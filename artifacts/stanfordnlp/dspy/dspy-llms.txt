@@ -1,0 +1,68 @@
+# Dspy
+
+> DSPy is designed to enable developers to build modular AI systems by programming language models through declarative Python code, rather than using prompts. Its primary goals include optimizing LM outputs via self-improving pipelines, supporting complex tasks like RAG pipelines and agent loops, and providing tools for prompt optimization, evaluation, and deployment. The framework aims to simplify the development of high-quality AI systems by abstracting away the complexity of traditional prompting methods.
+
+**Remember:**
+- Declarative Self-improving Python: Writing compositional Python code to teach LMs to generate high-quality outputs
+- Modular AI Systems: Building complex systems through reusable components and pipelines
+- Prompt Optimization: Algorithms for refining prompts and weights in language model programs
+- Teleprompting: Using instruction proposals and optimization techniques (e.g., GEPA, BootstrapFewShot) to improve LM performance
+- Retrieval-Augmented Generation (RAG): Integrating retrieval systems with language models for knowledge-intensive tasks
+- Evaluation Metrics: Tools for assessing model performance using semantic F1, exact match, and passage match
+
+## Docs
+- [README](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/README.md): install & quickstart.
+- [Tutorials](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/index.md): worked example.
+- [Ai Text Game](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/ai_text_game/index.md): worked example.
+- [Async](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/async/index.md): worked example.
+- [Build Ai Program](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/build_ai_program/index.md): worked example.
+- [Cache](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/cache/index.md): worked example.
+- [Classification](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/classification/index.md): worked example.
+- [Conversation History](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/conversation_history/index.md): worked example.
+- [Core Development](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/core_development/index.md): worked example.
+- [Deployment](https://raw.githubusercontent.com/stanfordnlp/dspy/main/docs/docs/tutorials/deployment/index.md): worked example.
+
+## Tutorials
+- [Example](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/primitives/example.py): worked example.
+- [Test Baleen](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/examples/test_baleen.py): worked example.
+- [Test Example](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/primitives/test_example.py): worked example.
+
+## API
+- [Base Module](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/primitives/base_module.py): docs page.
+- [Module](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/primitives/module.py): docs page.
+- [Test Base Module](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/primitives/test_base_module.py): docs page.
+- [Test Module](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/primitives/test_module.py): docs page.
+
+## Optional
+- [Contributing](https://raw.githubusercontent.com/stanfordnlp/dspy/main/CONTRIBUTING.md): docs page.
+- [Build And Release](https://raw.githubusercontent.com/stanfordnlp/dspy/main/.github/.internal_dspyai/internals/build-and-release.md): version history.
+- [Release Checklist](https://raw.githubusercontent.com/stanfordnlp/dspy/main/.github/.internal_dspyai/internals/release-checklist.md): version history.
+- [README](https://raw.githubusercontent.com/stanfordnlp/dspy/main/README.md): docs page.
+
+## .Github
+- [Pull Request Template](https://raw.githubusercontent.com/stanfordnlp/dspy/main/.github/PULL_REQUEST_TEMPLATE/pull_request_template.md): docs page.
+- [Test Version](https://raw.githubusercontent.com/stanfordnlp/dspy/main/.github/workflows/build_utils/test_version.py): docs page.
+
+## Dspy
+- [Init](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/__init__.py): docs page.
+- [Metadata](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/__metadata__.py): docs page.
+- [Aggregation](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/predict/aggregation.py): docs page.
+- [Annotation](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/utils/annotation.py): docs page.
+- [Asyncify](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/utils/asyncify.py): docs page.
+- [Auto Evaluation](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/evaluate/auto_evaluation.py): docs page.
+- [Avatar Optimizer](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/teleprompt/avatar_optimizer.py): docs page.
+- [Baml Adapter](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/adapters/baml_adapter.py): docs page.
+- [Base](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/adapters/base.py): docs page.
+- [Base Lm](https://raw.githubusercontent.com/stanfordnlp/dspy/main/dspy/clients/base_lm.py): docs page.
+
+## Tests
+- [README](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/README.md): install & quickstart.
+- [README](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/reliability/README.md): install & quickstart.
+- [Conftest](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/conftest.py): docs page.
+- [Init](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/__init__.py): docs page.
+- [Conftest](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/reliability/conftest.py): docs page.
+- [Init](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/reliability/__init__.py): docs page.
+- [Init](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/test_utils/__init__.py): docs page.
+- [Init](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/utils/__init__.py): docs page.
+- [Test Adapter Image](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/signatures/test_adapter_image.py): docs page.
+- [Test Adapter Utils](https://raw.githubusercontent.com/stanfordnlp/dspy/main/tests/adapters/test_adapter_utils.py): docs page.
