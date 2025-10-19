@@ -1,0 +1,55 @@
+# Overview
+
+The `llms.txt` generator is currently failing to build the `mlflow-llms-full.txt` file due to `403 Forbidden` errors on all GitHub API requests. This directive mandates a refactor of the generator's orchestration logic to use the appropriate fetching strategy based on repository visibility. This fix will make the generator more reliable and robust for developers.
+
+# Core Features
+
+- **Conditional Fetching Logic:** Intelligently chooses the correct file-fetching strategy based on repository visibility (public/private). This fixes the `403 Forbidden` errors for public repos and makes the system more efficient.
+- **Improved Error Handling:** Provides clearer error messages when GitHub API authentication fails, speeding up future debugging of token-related issues.
+
+# User Experience
+
+This is a CLI tool for developers. The "user" is the developer running the script.
+
+- **User Persona:** Developer using the `llms.txt` generator.
+- **Key User Flow:**
+    1. Developer runs the "full build" process.
+    2. The system correctly identifies `mlflow/mlflow` as a public repo.
+    3. It uses the direct-linking method to fetch files.
+    4. The build succeeds without errors.
+    5. (In case of private repo failure) The developer sees a clear error message pointing to a potential token issue.
+
+# Technical Architecture
+
+- **System Components:**
+  - `src/lmstudiotxt_generator/pipeline.py` or `full_builder.py`: Orchestration logic.
+  - `src/lmstudiotxt_generator/github.py`: GitHub interaction logic (both authenticated and direct).
+- **APIs and Integrations:**
+  - GitHub API (`api.github.com`) for private repos.
+  - GitHub Raw Content (`raw.githubusercontent.com`) for public repos.
+
+# Development Roadmap
+
+- **MVP Requirements:**
+    1. Implement the conditional fetching logic in `pipeline.py` or `full_builder.py`.
+- **Future Enhancements:**
+    1. Implement the improved error handling in `github.py`.
+    2. Add a test case to verify that the correct fetching strategy is used for both public and private repositories.
+
+# Logical Dependency Chain
+
+1. **Foundation:** Identify the exact function in the orchestration layer (`pipeline.py` or `full_builder.py`) that decides which fetching method to use.
+2. **Implement Core Logic:** Modify this function to include the public/private repository check. A function to check repo visibility might need to be added to `github.py`.
+3. **Integrate Fetching Methods:** Ensure the function correctly calls either the direct URL generator or the authenticated API fetcher.
+4. **Improve Error Handling:** Refactor the error handling in `github.py` for the authenticated method.
+5. **Testing:** Add unit tests to confirm the logic works as expected.
+
+# Risks and Mitigations
+
+- **Technical Challenge:** How to reliably determine if a GitHub repository is public or private via the API.
+  - **Mitigation:** Use the GitHub API's repository endpoint (`/repos/{owner}/{repo}`). The response JSON contains a `"private": false` or `"private": true` key-value pair. This will require an API call, but only one per repository, which is acceptable.
+
+# Appendix
+
+- **Research findings:** The root cause is not that the `mlflow/mlflow` repository is private (it is public), but that the generator's "full build" mode incorrectly uses a fragile, authentication-dependent process for all cases.
+- **Technical specifications:** See `refactoring_directive.md`.
