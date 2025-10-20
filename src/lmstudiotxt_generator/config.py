@@ -48,6 +48,8 @@ class AppConfig:
         or os.getenv("GH_TOKEN")
     )
     enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
+    lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
+    lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))
 
     def ensure_output_root(self, owner: str, repo: str) -> Path:
         """Return ``<output_root>/<owner>/<repo>`` and create it if missing."""

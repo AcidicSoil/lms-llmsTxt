@@ -118,6 +118,8 @@ def test_pipeline_fallback(tmp_path, monkeypatch):
         file_tree="README.md\nsrc/main.py",
         readme_content="# Title\n\nSummary",
         package_files="",
+        default_branch="main",
+        is_private=False,
     )
 
     class FakeAnalyzer:
@@ -140,3 +142,51 @@ def test_pipeline_fallback(tmp_path, monkeypatch):
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
     assert Path(artifacts.json_path).exists()
+
+
+def test_pipeline_unloads_model(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type("Result", (), {"llms_txt_content": "# Generated\n"})()
+
+    unload_called = {}
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(
+        pipeline,
+        "build_llms_full_from_repo",
+        lambda content, **_: content + "\n--- full ---\n",
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "unload_lmstudio_model",
+        lambda cfg: unload_called.setdefault("done", True),
+    )
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+        lm_auto_unload=True,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config)
+
+    assert unload_called.get("done") is True
+    assert Path(artifacts.llms_txt_path).exists()
+    assert Path(artifacts.llms_full_path).exists()

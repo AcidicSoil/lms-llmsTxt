@@ -42,8 +42,14 @@ def fallback_llms_payload(
     repo_url: str,
     file_tree: str,
     readme_content: str,
+    *,
+    default_branch: str | None = None,
 ) -> Dict[str, object]:
-    buckets = build_dynamic_buckets(repo_url, file_tree)
+    buckets = build_dynamic_buckets(
+        repo_url,
+        file_tree,
+        default_ref=default_branch,
+    )
     summary = _summary_from_readme(readme_content)
     remember = _remember_bullets()
     sections: List[Dict[str, object]] = []
@@ -90,12 +96,15 @@ def fallback_llms_markdown(
     repo_url: str,
     file_tree: str,
     readme_content: str,
+    *,
+    default_branch: str | None = None,
 ) -> str:
     payload = fallback_llms_payload(
         repo_name=repo_name,
         repo_url=repo_url,
         file_tree=file_tree,
         readme_content=readme_content,
+        default_branch=default_branch,
     )
     return fallback_markdown_from_payload(repo_name, payload)
 

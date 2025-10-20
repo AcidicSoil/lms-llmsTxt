@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import re
+import logging
 from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 
 import dspy
+import requests
 
 from .github import construct_raw_url, owner_repo_from_url
 from .signatures import (
@@ -80,8 +82,31 @@ TAXONOMY: List[Tuple[str, re.Pattern]] = [
 ]
 
 
+def _url_alive(url: str) -> bool:
+    try:
+        response = _URL_SESSION.head(
+            url, allow_redirects=True, timeout=_URL_VALIDATION_TIMEOUT, headers=_URL_HEADERS
+        )
+        status = response.status_code
+        if status and status < 400:
+            return True
+        response = _URL_SESSION.get(
+            url,
+            stream=True,
+            timeout=_URL_VALIDATION_TIMEOUT,
+            headers=_URL_HEADERS,
+        )
+        response.close()
+        return response.status_code < 400
+    except requests.RequestException:
+        return False
+
+
 def build_dynamic_buckets(
-    repo_url: str, file_tree: str
+    repo_url: str,
+    file_tree: str,
+    default_ref: str | None = None,
+    validate_urls: bool = True,
 ) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
     paths = [p.strip() for p in file_tree.splitlines() if p.strip()]
     pages = []
@@ -119,6 +144,19 @@ def build_dynamic_buckets(
         buckets[name] = items[:10]
         if not buckets[name]:
             buckets.pop(name, None)
+
+    if validate_urls:
+        for name, items in list(buckets.items()):
+            filtered = []
+            for page in items:
+                if _url_alive(page["url"]):
+                    filtered.append(page)
+                else:
+                    logger.debug("Dropping %s due to missing resource.", page["url"])
+            if filtered:
+                buckets[name] = filtered
+            else:
+                buckets.pop(name, None)
 
     reserved = {name for name, _ in TAXONOMY}
     for name in list(buckets.keys()):
@@ -194,6 +232,7 @@ class RepositoryAnalyzer(dspy.Module):
         file_tree: str,
         readme_content: str,
         package_files: str,
+        default_branch: str | None = None,
     ):
         repo_analysis = self.analyze_repo(
             repo_url=repo_url,
@@ -218,7 +257,11 @@ class RepositoryAnalyzer(dspy.Module):
         except Exception:
             project_name = "Project"
 
-        buckets = build_dynamic_buckets(repo_url, file_tree)
+        buckets = build_dynamic_buckets(
+            repo_url,
+            file_tree,
+            default_ref=default_branch,
+        )
 
         llms_txt_content = render_llms_markdown(
             project_name=project_name,
@@ -232,3 +275,10 @@ class RepositoryAnalyzer(dspy.Module):
             analysis=repo_analysis,
             structure=structure_analysis,
         )
+logger = logging.getLogger(__name__)
+
+_URL_VALIDATION_TIMEOUT = 5
+_URL_SESSION = requests.Session()
+_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
+
+                "url": construct_raw_url(repo_url, path, ref=default_ref),
