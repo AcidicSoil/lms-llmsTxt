@@ -9,6 +9,7 @@
 - Milestone 1: Map current orchestration and data flow between `pipeline.py` and `full_builder.py`.
 - Milestone 2: Introduce repo visibility checks and switch fetching based on public/private status.
 - Milestone 3: Harden error messaging and tests covering both fetch strategies.
+- Milestone 4: Restore LM Studio artifact orchestration and prune bad doc links.
 
 **Tasks**
 - [x] Document current GitHub fetch entry points and data passed into `build_llms_full_from_repo`
@@ -32,6 +33,15 @@
   (Owner: Codex, Est: 2h, Files: tests/test_full_builder.py).
   - Acceptance: New tests fail on regressions and pass after implementation.
   - Notes: Added coverage for raw fetch success, private API path, and 403 guidance output.
+- [ ] Ensure `run_generation` always creates `GenerationArtifacts` even when falling back
+  (Owner: Codex, Est: 1h, Files: src/lmstudiotxt_generator/pipeline.py, tests/test_lmstudio.py).
+  - Acceptance: `tests/test_lmstudio.py` passes and artifacts expose `used_fallback` plus file paths.
+- [ ] Harden link selection so 404-heavy sections are dropped or rewritten with live branches
+  (Owner: Codex, Est: 2h, Files: src/lmstudiotxt_generator/analyzer.py, src/lmstudiotxt_generator/github.py, tests/test_analyzer.py).
+  - Acceptance: Links targeting mlflow default to working branches; tests cover branch fallback and filtering.
+- [ ] Re-run pytest and regenerate mlflow artifacts after code fixes
+  (Owner: Codex, Est: 0.5h, Files: tests, .taskmaster/docs/mlflow/mlflow/mlflow-llms.txt).
+  - Acceptance: `python -m pytest` passes locally; regenerated artifact omits the reported 404 topics.
 
 **Won't do**
 - Rewrite the CLI interface or argument parsing logic.
@@ -42,7 +52,7 @@
 - Cache repository visibility lookups to avoid repeated API calls.
 
 **Validation**
-- Run `python3 -m pytest`; currently blocked because pytest is not installed in the environment.
+- Run `python3 -m pytest`; ensure environment has pytest via `pip install -e .[dev]` if missing.
 - Manual smoke test: invoke CLI against a public repo with an invalid token to confirm fallback.
 
 **Risks**

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import re
 import logging
+import re
 from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 
@@ -15,6 +15,12 @@ from .signatures import (
     GenerateLLMsTxt,
     GenerateUsageExamples,
 )
+
+logger = logging.getLogger(__name__)
+
+_URL_VALIDATION_TIMEOUT = 5
+_URL_SESSION = requests.Session()
+_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
 
 
 def _nicify_title(path: str) -> str:
@@ -116,7 +122,7 @@ def build_dynamic_buckets(
         pages.append(
             {
                 "path": path,
-                "url": construct_raw_url(repo_url, path),
+                "url": construct_raw_url(repo_url, path, ref=default_ref),
                 "title": (
                     "README"
                     if re.search(r"(^|/)README\.md$", path, flags=re.I)
@@ -275,10 +281,3 @@ class RepositoryAnalyzer(dspy.Module):
             analysis=repo_analysis,
             structure=structure_analysis,
         )
-logger = logging.getLogger(__name__)
-
-_URL_VALIDATION_TIMEOUT = 5
-_URL_SESSION = requests.Session()
-_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
-
-                "url": construct_raw_url(repo_url, path, ref=default_ref),
