@@ -190,3 +190,45 @@ def test_pipeline_unloads_model(tmp_path, monkeypatch):
     assert unload_called.get("done") is True
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
+
+
+def test_unload_prefers_sdk(monkeypatch):
+    handle_unloaded = {}
+
+    class FakeHandle:
+        identifier = "model"
+        model_key = "model"
+
+        def unload(self):
+            handle_unloaded["done"] = True
+
+    class FakeSDK:
+        def __init__(self):
+            self.hosts = []
+
+        def configure_default_client(self, host):
+            self.hosts.append(host)
+
+        def list_loaded_models(self, kind=None):
+            return [FakeHandle()]
+
+    fake_sdk = FakeSDK()
+    monkeypatch.setattr(lmstudio, "_LMSTUDIO_SDK", fake_sdk, raising=False)
+
+    def should_not_run(*args, **kwargs):
+        raise AssertionError("Fallback path should not execute when SDK succeeds")
+
+    monkeypatch.setattr(lmstudio, "_unload_model_http", should_not_run, raising=False)
+    monkeypatch.setattr(lmstudio, "_unload_model_cli", should_not_run, raising=False)
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key=None,
+        output_dir=Path("artifacts"),
+    )
+
+    lmstudio.unload_lmstudio_model(config)
+
+    assert handle_unloaded.get("done") is True
+    assert fake_sdk.hosts == ["localhost:1234"]

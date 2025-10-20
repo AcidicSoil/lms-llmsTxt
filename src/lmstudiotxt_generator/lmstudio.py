@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import subprocess
 from typing import Iterable, Optional, Tuple
+from urllib.parse import urlparse
 
 import dspy
 import requests
@@ -10,6 +11,11 @@ import requests
 from .config import AppConfig
 
 logger = logging.getLogger(__name__)
+
+try:  # Optional dependency recommended for managed unload
+    import lmstudio as _LMSTUDIO_SDK  # type: ignore
+except Exception:  # pragma: no cover - SDK is optional at runtime
+    _LMSTUDIO_SDK = None  # type: ignore[assignment]
 
 
 class LMStudioConnectivityError(RuntimeError):
@@ -210,6 +216,98 @@ def _load_model_cli(model: str) -> bool:
     return False
 
 
+def _host_from_api_base(api_base: str | None) -> Optional[str]:
+    if not api_base:
+        return None
+    parsed = urlparse(str(api_base))
+    host = parsed.netloc or parsed.path
+    host = host.strip("/") if host else ""
+    return host or None
+
+
+def _configure_sdk_client(config: AppConfig) -> None:
+    if _LMSTUDIO_SDK is None:
+        return
+    host = _host_from_api_base(config.lm_api_base)
+    if not host:
+        return
+    try:
+        configure = getattr(_LMSTUDIO_SDK, "configure_default_client", None)
+        if callable(configure):
+            configure(host)
+    except Exception as exc:  # pragma: no cover - diagnostic only
+        logger.debug("LM Studio SDK configure_default_client failed: %s", exc)
+
+
+def _unload_model_sdk(config: AppConfig) -> bool:
+    """
+    Attempt to unload the configured model via the official LM Studio Python SDK.
+    """
+    if _LMSTUDIO_SDK is None:
+        return False
+
+    _configure_sdk_client(config)
+
+    target_key = (config.lm_model or "").strip()
+    handles: list = []
+    try:
+        handles = list(_LMSTUDIO_SDK.list_loaded_models("llm"))  # type: ignore[attr-defined]
+    except AttributeError:
+        try:
+            client = _LMSTUDIO_SDK.get_default_client()  # type: ignore[attr-defined]
+            handles = list(client.llm.list_loaded_models())  # type: ignore[attr-defined]
+        except Exception as exc:  # pragma: no cover - diagnostic path
+            logger.debug("LM Studio SDK list_loaded_models unavailable: %s", exc)
+            handles = []
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK list_loaded_models failed: %s", exc)
+        handles = []
+
+    selected = []
+    for handle in handles:
+        try:
+            identifier = getattr(handle, "identifier", None)
+            model_key = getattr(handle, "model_key", None) or getattr(handle, "modelKey", None)
+        except Exception:  # pragma: no cover - defensive
+            identifier = model_key = None
+        if target_key and target_key not in {identifier, model_key}:
+            continue
+        selected.append(handle)
+    if not selected:
+        selected = handles
+
+    success = False
+    for handle in selected:
+        try:
+            handle.unload()
+            success = True
+        except Exception as exc:  # pragma: no cover - diagnostic path
+            logger.debug("LM Studio SDK failed to unload handle %r: %s", handle, exc)
+
+    if success:
+        logger.info("LM Studio SDK unloaded model '%s'.", target_key or selected[0])
+        return True
+
+    try:
+        if target_key:
+            handle = _LMSTUDIO_SDK.llm(target_key)  # type: ignore[attr-defined]
+        else:
+            handle = _LMSTUDIO_SDK.llm()  # type: ignore[attr-defined]
+    except TypeError:
+        handle = _LMSTUDIO_SDK.llm()  # type: ignore[attr-defined]
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK llm(%s) failed: %s", target_key or "<default>", exc)
+        return False
+
+    try:
+        handle.unload()
+        logger.info("LM Studio SDK unloaded model '%s'.", target_key or getattr(handle, "model_key", "<default>"))
+        return True
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK handle unload failed: %s", exc)
+        return False
+
+
 def _unload_model_http(
     base_url: str,
     headers: dict[str, str],
@@ -391,6 +489,9 @@ def unload_lmstudio_model(config: AppConfig) -> None:
     Attempt to unload the configured LM Studio model to free resources.
     """
 
+    if _unload_model_sdk(config):
+        return
+
     headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
     base = config.lm_api_base.rstrip("/")
 
@@ -407,7 +508,7 @@ def unload_lmstudio_model(config: AppConfig) -> None:
         return
 
     logger.warning(
-        "Failed to unload LM Studio model '%s' via HTTP or CLI. The model may remain loaded.",
+        "Failed to unload LM Studio model '%s' via SDK, HTTP, or CLI. The model may remain loaded.",
         config.lm_model,
     )
 
