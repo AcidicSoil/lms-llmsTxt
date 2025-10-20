@@ -48,7 +48,7 @@ def _auth_headers(token: str | None) -> dict[str, str]:
     return headers
 
 
-def get_default_branch(owner: str, repo: str, token: str | None) -> str:
+def get_repository_metadata(owner: str, repo: str, token: str | None) -> dict[str, object]:
     resp = _SESSION.get(
         f"https://api.github.com/repos/{owner}/{repo}",
         headers=_auth_headers(token),
@@ -58,7 +58,16 @@ def get_default_branch(owner: str, repo: str, token: str | None) -> str:
         raise FileNotFoundError(f"Repository not found: {owner}/{repo}")
     resp.raise_for_status()
     payload = resp.json()
-    return payload.get("default_branch", "main")
+    return {
+        "default_branch": payload.get("default_branch", "main"),
+        "is_private": bool(payload.get("private", False)),
+        "visibility": payload.get("visibility"),
+    }
+
+
+def get_default_branch(owner: str, repo: str, token: str | None) -> str:
+    metadata = get_repository_metadata(owner, repo, token)
+    return str(metadata.get("default_branch", "main"))
 
 
 def fetch_file_tree(
@@ -102,7 +111,8 @@ def fetch_file_content(
 
 def gather_repository_material(repo_url: str, token: str | None = None) -> RepositoryMaterial:
     owner, repo = owner_repo_from_url(repo_url)
-    ref = get_default_branch(owner, repo, token)
+    metadata = get_repository_metadata(owner, repo, token)
+    ref = str(metadata.get("default_branch", "main"))
 
     file_paths = fetch_file_tree(owner, repo, ref, token)
     file_tree = "\n".join(sorted(file_paths))
@@ -128,6 +138,8 @@ def gather_repository_material(repo_url: str, token: str | None = None) -> Repos
         file_tree=file_tree,
         readme_content=readme,
         package_files=package_files,
+        default_branch=ref,
+        is_private=bool(metadata.get("is_private", False)),
     )
 
 

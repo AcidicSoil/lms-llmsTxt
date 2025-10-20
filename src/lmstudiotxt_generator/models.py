@@ -11,6 +11,8 @@ class RepositoryMaterial:
     file_tree: str
     readme_content: str
     package_files: str
+    default_branch: str
+    is_private: bool
 
 
 @dataclass

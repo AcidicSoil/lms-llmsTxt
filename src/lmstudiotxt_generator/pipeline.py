@@ -14,7 +14,7 @@ from .fallback import (
     fallback_markdown_from_payload,
 )
 from .github import gather_repository_material, owner_repo_from_url
-from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError
+from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
 from .schema import LLMS_JSON_SCHEMA
 
@@ -73,14 +73,19 @@ def run_generation(
     used_fallback = False
     project_name = repo.replace("-", " ").replace("_", " ").title()
 
+    model_loaded = False
+
     try:
         logger.info("Configuring LM Studio model '%s'", config.lm_model)
         configure_lmstudio_lm(config, cache=cache_lm)
+        model_loaded = True
+
         result = analyzer(
             repo_url=material.repo_url,
             file_tree=material.file_tree,
             readme_content=material.readme_content,
             package_files=material.package_files,
+            default_branch=material.default_branch,
         )
         llms_text = result.llms_txt_content
     except (
@@ -98,6 +103,7 @@ def run_generation(
             repo_url=repo_url,
             file_tree=material.file_tree,
             readme_content=material.readme_content,
+            default_branch=material.default_branch,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
     except Exception as exc:  # pragma: no cover - defensive fallback
@@ -109,8 +115,12 @@ def run_generation(
             repo_url=repo_url,
             file_tree=material.file_tree,
             readme_content=material.readme_content,
+            default_branch=material.default_branch,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
+    finally:
+        if model_loaded and config.lm_auto_unload:
+            unload_lmstudio_model(config)
 
     llms_txt_path = repo_root / f"{base_name}-llms.txt"
     logger.info("Writing llms.txt to %s", llms_txt_path)
@@ -128,7 +138,12 @@ def run_generation(
             logger.debug("Writing llms-ctx to %s", ctx_path)
             _write_text(ctx_path, ctx_text, stamp)
 
-    llms_full_text = build_llms_full_from_repo(llms_text)
+    llms_full_text = build_llms_full_from_repo(
+        llms_text,
+        prefer_raw=not material.is_private,
+        default_ref=material.default_branch,
+        token=config.github_token,
+    )
     llms_full_path = repo_root / f"{base_name}-llms-full.txt"
     logger.debug("Writing llms-full to %s", llms_full_path)
     _write_text(llms_full_path, llms_full_text, stamp)
