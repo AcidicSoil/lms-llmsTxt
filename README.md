@@ -1,87 +1,133 @@
-# LM Studio llms.txt Generator
+---
+title: "LM Studio llms.txt Generator"
+description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
+---
 
-This project scaffolds a reusable codebase for generating `llms.txt` documentation
-with [DSPy](https://github.com/stanfordnlp/dspy) while targeting
-[LM Studio](https://lmstudio.ai/)'s OpenAI-compatible API. It is inspired by the
-DSPy tutorials but reorganized into a structured Python package ready for
-automation or CLI usage.
+## Overview
+
+Use this CLI-first toolkit to produce LLM-friendly documentation bundles (`llms.txt`, `llms-full.txt`, optional `llms-ctx.txt`, and fallback JSON) for any GitHub repository. The generator wraps DSPy analyzers, manages LM Studio model lifecycle with the official Python SDK, and guarantees output even when the primary language model cannot respond.
+
+<Info>
+The pipeline validates curated links, detects default branches automatically, and writes artifacts to `artifacts/<owner>/<repo>/`.
+</Info>
 
 ## Prerequisites
 
-- Python 3.10 or newer.
-- LM Studio running the HTTP server (Developer tab → *Start Server*) or the CLI:
+- Python 3.10 or later
+- LM Studio server available locally (Developer tab → **Start Server**) or the CLI (`lms server start --port 1234`)
+- GitHub API token in `GITHUB_ACCESS_TOKEN` or `GH_TOKEN`
+- Optional: [`llms_txt`](https://pypi.org/project/llms-txt/) when you want to produce `llms-ctx.txt`
 
-  ```bash
-  npx lmstudio install-cli
-  lms server start --port 1234
-  ```
+<Warning>
+Install dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
+</Warning>
 
-- A GitHub API token (`GITHUB_ACCESS_TOKEN` or `GH_TOKEN`) to fetch repository
-  trees and file contents.
+## Install
 
-Optional:
+<Steps>
+  <Step title="Create a virtual environment">
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+  </Step>
+  <Step title="Install the package with developer extras">
+    ```bash
+    pip install -e .[dev]
+    ```
+    Installing the editable package exposes the `lmstudio-llmstxt` CLI and brings in the `lmstudio` Python SDK plus pytest.
+  </Step>
+</Steps>
 
-- `llms_txt` package if you want to emit context files (`pip install llms-txt`).
-- Set `ENABLE_CTX=1` to opt-in to context generation.
+<Tip>
+Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
+</Tip>
 
-## Installation
+## Configure LM Studio
 
-```bash
-pip install -e .
-```
+<Steps>
+  <Step title="Load the CLI">
+    ```bash
+    npx lmstudio install-cli
+    lms server start --port 1234
+    ```
+    The server must expose an OpenAI-compatible endpoint, commonly `http://localhost:1234/v1`.
+  </Step>
+  <Step title="Ensure the target model is downloaded">
+    Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
+  </Step>
+</Steps>
 
-The editable install exposes the `lmstudio-llmstxt` CLI entry point.
+## Quick start
 
-## Usage
+Run the CLI against any GitHub repository:
 
 ```bash
 lmstudio-llmstxt https://github.com/owner/repo \
-  --model qwen3-4b-instruct-2507@q6_k_xl \
+  --model qwen/qwen3-4b-2507 \
   --api-base http://localhost:1234/v1 \
   --stamp
 ```
 
-Artifacts are stored inside `./artifacts/<owner>/<repo>/` by default. Override
-the target directory with `--output-dir`.
+The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
 
-Environment variables can be used instead of flags:
+### Environment variables
 
-- `LMSTUDIO_MODEL`
-- `LMSTUDIO_BASE_URL`
-- `LMSTUDIO_API_KEY`
-- `OUTPUT_DIR`
+| Variable | Description |
+|----------|-------------|
+| `LMSTUDIO_MODEL` | Default LM Studio model identifier |
+| `LMSTUDIO_BASE_URL` | Base URL such as `http://localhost:1234/v1` |
+| `LMSTUDIO_API_KEY` | API key for secured LM Studio deployments |
+| `OUTPUT_DIR` | Custom root directory for artifacts |
+| `ENABLE_CTX=1` | Emit `llms-ctx.txt` using the optional `llms_txt` package |
 
-## Project Structure
+## Generated artifacts
 
-- `src/lmstudiotxt_generator/` contains reusable modules for configuration,
-  GitHub data collection, DSPy analysis, and artifact generation.
-- `pyproject.toml` defines package metadata and dependencies.
-- `dspy_workspace/` keeps the original tutorial reference materials untouched.
-- If LM Studio declines the structured request, the pipeline emits
-  `*-llms.json` alongside the markdown so downstream tooling can rely on the
-  bundled JSON Schema.
+| Artifact | Purpose |
+|----------|---------|
+| `*-llms.txt` | Primary documentation synthesized by DSPy or the fallback heuristic |
+| `*-llms-full.txt` | Expanded content fetched from curated GitHub links with 404 filtering |
+| `*-llms.json` | Fallback JSON following `LLMS_JSON_SCHEMA` (only when LM fallback triggers) |
+| `*-llms-ctx.txt` | Optional context file created when `ENABLE_CTX=1` and `llms_txt` is installed |
 
-## Development Notes
+<Check>
+The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
+</Check>
 
-- The DSPy `RepositoryAnalyzer` module mirrors the tutorial logic but is bundled
-  as a reusable package component.
-- LM Studio interactions use the OpenAI protocol, so the same prompts can run
-  locally or against hosted APIs by adjusting environment variables.
-- A lightweight pytest suite covers the LM Studio handshake and fallback
-  behaviour.
-- When the language model responds with a `BadRequestError` (for example if the
-  model is not loaded or does not support JSON schema), the CLI falls back to a
-  heuristic generator that serializes data using `LLMS_JSON_SCHEMA` before
-  rendering markdown.
-- The tooling will attempt to auto-load `LMSTUDIO_MODEL` via LM Studio's REST
-  `/v1/models` endpoint before issuing any DSPy calls and report if the request
-  fails.
+## How it works
 
-### Running tests
+1. **Collect repository material** – the GitHub client gathers the file tree, README, package files, repository visibility, and default branch.
+2. **Prepare LM Studio** – the manager confirms the requested model is loaded, auto-loading if necessary.
+3. **Generate documentation** – DSPy produces curated content; on LM failures the fallback serializer builds markdown and JSON directly.
+4. **Assemble `llms-full`** – curated links are re-fetched via raw GitHub URLs for public repos or authenticated API calls for private ones, with validation to remove dead links.
+5. **Unload models safely** – the workflow first uses the official `lmstudio` SDK (`model.unload()` or `list_loaded_models`), then falls back to HTTP and CLI unload requests.
 
-Install the dev extras and execute the test suite:
+## Project layout
+
+- `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzers, LM Studio helpers, fallback renderer, and artifact writers
+- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, and pipeline fallbacks
+- `.taskmaster/` – Task Master AI configuration for agentic planning (optional)
+- `artifacts/` – sample outputs generated from previous runs
+
+## Verify your setup
 
 ```bash
-pip install -e .[dev]
-pytest
+source .venv/bin/activate
+python -m pytest
 ```
+
+All tests should pass, confirming URL validation, fallback handling, and SDK-first unload behaviour.
+
+## Troubleshooting
+
+<Warning>
+If `pip install -e .[dev]` fails with build tool errors (`cmake` or `pyarrow`), install the missing system packages and retry the installation before running tests.
+</Warning>
+
+<Tip>
+When `llms-full` surfaces `[fetch-error]`, verify the curated link uses the repository’s actual default branch (`master` vs `main`). The analyzer keeps only live URLs, but custom additions may need manual tweaks.
+</Tip>
+
+<Info>
+Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid repeating flags during iterative runs.
+</Info>

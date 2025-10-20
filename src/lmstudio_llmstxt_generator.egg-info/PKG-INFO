@@ -13,88 +13,134 @@ Requires-Dist: pytest; extra == "dev"
 
 # LM Studio llms.txt Generator
 
-This project scaffolds a reusable codebase for generating `llms.txt` documentation
-with [DSPy](https://github.com/stanfordnlp/dspy) while targeting
-[LM Studio](https://lmstudio.ai/)'s OpenAI-compatible API. It is inspired by the
-DSPy tutorials but reorganized into a structured Python package ready for
-automation or CLI usage.
+Generate `llms.txt`, `llms-full.txt`, optional `llms-ctx.txt`, and JSON schema
+artifacts for any GitHub repository using [DSPy](https://github.com/stanfordnlp/dspy)
+with [LM Studio](https://lmstudio.ai/)'s OpenAI-compatible API. The package wraps
+the tutorial notebooks into a CLI-focused workflow with resilient fallbacks that
+produce documentation even when the local language model cannot respond.
+
+## Highlights
+
+- **Repository-first pipeline** – pulls file trees, READMEs, and config files via
+  the GitHub API, threads the data into the DSPy analyzer, and writes normalized
+  artifacts to disk.
+- **Automatic LM Studio lifecycle** – attempts to load the requested model, and
+  now prefers the official `lmstudio` Python SDK to unload models once generation
+  finishes. HTTP/CLI fallbacks remain for older environments.
+- **Fallback heuristics** – if the LM call fails (rate limits, schema issues,
+  connectivity), a deterministic generator creates `llms.txt`/JSON directly from
+  repository metadata.
+- **Link validation** – curated URLs are probed before inclusion, and dynamic
+  branch detection avoids stale `main` vs `master` mismatches.
 
 ## Prerequisites
 
-- Python 3.10 or newer.
-- LM Studio running the HTTP server (Developer tab → *Start Server*) or the CLI:
+- Python 3.10+
+- LM Studio with the server enabled (Developer tab → **Start Server**) or CLI:
 
   ```bash
   npx lmstudio install-cli
   lms server start --port 1234
   ```
 
-- A GitHub API token (`GITHUB_ACCESS_TOKEN` or `GH_TOKEN`) to fetch repository
-  trees and file contents.
-
-Optional:
-
-- `llms_txt` package if you want to emit context files (`pip install llms-txt`).
-- Set `ENABLE_CTX=1` to opt-in to context generation.
+- GitHub token (`GITHUB_ACCESS_TOKEN` or `GH_TOKEN`) for repository trees/content.
+- Optional extras:
+  - [`llms_txt`](https://pypi.org/project/llms-txt/) if you want `llms-ctx.txt`
+    (`ENABLE_CTX=1` to opt in).
+  - Virtually managed Python environment (`python -m venv .venv`) to avoid PEP 668
+    restrictions when installing dependencies locally.
 
 ## Installation
 
+Create and activate a virtual environment (recommended):
+
 ```bash
-pip install -e .
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev]
 ```
 
-The editable install exposes the `lmstudio-llmstxt` CLI entry point.
+The editable install exposes the `lmstudio-llmstxt` CLI and brings in `pytest`
+and the `lmstudio` Python SDK used for clean unloading.
 
-## Usage
+## Quick Start
 
 ```bash
 lmstudio-llmstxt https://github.com/owner/repo \
-  --model qwen3-4b-instruct-2507@q6_k_xl \
+  --model qwen/qwen3-4b-2507 \
   --api-base http://localhost:1234/v1 \
   --stamp
 ```
 
-Artifacts are stored inside `./artifacts/<owner>/<repo>/` by default. Override
-the target directory with `--output-dir`.
+Artifacts land at `./artifacts/<owner>/<repo>/` by default; override with
+`--output-dir`. Common environment overrides:
 
-Environment variables can be used instead of flags:
+| Variable             | Purpose                                     |
+|----------------------|---------------------------------------------|
+| `LMSTUDIO_MODEL`     | Default model identifier                    |
+| `LMSTUDIO_BASE_URL`  | e.g. `http://localhost:1234/v1`              |
+| `LMSTUDIO_API_KEY`   | Optional bearer token for secured servers   |
+| `OUTPUT_DIR`         | Alternative root for generated artifacts    |
+| `ENABLE_CTX=1`       | Write `llms-ctx.txt` using `llms_txt` (opt) |
 
-- `LMSTUDIO_MODEL`
-- `LMSTUDIO_BASE_URL`
-- `LMSTUDIO_API_KEY`
-- `OUTPUT_DIR`
+## Generated Artifacts
 
-## Project Structure
+| File suffix          | Contents                                                                    |
+|----------------------|-----------------------------------------------------------------------------|
+| `-llms.txt`          | LM-friendly project summary assembled by DSPy (or fallback heuristic).      |
+| `-llms-full.txt`     | Expanded content fetched from curated source links; respects private repos. |
+| `-llms.json`         | (Fallback only) Raw data conforming to `LLMS_JSON_SCHEMA`.                  |
+| `-llms-ctx.txt`      | (Optional) Context file produced by `llms_txt`.                             |
 
-- `src/lmstudiotxt_generator/` contains reusable modules for configuration,
-  GitHub data collection, DSPy analysis, and artifact generation.
-- `pyproject.toml` defines package metadata and dependencies.
-- `dspy_workspace/` keeps the original tutorial reference materials untouched.
-- If LM Studio declines the structured request, the pipeline emits
-  `*-llms.json` alongside the markdown so downstream tooling can rely on the
-  bundled JSON Schema.
+The pipeline always writes these artifacts even when the LM call fails, ensuring
+downstream tooling has deterministic outputs.
 
-## Development Notes
+## How It Works
 
-- The DSPy `RepositoryAnalyzer` module mirrors the tutorial logic but is bundled
-  as a reusable package component.
-- LM Studio interactions use the OpenAI protocol, so the same prompts can run
-  locally or against hosted APIs by adjusting environment variables.
-- A lightweight pytest suite covers the LM Studio handshake and fallback
-  behaviour.
-- When the language model responds with a `BadRequestError` (for example if the
-  model is not loaded or does not support JSON schema), the CLI falls back to a
-  heuristic generator that serializes data using `LLMS_JSON_SCHEMA` before
-  rendering markdown.
-- The tooling will attempt to auto-load `LMSTUDIO_MODEL` via LM Studio's REST
-  `/v1/models` endpoint before issuing any DSPy calls and report if the request
-  fails.
+1. **Material gathering** – `gather_repository_material` resolves the repository
+   visibility, default branch, and relevant files via the GitHub API.
+2. **LM Studio handshake** – `configure_lmstudio_lm` verifies the target model is
+   loaded, auto-loading when necessary.
+3. **Generation** – `RepositoryAnalyzer` (DSPy) synthesizes the curated `llms.txt`
+   content. If the LM raises `BadRequestError`, `RateLimitError`, authentication,
+   or connectivity errors, the fallback renderer constructs the markdown/JSON.
+4. **Artifact assembly** – `build_llms_full_from_repo` re-fetches curated links
+   via raw GitHub URLs for public repos or authenticated API calls for private
+   ones, trimming 404s and oversized files.
+5. **Cleanup** – `unload_lmstudio_model` now prefers the LM Studio Python SDK
+   (`model.unload()` / `list_loaded_models`) and falls back to HTTP + CLI probes
+   when the SDK is unavailable.
 
-### Running tests
+## Development Workflow
 
-Install the dev extras and execute the test suite:
+- Run tests inside the project virtualenv:
 
-```bash
-pip install -e .[dev]
-pytest
-```
+  ```bash
+  source .venv/bin/activate
+  python -m pytest
+  ```
+
+- Regenerate documentation artifacts locally with the CLI.
+- When contributing, ensure newly curated sections do not emit 404s; tests cover
+  URL validation and branch fallback logic.
+
+## Troubleshooting
+
+- **PEP 668 errors during install** – create a virtualenv or add `--break-system-packages`
+  (not recommended) when installing locally.
+- **Model fails to unload** – confirm the `lmstudio` SDK is installed; the logger
+  surfaces whether SDK, HTTP, or CLI unloading was attempted.
+- **GitHub 404s in `llms-full`** – verify curated links use the correct branch.
+  The analyzer now re-checks live URLs and demotes sections when all links fail.
+
+## Project Layout
+
+- `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzer,
+  LM Studio helpers, fallback renderer, and full artifact builder.
+- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload, and
+  pipeline fallbacks.
+- `.taskmaster/` – Task Master AI workflows (optional automation).
+- `artifacts/` – sample generated outputs (ignored by the package).
+
+With these pieces, you can integrate automated `llms.txt` production into CI,
+local documentation tasks, or MCP-driven workflows powered by LM Studio.
