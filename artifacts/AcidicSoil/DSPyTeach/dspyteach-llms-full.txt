@@ -948,443 +948,6 @@ Expected Output:
 - Side-by-side API table and patch suggestions.
 
 
---- example-response-format-usage.py ---
-# main.py
-# Purpose: Automated documentation-powered code generation pipeline using DSPy.
-# Now with integrated GitHub repository analysis.
-
-import dspy
-import requests
-from bs4 import BeautifulSoup
-import html2text
-from typing import List, Dict, Any
-import json
-import time
-import subprocess
-
-# Import the GitHub helper functions
-from repo_helpers import gather_repository_info
-
-MODEL_NAME = "hf.co/bartowski/Qwen_Qwen3-4B-Instruct-2507-GGUF:Q4_K_S"
-
-
-def stop_ollama_model(model_name: str) -> None:
-    """Stop the specified Ollama model to free server resources."""
-    try:
-        subprocess.run(
-            ["ollama", "stop", model_name],
-            check=True,
-            capture_output=True,
-        )
-    except subprocess.CalledProcessError as exc:  # pragma: no cover - log warning only
-        print(f"Warning: Failed to stop model {model_name}: {exc}")
-
-
-# --- Data Fetching Classes ---
-
-
-class DocumentationFetcher:
-    """
-    Fetches and processes documentation from both standard URLs and GitHub repositories.
-    """
-
-    def __init__(self, max_retries=3, delay=1):
-        self.session = requests.Session()
-        self.session.headers.update(
-            {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
-            }
-        )
-        self.max_retries = max_retries
-        self.delay = delay
-        self.html_converter = html2text.HTML2Text()
-        self.html_converter.ignore_links = False
-        self.html_converter.ignore_images = True
-
-    def fetch_website_url(self, url: str) -> dict:
-        """Fetches and cleans content from a standard website URL."""
-        for attempt in range(self.max_retries):
-            try:
-                print(f"📡 Fetching Website: {url} (attempt {attempt + 1})")
-                response = self.session.get(url, timeout=15)
-                response.raise_for_status()
-                soup = BeautifulSoup(response.content, "html.parser")
-                for script in soup(["script", "style", "nav", "footer", "header"]):
-                    script.decompose()
-                markdown_content = self.html_converter.handle(str(soup))
-                return {
-                    "url": url,
-                    "title": soup.title.string if soup.title else "No title",
-                    "content": markdown_content,
-                    "success": True,
-                }
-            except Exception as e:
-                print(f"❌ Error fetching {url}: {e}")
-                if attempt < self.max_retries - 1:
-                    time.sleep(self.delay)
-        return {"url": url, "title": "Failed to fetch", "content": "", "success": False}
-
-    def fetch_github_repo(self, url: str) -> dict:
-        """Fetches and consolidates content from a GitHub repository."""
-        print(f"📦 Fetching GitHub Repo: {url}")
-        try:
-            # Use the helper function to get README and example files
-            combined_content, details = gather_repository_info(url)
-            if "Could not access" in combined_content:
-                return {
-                    "url": url,
-                    "title": "Failed to fetch repo",
-                    "content": "",
-                    "success": False,
-                }
-
-            return {
-                "url": url,
-                "title": f"GitHub Repo: {url.split('/')[-1]}",
-                "content": combined_content,
-                "success": True,
-                "details": details,
-            }
-        except Exception as e:
-            print(f"❌ Error fetching GitHub repo {url}: {e}")
-            return {
-                "url": url,
-                "title": "Failed to fetch repo",
-                "content": f"Error: {e}",
-                "success": False,
-            }
-
-    def fetch_documentation(self, urls: list[str]) -> list[dict]:
-        """
-        Fetches documentation from a list of URLs, routing to the correct
-        fetcher (website or GitHub) based on the URL.
-        """
-        results = []
-        for url in urls:
-            if "github.com" in url:
-                result = self.fetch_github_repo(url)
-            else:
-                result = self.fetch_website_url(url)
-
-            results.append(result)
-            time.sleep(self.delay)  # Be respectful to servers
-        return results
-
-
-# --- DSPy Signatures and Modules ---
-
-
-class LibraryAnalyzer(dspy.Signature):
-    """Analyze library documentation to understand core concepts, patterns, and examples."""
-
-    library_name: str = dspy.InputField(desc="Name of the library to analyze")
-    documentation_content: str = dspy.InputField(
-        desc="Combined documentation from websites, READMEs, and code examples"
-    )
-
-    core_concepts: list[str] = dspy.OutputField(
-        desc="Main concepts, classes, and components of the library."
-    )
-    common_patterns: list[str] = dspy.OutputField(
-        desc="Common usage patterns or workflows."
-    )
-    key_methods: list[str] = dspy.OutputField(
-        desc="List of important methods or functions and their purpose."
-    )
-    installation_info: str = dspy.OutputField(
-        desc="How to install the library (e.g., 'pip install ...')."
-    )
-    code_examples: list[str] = dspy.OutputField(
-        desc="Key code snippets found in the documentation."
-    )
-
-
-class CodeGenerator(dspy.Signature):
-    """Generate a complete, working code example for a specific use case."""
-
-    library_info: str = dspy.InputField(
-        desc="Summary of the library's concepts, patterns, and methods."
-    )
-    use_case: str = dspy.InputField(
-        desc="The specific task to accomplish with the code."
-    )
-    requirements: str = dspy.InputField(
-        desc="Additional requirements or constraints for the code."
-    )
-
-    code_example: str = dspy.OutputField(
-        desc="A single, complete, and runnable code block."
-    )
-    explanation: str = dspy.OutputField(
-        desc="A step-by-step explanation of the generated code."
-    )
-    best_practices: list[str] = dspy.OutputField(
-        desc="Tips and best practices for using the library."
-    )
-    imports_needed: list[str] = dspy.OutputField(
-        desc="A list of necessary import statements."
-    )
-
-
-class DocumentationLearningAgent(dspy.Module):
-    """Agent that learns from documentation and generates code."""
-
-    def __init__(self):
-        super().__init__()
-        self.fetcher = DocumentationFetcher()
-        self.analyze_docs = dspy.ChainOfThought(LibraryAnalyzer)
-        self.generate_code = dspy.ChainOfThought(CodeGenerator)
-
-    def learn_from_urls(self, library_name: str, doc_urls: list[str]) -> Dict:
-        """Learns about a library from documentation URLs and GitHub repos."""
-        print(f"📚 Learning about {library_name} from {len(doc_urls)} sources...")
-        docs = self.fetcher.fetch_documentation(doc_urls)
-
-        combined_content = "\n\n---\n\n".join(
-            [
-                f"SOURCE: {doc['url']}\n\n{doc['content']}"
-                for doc in docs
-                if doc["success"]
-            ]
-        )
-
-        if not combined_content:
-            raise ValueError("No documentation could be fetched successfully.")
-
-        analysis = self.analyze_docs(
-            library_name=library_name, documentation_content=combined_content
-        )
-
-        return {
-            "library": library_name,
-            "source_urls": [doc["url"] for doc in docs if doc["success"]],
-            "core_concepts": analysis.core_concepts,
-            "patterns": analysis.common_patterns,
-            "methods": analysis.key_methods,
-            "installation": analysis.installation_info,
-            "examples": analysis.code_examples,
-        }
-
-    def generate_example(
-        self, library_info: Dict, use_case: str, requirements: str = ""
-    ) -> Dict:
-        """Generates a code example for a specific use case."""
-        info_text = f"""
-        Library: {library_info["library"]}
-        Core Concepts: {", ".join(library_info["core_concepts"])}
-        Common Patterns: {", ".join(library_info["patterns"])}
-        Key Methods: {", ".join(library_info["methods"])}
-        Installation: {library_info["installation"]}
-        """
-
-        code_result = self.generate_code(
-            library_info=info_text, use_case=use_case, requirements=requirements
-        )
-
-        return {
-            "code": code_result.code_example,
-            "explanation": code_result.explanation,
-            "best_practices": code_result.best_practices,
-            "imports": code_result.imports_needed,
-        }
-
-def interactive_learning_session():
-    """Main interactive session for the library learning system."""
-    lm = dspy.LM(
-        f"ollama_chat/{MODEL_NAME}",
-        api_base="http://localhost:11434",
-        api_key="",
-        streaming=False,
-        cache=False,
-        response_format={
-        "type": "json_schema",
-        "json_schema": {
-            "schema": {
-                "type": "object",
-                "properties": {
-                    "project": {
-                        "type": "object",
-                        "properties": {
-                            "name": {"type": "string"},
-                            "description": {"type": "string"},
-                        },
-                        "required": ["name", "description"],
-                    },
-                    "key_concepts": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "minItems": 1,
-                    },
-                    "architecture_overview": {"type": "string"},
-                    "important_directories": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "minItems": 1,
-                    },
-                    "entry_points": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "minItems": 1,
-                    },
-                    "development_info": {
-                        "type": "object",
-                        "properties": {
-                            "test_dependencies": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                            },
-                            "linting_tools": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "minItems": 1,
-                            },
-                            "optional_dependencies": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                            },
-                        },
-                        "required": ["test_dependencies", "linting_tools"],
-                    },
-                    "usage_examples": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "minItems": 1,
-                    },
-                },
-                "required": [
-                    "project",
-                    "key_concepts",
-                    "architecture_overview",
-                    "important_directories",
-                    "entry_points",
-                    "development_info",
-                    "usage_examples",
-                ],
-            }
-        },
-    },
-    )
-    dspy.configure(lm=lm)
-
-    learned_libraries = {}
-
-    try:
-        print("🎯 Welcome to the Interactive Library Learning System!")
-        print("This system now supports learning from websites AND GitHub repositories.\n")
-
-        agent = DocumentationLearningAgent()
-
-        while True:
-            print("\n" + "=" * 60)
-            library_name = input(
-                "\n📚 Enter the library name (or 'quit' to exit): "
-            ).strip()
-            if library_name.lower() in ["quit", "exit", "q"]:
-                break
-
-            print(
-                f"\n🔗 Enter documentation URLs or a GitHub repo URL for {library_name} (one per line, empty line to finish):"
-            )
-            urls = []
-            while True:
-                url = input("  URL: ").strip()
-                if not url:
-                    break
-                urls.append(url)
-
-            if not urls:
-                continue
-
-            try:
-                # Step 1: Learn about the library from the provided sources
-                library_info = agent.learn_from_urls(library_name, urls)
-                print(f"\n✅ Successfully learned {library_name}!")
-                print(f"   - Core Concepts: {library_info.get('core_concepts', 'N/A')}")
-                print(f"   - Installation: {library_info.get('installation', 'N/A')}")
-
-                # Step 2: Get all use cases from the user upfront
-                print(
-                    f"\n🎯 Define use cases for {library_name} (one per line, empty line to finish):"
-                )
-                use_cases = []
-                while True:
-                    use_case = input("     Use case: ").strip()
-                    if not use_case:
-                        break
-                    use_cases.append(use_case)
-
-                if not use_cases:
-                    print("No use cases provided. Moving on.")
-                    continue
-
-                # Step 3: Generate and display all examples
-                print(f"\n🔧 Generating {len(use_cases)} examples for {library_name}...")
-                all_examples = []
-                for i, use_case in enumerate(use_cases, 1):
-                    print(f"\n--- EXAMPLE {i}/{len(use_cases)}: {use_case} ---")
-
-                    example = agent.generate_example(library_info, use_case)
-                    all_examples.append({"use_case": use_case, **example})
-
-                    print("\n💻 Code Example:")
-                    print(f"```python\n{example['code']}\n```")
-
-                    print("\n📦 Required Imports:")
-                    print("\n".join([f"  • {imp}" for imp in example["imports"]]))
-
-                    print("\n📝 Explanation:")
-                    print(example["explanation"])
-
-                    print("\n✅ Best Practices:")
-                    print("\n".join([f"  • {bp}" for bp in example["best_practices"]]))
-                    print("--- END OF EXAMPLE ---")
-
-                # Store the complete results
-                learned_libraries[library_name] = {
-                    "library_info": library_info,
-                    "examples": all_examples,
-                }
-
-                # Step 4: Offer to save the results to a file
-                save_results = (
-                    input(f"\n💾 Save learning results for {library_name} to file? (y/n): ")
-                    .strip()
-                    .lower()
-                )
-                if save_results in ["y", "yes"]:
-                    filename = input(
-                        f"   Enter filename (default: {library_name.lower()}_learning.json): "
-                    ).strip()
-                    if not filename:
-                        filename = f"{library_name.lower()}_learning.json"
-
-                    try:
-                        with open(filename, "w", encoding="utf-8") as f:
-                            json.dump(
-                                learned_libraries[library_name], f, indent=2, default=str
-                            )
-                        print(f"   ✅ Results saved to {filename}")
-                    except Exception as e:
-                        print(f"   ❌ Error saving file: {e}")
-
-            except Exception as e:
-                print(f"❌ An error occurred while learning {library_name}: {e}")
-
-        print("\n👋 Thanks for using the Interactive Library Learning System!")
-        if learned_libraries:
-            print(f"\n🎉 Session Summary:")
-            print(
-                f"Successfully learned {len(learned_libraries)} libraries: {list(learned_libraries.keys())}"
-            )
-    finally:
-        stop_ollama_model(MODEL_NAME)
-
-
-if __name__ == "__main__":
-    interactive_learning_session()
-
-
 --- example-data/prompt-front-matter/00-ideation__architecture__adr-new.architecture.refactor.md ---
 # ADR Drafting Assistant
 
@@ -1871,717 +1434,163 @@ Mid-project adjustment, delta update, planning revision, graph maintenance, read
   - New tasks added for provider swap; prior tasks kept with `deprecated` or `blocked` and lineage links.
 
 
---- .taskmaster/scripts/bump.md ---
-# bump version and commit workflow
-
-uv build
-uv version --bump patch --bump beta
-git add .
-git commit -m "Release: 0.1.4b1"
-git tag -a v0.1.4b1 -m "Release 0.1.4b1"
-git push origin HEAD --tags
-
-{ yes "" | dt -m refactor ~/.gemini/commands \
-    --provider lmstudio \
-    --api-base <http://10.0.0.81:1234/v1> --confirm-each; } \
-  |& tee "dspyteach.all.$(date +%Y%m%d-%H%M%S).log"
-
-{ dt generate-sequence \
-  --goal "Cut a release" ~/.codex/prompts \
-    --provider lmstudio \
-    --api-base http://10.0.0.81:1234/v1; }
-
-dspyteach rank-prompts "How do I commit my changes?" ~/.codex/prompts 0.6
-
-dt generate-sequence \
-  --goal "Cut a release"
-
-
-{ dspyteach generate-sequence "Cut a release" -P lmstudio -B 10.0.0.81:1234/v1 ;} |& tee "dspyteach.all.$(date +%Y%m%d-%H%M%S).log"
-
-
-dspyteach -P lmstudio -B 10.0.0.81:1234/v1 generate-sequence "Cut a release"
-
-
- dspyteach generate-sequence "Cut a release"
-  dspyteach -P lmstudio -B <http://localhost:1234/v1> generate-sequence
-  --goal "Cut a release"
-
-
---- AGENTS.md ---
-<!-- path: ~/projects/dspy-file/AGENTS.md -->
-
-# AGENTS.md — Tool Selection (Python)
-
-## DSPy Framework Playbook (All‑Purpose)
-
-**When to apply:** Use these rules whenever creating or editing DSPy **Signatures**, **Modules**, **Programs**, **Optimizers**, **Metrics**, or **RAG** components in any repository.
-
-**Canonical docs**
-
-- Signatures: <https://dspy.ai/learn/programming/signatures/>
-- Modules (Predict / ChainOfThought / ReAct): <https://dspy.ai/learn/programming/modules/>
-- Optimizers overview: <https://dspy.ai/learn/optimization/optimizers/>
-- MIPROv2: <https://dspy.ai/api/optimizers/MIPROv2/>
-- BootstrapFewShot: <https://dspy.ai/api/optimizers/BootstrapFewShot/>
-- Assertions: <https://dspy.ai/learn/programming/7-assertions/>
-- Metrics: <https://dspy.ai/learn/evaluation/metrics/>
-- RAG tutorial: <https://dspy.ai/tutorials/rag/>
-
-### Quick posture
-
-- **Program, don’t prompt.** Encode task instructions in **Signature docstrings**; compose behavior from Modules. Avoid ad‑hoc long prompts.
-- **Provider‑agnostic.** Support OpenAI/Ollama/Anthropic/etc. by configuring the LM once via `dspy.settings.configure(lm=...)` before building modules.
-- **Composable by default.** Prefer several small Modules over a single monolith; pass data via fields, not globals.
-- **Repro first.** Pin DSPy and core deps in `pyproject.toml`; commit seeds and compile artifacts for deterministic rebuilds.
-
-### Order of operations (universal)
-
-1) **Define Signature(s)** — Put task instructions in the **docstring**; declare inputs with `dspy.InputField`, outputs with `dspy.OutputField`. (Docs: Signatures)
-2) **Compose Modules** — Start with `dspy.Predict`; add `dspy.ChainOfThought` when rationale is useful; use `dspy.ReAct` for tools/agents. (Docs: Modules)
-3) **Choose a Metric** — Make it concrete: e.g., `accuracy`/`F1` (classification), `nDCG@k` (ranking), exact/EM (QA). (Docs: Metrics)
-4) **Add Assertions** — Specify schema+constraints and enable automatic retries on violation. (Docs: Assertions)
-5) **(Optional) Retrieval** — Add a retriever and route evidence to the program for RAG tasks. (Docs: RAG tutorial)
-6) **Optimize** — Run `BootstrapFewShot` to assemble demos → then `MIPROv2` to jointly tune instructions+demos against your metric. (Docs: Optimizers)
-
-### Minimum rules (Codex must enforce)
-
-- **Instruction location:** All task guidance lives in Signature docstrings; no hidden prompts in module code.
-- **LM config timing:** Call `dspy.settings.configure(lm=...)` **before** constructing Modules/Programs so compiles/optimizers see the right LM.
-- **Schema guard (example):** For ranked outputs, emit a 3‑column Markdown table: `prompt | score | rationale`, where `score` ∈ `[0,1]`.
-- **Metrics defaults:** Classification → `accuracy` or `F1`; Ranking → `nDCG@k`; QA → exact match / token‑F1. Document any custom metric in one line.
-- **Tracing & artifacts:** Enable tracing during iteration; persist optimized programs/artifacts after `compile()` for reproducibility.
-- **Small pieces, loosely joined:** Prefer many tiny units; inject dependencies; avoid singletons and global state.
-
-### Environment & compatibility
-
-- **Versioning:** Prefer `dspy>=2` (or latest stable); if upgrading major versions, re‑run optimizers and refresh assertions.
-- **Providers:** Keep provider/model/api‑base in env (e.g., `DSPY_OPENAI_API_KEY`, `OPENAI_API_BASE`, etc.). Do not hardcode keys.
-- **Eval data:** Keep small, labeled eval sets under `eval/` to make metrics and compilation meaningful.
-
-### Long‑form guide (for humans)
-
-See **docs/pre-work-dspy.md** for the expanded checklist and examples
--------
-
-When you need to call tools from the shell, use this rubric:
-
-File & Text
-
--------
-
-- Find files by file name: `fd`
-
-- Find files with path name: `fd -p <file-path>`
-
-- List files in a directory: `fd . <directory>`
-
-- Find files with extension and pattern: `fd -e <extension> <pattern>`
-
-- Find Text: `rg` (ripgrep)
-
-- Find Code Structure: `ast-grep`
-
-  - Common languages:
-
-    - Python → `ast-grep --lang python -p '<pattern>'`
-
-    - TypeScript → `ast-grep --lang ts -p '<pattern>'`
-
-    - Bash → `ast-grep --lang bash -p '<pattern>'`
-
-    - TSX (React) → `ast-grep --lang tsx -p '<pattern>'`
-
-    - JavaScript → `ast-grep --lang js -p '<pattern>'`
-
-    - Rust → `ast-grep --lang rust -p '<pattern>'`
-
-    - JSON → `ast-grep --lang json -p '<pattern>'`
-
-  - Prefer `ast-grep` over ripgrep/grep unless a plain-text search is explicitly requested.
-
-- Select among matches: pipe to `fzf`
-
-Data
-----
-
-- JSON: `jq`
-
-- YAML/XML: `yq`
-
-Python Tooling
---------------
-
-- Package Management & Virtual Envs: `uv`
-    (fast replacement for pip/pip-tools/virtualenv; use `uv pip install ...`, `uv run ...`)
-
-- Linting & Formatting: `ruff`
-    (linter + formatter; use `ruff check .`, `ruff format .`)
-
-- Static Typing: `mypy`
-    (type checking; use `mypy .`)
-
-- Security: `bandit`
-    (Python security linter; use `bandit -r .`)
-
-- Testing: `pytest`
-    (test runner; use `pytest -q`, `pytest -k <pattern>` to filter tests)
-
-- Logging: `loguru`
-    (runtime logging utility; import in code:)
-
-        from loguru import logger
-        logger.info("message")
-
-Notes
------
-
-- Prefer `uv` for Python dependency and environment management instead of pip/venv/poetry/pip-tools.
-
-MCP\_SERVERS
-------------
-
-- Use the `dspy_Docs` MCP server to get latest docs for DSPy usage.
-
-- Use the `lmstudio_docs` MCP server to get latest docs for LM Studio API usage.
-
--------
-
-## Proactive TODO/FIXME Annotations
-
-Add TODO/FIXME notes as you work—don’t wait for a cleanup pass. Use them to mark: missing tests, unclear contracts, temporary workarounds, performance/security concerns, or places where design choices need follow-up.
-
-**Format (single line):**
-
-    TODO(scope|owner): short, imperative next step — why it matters [evidence: <source|cmd|ticket>]
-    FIXME(scope|owner): what is broken — minimal repro or constraint [evidence: <source|cmd|ticket>]
-
-- `scope|owner` is optional but encouraged (e.g., `ui`, `backend`, `deps`, or a handle like `@alice`).
-
-- Keep it ≤120 chars when possible; link to issues for details.
-
-**Examples (per language comment style):**
-
-    # TODO(domain|@alice): replace naive parse with streaming parser — OOM on large inputs [evidence: profile.txt]
-    # FIXME(api): 500 on empty payload — add validation + test [evidence: pytest -k empty_payload]
-
-
-    // TODO(ui): debounce search — noisy network on fast typing [evidence: trace.log]
-    // FIXME(auth|@bob): refresh token race — guard with mutex [evidence: unit test 'refresh-concurrency']
-
-
-    # TODO(devex): switch to uv task for one-liners [evidence: uv run --help]
-
-### Workflow (aligned with `todos.md`)
-
-1. Gather evidence with the command you used during investigation and reference it in the note’s `[evidence: ...]`.
-
-2. Add the TODO/FIXME in the code at the closest actionable location.
-
-3. Commit with a concise message (e.g., `chore(todos): mark debounce + auth race with evidence`).
-
-4. Before opening a PR, **find and group** all annotations as described in `todos.md` so maintainers can review them together.
-
-### Discover & verify (standard commands)
-
-- Plain-text sweep:
-
-```bash
-        rg -n "TODO|FIXME" | fzf
-```
-
-- Syntax-aware matches (prefer this when patterns are noisy):
-
-```bash
-        ast-grep --lang python -p "// TODO(_) (_) : (_)"
-        ast-grep --lang ts -p "// FIXME(_) : (_)"
-```
-
-- File targeting:
-
-```bash
-        fd -e py -e ts | xargs rg -n "TODO|FIXME"
-```
-
-### PR checklist (copy into your PR template)
-
-- Added TODO/FIXME where follow-ups are needed, with `[evidence: ...]`.
-
-- Ran `rg`/`ast-grep` to list all annotations and grouped them per `todos.md` for reviewers.
-
-- Linked or opened issues for any TODO expected to live >2 sprints.
-
-### Retirement policy
-
-- Convert TODO → issue if it will outlive the current PR.
-
-- Remove the annotation when addressed; reference the commit/issue that resolves it.
-
--------
-
-Rules for Best-Practice
-
--------
-
-<file\_length\_and\_structure>
-
-- Prefer maintainability signals over fixed line caps.
-
-- Split when cognitive complexity > 15, cohesion drops, or fan-in/out spikes.
-
-- Group by feature. Keep a file to one capability plus its close helpers.
-
-- Use clear folder names and consistent naming.
-
-</file\_length\_and\_structure>
-
-<paradigm\_and\_style>
-
-- Use OOP, functional, or data-oriented styles as idiomatic for the language.
-
-- Favor composition. In OOP, model behavior behind small interfaces or protocols.
-
-- Prefer pure functions and algebraic data types where natural.
-
-</paradigm\_and\_style>
-
-<single\_responsibility\_principle>
-
-- Aim for one capability and its close helpers. Avoid micro-files.
-
-- Enforce through module boundaries and public APIs, not line counts.
-
-</single\_responsibility\_principle>
-
-<modular\_design>
-
-- Design modules to be interchangeable, testable, and isolated.
-
-- Keep public surfaces small. Inject dependencies. Avoid tight coupling.
-
-- Optimize for replaceability and test seams over premature reuse.
-
-</modular\_design>
-
-<roles\_by\_platform>
-
-- UI stacks: ViewModel for UI logic, Manager for business logic, Coordinator for navigation and state flow.
-
-- Backend and CLI: Service, Handler, Repository, Job, Workflow.
-
-- Do not mix view code with business logic.
-
-</roles\_by\_platform>
-
-<function\_and\_class\_size>
-
-- Size by behavior, not lines.
-
-- Functions ≤ 20–30 cognitive steps.
-
-- Split a class when it owns more than one lifecycle or more than one external dependency graph.
-
-</function\_and\_class\_size>
-
-<naming\_and\_readability>
-
-- Use intention revealing names.
-
-- Allow domain terms with qualifiers, for example `UserData`, `BillingInfo`.
-
-- Forbid empty suffixes like `Helper` or `Utils` unless tightly scoped.
-
-</naming\_and\_readability>
-
-<scalability\_mindset>
-
-- Build for extension points from day one, such as interfaces, protocols, and constructor injection.
-
-- Prefer local duplication over unstable abstractions.
-
-- Document contracts at module seams.
-
-</scalability\_mindset>
-
-<avoid\_god\_classes>
-
-- Do not centralize everything in one file or class.
-
-- Split into UI, State, Handlers, Networking, and other focused parts.
-
-</avoid\_god\_classes>
-
-<dependency\_injection>
-
-- Backends: prefer constructor injection. Keep containers optional.
-
-- Swift, Kotlin, TypeScript: use protocols or interfaces. Inject by initializer or factory.
-
-- Limit global singletons. Provide test doubles at seams.
-
-</dependency\_injection>
-
-<testing>
-
-- Require deterministic seams.
-
-- Add contract tests for modules and layers.
-
-- Use snapshot or golden tests for UI and renderers.
-
-</testing>
-
-<architecture\_boundaries>
-
-- Feature oriented packaging with clear dependency direction: UI → app → domain → infra.
-
-- Stabilize domain modules. Keep infra replaceable.
-
-- Enforce imports with rules or module maps.
-
-</architecture\_boundaries>
-
--------
-
-
---- GEMINI.md ---
-<!-- path: ~/projects/dspy-file/AGENTS.md -->
-
-# AGENTS.md — Tool Selection (Python)
-
-## DSPy Framework Playbook (All‑Purpose)
-
-**When to apply:** Use these rules whenever creating or editing DSPy **Signatures**, **Modules**, **Programs**, **Optimizers**, **Metrics**, or **RAG** components in any repository.
-
-**Canonical docs**
-
-- Signatures: <https://dspy.ai/learn/programming/signatures/>
-- Modules (Predict / ChainOfThought / ReAct): <https://dspy.ai/learn/programming/modules/>
-- Optimizers overview: <https://dspy.ai/learn/optimization/optimizers/>
-- MIPROv2: <https://dspy.ai/api/optimizers/MIPROv2/>
-- BootstrapFewShot: <https://dspy.ai/api/optimizers/BootstrapFewShot/>
-- Assertions: <https://dspy.ai/learn/programming/7-assertions/>
-- Metrics: <https://dspy.ai/learn/evaluation/metrics/>
-- RAG tutorial: <https://dspy.ai/tutorials/rag/>
-
-### Quick posture
-
-- **Program, don’t prompt.** Encode task instructions in **Signature docstrings**; compose behavior from Modules. Avoid ad‑hoc long prompts.
-- **Provider‑agnostic.** Support OpenAI/Ollama/Anthropic/etc. by configuring the LM once via `dspy.settings.configure(lm=...)` before building modules.
-- **Composable by default.** Prefer several small Modules over a single monolith; pass data via fields, not globals.
-- **Repro first.** Pin DSPy and core deps in `pyproject.toml`; commit seeds and compile artifacts for deterministic rebuilds.
-
-### Order of operations (universal)
-
-1) **Define Signature(s)** — Put task instructions in the **docstring**; declare inputs with `dspy.InputField`, outputs with `dspy.OutputField`. (Docs: Signatures)
-2) **Compose Modules** — Start with `dspy.Predict`; add `dspy.ChainOfThought` when rationale is useful; use `dspy.ReAct` for tools/agents. (Docs: Modules)
-3) **Choose a Metric** — Make it concrete: e.g., `accuracy`/`F1` (classification), `nDCG@k` (ranking), exact/EM (QA). (Docs: Metrics)
-4) **Add Assertions** — Specify schema+constraints and enable automatic retries on violation. (Docs: Assertions)
-5) **(Optional) Retrieval** — Add a retriever and route evidence to the program for RAG tasks. (Docs: RAG tutorial)
-6) **Optimize** — Run `BootstrapFewShot` to assemble demos → then `MIPROv2` to jointly tune instructions+demos against your metric. (Docs: Optimizers)
-
-### Minimum rules (Codex must enforce)
-
-- **Instruction location:** All task guidance lives in Signature docstrings; no hidden prompts in module code.
-- **LM config timing:** Call `dspy.settings.configure(lm=...)` **before** constructing Modules/Programs so compiles/optimizers see the right LM.
-- **Schema guard (example):** For ranked outputs, emit a 3‑column Markdown table: `prompt | score | rationale`, where `score` ∈ `[0,1]`.
-- **Metrics defaults:** Classification → `accuracy` or `F1`; Ranking → `nDCG@k`; QA → exact match / token‑F1. Document any custom metric in one line.
-- **Tracing & artifacts:** Enable tracing during iteration; persist optimized programs/artifacts after `compile()` for reproducibility.
-- **Small pieces, loosely joined:** Prefer many tiny units; inject dependencies; avoid singletons and global state.
-
-### Environment & compatibility
-
-- **Versioning:** Prefer `dspy>=2` (or latest stable); if upgrading major versions, re‑run optimizers and refresh assertions.
-- **Providers:** Keep provider/model/api‑base in env (e.g., `DSPY_OPENAI_API_KEY`, `OPENAI_API_BASE`, etc.). Do not hardcode keys.
-- **Eval data:** Keep small, labeled eval sets under `eval/` to make metrics and compilation meaningful.
-
-### Long‑form guide (for humans)
-
-See **docs/pre-work-dspy.md** for the expanded checklist and examples
--------
-
-When you need to call tools from the shell, use this rubric:
-
-File & Text
-
--------
-
-- Find files by file name: `fd`
-
-- Find files with path name: `fd -p <file-path>`
-
-- List files in a directory: `fd . <directory>`
-
-- Find files with extension and pattern: `fd -e <extension> <pattern>`
-
-- Find Text: `rg` (ripgrep)
-
-- Find Code Structure: `ast-grep`
-
-  - Common languages:
-
-    - Python → `ast-grep --lang python -p '<pattern>'`
-
-    - TypeScript → `ast-grep --lang ts -p '<pattern>'`
-
-    - Bash → `ast-grep --lang bash -p '<pattern>'`
-
-    - TSX (React) → `ast-grep --lang tsx -p '<pattern>'`
-
-    - JavaScript → `ast-grep --lang js -p '<pattern>'`
-
-    - Rust → `ast-grep --lang rust -p '<pattern>'`
-
-    - JSON → `ast-grep --lang json -p '<pattern>'`
-
-  - Prefer `ast-grep` over ripgrep/grep unless a plain-text search is explicitly requested.
-
-- Select among matches: pipe to `fzf`
-
-Data
-----
-
-- JSON: `jq`
-
-- YAML/XML: `yq`
-
-Python Tooling
---------------
-
-- Package Management & Virtual Envs: `uv`
-    (fast replacement for pip/pip-tools/virtualenv; use `uv pip install ...`, `uv run ...`)
-
-- Linting & Formatting: `ruff`
-    (linter + formatter; use `ruff check .`, `ruff format .`)
-
-- Static Typing: `mypy`
-    (type checking; use `mypy .`)
-
-- Security: `bandit`
-    (Python security linter; use `bandit -r .`)
-
-- Testing: `pytest`
-    (test runner; use `pytest -q`, `pytest -k <pattern>` to filter tests)
-
-- Logging: `loguru`
-    (runtime logging utility; import in code:)
-
-        from loguru import logger
-        logger.info("message")
-
-Notes
------
-
-- Prefer `uv` for Python dependency and environment management instead of pip/venv/poetry/pip-tools.
-
-MCP\_SERVERS
-------------
-
-- Use the `dspy_Docs` MCP server to get latest docs for DSPy usage.
-
-- Use the `lmstudio_docs` MCP server to get latest docs for LM Studio API usage.
-
--------
-
-## Proactive TODO/FIXME Annotations
-
-Add TODO/FIXME notes as you work—don’t wait for a cleanup pass. Use them to mark: missing tests, unclear contracts, temporary workarounds, performance/security concerns, or places where design choices need follow-up.
-
-**Format (single line):**
-
-    TODO(scope|owner): short, imperative next step — why it matters [evidence: <source|cmd|ticket>]
-    FIXME(scope|owner): what is broken — minimal repro or constraint [evidence: <source|cmd|ticket>]
-
-- `scope|owner` is optional but encouraged (e.g., `ui`, `backend`, `deps`, or a handle like `@alice`).
-
-- Keep it ≤120 chars when possible; link to issues for details.
-
-**Examples (per language comment style):**
-
-    # TODO(domain|@alice): replace naive parse with streaming parser — OOM on large inputs [evidence: profile.txt]
-    # FIXME(api): 500 on empty payload — add validation + test [evidence: pytest -k empty_payload]
-
-
-    // TODO(ui): debounce search — noisy network on fast typing [evidence: trace.log]
-    // FIXME(auth|@bob): refresh token race — guard with mutex [evidence: unit test 'refresh-concurrency']
-
-
-    # TODO(devex): switch to uv task for one-liners [evidence: uv run --help]
-
-### Workflow (aligned with `todos.md`)
-
-1. Gather evidence with the command you used during investigation and reference it in the note’s `[evidence: ...]`.
-
-2. Add the TODO/FIXME in the code at the closest actionable location.
-
-3. Commit with a concise message (e.g., `chore(todos): mark debounce + auth race with evidence`).
-
-4. Before opening a PR, **find and group** all annotations as described in `todos.md` so maintainers can review them together.
-
-### Discover & verify (standard commands)
-
-- Plain-text sweep:
-
-```bash
-        rg -n "TODO|FIXME" | fzf
-```
-
-- Syntax-aware matches (prefer this when patterns are noisy):
-
-```bash
-        ast-grep --lang python -p "// TODO(_) (_) : (_)"
-        ast-grep --lang ts -p "// FIXME(_) : (_)"
-```
-
-- File targeting:
-
-```bash
-        fd -e py -e ts | xargs rg -n "TODO|FIXME"
-```
-
-### PR checklist (copy into your PR template)
-
-- Added TODO/FIXME where follow-ups are needed, with `[evidence: ...]`.
-
-- Ran `rg`/`ast-grep` to list all annotations and grouped them per `todos.md` for reviewers.
-
-- Linked or opened issues for any TODO expected to live >2 sprints.
-
-### Retirement policy
-
-- Convert TODO → issue if it will outlive the current PR.
-
-- Remove the annotation when addressed; reference the commit/issue that resolves it.
-
--------
-
-Rules for Best-Practice
-
--------
-
-<file\_length\_and\_structure>
-
-- Prefer maintainability signals over fixed line caps.
-
-- Split when cognitive complexity > 15, cohesion drops, or fan-in/out spikes.
-
-- Group by feature. Keep a file to one capability plus its close helpers.
-
-- Use clear folder names and consistent naming.
-
-</file\_length\_and\_structure>
-
-<paradigm\_and\_style>
-
-- Use OOP, functional, or data-oriented styles as idiomatic for the language.
-
-- Favor composition. In OOP, model behavior behind small interfaces or protocols.
-
-- Prefer pure functions and algebraic data types where natural.
-
-</paradigm\_and\_style>
-
-<single\_responsibility\_principle>
-
-- Aim for one capability and its close helpers. Avoid micro-files.
-
-- Enforce through module boundaries and public APIs, not line counts.
-
-</single\_responsibility\_principle>
-
-<modular\_design>
-
-- Design modules to be interchangeable, testable, and isolated.
-
-- Keep public surfaces small. Inject dependencies. Avoid tight coupling.
-
-- Optimize for replaceability and test seams over premature reuse.
-
-</modular\_design>
-
-<roles\_by\_platform>
-
-- UI stacks: ViewModel for UI logic, Manager for business logic, Coordinator for navigation and state flow.
-
-- Backend and CLI: Service, Handler, Repository, Job, Workflow.
-
-- Do not mix view code with business logic.
-
-</roles\_by\_platform>
-
-<function\_and\_class\_size>
-
-- Size by behavior, not lines.
-
-- Functions ≤ 20–30 cognitive steps.
-
-- Split a class when it owns more than one lifecycle or more than one external dependency graph.
-
-</function\_and\_class\_size>
-
-<naming\_and\_readability>
-
-- Use intention revealing names.
-
-- Allow domain terms with qualifiers, for example `UserData`, `BillingInfo`.
-
-- Forbid empty suffixes like `Helper` or `Utils` unless tightly scoped.
-
-</naming\_and\_readability>
-
-<scalability\_mindset>
-
-- Build for extension points from day one, such as interfaces, protocols, and constructor injection.
-
-- Prefer local duplication over unstable abstractions.
-
-- Document contracts at module seams.
-
-</scalability\_mindset>
-
-<avoid\_god\_classes>
-
-- Do not centralize everything in one file or class.
-
-- Split into UI, State, Handlers, Networking, and other focused parts.
-
-</avoid\_god\_classes>
-
-<dependency\_injection>
-
-- Backends: prefer constructor injection. Keep containers optional.
-
-- Swift, Kotlin, TypeScript: use protocols or interfaces. Inject by initializer or factory.
-
-- Limit global singletons. Provide test doubles at seams.
-
-</dependency\_injection>
-
-<testing>
-
-- Require deterministic seams.
-
-- Add contract tests for modules and layers.
-
-- Use snapshot or golden tests for UI and renderers.
-
-</testing>
-
-<architecture\_boundaries>
-
-- Feature oriented packaging with clear dependency direction: UI → app → domain → infra.
-
-- Stabilize domain modules. Keep infra replaceable.
-
-- Enforce imports with rules or module maps.
-
-</architecture\_boundaries>
-
--------
+--- example-data/prompt-front-matter/00-ideation__requirements__planning-process.requirements.refactor.md ---
+# Planning Process
+
+## Metadata
+
+- identifier: planning-process
+- categories: 
+  - planning
+  - task-management
+  - risk-assessment
+  - validation
+- stage: planning
+- dependencies: 
+  - PLAN.md exists or is created
+  - Git repository with test runner available
+- provided-artifacts: 
+  - updated PLAN.md with structured sections and checklist
+- summary: Draft, refine, and execute a feature plan with strict scope control and progress tracking.
+
+## Inputs
+
+- Trigger: /planning-process
+- Purpose: Draft, refine, and execute a feature plan with strict scope control and progress tracking.
+- Output format: Update or create `PLAN.md` with the sections above. Include a checklist for **Tasks**. Keep lines under 100 chars.
+- Examples:
+  - Input: "Add OAuth login"
+  - Output:
+    - Goal: Let users sign in with Google.
+    - Tasks: [ ] add Google client, [ ] callback route, [ ] session, [ ] E2E test.
+    - Won't do: org SSO.
+    - Ideas for later: Apple login.
+- Notes:
+  - Planning only. No code edits.
+  - Assume a Git repo with test runner available.
+
+## Canonical taxonomy (exact strings)
+
+- planning
+- task-management
+- risk-assessment
+- validation
+
+### Stage hints (for inference)
+
+- planning → planning
+- task management → planning or execution
+- validation → validation or testing
+- risk assessment → planning or review
+
+## Algorithm
+
+1. Extract signals from $1  
+   * Titles/headings, imperative verbs, intent sentences, explicit tags, and dependency phrasing.
+
+2. Determine the primary identifier  
+   * Prefer explicit input; otherwise infer from main action + object.  
+   * Normalize (lowercase, kebab-case, length-capped, starts with a letter).  
+   * De-duplicate.
+
+3. Determine categories  
+   * Prefer explicit input; otherwise infer from verbs/headings vs $5.  
+   * Validate, sort deterministically, and de-dupe (≤3).
+
+4. Determine lifecycle/stage (optional)  
+   * Prefer explicit input; otherwise map categories via $6.  
+   * Omit if uncertain.
+
+5. Determine dependencies (optional)  
+   * Parse phrases implying order or prerequisites; keep id-shaped items (≤5).
+
+6. Determine provided artifacts (optional)  
+   * Short list (≤3) of unlocked outputs.
+
+7. Compose summary  
+   * One sentence (≤120 chars): “Do <verb> <object> to achieve <outcome>.”
+
+8. Produce metadata in the requested format  
+   * Default to a human-readable serialization; honor any requested alternative.
+
+9. Reconcile if input already contains metadata  
+   * Merge: explicit inputs > existing > inferred.  
+   * Validate lists; move unknowns to an extension field if needed.  
+   * Remove empty keys.
+
+## Assumptions & Constraints
+
+- Emit exactly one document: metadata, a single blank line, then $1.
+- Limit distinct placeholders to ≤ 7.
+- Do not alter the body text.
+
+## Validation
+
+- Identifier matches a normalized id pattern (kebab-case).
+- Categories non-empty and drawn from canonical taxonomy (≤3).
+- Stage, if present, is one of the allowed stages implied by stage hints.
+- Dependencies, if present, are id-shaped (≤5).
+- Artifacts ≤3 items.
+- Summary ≤120 chars; punctuation coherent.
+- Body text is not altered.
+
+## Output format examples
+
+- Metadata block:
+  - identifier: planning-process
+  - categories: 
+    - planning
+    - task-management
+    - risk-assessment
+    - validation
+  - stage: planning
+  - dependencies: 
+    - PLAN.md exists or is created
+    - Git repository with test runner available
+  - provided-artifacts: 
+    - updated PLAN.md with structured sections and checklist
+  - summary: Draft, refine, and execute a feature plan with strict scope control and progress tracking.
+
+- Body text (unchanged):
+  # Planning Process
+
+  Trigger: /planning-process
+
+  Purpose: Draft, refine, and execute a feature plan with strict scope control and progress tracking.
+
+  ## Steps
+
+  1. If no plan file exists, create `PLAN.md`. If it exists, load it.
+  2. Draft sections: **Goal**, **User Story**, **Milestones**, **Tasks**, **Won't do**, **Ideas for later**, **Validation**, **Risks**.
+  3. Trim bloat. Convert vague bullets into testable tasks with acceptance criteria.
+  4. Tag each task with an owner and estimate. Link to files or paths that will change.
+  5. Maintain two backlogs: **Won't do** (explicit non-goals) and **Ideas for later** (deferrable work).
+  6. Mark tasks done after tests pass. Append commit SHAs next to completed items.
+  7. After each milestone: run tests, update **Validation**, then commit `PLAN.md`.
+
+  ## Output format
+
+  - Update or create `PLAN.md` with the sections above.
+  - Include a checklist for **Tasks**. Keep lines under 100 chars.
+
+  ## Examples
+  **Input**: "Add OAuth login"
+
+  **Output**:
+
+  - Goal: Let users sign in with Google.
+  - Tasks: [ ] add Google client, [ ] callback route, [ ] session, [ ] E2E test.
+  - Won't do: org SSO.
+  - Ideas for later: Apple login.
+
+  ## Notes
+
+  - Planning only. No code edits.
+  - Assume a Git repo with test runner available.
 
 
 --- README.md ---
-# dspyteach – DSPy File Teaching Analyzer
+# DSPyTeach – DSPy File Teaching Analyzer
 
 ---
 
@@ -2615,19 +1624,29 @@ The implementation mirrors the multi-file tutorial (`tutorials/multi-llmtxt_gene
 1. Confirm Python 3.10–3.12 is available and pull at least one OpenAI-compatible model (Ollama, LM Studio, or a hosted provider).
 2. From the repository root, create an isolated environment and install dependencies:
 
-   ```bash
-   uv venv -p 3.12
-   source .venv/bin/activate
-   uv sync
-   ```
+### Linux
+
+  ```shell
+  uv build
+  uv sync
+  source .venv/bin/activate
+  ```
+
+### Windows
+
+  ```shell
+  uv build
+  uv sync
+  .venv/scripts/activate
+  ```
 
 3. Run a smoke test to confirm the CLI is wired up:
 
-   ```bash
-   dspyteach --help
-   ```
+  ```bash
+  dspyteach --help
+  ```
 
-   Expected result: the help output lists available flags and displays the active version string.
+  Expected result: the help output lists available flags and displays the active version string.
 
 4. Analyze a sample file to confirm end-to-end output:
 
@@ -2661,25 +1680,19 @@ The implementation mirrors the multi-file tutorial (`tutorials/multi-llmtxt_gene
 
 ### Install with uv (recommended for local development)
 
-```bash
-uv venv -p 3.12
-source .venv/bin/activate
-uv sync
-```
-
-Expected result: the virtual environment contains the project dependencies and `dspyteach --version` reports the local build.
+<https://github.com/astral-sh/uv>
 
 ### Install from PyPI
 
 ```bash
-pip install dspyteach
+uv pip install dspyteach
 ```
 
 Expected result: running `dspyteach --help` prints the CLI usage banner from the installed package.
 
 ### Configure the language model
 
-The CLI now supports configurable OpenAI-compatible providers in addition to the default Ollama runtime. You can override the backend via CLI options or environment variables:
+The CLI supports configurable OpenAI-compatible providers in addition to the default Ollama runtime. You can override the backend via CLI options or environment variables:
 
 ```bash
 # Use LM Studio's OpenAI-compatible server with its default port
@@ -2751,8 +1764,15 @@ Use `--non-recursive` to stay in the top-level directory, add `--glob` repeatedl
 - **Generate refactor templates instead of teaching briefs**
 
   ```bash
-  dspyteach ./repo --mode refactor --prompt refactor_prompt_template
+  dspyteach --mode refactor ./repo
   ```
+
+- **Refactoring prompts easily**
+
+  ```bash
+  dt -m refactor C:\Users\user\projects\WIP\.__pre-temp-prompts\temp-prompts-organized\ --provider lmstudio --api-base http://127.0.0.1:1234/v1 -ed prompt-front-matter/ -o ..\dspyteach\data -i
+  ```
+
 
   Expected result: `.refactor.md` files appear alongside the teaching outputs with guidance tailored to the selected prompt.
 
@@ -2762,12 +1782,24 @@ To omit specific subdirectories entirely, pass one or more `--exclude-dirs` opti
 
 Prefer short flags? The common options include `-r` (`--raw`), `-m` (`--mode`), `-nr` (`--non-recursive`), `-g` (`--glob`), `-i` (`--confirm-each`), `-ed` (`--exclude-dirs`), and `-o` (`--output-dir`). Mix and match them as needed.
 
+## Adding Custom Prompts
+
+The application can be extended with custom prompts for different analysis modes. When more than one prompt template (`.md` file) exists in the `dspy_file/prompts/` directory, the CLI will display a picker, allowing you to choose which prompt to use for the analysis.
+
+To add a new prompt:
+
+1.  Create a new Markdown file (e.g., `my_custom_prompt.md`) inside the `dspy_file/prompts/` directory.
+2.  The name of the file (without the `.md` extension) will be used to identify the prompt in the picker.
+3.  Write your prompt content inside this new file.
+
+For example, to add a prompt for summarizing code, you could create `dspy_file/prompts/summarize_code.md` with your desired instructions. The next time you run in a mode that uses prompts, `summarize_code` will appear as an option.
+
 ## Refactor files/dirs
 
 Want to scaffold refactor prompt templates instead of teaching briefs? Switch the mode:
 
 ```bash
-dspyteach path/to/project --mode refactor --glob "**/*.md"
+dspyteach --mode refactor path/to/project --glob "**/*.md"
 ```
 
 ---
@@ -2776,7 +1808,7 @@ dspyteach path/to/project --mode refactor --glob "**/*.md"
 
 ## **clarity on what happens when in teaching mode**
 
-### both of these commands shown below would create new directories in the path outside the cwd that you ran the commands from and the directories would be the following: so in this case it would be exactly ["C:\Users\user\projects\WIP\NAME-OF-CWD + (the new files it creates which will be...)dspyteach\teach\data\00-ideation\architecture\adr-new.architecture.md]"
+### both of these commands shown below would create new directories in the path outside the cwd that you ran the commands from and the directories would be the following: so in this case it would be exactly ["C:\Users\user\projects\WIP\NAME-OF-CWD + (the new files it creates which will be...)dspyteach\teach\data\00-ideation\architecture\adr-new.architecture.md"]
 
 #### "00-ideation\architecture\adr-new.architecture.md" are unique to my personal setup so your output would be a mirrored version of the target path recursively
 
@@ -2842,113 +1874,16 @@ Maintainer release steps live in [docs/RELEASING.md](docs/RELEASING.md).
 - When you see `ollama command not found`, ensure the `ollama` binary is on your `PATH`.
 - For encoding errors, the helper already falls back to `latin-1`, but you can add more fallbacks in `file_helpers.read_file_content` if needed.
 
-
---- json_response_integration_report.md ---
-# Integration Report: JSON Response Formatting
-
-**Date:** October 17, 2025
-**Status:** Proposed
-
-## 1. Objective
-
-This document outlines a proposal to integrate a feature into the `dspy-file` command-line tool (`analyze_file_cli.py`) to enforce structured JSON output from language models. This is based on the `response_format` parameter within the **DSPy framework**, which instructs DSPy to request JSON-formatted output from the underlying model provider.
-
-## 2. DSPy Framework Abstraction
-
-It is important to note that `response_format` is a feature of the `dspy.LM` abstraction layer, not necessarily a native parameter of the end-provider's API. The DSPy framework is responsible for translating this parameter into the correct, provider-specific API call.
-
-- When `response_format` is passed to `dspy.LM` for an **Ollama** model, DSPy's Ollama client handler converts this into the native `format: 'json'` parameter in the request sent to the Ollama server.
-- Similarly, for **OpenAI-compatible** endpoints, DSPy would use the provider's required format, such as `response_format={"type": "json_object"}`.
-
-The code proposed in this document correctly interacts with the DSPy abstraction layer.
-
-## 3. Initial Proposal (Ollama-Specific)
-
-The initial goal was to create an optional, provider-specific feature for users of Ollama.
-
-### 3.1. Key Mechanisms
-
-1. **CLI Flag:** A new `--json-response` command-line flag was proposed to allow users to explicitly enable this functionality.
-2. **Provider Gating:** The core logic is enclosed in `if provider is Provider.OLLAMA:` checks to ensure it only runs when Ollama is the selected provider.
-3. **External Schemas:** The proposal involves loading the required JSON schema from external files (e.g., `teach.schema.json`, `refactor.schema.json`) based on the selected analysis mode.
-
-## 4. Generalized Proposal (Provider-Agnostic)
-
-To extend this feature to other providers, the Ollama-specific gating can be removed.
-
-### 4.1. Key Mechanisms
-
-1. **CLI Flag:** The `--json-response` flag remains the sole controller for the feature.
-2. **Generalized Logic:** The `if provider is Provider.OLLAMA` checks are removed, allowing the `response_format` to be passed to any configured provider via the `dspy.LM` constructor.
-
-### 4.2. Considerations & Caveats
-
-- **Provider Capability:** The success of this feature depends on both the DSPy provider implementation and the underlying model's ability to generate valid JSON. While the `response_format` parameter instructs the model, it does not guarantee schema conformance, which still relies on the model's instruction-following capabilities.
-
-## 5. Final Proposed Code (Provider-Agnostic)
-
-The following represents the final proposed code structure for a generalized implementation.
-
-```python
-# In dspy_file/analyze_file_cli.py
-
-# 1. In build_parser()
-parser.add_argument(
-    "--json-response",
-    action="store_true",
-    dest="json_response",
-    help="Request a JSON response using a schema (if supported by the provider's DSPy handler).",
-)
-
-# 2. In configure_model()
-def configure_model(
-    # ...,
-    response_format: dict[str, Any] | None = None,
-):
-    lm_kwargs: dict[str, Any] = {"streaming": False, "cache": False}
-
-    if response_format:
-        lm_kwargs["response_format"] = response_format
-
-    if provider is Provider.OLLAMA:
-        # ...
-    else:
-        # ...
-
-    lm = dspy.LM(identifier, **lm_kwargs)
-    dspy.configure(lm=lm)
-
-# 3. In main()
-# ...
-analysis_mode = AnalysisMode(args.mode)
-response_format = None
-if args.json_response:
-    schema_filename = f"{analysis_mode.value}.schema.json"
-    schema_path = Path(__file__).parent / "prompts" / schema_filename
-    try:
-        with schema_path.open("r", encoding="utf-8") as f:
-            schema = json.load(f)
-        response_format = {
-            "type": "json_schema",
-            "json_schema": {"schema": schema},
-        }
-    except Exception as e:
-        print(f"Warning: Could not load schema from {schema_path}. Error: {e}")
-
-configure_model(..., response_format=response_format)
-# ...
-```
-
-
 --- dspy_file/analyze_file_cli.py ---
 # path: analyze_file_cli.py
-# analyze_file_cli.py - command line entry point for DSPy file analyzer
+# analyze_file_cli.py - command line entry point for DSPy file analyzer with MLflow tracking + tracing
 from __future__ import annotations
 
 import argparse
 import os
 import subprocess
 import sys
+import time
 from enum import Enum
 from urllib import error as urlerror
 from urllib import request
@@ -2968,6 +1903,11 @@ try:  # dspy depends on litellm; guard in case import path changes.
 except Exception:  # pragma: no cover - defensive fallback if litellm API shifts
     LiteLLMInternalServerError = None  # type: ignore[assignment]
 
+# Optional MLflow import. Enabled only with --mlflow to ensure no behavior change by default.
+try:  # pragma: no cover - optional dependency
+    import mlflow  # type: ignore
+except Exception:  # pragma: no cover - keep CLI usable without MLflow installed
+    mlflow = None  # type: ignore
 
 class Provider(str, Enum):
     """Supported language model providers."""
@@ -3155,11 +2095,7 @@ def _write_output(
     output_dir: Path | None = None,
     suffix: str = "",
 ) -> Path:
-    """Write output to the same filename and directory layout as the analyzed path.
-
-    If output_dir is provided, mirror the relative directory structure inside it and
-    keep the original filename. Otherwise overwrite the source file in place.
-    """
+    """Write output to the same filename and directory layout as the analyzed path."""
 
     try:
         relative_path = (
@@ -3182,8 +2118,6 @@ def _write_output(
 
 
 def _confirm_analyze(path: Path) -> bool:
-    """Prompt the user for confirmation before analyzing a file."""
-
     prompt = f"Analyze {path}? [Y/n]: "
     while True:
         try:
@@ -3307,6 +2241,18 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help=("Directory to write outputs. If omitted, overwrite files in place."),
     )
+    # --- MLflow options ---
+    parser.add_argument(
+        "--mlflow",
+        action="store_true",
+        help="Enable MLflow tracking of params, metrics, artifacts, and traces.",
+    )
+    parser.add_argument(
+        "--mlflow-experiment",
+        dest="mlflow_experiment",
+        default=None,
+        help="Name of the MLflow experiment to use or create when --mlflow is set.",
+    )
     return parser
 
 
@@ -3321,6 +2267,8 @@ def analyze_path(
     output_dir: Path | None,
     mode: AnalysisMode,
     prompt_text: str | None = None,
+    mlflow_enabled: bool = False,
+    root_hint: Path | None = None,
 ) -> int:
     """Run the DSPy pipeline and render results to stdout for one or many files."""
 
@@ -3341,7 +2289,10 @@ def analyze_path(
         analyzer = FileTeachingAnalyzer()
     else:
         analyzer = FileRefactorAnalyzer(template_text=prompt_text)
-    root: Path | None = resolved if resolved.is_dir() else None
+
+    root: Path | None = (
+        root_hint if root_hint else (resolved if resolved.is_dir() else None)
+    )
 
     exit_code = 0
     for target in targets:
@@ -3350,14 +2301,41 @@ def analyze_path(
             continue
 
         try:
-            content = read_file_content(target)
+            # --- trace: read file ---
+            if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+                with mlflow.start_span(
+                    name="read_file", attributes={"path": str(target)}
+                ):
+                    content = read_file_content(target)
+            else:
+                content = read_file_content(target)
         except (FileNotFoundError, UnicodeDecodeError) as exc:
             print(f"Skipping {target}: {exc}")
             exit_code = 1
             continue
 
+        # Compute relative path for logging.
+        try:
+            relative = target.relative_to(root) if root else Path(target.name)
+        except Exception:
+            relative = Path(target.name)
+
         print(f"\n=== Analyzing {target} ===")
-        prediction = analyzer(file_path=str(target), file_content=content)
+        t0 = time.perf_counter()
+        # --- trace: model inference ---
+        if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+            with mlflow.start_span(
+                name="dspy_inference",
+                attributes={
+                    "file": str(relative),
+                    "mode": mode.value,
+                    "bytes_in": len(content.encode("utf-8", errors="ignore")),
+                },
+            ):
+                prediction = analyzer(file_path=str(target), file_content=content)
+        else:
+            prediction = analyzer(file_path=str(target), file_content=content)
+        dt_ms = int((time.perf_counter() - t0) * 1000)
 
         if raw:
             output_text = repr(prediction)
@@ -3366,14 +2344,61 @@ def analyze_path(
             output_text = render_prediction(prediction, mode=mode.render_key)
             print(output_text, end="")
 
-        output_path = _write_output(
-            target,
-            output_text,
-            root=root,
-            output_dir=output_dir,
-            suffix=mode.file_suffix,
-        )
+        # --- trace: write output ---
+        if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+            with mlflow.start_span(
+                name="write_output", attributes={"file": str(relative)}
+            ):
+                output_path = _write_output(
+                    target,
+                    output_text,
+                    root=root,
+                    output_dir=output_dir,
+                    suffix=mode.file_suffix,
+                )
+        else:
+            output_path = _write_output(
+                target,
+                output_text,
+                root=root,
+                output_dir=output_dir,
+                suffix=mode.file_suffix,
+            )
         print(f"Saved {mode.output_description} to {output_path}")
+
+        if mlflow_enabled and mlflow is not None:
+            # Nested run per analyzed file
+            run_name = str(relative)
+            with mlflow.start_run(nested=True, run_name=run_name):  # type: ignore[attr-defined]
+                mlflow.log_params(  # type: ignore[attr-defined]
+                    {
+                        "path": str(relative),
+                        "raw": str(raw),
+                        "confirm_each": str(confirm_each),
+                        "recursive": str(recursive),
+                        "globs": ",".join(include_globs or []),
+                        "excluded_dirs": ",".join(exclude_dirs or []),
+                    }
+                )
+                in_bytes = len(content.encode("utf-8", errors="ignore"))
+                out_chars = len(output_text)
+                mlflow.log_metrics(  # type: ignore[attr-defined]
+                    {
+                        "input_bytes": float(in_bytes),
+                        "output_chars": float(out_chars),
+                        "duration_ms": float(dt_ms),
+                    }
+                )
+                mlflow.set_tags({"analysis_mode": mode.value})  # type: ignore[attr-defined]
+                mlflow.log_artifact(str(output_path))  # type: ignore[attr-defined]
+
+                if hasattr(mlflow, "update_current_trace"):
+                    try:
+                        mlflow.update_current_trace(
+                            tags={"file": str(relative), "analysis_mode": mode.value}
+                        )
+                    except Exception:
+                        pass
 
     return exit_code
 
@@ -3410,13 +2435,20 @@ def main(argv: list[str] | None = None) -> int:
             print("Unable to reach the LM Studio server before starting analysis.")
             print(f"Details: {exc}")
             print(
-                "Start LM Studio's local API server (Developer tab → Start Server or "
-                "`lms server start`) and re-run, or pass --api-base to match the running port."
+                "Start LM Studio's local API server (Developer tab → Start Server or `lms server start`) and re-run, or pass --api-base to match the running port."
             )
             return 1
 
     configure_model(provider, model_name, api_base=api_base, api_key=api_key)
     stop_model: str | None = model_name if provider is Provider.OLLAMA else None
+
+    # Evaluate MLflow configuration
+    mlflow_enabled = bool(args.mlflow)
+    if mlflow_enabled and mlflow is None:  # type: no cover
+        print(
+            "Warning: --mlflow requested but MLflow is not installed. Disabling MLflow."
+        )
+        mlflow_enabled = False
 
     exit_code = 0
     try:
@@ -3445,7 +2477,106 @@ def main(argv: list[str] | None = None) -> int:
                     segment.strip() for segment in entry.split(",") if segment.strip()
                 )
             exclude_dirs = parsed or None
-        try:
+
+        # --- MLflow parent run + root span for the whole invocation ---
+        if mlflow_enabled and mlflow is not None:
+            if args.mlflow_experiment:
+                try:
+                    mlflow.set_experiment(args.mlflow_experiment)  # type: ignore[attr-defined]
+                except Exception as exc:
+                    print(f"Warning: failed to set MLflow experiment: {exc}")
+
+            tracing_supported = hasattr(mlflow, "start_span") and hasattr(
+                mlflow, "update_current_trace"
+            )
+            run_name = f"analyze:{Path(args.path).name}"
+
+            if tracing_supported:
+                with mlflow.start_span(name="analyze_file_cli") as root_span:
+                    # inputs on the root span when API exists
+                    try:
+                        if hasattr(root_span, "set_inputs"):
+                            root_span.set_inputs({
+                                "path": args.path,
+                                "mode": analysis_mode.value,
+                            })
+                    except Exception:
+                        pass
+
+                    try:
+                        mlflow.update_current_trace(
+                            tags={
+                                "provider": provider.value,
+                                "api_base_set": str(bool(api_base)),
+                            }
+                        )
+                    except Exception:
+                        pass
+
+                    with mlflow.start_run(run_name=run_name):  # type: ignore[attr-defined]
+                        mlflow.set_tags(  # type: ignore[attr-defined]
+                            {
+                                "provider": provider.value,
+                                "mode": analysis_mode.value,
+                                "api_base": str(bool(api_base)),
+                            }
+                        )
+                        mlflow.log_params(  # type: ignore[attr-defined]
+                            {
+                                "provider": provider.value,
+                                "model": model_name,
+                                "api_base": api_base or "",
+                                "path": args.path,
+                                "output_dir": str(output_dir) if output_dir else "",
+                                "recursive": str(not args.non_recursive),
+                            }
+                        )
+                        exit_code = analyze_path(
+                            args.path,
+                            raw=args.raw,
+                            recursive=not args.non_recursive,
+                            include_globs=args.include_globs,
+                            confirm_each=args.confirm_each,
+                            exclude_dirs=exclude_dirs,
+                            output_dir=output_dir,
+                            mode=analysis_mode,
+                            prompt_text=prompt_text,
+                            mlflow_enabled=True,
+                            root_hint=Path(args.path).expanduser().resolve(),
+                        )
+            else:
+                with mlflow.start_run(run_name=run_name):  # type: ignore[attr-defined]
+                    mlflow.set_tags(  # type: ignore[attr-defined]
+                        {
+                            "provider": provider.value,
+                            "mode": analysis_mode.value,
+                            "api_base": str(bool(api_base)),
+                        }
+                    )
+                    mlflow.log_params(  # type: ignore[attr-defined]
+                        {
+                            "provider": provider.value,
+                            "model": model_name,
+                            "api_base": api_base or "",
+                            "path": args.path,
+                            "output_dir": str(output_dir) if output_dir else "",
+                            "recursive": str(not args.non_recursive),
+                        }
+                    )
+                    exit_code = analyze_path(
+                        args.path,
+                        raw=args.raw,
+                        recursive=not args.non_recursive,
+                        include_globs=args.include_globs,
+                        confirm_each=args.confirm_each,
+                        exclude_dirs=exclude_dirs,
+                        output_dir=output_dir,
+                        mode=analysis_mode,
+                        prompt_text=prompt_text,
+                        mlflow_enabled=True,
+                        root_hint=Path(args.path).expanduser().resolve(),
+                    )
+        else:
             exit_code = analyze_path(
                 args.path,
                 raw=args.raw,
@@ -3456,23 +2587,22 @@ def main(argv: list[str] | None = None) -> int:
                 output_dir=output_dir,
                 mode=analysis_mode,
                 prompt_text=prompt_text,
+                mlflow_enabled=False,
+                root_hint=Path(args.path).expanduser().resolve(),
             )
-        except Exception as exc:
-            if LiteLLMInternalServerError and isinstance(
-                exc, LiteLLMInternalServerError
-            ):
-                message = str(exc)
-                if exc.__cause__:
-                    message = f"{message} (cause: {exc.__cause__})"
-                print("Model request failed while generating the report.")
-                print(f"Details: {message}")
-                if provider is Provider.LMSTUDIO:
-                    print(
-                        "Confirm the LM Studio server is running and reachable at "
-                        f"{api_base}."
-                    )
-                return 1
-            raise
+    except Exception as exc:
+        if LiteLLMInternalServerError and isinstance(exc, LiteLLMInternalServerError):
+            message = str(exc)
+            if exc.__cause__:
+                message = f"{message} (cause: {exc.__cause__})"
+            print("Model request failed while generating the report.")
+            print(f"Details: {message}")
+            if provider is Provider.LMSTUDIO:
+                print(
+                    f"Confirm the LM Studio server is running and reachable at {api_base}."
+                )
+            return 1
+        raise
     except (FileNotFoundError, IsADirectoryError) as exc:
         parser.print_usage(sys.stderr)
         print(f"{parser.prog}: error: {exc}", file=sys.stderr)
@@ -3484,7 +2614,6 @@ def main(argv: list[str] | None = None) -> int:
             stop_ollama_model(stop_model)
 
     return exit_code
-
 
 if __name__ == "__main__":  # pragma: no cover - CLI entry point
     sys.exit(main())
@@ -3979,6 +3108,17 @@ ALWAYS_IGNORED_DIRS: set[str] = {
     ".vscode",
     ".idea",
     "venv",
+    ".github",
+    ".taskmaster",
+    ".gemini"
+    ".clinerules",
+    ".cursor",
+    "dist",
+    ".pytest_cache",
+    "codefetch",
+    "tests",
+    "logs",
+    "scripts"
 }
 
 # Individual files or suffixes that should never be analyzed.
@@ -4750,9 +3890,10 @@ def test_analyze_path_respects_exclude_dirs(tmp_path: Path) -> None:
 
     assert exit_code == 0
     assert dummy.calls == [(str(include_file), "print('keep')\n")]
-    generated = list(output_dir.glob("*.md"))
-    assert len(generated) == 1
-    assert "ignore" not in generated[0].read_text(encoding="utf-8")
+    output_files = [p for p in output_dir.rglob("*") if p.is_file()]
+    assert {p.relative_to(output_dir) for p in output_files} == {Path("include") / "keep.py"}
+    generated_file = output_dir / "include" / "keep.py"
+    assert "ignore" not in generated_file.read_text(encoding="utf-8")
 
 
 def test_analyze_path_refactor_mode_uses_refactor_analyzer(tmp_path: Path) -> None:
@@ -4788,9 +3929,9 @@ def test_analyze_path_refactor_mode_uses_refactor_analyzer(tmp_path: Path) -> No
 
     assert exit_code == 0
     assert dummy.calls == [(str(source), "# Title\n\nSome content")]
-    generated_files = list(output_dir.glob("*.refactor.md"))
-    assert len(generated_files) == 1
-    assert generated_files[0].read_text(encoding="utf-8").endswith("Value.\n")
+    generated_file = output_dir / "example.md"
+    assert generated_file.exists()
+    assert generated_file.read_text(encoding="utf-8").endswith("Value.\n")
     refactor_cls.assert_called_once()
     assert refactor_cls.call_args.kwargs["template_text"] == "Custom prompt"
 
