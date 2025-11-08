@@ -5,10 +5,12 @@ description = "LM Studio-powered llms.txt generator based on DSPy tutorials."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "dspy-ai",
+    "dspy",
     "python-dotenv",
     "requests",
-    "lmstudio>=1.5.0",
+    "lmstudio",
+    "llm-ctx @ git+https://github.com/AnswerDotAI/llm-ctx.git",
+    "llms_txt"
 ]
 
 [project.optional-dependencies]

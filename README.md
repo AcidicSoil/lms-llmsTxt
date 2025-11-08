@@ -106,7 +106,6 @@ The pipeline always writes `llms.txt` and `llms-full.txt`, even when the languag
 
 - `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzers, LM Studio helpers, fallback renderer, and artifact writers
 - `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, and pipeline fallbacks
-- `.taskmaster/` – Task Master AI configuration for agentic planning (optional)
 - `artifacts/` – sample outputs generated from previous runs
 
 ## Verify your setup
@@ -115,6 +114,13 @@ The pipeline always writes `llms.txt` and `llms-full.txt`, even when the languag
 source .venv/bin/activate
 python -m pytest
 ```
+### Windows
+
+```bash
+source .venv/Scripts/activate
+python -m pytest
+```
+
 
 All tests should pass, confirming URL validation, fallback handling, and SDK-first unload behaviour.
 
