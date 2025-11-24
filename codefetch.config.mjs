@@ -23,7 +23,6 @@ export default {
     "**/__pycache__/**",
     ".pytest_cache",
     "**/.context/**",
-    "**/llms.txt/**",
     ".codex",
     "**/node_modules/**",
     "**/shared/**",

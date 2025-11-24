@@ -1,12 +1,13 @@
 # repos
 
-https://github.com/TanStack/devtools
-https://github.com/TanStack/virtual
-https://github.com/TanStack/router
-https://github.com/TanStack/form
-https://github.com/TanStack/query
-https://github.com/TanStack/config
-https://github.com/TanStack/pacer
-https://github.com/TanStack/create-tsrouter-app
-https://github.com/TanStack/store
-https://github.com/TanStack/table
+https://github.com/langchain-ai/langchainjs
+
+https://github.com/langchain-ai/langgraphjs
+
+https://github.com/langchain-ai/open-swe
+
+https://github.com/langchain-ai/langchain-mcp-adapters
+
+https://github.com/langchain-ai/langchain-nextjs-template
+
+https://github.com/langchain-ai/agent-protocol
