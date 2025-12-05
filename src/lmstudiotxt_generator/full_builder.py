@@ -7,9 +7,9 @@ import textwrap
 from dataclasses import dataclass
 from typing import Iterable, Optional, Tuple
 from urllib.parse import urljoin
-
+import posixpath
 import requests
-
+from .github import  _normalize_repo_path
 
 @dataclass
 class GhRef:
@@ -107,23 +107,39 @@ def sanitize_path_for_block(title: str, url: str, gh: Optional[GhRef]) -> str:
         path = title.lower().strip().replace(" ", "-")
     return path.lstrip("/")
 
-
 def _resolve_repo_url(gh: GhRef, ref: str, href: str) -> Optional[str]:
     """
-    Resolve a repo-relative link to an absolute raw.githubusercontent URL.
-    Ignore empty, fragments, mailto:, javascript:.
+    Resolve a repo-relative link found in Markdown/HTML to a canonical
+    GitHub blob URL.
+
+    - Leaves absolute http(s) links unchanged.
+    - Ignores anchors, mailto:, javascript:.
+    - Normalizes '.' and '..' segments.
+    - For extensionless paths (no '.' in final segment), assumes '.md'.
     """
     href = href.strip()
     if not href or href.startswith(("#", "mailto:", "javascript:")):
         return None
     if href.startswith(("http://", "https://")):
         return href
-    base_dir = gh.path.rsplit("/", 1)[0] if "/" in gh.path else ""
+
+    # Build a repo-relative path
     if href.startswith("/"):
-        resolved_path = href.lstrip("/")
+        rel = href.lstrip("/")
     else:
-        resolved_path = f"{base_dir}/{href}".replace("//", "/")
-    return f"https://raw.githubusercontent.com/{gh.owner}/{gh.repo}/{ref}/{resolved_path}"
+        base_dir = gh.path.rsplit("/", 1)[0] if "/" in gh.path else ""
+        rel = f"{base_dir}/{href}" if base_dir else href
+
+    rel = _normalize_repo_path(rel)
+
+    # Heuristic: if the last segment has no dot, treat it as a markdown file.
+    last = rel.rsplit("/", 1)[-1]
+    if "." not in last:
+        rel = rel + ".md"
+
+    return f"https://github.com/{gh.owner}/{gh.repo}/blob/{ref}/{rel}"
+
+
 
 
 def _resolve_web_url(base_url: str, href: str) -> Optional[str]:

@@ -1,66 +1,126 @@
-# AGENTS.md
+# don't fetch or derive app state in useEffect
 
-Centralised AI agent instructions. Add coding guidelines, style guides, and project context here.
+# core rules
 
-Ruler concatenates all .md files in this directory (and subdirectories), starting with AGENTS.md (if present), then remaining files in sorted order.
+1. Fetch on navigation in route loaders (SSR + streaming); optionally seed via `queryClient.ensureQueryData`. \[1]
+2. Do server work on the server via TanStack Start server functions; after mutations call `router.invalidate()` and/or `queryClient.invalidateQueries()`. \[2]
+3. Keep page/UI state in the URL with typed search params (`validateSearch`, `Route.useSearch`, `navigate`). \[3]
+4. Reserve effects for real external effects only (DOM, subscriptions, analytics). Compute derived state during render; `useMemo` only if expensive. \[4]\[6]
+5. Hydration + Suspense: any update that suspends during hydration replaces SSR content with fallbacks. Wrap sync updates that might suspend in `startTransition` (direct import). Avoid rendering `isPending` during hydration. `useSyncExternalStore` always triggers fallbacks during hydration. \[10]
+6. Data placement:
 
-## Hierarchical Policy
+   * Server-synced domain data → TanStack DB collections (often powered by TanStack Query via `queryCollectionOptions`, or a sync engine). Read with live queries. \[11]\[12]\[14]
+   * Ephemeral UI/session (theme, modals, steppers, optimistic buffers) → zustand or local-only/localStorage collection. Do not mirror server data into zustand. \[16]\[14]
+   * Derived views → compute in render or via live queries. \[12]
 
-- Inherits system-wide conventions from `.ruler/AGENTS.md`.
-- Defines project-wide architecture, directory ownership, and cross-boundary interaction rules.
-- Delegates detailed behavioral rules to nested `AGENTS.md` files:
-  - `src/lmstudiotxt_generator/AGENTS.md` for the Python DSPy + LM Studio backend.
-  - `ui/AGENTS.md` for any interactive UI or dashboard.
-- For any task touching a specific area, read the most specific `AGENTS.md` for that directory after this file.
+# if your useEffect did X → use Y
 
-## Domain Vocabulary
+* Fetch on mount/param change → route loader (+ `ensureQueryData`). \[1]
+* Submit/mutate → server function → then `router.invalidate()`/`qc.invalidateQueries()`. \[2]
+* Sync UI ↔ querystring → typed search params + `navigate`. \[3]
+* Derived state → compute during render (`useMemo` only if expensive). \[4]
+* Subscribe external stores → `useSyncExternalStore` (expect hydration fallbacks). \[5]\[10]
+* DOM/listeners/widgets → small `useEffect`/`useLayoutEffect`. \[6]
+* Synced list + optimistic UI → DB query collection + `onInsert`/`onUpdate`/`onDelete` or server fn + invalidate. \[11]\[13]
+* Realtime websocket/SSE patches → TanStack DB direct writes (`writeInsert/update/delete/upsert/batch`). \[13]
+* Joins/aggregations → live queries. \[12]
+* Local-only prefs/cross-tab → localStorage collection (no effects). \[14]
 
-- Backend: Python package under `src/lmstudiotxt_generator` that owns all llms.txt generation, DSPy programs, and LM Studio connectivity.
-- UI: Any web or desktop user interface living under `ui/` that triggers backend operations and visualizes results.
-- Artifacts: Generated llms-related files (e.g., `*-llms.txt`, `*-llms-full.txt`, `*-llms-ctx.txt`, `*-llms.json`) written under an `OUTPUT_DIR` (default `./artifacts/`).
-- Orchestration: High-level flows that wire inputs (GitHub repo URL, config) to backend calls and artifact emission (CLI entrypoints, job runners, CI scripts).
-- Integration: Code that talks to external systems (GitHub, LM Studio, web APIs, file system) but does not own business rules.
+# idioms (names only)
 
-## Allowed Patterns
+* Loader: `queryClient.ensureQueryData(queryOptions({ queryKey, queryFn }))` → read via `useSuspenseQuery` hydrated from loader. \[1]
+* DB query collection: `createCollection(queryCollectionOptions({ queryKey, queryFn, queryClient, getKey }))` → read via live query. \[11]\[12]
+* Mutation (server-first): `createServerFn(...).handler(...)` → on success `qc.invalidateQueries`, `router.invalidate`; supports `<form action={serverFn.url}>`. \[2]
+* DB persistence handlers: `onInsert`/`onUpdate`/`onDelete` → return `{ refetch?: boolean }`; pair with direct writes when skipping refetch. \[13]
+* Search params as state: `validateSearch → Route.useSearch → navigate({ search })`. \[3]
+* External store read: `useSyncExternalStore(subscribe, getSnapshot)`. \[5]
+* Hydration-safe: `import { startTransition } from 'react'` for sync updates; avoid `useTransition`/`isPending` during hydration. \[10]
 
-- Directory ownership:
-  - Keep Python source under `src/lmstudiotxt_generator/`.
-  - Keep any UI implementation under `ui/`.
-  - Keep packaging, configuration, and repo-level tooling at the root (e.g., `pyproject.toml`, `README.md`, `.env`, CI config).
-- Architectural layering:
-  - Root-level scripts and tooling may orchestrate work but must not implement domain logic; they call into backend public APIs or invoke CLI entrypoints.
-  - Backend owns all llms.txt generation logic, DSPy programs, GitHub integration, and LM Studio integration.
-  - UI owns all presentation logic, user workflows, and client-side state; it treats the backend as a black-box service.
-- Public surfaces:
-  - Prefer using the backend’s documented public APIs (e.g., `lmstudio-llmstxt` CLI, or a dedicated Python entrypoint) rather than importing deep internal modules from root-level tools.
-  - When adding new top-level tools (CLI wrappers, scripts, CI jobs), route through the same backend entrypoints used by the official CLI or server code.
-- Policy propagation:
-  - When creating a new top-level directory that contains runtime code (e.g., `server/`, `workers/`), add an `AGENTS.md` in that directory and explicitly define its relationship to backend and UI.
-  - Use nested `AGENTS.md` files to tighten, not loosen, constraints defined here or in `.ruler/AGENTS.md`.
+# decision checklist
 
-## Prohibited Patterns
+* Needed at render → loader (defer/stream). \[1]\[7]
+* User changed data → server fn → invalidate; or DB handlers/direct writes. \[2]\[13]
+* Belongs in URL → typed search params. \[3]
+* Purely derived → render/live query. \[4]\[12]
+* External system only → effect. \[6]
+* Hydration sensitive → `startTransition` for sync updates; expect fallbacks from external stores; avoid `isPending` during hydration. \[10]
+* SSR/SEO → loader-based fetching with streaming/deferred; dehydrate/hydrate caches and DB snapshots. \[7]
 
-- Cross-boundary violations:
-  - UI code (under `ui/`) must not import Python modules directly or depend on internal backend file paths; communication must go through a stable interface (HTTP API, CLI wrapper, message bus, etc.).
-  - Backend Python code must not assume knowledge of UI framework internals, UI routing, or client-side state structures.
-- Root-level logic:
-  - Do not put business logic, DSPy programs, or LM Studio/GitHub integration code directly in root-level scripts or modules.
-  - Do not introduce new long-lived runtime modules at the repo root without a corresponding `AGENTS.md` that defines their scope and dependencies.
-- Environment handling:
-  - Do not read environment variables directly from scattered modules; centralize environment configuration in dedicated config modules (e.g., backend `AppConfig`) and pass configuration objects downward.
-- Tooling:
-  - Do not create tooling that bypasses backend validation or error handling (e.g., scripts that call GitHub APIs independently of the backend integration layer).
+# React 19 helpers
 
-## Boundaries
+* `useActionState` for form pending/error/result. \[8]
+* `use` to suspend on promises. \[9]
 
-- Inbound boundaries (how the repo is used):
-  - Human operators and CI entrypoints interact with the project via:
-    - CLI commands (e.g., a console script that calls backend orchestration functions).
-    - Optional HTTP or job runner surfaces if/when they are introduced in separate bounded contexts.
-- Outbound boundaries (what the repo talks to):
-  - External services (GitHub, LM Studio, websites) are only accessed by the backend integration layer, not by root-level scripts or the UI.
-  - Roots scripts may perform basic file system operations (e.g., managing `artifacts/`, reading configuration) but must not duplicate backend logic.
-- Delegation map:
-  - For backend changes, follow `src/lmstudiotxt_generator/AGENTS.md`.
-  - For UI changes, follow `ui/AGENTS.md`.
-  - For new cross-cutting areas (e.g., `server/`, `infra/`, `workers/`), introduce a local `AGENTS.md` and explicitly document dependencies on backend and UI.
+# hydration + suspense playbook \[10]
+
+* Rule: sync updates that suspend during hydration → fallback replaces SSR.
+* Quick fix: wrap updates with `startTransition` (direct import); re-wrap after `await`.
+* Avoid during hydration: using `useTransition` for the update, rendering `isPending`, `useDeferredValue` unless the suspensey child is memoized, any `useSyncExternalStore` mutation.
+* Safe during hydration: setting same value with `useState`/`useReducer`, `startTransition`-wrapped sync updates, `useDeferredValue` with `React.memo` around the suspensey child.
+* Compiler auto-memoization may help; treat as optimization.
+
+# TanStack DB: when/how \[11]\[12]\[13]\[14]\[15]\[16]
+
+* Use DB for server-synced domain data.
+* Load: `queryCollectionOptions` (simple fetch; optional refetch) or sync collections (Electric/Trailbase/RxDB).
+* Read: live queries (reactive, incremental; joins, `groupBy`, `distinct`, `order`, `limit`). \[12]
+* Writes:
+
+  * Server-first → server fn → `router.invalidate()`/`qc.invalidateQueries()`. \[2]
+  * Client-first → `onInsert`/`onUpdate`/`onDelete` (return `{ refetch: false }` if reconciling via direct writes/realtime). \[13]
+  * Direct writes → `writeInsert/update/delete/upsert/batch` for websocket/SSE deltas, incremental pagination, server-computed fields; bypass optimistic layer and skip refetch. \[13]
+* Behaviors: query collection treats `queryFn` result as full state; empty array deletes all; merge partial fetches before returning. \[13]
+* Transaction merging reduces churn:
+
+  * insert+update → merged insert
+  * insert+delete → cancel
+  * update+delete → delete
+  * update+update → single union
+  * same type back-to-back → keep latest \[15]
+* SSR: per-request store instances; never touch storage during SSR. \[16]\[14]
+
+# SSR/streaming/hydration with router + DB
+
+* In loaders: seed query via `ensureQueryData`; for DB, preload or dehydrate/hydrate snapshots so lists render instantly and stream updates. \[1]\[7]\[12]\[14]
+* After mutations: loader-owned → invalidate router/query; DB-owned → let collection refetch or apply direct writes. \[2]\[13]
+
+# micro-recipes
+
+* Avoid first-click spinner after SSR: wrap clicks with `startTransition`; don't render `isPending` until post-hydration. \[10]
+* External store during hydration: defer interaction or isolate the suspense boundary; expect fallbacks. \[5]\[10]
+* Paginated load-more: fetch next page, then `collection.utils.writeBatch(() => writeInsert(...))` to append without refetching old pages. \[13]
+* Realtime patches: `writeUpsert`/`writeDelete` from socket callback inside `writeBatch`. \[13]
+
+# TanStack Start best practices
+
+## Selective SSR
+
+* Default `ssr: true` (change via `getRouter({ defaultSsr: false })`). SPA mode disables all server loaders/SSR.
+* Per-route `ssr`: `true` | `'data-only'` | `false`.
+* Functional `ssr(props)`: runs only on server initial request; can return `true` | `'data-only'` | `false` based on validated params/search.
+* Inheritance: child can only get less SSR (true → `'data-only'` or false; `'data-only'` → false).
+* Fallback: first route with `ssr: false` or `'data-only'` renders `pendingComponent` (or `defaultPendingComponent`) at least `minPendingMs` (or `defaultPendingMinMs`).
+* Root: you can disable SSR of root route component; `shellComponent` is always SSRed.
+
+## Zustand in TanStack Start
+
+* Use for client/UI/session and push-based domain state (theme, modals, wizards, optimistic UI, websocket buffers). Keep server data in loaders/Query.
+* Per-request store instance to avoid SSR leaks; inject via Router context; dehydrate/hydrate via `router.dehydrate`/`router.hydrate` so snapshots stream with the page.
+* After navigation resolution, clear transient UI with `router.subscribe('onResolved', ...)`.
+* Mutations: do work in server fn → optionally update store optimistically → `router.invalidate` to reconcile with loader data.
+* Persist middleware only for client/session; avoid touching storage during SSR.
+* Use atomic selectors (`useStore(s => slice)`) and equality helpers.
+
+## Project constraints
+
+* Use pnpm.
+* All route files are TypeScript React (`.tsx`).
+* Use alias imports: `~` resolves to root `./src`.
+* Never update `.env`; update `.env.example` instead.
+* Never start the dev server with `pnpm run dev` or `npm run dev`.
+* Never create a local pnpm --store
+* Preserve all existing features and UI options unless explicitly instructed to remove, hide, or rename them; if a feature isn't fully wired, maintain its UX surface and annotate it with `// TODO`.
+
+## docs map
+
+\[1] router data loading · \[2] server functions · \[3] search params · \[4] you might not need an effect · \[5] `useSyncExternalStore` · \[6] synchronizing with effects · \[7] SSR/streaming · \[8] `useActionState` · \[9] `use` · \[10] hydration + suspense guide · \[11] TanStack DB query collection · \[12] live queries · \[13] direct writes + persistence handlers · \[14] collections catalog · \[15] transactions + optimistic actions · \[16] zustand in TanStack Start

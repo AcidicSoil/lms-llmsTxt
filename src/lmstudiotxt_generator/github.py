@@ -6,8 +6,18 @@ import re
 from typing import Iterable
 
 import requests
-
+import posixpath
 from .models import RepositoryMaterial
+
+def _normalize_repo_path(path: str) -> str:
+    """
+    Normalize a repo-relative path:
+    - strip leading slash
+    - collapse '.' and '..' segments
+    """
+    path = path.lstrip("/")
+    # posix-style normalization: 'docs/./x/../y' -> 'docs/y'
+    return posixpath.normpath(path)
 
 _GITHUB_URL = re.compile(
     r"""
@@ -144,6 +154,11 @@ def gather_repository_material(repo_url: str, token: str | None = None) -> Repos
 
 
 def construct_raw_url(repo_url: str, path: str, ref: str | None = None) -> str:
+    """
+    Build a canonical GitHub blob URL for a repo file.
+
+    Used by the fallback llms.txt path.
+    """
     owner, repo = owner_repo_from_url(repo_url)
     if not ref:
         token = os.getenv("GITHUB_ACCESS_TOKEN") or os.getenv("GH_TOKEN")
@@ -151,4 +166,7 @@ def construct_raw_url(repo_url: str, path: str, ref: str | None = None) -> str:
             ref = get_default_branch(owner, repo, token)
         except Exception:
             ref = "main"
-    return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
+
+    norm_path = _normalize_repo_path(path)
+    return f"https://github.com/{owner}/{repo}/blob/{ref}/{norm_path}"
+
