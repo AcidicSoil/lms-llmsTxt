@@ -3,12 +3,12 @@
   "private": true,
   "scripts": {
     "code": "codefetch --include-dir src --exclude-dirs __pycache__ -o src.md",
+    "code:root": "codefetch -t 2 --include-dir src --exclude-dirs __pycache__ -o root-src.md",
     "code:docs": "codefetch --include-dir docs --exclude-dirs __pycache__ -o docs_codebase.md",
     "code:artifacts": "node scripts/codefetch-artifacts.mjs",
-    "code:bash": "bash scripts/codefetch-artifacts.sh",
-    "code:all": "pnpm code && pnpm code:docs && pnpm code:artifacts"
+    "code:bash": "bash scripts/codefetch-artifacts.sh"
   },
-  "devDependencies": {
-    "codefetch": "^1.6.1"
+  "dependencies": {
+    "codefetch": "^2.1.2"
   }
 }
