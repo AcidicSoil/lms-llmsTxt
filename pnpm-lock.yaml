@@ -9,10 +9,16 @@ importers:
   .:
     devDependencies:
       codefetch:
-        specifier: ^1.6.1
-        version: 1.6.1
+        specifier: ^2.2.0
+        version: 2.2.0
 
 packages:
+
+  '@clack/core@0.5.0':
+    resolution: {integrity: sha512-p3y0FIOwaYRUPRcMO7+dlmLh8PSRcrjuTndsiA0WAFbWES0mLZlrjVoBRZ9DzkPFJZG6KGkJmoEAY0ZcVWTkow==}
+
+  '@clack/prompts@0.11.0':
+    resolution: {integrity: sha512-pMN5FcrEw9hUkZA4f+zLlzivQSeQf5dRGJjSUbvVYDLvpKCdQx5OaknvKzgbtXOizhP+SJJJjqEbOe55uKKfAw==}
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -61,11 +67,11 @@ packages:
   citty@0.1.6:
     resolution: {integrity: sha512-tskPPKEs8D2KPafUypv2gxwJP8h/OaJmC82QQGGDQcHvXX43xF2VDACcJVmZ0EuSxkpO9Kc4MlrA3q0+FG58AQ==}
 
-  codefetch-sdk@1.6.2:
-    resolution: {integrity: sha512-SYUkiaqNPFbD/bNMQss9BZbRHh4q0BDD4/L0chtpNrkt8x9rsUhSrQ8T+s0ugTeFL6IIyix6MWdJbyezeVNn1g==}
+  codefetch-sdk@2.2.0:
+    resolution: {integrity: sha512-cUd0O2T/haMBAMcfU4qDMYo0dUiZqZhYqwRbdmX4onNZwr6lcwHhMHYpfP5ihqkWXbrMU70Z67hprfSOTI1S0Q==}
 
-  codefetch@1.6.1:
-    resolution: {integrity: sha512-t4XhXemE+PPL6iGEi4WklQOZhComFfmCy8vl6MoIzMDcsUOzAooAKrSiVaoYHvFaJYvkeVH/V7CBP/aLTjUoag==}
+  codefetch@2.2.0:
+    resolution: {integrity: sha512-BuySdRjt/SF1C63VaEuISh4P8G2AGhdlErSWrNPk/s/wNeQu//akbB5toeYbQAvUd4pn/p4/T37lYzrZwSELfw==}
     hasBin: true
 
   confbox@0.1.8:
@@ -180,6 +186,9 @@ packages:
   perfect-debounce@1.0.0:
     resolution: {integrity: sha512-xCy9V055GLEqoFaHoC1SoLIaLmWctgCUaBaWxDZ7/Zx4CTyX7cJQLJOok/orfjZAh9kEYpjJa4d0KcJmCbctZA==}
 
+  picocolors@1.1.1:
+    resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
+
   picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
@@ -204,6 +213,9 @@ packages:
   run-parallel@1.2.0:
     resolution: {integrity: sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA==}
 
+  sisteransi@1.0.5:
+    resolution: {integrity: sha512-bLGGlR1QxBcynn2d5YmDX4MGjlZvy2MRBDRNHLJ8VI6l6+9FUiyTFNJ0IveOSP0bcXgVDPRcfGqA0pjaqUpfVg==}
+
   tar@6.2.1:
     resolution: {integrity: sha512-DZ4yORTwrbTj/7MZYq2w+/ZFdI6OZ/f9SFHR+71gIVUZhOQPHzVCLpvRnPgyaMpfWxxk/4ONva3GQSyNIKRv6A==}
     engines: {node: '>=10'}
@@ -222,6 +234,17 @@ packages:
     resolution: {integrity: sha512-3wdGidZyq5PB084XLES5TpOSRA3wjXAlIWMhum2kRcv/41Sn2emQ0dycQW4uZXLejwKvg6EsvbdlVL+FYEct7A==}
 
 snapshots:
+
+  '@clack/core@0.5.0':
+    dependencies:
+      picocolors: 1.1.1
+      sisteransi: 1.0.5
+
+  '@clack/prompts@0.11.0':
+    dependencies:
+      '@clack/core': 0.5.0
+      picocolors: 1.1.1
+      sisteransi: 1.0.5
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:
@@ -270,7 +293,7 @@ snapshots:
     dependencies:
       consola: 3.4.2
 
-  codefetch-sdk@1.6.2:
+  codefetch-sdk@2.2.0:
     dependencies:
       adm-zip: 0.5.16
       c12: 2.0.4
@@ -283,10 +306,11 @@ snapshots:
     transitivePeerDependencies:
       - magicast
 
-  codefetch@1.6.1:
+  codefetch@2.2.0:
     dependencies:
+      '@clack/prompts': 0.11.0
       c12: 2.0.4
-      codefetch-sdk: 1.6.2
+      codefetch-sdk: 2.2.0
       consola: 3.4.2
       ignore: 7.0.5
       mri: 1.2.0
@@ -400,6 +424,8 @@ snapshots:
 
   perfect-debounce@1.0.0: {}
 
+  picocolors@1.1.1: {}
+
   picomatch@2.3.1: {}
 
   pkg-types@1.3.1:
@@ -422,6 +448,8 @@ snapshots:
   run-parallel@1.2.0:
     dependencies:
       queue-microtask: 1.2.3
+
+  sisteransi@1.0.5: {}
 
   tar@6.2.1:
     dependencies:
