@@ -12,11 +12,7 @@ from .config import AppConfig
 try:
     import dspy
 except ImportError:
-    class MockDSPy:
-        class LM:
-            def __init__(self, *args, **kwargs): pass
-        def configure(lm=None): pass
-    dspy = MockDSPy()
+    from .signatures import dspy
 
 logger = logging.getLogger(__name__)
 

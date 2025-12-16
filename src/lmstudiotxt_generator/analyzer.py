@@ -11,17 +11,7 @@ from .github import construct_github_file_url, owner_repo_from_url
 try:
     import dspy
 except ImportError:
-    class MockDSPy:
-        class Module:
-            pass
-        class ChainOfThought:
-            def __init__(self, signature): pass
-            def __call__(self, **kwargs): return dspy.Prediction()
-        class Prediction:
-            def __init__(self, **kwargs):
-                for k, v in kwargs.items():
-                    setattr(self, k, v)
-    dspy = MockDSPy()
+    from .signatures import dspy
 
 from .signatures import (
     AnalyzeCodeStructure,

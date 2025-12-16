@@ -8,10 +8,28 @@ except ImportError:
     class MockDSPy:
         class Signature:
             pass
-        def InputField(**kwargs):
-            return None
-        def OutputField(**kwargs):
-            return None
+        class Module:
+            pass
+        class ChainOfThought:
+            def __init__(self, signature): pass
+            def __call__(self, **kwargs): return MockDSPy.Prediction()
+        class Prediction:
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+        class LM:
+            def __init__(self, *args, **kwargs): pass
+
+        class InputField:
+            def __init__(self, *args, **kwargs): pass
+        
+        class OutputField:
+            def __init__(self, *args, **kwargs): pass
+            
+        @staticmethod
+        def configure(**kwargs):
+            pass
+
     dspy = MockDSPy()
 
 
