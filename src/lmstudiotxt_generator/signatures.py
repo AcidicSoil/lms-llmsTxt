@@ -2,7 +2,17 @@ from __future__ import annotations
 
 from typing import List
 
-import dspy
+try:
+    import dspy
+except ImportError:
+    class MockDSPy:
+        class Signature:
+            pass
+        def InputField(**kwargs):
+            return None
+        def OutputField(**kwargs):
+            return None
+    dspy = MockDSPy()
 
 
 class AnalyzeRepository(dspy.Signature):

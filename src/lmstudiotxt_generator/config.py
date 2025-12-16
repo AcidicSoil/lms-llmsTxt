@@ -47,6 +47,9 @@ class AppConfig:
         default_factory=lambda: os.getenv("GITHUB_ACCESS_TOKEN")
         or os.getenv("GH_TOKEN")
     )
+    link_style: str = field(
+        default_factory=lambda: os.getenv("LINK_STYLE", "blob")
+    )
     enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
     lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
     lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))

@@ -153,11 +153,14 @@ def gather_repository_material(repo_url: str, token: str | None = None) -> Repos
     )
 
 
-def construct_raw_url(repo_url: str, path: str, ref: str | None = None) -> str:
+def construct_github_file_url(
+    repo_url: str, path: str, ref: str | None = None, style: str = "blob"
+) -> str:
     """
-    Build a canonical GitHub blob URL for a repo file.
+    Build a canonical GitHub URL for a repo file.
 
-    Used by the fallback llms.txt path.
+    style="blob": https://github.com/owner/repo/blob/ref/path
+    style="raw":  https://raw.githubusercontent.com/owner/repo/ref/path
     """
     owner, repo = owner_repo_from_url(repo_url)
     if not ref:
@@ -168,5 +171,8 @@ def construct_raw_url(repo_url: str, path: str, ref: str | None = None) -> str:
             ref = "main"
 
     norm_path = _normalize_repo_path(path)
+
+    if style == "raw":
+        return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{norm_path}"
     return f"https://github.com/{owner}/{repo}/blob/{ref}/{norm_path}"
 

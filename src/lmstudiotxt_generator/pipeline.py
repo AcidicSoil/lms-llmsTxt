@@ -86,6 +86,7 @@ def run_generation(
             readme_content=material.readme_content,
             package_files=material.package_files,
             default_branch=material.default_branch,
+            link_style=config.link_style,
         )
         llms_text = result.llms_txt_content
     except (
@@ -96,14 +97,13 @@ def run_generation(
         LMStudioConnectivityError,
     ) as exc:
         used_fallback = True
-        logger.warning("Language model request failed: %s", exc)
-        logger.warning("Falling back to heuristic llms.txt generation using %s.", LLMS_JSON_SCHEMA["title"])
         fallback_payload = fallback_llms_payload(
             repo_name=project_name,
             repo_url=repo_url,
             file_tree=material.file_tree,
             readme_content=material.readme_content,
             default_branch=material.default_branch,
+            link_style=config.link_style,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
     except Exception as exc:  # pragma: no cover - defensive fallback
@@ -116,6 +116,7 @@ def run_generation(
             file_tree=material.file_tree,
             readme_content=material.readme_content,
             default_branch=material.default_branch,
+            link_style=config.link_style,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
     finally:
@@ -143,6 +144,7 @@ def run_generation(
         prefer_raw=not material.is_private,
         default_ref=material.default_branch,
         token=config.github_token,
+        link_style=config.link_style,
     )
     llms_full_path = repo_root / f"{base_name}-llms-full.txt"
     logger.debug("Writing llms-full to %s", llms_full_path)

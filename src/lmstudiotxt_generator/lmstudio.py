@@ -5,10 +5,18 @@ import subprocess
 from typing import Iterable, Optional, Tuple
 from urllib.parse import urlparse
 
-import dspy
 import requests
 
 from .config import AppConfig
+
+try:
+    import dspy
+except ImportError:
+    class MockDSPy:
+        class LM:
+            def __init__(self, *args, **kwargs): pass
+        def configure(lm=None): pass
+    dspy = MockDSPy()
 
 logger = logging.getLogger(__name__)
 

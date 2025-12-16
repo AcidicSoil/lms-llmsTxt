@@ -107,10 +107,10 @@ def sanitize_path_for_block(title: str, url: str, gh: Optional[GhRef]) -> str:
         path = title.lower().strip().replace(" ", "-")
     return path.lstrip("/")
 
-def _resolve_repo_url(gh: GhRef, ref: str, href: str) -> Optional[str]:
+def _resolve_repo_url(gh: GhRef, ref: str, href: str, style: str = "blob") -> Optional[str]:
     """
     Resolve a repo-relative link found in Markdown/HTML to a canonical
-    GitHub blob URL.
+    GitHub URL (blob or raw).
 
     - Leaves absolute http(s) links unchanged.
     - Ignores anchors, mailto:, javascript:.
@@ -137,6 +137,8 @@ def _resolve_repo_url(gh: GhRef, ref: str, href: str) -> Optional[str]:
     if "." not in last:
         rel = rel + ".md"
 
+    if style == "raw":
+        return f"https://raw.githubusercontent.com/{gh.owner}/{gh.repo}/{ref}/{rel}"
     return f"https://github.com/{gh.owner}/{gh.repo}/blob/{ref}/{rel}"
 
 
@@ -156,7 +158,7 @@ def _resolve_web_url(base_url: str, href: str) -> Optional[str]:
     return None
 
 
-def _extract_links(body_text: str, *, gh: Optional[GhRef], ref: str, base_url: Optional[str]) -> list[tuple[str, str]]:
+def _extract_links(body_text: str, *, gh: Optional[GhRef], ref: str, base_url: Optional[str], link_style: str = "blob") -> list[tuple[str, str]]:
     """
     Extract outbound links from Markdown/HTML and resolve to absolute URLs.
     For GitHub pages pass gh+ref. For websites pass base_url.
@@ -175,7 +177,7 @@ def _extract_links(body_text: str, *, gh: Optional[GhRef], ref: str, base_url: O
         text = m.group("text").strip()
         href = m.group("href").strip()
         if gh:
-            resolved = _resolve_repo_url(gh, ref, href)
+            resolved = _resolve_repo_url(gh, ref, href, style=link_style)
         else:
             resolved = _resolve_web_url(base_url or "", href)
         if resolved:
@@ -186,7 +188,7 @@ def _extract_links(body_text: str, *, gh: Optional[GhRef], ref: str, base_url: O
         text = re.sub(r"\s+", " ", m.group("text")).strip() or "link"
         href = m.group("href").strip()
         if gh:
-            resolved = _resolve_repo_url(gh, ref, href)
+            resolved = _resolve_repo_url(gh, ref, href, style=link_style)
         else:
             resolved = _resolve_web_url(base_url or "", href)
         if resolved:
@@ -224,6 +226,7 @@ def build_llms_full_from_repo(
     prefer_raw: bool = False,
     default_ref: Optional[str] = None,
     token: Optional[str] = None,
+    link_style: str = "blob",
 ) -> str:
     """
     Extended: also accepts general website URLs in the curated list.
@@ -282,7 +285,7 @@ def build_llms_full_from_repo(
             block_path = sanitize_path_for_block(title, url, gh)
             text_body = body.decode("utf-8", "replace")
 
-            links = _extract_links(text_body, gh=gh, ref=resolved_ref, base_url=None)[:100]
+            links = _extract_links(text_body, gh=gh, ref=resolved_ref, base_url=None, link_style=link_style)[:100]
             link_section = ""
             if links:
                 bullet_lines = "\n".join(f"- [{t}]({h})" for t, h in links)
@@ -311,6 +314,7 @@ def build_llms_full_from_repo(
                 gh=None,
                 ref="",
                 base_url=url,
+                link_style=link_style,
             )[:100]
             link_section = ""
             if links:

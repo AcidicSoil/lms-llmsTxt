@@ -5,10 +5,24 @@ import re
 from collections import defaultdict
 from typing import Dict, Iterable, List, Tuple
 
-import dspy
 import requests
 
-from .github import construct_raw_url, owner_repo_from_url
+from .github import construct_github_file_url, owner_repo_from_url
+try:
+    import dspy
+except ImportError:
+    class MockDSPy:
+        class Module:
+            pass
+        class ChainOfThought:
+            def __init__(self, signature): pass
+            def __call__(self, **kwargs): return dspy.Prediction()
+        class Prediction:
+            def __init__(self, **kwargs):
+                for k, v in kwargs.items():
+                    setattr(self, k, v)
+    dspy = MockDSPy()
+
 from .signatures import (
     AnalyzeCodeStructure,
     AnalyzeRepository,
@@ -113,6 +127,7 @@ def build_dynamic_buckets(
     file_tree: str,
     default_ref: str | None = None,
     validate_urls: bool = True,
+    link_style: str = "blob",
 ) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
     paths = [p.strip() for p in file_tree.splitlines() if p.strip()]
     pages = []
@@ -122,7 +137,9 @@ def build_dynamic_buckets(
         pages.append(
             {
                 "path": path,
-                "url": construct_raw_url(repo_url, path, ref=default_ref),
+                "url": construct_github_file_url(
+                    repo_url, path, ref=default_ref, style=link_style
+                ),
                 "title": (
                     "README"
                     if re.search(r"(^|/)README\.md$", path, flags=re.I)
@@ -239,6 +256,7 @@ class RepositoryAnalyzer(dspy.Module):
         readme_content: str,
         package_files: str,
         default_branch: str | None = None,
+        link_style: str = "blob",
     ):
         repo_analysis = self.analyze_repo(
             repo_url=repo_url,
@@ -267,6 +285,7 @@ class RepositoryAnalyzer(dspy.Module):
             repo_url,
             file_tree,
             default_ref=default_branch,
+            link_style=link_style,
         )
 
         llms_txt_content = render_llms_markdown(

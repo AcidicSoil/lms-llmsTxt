@@ -32,6 +32,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Directory where artifacts will be written (default: OUTPUT_DIR or ./artifacts).",
     )
     parser.add_argument(
+        "--link-style",
+        choices=["blob", "raw"],
+        help="Style of GitHub file links to generate (default: blob).",
+    )
+    parser.add_argument(
         "--stamp",
         action="store_true",
         help="Append a UTC timestamp comment to generated files.",
@@ -66,6 +71,8 @@ def main(argv: list[str] | None = None) -> int:
         config.lm_api_key = args.api_key
     if args.output_dir:
         config.output_dir = args.output_dir
+    if args.link_style:
+        config.link_style = args.link_style
     if args.no_ctx:
         config.enable_ctx = False
 
