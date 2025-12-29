@@ -1,0 +1,618 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Clean Dependencies and Normalize Names in pyproject.toml",
+        "description": "Remove direct VCS URL dependencies and normalize dependency names to canonical PyPI distribution names to ensure PyPI compliance.",
+        "details": "1. Modify `pyproject.toml`. \n2. Identify the `llm-ctx` dependency currently defined as `llm-ctx @ git+...`.\n3. Replace it with a valid PyPI version constraint (e.g., `>=x.y.z` if available on PyPI) or a specific version. If it's not on PyPI, this task blocks until a strategy (vendor or PyPI release of dependency) is decided, but assuming availability or replacement, update it.\n4. Scan for other dependencies and ensure they use canonical names (e.g., change `llms_txt` to `llms-txt` if applicable).\n5. Verify `uv lock` or `pip install` works with the new configuration.",
+        "testStrategy": "Run `uv build` to ensure metadata is generated. Run `pip install .` in a fresh environment to verify dependencies resolve without git protocols.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update pyproject.toml Dependencies",
+            "description": "Modify the pyproject.toml file to replace direct Git URLs with standard PyPI version constraints and normalize dependency names.",
+            "dependencies": [],
+            "details": "Open `pyproject.toml`. Locate the dependency `llm-ctx`. Replace the `git+https://...` syntax with a standard version specifier (e.g., `^0.2.0` or `>=0.2.0`). Additionally, review all other dependencies in the `[project.dependencies]` section. Convert names like `llms_txt` to their canonical form `llms-txt` to avoid ambiguous distribution name warnings during build.",
+            "status": "pending",
+            "testStrategy": "Manual inspection of pyproject.toml to confirm no URL dependencies remain."
+          },
+          {
+            "id": 2,
+            "title": "Validate Dependency Configuration and Build",
+            "description": "Verify that the updated dependency configuration allows for a successful build and installation in a clean environment.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a fresh virtual environment. Run `pip install .` (or `uv pip install .`) to confirm that the package installs with the new PyPI-based dependencies. Run a build command (e.g., `python -m build` or `uv build`) and inspect the generated metadata (PKG-INFO) in the source distribution to ensure `Requires-Dist` fields do not contain direct URL references.",
+            "status": "pending",
+            "testStrategy": "Successful execution of build commands and installation without resolution errors."
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Configure Setuptools for src Layout Discovery",
+        "description": "Explicitly configure package discovery in pyproject.toml to ensure code under `src/` is correctly included in the built wheel.",
+        "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `lmstxt = \"lmstudiotxt_generator.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
+        "testStrategy": "Run `uv build`. Inspect the generated wheel content (using `unzip -l dist/*.whl`) to verify `lmstudiotxt_generator` directory exists in the root of the wheel.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze Project Structure and Current Configuration",
+            "description": "Inspect the file system to verify the 'src' directory existence and read the current 'pyproject.toml' to assess existing build settings.",
+            "dependencies": [],
+            "details": "Use glob/ls to confirm `src/lmstudiotxt_generator` (or similar) exists. Read `pyproject.toml` to identify the current `[build-system]` and any existing `[tool.setuptools]` configuration to determine the necessary changes.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Configure Build System Backend",
+            "description": "Ensure 'pyproject.toml' defines a standard build backend compatible with setuptools and src-layout.",
+            "dependencies": [
+              1
+            ],
+            "details": "Edit `pyproject.toml` to verify or add the `[build-system]` table. Ensure `requires` includes `[\"setuptools\", \"wheel\"]` (and `setuptools-scm` if dynamic versioning is used) and `build-backend` is set to `\"setuptools.build_meta\"`.",
+            "status": "pending",
+            "testStrategy": "Run `uv build` (or `python -m build`) to confirm the build backend initializes correctly."
+          },
+          {
+            "id": 3,
+            "title": "Implement Explicit Package Discovery",
+            "description": "Add the specific setuptools configuration to restrict package discovery to the 'src' directory.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `pyproject.toml`, add or update the `[tool.setuptools.packages.find]` table. Set `where = [\"src\"]` to ensure only the code inside `src/` is packaged, preventing accidental inclusion of root-level scripts or config files.",
+            "status": "pending",
+            "testStrategy": "None (Verification happens in the final build step)."
+          },
+          {
+            "id": 4,
+            "title": "Configure Entry Points",
+            "description": "Verify and update the CLI entry point mapping in 'pyproject.toml' to point to the correct location within the src layout.",
+            "dependencies": [
+              3
+            ],
+            "details": "Check `[project.scripts]`. Ensure the command (e.g., `lmstxt`) maps to the correct module path, likely `lmstudiotxt_generator.cli:main` or similar. If the package name changed or moved to src, ensure the import path is valid.",
+            "status": "pending",
+            "testStrategy": "Run `pip install -e .` and check if the `lmstxt` command is available and executable."
+          },
+          {
+            "id": 5,
+            "title": "Verify Wheel Structure",
+            "description": "Build the distribution package and inspect the contents to confirm the 'src' layout is correctly flattened in the wheel.",
+            "dependencies": [
+              4
+            ],
+            "details": "Run `uv build`. Use `unzip -l dist/*.whl` to list the files. Confirm that the top-level directory in the wheel is the package folder (e.g., `lmstudiotxt_generator/`), NOT `src/lmstudiotxt_generator/` and NOT containing extraneous root files.",
+            "status": "pending",
+            "testStrategy": "Automated script or manual check using unzip/tar to validate file hierarchy inside the artifact."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Artifact Metadata Validation Script",
+        "description": "Create a script or makefile target to validate that built artifacts have correct metadata and are well-formed.",
+        "details": "1. Create `scripts/release/validate_metadata.py` or similar.\n2. The script should run `twine check dist/*` (or equivalent `uv` command if available) to ensure README renders correctly and metadata is valid.\n3. Ensure it checks for the absence of direct URL dependencies in the metadata `Requires-Dist` fields.",
+        "testStrategy": "Build artifacts with known bad metadata (e.g., direct URL) and ensure script fails. Build clean artifacts and ensure script passes.",
+        "priority": "medium",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Validation Script and Directory Structure",
+            "description": "Create the scripts directory and the initial Python script structure for metadata validation.",
+            "dependencies": [],
+            "details": "Create directory `scripts/release/` if it does not exist. Create `scripts/release/validate_metadata.py`. Set up standard Python boilerplate (argparse to accept dist directory path, logging setup).",
+            "status": "pending",
+            "testStrategy": "Run `python scripts/release/validate_metadata.py --help` to verify it runs without errors."
+          },
+          {
+            "id": 2,
+            "title": "Implement Standard Twine Check Integration",
+            "description": "Integrate `twine check` execution into the validation script to verify standard metadata compliance.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `validate_metadata.py`, use `subprocess` to run `twine check` on the target artifacts. Ensure the script captures stdout/stderr and propagates the exit code if twine detects invalid reStructuredText or missing fields.",
+            "status": "pending",
+            "testStrategy": "Build a valid artifact using `uv build` and run the script; ensure it passes the twine check step."
+          },
+          {
+            "id": 3,
+            "title": "Implement Metadata Extraction Logic",
+            "description": "Add functionality to extract metadata files from Wheel and Source distributions.",
+            "dependencies": [
+              1
+            ],
+            "details": "Using `zipfile` for `.whl` and `tarfile` for `.tar.gz`, implement functions to locate and read the `METADATA` (wheel) or `PKG-INFO` (sdist) files from the artifacts in the dist directory.",
+            "status": "pending",
+            "testStrategy": "Unit test the extraction function with a sample built artifact to ensure it returns the raw metadata string."
+          },
+          {
+            "id": 4,
+            "title": "Implement Direct URL Dependency Validation",
+            "description": "Parse metadata to detect and reject direct URL dependencies in `Requires-Dist`.",
+            "dependencies": [
+              3
+            ],
+            "details": "Parse the extracted metadata headers. Iterate through `Requires-Dist` entries. Implement a regex or parsing check (e.g. using `packaging.requirements`) to identify if any dependency specifies a direct URL (e.g., `@ http://...` or `git+https://...`). Raise an error if found.",
+            "status": "pending",
+            "testStrategy": "Create a dummy wheel with a direct URL dependency, run the script, and assert that it fails with a specific error message."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Script Execution Flow and CI Integration",
+            "description": "Combine checks into a main execution loop and handle overall exit codes.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Orchestrate the flow: 1. Find all files in `dist/`. 2. Run Twine check. 3. Run Metadata/URL check. 4. Aggregate results. If any check fails, print clear errors and exit with non-zero status code. Update `pyproject.toml` or `Makefile` (if exists) to include a target for this script.",
+            "status": "pending",
+            "testStrategy": "Run the full script against a clean build (`uv build`) to confirm zero exit code, then against a corrupted build to confirm non-zero exit code."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Create Smoke Test Suite for Artifacts",
+        "description": "Develop a smoke test script that installs built artifacts (wheel/sdist) and verifies the CLI runs.",
+        "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `lmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `lmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
+        "testStrategy": "Run `pytest tests/smoke_test.py` (or execute directly `python tests/smoke_test.py`) after running `uv build`. It should pass only if artifacts are valid.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize smoke test script with venv management helpers",
+            "description": "Set up the test file and utilities for isolating installations in temporary virtual environments.",
+            "dependencies": [],
+            "details": "Create `tests/smoke_test.py`. Implement helper functions using `tempfile`, `venv`, and `subprocess` to generate throwaway virtual environments. Create a utility function `run_in_venv(venv_path, command)` to execute shell commands (like `pip install` or the CLI executable) specifically within the context of the created environment.",
+            "status": "pending",
+            "testStrategy": "Execute the script to verify the helper function successfully creates a directory containing a valid Python executable."
+          },
+          {
+            "id": 2,
+            "title": "Implement artifact installation tests for Wheel and Sdist",
+            "description": "Write the specific test cases that install the build artifacts and verify the CLI entry point runs correctly.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `tests/smoke_test.py`, implement `test_wheel_install()` and `test_sdist_install()`. The logic must: 1. Locate the `.whl` and `.tar.gz` files in `dist/`. 2. Invoke the venv helper. 3. Install the artifact into the venv. 4. Execute `lmstxt --help` and assert exit code 0. Add a `if __name__ == '__main__':` block to run these tests.",
+            "status": "pending",
+            "testStrategy": "Run `uv build` to generate artifacts, then execute `python tests/smoke_test.py`. Expect success output for both installation types."
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Update TestPyPI Publishing Workflow",
+        "description": "Refine the GitHub Action for TestPyPI to use `uv`, proper secrets, and allow manual dispatch.",
+        "details": "1. Edit `.github/workflows/publish-testpypi.yml`.\n2. Ensure `on: workflow_dispatch` with input `release_tag` (or ref).\n3. Use `uv build` to generate artifacts.\n4. Use `uv publish` (or `twine`) targeting `https://test.pypi.org/legacy/`.\n5. Map `UV_PUBLISH_TOKEN` or `TWINE_PASSWORD` to the repo secret `TEST_PYPI_TOKEN`.\n6. Ensure it runs the smoke test (Task 4) before publishing.",
+        "testStrategy": "Trigger the workflow manually on a branch. Verify artifacts appear on TestPyPI.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze and Prepare Workflow Structure",
+            "description": "Examine the existing GitHub Actions workflows to determine the correct structure for the TestPyPI publishing workflow.",
+            "dependencies": [],
+            "details": "Check for existing workflows in `.github/workflows/` like `publish-testpypi.yml` or `ci.yml`. Create or update `.github/workflows/publish-testpypi.yml` to define the basic structure, ensuring permissions are set correctly (id-token: write for future OIDC or just contents: read) and define the `workflow_dispatch` trigger with a `release_tag` input option.",
+            "status": "pending",
+            "testStrategy": "Validate YAML syntax using a linter."
+          },
+          {
+            "id": 2,
+            "title": "Implement UV Setup and Build Steps",
+            "description": "Configure the workflow to set up Python and install uv, then build the package distribution artifacts.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the `publish-testpypi.yml` workflow, add steps to: 1. Checkout code (using `actions/checkout@v4`). 2. Set up Python (using `actions/setup-python@v5`). 3. Install `uv` (e.g., via `pip install uv` or the official action if available/preferred). 4. Run `uv build` to generate sdist and wheel files in the `dist/` directory.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 3,
+            "title": "Integrate Smoke Tests into Workflow",
+            "description": "Add a step to run the project's smoke tests before publishing to ensure artifact integrity.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add a step after the build process but before publishing. This step should create a fresh virtual environment using `uv venv`, install the built wheel from `dist/` (e.g., `uv pip install dist/*.whl`), and run the basic CLI command or import test defined in Task 4 (e.g., `lmstxt --help` or a specific script).",
+            "status": "pending",
+            "testStrategy": "Workflow fails if the smoke test command returns a non-zero exit code."
+          },
+          {
+            "id": 4,
+            "title": "Configure UV Publish to TestPyPI",
+            "description": "Add the publishing step using `uv publish` targeting the TestPyPI repository with proper authentication.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add the publish step: `uv publish --publish-url https://test.pypi.org/legacy/ dist/*`. Configure authentication by mapping the `UV_PUBLISH_TOKEN` environment variable to the `${{ secrets.TEST_PYPI_TOKEN }}` GitHub secret. Ensure this step only runs if the smoke test passes.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 5,
+            "title": "Final Review and Workflow Validation",
+            "description": "Verify the complete workflow configuration and document the dispatch parameters.",
+            "dependencies": [
+              4
+            ],
+            "details": "Review the final `.github/workflows/publish-testpypi.yml` file to ensure all indentation is correct, secrets are referenced properly, and the `workflow_dispatch` inputs are correctly defined. Verify that the `release_tag` input is used to checkout the specific ref if provided, or default to the current branch.",
+            "status": "pending",
+            "testStrategy": "Manually trigger the workflow from the GitHub Actions UI on a feature branch to verify it passes up to the publish step (which might fail if secrets aren't set in the fork, but the logic can be verified)."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Configure PyPI Trusted Publishing Workflow",
+        "description": "Update the release workflow to use OIDC for Trusted Publishing to PyPI on tag push.",
+        "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-llmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
+        "testStrategy": "Review workflow syntax using a linter. Actual verification requires pushing a tag (or testing in a fork with TestPyPI configured as the trusted target).",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze and Prepare Release Workflow Structure",
+            "description": "Examine the existing .github/workflows directory and prepare the structure for release.yml with required OIDC permissions.",
+            "dependencies": [],
+            "details": "Check for existing release.yml. If present, review current steps. If absent, create a new file. Define the trigger on 'push' for tags matching 'v*'. Crucially, add the top-level 'permissions' block setting 'id-token: write' to enable OIDC authentication for Trusted Publishing.",
+            "status": "pending",
+            "testStrategy": "Review the workflow file syntax to ensure permissions are correctly scoped."
+          },
+          {
+            "id": 2,
+            "title": "Configure Build Job with UV",
+            "description": "Define the build job in release.yml to checkout code, set up Python, and build artifacts using uv.",
+            "dependencies": [
+              1
+            ],
+            "details": "In release.yml, add a 'build' job. Steps: 1. Checkout code (v4). 2. Install uv. 3. Setup Python (v5). 4. Run 'uv build'. 5. Upload artifacts (dist/*) using actions/upload-artifact@v4 so they can be used by subsequent jobs (smoke test and publish).",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 3,
+            "title": "Integrate Smoke Test Job",
+            "description": "Add a smoke test job that runs before publishing to verify the build artifacts work as expected.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a 'smoke-test' job in release.yml that 'needs: build'. Steps: 1. Download artifacts from the build job. 2. Install uv/Python. 3. Run the smoke test suite (e.g., 'python tests/smoke_test.py' or 'pytest tests/smoke_test.py') against the downloaded wheel to ensure viability before publishing.",
+            "status": "pending",
+            "testStrategy": "Ensure the job fails if the smoke test script exits with a non-zero code."
+          },
+          {
+            "id": 4,
+            "title": "Configure PyPI Publish Job with Trusted Publishing",
+            "description": "Define the publish job using OIDC authentication targeting the PyPI environment.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add a 'publish' job that 'needs: smoke-test'. Define 'environment' with name 'pypi' and url 'https://pypi.org/p/lmstudio-llmstxt-generator'. Use 'pypa/gh-action-pypi-publish@release/v1' (recommended for Trusted Publishing) or 'uv publish --trusted-publishing' if supported. Do NOT use username/password secrets.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 5,
+            "title": "Finalize and Validate Workflow Configuration",
+            "description": "Combine all jobs into the final workflow file and perform static validation.",
+            "dependencies": [
+              4
+            ],
+            "details": "Ensure all jobs (build, smoke-test, publish) are correctly linked with 'needs'. Verify the environment URL matches the specific PyPI project. Commit the .github/workflows/release.yml file. Check that 'contents: read' permission is also present alongside 'id-token: write'.",
+            "status": "pending",
+            "testStrategy": "Run a linter (e.g., action-validator) on the YAML file locally if possible."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Consolidate Release Runbook",
+        "description": "Create a comprehensive document describing the release process for maintainers.",
+        "details": "1. Create `docs/publishing.md`.\n2. Document prerequisites (PyPI account, Trusted Publisher setup logic).\n3. Document the 'One Command' release flow (tagging).\n4. Document the TestPyPI manual trigger flow.\n5. Include troubleshooting steps for common errors (e.g., metadata rejected).\n6. Link to the CI workflows.",
+        "testStrategy": "Peer review the markdown file. Verify links work.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Establish Documentation Structure and Prerequisites",
+            "description": "Create the `docs/publishing.md` file and document the initial setup requirements for maintainers.",
+            "dependencies": [],
+            "details": "Create a new markdown file at `docs/publishing.md`. Add a 'Prerequisites' section detailing the need for a PyPI account and the specific configuration required for Trusted Publisher setup (OIDC) between GitHub and PyPI. Explain how maintainers should verify their permissions before attempting a release.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Document the Production Release Workflow",
+            "description": "Detail the standard 'One Command' release process triggered by git tags.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `docs/publishing.md`, describe the production release flow. Explain the versioning convention (Semantic Versioning), how to create a git tag (e.g., `git tag v1.0.0`), and how pushing this tag triggers the GitHub Action defined in `.github/workflows/release.yml`. Include a step-by-step guide for the maintainer to execute this flow.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 3,
+            "title": "Document the TestPyPI Workflow",
+            "description": "Explain the manual trigger process for deploying to TestPyPI for validation.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a section to `docs/publishing.md` covering the TestPyPI release process. Reference the manual dispatch trigger configured in the CI workflow. Provide instructions on how to use the GitHub UI 'Run workflow' button, input necessary parameters (if any), and verify the artifact on `test.pypi.org`.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 4,
+            "title": "Compile Troubleshooting Guide",
+            "description": "Create a section for resolving common release failures and errors.",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Add a 'Troubleshooting' section to the documentation. Address common issues such as 'Metadata Rejected' (often due to version conflicts or invalid `pyproject.toml` configuration), OIDC token failures, and smoke test failures. Provide resolution steps for each scenario, including how to clean up failed tags if necessary.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 5,
+            "title": "Finalize References and CI Links",
+            "description": "Add direct links to workflows and review the document for completeness.",
+            "dependencies": [
+              4
+            ],
+            "details": "Conclude the document by adding direct links to the repository's 'Actions' tab and the specific workflow files (`release.yml`, etc.). Perform a self-review to ensure all paths, commands, and URLs are accurate relative to the project root. Ensure the document is linked from the main `README.md` or `CONTRIBUTING.md` if they exist.",
+            "status": "pending",
+            "testStrategy": "Peer review the markdown file. Verify all hyperlinks are functional."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Add Pre-commit/Local Build Check Script",
+        "description": "Create a helper script for developers to run the full build-verify-smoke cycle locally.",
+        "details": "1. Create `scripts/release/verify_install.sh` (or `local_check.sh`).\n2. The script should: Clean `dist/`, run `uv build`, run `validate_metadata.py`, and run `smoke_test.py`.\n3. Make it executable.",
+        "testStrategy": "Run `./scripts/release/verify_install.sh` locally and ensure it passes when the repo is clean.",
+        "priority": "low",
+        "dependencies": [
+          3,
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Verify Install Script Skeleton",
+            "description": "Initialize the verify_install.sh bash script with strict error handling and basic environment checks.",
+            "dependencies": [],
+            "details": "Create the directory `scripts/release` if it does not exist. Create the file `scripts/release/verify_install.sh` with the shebang `#!/bin/bash` and `set -euo pipefail` to ensure the script exits immediately on error. Add a check to verify that the `uv` command is installed and available in the system PATH.",
+            "status": "pending",
+            "testStrategy": "Run the script; verify it exists, errors if `uv` is missing, or exits cleanly if nothing else is added yet."
+          },
+          {
+            "id": 2,
+            "title": "Implement Clean and Build Logic",
+            "description": "Add functionality to clean old artifacts and rebuild the project using uv.",
+            "dependencies": [
+              1
+            ],
+            "details": "Update the script to run `rm -rf dist/` to clean previous builds. Add the `uv build` command. Check that the `dist/` directory is created and contains artifacts (e.g., `.whl`, `.tar.gz`) after the build command runs.",
+            "status": "pending",
+            "testStrategy": "Run the script. Check that `dist/` is cleared and then repopulated with build artifacts."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Metadata Validation Step",
+            "description": "Invoke the metadata validation Python script to ensure build artifacts are well-formed.",
+            "dependencies": [
+              2
+            ],
+            "details": "Add the command to execute `python scripts/release/validate_metadata.py`. Ensure the script relies on the exit code of this Python script to determine pass/fail status. This ensures no artifacts with invalid metadata (e.g., direct URL dependencies) pass the check.",
+            "status": "pending",
+            "testStrategy": "Temporarily modify `pyproject.toml` to be invalid, run the script, and ensure it fails at this step."
+          },
+          {
+            "id": 4,
+            "title": "Integrate Smoke Test Step",
+            "description": "Invoke the smoke test script to verify the basic functionality of the built artifacts.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add the command to execute `python scripts/release/smoke_test.py`. This step should occur after metadata validation. It ensures that the package built in the previous steps can be installed and imported successfully.",
+            "status": "pending",
+            "testStrategy": "Run the script and verify that the smoke test python script is executed effectively."
+          },
+          {
+            "id": 5,
+            "title": "Finalize Script Permissions and User Experience",
+            "description": "Make the script executable and add user-friendly logging for build phases.",
+            "dependencies": [
+              4
+            ],
+            "details": "Run `chmod +x scripts/release/verify_install.sh`. Add `echo` statements with ANSI color codes (e.g., Green for success, Red for failure) to clearly demarcate the Build, Validate, and Smoke Test phases. Add a final success message if all steps pass.",
+            "status": "pending",
+            "testStrategy": "Run `./scripts/release/verify_install.sh` directly from the terminal and verify the output contains formatted status messages."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Verify Dynamic Versioning or Version Bump Policy",
+        "description": "Ensure the package version aligns with the Git tag automatically or document the bump process.",
+        "details": "1. Check `pyproject.toml` for `dynamic = [\"version\"]` or static version.\n2. If static, update the Runbook (Task 7) to include 'Bump version in pyproject.toml' as a step before tagging.\n3. If dynamic versioning is preferred, configure `setuptools_scm` (or equivalent) in `pyproject.toml` and add it to build-system requirements.",
+        "testStrategy": "Build a wheel and check the filename version. Ensure it matches the expected tag/commit version.",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze pyproject.toml for Current Versioning Configuration",
+            "description": "Inspect the pyproject.toml file to determine if the version is statically defined or configured for dynamic discovery.",
+            "dependencies": [],
+            "details": "Read `pyproject.toml` to check the `[project]` table for a `version` key or `dynamic = [\"version\"]`. Check `[build-system]` and `[tool.setuptools]` (or other backend configs) to understand the current setup.",
+            "status": "pending",
+            "testStrategy": "None (Analysis task)"
+          },
+          {
+            "id": 2,
+            "title": "Implement Dynamic Versioning with setuptools_scm",
+            "description": "Configure the project to derive its version automatically from Git tags using setuptools_scm.",
+            "dependencies": [
+              1
+            ],
+            "details": "Modify `pyproject.toml` to: 1. Remove static `version`. 2. Add `dynamic = [\"version\"]`. 3. Add `setuptools_scm` to `[build-system] requires`. 4. Add `[tool.setuptools_scm]` section (can be empty or with `write_to` config).",
+            "status": "pending",
+            "testStrategy": "Run `uv build` (or pip install) locally and verify the generated metadata/wheel version matches `git describe --tags`."
+          },
+          {
+            "id": 3,
+            "title": "Ensure __version__ Attribute Availability",
+            "description": "Ensure the package version is accessible at runtime via `__version__` without hardcoding it.",
+            "dependencies": [
+              2
+            ],
+            "details": "Modify `src/lmstudiotxt_generator/__init__.py` (or equivalent top-level init) to use `importlib.metadata.version` to retrieve the installed package version dynamically, handling the `PackageNotFoundError` gracefully.",
+            "status": "pending",
+            "testStrategy": "Run a python script importing the package and printing `__version__`. It should match the installed version."
+          },
+          {
+            "id": 4,
+            "title": "Update Release Documentation / Runbook",
+            "description": "Update the project documentation to reflect the new dynamic versioning workflow.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create or update a `RELEASE.md` or the Runbook (from Task 7 context) to explain that tagging a commit triggers the version bump, and manual editing of `pyproject.toml` version is no longer needed.",
+            "status": "pending",
+            "testStrategy": "Review the documentation for clarity and accuracy."
+          },
+          {
+            "id": 5,
+            "title": "Verify Wheel Versioning with Smoke Test",
+            "description": "Validate that the build process produces artifacts with the correct version derived from the git context.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create a temporary git tag (e.g., `v0.0.1-test`), run `uv build`, and inspect the filename of the generated `.whl` in `dist/`. Ensure it matches the tag. Clean up the tag afterwards.",
+            "status": "pending",
+            "testStrategy": "Manual verification or script checking `dist/` filenames against `git describe` output."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "End-to-End Release Simulation",
+        "description": "Perform a final validation of the entire pipeline using TestPyPI.",
+        "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-llmstxt-generator`.\n5. Verify `lmstxt --help` works.",
+        "testStrategy": "Successful installation and execution from TestPyPI.",
+        "priority": "medium",
+        "dependencies": [
+          5,
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Version to Development Release Candidate",
+            "description": "Bump the package version in pyproject.toml to a unique development version (e.g., 0.0.1.dev1) to allow a non-conflicting upload to TestPyPI.",
+            "dependencies": [],
+            "details": "Modify the `version` field in `pyproject.toml`. Append a `.devN` suffix to the current version. This ensures that we can verify the upload mechanism without consuming a 'real' semantic version number on TestPyPI, as PyPI files are immutable.",
+            "status": "pending",
+            "testStrategy": "Check pyproject.toml content and verify `uv build` produces a file with the new version string."
+          },
+          {
+            "id": 2,
+            "title": "Trigger TestPyPI Deployment Workflow",
+            "description": "Manually trigger the GitHub Action or CI pipeline configured for TestPyPI deployment using the new development version.",
+            "dependencies": [
+              1
+            ],
+            "details": "Navigate to the CI/CD dashboard (e.g., GitHub Actions). Locate the 'Publish to TestPyPI' workflow (created in previous tasks). Trigger it manually or by pushing a specific tag (e.g., `v0.0.1.dev1`) depending on the trigger logic defined in the workflow file.",
+            "status": "pending",
+            "testStrategy": "Monitor the CI job logs for successful completion, specifically looking for the 'Twine upload' or equivalent step success message."
+          },
+          {
+            "id": 3,
+            "title": "Verify TestPyPI Upload Integrity",
+            "description": "Confirm that the package artifacts have effectively appeared on the TestPyPI repository page with the correct metadata.",
+            "dependencies": [
+              2
+            ],
+            "details": "Visit the project URL on TestPyPI (e.g., `https://test.pypi.org/project/lmstudio-llmstxt-generator/`). Verify that the new version `0.0.1.dev1` is listed, the Release Date is current, and the `Description` (README) renders correctly.",
+            "status": "pending",
+            "testStrategy": "Manual verification on the TestPyPI website."
+          },
+          {
+            "id": 4,
+            "title": "Perform Clean Installation from TestPyPI",
+            "description": "Create a fresh virtual environment and install the package exclusively from the TestPyPI index to simulate an end-user installation.",
+            "dependencies": [
+              3
+            ],
+            "details": "Create a new virtualenv: `python -m venv venv_test`. Activate it. Run `pip install --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ lmstudio-llmstxt-generator==0.0.1.dev1`. Note: `--extra-index-url` is often needed for dependencies that don't exist on TestPyPI.",
+            "status": "pending",
+            "testStrategy": "Ensure pip completes successfully without errors regarding missing dependencies or hash mismatches."
+          },
+          {
+            "id": 5,
+            "title": "Validate Installed CLI Functionality",
+            "description": "Execute the installed CLI tool within the test environment to confirm the package structure and entry points function correctly.",
+            "dependencies": [
+              4
+            ],
+            "details": "Inside the `venv_test`, run the command `lmstxt --help`. Verify that the help text is displayed, indicating that the entry point scripts were correctly generated and the internal imports are working.",
+            "status": "pending",
+            "testStrategy": "The command should exit with code 0 and display the standard help message, not an ImportError or ModuleNotFoundError."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2025-12-29T22:13:30.525Z",
+      "updated": "2025-12-29T22:13:30.525Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

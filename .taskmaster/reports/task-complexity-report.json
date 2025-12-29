@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2025-12-29T22:16:03.273Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Taskmaster",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Clean Dependencies and Normalize Names in pyproject.toml",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Investigate the current `llm-ctx` dependency usage in the codebase to determine if it can be replaced by a PyPI version or if it needs to be vendored/submoduled. 2. Update `pyproject.toml` to replace git URL with a standard version constraint or local path, and normalize other dependency names (e.g., `llms_txt` -> `llms-txt`).",
+			"reasoning": "This task requires modifying `pyproject.toml` to remove a git URL dependency (`llm-ctx`). The complexity lies in resolving how to handle `llm-ctx` if a valid PyPI version doesn't exist. Since this blocks PyPI uploads, it might require code changes (imports) or vendoring if the external library isn't standard."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Configure Setuptools for src Layout Discovery",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is a configuration task. The project likely already follows a structure, or needs a minor shift. Adding `[tool.setuptools.packages.find] where = [\"src\"]` is standard practice and low risk, assuming the directory structure matches."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Artifact Metadata Validation Script",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Writing a script to run `twine check` is straightforward. The additional check for direct URL dependencies in metadata requires parsing the wheel metadata (e.g. using `pkginfo` or standard library `zipfile` + parsing), which adds slight complexity but is well-defined."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Create Smoke Test Suite for Artifacts",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Create a `tests/smoke_test.py` that utilizes `subprocess` to create a temporary virtual environment. 2. Implement test cases that install the generated wheel and sdist into this environment and execute the CLI entry point (`lmstxt --help`) to verify basic functionality.",
+			"reasoning": "Isolating tests to verify artifact installation involves managing subprocesses and virtual environments (potentially using `venv` module programmatically). This is more complex than standard unit tests because it interacts with the build artifacts and system environment paths."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Update TestPyPI Publishing Workflow",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Modifying a GitHub Actions YAML file is generally low complexity. The logic involves swapping build commands to `uv` and setting up secrets. The main friction point is usually testing the workflow itself."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Configure PyPI Trusted Publishing Workflow",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Similar to Task 5, this is infrastructure-as-code configuration. Setting up OIDC is standard documentation work. The complexity is low, provided the repository settings (secrets/environments) are accessible."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Consolidate Release Runbook",
+			"complexityScore": 1,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is a documentation task. It requires synthesizing the knowledge from previous tasks into a markdown file. No code complexity."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Add Pre-commit/Local Build Check Script",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is a shell script wrapper around existing commands (`uv build`, the validation script from Task 3, and the smoke test from Task 4). It creates a unified entry point for developers."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Verify Dynamic Versioning or Version Bump Policy",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Deciding between static vs dynamic versioning. If dynamic (`setuptools_scm`), it requires adding a build-time dependency and configuration in `pyproject.toml`. If static, it's just policy. The technical implementation of `setuptools_scm` is standard."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "End-to-End Release Simulation",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is a process validation task. It involves manual steps and monitoring CI. The complexity comes from debugging potential failures in the integration of all previous tasks (e.g., if the smoke test fails in CI or TestPyPI rejects the package)."
+		}
+	]
+}
