@@ -2,7 +2,7 @@
   "name": "codefetch-runner",
   "private": true,
   "scripts": {
-    "code": "codefetch --include-dir src --exclude-dirs __pycache__ -o src.md",
+    "code": "codefetch -t 5 --include-dir src --exclude-dirs __pycache__ -o src.md",
     "code:docs": "codefetch --include-dir docs --exclude-dirs __pycache__ -o docs_codebase.md",
     "code:artifacts": "node scripts/codefetch-artifacts.mjs",
     "code:bash": "bash scripts/codefetch-artifacts.sh",
