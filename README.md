@@ -3,6 +3,12 @@ title: "LM Studio llms.txt Generator"
 description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
 ---
 
+[![PyPI](https://img.shields.io/pypi/v/lms-llmsTxt.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/lms-llmsTxt/)
+[![Downloads](https://img.shields.io/pypi/dm/lms-llmsTxt.svg?cacheSeconds=300)](https://pypi.org/project/lms-llmsTxt/)
+[![TestPyPI](https://img.shields.io/badge/TestPyPI-lms-llmsTxt-informational?cacheSeconds=300)](https://test.pypi.org/project/lms-llmsTxt/)
+[![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml)
+[![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms-llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
+
 ## Overview
 
 Use this CLI-first toolkit to produce LLM-friendly documentation bundles (`llms.txt`, `llms-full.txt`, optional `llms-ctx.txt`, and fallback JSON) for any GitHub repository. The generator wraps DSPy analyzers, manages LM Studio model lifecycle with the official Python SDK, and guarantees output even when the primary language model cannot respond.

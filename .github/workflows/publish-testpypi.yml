@@ -30,8 +30,8 @@ jobs:
 
       - name: Smoke Test Artifacts
         run: |
-          # Use the smoke test script which handles venv creation
-          python tests/smoke_test.py
+          # Run smoke tests using pytest via uv
+          uv run --with pytest pytest tests/smoke_test.py
 
       - name: Publish to TestPyPI
         env:

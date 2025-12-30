@@ -29,7 +29,7 @@ jobs:
         run: uv build
 
       - name: Smoke Test
-        run: python tests/smoke_test.py
+        run: uv run --with pytest pytest tests/smoke_test.py
 
       - name: Publish to PyPI
         run: uv publish --trusted-publishing
