@@ -1,6 +1,6 @@
 [project]
 name = "lmstudio-llmstxt-generator"
-version = "0.1.0"
+dynamic = ["version"]
 description = "LM Studio-powered llms.txt generator based on DSPy tutorials."
 readme = "README.md"
 requires-python = ">=3.10"
@@ -22,11 +22,15 @@ dev = [
 lmstxt = "lmstudiotxt_generator.cli:main"
 
 [build-system]
-requires = ["setuptools>=67", "wheel"]
+requires = ["setuptools>=67", "wheel", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "node-and-date"
 
 [tool.pytest.ini_options]
 pythonpath = [
