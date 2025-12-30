@@ -29,7 +29,7 @@ fi
 
 echo -e "${GREEN}🔥 Running smoke tests...${NC}"
 # Run with pytest installed in ephemeral env
-if ! uv run --with pytest tests/smoke_test.py; then
+if ! uv run --with pytest pytest tests/smoke_test.py; then
     echo -e "${RED}❌ Smoke tests failed.${NC}"
     exit 1
 fi
