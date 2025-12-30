@@ -1,4 +1,4 @@
-name: Publish dspyteach (TestPyPI)
+name: Publish to TestPyPI
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
       release_tag:
         description: "Optional Git ref or tag to publish"
         required: false
+        default: ""
 
 jobs:
   publish:
@@ -19,14 +20,20 @@ jobs:
           ref: ${{ github.event.inputs.release_tag || github.ref }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v6
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.12"
+          enable-cache: true
 
       - name: Build distributions
-        run: uv build --no-sources
+        run: uv build
+
+      - name: Smoke Test Artifacts
+        run: |
+          # Use the smoke test script which handles venv creation
+          python tests/smoke_test.py
 
       - name: Publish to TestPyPI
         env:
           UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
-        run: uv publish --index testpypi
+        run: uv publish --publish-url https://test.pypi.org/legacy/

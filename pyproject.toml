@@ -9,8 +9,8 @@ dependencies = [
     "python-dotenv",
     "requests",
     "lmstudio",
-    "llm-ctx @ git+https://github.com/AnswerDotAI/llm-ctx.git",
-    "llms_txt"
+    "llm-ctx",
+    "llms-txt"
 ]
 
 [project.optional-dependencies]
@@ -24,6 +24,9 @@ lmstxt = "lmstudiotxt_generator.cli:main"
 [build-system]
 requires = ["setuptools>=67", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.pytest.ini_options]
 pythonpath = [
