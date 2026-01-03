@@ -1295,7 +1295,7 @@
   "feat-mcp": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Project Foundation & Configuration Module",
         "description": "Establish the project structure, dependency management, and configuration loading logic.",
         "details": "Initialize the project following the `src/llmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-llmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.\n\nLibraries: `pydantic`, `pydantic-settings`, `mcp`.\nfiles: `src/llmstxt_mcp/config.py`, `src/llmstxt_mcp/errors.py`, `pyproject.toml`.",
@@ -1310,7 +1310,7 @@
         "updatedAt": "2026-01-03T19:17:10.418Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Data Models & Type Definitions",
         "description": "Define Pydantic models for MCP tool inputs/outputs and internal data structures.",
         "details": "Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.\n\nLibraries: `pydantic`.\nfiles: `src/llmstxt_mcp/models.py`.",
@@ -1327,7 +1327,7 @@
         "updatedAt": "2026-01-03T19:17:54.333Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Security & File Hashing Utilities",
         "description": "Implement path validation security controls and file hashing utilities.",
         "details": "Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.\n\nLibraries: `pathlib`, `hashlib`.\nfiles: `src/llmstxt_mcp/security.py`, `src/llmstxt_mcp/hashing.py`.",
@@ -1344,7 +1344,7 @@
         "updatedAt": "2026-01-03T19:18:55.104Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "In-Memory Run Registry",
         "description": "Implement the storage mechanism to track generation runs and their artifacts.",
         "details": "Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.\n\nfiles: `src/llmstxt_mcp/runs.py`.",
@@ -1361,7 +1361,7 @@
         "updatedAt": "2026-01-03T19:19:47.633Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Artifact Access Logic",
         "description": "Implement the core logic for resolving, reading, and chunking artifact content.",
         "details": "Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.\n\nfiles: `src/llmstxt_mcp/artifacts.py`.",
@@ -1417,7 +1417,7 @@
         "updatedAt": "2026-01-03T19:25:09.120Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Generator Integration & Serialized Execution",
         "description": "Wrap the external `lmstudiotxt_generator` library with thread-safe execution logic.",
         "details": "In `server.py` (or a dedicated integration module), implement the `llmstxt_generate` tool logic. Import `run_generation` from the external library. Use a `threading.Lock` to ensure only one generation runs at a time (avoiding global config races). Capture exceptions (specifically connectivity errors) and map them to `LMStudioUnavailableError`. Calculate hashes for outputs and register the run in `RunStore`.\n\nLibraries: `lmstudiotxt_generator`.\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1473,7 +1473,7 @@
         "updatedAt": "2026-01-03T19:55:09.862Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "MCP Server Tool & Resource Wiring",
         "description": "Configure the FastMCP server instance and register tools and resources.",
         "details": "In `server.py`, initialize `FastMCP`. Register the `llmstxt_generate` and `llmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `llmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `llmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.\n\nLibraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1542,7 +1542,7 @@
         "updatedAt": "2026-01-03T20:22:31.099Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Stdio-Safe Logging Implementation",
         "description": "Configure logging to ensure no interference with the stdio transport. [Updated: 1/3/2026]",
         "details": "Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.\n\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1559,7 +1559,7 @@
         "updatedAt": "2026-01-03T20:26:24.207Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Request Limits & Error Normalization",
         "description": "Harden the server by enforcing limits and ensuring clean error reporting.",
         "details": "Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.\n\nfiles: `src/llmstxt_mcp/errors.py`, `src/llmstxt_mcp/server.py`.",
@@ -1576,7 +1576,7 @@
         "updatedAt": "2026-01-03T20:26:56.522Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Packaging & Entry Point Verification",
         "description": "Finalize packaging and verify the CLI entry point works for both transports.",
         "details": "Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `llmstxt-mcp = llmstxt_mcp.server:main`). Verify that running `llmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.\n\nfiles: `pyproject.toml`, `README.md`.",
@@ -1586,21 +1586,25 @@
           "8",
           "9"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [],
         "complexity": 2,
         "recommendedSubtasks": 0,
-        "expansionPrompt": ""
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-03T22:34:55.275Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-03T20:26:56.523Z",
+      "lastModified": "2026-01-03T22:34:55.276Z",
       "taskCount": 10,
-      "completedCount": 9,
+      "completedCount": 10,
       "tags": [
         "feat-mcp"
-      ]
+      ],
+      "created": "2026-01-03T22:35:42.383Z",
+      "description": "Tasks for feat-mcp context",
+      "updated": "2026-01-03T22:35:42.383Z"
     }
   }
 }

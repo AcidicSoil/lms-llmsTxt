@@ -1,3 +1,4 @@
+import json
 from llmstxt_mcp.server import run_store
 from llmstxt_mcp.models import GenerateResult, ArtifactRef
 import pytest
@@ -13,9 +14,11 @@ def test_list_runs_tool():
     
     from llmstxt_mcp.server import list_runs
     
-    results = list_runs(limit=10)
+    # Returns JSON string now
+    json_res = list_runs(limit=10)
+    results = json.loads(json_res)
     assert len(results) >= 1
-    assert results[0].run_id == "test-run"
+    assert results[0]["run_id"] == "test-run"
 
 def test_read_artifact_tool(tmp_path):
     # Setup artifact
@@ -31,10 +34,12 @@ def test_read_artifact_tool(tmp_path):
     
     from llmstxt_mcp.server import read_artifact
     
-    result = read_artifact(run_id="read-test", artifact_name="llms.txt", offset=0, limit=100)
-    assert result.content == "12345"
-    assert result.total_chars == 5
-    assert result.truncated is False
+    # Returns JSON string
+    json_res = read_artifact(run_id="read-test", artifact_name="llms.txt", offset=0, limit=100)
+    result = json.loads(json_res)
+    assert result["content"] == "12345"
+    assert result["total_chars"] == 5
+    assert result["truncated"] is False
 
 def test_resource_access(tmp_path):
     # Setup artifact
