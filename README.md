@@ -124,13 +124,15 @@ llmstxt-mcp
 #     "llmstxt": {
 #       "command": "llmstxt-mcp",
 #       "env": {
-#         "GITHUB_ACCESS_TOKEN": "your_token",
-#         "LMSTUDIO_BASE_URL": "http://localhost:1234/v1"
+#         "GITHUB_ACCESS_TOKEN": "$GITHUB_ACCESS_TOKEN",
+#         "LMSTUDIO_BASE_URL": "${LMSTUDIO_BASE_URL}"
 #       }
 #     }
 #   }
 # }
 ```
+
+### codex config in your config.toml
 
 ```toml
 [mcp_servers.llmstxt]
@@ -141,7 +143,7 @@ tool_timeout_sec = 30
 
 [mcp_servers.llmstxt.env]
 GITHUB_ACCESS_TOKEN = "$GITHUB_ACCESS_TOKEN"
-LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
+LMSTUDIO_BASE_URL = "${LMSTUDIO_BASE_URL}"
 # LMSTUDIO_MODEL = "qwen/qwen3-4b-2507" # optional
 
 ```
@@ -190,3 +192,9 @@ When `llms-full` surfaces `[fetch-error]`, verify the curated link uses the repo
 <Info>
 Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid repeating flags during iterative runs.
 </Info>
+
+### Testing The MCP Via Inspector Config
+
+```bash
+npx @modelcontextprotocol/inspector --config ./inspector.config.json
+```
