@@ -4,7 +4,7 @@ import uuid
 from typing import Any
 from pathlib import Path
 from lmstudiotxt_generator.pipeline import run_generation
-from lmstudiotxt_generator import LMStudioConnectivityError
+from lmstudiotxt_generator import LMStudioConnectivityError, AppConfig
 from lmstudiotxt_generator.models import GenerationArtifacts
 from .errors import LMStudioUnavailableError
 from .models import GenerateResult, ArtifactRef
@@ -25,19 +25,24 @@ def safe_generate(
 ) -> GenerateResult:
     """
     Thread-safe wrapper around run_generation that updates the run store.
+    
+    Note: depth, concurrency, and skip_repo_check are currently not supported by the
+    underlying library's run_generation but are kept in the signature for future compatibility.
     """
     run_id = str(uuid.uuid4())
     
+    # Construct AppConfig from arguments
+    # Note: Using defaults/env vars for LM settings as they aren't passed in this tool call
+    config = AppConfig(
+        output_dir=Path(output_dir)
+    )
+    
     with _lock:
         try:
-            # Note: run_generation expects string path or Path object
-            # It returns GenerationArtifacts dataclass
+            # Call run_generation with correct signature
             artifacts: GenerationArtifacts = run_generation(
-                url=url,
-                output_dir=output_dir,
-                depth=depth,
-                concurrency=concurrency,
-                skip_repo_check=skip_repo_check,
+                repo_url=url,
+                config=config,
                 cache_lm=cache_lm
             )
             
