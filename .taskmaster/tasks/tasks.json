@@ -1291,5 +1291,316 @@
       "description": "Tasks for chore-release context",
       "updated": "2026-01-03T18:28:51.110Z"
     }
+  },
+  "feat-mcp": {
+    "tasks": [
+      {
+        "id": "1",
+        "title": "Project Foundation & Configuration Module",
+        "description": "Establish the project structure, dependency management, and configuration loading logic.",
+        "details": "Initialize the project following the `src/llmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-llmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.\n\nLibraries: `pydantic`, `pydantic-settings`, `mcp`.\nfiles: `src/llmstxt_mcp/config.py`, `src/llmstxt_mcp/errors.py`, `pyproject.toml`.",
+        "testStrategy": "Unit tests verifying that environment variables are correctly parsed into the config object and that defaults are applied. Test custom error instantiation.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 3,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Create a `pyproject.toml` configuration defining the build system and dependencies including `mcp` and `pydantic`. Implement `src/llmstxt_mcp/config.py` using `pydantic-settings` to parse environment variables like `LLMSTXT_MCP_ALLOWED_ROOT` with safe defaults. Define the custom exception hierarchy in `src/llmstxt_mcp/errors.py`.",
+        "updatedAt": "2026-01-03T19:17:10.418Z"
+      },
+      {
+        "id": "2",
+        "title": "Data Models & Type Definitions",
+        "description": "Define Pydantic models for MCP tool inputs/outputs and internal data structures.",
+        "details": "Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.\n\nLibraries: `pydantic`.\nfiles: `src/llmstxt_mcp/models.py`.",
+        "testStrategy": "Unit tests ensuring valid data passes validation and invalid data raises ValidationError. Verify JSON serialization formats.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-03T19:17:54.333Z"
+      },
+      {
+        "id": "3",
+        "title": "Security & File Hashing Utilities",
+        "description": "Implement path validation security controls and file hashing utilities.",
+        "details": "Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.\n\nLibraries: `pathlib`, `hashlib`.\nfiles: `src/llmstxt_mcp/security.py`, `src/llmstxt_mcp/hashing.py`.",
+        "testStrategy": "Unit tests: 1) Attempt to access paths outside the allowed root (e.g., `../etc/passwd`) and assert `OutputDirNotAllowedError`. 2) Verify SHA256 matches known values for test files. 3) Verify preview returns correct truncation boolean.",
+        "priority": "high",
+        "dependencies": [
+          "1"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Implement `validate_output_dir` in `security.py` using `pathlib` to strictly resolve and check path containment against the allowed root. Develop `hashing.py` to provide a streaming SHA256 calculator and a safe text preview reader that handles encoding errors gracefully.",
+        "updatedAt": "2026-01-03T19:18:55.104Z"
+      },
+      {
+        "id": "4",
+        "title": "In-Memory Run Registry",
+        "description": "Implement the storage mechanism to track generation runs and their artifacts.",
+        "details": "Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.\n\nfiles: `src/llmstxt_mcp/runs.py`.",
+        "testStrategy": "Unit tests: Add runs, retrieve them by ID, and list them with sorting/limiting. Verify `UnknownRunError` when accessing non-existent IDs.",
+        "priority": "medium",
+        "dependencies": [
+          "2"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 3,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-03T19:19:47.633Z"
+      },
+      {
+        "id": "5",
+        "title": "Artifact Access Logic",
+        "description": "Implement the core logic for resolving, reading, and chunking artifact content.",
+        "details": "Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.\n\nfiles: `src/llmstxt_mcp/artifacts.py`.",
+        "testStrategy": "Unit tests: Create dummy files, perform chunked reads at various offsets (start, middle, end, past end). Verify truncation banners are prepended when reading as a resource.",
+        "priority": "high",
+        "dependencies": [
+          "3",
+          "4"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Artifacts Module and URI Logic",
+            "description": "Create the artifacts module structure and implement the URI generation helper function. [Updated: 1/3/2026]",
+            "dependencies": [],
+            "details": "Create `src/llmstxt_mcp/artifacts.py`. Import necessary dependencies including the `RunStore` from `runs.py`. Implement the `resource_uri(run_id: str, artifact_name: str) -> str` function to generate standardized URIs (e.g., `llmstxt://{run_id}/{artifact}`) used by the MCP server to identify resources.",
+            "status": "done",
+            "testStrategy": "Unit test verifying that `resource_uri` returns the expected string format for given inputs.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:20:34.944Z"
+          },
+          {
+            "id": 2,
+            "title": "Implement Truncated Resource Reading",
+            "description": "Develop the logic to read artifact files for MCP Resources, ensuring content is truncated if it exceeds limits.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement `read_resource_text(run_id, artifact)`. This function must resolve the file path using `RunStore`, read the text content, and check against `LLMSTXT_MCP_RESOURCE_MAX_CHARS`. If the content exceeds the limit, truncate it and append a footer (e.g., '... truncated') to prevent overloading the MCP client.",
+            "status": "done",
+            "testStrategy": "Create a dummy file larger than the configured max chars. Call `read_resource_text` and assert the returned string length matches the limit and contains the truncation indicator.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:21:38.433Z"
+          },
+          {
+            "id": 3,
+            "title": "Implement Chunked Artifact Reading",
+            "description": "Create the logic for reading specific slices of a file based on offset and limit parameters for the reading tool.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement `read_artifact_chunk(run_id, artifact, offset, limit)`. Use python file seeking (`seek`) to navigate to the `offset` and read up to `limit` characters. Handle edge cases such as `offset` exceeding file size (return empty string) or `limit` extending past EOF. Ensure file handles are closed safely.",
+            "status": "done",
+            "testStrategy": "Create a file with known content (e.g., '0123456789'). specific offsets and limits (e.g., offset=2, limit=3 should return '234') and verify behavior when reading past EOF.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:25:09.120Z"
+          }
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Implement `resource_uri` generation logic. Create the `read_resource_text` function handling file I/O and truncation. Develop `read_artifact_chunk` with robust offset/limit handling to support pagination of large files.",
+        "updatedAt": "2026-01-03T19:25:09.120Z"
+      },
+      {
+        "id": "6",
+        "title": "Generator Integration & Serialized Execution",
+        "description": "Wrap the external `lmstudiotxt_generator` library with thread-safe execution logic.",
+        "details": "In `server.py` (or a dedicated integration module), implement the `llmstxt_generate` tool logic. Import `run_generation` from the external library. Use a `threading.Lock` to ensure only one generation runs at a time (avoiding global config races). Capture exceptions (specifically connectivity errors) and map them to `LMStudioUnavailableError`. Calculate hashes for outputs and register the run in `RunStore`.\n\nLibraries: `lmstudiotxt_generator`.\nfiles: `src/llmstxt_mcp/server.py`.",
+        "testStrategy": "Integration test: Mock the external `run_generation` to write temporary files. Verify that the MCP tool wrapper correctly calls the mock, computes metadata, and updates the RunStore.",
+        "priority": "high",
+        "dependencies": [
+          "5"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Thread-Safe Generator Wrapper",
+            "description": "Create the integration module and implement the locking mechanism to ensure serial execution of the generator.",
+            "dependencies": [],
+            "details": "Create `src/llmstxt_mcp/generator.py` (or integrate into `server.py`). Import `run_generation` from `lmstudiotxt_generator`. Instantiate a module-level `threading.Lock`. Define a function `safe_generate` that uses the lock as a context manager to wrap the call to `run_generation`. This ensures that concurrent requests to the MCP server do not trigger race conditions in the external library's global configuration.",
+            "status": "done",
+            "testStrategy": "Unit test: call the wrapper from multiple threads simultaneously and assert that the critical section is entered serially.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:31:15.917Z"
+          },
+          {
+            "id": 2,
+            "title": "Implement Error Translation Layer",
+            "description": "Add error handling logic to map external library exceptions to internal domain errors.",
+            "dependencies": [
+              1
+            ],
+            "details": "In the generation wrapper, wrap the `run_generation` call in a try/except block. Specifically identify connectivity errors (e.g., connection refused from LM Studio) and raise a `LMStudioUnavailableError` (defined in `errors.py`). Ensure generic exceptions are also caught and wrapped or logged appropriately to prevent server crashes while releasing the lock in a `finally` block.",
+            "status": "done",
+            "testStrategy": "Unit test: Mock `run_generation` to raise specific exceptions and assert that the wrapper raises the correct internal `LMStudioUnavailableError`.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:36:42.791Z"
+          },
+          {
+            "id": 3,
+            "title": "Integrate Output Hashing and RunStore Updates",
+            "description": "Process generation outputs, calculate hashes, and register the completed run in the RunStore.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Upon successful generation, use the hashing utilities from `src/llmstxt_mcp/hashing.py` to calculate SHA256 checksums for the output files. Construct a `Run` object with the status, timestamp, and artifact metadata. Call the `RunStore` instance to save the run. Return the final result object expected by the MCP tool interface.",
+            "status": "done",
+            "testStrategy": "Integration test: Verify that a successful generation results in a new entry in `RunStore` with correct file hashes.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T19:55:09.862Z"
+          }
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Create the integration module wrapping `lmstudiotxt_generator`. Implement a locking mechanism to enforce serial execution. Add error handling to translate external library exceptions into internal domain errors and update the `RunStore` upon completion.",
+        "updatedAt": "2026-01-03T19:55:09.862Z"
+      },
+      {
+        "id": "7",
+        "title": "MCP Server Tool & Resource Wiring",
+        "description": "Configure the FastMCP server instance and register tools and resources.",
+        "details": "In `server.py`, initialize `FastMCP`. Register the `llmstxt_generate` and `llmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `llmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `llmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.\n\nLibraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).\nfiles: `src/llmstxt_mcp/server.py`.",
+        "testStrategy": "Functional test: Instantiate the server in a test harness. Call `list_tools` and `list_resources` to verify registration. Simulate a tool call and resource read request.",
+        "priority": "high",
+        "dependencies": [
+          "6"
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize FastMCP Server Instance",
+            "description": "Set up the basic FastMCP server application shell and entry point. [Updated: 1/3/2026]",
+            "dependencies": [],
+            "details": "In `src/llmstxt_mcp/server.py`, import `FastMCP` and instantiate the server object with the name 'llmstxt-mcp'. Define the standard `if __name__ == \"__main__\":` block to invoke `mcp.run()`, ensuring it defaults to the stdio transport mechanism for standard MCP communication.",
+            "status": "done",
+            "testStrategy": "Run the python file directly and verify it enters the wait loop for stdin input (or prints help if arguments are required).",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T20:04:49.758Z"
+          },
+          {
+            "id": 2,
+            "title": "Register MCP Tools",
+            "description": "Expose the core generation and retrieval functions as MCP tools.",
+            "dependencies": [
+              1
+            ],
+            "details": "Import the logic from core modules. Use the `@mcp.tool()` decorator to register `llmstxt_generate`, `llmstxt_read_artifact`, and `llmstxt_list_runs`. Ensure type hints use the Pydantic models defined in `models.py` so that FastMCP generates the correct JSON schemas for the tool definitions.",
+            "status": "done",
+            "testStrategy": "Unit test that inspects the `mcp.tools` registry to confirm all three tools are present and possess the correct arguments/descriptions.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T20:20:31.495Z"
+          },
+          {
+            "id": 3,
+            "title": "Register Dynamic Resources",
+            "description": "Implement the URI pattern for accessing generated artifacts as resources. [Updated: 1/3/2026]",
+            "dependencies": [
+              1
+            ],
+            "details": "Use the `@mcp.resource(\"llmstxt://runs/{run_id}/{artifact}\")` decorator to register the resource handler. Implement the underlying function to parse the `run_id` and `artifact` name, retrieve the content from `RunStore`, and return it as a string resource.",
+            "status": "done",
+            "testStrategy": "Unit test mocking the `RunStore` with a dummy artifact, calling the resource handler with a valid URI, and asserting the content is returned.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T20:21:32.410Z"
+          },
+          {
+            "id": 4,
+            "title": "Server Capability Verification",
+            "description": "Verify the complete wiring of tools and resources within the server instance. [Updated: 1/3/2026]",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Create an integration test harness that loads the `server.py` module. Call the internal MCP introspection methods (e.g., `list_tools`, `list_resource_templates`) to verify that the server is correctly advertising its capabilities before it is deployed to a real client.",
+            "status": "done",
+            "testStrategy": "Integration test: Instantiate the server and simulate a `tools/list` and `resources/templates/list` JSON-RPC request to validate the response structure.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-03T20:22:31.099Z"
+          }
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Initialize the `FastMCP` server instance. Register the generation and reading tools with their Pydantic schemas. Define the resource URI pattern `llmstxt://runs/{run_id}/{artifact}` and link it to the artifact reader. Configure the entry point to run the server.",
+        "updatedAt": "2026-01-03T20:22:31.099Z"
+      },
+      {
+        "id": "8",
+        "title": "Stdio-Safe Logging Implementation",
+        "description": "Configure logging to ensure no interference with the stdio transport. [Updated: 1/3/2026]",
+        "details": "Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.\n\nfiles: `src/llmstxt_mcp/server.py`.",
+        "testStrategy": "Manual/Scripted test: Run the server in stdio mode, emit logs, and verify they appear on stderr while the JSON-RPC communication on stdout remains valid JSON.",
+        "priority": "medium",
+        "dependencies": [
+          "7"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-03T20:26:24.207Z"
+      },
+      {
+        "id": "9",
+        "title": "Request Limits & Error Normalization",
+        "description": "Harden the server by enforcing limits and ensuring clean error reporting.",
+        "details": "Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.\n\nfiles: `src/llmstxt_mcp/errors.py`, `src/llmstxt_mcp/server.py`.",
+        "testStrategy": "Unit tests: Trigger exceptions and verify the returned error message format. Test boundary conditions for chunk sizes to ensure limits are respected.",
+        "priority": "medium",
+        "dependencies": [
+          "7"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Implement decorators or middleware to catch domain exceptions and convert them to user-friendly MCP errors. Refactor artifact reading to strictly enforce `MAX_CHARS` limits globally.",
+        "updatedAt": "2026-01-03T20:26:56.522Z"
+      },
+      {
+        "id": "10",
+        "title": "Packaging & Entry Point Verification",
+        "description": "Finalize packaging and verify the CLI entry point works for both transports.",
+        "details": "Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `llmstxt-mcp = llmstxt_mcp.server:main`). Verify that running `llmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.\n\nfiles: `pyproject.toml`, `README.md`.",
+        "testStrategy": "Smoke test: Install the package locally (`pip install -e .`) and run the CLI command. Verify it starts up without crashing and prints expected startup logs to stderr.",
+        "priority": "low",
+        "dependencies": [
+          "8",
+          "9"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": ""
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2026-01-03T20:26:56.523Z",
+      "taskCount": 10,
+      "completedCount": 9,
+      "tags": [
+        "feat-mcp"
+      ]
+    }
   }
 }

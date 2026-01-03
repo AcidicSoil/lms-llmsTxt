@@ -100,6 +100,38 @@ The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to o
 The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
 </Check>
 
+## Model Context Protocol (MCP) Server
+
+This package includes a FastMCP server that exposes the generator as an MCP tool.
+
+### Features
+- **Tools**:
+  - `llmstxt_generate`: Generate documentation for a given repository URL.
+  - `llmstxt_list_runs`: View recent generation history.
+  - `llmstxt_read_artifact`: Read generated files (chunked access supported).
+- **Resources**:
+  - Access generated files via `llmstxt://runs/{run_id}/{artifact_name}`.
+
+### Running the Server
+
+```bash
+# Default stdio transport
+llmstxt-mcp
+
+# Or use with Claude Desktop / Cursor by adding to your config:
+# {
+#   "mcpServers": {
+#     "llmstxt": {
+#       "command": "llmstxt-mcp",
+#       "env": {
+#         "GITHUB_ACCESS_TOKEN": "your_token",
+#         "LMSTUDIO_BASE_URL": "http://localhost:1234/v1"
+#       }
+#     }
+#   }
+# }
+```
+
 ## How it works
 
 1. **Collect repository material** – the GitHub client gathers the file tree, README, package files, repository visibility, and default branch.
@@ -111,7 +143,8 @@ The pipeline always writes `llms.txt` and `llms-full.txt`, even when the languag
 ## Project layout
 
 - `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzers, LM Studio helpers, fallback renderer, and artifact writers
-- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, and pipeline fallbacks
+- `src/llmstxt_mcp/` – MCP server implementation, tools, and resource handlers
+- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, pipeline fallbacks, and MCP server functionality
 - `artifacts/` – sample outputs generated from previous runs
 
 ## Verify your setup

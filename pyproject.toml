@@ -10,7 +10,10 @@ dependencies = [
     "requests",
     "lmstudio",
     "llm-ctx",
-    "llms-txt"
+    "llms-txt",
+    "mcp",
+    "pydantic",
+    "pydantic-settings"
 ]
 
 [project.optional-dependencies]
@@ -23,6 +26,7 @@ test = [
 
 [project.scripts]
 lmstxt = "lmstudiotxt_generator.cli:main"
+llmstxt-mcp = "llmstxt_mcp.server:main"
 
 [build-system]
 requires = ["setuptools>=67", "wheel", "setuptools_scm>=8"]
