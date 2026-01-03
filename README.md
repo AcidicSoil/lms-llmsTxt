@@ -132,6 +132,20 @@ llmstxt-mcp
 # }
 ```
 
+```toml
+[mcp_servers.llmstxt]
+command = "llmstxt-mcp"
+args = ["stdio"]
+startup_timeout_sec = 30
+tool_timeout_sec = 30
+
+[mcp_servers.llmstxt.env]
+GITHUB_ACCESS_TOKEN = "$GITHUB_ACCESS_TOKEN"
+LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
+# LMSTUDIO_MODEL = "qwen/qwen3-4b-2507" # optional
+
+```
+
 ## How it works
 
 1. **Collect repository material** – the GitHub client gathers the file tree, README, package files, repository visibility, and default branch.
