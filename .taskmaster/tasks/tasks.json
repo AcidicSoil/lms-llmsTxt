@@ -618,7 +618,7 @@
   "chore-release": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Clean Dependencies and Normalize Names in pyproject.toml",
         "description": "Remove direct VCS URL dependencies and normalize dependency names to canonical PyPI distribution names to ensure PyPI compliance.",
         "details": "1. Modify `pyproject.toml`. \n2. Identify the `llm-ctx` dependency currently defined as `llm-ctx @ git+...`.\n3. Replace it with a valid PyPI version constraint (e.g., `>=x.y.z` if available on PyPI) or a specific version. If it's not on PyPI, this task blocks until a strategy (vendor or PyPI release of dependency) is decided, but assuming availability or replacement, update it.\n4. Scan for other dependencies and ensure they use canonical names (e.g., change `llms_txt` to `llms-txt` if applicable).\n5. Verify `uv lock` or `pip install` works with the new configuration.",
@@ -653,7 +653,7 @@
         "updatedAt": "2025-12-30T00:12:38.308Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Configure Setuptools for src Layout Discovery",
         "description": "Explicitly configure package discovery in pyproject.toml to ensure code under `src/` is correctly included in the built wheel.",
         "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `lmstxt = \"lmstudiotxt_generator.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
@@ -726,7 +726,7 @@
         "updatedAt": "2025-12-30T00:13:30.433Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Implement Artifact Metadata Validation Script",
         "description": "Create a script or makefile target to validate that built artifacts have correct metadata and are well-formed.",
         "details": "1. Create `scripts/release/validate_metadata.py` or similar.\n2. The script should run `twine check dist/*` (or equivalent `uv` command if available) to ensure README renders correctly and metadata is valid.\n3. Ensure it checks for the absence of direct URL dependencies in the metadata `Requires-Dist` fields.",
@@ -800,7 +800,7 @@
         "updatedAt": "2025-12-30T00:14:42.421Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "Create Smoke Test Suite for Artifacts",
         "description": "Develop a smoke test script that installs built artifacts (wheel/sdist) and verifies the CLI runs.",
         "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `lmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `lmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
@@ -837,7 +837,7 @@
         "updatedAt": "2025-12-30T00:18:03.814Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Update TestPyPI Publishing Workflow",
         "description": "Refine the GitHub Action for TestPyPI to use `uv`, proper secrets, and allow manual dispatch.",
         "details": "1. Edit `.github/workflows/publish-testpypi.yml`.\n2. Ensure `on: workflow_dispatch` with input `release_tag` (or ref).\n3. Use `uv build` to generate artifacts.\n4. Use `uv publish` (or `twine`) targeting `https://test.pypi.org/legacy/`.\n5. Map `UV_PUBLISH_TOKEN` or `TWINE_PASSWORD` to the repo secret `TEST_PYPI_TOKEN`.\n6. Ensure it runs the smoke test (Task 4) before publishing.",
@@ -910,7 +910,7 @@
         "updatedAt": "2025-12-30T00:19:04.031Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Configure PyPI Trusted Publishing Workflow",
         "description": "Update the release workflow to use OIDC for Trusted Publishing to PyPI on tag push.",
         "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-llmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
@@ -983,7 +983,7 @@
         "updatedAt": "2025-12-30T00:19:10.363Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "Consolidate Release Runbook",
         "description": "Create a comprehensive document describing the release process for maintainers.",
         "details": "1. Create `docs/publishing.md`.\n2. Document prerequisites (PyPI account, Trusted Publisher setup logic).\n3. Document the 'One Command' release flow (tagging).\n4. Document the TestPyPI manual trigger flow.\n5. Include troubleshooting steps for common errors (e.g., metadata rejected).\n6. Link to the CI workflows.",
@@ -1058,7 +1058,7 @@
         "updatedAt": "2025-12-30T00:19:25.045Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Add Pre-commit/Local Build Check Script",
         "description": "Create a helper script for developers to run the full build-verify-smoke cycle locally.",
         "details": "1. Create `scripts/release/verify_install.sh` (or `local_check.sh`).\n2. The script should: Clean `dist/`, run `uv build`, run `validate_metadata.py`, and run `smoke_test.py`.\n3. Make it executable.",
@@ -1132,7 +1132,7 @@
         "updatedAt": "2025-12-30T00:24:30.249Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Verify Dynamic Versioning or Version Bump Policy",
         "description": "Ensure the package version aligns with the Git tag automatically or document the bump process.",
         "details": "1. Check `pyproject.toml` for `dynamic = [\"version\"]` or static version.\n2. If static, update the Runbook (Task 7) to include 'Bump version in pyproject.toml' as a step before tagging.\n3. If dynamic versioning is preferred, configure `setuptools_scm` (or equivalent) in `pyproject.toml` and add it to build-system requirements.",
@@ -1205,7 +1205,7 @@
         "updatedAt": "2025-12-30T00:27:09.320Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "End-to-End Release Simulation",
         "description": "Perform a final validation of the entire pipeline using TestPyPI.",
         "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-llmstxt-generator`.\n5. Verify `lmstxt --help` works.",
@@ -1286,7 +1286,10 @@
       "completedCount": 10,
       "tags": [
         "chore-release"
-      ]
+      ],
+      "created": "2026-01-03T18:28:51.110Z",
+      "description": "Tasks for chore-release context",
+      "updated": "2026-01-03T18:28:51.110Z"
     }
   }
 }
