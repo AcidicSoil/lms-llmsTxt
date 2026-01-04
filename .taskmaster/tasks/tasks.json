@@ -1595,14 +1595,133 @@
       },
       {
         "id": 11,
-        "title": "test",
-        "description": "this is a test",
-        "details": "another test",
-        "testStrategy": "test",
+        "title": "Fix: Refactor for Asynchronous Processing",
+        "description": "To truly remove the timeout in a way that works for tools, the server should not do heavy lifting inside the tool call. It should accept the request, launch a background thread to do the work, and return a \"Processing...\" status immediately.",
+        "details": "Requirements:\n- Accept the request\n- Launch a background thread to do the work\n- Return a \"Processing...\" status immediately",
+        "testStrategy": "",
         "status": "pending",
         "dependencies": [],
-        "priority": "medium",
-        "subtasks": []
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update RunRecord to Include Job Status and Results",
+            "description": "Enhance the RunRecord data model to track the state of the background job (e.g., 'pending', 'processing', 'completed', 'failed') and capture any errors or outputs.",
+            "dependencies": [],
+            "details": "Modify the `RunRecord` class in `src/llmstxt_mcp/runs.py`. Add fields for `status` (Enum), `error_message` (Optional[str]), and ensure it can store results once the background task finishes. Update `RunStore.put_run` or create a `update_run` method to allow updating status during the lifecycle.",
+            "status": "pending",
+            "testStrategy": "Unit test for RunStore and RunRecord to ensure status transitions and metadata updates are correctly persisted in memory."
+          },
+          {
+            "id": 2,
+            "title": "Implement Background Worker Logic",
+            "description": "Create a helper function that executes the heavy generation logic and updates the RunStore with results.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/llmstxt_mcp/server.py` or a new `worker.py`, implement an async-friendly wrapper (using `anyio.to_thread.run_sync` or standard `threading`) that calls the actual generation code. It must catch exceptions, update the run status in `RunStore` to 'completed' or 'failed', and store the resulting artifact paths.",
+            "status": "pending",
+            "testStrategy": "Integration test: Call the worker function directly and verify that the RunStore reflects the correct status and artifact list after completion."
+          },
+          {
+            "id": 3,
+            "title": "Refactor llmstxt_generate Tool to Use Background Tasks",
+            "description": "Modify the main generation tool to initialize a run and immediately return the run ID.",
+            "dependencies": [
+              2
+            ],
+            "details": "Update the `llmstxt_generate` tool in `server.py`. Instead of awaiting the full generation, it should: 1. Generate a unique `run_id`. 2. Create a 'pending' record in `RunStore`. 3. Schedule the worker logic in the background (using `asyncio.create_task` or a background thread). 4. Return a JSON response containing the `run_id` and a message like 'Generation started'.",
+            "status": "pending",
+            "testStrategy": "Functional test using an MCP client: verify that the tool call returns immediately with a success message while the work happens in the background."
+          },
+          {
+            "id": 4,
+            "title": "Update Resource Provider for Dynamic Run Status",
+            "description": "Ensure that reading a run resource provides the current status of the processing job.",
+            "dependencies": [
+              1,
+              3
+            ],
+            "details": "Modify the resource resolver for `llmstxt://runs/{run_id}/...` in `server.py`. If the user requests the status or the job is still processing, the resource content should reflect the current status (e.g., 'Processing...') instead of failing or blocking. If the job failed, it should return the captured error message.",
+            "status": "pending",
+            "testStrategy": "Resource read test: Attempt to read a resource for a 'processing' run and verify the returned text indicates the current state."
+          },
+          {
+            "id": 5,
+            "title": "Implement Asynchronous Cleanup of Completed Runs",
+            "description": "Add logic to prune old runs from the in-memory registry to prevent memory leaks.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add a simple TTL (Time To Live) or a maximum capacity check to `RunStore`. Implement a background cleanup routine that periodically removes records for runs that have been completed or failed for a certain duration.",
+            "status": "pending",
+            "testStrategy": "Unit test: Verify that adding runs beyond the capacity or after the TTL causes the oldest/expired runs to be removed from the registry."
+          },
+          {
+            "id": 6,
+            "title": "Update RunRecord Model for State Tracking",
+            "description": "Enhance the existing RunRecord model in runs.py to include status fields and lifecycle timestamps.",
+            "dependencies": [],
+            "details": "Add 'status' (Enum: PENDING, PROCESSING, COMPLETED, FAILED), 'error_message' (Optional string), and 'updated_at' fields to the RunRecord dataclass or Pydantic model.",
+            "status": "pending",
+            "testStrategy": "Unit tests to verify instantiation and field accessibility for the updated RunRecord structure."
+          },
+          {
+            "id": 7,
+            "title": "Implement Thread-Safe RunStore Update Mechanism",
+            "description": "Modify RunStore to handle concurrent updates to records safely using synchronization primitives.",
+            "dependencies": [
+              6
+            ],
+            "details": "Add a threading.Lock to the RunStore class. Implement an update_run(run_id, **kwargs) method that safely updates specific fields in a RunRecord without race conditions.",
+            "status": "pending",
+            "testStrategy": "Concurrent stress test with multiple threads attempting to update the same record ID simultaneously."
+          },
+          {
+            "id": 8,
+            "title": "Develop Background Execution Wrapper",
+            "description": "Create a helper function to execute long-running generator tasks in a background thread.",
+            "dependencies": [
+              7
+            ],
+            "details": "Use anyio.to_thread.run_sync or threading.Thread to wrap generator logic. The wrapper must update the RunStore status to 'PROCESSING' at start, 'COMPLETED' on success, and 'FAILED' on exception.",
+            "status": "pending",
+            "testStrategy": "Verify status transitions in the RunStore when a dummy background task is executed through the wrapper."
+          },
+          {
+            "id": 9,
+            "title": "Refactor Generate Tool for Immediate Response",
+            "description": "Update the llmstxt_generate tool in server.py to initiate background work and return immediately.",
+            "dependencies": [
+              8
+            ],
+            "details": "Modify the tool handler to create a new run_id, put a 'PENDING' record in the RunStore, spawn the background wrapper task, and return a JSON response containing the run_id and 'Processing...' message.",
+            "status": "pending",
+            "testStrategy": "Functional test calling the generate tool and checking for immediate HTTP 200/OK while background work continues."
+          },
+          {
+            "id": 10,
+            "title": "Implement Status-Aware Resource Resolvers",
+            "description": "Update llmstxt_read_artifact and resource providers to handle runs that are still in progress.",
+            "dependencies": [
+              9
+            ],
+            "details": "Check the RunRecord status in resource handlers. If 'PROCESSING', return a status indicator. If 'FAILED', return the error details. Only return artifact content if status is 'COMPLETED'.",
+            "status": "pending",
+            "testStrategy": "Attempt to read an artifact for a 'PROCESSING' run and verify the response correctly indicates work is in progress."
+          },
+          {
+            "id": 11,
+            "title": "Implement In-Memory Record Cleanup Routine",
+            "description": "Create a background maintenance task to remove old or stale run records from the RunStore.",
+            "dependencies": [
+              7
+            ],
+            "details": "Add a method to RunStore that deletes records older than a configurable TTL (e.g., 24 hours). Implement an optional background loop or trigger this during new run creation to prevent memory leaks.",
+            "status": "pending",
+            "testStrategy": "Add records with manually expired timestamps and verify they are correctly removed after calling the pruning method."
+          }
+        ]
       }
     ],
     "metadata": {
@@ -1615,7 +1734,7 @@
       ],
       "created": "2026-01-03T22:35:42.383Z",
       "description": "Tasks for feat-mcp context",
-      "updated": "2026-01-04T04:03:00.241Z"
+      "updated": "2026-01-04T06:49:57.307Z"
     }
   }
 }

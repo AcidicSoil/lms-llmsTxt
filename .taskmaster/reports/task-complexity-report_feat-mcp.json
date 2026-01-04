@@ -1,91 +1,21 @@
 {
 	"meta": {
-		"generatedAt": "2026-01-03T22:35:29.925Z",
-		"tasksAnalyzed": 0,
+		"generatedAt": "2026-01-04T07:27:13.535Z",
+		"tasksAnalyzed": 1,
+		"totalTasks": 11,
+		"analysisCount": 1,
 		"thresholdScore": 5,
 		"projectName": "Task Master",
-		"usedResearch": false
+		"usedResearch": true
 	},
 	"complexityAnalysis": [
 		{
-			"taskId": 1,
-			"taskTitle": "Project Foundation & Configuration Module",
-			"complexityScore": 3,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Create a `pyproject.toml` configuration defining the build system and dependencies including `mcp` and `pydantic`. Implement `src/llmstxt_mcp/config.py` using `pydantic-settings` to parse environment variables like `LLMSTXT_MCP_ALLOWED_ROOT` with safe defaults. Define the custom exception hierarchy in `src/llmstxt_mcp/errors.py`.",
-			"reasoning": "This is a standard boilerplate setup. The complexity is low as it involves standard library and package configuration. The main effort is ensuring the directory structure is correct and dependencies are properly resolved."
-		},
-		{
-			"taskId": 2,
-			"taskTitle": "Data Models & Type Definitions",
-			"complexityScore": 2,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "",
-			"reasoning": "Defining Pydantic models is straightforward. The scope is well-defined (inputs/outputs for specific tools). No complex logic, just schema definitions."
-		},
-		{
-			"taskId": 3,
-			"taskTitle": "Security & File Hashing Utilities",
-			"complexityScore": 4,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Implement `validate_output_dir` in `security.py` using `pathlib` to strictly resolve and check path containment against the allowed root. Develop `hashing.py` to provide a streaming SHA256 calculator and a safe text preview reader that handles encoding errors gracefully.",
-			"reasoning": "Security components require careful implementation to prevent path traversal (e.g., `..` attacks). While the logic isn't massive, the criticality of getting it right slightly raises the complexity score."
-		},
-		{
-			"taskId": 4,
-			"taskTitle": "In-Memory Run Registry",
-			"complexityScore": 3,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "",
-			"reasoning": "Implementing an in-memory dictionary wrapper is simple. The logic involves basic CRUD operations on a Python dict. Thread safety is mentioned but likely minimal given Python's GIL and the atomic nature of dict operations for this use case."
-		},
-		{
-			"taskId": 5,
-			"taskTitle": "Artifact Access Logic",
-			"complexityScore": 5,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Implement `resource_uri` generation logic. Create the `read_resource_text` function handling file I/O and truncation. Develop `read_artifact_chunk` with robust offset/limit handling to support pagination of large files.",
-			"reasoning": "This task involves file I/O, offset calculations, and combining the previous security/model layers. Handling large files efficiently and correctly managing edge cases (e.g., reading past EOF) adds moderate complexity."
-		},
-		{
-			"taskId": 6,
-			"taskTitle": "Generator Integration & Serialized Execution",
-			"complexityScore": 6,
-			"recommendedSubtasks": 3,
-			"expansionPrompt": "Create the integration module wrapping `lmstudiotxt_generator`. Implement a locking mechanism to enforce serial execution. Add error handling to translate external library exceptions into internal domain errors and update the `RunStore` upon completion.",
-			"reasoning": "Integration with an external library (`lmstudiotxt_generator`) introduces external factors (API changes, specific exception behaviors). Enforcing thread safety and managing the lifecycle of a generation run (status updates, error propagation) makes this the most complex logic piece."
-		},
-		{
-			"taskId": 7,
-			"taskTitle": "MCP Server Tool & Resource Wiring",
-			"complexityScore": 5,
-			"recommendedSubtasks": 4,
-			"expansionPrompt": "Initialize the `FastMCP` server instance. Register the generation and reading tools with their Pydantic schemas. Define the resource URI pattern `llmstxt://runs/{run_id}/{artifact}` and link it to the artifact reader. Configure the entry point to run the server.",
-			"reasoning": "This is the 'glue' code. While `FastMCP` simplifies much of this, correctly wiring up dynamic resources (URI templates) and ensuring tools are correctly exposed with metadata requires attention to detail."
-		},
-		{
-			"taskId": 8,
-			"taskTitle": "Stdio-Safe Logging Implementation",
-			"complexityScore": 2,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "",
-			"reasoning": "Configuring logging to stderr is a standard requirement for CLI tools using stdout for data. It's a configuration task with low risk if standard patterns are followed."
-		},
-		{
-			"taskId": 9,
-			"taskTitle": "Request Limits & Error Normalization",
-			"complexityScore": 4,
-			"recommendedSubtasks": 2,
-			"expansionPrompt": "Implement decorators or middleware to catch domain exceptions and convert them to user-friendly MCP errors. Refactor artifact reading to strictly enforce `MAX_CHARS` limits globally.",
-			"reasoning": "This involves retrofitting error handling across the server. It requires identifying all entry points and ensuring consistent behavior, which is slightly more complex than the initial implementation."
-		},
-		{
-			"taskId": 10,
-			"taskTitle": "Packaging & Entry Point Verification",
-			"complexityScore": 2,
-			"recommendedSubtasks": 0,
-			"expansionPrompt": "",
-			"reasoning": "Standard Python packaging task. If the directory structure from Task 1 was correct, this is mostly verifying `pyproject.toml` and documentation."
+			"taskId": 11,
+			"taskTitle": "Fix: Refactor for Asynchronous Processing",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Identify and break down the necessary changes for Task 11 into granular steps. Ensure you cover the following areas: 1) Updating the RunRecord model to track state, 2) Creating a thread-safe RunStore update mechanism, 3) Implementing a background execution wrapper (e.g., using anyio or threading), 4) Refactoring the FastMCP tool to handle immediate returns and background task spawning, 5) Updating resource resolvers to provide status-aware responses, and 6) Implementing a safe cleanup/pruning routine for in-memory records.",
+			"reasoning": "This task is highly complex as it fundamentally changes the server's execution model from synchronous/blocking to asynchronous/non-blocking for long-running tool calls. It requires managing concurrency safely (thread-safety in the RunStore), handling background task lifecycles (including error capture and state propagation), and modifying the MCP resource resolution logic to handle intermediate states ('Processing'). The high score reflects the risks associated with background thread management, potential race conditions in the shared registry, and the need to ensure standard MCP clients correctly handle 'immediate-response-with-id' patterns."
 		}
 	]
 }
