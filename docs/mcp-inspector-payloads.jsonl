@@ -1,0 +1,7 @@
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"mcp-inspector","version":"1.0"}}}
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+{"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}}
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"llmstxt_list_runs","arguments":{"limit":5}}}
+{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"llmstxt_generate","arguments":{"url":"https://github.com/owner/repo","output_dir":"./output","depth":1,"concurrency":5,"skip_repo_check":false,"cache_lm":true}}}
+{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"llmstxt_read_artifact","arguments":{"run_id":"<RUN_ID_FROM_STEP_4>","artifact_name":"llms.txt","offset":0,"limit":2000}}}
+{"jsonrpc":"2.0","id":6,"method":"tools/call","params":{"name":"llmstxt_read_artifact","arguments":{"run_id":"missing-id","artifact_name":"llms.txt","offset":0,"limit":200}}}

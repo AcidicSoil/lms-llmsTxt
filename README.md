@@ -198,3 +198,14 @@ Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid re
 ```bash
 npx @modelcontextprotocol/inspector --config ./inspector.config.json
 ```
+
+### MCP Inspector Payloads
+
+Use the ready-to-run JSON-RPC payloads in `docs/mcp-inspector-payloads.jsonl` to verify the MCP tools:
+
+1) Start the inspector with the config above.
+2) Paste each line from `docs/mcp-inspector-payloads.jsonl` into the raw JSON-RPC input, in order.
+3) Replace `https://github.com/owner/repo` with a real repo URL.
+4) After `llmstxt_generate`, replace `<RUN_ID_FROM_STEP_4>` with the returned `run_id`.
+
+Note: tool responses are returned as text content that contains JSON. Parse `result.content[0].text` to get structured data.
