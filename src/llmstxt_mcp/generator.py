@@ -6,10 +6,11 @@ from pathlib import Path
 from lmstudiotxt_generator.pipeline import run_generation
 from lmstudiotxt_generator import LMStudioConnectivityError, AppConfig
 from lmstudiotxt_generator.models import GenerationArtifacts
-from .errors import LMStudioUnavailableError
+from .errors import LMStudioUnavailableError, OutputDirNotAllowedError
 from .models import GenerateResult, ArtifactRef
 from .runs import RunStore
 from .hashing import sha256_file
+from .security import validate_output_dir
 
 _lock = threading.Lock()
 logger = logging.getLogger(__name__)
@@ -31,10 +32,16 @@ def safe_generate(
     """
     run_id = str(uuid.uuid4())
     
+    # Security: Validate output directory before use
+    try:
+        validated_dir = validate_output_dir(Path(output_dir))
+    except OutputDirNotAllowedError as e:
+        logger.error(f"Security violation: {e}")
+        raise
+    
     # Construct AppConfig from arguments
-    # Note: Using defaults/env vars for LM settings as they aren't passed in this tool call
     config = AppConfig(
-        output_dir=Path(output_dir)
+        output_dir=validated_dir
     )
     
     with _lock:
