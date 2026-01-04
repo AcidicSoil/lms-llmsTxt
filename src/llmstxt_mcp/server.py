@@ -1,12 +1,14 @@
+import json
 import logging
 import sys
-import json
+import threading
+import uuid
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .config import settings
-from .models import ReadArtifactResult, ArtifactName
+from .models import ReadArtifactResult, ArtifactName, RunRecord
 from .runs import RunStore
 from .generator import (
     safe_generate_llms_txt,
@@ -29,7 +31,31 @@ logger = logging.getLogger(__name__)
 mcp = FastMCP("llmstxt_mcp")
 
 # Initialize RunStore (singleton for the server instance)
-run_store = RunStore()
+run_store = RunStore(
+    max_runs=settings.LLMSTXT_MCP_RUN_MAX,
+    ttl_seconds=settings.LLMSTXT_MCP_RUN_TTL_SECONDS,
+    cleanup_interval_seconds=settings.LLMSTXT_MCP_RUN_CLEANUP_INTERVAL_SECONDS,
+)
+run_store.start_cleanup_worker()
+
+def _spawn_background(target, *args, **kwargs) -> None:
+    def _runner() -> None:
+        try:
+            target(*args, **kwargs)
+        except Exception:
+            logger.exception("Background job failed")
+
+    thread = threading.Thread(target=_runner, daemon=True)
+    thread.start()
+
+def _start_run(run_id: str | None) -> str:
+    if run_id:
+        run_store.get_run(run_id)
+        run_store.update_run(run_id, status="processing", error_message=None)
+        return run_id
+    new_run_id = str(uuid.uuid4())
+    run_store.put_run(RunRecord(run_id=new_run_id, status="processing"))
+    return new_run_id
 
 
 def _artifact_path_from_url(output_dir: Path, repo_url: str, artifact_name: str) -> Path:
@@ -77,16 +103,20 @@ def generate_llms_txt(
     Generates llms.txt (and llms.json on fallback) for a repository.
 
     Returns:
-        str: JSON-formatted GenerateResult containing run_id and artifact references.
+        str: JSON-formatted RunRecord containing run_id and status.
     """
-    logger.info(f"Starting llms.txt generation for {url}")
-    result = safe_generate_llms_txt(
-        run_store=run_store,
-        url=url,
-        output_dir=output_dir,
-        cache_lm=cache_lm
+    logger.info("Queueing llms.txt generation for %s", url)
+    validate_output_dir(Path(output_dir))
+    run_id = _start_run(None)
+    _spawn_background(
+        safe_generate_llms_txt,
+        run_store,
+        run_id,
+        url,
+        output_dir,
+        cache_lm,
     )
-    return result.model_dump_json(indent=2)
+    return run_store.get_run(run_id).model_dump_json(indent=2)
 
 
 @mcp.tool(
@@ -108,16 +138,20 @@ def generate_llms_full(
     Generates llms-full.txt from an existing llms.txt artifact.
 
     Returns:
-        str: JSON-formatted GenerateResult with updated artifacts.
+        str: JSON-formatted RunRecord with updated artifacts.
     """
-    logger.info(f"Starting llms-full generation for {run_id}")
-    result = safe_generate_llms_full(
-        run_store=run_store,
-        run_id=run_id,
-        repo_url=repo_url,
-        output_dir=output_dir,
+    logger.info("Queueing llms-full generation for %s", run_id)
+    if not run_id:
+        validate_output_dir(Path(output_dir))
+    effective_run_id = _start_run(run_id)
+    _spawn_background(
+        safe_generate_llms_full,
+        run_store,
+        effective_run_id,
+        repo_url,
+        output_dir,
     )
-    return result.model_dump_json(indent=2)
+    return run_store.get_run(effective_run_id).model_dump_json(indent=2)
 
 
 @mcp.tool(
@@ -139,16 +173,22 @@ def generate_llms_ctx(
     Generates llms-ctx.txt from an existing llms.txt artifact.
 
     Returns:
-        str: JSON-formatted GenerateResult with updated artifacts.
+        str: JSON-formatted RunRecord with updated artifacts.
     """
-    logger.info(f"Starting llms-ctx generation for {run_id}")
-    result = safe_generate_llms_ctx(
-        run_store=run_store,
-        run_id=run_id,
-        repo_url=repo_url,
-        output_dir=output_dir,
+    logger.info("Queueing llms-ctx generation for %s", run_id)
+    if not run_id:
+        if not repo_url:
+            raise ValueError("repo_url is required when run_id is omitted")
+        validate_output_dir(Path(output_dir))
+    effective_run_id = _start_run(run_id)
+    _spawn_background(
+        safe_generate_llms_ctx,
+        run_store,
+        effective_run_id,
+        repo_url,
+        output_dir,
     )
-    return result.model_dump_json(indent=2)
+    return run_store.get_run(effective_run_id).model_dump_json(indent=2)
 
 @mcp.tool(
     name="llmstxt_list_runs",
@@ -165,10 +205,10 @@ def list_runs(
     Returns a list of recent generation runs, ordered by newest first.
 
     Returns:
-        str: JSON list of GenerateResult objects.
+        str: JSON list of RunRecord objects.
     """
     runs = run_store.list_runs(limit=limit)
-    return json.dumps([r.model_dump() for r in runs], indent=2)
+    return json.dumps([r.model_dump(mode="json") for r in runs], indent=2)
 
 @mcp.tool(
     name="llmstxt_read_artifact",
