@@ -1,12 +1,12 @@
 from unittest.mock import patch
 import pytest
-from llmstxt_mcp.generator import safe_generate
+from llmstxt_mcp.generator import safe_generate_llms_txt
 from llmstxt_mcp.runs import RunStore
 from lmstudiotxt_generator.pipeline import run_generation
 
-def test_safe_generate_calls_run_generation_with_correct_signature():
+def test_safe_generate_llms_txt_calls_run_generation_with_correct_signature():
     """
-    Ensures safe_generate uses the correct keyword arguments when calling run_generation.
+    Ensures safe_generate_llms_txt uses the correct keyword arguments when calling run_generation.
     Using autospec=True ensures the mock enforces the real function's signature.
     """
     run_store = RunStore()
@@ -22,7 +22,7 @@ def test_safe_generate_calls_run_generation_with_correct_signature():
         
         # This should NOT raise TypeError
         try:
-            safe_generate(run_store, url="https://github.com/test/repo")
+            safe_generate_llms_txt(run_store, url="https://github.com/test/repo")
         except TypeError as e:
             pytest.fail(f"safe_generate called run_generation with incorrect signature: {e}")
         
@@ -31,3 +31,5 @@ def test_safe_generate_calls_run_generation_with_correct_signature():
         assert "repo_url" in kwargs
         assert "config" in kwargs
         assert "url" not in kwargs
+        assert kwargs.get("build_full") is False
+        assert kwargs.get("build_ctx") is False

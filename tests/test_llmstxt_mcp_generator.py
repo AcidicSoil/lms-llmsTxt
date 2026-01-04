@@ -3,7 +3,7 @@ import time
 import pytest
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from llmstxt_mcp.generator import safe_generate
+from llmstxt_mcp.generator import safe_generate_llms_txt
 from llmstxt_mcp.errors import LMStudioUnavailableError, OutputDirNotAllowedError
 from llmstxt_mcp.runs import RunStore
 from llmstxt_mcp.config import settings
@@ -14,7 +14,7 @@ from lmstudiotxt_generator.models import GenerationArtifacts
 def run_store():
     return RunStore()
 
-def test_safe_generate_success(run_store, tmp_path):
+def test_safe_generate_llms_txt_success(run_store, tmp_path):
     # Setup mock artifacts
     f1 = tmp_path / "llms.txt"
     f1.write_text("content")
@@ -24,14 +24,14 @@ def test_safe_generate_success(run_store, tmp_path):
     
     mock_artifacts = GenerationArtifacts(
         llms_txt_path=str(f1),
-        llms_full_path="",
-        ctx_path="",
-        json_path="",
+        llms_full_path=None,
+        ctx_path=None,
+        json_path=None,
         used_fallback=False
     )
     
     with patch("llmstxt_mcp.generator.run_generation", return_value=mock_artifacts):
-        result = safe_generate(run_store, "https://github.com/foo/bar", output_dir=str(tmp_path))
+        result = safe_generate_llms_txt(run_store, "https://github.com/foo/bar", output_dir=str(tmp_path))
         
         assert result.status == "success"
         assert len(result.artifacts) == 1
@@ -40,15 +40,15 @@ def test_safe_generate_success(run_store, tmp_path):
         stored = run_store.get_run(result.run_id)
         assert stored == result
 
-def test_safe_generate_security_violation(run_store, tmp_path):
+def test_safe_generate_llms_txt_security_violation(run_store, tmp_path):
     # Configure allowed root
     settings.LLMSTXT_MCP_ALLOWED_ROOT = tmp_path
     
     # Attempt to use a directory outside the root
     with pytest.raises(OutputDirNotAllowedError):
-        safe_generate(run_store, "https://github.com/foo/bar", output_dir="/etc")
+        safe_generate_llms_txt(run_store, "https://github.com/foo/bar", output_dir="/etc")
 
-def test_safe_generate_failure(run_store, tmp_path):
+def test_safe_generate_llms_txt_failure(run_store, tmp_path):
     # Configure allowed root
     settings.LLMSTXT_MCP_ALLOWED_ROOT = tmp_path
     
@@ -56,7 +56,7 @@ def test_safe_generate_failure(run_store, tmp_path):
         mock_run.side_effect = ValueError("Boom")
         
         with pytest.raises(RuntimeError):
-            safe_generate(run_store, "https://github.com/foo/bar", output_dir=str(tmp_path))
+            safe_generate_llms_txt(run_store, "https://github.com/foo/bar", output_dir=str(tmp_path))
             
         runs = run_store.list_runs()
         assert len(runs) == 1

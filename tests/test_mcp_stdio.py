@@ -81,7 +81,9 @@ def test_mcp_stdio_server():
         tools = resp["result"]["tools"]
         tool_names = [t["name"] for t in tools]
         
-        assert "llmstxt_generate" in tool_names
+        assert "llmstxt_generate_llms_txt" in tool_names
+        assert "llmstxt_generate_llms_full" in tool_names
+        assert "llmstxt_generate_llms_ctx" in tool_names
         assert "llmstxt_list_runs" in tool_names
         assert "llmstxt_read_artifact" in tool_names
 

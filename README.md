@@ -106,7 +106,9 @@ This package includes a FastMCP server that exposes the generator as an MCP tool
 
 ### Features
 - **Tools**:
-  - `llmstxt_generate`: Generate documentation for a given repository URL.
+  - `llmstxt_generate_llms_txt`: Generate `llms.txt` (and `llms.json` on fallback).
+  - `llmstxt_generate_llms_full`: Generate `llms-full.txt` from an existing `llms.txt` run.
+  - `llmstxt_generate_llms_ctx`: Generate `llms-ctx.txt` from an existing `llms.txt` run (requires `llms_txt`).
   - `llmstxt_list_runs`: View recent generation history.
   - `llmstxt_read_artifact`: Read generated files (chunked access supported).
 - **Resources**:
@@ -131,6 +133,26 @@ llmstxt-mcp
 #   }
 # }
 ```
+
+### local usage configs
+
+```json
+"llmstxt": {
+      "command": "uv",
+      "args": ["run", "llmstxt-mcp"],
+      "timeout": 30000,
+      "trust": true
+    }
+```
+
+```toml
+[mcp_servers.llmstxt]
+command = "uv"
+args = ["run", "llmstxt-mcp"]
+startup_timeout_sec = 30
+tool_timeout_sec = 30
+```
+
 
 ### codex config in your config.toml
 
@@ -198,14 +220,41 @@ Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid re
 ```bash
 npx @modelcontextprotocol/inspector --config ./inspector.config.json
 ```
+```bash
+npx @modelcontextprotocol/inspector --config ./inspector.config.json --server llmstxt-mcp
+
+```
 
 ### MCP Inspector Payloads
 
-Use the ready-to-run JSON-RPC payloads in `docs/mcp-inspector-payloads.jsonl` to verify the MCP tools:
+Use the ready-to-run payloads in `docs/mcp-inspector-payloads.md` to verify the MCP tools:
 
 1) Start the inspector with the config above.
-2) Paste each line from `docs/mcp-inspector-payloads.jsonl` into the raw JSON-RPC input, in order.
+2) Paste each payload from `docs/mcp-inspector-payloads.md` into the inspector input, in order.
 3) Replace `https://github.com/owner/repo` with a real repo URL.
-4) After `llmstxt_generate`, replace `<RUN_ID_FROM_STEP_4>` with the returned `run_id`.
 
 Note: tool responses are returned as text content that contains JSON. Parse `result.content[0].text` to get structured data.
+Note: `llmstxt_generate_llms_ctx` requires the optional `llms_txt` package.
+
+#### Run ID vs Deterministic Paths
+
+The MCP tools accept either:
+- `run_id` (preferred when you want to track a specific run), or
+- `repo_url` + `output_dir` (deterministic, easier for manual testing).
+
+When `run_id` is omitted, the tools resolve artifacts from:
+`<output_dir>/<owner>/<repo>/<repo>-llms*.txt`.
+
+If `llmstxt_generate_llms_full` or `llmstxt_generate_llms_ctx` is called without
+`run_id` and `llms.txt` is missing, the server will auto-generate `llms.txt`
+first (using the same `repo_url` + `output_dir`).
+
+### Task Master MCP Inspector Payloads
+
+Use `docs/task-master-inspector-payloads.md` to smoke-test the Task Master MCP server:
+
+1) Start your MCP inspector for Task Master.
+2) Paste each payload from `docs/task-master-inspector-payloads.md` in order.
+3) If your Task Master server exposes tool names with a prefix, run `tools/list` first and adjust the `name` fields accordingly.
+
+Note: The payloads assume the Task Master server exposes tool names like `add_task` and `get_tasks`.

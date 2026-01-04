@@ -60,6 +60,8 @@ def run_generation(
     *,
     stamp: bool = False,
     cache_lm: bool = False,
+    build_full: bool = True,
+    build_ctx: bool | None = None,
 ) -> GenerationArtifacts:
     owner, repo = owner_repo_from_url(repo_url)
     repo_root = config.ensure_output_root(owner, repo)
@@ -128,7 +130,8 @@ def run_generation(
     _write_text(llms_txt_path, llms_text, stamp)
 
     ctx_path: Optional[Path] = None
-    if config.enable_ctx:
+    should_build_ctx = config.enable_ctx if build_ctx is None else build_ctx
+    if should_build_ctx:
         try:
             from llms_txt import create_ctx  # type: ignore
         except ImportError:
@@ -139,16 +142,18 @@ def run_generation(
             logger.debug("Writing llms-ctx to %s", ctx_path)
             _write_text(ctx_path, ctx_text, stamp)
 
-    llms_full_text = build_llms_full_from_repo(
-        llms_text,
-        prefer_raw=not material.is_private,
-        default_ref=material.default_branch,
-        token=config.github_token,
-        link_style=config.link_style,
-    )
-    llms_full_path = repo_root / f"{base_name}-llms-full.txt"
-    logger.debug("Writing llms-full to %s", llms_full_path)
-    _write_text(llms_full_path, llms_full_text, stamp)
+    llms_full_path: Optional[Path] = None
+    if build_full:
+        llms_full_text = build_llms_full_from_repo(
+            llms_text,
+            prefer_raw=not material.is_private,
+            default_ref=material.default_branch,
+            token=config.github_token,
+            link_style=config.link_style,
+        )
+        llms_full_path = repo_root / f"{base_name}-llms-full.txt"
+        logger.debug("Writing llms-full to %s", llms_full_path)
+        _write_text(llms_full_path, llms_full_text, stamp)
 
     json_path: Optional[Path] = None
     if fallback_payload:
@@ -158,7 +163,7 @@ def run_generation(
 
     return GenerationArtifacts(
         llms_txt_path=str(llms_txt_path),
-        llms_full_path=str(llms_full_path),
+        llms_full_path=str(llms_full_path) if llms_full_path else None,
         ctx_path=str(ctx_path) if ctx_path else None,
         json_path=str(json_path) if json_path else None,
         used_fallback=used_fallback,

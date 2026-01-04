@@ -2,6 +2,13 @@
   "mcpServers": {
     "llmstxt": {
       "command": "llmstxt-mcp"
+    },
+    "task-master-ai": {
+      "command": "/home/user/.nvm/versions/node/v22.21.0/bin/task-master-ai",
+      "startup_timeout_sec": 60.0,
+      "env": {
+        "TASK_MASTER_TOOLS": "all"
+      }
     }
   }
 }

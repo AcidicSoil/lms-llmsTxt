@@ -1,15 +1,21 @@
 import logging
 import sys
 import json
-from typing import List, Optional
-from mcp.server.fastmcp import FastMCP, Context
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .config import settings
-from .models import GenerateResult, ReadArtifactResult, ArtifactName
+from .models import ReadArtifactResult, ArtifactName
 from .runs import RunStore
-from .generator import safe_generate
+from .generator import (
+    safe_generate_llms_txt,
+    safe_generate_llms_full,
+    safe_generate_llms_ctx,
+)
 from .artifacts import read_resource_text, read_artifact_chunk
+from .security import validate_output_dir
+from lmstudiotxt_generator.github import owner_repo_from_url
 
 # Configure logging to stderr to avoid interfering with JSON-RPC on stdout
 logging.basicConfig(
@@ -25,59 +31,122 @@ mcp = FastMCP("llmstxt_mcp")
 # Initialize RunStore (singleton for the server instance)
 run_store = RunStore()
 
+
+def _artifact_path_from_url(output_dir: Path, repo_url: str, artifact_name: str) -> Path:
+    owner, repo = owner_repo_from_url(repo_url)
+    base_name = repo.lower().replace(" ", "-")
+    suffix_map = {
+        "llms.txt": "llms.txt",
+        "llms-full.txt": "llms-full.txt",
+        "llms-ctx.txt": "llms-ctx.txt",
+        "llms.json": "llms.json",
+    }
+    suffix = suffix_map.get(artifact_name, artifact_name)
+    return output_dir / owner / repo / f"{base_name}-{suffix}"
+
+
+def _read_file_chunk(path: Path, offset: int, limit: int) -> str:
+    if not path.exists():
+        raise FileNotFoundError(f"Artifact file not found at {path}")
+    try:
+        file_size = path.stat().st_size
+        if offset >= file_size:
+            return ""
+        with open(path, "r", encoding="utf-8") as f:
+            f.seek(offset)
+            return f.read(limit)
+    except UnicodeDecodeError:
+        return "<Binary or non-UTF-8 content>"
+
 @mcp.tool(
-    name="llmstxt_generate",
+    name="llmstxt_generate_llms_txt",
     annotations={
-        "title": "Generate Documentation Bundle",
+        "title": "Generate llms.txt",
         "readOnlyHint": False,
         "destructiveHint": False,
         "idempotentHint": False,
         "openWorldHint": True
     }
 )
-def generate(
+def generate_llms_txt(
     url: str = Field(..., description="The URL of the repository to process (e.g., https://github.com/owner/repo)"),
     output_dir: str = Field("./output", description="Local directory to store artifacts"),
-    depth: int = Field(1, description="Depth for dependency/link crawling", ge=0, le=3),
-    concurrency: int = Field(5, description="Number of concurrent requests for fetching", ge=1, le=20),
-    skip_repo_check: bool = Field(False, description="Skip validation of repository existence"),
     cache_lm: bool = Field(True, description="Enable LM caching")
 ) -> str:
     """
-    Analyzes a repository and generates documentation artifacts (llms.txt, llms-full.txt) optimized for LLM consumption.
-
-    This tool triggers a DSPy-powered analysis pipeline that crawls the repository, 
-    identifies key documentation, and synthesizes a curated index.
-
-    Args:
-        url (str): Repository URL.
-        output_dir (str): Where to save files.
-        depth (int): Crawl depth (default 1).
-        concurrency (int): Parallel fetch limit (default 5).
-        skip_repo_check (bool): If true, bypasses GH API existence check.
-        cache_lm (bool): Use cached results for identical LLM prompts.
+    Generates llms.txt (and llms.json on fallback) for a repository.
 
     Returns:
         str: JSON-formatted GenerateResult containing run_id and artifact references.
-        
-        Success Schema:
-        {
-            "run_id": "uuid-string",
-            "status": "success",
-            "artifacts": [
-                {"name": "llms.txt", "path": "...", "size_bytes": 123, "hash_sha256": "..."}
-            ]
-        }
     """
-    logger.info(f"Starting generation for {url}")
-    result = safe_generate(
+    logger.info(f"Starting llms.txt generation for {url}")
+    result = safe_generate_llms_txt(
         run_store=run_store,
         url=url,
         output_dir=output_dir,
-        depth=depth,
-        concurrency=concurrency,
-        skip_repo_check=skip_repo_check,
         cache_lm=cache_lm
+    )
+    return result.model_dump_json(indent=2)
+
+
+@mcp.tool(
+    name="llmstxt_generate_llms_full",
+    annotations={
+        "title": "Generate llms-full.txt",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True
+    }
+)
+def generate_llms_full(
+    repo_url: str = Field(..., description="Repository URL for resolving default branch and access"),
+    run_id: str | None = Field(None, description="Run ID containing llms.txt (optional)"),
+    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
+) -> str:
+    """
+    Generates llms-full.txt from an existing llms.txt artifact.
+
+    Returns:
+        str: JSON-formatted GenerateResult with updated artifacts.
+    """
+    logger.info(f"Starting llms-full generation for {run_id}")
+    result = safe_generate_llms_full(
+        run_store=run_store,
+        run_id=run_id,
+        repo_url=repo_url,
+        output_dir=output_dir,
+    )
+    return result.model_dump_json(indent=2)
+
+
+@mcp.tool(
+    name="llmstxt_generate_llms_ctx",
+    annotations={
+        "title": "Generate llms-ctx.txt",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True
+    }
+)
+def generate_llms_ctx(
+    run_id: str | None = Field(None, description="Run ID containing llms.txt (optional)"),
+    repo_url: str | None = Field(None, description="Repository URL (required when run_id is omitted)"),
+    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
+) -> str:
+    """
+    Generates llms-ctx.txt from an existing llms.txt artifact.
+
+    Returns:
+        str: JSON-formatted GenerateResult with updated artifacts.
+    """
+    logger.info(f"Starting llms-ctx generation for {run_id}")
+    result = safe_generate_llms_ctx(
+        run_store=run_store,
+        run_id=run_id,
+        repo_url=repo_url,
+        output_dir=output_dir,
     )
     return result.model_dump_json(indent=2)
 
@@ -110,7 +179,9 @@ def list_runs(
     }
 )
 def read_artifact(
-    run_id: str = Field(..., description="The UUID of the run"),
+    run_id: str | None = Field(None, description="The UUID of the run (optional)"),
+    repo_url: str | None = Field(None, description="Repository URL (required when run_id is omitted)"),
+    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
     artifact_name: ArtifactName = Field(..., description="Name of the artifact (e.g., 'llms.txt', 'llms-full.txt')"),
     offset: int = Field(0, description="Byte offset to start reading from", ge=0),
     limit: int = Field(10000, description="Maximum number of characters to read", ge=1, le=100000)
@@ -137,7 +208,16 @@ def read_artifact(
         }
     """
     effective_limit = min(limit, settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS)
-    content = read_artifact_chunk(run_store, run_id, artifact_name, offset, effective_limit)
+    if run_id:
+        logger.info("Reading artifact via run_id %s", run_id)
+        content = read_artifact_chunk(run_store, run_id, artifact_name, offset, effective_limit)
+    else:
+        if not repo_url:
+            raise ValueError("repo_url is required when run_id is omitted")
+        logger.info("Reading artifact via repo_url + output_dir")
+        validated_dir = validate_output_dir(Path(output_dir))
+        artifact_path = _artifact_path_from_url(validated_dir, repo_url, artifact_name)
+        content = _read_file_chunk(artifact_path, offset, effective_limit)
     
     res = ReadArtifactResult(
         content=content,
