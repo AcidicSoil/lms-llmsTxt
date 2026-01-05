@@ -1,0 +1,62 @@
+# Cline Workspace
+
+> The purpose of this project is to create a flexible, extensible workflow automation system that enables developers to define, execute, and manage software development tasks declaratively through a command-line interface. It supports modular workflows with configurable steps (e.g., shell commands, AI interactions, human gate reviews), integrates with external tools via standardized interfaces, and allows for the creation of custom packs or plugins (e.g., Gemini or LM Studio adapters). The system aims to improve productivity by automating repetitive tasks, enforcing code quality, managing dependencies, and providing a unified interface for running workflows across different environments.
+
+**Remember:**
+- Workflow Pack
+- Workflow Manifest
+- Runner Engine
+- Step Runners (Shell, AI, Human Gate)
+- Model Context Protocol (MCP)
+- Integration Primitives (Git, GitHub, Lint, Test)
+
+## Docs
+- [Issue 1 Lm Studio Plugin Install Issue](https://github.com/AcidicSoil/cline-workspace/blob/main/docs/temp/Issue-1_LM_Studio-plugin-install-issue.md): install & quickstart.
+- [Install Taskmaster](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/install-taskmaster.md): install & quickstart.
+- [Quick Install Taskmaster](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/quick-install-taskmaster.md): install & quickstart.
+- [Codebase Strategy Questions](https://github.com/AcidicSoil/cline-workspace/blob/main/docs/codebase_strategy_questions.md): docs page.
+- [Cline Cli Workflows Report](https://github.com/AcidicSoil/cline-workspace/blob/main/docs/.cline-docs/cline-cli-workflows-report.md): docs page.
+- [Custom Workflows With Cline](https://github.com/AcidicSoil/cline-workspace/blob/main/docs/.cline-docs/Custom Workflows with Cline.md): docs page.
+- [Issue 2 Mcp Server Adapter](https://github.com/AcidicSoil/cline-workspace/blob/main/docs/temp/Issue-2_MCP-Server-Adapter.md): docs page.
+- [Prd](https://github.com/AcidicSoil/cline-workspace/blob/main/.taskmaster/docs/PRD.md): docs page.
+- [Prd Full Text](https://github.com/AcidicSoil/cline-workspace/blob/main/.taskmaster/docs/PRD-full-text.md): docs page.
+- [Prd Revisions](https://github.com/AcidicSoil/cline-workspace/blob/main/.taskmaster/docs/prd-revisions.md): docs page.
+
+## Tutorials
+- [Example Prd](https://github.com/AcidicSoil/cline-workspace/blob/main/.taskmaster/templates/example_prd.txt): worked example.
+- [Example Prd Rpg](https://github.com/AcidicSoil/cline-workspace/blob/main/.taskmaster/templates/example_prd_rpg.txt): worked example.
+
+## Optional
+- [Agents](https://github.com/AcidicSoil/cline-workspace/blob/main/AGENTS.md): docs page.
+- [README](https://github.com/AcidicSoil/cline-workspace/blob/main/README.md): docs page.
+- [Jest.Config](https://github.com/AcidicSoil/cline-workspace/blob/main/jest.config.js): docs page.
+
+## .Clinerules
+- [Cline Rules](https://github.com/AcidicSoil/cline-workspace/blob/main/.clinerules/cline_rules.md): docs page.
+- [Dev Workflow](https://github.com/AcidicSoil/cline-workspace/blob/main/.clinerules/dev_workflow.md): docs page.
+- [Self Improve](https://github.com/AcidicSoil/cline-workspace/blob/main/.clinerules/self_improve.md): docs page.
+- [Taskmaster](https://github.com/AcidicSoil/cline-workspace/blob/main/.clinerules/taskmaster.md): docs page.
+
+## .Cursor
+- [Add Dependency](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/add-dependency.md): docs page.
+- [Add Subtask](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/add-subtask.md): docs page.
+- [Add Task](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/add-task.md): docs page.
+- [Analyze Complexity](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/analyze-complexity.md): docs page.
+- [Analyze Project](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/analyze-project.md): docs page.
+- [Auto Implement Tasks](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/auto-implement-tasks.md): docs page.
+- [Command Pipeline](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/command-pipeline.md): docs page.
+- [Complexity Report](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/complexity-report.md): docs page.
+- [Convert Task To Subtask](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/convert-task-to-subtask.md): docs page.
+- [Expand All Tasks](https://github.com/AcidicSoil/cline-workspace/blob/main/.cursor/commands/tm/expand-all-tasks.md): docs page.
+
+## Packages
+- [Config](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/foundation/src/config.ts): docs page.
+- [Context](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/runner/src/context.ts): docs page.
+- [Declarations.D](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/runner/src/declarations.d.ts): docs page.
+- [Discovery](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/registry/src/discovery.ts): docs page.
+- [Engine](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/runner/src/engine.ts): docs page.
+- [Engine.Test](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/runner/tests/engine.test.ts): docs page.
+- [Errors](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/foundation/src/errors.ts): docs page.
+- [Formatting](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/runner/src/formatting.ts): docs page.
+- [Foundation.Test](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/foundation/tests/foundation.test.ts): docs page.
+- [Git](https://github.com/AcidicSoil/cline-workspace/blob/main/packages/integrations/src/git.ts): docs page.

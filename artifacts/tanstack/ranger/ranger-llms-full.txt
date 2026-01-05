@@ -1,0 +1,1284 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/installation.md ---
+---
+title: Installation
+---
+
+You can install TanStack Ranger with any [NPM](https://npmjs.com) package manager.
+
+Depending on your framework of choice, install one of the following packages:
+
+- [React](./framework/react/react-ranger.md)
+- Solid (coming soon!)
+- Vue (coming soon!)
+- Svelte (coming soon!)
+- Angular (coming soon!)
+
+
+## Links discovered
+- [NPM](https://npmjs.com)
+- [React](https://github.com/tanstack/ranger/blob/main/docs/framework/react/react-ranger.md)
+
+--- docs/overview.md ---
+---
+title: Overview
+---
+
+Feature Rich and Lightweight Headless utility, which means out of the box, it doesn't render or supply any actual UI elements. Some of its features include:
+
+- 100% Typesafe
+- Lightweight (10kb)
+- Easy to maintain
+- Extensible
+- Not dictating UI
+
+## Let's go!
+
+Enough overview, there's so much more to do with TanStack Ranger. Hit that next button and let's get started!
+
+
+--- docs/concepts.md ---
+---
+name: Concepts
+route: /concepts
+---
+
+# Concepts
+
+## Ranger is a "headless" UI library
+
+Ranger is a headless utility, which means out of the box, it doesn't render or supply any actual UI elements. You are in charge of utilizing the state and callbacks of the hooks provided by this library to render your own table markup. [Read this article to understand why Ranger is built this way](https://www.merrickchristensen.com/articles/headless-user-interface-components/). If you don't want to, then here's a quick rundown anyway:
+
+- Separation of Concerns - Not that superficial kind you read about all the time. The real kind. Ranger as a library honestly has no business being in charge of your UI. The look, feel, and overall experience of your table is what makes your app or product great. The less Ranger gets in the way of that, the better!
+- Maintenance - By removing the massive (and seemingly endless) API surface area required to support every UI use-case, Ranger can remain small, easy-to-use and simple to update/maintain.
+- Extensibility - UI presents countless edge cases for a library simply because it's a creative medium, and one where every developer does things differently. By not dictating UI concerns, Ranger empowers the developer to design and extend the UI based on their unique use-case.
+
+## The Ranger instance
+
+At the heart of every Ranger is the `Ranger` class. This class will provide everything you'll ever need to build a ranger and interact with its state. This includes, but is not limited to:
+
+- Value Range
+- Snap Interpolation
+- Ticks (labels) generation
+
+After reading about Ranger's concepts, you should:
+
+- [Check Out Some Examples](/ranger/latest/docs/framework/react/examples/basic)
+
+
+## Links discovered
+- [Read this article to understand why Ranger is built this way](https://www.merrickchristensen.com/articles/headless-user-interface-components/)
+- [Check Out Some Examples](https://github.com/tanstack/ranger/blob/main/ranger/latest/docs/framework/react/examples/basic.md)
+
+--- docs/faq.md ---
+---
+name: FAQ
+route: /faq
+---
+
+# FAQ
+
+Below are some of the most frequently asked questions on how to use the React Ranger API to solve various table challenges you may encounter
+
+<hr/>
+
+
+--- docs/quick-start.md ---
+---
+title: Quick Start
+---
+
+If you're feeling impatient and prefer to skip all of our wonderful documentation, here is the bare minimum to get going with TanStack Ranger. We'll use React for this example, but the same principles apply to other frameworks.
+
+```tsx
+import React from 'react'
+import ReactDOM from 'react-dom'
+import { useRanger, Ranger } from '@tanstack/react-ranger'
+
+function App() {
+  const rangerRef = React.useRef<HTMLDivElement>(null)
+  const [values, setValues] = React.useState<ReadonlyArray<number>>([
+    10, 15, 50,
+  ])
+
+  const rangerInstance = useRanger<HTMLDivElement>({
+    getRangerElement: () => rangerRef.current,
+    values,
+    min: 0,
+    max: 100,
+    stepSize: 5,
+    onChange: (instance: Ranger<HTMLDivElement>) =>
+      setValues(instance.sortedValues),
+  })
+
+  return (
+    <div className="App" style={{ padding: 10 }}>
+      <h1>Basic Range</h1>
+      <span>Active Index: {rangerInstance.activeHandleIndex}</span>
+      <br />
+      <br />
+      <div
+        ref={rangerRef}
+        style={{
+          position: 'relative',
+          userSelect: 'none',
+          height: '4px',
+          background: '#ddd',
+          boxShadow: 'inset 0 1px 2px rgba(0,0,0,.6)',
+          borderRadius: '2px',
+        }}
+      >
+        {rangerInstance
+          .handles()
+          .map(
+            (
+              {
+                value,
+                onKeyDownHandler,
+                onMouseDownHandler,
+                onTouchStart,
+                isActive,
+              },
+              i,
+            ) => (
+              <button
+                key={i}
+                onKeyDown={onKeyDownHandler}
+                onMouseDown={onMouseDownHandler}
+                onTouchStart={onTouchStart}
+                role="slider"
+                aria-valuemin={rangerInstance.options.min}
+                aria-valuemax={rangerInstance.options.max}
+                aria-valuenow={value}
+                style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: `${rangerInstance.getPercentageForValue(value)}%`,
+                  zIndex: isActive ? '1' : '0',
+                  transform: 'translate(-50%, -50%)',
+                  width: '14px',
+                  height: '14px',
+                  outline: 'none',
+                  borderRadius: '100%',
+                  background: 'linear-gradient(to bottom, #eee 45%, #ddd 55%)',
+                  border: 'solid 1px #888',
+                }}
+              />
+            ),
+          )}
+      </div>
+      <br />
+      <br />
+      <br />
+      <pre
+        style={{
+          display: 'inline-block',
+          textAlign: 'left',
+        }}
+      >
+        <code>
+          {JSON.stringify({
+            values,
+          })}
+        </code>
+      </pre>
+    </div>
+  )
+}
+
+ReactDOM.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+  document.getElementById('root'),
+)
+```
+
+If you skipped this example or didn't understand something, we don't blame you, because there's so much more to learn to really take advantage of TanStack Ranger! Let's move on.
+
+
+--- docs/framework/react/react-ranger.md ---
+---
+title: React Ranger
+---
+
+You can install TanStack Ranger with any [NPM](https://npmjs.com) package manager.
+
+```sh
+npm install @tanstack/react-ranger
+```
+
+
+## Links discovered
+- [NPM](https://npmjs.com)
+
+--- docs/framework/react/api/basic.md ---
+---
+name: Basic
+route: /api/basic
+menu: API
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [basic](/ranger/latest/docs/framework/react/examples/basic)
+
+The API below described how to use the **basic** features.
+
+## Options
+
+### values
+
+```tsx
+values: ReadonlyArray<number>
+```
+
+**Required** The current value (or values) for the range.
+
+### min
+
+```tsx
+min: number
+```
+
+**Required** The minimum limit for the range.
+
+### max
+
+```tsx
+max: number
+```
+
+**Required** The maximum limit for the range.
+
+### stepSize
+
+```ts
+stepSize: number
+```
+
+**Required** The distance between selectable steps.
+
+### onChange
+
+```ts
+onChange: (instance: Ranger<TTrackElement>) => void
+```
+
+A function that is called when the handle is released.
+
+## API
+
+### handles
+
+```tsx
+handles: ReadonlyArray<{
+  value: number
+  isActive: boolean
+  onKeyDownHandler(event): function
+  onMouseDownHandler(event): function
+  onTouchStart(event): function
+}>
+```
+
+Handles to be rendered. Each `handle` has the following props:
+
+- `value: number` - The current value for the handle.
+- `isActive: boolean` - Denotes if the handle is currently being dragged.
+- `onKeyDownHandler(event): func`
+- `onMouseDownHandler(event): func`
+- `onTouchStart(event): func`
+
+### activeHandleIndex
+
+```tsx
+activeHandleIndex: null | number
+```
+
+The zero-based index of the handle that is currently being dragged, or `null` if no handle is being dragged.
+
+
+## Links discovered
+- [basic](https://github.com/tanstack/ranger/blob/main/ranger/latest/docs/framework/react/examples/basic.md)
+
+--- docs/framework/react/api/custom-steps.md ---
+---
+name: Custom Steps
+route: /api/custom-steps
+menu: API
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [custom-steps](../examples/custom-steps)
+
+The API below described how to use the **custom-steps** features.
+
+## Options
+
+### steps
+
+```ts
+steps: Array<number>
+```
+
+An array of custom steps to use. This will override `stepSize`
+
+### ticks
+
+```ts
+ticks: Array<number>
+```
+
+An array of custom ticks to use. This will override `tickSize`
+
+## API
+
+### getTicks
+
+```tsx
+getTicks: () =>
+  ReadonlyArray<{ value: number; key: number; percentage: number }>
+```
+
+Ticks to be rendered. Each `tick` has the following props:
+
+- `value: number` - The tick number to be displayed
+- `key: number` - The key of a tick
+- `percentage: number` - Percentage value of where tick should be placed on ranger
+
+
+## Links discovered
+- [custom-steps](https://github.com/tanstack/ranger/blob/main/docs/framework/react/examples/custom-steps.md)
+
+--- docs/framework/react/api/custom-styles.md ---
+---
+name: Custom Styles
+route: /api/custom-styles
+menu: API
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [custom-styles](../examples/custom-styles)
+
+The API below described how to use the **custom-steps** features.
+
+## API
+
+### getSegments
+
+```tsx
+getSegments: () => ReadonlyArray<{ left: number; width: number }>
+```
+
+Segments to be rendered. Each `segment` has the following props:
+
+- `left: number` - Percentage value of where segment should start on ranger
+- `width: number` - Percentage value of segment width
+
+
+## Links discovered
+- [custom-styles](https://github.com/tanstack/ranger/blob/main/docs/framework/react/examples/custom-styles.md)
+
+--- docs/framework/react/api/logarithmic-interpolator.md ---
+---
+name: Logarithmic Interpolator
+route: /api/logarithmic-interpolator
+menu: API
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [logarithmic-interpolator](../examples/logarithmic-interpolator)
+
+The API below described how to use the **logarithmic-interpolator** features.
+
+## Options
+
+By default, `react-ranger` uses linear interpolation between data points, but allows you to easily customize it to use your own interpolation functions by passing an object that implements the following interface.
+
+### interpolator
+
+```tsx
+interpolator: {
+    getPercentageForValue: (val: number, min: number, max: number): number;
+    getValueForClientX: (clientX: number, trackDims: object, min: number, max: number): number;
+}
+```
+
+The Interpolator to use. Defaults to the bundled linear-scale interpolator
+
+- `getPercentageForValue` - Takes the value & range and returns a percentage [0, 100] where the value sits from left to right.
+- `getValueForClientX`- Takes the clientX (offset from the left edge of the ranger) along with the dimensions and range settings and transforms a pixel coordinate back into a value.
+
+
+## Links discovered
+- [logarithmic-interpolator](https://github.com/tanstack/ranger/blob/main/docs/framework/react/examples/logarithmic-interpolator.md)
+
+--- examples/react/basic/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm run start` or `yarn start`
+
+
+--- examples/react/custom-steps/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm run start` or `yarn start`
+
+
+--- examples/react/custom-styles/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm run start` or `yarn start`
+
+
+--- examples/react/logarithmic-interpolator/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm run start` or `yarn start`
+
+
+--- examples/react/update-on-drag/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm run start` or `yarn start`
+
+
+--- examples/react/basic/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/custom-steps/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/custom-styles/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/logarithmic-interpolator/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/update-on-drag/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script type="module" src="https://cdn.skypack.dev/twind/shim"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+- Clone the repo
+  - `gh repo clone TanStack/ranger`
+- Ensure `node` is installed
+  - https://nodejs.org/en/
+- Ensure `pnpm` is installed
+  - https://pnpm.io/installation
+  - Why? We use `pnpm` to manage workspace dependencies. It's easily the best monorepo/workspace experience available as of when this was written.
+- Install dependencies
+  - `pnpm install`
+  - This installs dependencies for all of the packages in the monorepo, even examples!
+  - Dependencies inside of the packages and examples are automatically linked together as local/dynamic dependencies.
+- Run the build or dev watcher
+  - `pnpm build` or
+  - `pnpm dev`
+- Navigate to an example
+  - `cd examples/react/basic`
+- Run the example
+  - `pnpm dev`
+- Make changes to the code
+  - If you ran `pnpm dev` the dev watcher will automatically rebuild the code that has changed.
+
+
+--- packages/ranger/CHANGELOG.md ---
+# @tanstack/ranger
+
+## 0.0.4
+
+### Patch Changes
+
+- build: migrate to tsdown ([`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34))
+
+
+## Links discovered
+- [`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34)
+
+--- packages/react-ranger/CHANGELOG.md ---
+# @tanstack/react-ranger
+
+## 0.0.5
+
+### Patch Changes
+
+- build: migrate to tsdown ([`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34))
+
+- Updated dependencies [[`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34)]:
+  - @tanstack/ranger@0.0.4
+
+
+## Links discovered
+- [`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34)
+- [[`078f32b`](https://github.com/TanStack/ranger/commit/078f32b5d1327250799188fd91cce1df73116f34)
+
+--- README.md ---
+![React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+
+Headless UI for building ranger component in TS/JS and React
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />
+</a><a href="https://github.com/TanStack/ranger/actions/workflows/ci.yml">
+<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />
+</a><a href="https://npmjs.com/package/@tanstack/ranger" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger.svg" />
+</a><a href="https://bundlephobia.com/result?p=@tanstack/ranger@latest" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/tanstack/ranger/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://github.com/tanstack/ranger" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />
+</a>
+
+<br />
+<br />
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/TanStack/react-query), [TanStack Table](https://github.com/TanStack/table), [React Charts](https://github.com/TanStack/react-charts)
+
+## Visit [tanstack.com/ranger](https://tanstack.com/ranger) for docs, guides, API and more!
+
+## Quick Features
+
+- Headless!
+- Single or Multiple Handles
+- Handle Divider Items
+- Custom Steps or Step-Size
+- Custom Ticks
+
+<!-- Force  -->
+
+
+## Links discovered
+- [React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/TanStack/react-query)
+- [TanStack Table](https://github.com/TanStack/table)
+- [React Charts](https://github.com/TanStack/react-charts)
+- [tanstack.com/ranger](https://tanstack.com/ranger)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />](https://github.com/TanStack/ranger/actions/workflows/ci.yml)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger.svg" />](https://npmjs.com/package/@tanstack/ranger)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />](https://bundlephobia.com/result?p=@tanstack/ranger@latest)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/ranger/discussions)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />](https://github.com/tanstack/ranger)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />](https://twitter.com/tannerlinsley)
+
+--- prettier.config.js ---
+// @ts-check
+
+/** @type {import('prettier').Config} */
+const config = {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+}
+
+export default config
+
+
+--- scripts/verify-links.ts ---
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
+import { glob } from 'tinyglobby'
+// @ts-ignore Could not find a declaration file for module 'markdown-link-extractor'.
+import markdownLinkExtractor from 'markdown-link-extractor'
+
+const errors: Array<{
+  file: string
+  link: string
+  resolvedPath: string
+  reason: string
+}> = []
+
+function isRelativeLink(link: string) {
+  return (
+    !link.startsWith('/') &&
+    !link.startsWith('http://') &&
+    !link.startsWith('https://') &&
+    !link.startsWith('//') &&
+    !link.startsWith('#') &&
+    !link.startsWith('mailto:')
+  )
+}
+
+/** Remove any trailing .md */
+function stripExtension(p: string): string {
+  return p.replace(`${extname(p)}`, '')
+}
+
+function relativeLinkExists(link: string, file: string): boolean {
+  // Remove hash if present
+  const linkWithoutHash = link.split('#')[0]
+  // If the link is empty after removing hash, it's not a file
+  if (!linkWithoutHash) return false
+
+  // Strip the file/link extensions
+  const filePath = stripExtension(file)
+  const linkPath = stripExtension(linkWithoutHash)
+
+  // Resolve the path relative to the markdown file's directory
+  // Nav up a level to simulate how links are resolved on the web
+  let absPath = resolve(filePath, '..', linkPath)
+
+  // Ensure the resolved path is within /docs
+  const docsRoot = resolve('docs')
+  if (!absPath.startsWith(docsRoot)) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Path outside /docs',
+    })
+    return false
+  }
+
+  // Check if this is an example path
+  const isExample = absPath.includes('/examples/')
+
+  let exists = false
+
+  if (isExample) {
+    // Transform /docs/framework/{framework}/examples/ to /examples/{framework}/
+    absPath = absPath.replace(
+      /\/docs\/framework\/([^/]+)\/examples\//,
+      '/examples/$1/',
+    )
+    // For examples, we want to check if the directory exists
+    exists = existsSync(absPath) && statSync(absPath).isDirectory()
+  } else {
+    // For non-examples, we want to check if the .md file exists
+    if (!absPath.endsWith('.md')) {
+      absPath = `${absPath}.md`
+    }
+    exists = existsSync(absPath)
+  }
+
+  if (!exists) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Not found',
+    })
+  }
+  return exists
+}
+
+async function verifyMarkdownLinks() {
+  // Find all markdown files in docs directory
+  const markdownFiles = await glob('docs/**/*.md', {
+    ignore: ['**/node_modules/**'],
+  })
+
+  console.log(`Found ${markdownFiles.length} markdown files\n`)
+
+  // Process each file
+  for (const file of markdownFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const links: Array<string> = markdownLinkExtractor(content)
+
+    const relativeLinks = links.filter((link: string) => {
+      return isRelativeLink(link)
+    })
+
+    if (relativeLinks.length > 0) {
+      relativeLinks.forEach((link) => {
+        relativeLinkExists(link, file)
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`\n❌ Found ${errors.length} broken links:`)
+    errors.forEach((err) => {
+      console.log(
+        `${err.file}\n  link:      ${err.link}\n  resolved:  ${err.resolvedPath}\n  why:       ${err.reason}\n`,
+      )
+    })
+    process.exit(1)
+  } else {
+    console.log('\n✅ No broken links found!')
+  }
+}
+
+verifyMarkdownLinks().catch(console.error)
+
+
+--- packages/ranger/README.md ---
+![React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+
+Headless UI for building ranger component in TS/JS and React
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />
+</a><a href="https://github.com/TanStack/ranger/actions/workflows/ci.yml">
+<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />
+</a><a href="https://npmjs.com/package/@tanstack/ranger-core" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger-core.svg" />
+</a><a href="https://bundlephobia.com/result?p=@tanstack/ranger@latest" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/tanstack/ranger/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://github.com/tanstack/ranger" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />
+</a>
+
+<br />
+<br />
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/TanStack/react-query), [TanStack Table](https://github.com/TanStack/table), [React Charts](https://github.com/TanStack/react-charts)
+
+## Visit [tanstack.com/ranger](https://tanstack.com/ranger) for docs, guides, API and more!
+
+## Quick Features
+
+- Headless!
+- Single or Multiple Handles
+- Handle Devider Items
+- Custom Steps or Step-Size
+- Custom Ticks
+
+<!-- Force  -->
+
+
+## Links discovered
+- [React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/TanStack/react-query)
+- [TanStack Table](https://github.com/TanStack/table)
+- [React Charts](https://github.com/TanStack/react-charts)
+- [tanstack.com/ranger](https://tanstack.com/ranger)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />](https://github.com/TanStack/ranger/actions/workflows/ci.yml)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger-core.svg" />](https://npmjs.com/package/@tanstack/ranger-core)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />](https://bundlephobia.com/result?p=@tanstack/ranger@latest)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/ranger/discussions)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />](https://github.com/tanstack/ranger)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />](https://twitter.com/tannerlinsley)
+
+--- packages/react-ranger/README.md ---
+![React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+
+Headless UI for building ranger component in TS/JS and React
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />
+</a><a href="https://github.com/TanStack/ranger/actions/workflows/ci.yml">
+<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />
+</a><a href="https://npmjs.com/package/@tanstack/ranger-core" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger-core.svg" />
+</a><a href="https://bundlephobia.com/result?p=@tanstack/ranger@latest" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/tanstack/ranger/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://github.com/tanstack/ranger" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />
+</a>
+
+<br />
+<br />
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/TanStack/react-query), [TanStack Table](https://github.com/TanStack/table), [React Charts](https://github.com/TanStack/react-charts)
+
+## Visit [tanstack.com/ranger](https://tanstack.com/ranger) for docs, guides, API and more!
+
+## Quick Features
+
+- Headless!
+- Single or Multiple Handles
+- Handle Devider Items
+- Custom Steps or Step-Size
+- Custom Ticks
+
+<!-- Force  -->
+
+
+## Links discovered
+- [React Ranger Header](https://github.com/tanstack/ranger/raw/main/media/headerv1.png)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/TanStack/react-query)
+- [TanStack Table](https://github.com/TanStack/table)
+- [React Charts](https://github.com/TanStack/react-charts)
+- [tanstack.com/ranger](https://tanstack.com/ranger)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack" />](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img src="https://github.com/tanstack/ranger/actions/workflows/ci.yml/badge.svg" />](https://github.com/TanStack/ranger/actions/workflows/ci.yml)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/ranger-core.svg" />](https://npmjs.com/package/@tanstack/ranger-core)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/ranger@latest" />](https://bundlephobia.com/result?p=@tanstack/ranger@latest)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/ranger/discussions)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/ranger.svg?style=social&label=Star" />](https://github.com/tanstack/ranger)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />](https://twitter.com/tannerlinsley)
+
+--- packages/ranger/tsdown.config.ts ---
+import { defineConfig } from 'tsdown'
+
+export default defineConfig({
+  entry: ['./src/index.ts'],
+  format: ['esm'],
+  unbundle: true,
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  minify: false,
+  fixedExtension: false,
+  exports: {
+    devExports: true,
+  },
+  publint: {
+    strict: true,
+  },
+  attw: {
+    profile: 'esm-only',
+    level: 'error',
+  },
+})
+
+
+--- packages/react-ranger/tsdown.config.ts ---
+import { defineConfig } from 'tsdown'
+
+export default defineConfig({
+  entry: ['./src/index.tsx'],
+  format: ['esm'],
+  unbundle: true,
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  minify: false,
+  fixedExtension: false,
+  exports: {
+    devExports: true,
+  },
+  publint: {
+    strict: true,
+  },
+  attw: {
+    profile: 'esm-only',
+    level: 'error',
+  },
+})
+
+
+--- packages/ranger/src/index.ts ---
+import {
+  linearInterpolator,
+  getBoundingClientRect,
+  sortNumList,
+} from './utils.js'
+
+export type RangerChangeEvent<TTrackElement> = (
+  instance: Ranger<TTrackElement>,
+) => void
+
+export type RangerInterpolator = {
+  getPercentageForValue: (val: number, min: number, max: number) => number
+  getValueForClientX: (
+    clientX: number,
+    trackDims: { width: number; left: number },
+    min: number,
+    max: number,
+  ) => number
+}
+
+export type RangerClassConfig<TTrackElement = unknown> = {
+  getRangerElement: () => TTrackElement | null
+  values: ReadonlyArray<number>
+
+  min: number
+  max: number
+
+  tickSize: number
+  ticks?: ReadonlyArray<number>
+
+  interpolator: RangerInterpolator
+  onChange: RangerChangeEvent<TTrackElement>
+  onDrag?: RangerChangeEvent<TTrackElement>
+
+  rerender: () => void
+  debug: boolean
+} & ({ stepSize: number } | { steps: ReadonlyArray<number> })
+
+export type RangerConfig<TTrackElement = unknown> = Omit<
+  RangerClassConfig<TTrackElement>,
+  'tickSize' | 'interpolator' | 'onChange' | 'debug'
+> & {
+  tickSize?: number
+  interpolator?: RangerInterpolator
+  onChange?: RangerChangeEvent<TTrackElement>
+  debug?: boolean
+} & ({ stepSize: number } | { steps: ReadonlyArray<number> })
+
+export type RangerOptions<TTrackElement = unknown> = Omit<
+  RangerConfig<TTrackElement>,
+  'rerender'
+> &
+  ({ stepSize: number } | { steps: ReadonlyArray<number> })
+
+export class Ranger<TTrackElement = unknown> {
+  activeHandleIndex: number | undefined
+  tempValues: ReadonlyArray<number> | undefined
+  sortedValues: ReadonlyArray<number> = []
+
+  options!: RangerClassConfig<TTrackElement>
+
+  private rangerElement: TTrackElement | null = null
+
+  constructor(opts: RangerConfig<TTrackElement>) {
+    this.setOptions(opts)
+  }
+
+  setOptions(opts: RangerConfig<TTrackElement>) {
+    Object.entries(opts).forEach(([key, value]) => {
+      if (typeof value === 'undefined') delete (opts as any)[key]
+    })
+
+    this.options = {
+      debug: false,
+      tickSize: 10,
+      interpolator: linearInterpolator,
+      onChange: () => {},
+      ...opts,
+    }
+  }
+
+  _willUpdate = () => {
+    const rangerElement = this.options.getRangerElement()
+
+    if (this.rangerElement !== rangerElement) {
+      this.rangerElement = rangerElement
+    }
+  }
+
+  getValueForClientX = (clientX: number) => {
+    const trackDims = getBoundingClientRect(this.rangerElement)
+    return this.options.interpolator.getValueForClientX(
+      clientX,
+      trackDims,
+      this.options.min,
+      this.options.max,
+    )
+  }
+
+  getNextStep = (val: number, direction: number): number => {
+    const { min, max } = this.options
+
+    if ('steps' in this.options) {
+      const { steps } = this.options
+      let currIndex = steps.indexOf(val)
+      let nextIndex = currIndex + direction
+      if (nextIndex >= 0 && nextIndex < steps.length) {
+        return steps[nextIndex] as number
+      } else {
+        return val
+      }
+    } else {
+      let nextVal = val + this.options.stepSize * direction
+      if (nextVal >= min && nextVal <= max) {
+        return nextVal
+      } else {
+        return val
+      }
+    }
+  }
+
+  roundToStep = (val: number) => {
+    const { min, max } = this.options
+
+    let left = min
+    let right = max
+    if ('steps' in this.options) {
+      this.options.steps.forEach((step) => {
+        if (step <= val && step > left) {
+          left = step
+        }
+        if (step >= val && step < right) {
+          right = step
+        }
+      })
+    } else {
+      const { stepSize } = this.options
+      while (left < val && left + stepSize < val) {
+        left += stepSize
+      }
+
+      right = Math.min(left + stepSize, max)
+    }
+
+    if (val - left < right - val) {
+      return left
+    }
+    return right
+  }
+
+  handleDrag = (e: any) => {
+    if (this.activeHandleIndex === undefined) {
+      return
+    }
+
+    const clientX =
+      e.type === 'touchmove' ? e.changedTouches[0].clientX : e.clientX
+    const newValue = this.getValueForClientX(clientX)
+    const newRoundedValue = this.roundToStep(newValue)
+
+    this.sortedValues = [
+      ...this.options.values.slice(0, this.activeHandleIndex),
+      newRoundedValue,
+      ...this.options.values.slice(this.activeHandleIndex + 1),
+    ]
+
+    if (this.options.onDrag) {
+      this.options.onDrag(this)
+    } else {
+      this.tempValues = this.sortedValues
+      this.options.rerender()
+    }
+  }
+
+  handleKeyDown = (e: KeyboardEvent, i: number) => {
+    const { values } = this.options
+
+    // Left Arrow || Right Arrow
+    if (e.keyCode === 37 || e.keyCode === 39) {
+      this.activeHandleIndex = i
+      const direction = e.keyCode === 37 ? -1 : 1
+      const newValue = this.getNextStep(values[i] as number, direction)
+      const newValues = [
+        ...values.slice(0, i),
+        newValue,
+        ...values.slice(i + 1),
+      ]
+      this.sortedValues = sortNumList(newValues)
+      if (this.options.onChange) {
+        this.options.onChange(this)
+      }
+    }
+  }
+
+  handlePress = (_e: any, i: number) => {
+    this.activeHandleIndex = i
+    this.options.rerender()
+
+    const handleRelease = () => {
+      const { tempValues, handleDrag } = this
+
+      document.removeEventListener('mousemove', handleDrag)
+      document.removeEventListener('touchmove', handleDrag)
+      document.removeEventListener('mouseup', handleRelease)
+      document.removeEventListener('touchend', handleRelease)
+      this.sortedValues = sortNumList(tempValues || this.options.values)
+      if (this.options.onChange) {
+        this.options.onChange(this)
+      }
+      if (this.options.onDrag) {
+        this.options.onDrag(this)
+      }
+      this.activeHandleIndex = undefined
+      this.tempValues = undefined
+      this.options.rerender()
+    }
+    const { handleDrag } = this
+    document.addEventListener('mousemove', handleDrag)
+    document.addEventListener('touchmove', handleDrag)
+    document.addEventListener('mouseup', handleRelease)
+    document.addEventListener('touchend', handleRelease)
+  }
+
+  getPercentageForValue = (val: number) =>
+    this.options.interpolator.getPercentageForValue(
+      val,
+      this.options.min,
+      this.options.max,
+    )
+
+  getTicks = () => {
+    let ticks: Array<number> = []
+    if (this.options.ticks) {
+      ticks = [...this.options.ticks]
+    } else if ('steps' in this.options) {
+      ticks = [...this.options.steps]
+    } else {
+      ticks = [this.options.min]
+      while (
+        (ticks[ticks.length - 1] as number) <
+        this.options.max - this.options.tickSize
+      ) {
+        ticks.push((ticks[ticks.length - 1] as number) + this.options.tickSize)
+      }
+      ticks.push(this.options.max)
+    }
+
+    return ticks.map((value, i) => ({
+      value,
+      key: i,
+      percentage: this.getPercentageForValue(value),
+    }))
+  }
+
+  getSteps = () => {
+    const values = sortNumList(this.tempValues || this.options.values)
+
+    return [...values, this.options.max].map((value, i) => {
+      const previousValue = values[i - 1]
+      const leftValue =
+        previousValue !== undefined ? previousValue : this.options.min
+      const left = this.getPercentageForValue(leftValue)
+      const width = this.getPercentageForValue(value) - left
+      return {
+        left,
+        width,
+      }
+    })
+  }
+
+  handles = () => {
+    return (this.tempValues || this.options.values).map((value, i) => ({
+      value,
+      isActive: i === this.activeHandleIndex,
+      onKeyDownHandler: (e: any) => {
+        this.handleKeyDown(e, i)
+      },
+      onMouseDownHandler: (e: any) => {
+        this.handlePress(e, i)
+      },
+      onTouchStart: (e: any) => {
+        this.handlePress(e, i)
+      },
+    }))
+  }
+}
+
+
+--- packages/ranger/src/utils.ts ---
+export const getBoundingClientRect = (element: any) => {
+  const rect = element.getBoundingClientRect()
+  return {
+    left: Math.ceil(rect.left),
+    width: Math.ceil(rect.width),
+  }
+}
+
+export const sortNumList = (arr: ReadonlyArray<number | string>) =>
+  [...arr].map(Number).sort((a, b) => a - b)
+
+export const linearInterpolator = {
+  getPercentageForValue: (val: number, min: number, max: number) => {
+    return Math.max(0, Math.min(100, ((val - min) / (max - min)) * 100))
+  },
+  getValueForClientX: (
+    clientX: number,
+    trackDims: { width: number; left: number },
+    min: number,
+    max: number,
+  ) => {
+    const { left, width } = trackDims
+    const percentageValue = (clientX - left) / width
+    const value = (max - min) * percentageValue
+    return value + min
+  },
+}

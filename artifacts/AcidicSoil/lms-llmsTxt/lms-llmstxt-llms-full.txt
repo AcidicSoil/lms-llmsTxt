@@ -1,0 +1,2453 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- .ruler/AGENTS.md ---
+
+
+--- README.md ---
+---
+title: "LM Studio llms.txt Generator"
+description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
+---
+
+## Overview
+
+Use this CLI-first toolkit to produce LLM-friendly documentation bundles (`llms.txt`, `llms-full.txt`, optional `llms-ctx.txt`, and fallback JSON) for any GitHub repository. The generator wraps DSPy analyzers, manages LM Studio model lifecycle with the official Python SDK, and guarantees output even when the primary language model cannot respond.
+
+<Info>
+The pipeline validates curated links, detects default branches automatically, and writes artifacts to `artifacts/<owner>/<repo>/`.
+</Info>
+
+## Prerequisites
+
+- Python 3.10 or later
+- LM Studio server available locally (Developer tab → **Start Server**) or the CLI (`lms server start --port 1234`)
+- GitHub API token in `GITHUB_ACCESS_TOKEN` or `GH_TOKEN`
+- Optional: [`llms_txt`](https://pypi.org/project/llms-txt/) when you want to produce `llms-ctx.txt`
+
+<Warning>
+Install dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
+</Warning>
+
+## Install
+
+<Steps>
+  <Step title="Create a virtual environment">
+    ```bash
+    python3 -m venv .venv
+    source .venv/bin/activate
+    ```
+  </Step>
+  <Step title="Install the package with developer extras">
+    ```bash
+    pip install -e .[dev]
+    ```
+    Installing the editable package exposes the `lmstudio-llmstxt` CLI and brings in the `lmstudio` Python SDK plus pytest.
+  </Step>
+</Steps>
+
+<Tip>
+Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
+</Tip>
+
+## Configure LM Studio
+
+<Steps>
+  <Step title="Load the CLI">
+    ```bash
+    npx lmstudio install-cli
+    lms server start --port 1234
+    ```
+    The server must expose an OpenAI-compatible endpoint, commonly `http://localhost:1234/v1`.
+  </Step>
+  <Step title="Ensure the target model is downloaded">
+    Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
+  </Step>
+</Steps>
+
+## Quick start
+
+Run the CLI against any GitHub repository:
+
+```bash
+lmstudio-llmstxt https://github.com/owner/repo \
+  --model qwen/qwen3-4b-2507 \
+  --api-base http://localhost:1234/v1 \
+  --stamp
+```
+
+The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
+
+### Environment variables
+
+| Variable | Description |
+|----------|-------------|
+| `LMSTUDIO_MODEL` | Default LM Studio model identifier |
+| `LMSTUDIO_BASE_URL` | Base URL such as `http://localhost:1234/v1` |
+| `LMSTUDIO_API_KEY` | API key for secured LM Studio deployments |
+| `OUTPUT_DIR` | Custom root directory for artifacts |
+| `ENABLE_CTX=1` | Emit `llms-ctx.txt` using the optional `llms_txt` package |
+
+## Generated artifacts
+
+| Artifact | Purpose |
+|----------|---------|
+| `*-llms.txt` | Primary documentation synthesized by DSPy or the fallback heuristic |
+| `*-llms-full.txt` | Expanded content fetched from curated GitHub links with 404 filtering |
+| `*-llms.json` | Fallback JSON following `LLMS_JSON_SCHEMA` (only when LM fallback triggers) |
+| `*-llms-ctx.txt` | Optional context file created when `ENABLE_CTX=1` and `llms_txt` is installed |
+
+<Check>
+The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
+</Check>
+
+## How it works
+
+1. **Collect repository material** – the GitHub client gathers the file tree, README, package files, repository visibility, and default branch.
+2. **Prepare LM Studio** – the manager confirms the requested model is loaded, auto-loading if necessary.
+3. **Generate documentation** – DSPy produces curated content; on LM failures the fallback serializer builds markdown and JSON directly.
+4. **Assemble `llms-full`** – curated links are re-fetched via raw GitHub URLs for public repos or authenticated API calls for private ones, with validation to remove dead links.
+5. **Unload models safely** – the workflow first uses the official `lmstudio` SDK (`model.unload()` or `list_loaded_models`), then falls back to HTTP and CLI unload requests.
+
+## Project layout
+
+- `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzers, LM Studio helpers, fallback renderer, and artifact writers
+- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, and pipeline fallbacks
+- `artifacts/` – sample outputs generated from previous runs
+
+## Verify your setup
+
+```bash
+source .venv/bin/activate
+python -m pytest
+```
+### Windows
+
+```bash
+source .venv/Scripts/activate
+python -m pytest
+```
+
+
+All tests should pass, confirming URL validation, fallback handling, and SDK-first unload behaviour.
+
+## Troubleshooting
+
+<Warning>
+If `pip install -e .[dev]` fails with build tool errors (`cmake` or `pyarrow`), install the missing system packages and retry the installation before running tests.
+</Warning>
+
+<Tip>
+When `llms-full` surfaces `[fetch-error]`, verify the curated link uses the repository’s actual default branch (`master` vs `main`). The analyzer keeps only live URLs, but custom additions may need manual tweaks.
+</Tip>
+
+<Info>
+Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid repeating flags during iterative runs.
+</Info>
+
+
+## Links discovered
+- [`llms_txt`](https://pypi.org/project/llms-txt/)
+
+--- repos.md ---
+https://github.com/tanstack/router
+https://github.com/tanstack/query
+https://github.com/tanstack/table
+https://github.com/tanstack/db
+https://github.com/tanstack/ai
+https://github.com/tanstack/form
+https://github.com/tanstack/virtual
+https://github.com/tanstack/pacer
+https://github.com/tanstack/store
+https://github.com/tanstack/devtools
+https://github.com/TanStack/config
+https://github.com/tanstack/ranger
+https://github.com/TanStack/react-charts
+
+
+--- scripts/queue_run.py ---
+# queue_run.py
+import re, subprocess, sys, pathlib
+
+md = pathlib.Path("repos.md").read_text(encoding="utf-8")
+urls = re.findall(r"https://github\.com/[^\s)]+", md)
+
+pathlib.Path("logs").mkdir(exist_ok=True)
+for u in urls:
+    owner_repo = "-".join(u.rstrip(")").split("/")[-2:])
+    log = pathlib.Path("logs") / f"{owner_repo}.log"
+    # swap "lmstxt" with "lmstudio-llmstxt" if that's your installed CLI
+    cmd = ["lmstxt", u]
+    print(">>", " ".join(cmd))
+    with log.open("w", encoding="utf-8") as fh:
+        p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        fh.write(p.stdout)
+        sys.stdout.write(p.stdout)
+        sys.stdout.flush()
+    if p.returncode != 0:
+        print(f"[error] failed for {u} (see {log})")
+
+
+--- src/lmstudiotxt_generator/analyzer.py ---
+from __future__ import annotations
+
+import logging
+import re
+from collections import defaultdict
+from typing import Dict, Iterable, List, Tuple
+
+import requests
+
+from .github import construct_github_file_url, owner_repo_from_url
+try:
+    import dspy
+except ImportError:
+    from .signatures import dspy
+
+from .signatures import (
+    AnalyzeCodeStructure,
+    AnalyzeRepository,
+    GenerateLLMsTxt,
+    GenerateUsageExamples,
+)
+
+logger = logging.getLogger(__name__)
+
+_URL_VALIDATION_TIMEOUT = 5
+_URL_SESSION = requests.Session()
+_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
+
+
+def _nicify_title(path: str) -> str:
+    base = path.rsplit("/", 1)[-1]
+    base = re.sub(r"\.(md|rst|txt|py|ipynb|js|ts|html|mdx)$", "", base, flags=re.I)
+    base = base.replace("-", " ").replace("_", " ")
+    title = base.strip().title() or path
+    if re.search(r"(^|/)index(\.mdx?|\.html?)?$", path, flags=re.I):
+        parts = path.strip("/").split("/")
+        if len(parts) > 1:
+            title = parts[-2].replace("-", " ").replace("_", " ").title()
+    return title
+
+
+def _short_note(path: str) -> str:
+    lower = path.lower()
+    if any(
+        hint in lower
+        for hint in ["getting-started", "quickstart", "install", "overview", "/readme"]
+    ):
+        return "install & quickstart"
+    if any(hint in lower for hint in ["reference", "/api"]):
+        return "API reference"
+    if any(hint in lower for hint in ["tutorial", "example", "how-to", "demo"]):
+        return "worked example"
+    if any(hint in lower for hint in ["concept", "architecture", "faq"]):
+        return "core concept"
+    if "changelog" in lower or "release" in lower:
+        return "version history"
+    if "license" in lower:
+        return "usage terms"
+    if "security" in lower:
+        return "security policy"
+    return "docs page"
+
+
+def _score(path: str) -> float:
+    score = 0.0
+    lower = path.lower()
+    if any(
+        hint in lower
+        for hint in ["quickstart", "getting-started", "install", "overview", "/readme"]
+    ):
+        score += 5
+    if any(hint in lower for hint in ["tutorial", "example", "how-to", "demo"]):
+        score += 3
+    if re.search(r"(^|/)index(\.mdx?|\.html?)?$", lower):
+        score += 2
+    score -= lower.count("/") * 0.1
+    return score
+
+
+TAXONOMY: List[Tuple[str, re.Pattern]] = [
+    (
+        "Docs",
+        re.compile(r"(docs|guide|getting[-_ ]?started|quickstart|install|overview)", re.I),
+    ),
+    ("Tutorials", re.compile(r"(tutorial|example|how[-_ ]?to|cookbook|demos?)", re.I)),
+    ("API", re.compile(r"(api|reference|sdk|class|module)", re.I)),
+    ("Concepts", re.compile(r"(concept|architecture|design|faq)", re.I)),
+    (
+        "Optional",
+        re.compile(r"(contributing|changelog|release|security|license|benchmark)", re.I),
+    ),
+]
+
+
+def _url_alive(url: str) -> bool:
+    try:
+        response = _URL_SESSION.head(
+            url, allow_redirects=True, timeout=_URL_VALIDATION_TIMEOUT, headers=_URL_HEADERS
+        )
+        status = response.status_code
+        if status and status < 400:
+            return True
+        response = _URL_SESSION.get(
+            url,
+            stream=True,
+            timeout=_URL_VALIDATION_TIMEOUT,
+            headers=_URL_HEADERS,
+        )
+        response.close()
+        return response.status_code < 400
+    except requests.RequestException:
+        return False
+
+
+def build_dynamic_buckets(
+    repo_url: str,
+    file_tree: str,
+    default_ref: str | None = None,
+    validate_urls: bool = True,
+    link_style: str = "blob",
+) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
+    paths = [p.strip() for p in file_tree.splitlines() if p.strip()]
+    pages = []
+    for path in paths:
+        if not re.search(r"\.(md|mdx|py|ipynb|js|ts|rst|txt|html)$", path, flags=re.I):
+            continue
+        pages.append(
+            {
+                "path": path,
+                "url": construct_github_file_url(
+                    repo_url, path, ref=default_ref, style=link_style
+                ),
+                "title": (
+                    "README"
+                    if re.search(r"(^|/)README\.md$", path, flags=re.I)
+                    else _nicify_title(path)
+                ),
+                "note": _short_note(path),
+                "score": _score(path),
+            }
+        )
+
+    buckets: Dict[str, List[dict]] = defaultdict(list)
+    for page in pages:
+        matched = False
+        for name, regex in TAXONOMY:
+            if regex.search(page["path"]) or regex.search(page["title"]):
+                buckets[name].append(page)
+                matched = True
+                break
+        if not matched:
+            top = page["path"].strip("/").split("/")[0] or "Misc"
+            buckets[top.replace("-", " ").replace("_", " ").title()].append(page)
+
+    for name, items in list(buckets.items()):
+        items.sort(key=lambda item: (-item["score"], item["title"]))
+        buckets[name] = items[:10]
+        if not buckets[name]:
+            buckets.pop(name, None)
+
+    if validate_urls:
+        for name, items in list(buckets.items()):
+            filtered = []
+            for page in items:
+                if _url_alive(page["url"]):
+                    filtered.append(page)
+                else:
+                    logger.debug("Dropping %s due to missing resource.", page["url"])
+            if filtered:
+                buckets[name] = filtered
+            else:
+                buckets.pop(name, None)
+
+    reserved = {name for name, _ in TAXONOMY}
+    for name in list(buckets.keys()):
+        if name not in reserved and len(buckets[name]) <= 1:
+            buckets["Optional"].extend(buckets.pop(name))
+
+    ordered: List[Tuple[str, List[Tuple[str, str, str]]]] = []
+    seen = set()
+    for name, _ in TAXONOMY:
+        if name in buckets:
+            ordered.append(
+                (
+                    name,
+                    [(pg["title"], pg["url"], pg["note"]) for pg in buckets[name]],
+                )
+            )
+            seen.add(name)
+    for name in sorted(k for k in buckets.keys() if k not in seen):
+        ordered.append((name, [(pg["title"], pg["url"], pg["note"]) for pg in buckets[name]]))
+    return ordered
+
+
+def render_llms_markdown(
+    project_name: str,
+    project_purpose: str,
+    remember_bullets: Iterable[str],
+    buckets: List[Tuple[str, List[Tuple[str, str, str]]]],
+) -> str:
+    bullets = [str(b).strip().rstrip(".") for b in remember_bullets if str(b).strip()]
+    bullets = bullets[:6] or [
+        "Install + Quickstart first",
+        "Core concepts & API surface",
+        "Use Tutorials for worked examples",
+    ]
+    if len(bullets) < 3:
+        bullets += ["Review API reference", "See Optional for meta docs"][: 3 - len(bullets)]
+    purpose_line = (project_purpose or "").strip().replace("\n", " ")
+
+    def fmt(items: Iterable[Tuple[str, str, str]]) -> str:
+        return "\n".join(f"- [{title}]({url}): {note}." for title, url, note in items)
+
+    out = [
+        f"# {project_name}",
+        "",
+        f"> {purpose_line or 'Project overview unavailable.'}",
+        "",
+        "**Remember:**",
+        *[f"- {bullet}" for bullet in bullets],
+        "",
+    ]
+    for name, items in buckets:
+        if not items:
+            continue
+        out.append(f"## {name}")
+        out.append(fmt(items) or "- _No curated links yet_.")
+        out.append("")
+    return "\n".join(out).strip()
+
+
+class RepositoryAnalyzer(dspy.Module):
+    """DSPy module that synthesizes an llms.txt summary for a GitHub repository."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.analyze_repo = dspy.ChainOfThought(AnalyzeRepository)
+        self.analyze_structure = dspy.ChainOfThought(AnalyzeCodeStructure)
+        self.generate_examples = dspy.ChainOfThought(GenerateUsageExamples)
+        self.generate_llms_txt = dspy.ChainOfThought(GenerateLLMsTxt)
+
+    def forward(
+        self,
+        repo_url: str,
+        file_tree: str,
+        readme_content: str,
+        package_files: str,
+        default_branch: str | None = None,
+        link_style: str = "blob",
+    ):
+        repo_analysis = self.analyze_repo(
+            repo_url=repo_url,
+            file_tree=file_tree,
+            readme_content=readme_content,
+        )
+        structure_analysis = self.analyze_structure(
+            file_tree=file_tree, package_files=package_files
+        )
+
+        self.generate_examples(
+            repo_info=(
+                f"Purpose: {repo_analysis.project_purpose}\n\n"
+                f"Concepts: {', '.join(repo_analysis.key_concepts or [])}\n\n"
+                f"Entry points: {', '.join(structure_analysis.entry_points or [])}\n"
+            )
+        )
+
+        try:
+            _, repo = owner_repo_from_url(repo_url)
+            project_name = repo.replace("-", " ").replace("_", " ").title()
+        except Exception:
+            project_name = "Project"
+
+        buckets = build_dynamic_buckets(
+            repo_url,
+            file_tree,
+            default_ref=default_branch,
+            link_style=link_style,
+        )
+
+        llms_txt_content = render_llms_markdown(
+            project_name=project_name,
+            project_purpose=repo_analysis.project_purpose or "",
+            remember_bullets=repo_analysis.key_concepts or [],
+            buckets=buckets,
+        )
+
+        return dspy.Prediction(
+            llms_txt_content=llms_txt_content,
+            analysis=repo_analysis,
+            structure=structure_analysis,
+        )
+
+
+## Links discovered
+- [{title}](https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/{url}.md)
+
+--- src/lmstudiotxt_generator/cli.py ---
+import argparse
+import logging
+import sys
+from pathlib import Path
+from textwrap import dedent
+
+from .config import AppConfig
+from .pipeline import run_generation
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="lmstudio-llmstxt",
+        description="Generate llms.txt artifacts for a GitHub repository using LM Studio.",
+    )
+    parser.add_argument("repo", help="GitHub repository URL (https://github.com/<owner>/<repo>)")
+    parser.add_argument(
+        "--model",
+        help="LM Studio model identifier (overrides LMSTUDIO_MODEL).",
+    )
+    parser.add_argument(
+        "--api-base",
+        help="LM Studio API base URL (overrides LMSTUDIO_BASE_URL).",
+    )
+    parser.add_argument(
+        "--api-key",
+        help="LM Studio API key (overrides LMSTUDIO_API_KEY).",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        help="Directory where artifacts will be written (default: OUTPUT_DIR or ./artifacts).",
+    )
+    parser.add_argument(
+        "--link-style",
+        choices=["blob", "raw"],
+        help="Style of GitHub file links to generate (default: blob).",
+    )
+    parser.add_argument(
+        "--stamp",
+        action="store_true",
+        help="Append a UTC timestamp comment to generated files.",
+    )
+    parser.add_argument(
+        "--no-ctx",
+        action="store_true",
+        help="Skip generating llms-ctx.txt even if ENABLE_CTX is set.",
+    )
+    parser.add_argument(
+        "--cache-lm",
+        action="store_true",
+        help="Enable DSPy's LM cache (useful for repeated experiments).",
+    )
+    return parser
+
+
+def main(argv: list[str] | None = None) -> int:
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    config = AppConfig()
+    if args.model:
+        config.lm_model = args.model
+    if args.api_base:
+        config.lm_api_base = str(args.api_base)
+    if args.api_key:
+        config.lm_api_key = args.api_key
+    if args.output_dir:
+        config.output_dir = args.output_dir
+    if args.link_style:
+        config.link_style = args.link_style
+    if args.no_ctx:
+        config.enable_ctx = False
+
+    try:
+        artifacts = run_generation(
+            repo_url=args.repo,
+            config=config,
+            stamp=bool(args.stamp),
+            cache_lm=bool(args.cache_lm),
+        )
+    except Exception as exc:
+        parser.error(str(exc))
+        return 2
+
+    summary = dedent(
+        f"""\
+        Artifacts written:
+          - {artifacts.llms_txt_path}
+          - {artifacts.llms_full_path}
+        """
+    ).rstrip()
+
+    if artifacts.ctx_path:
+        summary += f"\n  - {artifacts.ctx_path}"
+    if artifacts.json_path:
+        summary += f"\n  - {artifacts.json_path}"
+    if artifacts.used_fallback:
+        summary += "\n(note) LM call failed; fallback JSON/schema output was used."
+
+    print(summary)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
+--- src/lmstudiotxt_generator/config.py ---
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass, field
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+@dataclass(slots=True)
+class AppConfig:
+    """
+    Runtime configuration for the LM Studio llms.txt generator.
+
+    Users can override defaults through environment variables:
+      - ``LMSTUDIO_MODEL``: LM Studio model identifier.
+      - ``LMSTUDIO_BASE_URL``: API base URL (defaults to http://localhost:1234/v1).
+      - ``LMSTUDIO_API_KEY``: Optional API key (LM Studio accepts any string).
+      - ``OUTPUT_DIR``: Root folder for generated artifacts.
+      - ``ENABLE_CTX``: Set truthy to emit llms-ctx.txt files when llms_txt.create_ctx
+        is available.
+    """
+    lm_model: str = field(
+        default_factory=lambda: os.getenv(
+            "LMSTUDIO_MODEL", "qwen3-4b-instruct-2507@q6_k_xl"
+        )
+    )
+    lm_api_base: str = field(
+        default_factory=lambda: os.getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1")
+    )
+    lm_api_key: str = field(
+        default_factory=lambda: os.getenv("LMSTUDIO_API_KEY", "lm-studio")
+    )
+    output_dir: Path = field(
+        default_factory=lambda: Path(os.getenv("OUTPUT_DIR", "artifacts"))
+    )
+    github_token: str | None = field(
+        default_factory=lambda: os.getenv("GITHUB_ACCESS_TOKEN")
+        or os.getenv("GH_TOKEN")
+    )
+    link_style: str = field(
+        default_factory=lambda: os.getenv("LINK_STYLE", "blob")
+    )
+    enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
+    lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
+    lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))
+
+    def ensure_output_root(self, owner: str, repo: str) -> Path:
+        """Return ``<output_root>/<owner>/<repo>`` and create it if missing."""
+        repo_root = self.output_dir / owner / repo
+        repo_root.mkdir(parents=True, exist_ok=True)
+        return repo_root
+
+
+--- src/lmstudiotxt_generator/fallback.py ---
+from __future__ import annotations
+
+import textwrap
+from typing import Dict, List, Tuple
+
+from .analyzer import build_dynamic_buckets, render_llms_markdown
+from .schema import LLMS_JSON_SCHEMA
+
+
+def _summary_from_readme(readme: str) -> str:
+    if not readme:
+        return "Project overview unavailable."
+    lines = [line.strip() for line in readme.splitlines()]
+    lines = [line for line in lines if line]
+    if not lines:
+        return "Project overview unavailable."
+    if lines[0].startswith("#"):
+        lines = lines[1:]
+    excerpt = []
+    for line in lines:
+        if line.startswith("#"):
+            break
+        excerpt.append(line)
+        if len(" ".join(excerpt)) > 280:
+            break
+    summary = " ".join(excerpt).strip()
+    if not summary:
+        return "Project overview unavailable."
+    return summary
+
+
+def _remember_bullets() -> List[str]:
+    return [
+        "Start with Docs for install & onboarding",
+        "Check Tutorials for end-to-end workflows",
+        "Review API references before integrating",
+    ]
+
+
+def fallback_llms_payload(
+    repo_name: str,
+    repo_url: str,
+    file_tree: str,
+    readme_content: str,
+    *,
+    default_branch: str | None = None,
+    link_style: str = "blob",
+) -> Dict[str, object]:
+    buckets = build_dynamic_buckets(
+        repo_url,
+        file_tree,
+        default_ref=default_branch,
+        link_style=link_style,
+    )
+    summary = _summary_from_readme(readme_content)
+    remember = _remember_bullets()
+    sections: List[Dict[str, object]] = []
+    for title, items in buckets:
+        links = [
+            {"title": link_title, "url": link_url, "note": note}
+            for (link_title, link_url, note) in items
+        ]
+        sections.append({"title": title, "links": links})
+    payload: Dict[str, object] = {
+        "schema": LLMS_JSON_SCHEMA,
+        "project": {"name": repo_name, "summary": summary},
+        "remember": remember,
+        "sections": sections,
+    }
+    return payload
+
+
+def fallback_markdown_from_payload(repo_name: str, payload: Dict[str, object]) -> str:
+    buckets: List[Tuple[str, List[Tuple[str, str, str]]]] = []
+    for section in payload["sections"]:
+        sec = section  # type: ignore[assignment]
+        items = [
+            (link["title"], link["url"], link["note"])
+            for link in sec["links"]  # type: ignore[index]
+        ]
+        buckets.append((sec["title"], items))  # type: ignore[arg-type]
+    markdown = render_llms_markdown(
+        project_name=repo_name,
+        project_purpose=payload["project"]["summary"],  # type: ignore[index]
+        remember_bullets=payload["remember"],  # type: ignore[index]
+        buckets=buckets,
+    )
+    header = textwrap.dedent(
+        """\
+        <!-- Generated via fallback path (no LM). -->
+        """
+    )
+    return header + "\n" + markdown
+
+
+def fallback_llms_markdown(
+    repo_name: str,
+    repo_url: str,
+    file_tree: str,
+    readme_content: str,
+    *,
+    default_branch: str | None = None,
+    link_style: str = "blob",
+) -> str:
+    payload = fallback_llms_payload(
+        repo_name=repo_name,
+        repo_url=repo_url,
+        file_tree=file_tree,
+        readme_content=readme_content,
+        default_branch=default_branch,
+        link_style=link_style,
+    )
+    return fallback_markdown_from_payload(repo_name, payload)
+
+
+__all__ = [
+    "fallback_llms_payload",
+    "fallback_llms_markdown",
+    "fallback_markdown_from_payload",
+]
+
+
+--- src/lmstudiotxt_generator/full_builder.py ---
+from __future__ import annotations
+
+import base64
+import os
+import re
+import textwrap
+from dataclasses import dataclass
+from typing import Iterable, Optional, Tuple
+from urllib.parse import urljoin
+import posixpath
+import requests
+from .github import  _normalize_repo_path
+
+@dataclass
+class GhRef:
+    owner: str
+    repo: str
+    path: str
+    ref: Optional[str] = None
+
+
+_GH_LINK = re.compile(
+    r"https?://(?:raw\.githubusercontent\.com|github\.com)/(?P<owner>[^/]+)/(?P<repo>[^/]+)/"
+    r"(?:(?:blob|tree)/)?(?P<ref>[^/]+)/(?P<path>.+)$",
+    re.I,
+)
+
+
+def parse_github_link(url: str) -> Optional[GhRef]:
+    match = _GH_LINK.match(url)
+    if not match:
+        return None
+    groups = match.groupdict()
+    return GhRef(groups["owner"], groups["repo"], groups["path"], groups.get("ref"))
+
+
+def gh_get_file(
+    owner: str,
+    repo: str,
+    path: str,
+    ref: Optional[str] = None,
+    token: Optional[str] = None,
+) -> Tuple[str, bytes]:
+    url = f"https://api.github.com/repos/{owner}/{repo}/contents/{path}"
+    params = {"ref": ref} if ref else {}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "llmstxt-generator",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    response = requests.get(url, params=params, headers=headers, timeout=30)
+    if response.status_code == 404:
+        raise FileNotFoundError(f"GitHub 404 for {owner}/{repo}/{path}@{ref or 'default'}")
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("encoding") == "base64":
+        body = base64.b64decode(payload["content"])
+    else:
+        body = payload.get("content", "").encode("utf-8", "ignore")
+    mime_hint = payload.get("type", "file")
+    return mime_hint, body
+
+
+def fetch_raw_file(
+    owner: str,
+    repo: str,
+    path: str,
+    ref: str,
+) -> bytes:
+    url = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
+    response = requests.get(
+        url,
+        headers={"User-Agent": "llmstxt-generator"},
+        timeout=30,
+    )
+    if response.status_code == 404:
+        raise FileNotFoundError(f"Raw GitHub 404 for {owner}/{repo}/{path}@{ref}")
+    response.raise_for_status()
+    return response.content
+
+
+# curated list item like "- [Title](https://...)"
+_PAGE_LINK = re.compile(r"^\s*-\s*\[(?P<title>.+?)\]\((?P<url>https?://[^\s)]+)\)", re.M)
+
+# within-page link patterns
+_MD_LINK = re.compile(r"\[(?P<text>[^\]]+)\]\((?P<href>[^)\s]+)\)")
+_HTML_LINK = re.compile(r"<a\s+[^>]*href=[\"'](?P<href>[^\"'#]+)[\"'][^>]*>(?P<text>.*?)</a>", re.I | re.S)
+
+# crude HTML-to-text helpers (stdlib only)
+_TAG = re.compile(r"<[^>]+>")
+_SCRIPT_STYLE = re.compile(r"<(script|style)\b[^>]*>.*?</\1>", re.I | re.S)
+_WHITESPACE = re.compile(r"[ \t\f\v]+")
+_NEWLINES = re.compile(r"\n{3,}")
+
+
+def iter_llms_links(curated_text: str) -> Iterable[Tuple[str, str]]:
+    for match in _PAGE_LINK.finditer(curated_text):
+        yield match.group("title").strip(), match.group("url").strip()
+
+
+def sanitize_path_for_block(title: str, url: str, gh: Optional[GhRef]) -> str:
+    if gh:
+        path = gh.path
+    else:
+        # website: create a stable, readable label from the title
+        path = title.lower().strip().replace(" ", "-")
+    return path.lstrip("/")
+
+def _resolve_repo_url(gh: GhRef, ref: str, href: str, style: str = "blob") -> Optional[str]:
+    """
+    Resolve a repo-relative link found in Markdown/HTML to a canonical
+    GitHub URL (blob or raw).
+
+    - Leaves absolute http(s) links unchanged.
+    - Ignores anchors, mailto:, javascript:.
+    - Normalizes '.' and '..' segments.
+    - For extensionless paths (no '.' in final segment), assumes '.md'.
+    """
+    href = href.strip()
+    if not href or href.startswith(("#", "mailto:", "javascript:")):
+        return None
+    if href.startswith(("http://", "https://")):
+        return href
+
+    # Build a repo-relative path
+    if href.startswith("/"):
+        rel = href.lstrip("/")
+    else:
+        base_dir = gh.path.rsplit("/", 1)[0] if "/" in gh.path else ""
+        rel = f"{base_dir}/{href}" if base_dir else href
+
+    rel = _normalize_repo_path(rel)
+
+    # Heuristic: if the last segment has no dot, treat it as a markdown file.
+    last = rel.rsplit("/", 1)[-1]
+    if "." not in last:
+        rel = rel + ".md"
+
+    if style == "raw":
+        return f"https://raw.githubusercontent.com/{gh.owner}/{gh.repo}/{ref}/{rel}"
+    return f"https://github.com/{gh.owner}/{gh.repo}/blob/{ref}/{rel}"
+
+
+
+
+def _resolve_web_url(base_url: str, href: str) -> Optional[str]:
+    """
+    Resolve a general website href against base_url.
+    Ignore fragments and non-http(s) schemes.
+    """
+    href = href.strip()
+    if not href or href.startswith(("#", "mailto:", "javascript:", "tel:")):
+        return None
+    resolved = urljoin(base_url, href)
+    if resolved.startswith(("http://", "https://")):
+        return resolved
+    return None
+
+
+def _extract_links(body_text: str, *, gh: Optional[GhRef], ref: str, base_url: Optional[str], link_style: str = "blob") -> list[tuple[str, str]]:
+    """
+    Extract outbound links from Markdown/HTML and resolve to absolute URLs.
+    For GitHub pages pass gh+ref. For websites pass base_url.
+    """
+    seen: set[tuple[str, str]] = set()
+    found: list[tuple[str, str]] = []
+
+    def _add(text: str, href: str):
+        key = (text, href)
+        if key not in seen:
+            seen.add(key)
+            found.append(key)
+
+    # Markdown links
+    for m in _MD_LINK.finditer(body_text):
+        text = m.group("text").strip()
+        href = m.group("href").strip()
+        if gh:
+            resolved = _resolve_repo_url(gh, ref, href, style=link_style)
+        else:
+            resolved = _resolve_web_url(base_url or "", href)
+        if resolved:
+            _add(text, resolved)
+
+    # HTML links
+    for m in _HTML_LINK.finditer(body_text):
+        text = re.sub(r"\s+", " ", m.group("text")).strip() or "link"
+        href = m.group("href").strip()
+        if gh:
+            resolved = _resolve_repo_url(gh, ref, href, style=link_style)
+        else:
+            resolved = _resolve_web_url(base_url or "", href)
+        if resolved:
+            _add(text, resolved)
+
+    return found
+
+
+def _html_to_text(html: str) -> str:
+    """
+    Very simple HTML -> text. Removes scripts/styles, strips tags,
+    normalizes whitespace. No external dependencies.
+    """
+    cleaned = _SCRIPT_STYLE.sub("", html)
+    cleaned = _TAG.sub("", cleaned)
+    cleaned = cleaned.replace("\r", "\n")
+    cleaned = _WHITESPACE.sub(" ", cleaned)
+    cleaned = re.sub(r"[ \t]+\n", "\n", cleaned)
+    cleaned = _NEWLINES.sub("\n\n", cleaned)
+    return cleaned.strip()
+
+
+def _fetch_website(url: str, user_agent: str = "llmstxt-generator", timeout: int = 30) -> str:
+    resp = requests.get(url, headers={"User-Agent": user_agent}, timeout=timeout)
+    resp.raise_for_status()
+    # prefer text; if bytes fallback, requests gives .text with encoding guess
+    return resp.text
+
+
+def build_llms_full_from_repo(
+    curated_llms_text: str,
+    max_bytes_per_file: int = 800_000,
+    max_files: int = 100,
+    *,
+    prefer_raw: bool = False,
+    default_ref: Optional[str] = None,
+    token: Optional[str] = None,
+    link_style: str = "blob",
+) -> str:
+    """
+    Extended: also accepts general website URLs in the curated list.
+    GitHub URLs are fetched via API/raw as before. Non-GitHub URLs are fetched as HTML.
+    """
+    resolved_token = (
+        token
+        if token is not None
+        else os.getenv("GITHUB_ACCESS_TOKEN") or os.getenv("GH_TOKEN")
+    )
+    blocks = []
+    seen = set()
+    count = 0
+
+    for title, url in iter_llms_links(curated_llms_text):
+        if count >= max_files:
+            break
+
+        gh = parse_github_link(url)
+
+        # dedupe key
+        if gh:
+            key = (gh.owner, gh.repo, gh.path, gh.ref or "")
+        else:
+            key = ("web", url)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        if gh:
+            # GitHub path fetch
+            resolved_ref = gh.ref or default_ref or "main"
+            try:
+                if prefer_raw:
+                    body = fetch_raw_file(gh.owner, gh.repo, gh.path, resolved_ref)
+                else:
+                    _, body = gh_get_file(
+                        gh.owner,
+                        gh.repo,
+                        gh.path,
+                        resolved_ref,
+                        resolved_token,
+                    )
+            except requests.HTTPError as exc:
+                message = _format_http_error(gh, resolved_ref, exc, auth_used=not prefer_raw)
+                body = message.encode("utf-8")
+            except Exception as exc:
+                message = _format_generic_error(gh, resolved_ref, exc)
+                body = message.encode("utf-8")
+
+            truncated = False
+            if len(body) > max_bytes_per_file:
+                body = body[:max_bytes_per_file] + b"\n[truncated]\n"
+                truncated = True
+
+            block_path = sanitize_path_for_block(title, url, gh)
+            text_body = body.decode("utf-8", "replace")
+
+            links = _extract_links(text_body, gh=gh, ref=resolved_ref, base_url=None, link_style=link_style)[:100]
+            link_section = ""
+            if links:
+                bullet_lines = "\n".join(f"- [{t}]({h})" for t, h in links)
+                link_section = f"\n## Links discovered\n{bullet_lines}\n"
+
+            blocks.append(f"--- {block_path} ---\n{text_body}\n{link_section}")
+            count += 1
+
+        else:
+            # General website fetch
+            try:
+                html = _fetch_website(url)
+            except Exception as exc:
+                text_body = f"[fetch-error] {url} :: {exc}"
+            else:
+                text_body = _html_to_text(html)
+
+            # enforce size after text conversion for websites
+            encoded = text_body.encode("utf-8", "ignore")
+            if len(encoded) > max_bytes_per_file:
+                encoded = encoded[:max_bytes_per_file] + b"\n[truncated]\n"
+                text_body = encoded.decode("utf-8", "ignore")
+
+            links = _extract_links(
+                html if 'html' in locals() else text_body,
+                gh=None,
+                ref="",
+                base_url=url,
+                link_style=link_style,
+            )[:100]
+            link_section = ""
+            if links:
+                bullet_lines = "\n".join(f"- [{t}]({h})" for t, h in links)
+                link_section = f"\n## Links discovered\n{bullet_lines}\n"
+
+            block_path = sanitize_path_for_block(title, url, gh=None)
+            blocks.append(f"--- {block_path} ---\n{text_body}\n{link_section}")
+            count += 1
+
+    disclaimer = textwrap.dedent(
+        """\
+        # llms-full (private-aware)
+        > Built from GitHub files and website pages. Large files may be truncated.
+        """
+    )
+    return disclaimer + "\n" + "\n".join(blocks)
+
+
+def _format_http_error(
+    gh: GhRef,
+    ref: str,
+    exc: requests.HTTPError,
+    *,
+    auth_used: bool,
+) -> str:
+    response = exc.response
+    status = response.status_code if response is not None else "unknown"
+    reason = response.reason if response is not None else str(exc)
+    hint = ""
+    if auth_used and response is not None and response.status_code == 403:
+        hint = (
+            " Verify that GITHUB_ACCESS_TOKEN or GH_TOKEN has 'repo' scope and is not expired."
+        )
+    return (
+        f"[fetch-error] {gh.owner}/{gh.repo}/{gh.path}@{ref} :: "
+        f"HTTP {status} {reason}.{hint}"
+    )
+
+
+def _format_generic_error(gh: GhRef, ref: str, exc: Exception) -> str:
+    return (
+        f"[fetch-error] {gh.owner}/{gh.repo}/{gh.path}@{ref} :: {exc}"
+    )
+
+
+## Links discovered
+- [Title](https://...)
+- [\"'](https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/?P<href>[^\"'#]+.md)
+- [{t}](https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/{h}.md)
+
+--- src/lmstudiotxt_generator/github.py ---
+from __future__ import annotations
+
+import base64
+import os
+import re
+from typing import Iterable
+
+import requests
+import posixpath
+from .models import RepositoryMaterial
+
+def _normalize_repo_path(path: str) -> str:
+    """
+    Normalize a repo-relative path:
+    - strip leading slash
+    - collapse '.' and '..' segments
+    """
+    path = path.lstrip("/")
+    # posix-style normalization: 'docs/./x/../y' -> 'docs/y'
+    return posixpath.normpath(path)
+
+_GITHUB_URL = re.compile(
+    r"""
+    ^
+    (?:
+        git@github\.com:
+        (?P<owner_ssh>[^/]+)/(?P<repo_ssh>[^/]+?)(?:\.git)?
+        |
+        https?://github\.com/
+        (?P<owner_http>[^/]+)/(?P<repo_http>[^/]+?)(?:\.git)?
+    )
+    (?:/.*)?
+    $
+    """,
+    re.IGNORECASE | re.VERBOSE,
+)
+
+_SESSION = requests.Session()
+
+
+def owner_repo_from_url(repo_url: str) -> tuple[str, str]:
+    """Return ``(owner, repo)`` for https or SSH GitHub URLs."""
+    m = _GITHUB_URL.match(repo_url.strip())
+    if not m:
+        raise ValueError(f"Unrecognized GitHub URL: {repo_url!r}")
+    owner = m.group("owner_http") or m.group("owner_ssh")
+    repo = m.group("repo_http") or m.group("repo_ssh")
+    return owner, repo
+
+
+def _auth_headers(token: str | None) -> dict[str, str]:
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "User-Agent": "lmstudio-llmstxt-generator",
+    }
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    return headers
+
+
+def get_repository_metadata(owner: str, repo: str, token: str | None) -> dict[str, object]:
+    resp = _SESSION.get(
+        f"https://api.github.com/repos/{owner}/{repo}",
+        headers=_auth_headers(token),
+        timeout=20,
+    )
+    if resp.status_code == 404:
+        raise FileNotFoundError(f"Repository not found: {owner}/{repo}")
+    resp.raise_for_status()
+    payload = resp.json()
+    return {
+        "default_branch": payload.get("default_branch", "main"),
+        "is_private": bool(payload.get("private", False)),
+        "visibility": payload.get("visibility"),
+    }
+
+
+def get_default_branch(owner: str, repo: str, token: str | None) -> str:
+    metadata = get_repository_metadata(owner, repo, token)
+    return str(metadata.get("default_branch", "main"))
+
+
+def fetch_file_tree(
+    owner: str, repo: str, ref: str, token: str | None
+) -> Iterable[str]:
+    resp = _SESSION.get(
+        f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}",
+        params={"recursive": 1},
+        headers=_auth_headers(token),
+        timeout=30,
+    )
+    resp.raise_for_status()
+    payload = resp.json()
+    return [
+        item["path"]
+        for item in payload.get("tree", [])
+        if item.get("type") == "blob" and "path" in item
+    ]
+
+
+def fetch_file_content(
+    owner: str, repo: str, path: str, ref: str, token: str | None
+) -> str | None:
+    resp = _SESSION.get(
+        f"https://api.github.com/repos/{owner}/{repo}/contents/{path}",
+        params={"ref": ref},
+        headers=_auth_headers(token),
+        timeout=20,
+    )
+    if resp.status_code == 404:
+        return None
+    resp.raise_for_status()
+    payload = resp.json()
+    content = payload.get("content")
+    if content and payload.get("encoding") == "base64":
+        return base64.b64decode(content).decode("utf-8", "replace")
+    if isinstance(content, str):
+        return content
+    return None
+
+
+def gather_repository_material(repo_url: str, token: str | None = None) -> RepositoryMaterial:
+    owner, repo = owner_repo_from_url(repo_url)
+    metadata = get_repository_metadata(owner, repo, token)
+    ref = str(metadata.get("default_branch", "main"))
+
+    file_paths = fetch_file_tree(owner, repo, ref, token)
+    file_tree = "\n".join(sorted(file_paths))
+
+    readme = fetch_file_content(owner, repo, "README.md", ref, token) or ""
+
+    package_blobs = []
+    for candidate in (
+        "pyproject.toml",
+        "setup.cfg",
+        "setup.py",
+        "requirements.txt",
+        "package.json",
+    ):
+        content = fetch_file_content(owner, repo, candidate, ref, token)
+        if content:
+            package_blobs.append(f"=== {candidate} ===\n{content}")
+
+    package_files = "\n\n".join(package_blobs)
+
+    return RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree=file_tree,
+        readme_content=readme,
+        package_files=package_files,
+        default_branch=ref,
+        is_private=bool(metadata.get("is_private", False)),
+    )
+
+
+def construct_github_file_url(
+    repo_url: str, path: str, ref: str | None = None, style: str = "blob"
+) -> str:
+    """
+    Build a canonical GitHub URL for a repo file.
+
+    style="blob": https://github.com/owner/repo/blob/ref/path
+    style="raw":  https://raw.githubusercontent.com/owner/repo/ref/path
+    """
+    owner, repo = owner_repo_from_url(repo_url)
+    if not ref:
+        token = os.getenv("GITHUB_ACCESS_TOKEN") or os.getenv("GH_TOKEN")
+        try:
+            ref = get_default_branch(owner, repo, token)
+        except Exception:
+            ref = "main"
+
+    norm_path = _normalize_repo_path(path)
+
+    if style == "raw":
+        return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{norm_path}"
+    return f"https://github.com/{owner}/{repo}/blob/{ref}/{norm_path}"
+
+
+
+--- src/lmstudiotxt_generator/__init__.py ---
+"""LM Studio-powered llms.txt generation toolkit."""
+
+from .analyzer import RepositoryAnalyzer
+from .config import AppConfig
+from .fallback import (
+    fallback_llms_payload,
+    fallback_llms_markdown,
+)
+from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError
+from .models import GenerationArtifacts, RepositoryMaterial
+from .schema import LLMS_JSON_SCHEMA
+
+__all__ = [
+    "AppConfig",
+    "GenerationArtifacts",
+    "RepositoryAnalyzer",
+    "RepositoryMaterial",
+    "configure_lmstudio_lm",
+    "LMStudioConnectivityError",
+    "fallback_llms_payload",
+    "fallback_llms_markdown",
+    "LLMS_JSON_SCHEMA",
+]
+
+
+--- src/lmstudiotxt_generator/lmstudio.py ---
+from __future__ import annotations
+
+import logging
+import subprocess
+from typing import Iterable, Optional, Tuple
+from urllib.parse import urlparse
+
+import requests
+
+from .config import AppConfig
+
+try:
+    import dspy
+except ImportError:
+    from .signatures import dspy
+
+logger = logging.getLogger(__name__)
+
+try:  # Optional dependency recommended for managed unload
+    import lmstudio as _LMSTUDIO_SDK  # type: ignore
+except Exception:  # pragma: no cover - SDK is optional at runtime
+    _LMSTUDIO_SDK = None  # type: ignore[assignment]
+
+
+class LMStudioConnectivityError(RuntimeError):
+    """Raised when LM Studio cannot be reached or does not expose the model."""
+
+
+_MODEL_ENDPOINTS: tuple[str, ...] = ("/v1/models", "/api/v1/models", "/models")
+_LOAD_ENDPOINT_PATTERNS: tuple[str, ...] = (
+    "/v1/models/{model}/load",
+    "/v1/models/load",
+    "/v1/models/{model}",
+    "/api/v1/models/{model}/load",
+    "/api/v1/models/load",
+    "/api/v1/models/{model}",
+    "/models/{model}/load",
+    "/models/load",
+    "/models/{model}",
+)
+_UNLOAD_ENDPOINT_PATTERNS: tuple[str, ...] = (
+    "/v1/models/{model}/unload",
+    "/v1/models/unload",
+    "/v1/models/{model}",
+    "/api/v1/models/{model}/unload",
+    "/api/v1/models/unload",
+    "/api/v1/models/{model}",
+    "/models/{model}/unload",
+    "/models/unload",
+    "/models/{model}",
+)
+
+
+def _build_lmstudio_url(base: str, endpoint: str) -> str:
+    """
+    Join ``base`` and ``endpoint`` while avoiding duplicated version prefixes.
+    """
+
+    base_trimmed = base.rstrip("/")
+    path = endpoint
+    for prefix in ("/v1", "/api/v1"):
+        if base_trimmed.endswith(prefix) and path.startswith(prefix):
+            path = path[len(prefix) :] or ""
+            if path and not path.startswith("/"):
+                path = "/" + path
+            break
+
+    if not path.startswith("/"):
+        path = "/" + path if path else ""
+
+    return base_trimmed + path
+
+
+def _fetch_models(
+    base_url: str, headers: dict[str, str]
+) -> Tuple[set[str], Optional[str]]:
+    """
+    Return (models, successful_endpoint) by probing known LM Studio endpoints.
+
+    Recent LM Studio releases mirror OpenAI's `/v1/models` endpoint, while older
+    builds exposed `/api/v1/models` or `/models`. We probe the known variants and
+    return the first that yields a usable payload.
+    """
+    last_error: Optional[requests.RequestException] = None
+    for endpoint in _MODEL_ENDPOINTS:
+        url = _build_lmstudio_url(base_url, endpoint)
+        try:
+            response = requests.get(url, headers=headers, timeout=5)
+            response.raise_for_status()
+            payload = response.json()
+        except requests.RequestException as exc:
+            last_error = exc
+            logger.debug("LM Studio GET %s failed: %s", url, exc)
+            continue
+
+        models: set[str] = set()
+        if isinstance(payload, dict) and "data" in payload:
+            for item in payload["data"]:
+                if isinstance(item, dict):
+                    identifier = item.get("id") or item.get("name")
+                    if identifier:
+                        models.add(str(identifier))
+                elif isinstance(item, str):
+                    models.add(item)
+        elif isinstance(payload, list):
+            for item in payload:
+                if isinstance(item, dict):
+                    identifier = item.get("id") or item.get("name")
+                    if identifier:
+                        models.add(str(identifier))
+                elif isinstance(item, str):
+                    models.add(item)
+
+        logger.debug("LM Studio models from %s: %s", url, models or "<empty>")
+        return models, endpoint
+
+    if last_error:
+        raise last_error
+    return set(), None
+
+
+def _load_model_http(
+    base_url: str,
+    headers: dict[str, str],
+    model: str,
+    endpoint_hint: Optional[str],
+) -> bool:
+    """
+    Attempt to load the requested model via LM Studio's HTTP API.
+
+    Returns True if any request returns a 2xx status code.
+    """
+    def candidate_paths() -> Iterable[str]:
+        if endpoint_hint and endpoint_hint.startswith("/v1"):
+            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/v1")]
+            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/v1")]
+            yield from primary + secondary
+        elif endpoint_hint and endpoint_hint.startswith("/api/v1"):
+            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
+            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
+            yield from primary + secondary
+        elif endpoint_hint:
+            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
+            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
+            yield from primary + secondary
+        else:
+            yield from _LOAD_ENDPOINT_PATTERNS
+
+    for template in candidate_paths():
+        url = _build_lmstudio_url(base_url, template.format(model=model))
+        body_candidates = (
+            None,
+            {"model": model},
+            {"id": model},
+            {"name": model},
+        )
+        for body in body_candidates:
+            try:
+                logger.debug("Attempting LM Studio load via %s body=%s", url, body)
+                if body is None:
+                    response = requests.post(url, headers=headers, timeout=10)
+                else:
+                    enriched_headers = dict(headers)
+                    enriched_headers["Content-Type"] = "application/json"
+                    response = requests.post(
+                        url,
+                        headers=enriched_headers,
+                        json=body,
+                        timeout=10,
+                    )
+                if response.status_code < 400:
+                    logger.info(
+                        "LM Studio accepted load request via %s (status %s)",
+                        url,
+                        response.status_code,
+                    )
+                    return True
+                logger.debug(
+                    "LM Studio rejected load request via %s (status %s: %s)",
+                    url,
+                    response.status_code,
+                    response.text,
+                )
+            except requests.RequestException as exc:
+                logger.debug("LM Studio load request failed via %s: %s", url, exc)
+                continue
+    return False
+
+
+def _load_model_cli(model: str) -> bool:
+    """
+    Attempt to load the model using the `lms` CLI if available.
+    """
+    try:
+        logger.debug("Attempting CLI load for model '%s'", model)
+        result = subprocess.run(
+            ["lms", "load", model],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except FileNotFoundError:
+        logger.debug("LM Studio CLI (lms) not found on PATH; skipping CLI load.")
+        return False
+    except subprocess.SubprocessError as exc:  # pragma: no cover - defensive
+        logger.debug("LM Studio CLI load failed: %s", exc)
+        return False
+
+    if result.returncode == 0:
+        logger.info("LM Studio CLI reported successful load for '%s'.", model)
+        return True
+
+    logger.debug(
+        "LM Studio CLI returned %s: %s %s",
+        result.returncode,
+        result.stdout,
+        result.stderr,
+    )
+    return False
+
+
+def _host_from_api_base(api_base: str | None) -> Optional[str]:
+    if not api_base:
+        return None
+    parsed = urlparse(str(api_base))
+    host = parsed.netloc or parsed.path
+    host = host.strip("/") if host else ""
+    return host or None
+
+
+def _configure_sdk_client(config: AppConfig) -> None:
+    if _LMSTUDIO_SDK is None:
+        return
+    host = _host_from_api_base(config.lm_api_base)
+    if not host:
+        return
+    try:
+        configure = getattr(_LMSTUDIO_SDK, "configure_default_client", None)
+        if callable(configure):
+            configure(host)
+    except Exception as exc:  # pragma: no cover - diagnostic only
+        logger.debug("LM Studio SDK configure_default_client failed: %s", exc)
+
+
+def _unload_model_sdk(config: AppConfig) -> bool:
+    """
+    Attempt to unload the configured model via the official LM Studio Python SDK.
+    """
+    if _LMSTUDIO_SDK is None:
+        return False
+
+    _configure_sdk_client(config)
+
+    target_key = (config.lm_model or "").strip()
+    handles: list = []
+    try:
+        handles = list(_LMSTUDIO_SDK.list_loaded_models("llm"))  # type: ignore[attr-defined]
+    except AttributeError:
+        try:
+            client = _LMSTUDIO_SDK.get_default_client()  # type: ignore[attr-defined]
+            handles = list(client.llm.list_loaded_models())  # type: ignore[attr-defined]
+        except Exception as exc:  # pragma: no cover - diagnostic path
+            logger.debug("LM Studio SDK list_loaded_models unavailable: %s", exc)
+            handles = []
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK list_loaded_models failed: %s", exc)
+        handles = []
+
+    selected = []
+    for handle in handles:
+        try:
+            identifier = getattr(handle, "identifier", None)
+            model_key = getattr(handle, "model_key", None) or getattr(handle, "modelKey", None)
+        except Exception:  # pragma: no cover - defensive
+            identifier = model_key = None
+        if target_key and target_key not in {identifier, model_key}:
+            continue
+        selected.append(handle)
+    if not selected:
+        selected = handles
+
+    success = False
+    for handle in selected:
+        try:
+            handle.unload()
+            success = True
+        except Exception as exc:  # pragma: no cover - diagnostic path
+            logger.debug("LM Studio SDK failed to unload handle %r: %s", handle, exc)
+
+    if success:
+        logger.info("LM Studio SDK unloaded model '%s'.", target_key or selected[0])
+        return True
+
+    try:
+        if target_key:
+            handle = _LMSTUDIO_SDK.llm(target_key)  # type: ignore[attr-defined]
+        else:
+            handle = _LMSTUDIO_SDK.llm()  # type: ignore[attr-defined]
+    except TypeError:
+        handle = _LMSTUDIO_SDK.llm()  # type: ignore[attr-defined]
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK llm(%s) failed: %s", target_key or "<default>", exc)
+        return False
+
+    try:
+        handle.unload()
+        logger.info("LM Studio SDK unloaded model '%s'.", target_key or getattr(handle, "model_key", "<default>"))
+        return True
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK handle unload failed: %s", exc)
+        return False
+
+
+def _unload_model_http(
+    base_url: str,
+    headers: dict[str, str],
+    model: str,
+    endpoint_hint: Optional[str],
+) -> bool:
+    """
+    Attempt to unload the requested model via LM Studio's HTTP API.
+
+    Returns True if any request returns a 2xx status code.
+    """
+
+    def candidate_paths() -> Iterable[str]:
+        if endpoint_hint and endpoint_hint.startswith("/v1"):
+            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/v1")]
+            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/v1")]
+            yield from primary + secondary
+        elif endpoint_hint and endpoint_hint.startswith("/api/v1"):
+            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
+            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
+            yield from primary + secondary
+        elif endpoint_hint:
+            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
+            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
+            yield from primary + secondary
+        else:
+            yield from _UNLOAD_ENDPOINT_PATTERNS
+
+    for template in candidate_paths():
+        url = _build_lmstudio_url(base_url, template.format(model=model))
+        body_candidates = (
+            None,
+            {"model": model},
+            {"id": model},
+            {"name": model},
+        )
+        for body in body_candidates:
+            try:
+                logger.debug("Attempting LM Studio unload via POST %s body=%s", url, body)
+                if body is None:
+                    response = requests.post(url, headers=headers, timeout=10)
+                else:
+                    enriched_headers = dict(headers)
+                    enriched_headers["Content-Type"] = "application/json"
+                    response = requests.post(
+                        url,
+                        headers=enriched_headers,
+                        json=body,
+                        timeout=10,
+                    )
+                if response.status_code < 400:
+                    logger.info(
+                        "LM Studio accepted unload request via POST %s (status %s)",
+                        url,
+                        response.status_code,
+                    )
+                    return True
+                logger.debug(
+                    "LM Studio rejected unload via POST %s (status %s: %s)",
+                    url,
+                    response.status_code,
+                    response.text,
+                )
+            except requests.RequestException as exc:
+                logger.debug("LM Studio unload request failed via %s: %s", url, exc)
+                continue
+    return False
+
+
+def _unload_model_cli(model: str) -> bool:
+    """
+    Attempt to unload the model using the `lms` CLI if available.
+    """
+    try:
+        logger.debug("Attempting CLI unload for model '%s'", model)
+        result = subprocess.run(
+            ["lms", "unload", model],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except FileNotFoundError:
+        logger.debug("LM Studio CLI (lms) not found on PATH; skipping CLI unload.")
+        return False
+    except subprocess.SubprocessError as exc:  # pragma: no cover - defensive
+        logger.debug("LM Studio CLI unload failed: %s", exc)
+        return False
+
+    if result.returncode == 0:
+        logger.info("LM Studio CLI reported successful unload for '%s'.", model)
+        return True
+
+    logger.debug(
+        "LM Studio CLI unload returned %s: %s %s",
+        result.returncode,
+        result.stdout,
+        result.stderr,
+    )
+    return False
+
+
+def _ensure_lmstudio_ready(config: AppConfig) -> None:
+    """
+    Confirm that LM Studio exposes the requested model, attempting to load it if needed.
+
+    Raises
+    ------
+    LMStudioConnectivityError
+        If the LM Studio server cannot be contacted or refuses to expose the model.
+    """
+
+    headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
+    base = config.lm_api_base.rstrip("/")
+
+    try:
+        models, endpoint_hint = _fetch_models(base, headers)
+    except requests.RequestException as exc:
+        raise LMStudioConnectivityError(
+            f"Failed to reach LM Studio at {base}: {exc}"
+        ) from exc
+
+    if config.lm_model in models:
+        logger.debug("LM Studio already has model '%s' loaded.", config.lm_model)
+        return
+
+    logger.info(
+        "LM Studio does not advertise model '%s'; attempting to load it automatically.",
+        config.lm_model,
+    )
+
+    loaded = _load_model_http(base, headers, config.lm_model, endpoint_hint)
+    if not loaded:
+        loaded = _load_model_cli(config.lm_model)
+
+    if not loaded:
+        raise LMStudioConnectivityError(
+            f"Unable to load model '{config.lm_model}' automatically. "
+            "Please load it in the LM Studio UI and retry."
+        )
+
+    # Re-query to confirm the model is present.
+    try:
+        models, _ = _fetch_models(base, headers)
+    except requests.RequestException as exc:
+        raise LMStudioConnectivityError(
+            f"Verified load but subsequent model fetch failed: {exc}"
+        ) from exc
+
+    if config.lm_model not in models:
+        raise LMStudioConnectivityError(
+            f"Model '{config.lm_model}' did not appear in LM Studio after load attempts. "
+            "Check the LM Studio logs for more details."
+        )
+
+    logger.info("LM Studio model '%s' is ready.", config.lm_model)
+
+
+def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
+    """
+    Configure DSPy to talk to LM Studio's OpenAI-compatible endpoint.
+    """
+
+    _ensure_lmstudio_ready(config)
+
+    lm = dspy.LM(
+        f"openai/{config.lm_model}",
+        api_base=config.lm_api_base,
+        api_key=config.lm_api_key,
+        cache=cache,
+        streaming=config.lm_streaming,
+    )
+    dspy.configure(lm=lm)
+    return lm
+
+
+def unload_lmstudio_model(config: AppConfig) -> None:
+    """
+    Attempt to unload the configured LM Studio model to free resources.
+    """
+
+    if _unload_model_sdk(config):
+        return
+
+    headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
+    base = config.lm_api_base.rstrip("/")
+
+    try:
+        _, endpoint_hint = _fetch_models(base, headers)
+    except requests.RequestException as exc:  # pragma: no cover - informational
+        endpoint_hint = None
+        logger.debug("Unable to refresh LM Studio endpoint hint before unload: %s", exc)
+
+    if _unload_model_http(base, headers, config.lm_model, endpoint_hint):
+        return
+
+    if _unload_model_cli(config.lm_model):
+        return
+
+    logger.warning(
+        "Failed to unload LM Studio model '%s' via SDK, HTTP, or CLI. The model may remain loaded.",
+        config.lm_model,
+    )
+
+
+__all__ = ["configure_lmstudio_lm", "LMStudioConnectivityError", "unload_lmstudio_model"]
+
+
+--- src/lmstudiotxt_generator/models.py ---
+from __future__ import annotations
+
+from dataclasses import dataclass
+
+
+@dataclass
+class RepositoryMaterial:
+    """Aggregate of repository inputs we feed into DSPy."""
+
+    repo_url: str
+    file_tree: str
+    readme_content: str
+    package_files: str
+    default_branch: str
+    is_private: bool
+
+
+@dataclass
+class GenerationArtifacts:
+    """Outputs written to disk once generation completes."""
+
+    llms_txt_path: str
+    llms_full_path: str | None = None
+    ctx_path: str | None = None
+    json_path: str | None = None
+    used_fallback: bool = False
+
+
+--- src/lmstudiotxt_generator/pipeline.py ---
+from __future__ import annotations
+
+import json
+import logging
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Optional
+
+from .analyzer import RepositoryAnalyzer
+from .config import AppConfig
+from .full_builder import build_llms_full_from_repo
+from .fallback import (
+    fallback_llms_payload,
+    fallback_markdown_from_payload,
+)
+from .github import gather_repository_material, owner_repo_from_url
+from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
+from .models import GenerationArtifacts, RepositoryMaterial
+from .schema import LLMS_JSON_SCHEMA
+
+try:  # Optional import; litellm is a transitive dependency of dspy.
+    from litellm.exceptions import BadRequestError as LiteLLMBadRequestError
+except Exception:  # pragma: no cover - fall back to generic Exception
+    LiteLLMBadRequestError = tuple()  # type: ignore[assignment]
+try:
+    from litellm.exceptions import RateLimitError as LiteLLMRateLimitError
+except Exception:  # pragma: no cover
+    LiteLLMRateLimitError = tuple()  # type: ignore[assignment]
+try:
+    from litellm.exceptions import AuthenticationError as LiteAuthError
+except Exception:  # pragma: no cover
+    LiteAuthError = tuple()  # type: ignore[assignment]
+try:
+    from litellm.exceptions import NotFoundError as LiteNotFoundError
+except Exception:  # pragma: no cover
+    LiteNotFoundError = tuple()  # type: ignore[assignment]
+
+logger = logging.getLogger(__name__)
+
+
+def _timestamp_comment(prefix: str = "# Generated") -> str:
+    now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+    return f"{prefix}: {now} UTC"
+
+
+def _write_text(path: Path, content: str, stamp: bool) -> None:
+    text = content.rstrip()
+    if stamp:
+        text += "\n\n" + _timestamp_comment()
+    path.write_text(text + "\n", encoding="utf-8")
+
+
+def prepare_repository_material(config: AppConfig, repo_url: str) -> RepositoryMaterial:
+    return gather_repository_material(repo_url, config.github_token)
+
+
+def run_generation(
+    repo_url: str,
+    config: AppConfig,
+    *,
+    stamp: bool = False,
+    cache_lm: bool = False,
+) -> GenerationArtifacts:
+    owner, repo = owner_repo_from_url(repo_url)
+    repo_root = config.ensure_output_root(owner, repo)
+    base_name = repo.lower().replace(" ", "-")
+
+    logger.debug("Preparing repository material for %s", repo_url)
+    material = prepare_repository_material(config, repo_url)
+    analyzer = RepositoryAnalyzer()
+
+    fallback_payload = None
+    used_fallback = False
+    project_name = repo.replace("-", " ").replace("_", " ").title()
+
+    model_loaded = False
+
+    try:
+        logger.info("Configuring LM Studio model '%s'", config.lm_model)
+        configure_lmstudio_lm(config, cache=cache_lm)
+        model_loaded = True
+
+        result = analyzer(
+            repo_url=material.repo_url,
+            file_tree=material.file_tree,
+            readme_content=material.readme_content,
+            package_files=material.package_files,
+            default_branch=material.default_branch,
+            link_style=config.link_style,
+        )
+        llms_text = result.llms_txt_content
+    except (
+        LiteLLMBadRequestError,
+        LiteLLMRateLimitError,
+        LiteAuthError,
+        LiteNotFoundError,
+        LMStudioConnectivityError,
+    ) as exc:
+        used_fallback = True
+        fallback_payload = fallback_llms_payload(
+            repo_name=project_name,
+            repo_url=repo_url,
+            file_tree=material.file_tree,
+            readme_content=material.readme_content,
+            default_branch=material.default_branch,
+            link_style=config.link_style,
+        )
+        llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
+    except Exception as exc:  # pragma: no cover - defensive fallback
+        used_fallback = True
+        logger.exception("Unexpected error during DSPy generation: %s", exc)
+        logger.warning("Falling back to heuristic llms.txt generation using %s.", LLMS_JSON_SCHEMA["title"])
+        fallback_payload = fallback_llms_payload(
+            repo_name=project_name,
+            repo_url=repo_url,
+            file_tree=material.file_tree,
+            readme_content=material.readme_content,
+            default_branch=material.default_branch,
+            link_style=config.link_style,
+        )
+        llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
+    finally:
+        if model_loaded and config.lm_auto_unload:
+            unload_lmstudio_model(config)
+
+    llms_txt_path = repo_root / f"{base_name}-llms.txt"
+    logger.info("Writing llms.txt to %s", llms_txt_path)
+    _write_text(llms_txt_path, llms_text, stamp)
+
+    ctx_path: Optional[Path] = None
+    if config.enable_ctx:
+        try:
+            from llms_txt import create_ctx  # type: ignore
+        except ImportError:
+            create_ctx = None  # type: ignore
+        if create_ctx:
+            ctx_text = create_ctx(llms_text, optional=False)
+            ctx_path = repo_root / f"{base_name}-llms-ctx.txt"
+            logger.debug("Writing llms-ctx to %s", ctx_path)
+            _write_text(ctx_path, ctx_text, stamp)
+
+    llms_full_text = build_llms_full_from_repo(
+        llms_text,
+        prefer_raw=not material.is_private,
+        default_ref=material.default_branch,
+        token=config.github_token,
+        link_style=config.link_style,
+    )
+    llms_full_path = repo_root / f"{base_name}-llms-full.txt"
+    logger.debug("Writing llms-full to %s", llms_full_path)
+    _write_text(llms_full_path, llms_full_text, stamp)
+
+    json_path: Optional[Path] = None
+    if fallback_payload:
+        json_path = repo_root / f"{base_name}-llms.json"
+        json_path.write_text(json.dumps(fallback_payload, indent=2), encoding="utf-8")
+        logger.info("Fallback JSON payload written to %s", json_path)
+
+    return GenerationArtifacts(
+        llms_txt_path=str(llms_txt_path),
+        llms_full_path=str(llms_full_path),
+        ctx_path=str(ctx_path) if ctx_path else None,
+        json_path=str(json_path) if json_path else None,
+        used_fallback=used_fallback,
+    )
+
+
+--- tests/test_analyzer.py ---
+from __future__ import annotations
+
+from lmstudiotxt_generator import analyzer
+
+
+def test_build_dynamic_buckets_uses_default_branch_and_filters_dead_links(monkeypatch):
+    recorded = []
+
+    def fake_construct(repo_url, path, ref=None, style="blob"):
+        recorded.append((repo_url, path, ref, style))
+        return f"https://example.com/{ref or 'none'}/{path}"
+
+    monkeypatch.setattr(analyzer, "construct_github_file_url", fake_construct)
+    monkeypatch.setattr(analyzer, "_url_alive", lambda url: "keep" in url)
+
+    file_tree = "docs/keep.md\nREADME.md\ntrash/missing.md"
+    buckets = analyzer.build_dynamic_buckets(
+        "https://github.com/example/repo",
+        file_tree,
+        default_ref="custom-branch",
+        validate_urls=True,
+    )
+
+    # Only the URL containing 'keep' should remain after validation.
+    assert any("keep.md" in url for _, items in buckets for _, url, _ in items)
+    assert all("missing.md" not in url for _, items in buckets for _, url, _ in items)
+    # construct_raw_url should receive the explicit default branch.
+    assert all(ref == "custom-branch" for _, _, ref, _ in recorded if ref is not None)
+
+
+--- tests/test_full_builder.py ---
+from __future__ import annotations
+
+import requests
+
+from lmstudiotxt_generator import full_builder
+
+
+def _curated_link(ref: str = "main") -> str:
+    return f"- [Example](https://github.com/owner/repo/blob/{ref}/dir/file.py)"
+
+
+def test_build_llms_full_prefers_raw(monkeypatch):
+    captured = {}
+
+    def fake_fetch_raw(owner, repo, path, ref):
+        captured["call"] = (owner, repo, path, ref)
+        return b"print('hello world')\n"
+
+    def explode(*args, **kwargs):
+        raise AssertionError("gh_get_file should not be used for public repos")
+
+    monkeypatch.setattr(full_builder, "fetch_raw_file", fake_fetch_raw)
+    monkeypatch.setattr(full_builder, "gh_get_file", explode)
+
+    output = full_builder.build_llms_full_from_repo(
+        _curated_link(),
+        prefer_raw=True,
+        default_ref="main",
+    )
+
+    assert captured["call"] == ("owner", "repo", "dir/file.py", "main")
+    assert "print('hello world')" in output
+
+
+def test_build_llms_full_private_repo_uses_api(monkeypatch):
+    def fake_fetch_raw(*args, **kwargs):
+        raise AssertionError("fetch_raw_file should not be used for private repos")
+
+    def fake_gh_get(owner, repo, path, ref, token):
+        assert token == "token-123"
+        assert ref == "main"
+        return "file", b"api-content\n"
+
+    monkeypatch.setattr(full_builder, "fetch_raw_file", fake_fetch_raw)
+    monkeypatch.setattr(full_builder, "gh_get_file", fake_gh_get)
+
+    output = full_builder.build_llms_full_from_repo(
+        _curated_link(),
+        prefer_raw=False,
+        default_ref="main",
+        token="token-123",
+    )
+
+    assert "api-content" in output
+
+
+def test_build_llms_full_403_hint(monkeypatch):
+    def fake_fetch_raw(*args, **kwargs):
+        raise AssertionError("fetch_raw_file should not be used when prefer_raw=False")
+
+    def fake_gh_get(owner, repo, path, ref, token):
+        response = requests.Response()
+        response.status_code = 403
+        response.reason = "Forbidden"
+        http_error = requests.HTTPError("Forbidden")
+        http_error.response = response
+        raise http_error
+
+    monkeypatch.setattr(full_builder, "fetch_raw_file", fake_fetch_raw)
+    monkeypatch.setattr(full_builder, "gh_get_file", fake_gh_get)
+
+    output = full_builder.build_llms_full_from_repo(
+        _curated_link(),
+        prefer_raw=False,
+        default_ref="main",
+        token="token-123",
+    )
+
+    assert "HTTP 403 Forbidden" in output
+    assert "Verify that GITHUB_ACCESS_TOKEN or GH_TOKEN" in output
+
+
+## Links discovered
+- [Example](https://github.com/owner/repo/blob/{ref}/dir/file.py)
+
+--- tests/test_lmstudio.py ---
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+import requests
+
+from lmstudiotxt_generator.config import AppConfig
+from lmstudiotxt_generator import pipeline
+import lmstudiotxt_generator.lmstudio as lmstudio
+from lmstudiotxt_generator.lmstudio import LMStudioConnectivityError
+
+
+class _FakeResponse:
+    def __init__(self, status_code=200, payload=None, text="OK"):
+        self.status_code = status_code
+        self._payload = payload or {}
+        self.text = text
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise requests.HTTPError(self.text)
+
+    def json(self):
+        return self._payload
+
+
+def test_fetch_models_prefers_v1(monkeypatch):
+    calls = []
+
+    def fake_get(url, headers=None, timeout=None):
+        calls.append(url)
+        if url.endswith("/v1/models"):
+            return _FakeResponse(
+                payload={"data": [{"id": "model-a"}, {"name": "model-b"}]},
+            )
+        if url.endswith("/models"):
+            raise requests.RequestException("legacy endpoint disabled")
+        raise AssertionError(f"Unexpected URL {url}")
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    config = AppConfig(
+        lm_model="model-a",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    lmstudio._ensure_lmstudio_ready(config)
+
+    assert calls[0].endswith("/v1/models")
+
+
+def test_ensure_ready_auto_load(monkeypatch):
+    sequence = [
+        _FakeResponse(payload={"data": []}),
+        _FakeResponse(payload={"data": [{"id": "target"}]}),
+    ]
+    posts = []
+
+    def fake_get(url, headers=None, timeout=None):
+        return sequence.pop(0)
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        posts.append((url, json))
+        return _FakeResponse()
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    monkeypatch.setattr(lmstudio.requests, "post", fake_post)
+
+    config = AppConfig(
+        lm_model="target",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    lmstudio._ensure_lmstudio_ready(config)
+
+    assert posts  # auto-load attempted
+
+
+def test_ensure_ready_failure(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(payload={"data": []})
+
+    def fake_post(url, headers=None, json=None, timeout=None):
+        return _FakeResponse(status_code=404, text="missing")
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    monkeypatch.setattr(lmstudio.requests, "post", fake_post)
+    monkeypatch.setattr(
+        lmstudio,
+        "_load_model_cli",
+        lambda model: False,
+    )
+
+    config = AppConfig(
+        lm_model="missing-model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    with pytest.raises(LMStudioConnectivityError):
+        lmstudio._ensure_lmstudio_ready(config)
+
+
+def test_pipeline_fallback(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    def fake_configure(*args, **kwargs):
+        raise LMStudioConnectivityError("LM unavailable")
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            raise AssertionError("Should not be invoked because configure fails")
+
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", fake_configure)
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
+    config = AppConfig(
+        lm_model="missing",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config)
+
+    assert artifacts.used_fallback is True
+    assert Path(artifacts.llms_txt_path).exists()
+    assert Path(artifacts.llms_full_path).exists()
+    assert Path(artifacts.json_path).exists()
+
+
+def test_pipeline_unloads_model(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type("Result", (), {"llms_txt_content": "# Generated\n"})()
+
+    unload_called = {}
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(
+        pipeline,
+        "build_llms_full_from_repo",
+        lambda content, **_: content + "\n--- full ---\n",
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "unload_lmstudio_model",
+        lambda cfg: unload_called.setdefault("done", True),
+    )
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+        lm_auto_unload=True,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config)
+
+    assert unload_called.get("done") is True
+    assert Path(artifacts.llms_txt_path).exists()
+    assert Path(artifacts.llms_full_path).exists()
+
+
+def test_unload_prefers_sdk(monkeypatch):
+    handle_unloaded = {}
+
+    class FakeHandle:
+        identifier = "model"
+        model_key = "model"
+
+        def unload(self):
+            handle_unloaded["done"] = True
+
+    class FakeSDK:
+        def __init__(self):
+            self.hosts = []
+
+        def configure_default_client(self, host):
+            self.hosts.append(host)
+
+        def list_loaded_models(self, kind=None):
+            return [FakeHandle()]
+
+    fake_sdk = FakeSDK()
+    monkeypatch.setattr(lmstudio, "_LMSTUDIO_SDK", fake_sdk, raising=False)
+
+    def should_not_run(*args, **kwargs):
+        raise AssertionError("Fallback path should not execute when SDK succeeds")
+
+    monkeypatch.setattr(lmstudio, "_unload_model_http", should_not_run, raising=False)
+    monkeypatch.setattr(lmstudio, "_unload_model_cli", should_not_run, raising=False)
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key=None,
+        output_dir=Path("artifacts"),
+    )
+
+    lmstudio.unload_lmstudio_model(config)
+
+    assert handle_unloaded.get("done") is True
+    assert fake_sdk.hosts == ["localhost:1234"]
+
+
+--- tests/fixtures/agents/AGENTS.session-coach.md ---
+# Loader fetch discipline
+
+- Fetch speculative data via TanStack Start loaders.
+- Never use `useEffect` for server reads.
+
+## Hydration + suspense safety
+
+- Avoid suspending updates during hydration.
+- Wrap synchronous updates that may suspend with `startTransition`.
+
+## Zustand state syncing
+
+- Keep server-synced data out of Zustand.
+- Mirror server truth via TanStack DB collections instead.

@@ -1,0 +1,1045 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- src/architectureStylizations.ts ---
+import chalk from "chalk";
+
+export class InfoLookup<TInnerKey, TLookupKey, TValue> {
+  private readonly lookup = new Map<TInnerKey, TValue>();
+  private readonly fallback: (key: TLookupKey) => TValue;
+
+  private constructor(
+    private readonly keyMapper: (key: TLookupKey) => TInnerKey,
+    fallback: ((key: TLookupKey) => TValue) | undefined,
+  ) {
+    this.fallback =
+      fallback ??
+      (key => {
+        throw new Error(`Key not found: ${key}`);
+      });
+  }
+
+  public static create<TKey, TValue>({ fallback }: { fallback?: (key: TKey) => TValue } = {}) {
+    return new InfoLookup<TKey, TKey, TValue>(key => key, fallback);
+  }
+
+  public static createWithKeyMapper<TInnerKey, TLookupKey, TValue>({
+    fallback,
+    keyMapper,
+  }: {
+    fallback: (key: TLookupKey) => TValue;
+    keyMapper: (key: TLookupKey) => TInnerKey;
+  }) {
+    return new InfoLookup<TInnerKey, TLookupKey, TValue>(keyMapper, fallback);
+  }
+
+  public register(...args: [...TInnerKey[], TValue]): this {
+    const value = args.at(-1) as TValue;
+    for (let i = 0; i < args.length - 1; i++) {
+      this.lookup.set(args[i] as TInnerKey, value);
+    }
+    return this;
+  }
+
+  public find(lookupKey: TLookupKey): TValue {
+    const innerKey = this.keyMapper(lookupKey);
+    if (this.lookup.has(innerKey)) {
+      return this.lookup.get(innerKey)!;
+    } else {
+      return this.fallback(lookupKey);
+    }
+  }
+}
+
+const llmColorer = chalk.cyan;
+const visionColorer = chalk.yellow;
+const embeddingColorer = chalk.blue;
+
+export const architectureInfoLookup = InfoLookup.createWithKeyMapper({
+  fallback: (arch: string) => ({
+    name: arch,
+    colorer: llmColorer,
+  }),
+  keyMapper: (arch: string) => arch.toLowerCase(),
+})
+  .register("phi2", "phi-2", {
+    name: "Phi-2",
+    colorer: llmColorer,
+  })
+  .register("phi3", "phi-3", {
+    name: "Phi-3",
+    colorer: llmColorer,
+  })
+  .register("mistral", {
+    name: "Mistral",
+    colorer: llmColorer,
+  })
+  .register("llama", {
+    name: "Llama",
+    colorer: llmColorer,
+  })
+  .register("gptneox", "gpt-neo-x", "gpt_neo_x", {
+    name: "GPT-NeoX",
+    colorer: llmColorer,
+  })
+  .register("mpt", {
+    name: "MPT",
+    colorer: llmColorer,
+  })
+  .register("replit", {
+    name: "Replit",
+    colorer: llmColorer,
+  })
+  .register("starcoder", {
+    name: "StarCoder",
+    colorer: llmColorer,
+  })
+  .register("falcon", {
+    name: "Falcon",
+    colorer: llmColorer,
+  })
+  .register("qwen", {
+    name: "Qwen",
+    colorer: llmColorer,
+  })
+  .register("qwen2", {
+    name: "Qwen2",
+    colorer: llmColorer,
+  })
+  .register("stablelm", {
+    name: "StableLM",
+    colorer: llmColorer,
+  })
+  .register("mamba", {
+    name: "mamba",
+    colorer: llmColorer,
+  })
+  .register("command-r", {
+    name: "Command R",
+    colorer: llmColorer,
+  })
+  .register("gemma", {
+    name: "Gemma",
+    colorer: llmColorer,
+  })
+  .register("gemma2", {
+    name: "Gemma 2",
+    colorer: llmColorer,
+  })
+  .register("deepseek2", {
+    name: "DeepSeek 2",
+    colorer: llmColorer,
+  })
+  .register("bert", {
+    name: "BERT",
+    colorer: embeddingColorer,
+  })
+  .register("nomic-bert", {
+    name: "Nomic BERT",
+    colorer: embeddingColorer,
+  })
+  .register("clip", {
+    name: "CLIP",
+    colorer: visionColorer,
+  });
+
+
+--- CONTRIBUTING.md ---
+# Contributing to `lms`
+
+First off, thank you for considering contributing to our open source projects! 👾❤️
+
+`lms` is LM Studio’s command line utility tool. It is an open-source project under the MIT license. We welcome community contributions.
+
+There are many ways to help, from writing tutorials or blog posts, improving the documentation, submitting bug reports and feature requests or contributing code which can be incorporated into `lms` itself.
+
+## Communication
+
+- **The best way to communicate with the team is to open an issue in this repository**
+- For bug reports, include steps to reproduce, expected behavior, and actual behavior
+- For feature requests, explain the use case and benefits clearly
+
+## Before You Contribute
+
+- **If you find an existing issue you'd like to work on, please comment on it first and tag the team**
+- This allows us to provide guidance and ensures your time is well spent
+- **We discourage drive-by feature PRs** without prior discussion - we want to make sure your efforts align with our roadmap and won't go to waste
+
+## Creating Good Pull Requests
+
+### Keep PRs Small and Focused
+
+- Address one concern per PR
+- Smaller PRs are easier to review and more likely to be merged quickly
+
+### Write Thoughtful PR Descriptions
+
+- Clearly explain what the PR does and why
+- When applicable, show before/after states or screenshots
+- Include any relevant context for reviewers
+- Reference the issue(s) your PR addresses with GitHub keywords (Fixes #123, Resolves #456)
+
+### Quality Expectations
+
+- Follow existing code style and patterns
+- Include tests for new functionality
+- Ensure all tests pass
+- Update documentation as needed
+
+## Code Review Process
+
+- Maintainers will review your PR as soon as possible
+- We may request changes or clarification
+- Once approved, a maintainer will merge your contribution
+
+## Contributor License Agreement (CLA)
+
+- We require all contributors to sign a Contributor License Agreement (CLA)
+- For first-time contributors, a bot will automatically comment on your PR with instructions
+- You'll need to accept the CLA before we can merge your contribution
+- This is standard practice in open source and helps protect both contributors and the project
+
+## Q&A
+
+- **How does `lms` communicate with LM Studio**
+
+  For the most part, `lms` communicates with LM Studio through the `lmstudio.js` SDK. You can find the source code for the SDK [here](https://github.com/lmstudio-ai/lmstudio.js/tree/main). `lmstudio.js` is in pre-release public alpha and it does not yet have a stable API.
+
+  There are some commands (such as `lms server start` or `lms server stop`) that need to interact with LM Studio separately from the API server state. In such cases, `lms` uses an internal file system based “communication” scheme. You can find the [related code here](https://github.com/lmstudio-ai/lmstudio-cli/blob/main/src/subcommands/server.ts). Note, if you are developing your own software, please do not rely on this API as it is subject to change. Relying on this API is guaranteed to cause sadness.
+
+- **How are the lms binaries built**
+
+  As you may have noticed, the `lms` command line tool shipped with LM Studio is a single binary file.
+
+  The binary is [built in our lmstudio.js mono-repo](https://github.com/lmstudio-ai/lmstudio.js/tree/main/publish/cli). This is done so that we can manage the versions of the `lms` command line tool and the `lmstudio.js` library together.
+
+## Questions
+
+If you have any other questions, feel free to join the [LM Studio Discord server](https://discord.gg/pwQWNhmQTY) and ask in the `#dev-chat` channel.
+
+## Is the LM Studio team hiring?
+
+Yes, yes we are. Please see our careers page: https://lmstudio.ai/careers.
+
+
+## Links discovered
+- [here](https://github.com/lmstudio-ai/lmstudio.js/tree/main)
+- [related code here](https://github.com/lmstudio-ai/lmstudio-cli/blob/main/src/subcommands/server.ts)
+- [built in our lmstudio.js mono-repo](https://github.com/lmstudio-ai/lmstudio.js/tree/main/publish/cli)
+- [LM Studio Discord server](https://discord.gg/pwQWNhmQTY)
+
+--- README.md ---
+<p align="center">
+  <br/>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://files.lmstudio.ai/lms-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="https://files.lmstudio.ai/lms-light.png">
+    <img alt="lmstudio cli logo" src="https://files.lmstudio.ai/lms-light.png" width="180">
+  </picture>
+  <br/>
+  <br/>
+</p>
+
+<p align="center"><bold><code>lms</code> - Command Line Tool for <a href="https://lmstudio.ai/">LM Studio</a></bold></p>
+<p align="center">Built with <bold><code><a href="https://github.com/lmstudio-ai/lmstudio.js">lmstudio.js</a></code></bold></p>
+
+# Installation
+
+`lms` ships with [LM Studio](https://lmstudio.ai/) 0.2.22 and newer.
+
+If you have trouble running the command, try running `npx lmstudio install-cli` to add it to path.
+
+To check if the bootstrapping was successful, run the following in a **👉 new terminal window 👈**:
+
+```shell
+lms
+```
+
+# Usage
+
+You can use `lms --help` to see a list of all available subcommands.
+
+For details about each subcommand, run `lms <subcommand> --help`.
+
+Here are some frequently used commands:
+
+- `lms status` - To check the status of LM Studio.
+- `lms server start` - To start the local API server.
+- `lms server stop` - To stop the local API server.
+- `lms ls` - To list all downloaded models.
+  - `lms ls --json` - To list all downloaded models in machine-readable JSON format.
+- `lms ps` - To list all loaded models available for inferencing.
+  - `lms ps --json` - To list all loaded models available for inferencing in machine-readable JSON format.
+- `lms load` - To load a model
+  - `lms load <model path> -y` - To load a model with maximum GPU acceleration without confirmation
+- `lms unload <model identifier>` - To unload a model
+  - `lms unload --all` - To unload all models
+- `lms create` - To create a new project with LM Studio SDK
+- `lms log stream` - To stream logs from LM Studio
+
+# Contributing
+
+The CLI is part of the [lmstudio.js monorepo](https://github.com/lmstudio-ai/lmstudio.js) and cannot be built standalone.
+
+## Building and Testing the CLI
+
+```bash
+# Clone and build the entire monorepo
+git clone https://github.com/lmstudio-ai/lmstudio-js.git --recursive
+cd lmstudio-js
+npm install
+npm run build
+
+# Test your CLI changes
+node publish/cli/dist/index.js <subcommand>
+```
+
+**Example:**
+
+```bash
+node publish/cli/dist/index.js --help
+node publish/cli/dist/index.js status
+```
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for more information.
+
+
+## Links discovered
+- [LM Studio](https://lmstudio.ai/)
+- [lmstudio.js monorepo](https://github.com/lmstudio-ai/lmstudio.js)
+- [CONTRIBUTING.md](https://raw.githubusercontent.com/lmstudio-ai/lms/main//CONTRIBUTING.md)
+- [lmstudio.js](https://github.com/lmstudio-ai/lmstudio.js)
+
+--- src/cliPref.ts ---
+import { SimpleLogger } from "@lmstudio/lms-common";
+import { z } from "zod";
+import { SimpleFileData } from "./SimpleFileData.js";
+import { cliPrefPath } from "./lmstudioPaths.js";
+
+const cliPrefSchema = z.object({
+  autoLaunchMinimizedWarned: z.boolean(),
+  importWillMoveWarned: z.boolean().optional(),
+  lastLoadedModels: z.array(z.string()).optional(),
+  autoStartServer: z.boolean().optional(),
+  fetchModelCatalog: z.boolean().optional(),
+});
+
+export type CliPref = z.infer<typeof cliPrefSchema>;
+
+export async function getCliPref(logger?: SimpleLogger): Promise<SimpleFileData<CliPref>> {
+  const defaultCliPref: CliPref = {
+    autoLaunchMinimizedWarned: false,
+    importWillMoveWarned: false,
+    lastLoadedModels: [],
+    autoStartServer: undefined,
+    fetchModelCatalog: undefined,
+  };
+  const cliPref = new SimpleFileData(
+    cliPrefPath,
+    defaultCliPref,
+    cliPrefSchema,
+    new SimpleLogger("CliPref", logger),
+  );
+  await cliPref.init();
+  return cliPref;
+}
+
+
+--- src/compareVersions.ts ---
+const NUM_VERSION_COMPONENTS = 3;
+const VERSION_REGEX = /^\d+(\.\d+){2}$/;
+
+function parseVersion(version: string): number[] {
+  if (!VERSION_REGEX.test(version)) {
+    throw new Error(
+      `Invalid version format: "${version}". Expected MAJOR.MINOR.PATCH with numbers only.`,
+    );
+  }
+
+  return version.split(".").map(part => {
+    const num = +part;
+    if (!Number.isSafeInteger(num) || num < 0) {
+      throw new Error(`Invalid component ${part} in ${version}`);
+    }
+    return num;
+  });
+}
+
+export function compareVersions(a: string, b: string): 1 | -1 | 0 {
+  const partsA = parseVersion(a);
+  const partsB = parseVersion(b);
+
+  for (let i = 0; i < NUM_VERSION_COMPONENTS; i++) {
+    if (partsA[i] > partsB[i]) return 1;
+    if (partsA[i] < partsB[i]) return -1;
+  }
+
+  return 0;
+}
+
+
+--- src/compareVersions.test.ts ---
+import { compareVersions } from "./compareVersions.js";
+
+describe("Version Comparison Functions", () => {
+  describe("compareVersions", () => {
+    it("should return 1 when first version is newer", () => {
+      expect(compareVersions("1.2.3", "1.2.2")).toBe(1);
+      expect(compareVersions("2.0.0", "1.9.9")).toBe(1);
+      expect(compareVersions("0.0.11", "0.0.2")).toBe(1);
+    });
+
+    it("should return -1 when second version is newer", () => {
+      expect(compareVersions("1.2.2", "1.2.3")).toBe(-1);
+      expect(compareVersions("1.9.9", "2.0.0")).toBe(-1);
+      expect(compareVersions("0.0.2", "0.0.11")).toBe(-1);
+    });
+
+    it("should return 0 when versions are equal", () => {
+      expect(compareVersions("1.2.3", "1.2.3")).toBe(0);
+    });
+
+    it("should handle versions with leading zeros", () => {
+      expect(compareVersions("1.01.3", "1.1.3")).toBe(0);
+      expect(compareVersions("1.02.3", "1.1.3")).toBe(1);
+    });
+
+    it("should throw error for invalid version format", () => {
+      expect(() => compareVersions("invalid", "1.2.3")).toThrow();
+      expect(() => compareVersions("1.2.3", "invalid")).toThrow();
+    });
+
+    it("should throw error for incomplete version format", () => {
+      expect(() => compareVersions("2.0", "1.2.3")).toThrow();
+      expect(() => compareVersions("1.2.3", "2.0")).toThrow();
+      expect(() => compareVersions("1", "1.2.3")).toThrow();
+    });
+  });
+});
+
+
+--- src/confirm.ts ---
+import { Cleaner, makePromise } from "@lmstudio/lms-common";
+import { createInterface, type Interface } from "readline/promises";
+
+const interrupted = Symbol("interrupted");
+
+interface AskQuestionOpts {
+  rl?: Interface;
+}
+
+export async function askQuestion(prompt: string, opts: AskQuestionOpts = {}): Promise<boolean> {
+  using cleaner = new Cleaner();
+  let rl = opts.rl;
+  if (rl === undefined) {
+    const createdReadLine = createInterface({
+      input: process.stdin,
+      output: process.stderr,
+    });
+    cleaner.register(() => createdReadLine.close());
+    rl = createdReadLine;
+  }
+  const { promise: sigintPromise, resolve: sigintResolve } = makePromise<typeof interrupted>();
+  const sigintListener = () => {
+    sigintResolve(interrupted);
+  };
+  rl.addListener("SIGINT", sigintListener);
+  cleaner.register(() => {
+    rl.removeListener("SIGINT", sigintListener);
+  });
+  let answer: boolean | undefined;
+  do {
+    const userResult = await Promise.race([rl.question(prompt + " (Y/N): "), sigintPromise]);
+    if (userResult === interrupted) {
+      console.info();
+      return false;
+    }
+    if (userResult.toUpperCase() === "Y") {
+      answer = true;
+    } else if (userResult.toUpperCase() === "N") {
+      answer = false;
+    } else {
+      process.stderr.write("Invalid selection. Please enter Y or N.\n");
+    }
+  } while (answer === undefined);
+  return answer;
+}
+
+
+--- src/createClient.ts ---
+import { Option, type Command, type OptionValues } from "@commander-js/extra-typings";
+import { apiServerPorts, text, type SimpleLogger } from "@lmstudio/lms-common";
+import { LMStudioClient, type LMStudioClientConstructorOpts } from "@lmstudio/sdk";
+import chalk from "chalk";
+import { spawn } from "child_process";
+import { randomBytes } from "crypto";
+import { readFile } from "fs/promises";
+import { exists } from "./exists.js";
+import { appInstallLocationFilePath, lmsKey2Path } from "./lmstudioPaths.js";
+import { type LogLevelArgs } from "./logLevel.js";
+import { createRefinedNumberParser } from "./types/refinedNumber.js";
+
+export const DEFAULT_SERVER_PORT: number = 1234;
+
+/**
+ * Checks if the HTTP server is running.
+ */
+export async function checkHttpServer(logger: SimpleLogger, port: number, host?: string) {
+  const resolvedHost = host ?? "127.0.0.1";
+  const url = `http://${resolvedHost}:${port}/lmstudio-greeting`;
+  logger.debug(`Checking server at ${url}`);
+  try {
+    const abortController = new AbortController();
+    setTimeout(() => abortController.abort(new Error("Connection timed out.")), 500).unref();
+    const response = await fetch(url, { signal: abortController.signal });
+    if (response.status !== 200) {
+      logger.debug(`Status is not 200: ${response.status}`);
+      return false;
+    }
+    const json = await response.json();
+    if (json?.lmstudio !== true) {
+      logger.debug(`Not an LM Studio server:`, json);
+      return false;
+    }
+  } catch (e) {
+    logger.debug(`Failed to check server:`, e);
+    return false;
+  }
+  return true;
+}
+
+interface AppInstallLocation {
+  path: string;
+  argv: Array<string>;
+  cwd: string;
+}
+
+/**
+ * Adds create client options to a commander.js command
+ */
+export function addCreateClientOptions<
+  Args extends any[],
+  Opts extends OptionValues,
+  GlobalOpts extends OptionValues,
+>(command: Command<Args, Opts, GlobalOpts>): Command<Args, Opts & CreateClientArgs, GlobalOpts> {
+  return command
+    .addOption(
+      new Option(
+        "--host <host>",
+        text`
+          If you wish to connect to a remote LM Studio instance, specify the host here. Note that, in
+          this case, lms will connect using client identifier "lms-cli-remote-<random chars>", which
+          will not be a privileged client, and will restrict usage of functionalities such as
+          "lms push".
+        `,
+      ).hideHelp(),
+    )
+    .addOption(
+      new Option(
+        "--port <port>",
+        text`
+          The port where LM Studio can be reached. If not provided and the host is set to "127.0.0.1"
+          (default), the last used port will be used; otherwise, ${DEFAULT_SERVER_PORT} will be used.
+        `,
+      )
+        .argParser(createRefinedNumberParser({ integer: true, min: 0, max: 65535 }))
+        .hideHelp(),
+    ) as Command<Args, Opts & CreateClientArgs, GlobalOpts>;
+}
+
+export interface CreateClientArgs {
+  yes?: boolean;
+  host?: string;
+  port?: number;
+}
+
+async function isLocalServerAtPortLMStudioServerOrThrow(port: number) {
+  const response = await fetch(`http://127.0.0.1:${port}/lmstudio-greeting`);
+  if (response.status !== 200) {
+    throw new Error("Status is not 200.");
+  }
+  const json = await response.json();
+  if (json?.lmstudio !== true) {
+    throw new Error("Not an LM Studio server.");
+  }
+  return port;
+}
+
+export async function tryFindLocalAPIServer(): Promise<number | null> {
+  return await Promise.any(apiServerPorts.map(isLocalServerAtPortLMStudioServerOrThrow)).then(
+    port => port,
+    () => null,
+  );
+}
+
+export async function wakeUpService(logger: SimpleLogger): Promise<boolean> {
+  logger.info("Waking up LM Studio service...");
+  const appInstallLocationPath = appInstallLocationFilePath;
+  logger.debug(`Resolved appInstallLocationPath: ${appInstallLocationPath}`);
+  try {
+    const appInstallLocation = JSON.parse(
+      await readFile(appInstallLocationPath, "utf-8"),
+    ) as AppInstallLocation;
+    logger.debug(`Read executable pointer:`, appInstallLocation);
+
+    const args: Array<string> = [];
+    const { path, argv, cwd } = appInstallLocation;
+    if (argv[1] === ".") {
+      // We are in development environment
+      args.push(".");
+    }
+    // Also add the headless flag
+    args.push("--run-as-service");
+
+    logger.debug(`Spawning process:`, { path, args, cwd });
+
+    const env = {
+      ...(process.platform === "linux" ? { DISPLAY: ":0" } : {}),
+      ...process.env,
+    };
+
+    const child = spawn(path, args, { cwd, detached: true, stdio: "ignore", env });
+    child.unref();
+
+    logger.debug(`Process spawned`);
+    return true;
+  } catch (e) {
+    logger.debug(`Failed to launch application`, e);
+    return false;
+  }
+}
+
+export interface CreateClientOpts {}
+const lmsKey = "<LMS-CLI-LMS-KEY>";
+
+export async function createClient(
+  logger: SimpleLogger,
+  args: CreateClientArgs & LogLevelArgs,
+  _opts: CreateClientOpts = {},
+) {
+  let { host, port } = args;
+  let isRemote = true;
+  if (host === undefined) {
+    isRemote = false;
+    host = "127.0.0.1";
+  } else if (host.includes("://")) {
+    logger.error("Host should not include the protocol.");
+    process.exit(1);
+  } else if (host.includes(":")) {
+    logger.error(`Host should not include the port number. Use ${chalk.yellow("--port")} instead.`);
+    process.exit(1);
+  }
+  let auth: LMStudioClientConstructorOpts;
+  if (isRemote) {
+    // If connecting to a remote server, we will use a random client identifier.
+    auth = {
+      clientIdentifier: `lms-cli-remote-${randomBytes(18).toString("base64")}`,
+    };
+  } else {
+    // Not remote. We need to check if this is a production build.
+    if (
+      lmsKey.startsWith("<") &&
+      (process.env.LMS_FORCE_PROD === undefined || process.env.LMS_FORCE_PROD === "")
+    ) {
+      // lmsKey not injected and we did not force prod, this is not a production build.
+      logger.warnText`
+        You are using a development build of lms-cli. Privileged features such as "lms push" will
+        not work.
+      `;
+      auth = {
+        clientIdentifier: "lms-cli-dev",
+      };
+    } else {
+      if (await exists(lmsKey2Path)) {
+        const lmsKey2 = (await readFile(lmsKey2Path, "utf-8")).trim();
+        auth = {
+          clientIdentifier: "lms-cli",
+          clientPasskey: lmsKey + lmsKey2,
+        };
+      } else {
+        // This case will happen when the CLI is the production build, yet the local LM Studio has
+        // not been run yet (so no lms-key-2 file). In this case, we will just use a dummy client
+        // identifier as we will soon try to wake up the service and refetch the key.
+        auth = {
+          clientIdentifier: "lms-cli",
+        };
+      }
+    }
+  }
+  if (port === undefined && host === "127.0.0.1") {
+    // We will now attempt to connect to the local API server.
+    const localPort = await tryFindLocalAPIServer();
+
+    if (localPort !== null) {
+      const baseUrl = `ws://${host}:${localPort}`;
+      logger.debug(`Found local API server at ${baseUrl}`);
+      return new LMStudioClient({ baseUrl, logger, ...auth });
+    }
+
+    // At this point, the user wants to access the local LM Studio, but it is not running. We will
+    // wake up the service and poll the API server until it is up.
+
+    await wakeUpService(logger);
+
+    // Polling
+
+    for (let i = 1; i <= 60; i++) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      logger.debug(`Polling the API server... (attempt ${i})`);
+      const localPort = await tryFindLocalAPIServer();
+      if (localPort !== null) {
+        const baseUrl = `ws://${host}:${localPort}`;
+        logger.debug(`Found local API server at ${baseUrl}`);
+
+        if (auth.clientIdentifier === "lms-cli") {
+          // We need to refetch the lms key due to the possibility of a new key being generated.
+          const lmsKey2 = (await readFile(lmsKey2Path, "utf-8")).trim();
+          auth = {
+            ...auth,
+            clientPasskey: lmsKey + lmsKey2,
+          };
+        }
+
+        return new LMStudioClient({ baseUrl, logger, ...auth });
+      }
+    }
+
+    logger.error("");
+  }
+
+  if (port === undefined) {
+    port = DEFAULT_SERVER_PORT;
+  }
+
+  logger.debug(`Connecting to server at ${host}:${port}`);
+  if (!(await checkHttpServer(logger, port, host))) {
+    logger.error(
+      text`
+        The server does not appear to be running at ${host}:${port}. Please make sure the server
+        is running and accessible at the specified address.
+      `,
+    );
+  }
+  const baseUrl = `ws://${host}:${port}`;
+  logger.debug(`Found server at ${port}`);
+  return new LMStudioClient({
+    baseUrl,
+    logger,
+    ...auth,
+  });
+}
+
+
+--- src/downloadPbUpdater.ts ---
+import { text } from "@lmstudio/lms-common";
+import { type DownloadProgressUpdate } from "@lmstudio/sdk";
+import { formatSizeBytes1000 } from "./formatSizeBytes1000.js";
+import { type ProgressBar } from "./ProgressBar.js";
+
+function formatRemainingTime(timeSeconds: number) {
+  const seconds = timeSeconds % 60;
+  const minutes = Math.floor(timeSeconds / 60) % 60;
+  const hours = Math.floor(timeSeconds / 3600);
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+}
+
+/**
+ * Given a progress bar pb, return a function that updates the progress bar with the given
+ * DownloadProgressUpdate.
+ */
+export function createDownloadPbUpdater(pb: ProgressBar) {
+  let longestDownloadedBytesStringLength = 6;
+  let longestTotalBytesStringLength = 6;
+  let longestSpeedBytesPerSecondStringLength = 6;
+  return ({ downloadedBytes, totalBytes, speedBytesPerSecond }: DownloadProgressUpdate) => {
+    const downloadedBytesString = formatSizeBytes1000(downloadedBytes);
+    if (downloadedBytesString.length > longestDownloadedBytesStringLength) {
+      longestDownloadedBytesStringLength = downloadedBytesString.length;
+    }
+    const totalBytesString = formatSizeBytes1000(totalBytes);
+    if (totalBytesString.length > longestTotalBytesStringLength) {
+      longestTotalBytesStringLength = totalBytesString.length;
+    }
+    const speedBytesPerSecondString = formatSizeBytes1000(speedBytesPerSecond);
+    if (speedBytesPerSecondString.length > longestSpeedBytesPerSecondStringLength) {
+      longestSpeedBytesPerSecondStringLength = speedBytesPerSecondString.length;
+    }
+    const timeLeftSeconds = Math.round((totalBytes - downloadedBytes) / speedBytesPerSecond);
+    pb.setRatio(
+      downloadedBytes / totalBytes,
+      text`
+        ${downloadedBytesString.padStart(longestDownloadedBytesStringLength)} /
+        ${totalBytesString.padStart(longestTotalBytesStringLength)} |
+        ${speedBytesPerSecondString.padStart(longestSpeedBytesPerSecondStringLength)}/s | ETA
+        ${formatRemainingTime(timeLeftSeconds)}
+      `,
+    );
+  };
+}
+
+
+--- src/ensureAuthenticated.ts ---
+import { makePromise, makeTitledPrettyError, text, type SimpleLogger } from "@lmstudio/lms-common";
+import { type LMStudioClient } from "@lmstudio/sdk";
+import chalk from "chalk";
+
+export async function ensureAuthenticated(
+  client: LMStudioClient,
+  logger: SimpleLogger,
+  { yes = false }: { yes?: boolean } = {},
+) {
+  const { promise, resolve, reject } = makePromise<void>();
+  client.repository
+    .ensureAuthenticated({
+      onAuthenticationUrl: url => {
+        if (yes) {
+          reject(
+            makeTitledPrettyError(
+              "Authentication required",
+              text`
+                This operation requires you to be authenticated. Inline authentication disabled due
+                to ${chalk.yellow("--yes")} flag. Please use ${chalk.yellow("lms auth")}
+                to authenticate before running this command again.
+              `,
+              url,
+            ),
+          );
+        } else {
+          logger.info("Authentication required. Please visit the following URL to authenticate:");
+          logger.info();
+          logger.info(chalk.green(`    ${url}`));
+          logger.info();
+        }
+      },
+    })
+    .then(resolve, reject);
+
+  await promise;
+}
+
+
+--- src/exists.ts ---
+import { access } from "fs/promises";
+
+export async function exists(path: string) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+
+--- src/FileData.ts ---
+import {
+  isAvailable,
+  Signal,
+  type Setter,
+  type SimpleLogger,
+  type StripNotAvailable,
+} from "@lmstudio/lms-common";
+import { existsSync, writeFileSync } from "fs";
+import { mkdir, readFile, watch } from "fs/promises";
+import path from "path";
+import { type ZodSchema } from "zod";
+
+const fileDataGlobalCache: Map<string, FileData<any, any>> = new Map();
+
+export type InitializationState =
+  | {
+      type: "notStarted";
+    }
+  | {
+      type: "initializing";
+      promise: Promise<void>;
+    }
+  | {
+      type: "initialized";
+    };
+
+export class FileData<TData, TSerialized> {
+  public get dataSignal(): Signal<TData> {
+    if (this.initializationState.type !== "initialized") {
+      throw new Error(
+        "FileData is not initialized yet, cannot access dataSignal. (Must call init() first)",
+      );
+    }
+    return this.internalDataSignal;
+  }
+  private readonly internalDataSignal!: Signal<TData>;
+  private readonly setData!: Setter<TData>;
+  private lastWroteString: string | null = null;
+  private initializationState: InitializationState = { type: "notStarted" };
+  public constructor(
+    private readonly filePath: string,
+    private readonly defaultData: TData,
+    private readonly serializer: (data: TData) => TSerialized,
+    private readonly deserializer: (serialized: TSerialized) => TData,
+    private readonly serializedSchema: ZodSchema<TSerialized>,
+    private readonly logger?: SimpleLogger,
+  ) {
+    if (fileDataGlobalCache.has(filePath)) {
+      logger?.debug("FileData already exists in cache, returning existing instance.");
+      return fileDataGlobalCache.get(filePath) as FileData<TData, TSerialized>;
+    }
+    [this.internalDataSignal, this.setData] = Signal.create(defaultData);
+    fileDataGlobalCache.set(filePath, this);
+  }
+
+  public async init() {
+    if (this.initializationState.type === "initializing") {
+      await this.initializationState.promise;
+      return;
+    }
+    if (this.initializationState.type === "initialized") {
+      return;
+    }
+    const initPromise = this.initInternal();
+    this.initializationState = { type: "initializing", promise: initPromise };
+    await initPromise;
+    this.initializationState = { type: "initialized" };
+  }
+
+  private async initInternal() {
+    this.logger?.debug("Initializing FileData");
+    const dir = path.dirname(this.filePath);
+    await mkdir(dir, { recursive: true });
+    let data: TData | null = null;
+    if (!existsSync(this.filePath)) {
+      this.logger?.debug("File does not exist, writing default data");
+      this.writeData(this.defaultData);
+    } else {
+      data = await this.readData();
+    }
+    if (data === null) {
+      data = this.defaultData;
+    }
+    this.setData(data as StripNotAvailable<TData>);
+    this.startWatcher().catch(e => {
+      this.logger?.error(`Watcher failed: ${e}`);
+    });
+  }
+
+  private async startWatcher() {
+    const watcher = watch(this.filePath, {
+      persistent: false,
+    });
+    for await (const event of watcher) {
+      if (event.eventType === "change") {
+        this.logger?.debug("File changed, reading data");
+        const data: TData | null = await this.readData();
+        if (data !== null && isAvailable(data)) {
+          this.setData(data as any);
+        }
+      }
+    }
+  }
+
+  private async readData(): Promise<TData | null> {
+    try {
+      const content = await readFile(this.filePath, "utf-8");
+      if (content === this.lastWroteString) {
+        this.logger?.debug("File content is the same as last written, skipping read");
+        return null;
+      }
+      const json = JSON.parse(content);
+      const parsed = this.serializedSchema.parse(json);
+      const data = this.deserializer(parsed);
+      return data;
+    } catch (e) {
+      this.logger?.error(`Error reading data from file: ${e}`);
+      return null;
+    }
+  }
+
+  private writeData(data: TData) {
+    const serialized = this.serializer(data);
+    const json = JSON.stringify(serialized, null, 2);
+    if (json === this.lastWroteString) {
+      return;
+    }
+    this.lastWroteString = json;
+    try {
+      writeFileSync(this.filePath, json);
+    } catch (e) {
+      this.logger?.error(`Error writing data to file: ${e}`);
+    }
+  }
+
+  public set(data: TData) {
+    if (!isAvailable(data)) {
+      throw new Error("Cannot set data to NOT_AVAILABLE");
+    }
+    this.setData(data);
+    this.writeData(this.dataSignal.get());
+  }
+
+  public setWithProducer(producer: (draft: TData) => void) {
+    this.setData.withProducer(producer);
+    this.writeData(this.dataSignal.get());
+  }
+
+  public get() {
+    return this.dataSignal.get();
+  }
+}
+
+
+--- src/findProjectFolder.ts ---
+import { type SimpleLogger } from "@lmstudio/lms-common";
+import { access } from "fs/promises";
+import { dirname, join, resolve } from "path";
+
+/**
+ * From the given folder, recursively travels back up, until finds one folder that contains a file
+ * with the given name.
+ */
+export async function recursiveFindAncestorFolderWithFile(
+  logger: SimpleLogger,
+  fileName: string,
+  cwd: string,
+) {
+  let currentDir = resolve(cwd);
+
+  let maximumDepth = 20;
+  while (maximumDepth > 0) {
+    maximumDepth--;
+    const manifestPath = join(currentDir, fileName);
+    logger.debug("Trying to access", manifestPath);
+    try {
+      await access(manifestPath);
+      logger.debug(`Found ${fileName} at`, currentDir);
+      return currentDir;
+    } catch (err) {
+      const parentDir = dirname(currentDir);
+      if (parentDir === currentDir) {
+        // Reached the root directory without finding manifest.json
+        return null;
+      }
+      currentDir = parentDir;
+    }
+  }
+  logger.debug(`Reached maximum depth without finding ${fileName}`);
+  return null;
+}
+
+/**
+ * Try to find the ancestor folder with a manifest.json file. If it does not exist, print an error
+ * message and exit the process.
+ */
+export async function findProjectFolderOrExit(logger: SimpleLogger, cwd: string) {
+  const projectFolder = await recursiveFindAncestorFolderWithFile(logger, "manifest.json", cwd);
+  if (projectFolder === null) {
+    logger.errorText`Could not find the project folder. Please invoke this command in a folder with a
+      manifest.json file.
+      \n       To create an empty plugin, use the \`lms create\` command, or create a new plugin in
+      LM Studio.
+    `;
+    process.exit(1);
+  }
+  return projectFolder;
+}

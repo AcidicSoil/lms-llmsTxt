@@ -1,0 +1,2206 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- packages/website/utils/classnames.ts ---
+type ClassValue = string | number | boolean | undefined | null;
+
+export const cn = (...classes: ClassValue[]): string => {
+  return classes.filter(Boolean).join(" ");
+};
+
+
+
+
+
+
+
+
+--- packages/react-grab/src/utils/is-capitalized.ts ---
+export const isCapitalized = (value: string): boolean =>
+  value.length > 0 && /^[A-Z]/.test(value);
+
+
+--- packages/website/app/api/version/route.ts ---
+import packageJson from "react-grab/package.json";
+
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "*",
+  "Access-Control-Allow-Headers": "*",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
+};
+
+export function GET() {
+  return new Response(packageJson.version, {
+    headers,
+  });
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    headers,
+  });
+}
+
+
+--- packages/benchmarks/README.md ---
+# React Grab Benchmarks
+
+This directory contains the benchmark suite used to measure React Grab's impact on coding agent performance. The benchmark compares control (without React Grab) vs treatment (with React Grab) groups across 20 test cases.
+
+## Overview
+
+The benchmark uses the [shadcn/ui dashboard](https://github.com/shadcn-ui/ui) as the test codebase - a Next.js application with auth, data tables, charts, and form components. Each test case represents a real-world task that developers commonly perform when working with coding agents.
+
+Each test runs twice:
+- **Control**: Without React Grab output (agent must search the codebase)
+- **Treatment**: With React Grab output (agent receives exact component stack)
+
+The benchmark measures:
+- Time to completion (`durationMs`)
+- Number of tool calls (`toolCalls`)
+- Token usage (`inputTokens`, `outputTokens`, `totalTokens`)
+- Cost (`costUsd`)
+- Success rate (whether the agent found the correct file)
+
+## Prerequisites
+
+- Node.js >= 18
+- pnpm >= 8
+- An Anthropic API key with access to Claude Code
+
+## Setup
+
+1. Install dependencies from the repository root:
+
+```bash
+pnpm install
+```
+
+2. Set up your Anthropic API key:
+
+The benchmark uses the `ANTHROPIC_API_KEY` environment variable. Set it before running:
+
+```bash
+export ANTHROPIC_API_KEY="your-api-key-here"
+```
+
+Or create a `.env` file in this directory:
+
+```
+ANTHROPIC_API_KEY=your-api-key-here
+```
+
+## Running the Benchmark
+
+From the repository root, navigate to the benchmarks directory:
+
+```bash
+cd packages/benchmarks
+```
+
+Run the benchmark using bun (bun can run TypeScript files directly):
+
+```bash
+bun index.ts
+```
+
+The benchmark will:
+1. Generate `test-cases.json` from the test cases
+2. Run all 40 tests (20 control + 20 treatment) in batches of 5
+3. Save results incrementally to `results.json`
+4. Display progress in the terminal
+
+## Output
+
+Results are written to `results.json` in the benchmarks directory. Each result includes:
+
+```json
+{
+  "testName": "Forgot Password Link",
+  "type": "control",
+  "inputTokens": 12345,
+  "outputTokens": 234,
+  "totalTokens": 12579,
+  "costUsd": 0.012,
+  "durationMs": 13600,
+  "toolCalls": 5,
+  "success": true
+}
+```
+
+## Test Cases
+
+The benchmark includes 20 test cases covering various UI element retrieval scenarios:
+
+- Form elements (inputs, buttons, links)
+- Navigation components
+- Data table elements
+- Chart components
+- Layout components
+- Authentication flows
+
+See [`test-cases.json`](./test-cases.json) for the full list of test cases and their prompts.
+
+## Cost Considerations
+
+Running the full benchmark suite (40 tests) will incur API costs. Each test uses:
+- Claude Code Sonnet for the main task
+- Claude Haiku 4.5 for result grading
+
+Estimated cost per full run: ~$0.50-1.00 USD (varies based on codebase size and API pricing).
+
+## Customization
+
+You can modify the benchmark by:
+
+1. **Adding test cases**: Edit `test-cases.ts` to add new test scenarios
+2. **Changing batch size**: Modify `BATCH_SIZE` in `index.ts` (default: 5)
+3. **Using a different codebase**: Update `TARGET_ENVIRONMENT_DIR` in `index.ts`
+4. **Changing the model**: Modify the model in `claude-code.ts` (currently uses `claudeCode("sonnet")`)
+
+## Troubleshooting
+
+**Error: Provider metadata not found**
+- Ensure you have a valid Anthropic API key set
+- Check that you have access to Claude Code API
+
+**Tests failing**
+- Verify the `shadcn-dashboard` directory exists and is properly set up
+- Check that the expected files in test cases match the actual codebase structure
+
+**Out of memory errors**
+- Reduce `BATCH_SIZE` in `index.ts` to run fewer tests concurrently
+
+## Caveats & Future Improvements
+
+There are several improvements that can be made to this benchmark:
+
+- **Different codebases**: This benchmark uses the shadcn dashboard. It would be valuable to test with different frameworks, codebase sizes, and architectural patterns to see how React Grab performs across various scenarios.
+
+- **Different agents/model providers**: Currently the benchmark only tests Claude Code. Testing with other coding agents (e.g., GitHub Copilot, Cursor, etc.) would provide a more comprehensive view of React Grab's impact.
+
+- **Multiple trials and sampling**: Since agents are non-deterministic, running multiple trials per test case and averaging results would decrease variance and provide more reliable metrics.
+
+- **Additional metrics**: Consider tracking more granular metrics like time to first tool call, search accuracy, or user satisfaction scores.
+
+Pull requests are welcome! If you'd like to contribute improvements to the benchmark suite, please open an issue or submit a PR on [GitHub](https://github.com/aidenybai/react-grab).
+
+## Results
+
+The latest benchmark results are published on the [React Grab website](https://react-grab.com/blog/intro). The benchmark shows that React Grab makes coding agents approximately **55% faster** on average.
+
+
+## Links discovered
+- [shadcn/ui dashboard](https://github.com/shadcn-ui/ui)
+- [`test-cases.json`](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/./test-cases.json)
+- [GitHub](https://github.com/aidenybai/react-grab)
+- [React Grab website](https://react-grab.com/blog/intro)
+
+--- packages/benchmarks/shadcn-dashboard/README.md ---
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+
+## Links discovered
+- [Next.js](https://nextjs.org)
+- [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app)
+- [http://localhost:3000](http://localhost:3000)
+- [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts)
+- [Geist](https://vercel.com/font)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [the Next.js GitHub repository](https://github.com/vercel/next.js)
+- [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
+- [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying)
+
+--- packages/benchmarks/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Benchmark Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-neutral-950 text-neutral-100 antialiased">
+    <div class="max-w-7xl mx-auto px-6 py-6">
+      <div class="flex items-center gap-3 mb-2">
+        <img src="/logo.svg" alt="React Grab" class="w-8 h-8" />
+        <h1 class="text-2xl font-medium text-white">React Grab Benchmark</h1>
+      </div>
+
+      <div class="mb-6 p-4 bg-neutral-900 rounded-lg border border-neutral-800">
+        <h2 class="text-sm font-medium text-neutral-200 mb-2">Methodology</h2>
+        <p class="text-sm text-neutral-400 leading-relaxed">
+          This benchmark evaluates React Grab's performance using the <a href="https://github.com/shadcn-ui/ui" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">shadcn/ui dashboard example</a>, a production-grade Next.js application with real-world complexity including multiple routes, form handling, data tables, charts, and authentication flows. We compare two scenarios: Control (without React Grab instrumentation) vs Treatment (with React Grab). This is a fair comparison because both scenarios use the same codebase, same prompts, and same AI model (Claude), with the only difference being whether React Grab's semantic element labeling is available. The benchmark measures success rate, token usage, cost, duration, and tool calls to quantify React Grab's impact on AI coding assistance efficiency.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 mb-6" id="summary">
+        <div>
+          <h3
+            class="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1"
+          >
+            Total Tests
+          </h3>
+          <p class="text-2xl font-semibold text-white" id="total-tests">-</p>
+        </div>
+        <div>
+          <h3
+            class="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1"
+          >
+            Success Rate
+          </h3>
+          <p class="text-2xl font-semibold text-white" id="success-rate">-</p>
+        </div>
+        <div>
+          <h3
+            class="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1"
+          >
+            Total Cost
+          </h3>
+          <p class="text-2xl font-semibold text-white" id="total-cost">-</p>
+        </div>
+        <div>
+          <h3
+            class="text-xs font-medium text-neutral-400 uppercase tracking-wide mb-1"
+          >
+            Total Duration
+          </h3>
+          <p class="text-2xl font-semibold text-white" id="total-duration">-</p>
+        </div>
+      </div>
+
+      <div id="comparison" class="mb-6"></div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="border-b border-neutral-800">
+              <th
+                rowspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Test Name
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Success
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Input Tokens
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Output Tokens
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Cost
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Duration
+              </th>
+              <th
+                colspan="2"
+                class="text-left py-2 px-3 text-xs font-medium text-neutral-300"
+              >
+                Tool Calls
+              </th>
+            </tr>
+            <tr class="border-b border-neutral-800 bg-neutral-900">
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400"
+              >
+                Control
+              </th>
+              <th
+                class="text-left py-1.5 px-3 text-xs font-normal text-neutral-400 bg-neutral-800"
+              >
+                Treatment
+              </th>
+            </tr>
+          </thead>
+          <tbody id="results-table"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <script type="module">
+      import prettyMs from "https://esm.sh/pretty-ms@9";
+
+      let testCaseMap = {};
+
+      async function loadResults() {
+        try {
+          const [resultsData, testCasesData] = await Promise.all([
+            fetch("/results.json").then((r) => r.json()),
+            fetch("/test-cases.json").then((r) => r.json()),
+          ]);
+
+          testCasesData.forEach((testCase) => {
+            testCaseMap[testCase.name] = testCase.prompt;
+          });
+
+          displayResults(resultsData);
+          displaySummary(resultsData);
+          displayComparison(resultsData);
+        } catch (error) {
+          console.error("Error loading results:", error);
+          document.getElementById("results-table").innerHTML =
+            '<tr><td colspan="13" class="text-center py-8 text-red-400">Error loading results. Please check console.</td></tr>';
+        }
+      }
+
+      function displayResults(data) {
+        const tbody = document.getElementById("results-table");
+
+        const groupedByTest = {};
+        data.forEach((result) => {
+          if (!groupedByTest[result.testName]) {
+            groupedByTest[result.testName] = {};
+          }
+          groupedByTest[result.testName][result.type] = result;
+        });
+
+        tbody.innerHTML = Object.entries(groupedByTest)
+          .map(([testName, results]) => {
+            const control = results.control || {};
+            const treatment = results.treatment || {};
+
+            const calculateChange = (controlVal, treatmentVal) => {
+              if (!controlVal || !treatmentVal)
+                return { change: "", bgColor: "bg-neutral-900" };
+              const change = ((treatmentVal - controlVal) / controlVal) * 100;
+              const isImprovement = change < 0;
+              const color = isImprovement ? "text-green-400" : "text-red-400";
+              const bgColor = isImprovement ? "bg-green-950" : "bg-red-950";
+              return {
+                change: `<span class="ml-1 text-xs ${color}">${isImprovement ? "↓" : "↑"}${Math.abs(change).toFixed(0)}%</span>`,
+                bgColor,
+              };
+            };
+
+            const inputChange = calculateChange(
+              control.inputTokens,
+              treatment.inputTokens,
+            );
+            const outputChange = calculateChange(
+              control.outputTokens,
+              treatment.outputTokens,
+            );
+            const costChange = calculateChange(
+              control.costUsd,
+              treatment.costUsd,
+            );
+            const durationChange = calculateChange(
+              control.durationMs,
+              treatment.durationMs,
+            );
+            const toolCallsChange = calculateChange(
+              control.toolCalls,
+              treatment.toolCalls,
+            );
+
+            const prompt = testCaseMap[testName] || "";
+
+            return `
+                    <tr class="border-b border-neutral-800 hover:bg-neutral-900">
+                        <td class="py-2 px-3 font-medium text-neutral-200 cursor-help" title="${prompt}">${testName}</td>
+                        <td class="py-2 px-3 ${control.success ? "text-green-400" : "text-red-400"}">${control.success !== undefined ? (control.success ? "✓" : "✗") : "-"}</td>
+                        <td class="py-2 px-3 bg-neutral-800 ${treatment.success ? "text-green-400" : "text-red-400"}">${treatment.success !== undefined ? (treatment.success ? "✓" : "✗") : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums">${control.inputTokens ? control.inputTokens.toLocaleString() : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums ${inputChange.bgColor}">${treatment.inputTokens ? treatment.inputTokens.toLocaleString() : "-"}${inputChange.change}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums">${control.outputTokens ? control.outputTokens.toLocaleString() : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums ${outputChange.bgColor}">${treatment.outputTokens ? treatment.outputTokens.toLocaleString() : "-"}${outputChange.change}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums">${control.costUsd !== undefined ? "$" + control.costUsd.toFixed(2) : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums ${costChange.bgColor}">${treatment.costUsd !== undefined ? "$" + treatment.costUsd.toFixed(2) : "-"}${costChange.change}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums">${control.durationMs ? prettyMs(control.durationMs) : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums ${durationChange.bgColor}">${treatment.durationMs ? prettyMs(treatment.durationMs) : "-"}${durationChange.change}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums">${control.toolCalls !== undefined ? control.toolCalls : "-"}</td>
+                        <td class="py-2 px-3 text-neutral-300 tabular-nums ${toolCallsChange.bgColor}">${treatment.toolCalls !== undefined ? treatment.toolCalls : "-"}${toolCallsChange.change}</td>
+                </tr>
+                `;
+          })
+          .join("");
+      }
+
+      function displaySummary(data) {
+        const totalTests = data.length;
+        const successCount = data.filter((r) => r.success).length;
+        const successRate = ((successCount / totalTests) * 100).toFixed(1);
+        const totalCost = data.reduce((sum, r) => sum + r.costUsd, 0);
+        const totalDuration = data.reduce((sum, r) => sum + r.durationMs, 0);
+
+        document.getElementById("total-tests").textContent = totalTests;
+        document.getElementById("success-rate").textContent = `${successRate}%`;
+        document.getElementById("total-cost").textContent =
+          `$${totalCost.toFixed(2)}`;
+        document.getElementById("total-duration").textContent =
+          prettyMs(totalDuration);
+      }
+
+      function displayComparison(data) {
+        const controlResults = data.filter((r) => r.type === "control");
+        const treatmentResults = data.filter((r) => r.type === "treatment");
+
+        if (controlResults.length === 0 || treatmentResults.length === 0) {
+          return;
+        }
+
+        const controlStats = calculateStats(controlResults);
+        const treatmentStats = calculateStats(treatmentResults);
+
+        const metrics = [
+          {
+            name: "Success Rate",
+            control: `${controlStats.successRate}%`,
+            treatment: `${treatmentStats.successRate}%`,
+            isImprovement:
+              treatmentStats.successRate >= controlStats.successRate,
+            change: `${Math.abs(treatmentStats.successRate - controlStats.successRate).toFixed(1)}%`,
+          },
+          {
+            name: "Avg Cost",
+            control: `$${controlStats.avgCost.toFixed(2)}`,
+            treatment: `$${treatmentStats.avgCost.toFixed(2)}`,
+            isImprovement: treatmentStats.avgCost <= controlStats.avgCost,
+            change: `${Math.abs(((treatmentStats.avgCost - controlStats.avgCost) / controlStats.avgCost) * 100).toFixed(1)}%`,
+          },
+          {
+            name: "Avg Duration",
+            control: prettyMs(controlStats.avgDuration),
+            treatment: prettyMs(treatmentStats.avgDuration),
+            isImprovement:
+              treatmentStats.avgDuration <= controlStats.avgDuration,
+            change: `${Math.abs(((treatmentStats.avgDuration - controlStats.avgDuration) / controlStats.avgDuration) * 100).toFixed(1)}%`,
+          },
+          {
+            name: "Avg Tool Calls",
+            control: controlStats.avgToolCalls.toFixed(1),
+            treatment: treatmentStats.avgToolCalls.toFixed(1),
+            isImprovement:
+              treatmentStats.avgToolCalls <= controlStats.avgToolCalls,
+            change: `${Math.abs(((treatmentStats.avgToolCalls - controlStats.avgToolCalls) / controlStats.avgToolCalls) * 100).toFixed(1)}%`,
+          },
+        ];
+
+        const comparisonHTML = `
+                <h2 class="text-xl font-medium mb-4 text-white">Control vs Treatment</h2>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-neutral-800">
+                                <th class="text-left py-2 px-3 text-xs font-medium text-neutral-300">Metric</th>
+                                <th class="text-left py-2 px-3 text-xs font-medium text-neutral-300">Control</th>
+                                <th class="text-left py-2 px-3 text-xs font-medium text-neutral-300 bg-neutral-800">Treatment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${metrics
+                              .map(
+                                (metric) => `
+                                <tr class="border-b border-neutral-800 hover:bg-neutral-900">
+                                    <td class="py-2 px-3 font-medium text-neutral-200">${metric.name}</td>
+                                    <td class="py-2 px-3 text-neutral-300 tabular-nums">${metric.control}</td>
+                                    <td class="py-2 px-3 text-neutral-300 tabular-nums bg-neutral-800">
+                                        ${metric.treatment}
+                                        <span class="ml-2 text-xs font-medium ${metric.isImprovement ? "text-green-400" : "text-red-400"}">
+                                            ${metric.isImprovement ? "↓" : "↑"} ${metric.change}
+                                        </span>
+                                    </td>
+                                </tr>
+                            `,
+                              )
+                              .join("")}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+        document.getElementById("comparison").innerHTML = comparisonHTML;
+      }
+
+      function calculateStats(results) {
+        const successCount = results.filter((r) => r.success).length;
+        return {
+          successRate: ((successCount / results.length) * 100).toFixed(1),
+          avgCost:
+            results.reduce((sum, r) => sum + r.costUsd, 0) / results.length,
+          avgDuration:
+            results.reduce((sum, r) => sum + r.durationMs, 0) / results.length,
+          avgToolCalls:
+            results.reduce((sum, r) => sum + r.toolCalls, 0) / results.length,
+          avgInputTokens:
+            results.reduce((sum, r) => sum + r.inputTokens, 0) / results.length,
+          avgOutputTokens:
+            results.reduce((sum, r) => sum + r.outputTokens, 0) /
+            results.length,
+        };
+      }
+
+      loadResults();
+    </script>
+  </body>
+</html>
+
+
+## Links discovered
+- [shadcn/ui dashboard example](https://github.com/shadcn-ui/ui)
+
+--- packages/react-grab/CHANGELOG.md ---
+# react-grab
+
+## 0.0.53
+
+### Patch Changes
+
+- fix: focus states
+
+## 0.0.52
+
+### Patch Changes
+
+- fix: copy states
+
+## 0.0.51
+
+### Patch Changes
+
+- fix: jsdocs on theme prop values
+
+## 0.0.50
+
+### Patch Changes
+
+- feat: extend API
+
+## 0.0.49
+
+### Patch Changes
+
+- fix: reactivation bug
+
+## 0.0.48
+
+### Patch Changes
+
+- fix: version fetching
+
+## 0.0.47
+
+### Patch Changes
+
+- fix: use event code instead of event key
+
+## 0.0.46
+
+### Patch Changes
+
+- fix: non-react projects
+
+## 0.0.45
+
+### Patch Changes
+
+- feat: input
+
+## 0.0.44
+
+### Patch Changes
+
+- fix: new log
+
+## 0.0.43
+
+### Patch Changes
+
+- fix: new hooks
+
+## 0.0.42
+
+### Patch Changes
+
+- fix: improve cursor
+
+## 0.0.41
+
+### Patch Changes
+
+- fix: improved copy version
+
+## 0.0.40
+
+### Patch Changes
+
+- fix: selection opacity
+
+## 0.0.39
+
+### Patch Changes
+
+- fix: sourcemaps in prod
+
+## 0.0.38
+
+### Patch Changes
+
+- fix: multi select
+
+## 0.0.37
+
+### Patch Changes
+
+- fix: in Component
+
+## 0.0.36
+
+### Patch Changes
+
+- fix: progress indicator
+
+## 0.0.35
+
+### Patch Changes
+
+- fix: allow copying inside input
+
+## 0.0.34
+
+### Patch Changes
+
+- fix: click thru
+
+## 0.0.33
+
+### Patch Changes
+
+- fix: bug with optimisitc label
+
+## 0.0.32
+
+### Patch Changes
+
+- fix: keybind issues
+
+## 0.0.31
+
+### Patch Changes
+
+- fix: screenshotrs
+
+## 0.0.30
+
+### Patch Changes
+
+- improvements to instrumentaiton
+
+## 0.0.29
+
+### Patch Changes
+
+- fix: crosshair length
+
+## 0.0.28
+
+### Patch Changes
+
+- fix: computed styles
+
+## 0.0.27
+
+### Patch Changes
+
+- fix: sources
+
+## 0.0.26
+
+### Patch Changes
+
+- performance
+
+## 0.0.25
+
+### Patch Changes
+
+- new crosshair
+
+## 0.0.24
+
+### Patch Changes
+
+- fix: issues
+
+## 0.0.23
+
+### Patch Changes
+
+- fix: things
+
+## 0.0.21
+
+### Patch Changes
+
+- fix: refactor code
+
+## 0.0.20
+
+### Patch Changes
+
+- fix: circular references issue
+
+## 0.0.19
+
+### Patch Changes
+
+- fix: react devtools and windows/linux compat
+
+## 0.0.18
+
+### Patch Changes
+
+- fix: owner stack
+
+## 0.0.17
+
+### Patch Changes
+
+- fix: sourcemaps
+
+## 0.0.16
+
+### Patch Changes
+
+- fix: docs
+
+## 0.0.15
+
+### Patch Changes
+
+- fix: ux fixes
+
+## 0.0.14
+
+### Patch Changes
+
+- fix: key
+
+
+--- packages/benchmarks/claude-code.ts ---
+import { generateText, streamText } from "ai";
+import { anthropic } from "@ai-sdk/anthropic";
+import { claudeCode } from "ai-sdk-provider-claude-code";
+
+interface ProviderMetadata {
+  "claude-code": {
+    sessionId: string;
+    costUsd: number;
+    durationMs: number;
+    rawUsage: {
+      input_tokens: number;
+      cache_creation_input_tokens: number;
+      cache_read_input_tokens: number;
+      output_tokens: number;
+      server_tool_use: Record<string, unknown>;
+      service_tier: string;
+      cache_creation: Record<string, unknown>;
+    };
+  };
+}
+
+interface Usage {
+  inputTokens: number;
+  outputTokens: number;
+  totalTokens: number;
+}
+
+interface ClaudeCodeTestResult {
+  inputTokens: number;
+  outputTokens: number;
+  costUsd: number;
+  durationMs: number;
+  toolCalls: number;
+  success: boolean;
+}
+
+interface Options {
+  prompt: string;
+  expectedFile: string;
+  cwd: string;
+}
+
+export const runClaudeCodeTest = async (
+  options: Options,
+): Promise<ClaudeCodeTestResult> => {
+  return new Promise(async (resolve, reject) => {
+    const result = streamText({
+      model: claudeCode("sonnet", {
+        cwd: options.cwd,
+      }),
+      prompt: options.prompt,
+      onChunk: async (chunk) => {},
+      onFinish: async (args) => {
+        if (!args.providerMetadata) {
+          reject(new Error("Provider metadata not found"));
+        }
+        const providerMetadata =
+          args.providerMetadata as unknown as ProviderMetadata;
+        if (!args.usage) {
+          reject(new Error("Usage not found"));
+        }
+
+        const { inputTokens, outputTokens } = args.usage as Usage;
+        const { costUsd, durationMs } = providerMetadata["claude-code"];
+
+        const graderResult = await generateText({
+          model: anthropic("claude-haiku-4-5"),
+          maxOutputTokens: 1,
+          prompt: `Did the model find the file ${options.expectedFile} in the output?
+
+IMPORTANT: ONLY RESPOND WITH "1" (for yes) or "0" (for no), NOTHING ELSE.
+
+Output:
+
+${args.text}`,
+        });
+
+        console.log(args.text);
+
+        const usageResult: ClaudeCodeTestResult = {
+          inputTokens,
+          outputTokens,
+          costUsd: costUsd,
+          durationMs: durationMs,
+          toolCalls: args.toolCalls.length,
+          success:
+            graderResult.text.includes("1") || !graderResult.text.includes("0"),
+        };
+
+        resolve(usageResult);
+      },
+    });
+    // need to wait for the result to be resolved
+    await result.text;
+  });
+};
+
+
+--- packages/benchmarks/index.ts ---
+import path from "path";
+import fs from "fs/promises";
+import { runClaudeCodeTest } from "./claude-code";
+import createSpinner from "yocto-spinner";
+import { TEST_CASES } from "./test-cases";
+
+const TARGET_ENVIRONMENT_DIR = path.join(__dirname, "shadcn-dashboard");
+
+const run = async () => {
+  const spinner = createSpinner({ text: "Running…" }).start();
+
+  const testCasesJson = TEST_CASES.map(({ name, prompt }) => ({
+    name,
+    prompt,
+  }));
+  const testCasesPath = path.join(__dirname, "test-cases.json");
+  await fs.writeFile(testCasesPath, JSON.stringify(testCasesJson, null, 2));
+
+  const allTests = TEST_CASES.flatMap((testCase) => {
+    const { name, prompt, expectedFile, reactGrabOutput } = testCase;
+
+    return [
+      {
+        testName: name,
+        type: "control" as const,
+        run: () =>
+          runClaudeCodeTest({
+            prompt: `ONLY RETURN THE FILE NAME, NO OTHER TEXT. ${prompt}`,
+            expectedFile,
+            cwd: TARGET_ENVIRONMENT_DIR,
+          }),
+      },
+      {
+        testName: name,
+        type: "treatment" as const,
+        run: () =>
+          runClaudeCodeTest({
+            prompt: `ONLY RETURN THE FILE NAME, NO OTHER TEXT. ${prompt}
+
+${reactGrabOutput}`,
+            expectedFile,
+            cwd: TARGET_ENVIRONMENT_DIR,
+          }),
+      },
+    ];
+  });
+
+  const outputPath = path.join(__dirname, "results.json");
+  const results: Array<{
+    testName: string;
+    type: "control" | "treatment";
+    [key: string]: unknown;
+  }> = [];
+
+  await fs.writeFile(outputPath, JSON.stringify(results, null, 2));
+
+  const BATCH_SIZE = 5;
+
+  for (let i = 0; i < allTests.length; i += BATCH_SIZE) {
+    const batch = allTests.slice(i, i + BATCH_SIZE);
+
+    await Promise.all(
+      batch.map(async ({ testName, type, run }) => {
+        const result = await run();
+        const testResult = {
+          testName,
+          type,
+          ...result,
+        };
+
+        results.push(testResult);
+        await fs.writeFile(outputPath, JSON.stringify(results, null, 2));
+
+        spinner.text = `Completed ${results.length}/${allTests.length} tests`;
+      }),
+    );
+  }
+
+  spinner.stop();
+
+  console.log(`Results written to ${outputPath}`);
+  console.log(`Total tests run: ${results.length}`);
+
+  process.exit(0);
+};
+
+run();
+
+
+--- packages/benchmarks/test-cases.ts ---
+interface TestCase {
+  name: string;
+  prompt: string;
+  expectedFile: string;
+  reactGrabOutput: string;
+}
+
+export const TEST_CASES: TestCase[] = [
+  {
+    name: "Grayscale Avatar",
+    prompt: "Find the grayscale avatar in the user menu",
+    expectedFile: "components/nav-user.tsx",
+    reactGrabOutput: `<selected_element>
+
+<span class="relative flex shrink-0 ove...">
+  (2 elements)
+</span>
+
+  at span in components/nav-user.tsx:57:17
+  at button in components/ui/sidebar.tsx:515:5
+  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
+  at NavUser in components/nav-user.tsx:32:10
+
+</selected_element>`,
+  },
+  {
+    name: "Forgot Password Link",
+    prompt: "Find the forgot password link in the login form",
+    expectedFile: "components/login-form.tsx",
+    reactGrabOutput: `<selected_element>
+
+<a class="ml-auto inline-block text-..." href="#">
+  Forgot your password?
+</a>
+
+  at a in components/login-form.tsx:46:19
+  at div in components/login-form.tsx:44:17
+  at Field in components/ui/field.tsx:87:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at form in components/login-form.tsx:32:11
+  at div in components/ui/card.tsx:66:5
+  at CardContent in components/ui/card.tsx:64:10
+  at LoginForm in components/login-form.tsx:18:10
+
+</selected_element>`,
+  },
+  {
+    name: "Time Range Toggle",
+    prompt:
+      "Find the time range toggle group showing Last 3 months, Last 30 days, Last 7 days",
+    expectedFile: "components/chart-area-interactive.tsx",
+    reactGrabOutput: `<selected_element>
+
+<div role="group" dir="ltr" class="flex items-center justify-c..." tabindex="0" style="outline: none;">
+  (3 elements)
+</div>
+
+  at div in components/chart-area-interactive.tsx:178:11
+  at CardAction in components/ui/card.tsx:52:5
+  at div in components/ui/card.tsx:20:5
+  at CardHeader in components/ui/card.tsx:18:10
+  at ChartAreaInteractive in components/chart-area-interactive.tsx:143:10
+
+</selected_element>`,
+  },
+  {
+    name: "Drag Handle",
+    prompt: "Find the drag handle with grip vertical icon in the table rows",
+    expectedFile: "components/data-table.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button class="inline-flex items-center ju..." aria-describedby="DndDe..." aria-disabled="false" role="button" tabindex="0">
+  (2 elements)
+</button>
+
+  at button in components/data-table.tsx:126:5
+  at DragHandle in components/data-table.tsx:120:10
+  at td in components/data-table.tsx:331:9
+  at tr in components/data-table.tsx:320:5
+  at DraggableRow in components/data-table.tsx:314:10
+
+</selected_element>`,
+  },
+  {
+    name: "Editable Target Input",
+    prompt:
+      "Find the inline editable target input field with transparent background in the data table",
+    expectedFile: "components/data-table.tsx",
+    reactGrabOutput: `<selected_element>
+
+<input class="flex rounded-md border border-..." id="1-target" value="2,500" />
+
+  at input in components/data-table.tsx:221:9
+  at form in components/data-table.tsx:208:7
+  at td in components/data-table.tsx:331:9
+  at tr in components/data-table.tsx:320:5
+  at DraggableRow in components/data-table.tsx:314:10
+
+</selected_element>`,
+  },
+  {
+    name: "OTP Input",
+    prompt:
+      "Find the OTP input with separator showing 6-digit verification code split into two groups",
+    expectedFile: "components/otp-form.tsx",
+    reactGrabOutput: `<selected_element>
+
+<div class="flex items-center gap-4 dis..." data-input-otp-co... style="position: relative; cursor: text; user-select: none; pointer-events: none;">
+  (3 elements)
+</div>
+
+  at div in components/otp-form.tsx:42:13
+  at Field in components/ui/field.tsx:87:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at form in components/otp-form.tsx:21:7
+  at OTPForm in components/otp-form.tsx:18:10
+
+</selected_element>`,
+  },
+  {
+    name: "Quick Create Button",
+    prompt:
+      "Find the Quick Create button with primary background color in the sidebar",
+    expectedFile: "components/nav-main.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button data-sidebar="menu-button" data-size="default" data-active="false" class="peer/menu-button flex w-full ..." data-tooltip="Quick Create">
+  (2 elements)
+</button>
+
+  at button in components/ui/sidebar.tsx:515:5
+  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
+  at li in components/nav-main.tsx:27:11
+  at ul in components/nav-main.tsx:26:9
+  at SidebarMenu in components/ui/sidebar.tsx:456:5
+  at div in components/nav-main.tsx:25:7
+  at SidebarGroupContent in components/ui/sidebar.tsx:445:5
+  at SidebarGroup in components/ui/sidebar.tsx:387:5
+  at NavMain in components/nav-main.tsx:14:10
+
+</selected_element>`,
+  },
+  {
+    name: "Dropdown Actions",
+    prompt:
+      "Find the show-on-hover dropdown menu button with three dots in the documents section",
+    expectedFile: "components/nav-documents.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button data-sidebar="menu-action" class="absolute right-1 top-1.5 fl..." id="radix-:R2dcmcq:" aria-haspopup="menu" aria-expanded="false" data-state="closed">
+  (2 elements)
+</button>
+
+  at button in components/ui/sidebar.tsx:560:5
+  at SidebarMenuAction in components/ui/sidebar.tsx:548:10
+  at li in components/nav-documents.tsx:44:11
+  at ul in components/nav-documents.tsx:42:7
+  at SidebarMenu in components/ui/sidebar.tsx:456:5
+  at SidebarGroup in components/ui/sidebar.tsx:387:5
+  at NavDocuments in components/nav-documents.tsx:28:10
+
+</selected_element>`,
+  },
+  {
+    name: "Status Badge",
+    prompt:
+      "Find the status badge with green checkmark icon showing Done status",
+    expectedFile: "components/data-table.tsx",
+    reactGrabOutput: `<selected_element>
+
+<div class="inline-flex items-centers ro...">
+  (1 element)
+</div>
+
+  at div in components/data-table.tsx:194:7
+  at td in components/data-table.tsx:331:9
+  at tr in components/data-table.tsx:320:5
+  at DraggableRow in components/data-table.tsx:314:10
+
+</selected_element>`,
+  },
+  {
+    name: "Tabs with Badges",
+    prompt:
+      "Find the tab button showing Past Performance with a badge counter showing 3",
+    expectedFile: "components/data-table.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button type="button" role="tab" aria-selected="true" aria-controls="radix-:R1ld9..." data-state="active" id="radix-:R1ld9..." class="inline-flex items-center ju..." tabindex="0" data-orientation="horizontal" data-radix-collectio...>
+  (1 element)
+  Past Performance
+</button>
+
+  at button in components/data-table.tsx:430:11
+  at div in components/data-table.tsx:428:9
+  at Tabs in components/data-table.tsx:405:5
+  at DataTable in components/data-table.tsx:339:10
+
+</selected_element>`,
+  },
+  {
+    name: "Team Switcher Dropdown",
+    prompt:
+      "Find the team switcher dropdown button with chevron icon in the sidebar",
+    expectedFile: "components/team-switcher.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button data-sidebar="menu-button" data-size="lg" class="peer/menu-button flex w-full ..." data-state="closed" aria-haspopup="menu" aria-expanded="false">
+  (3 elements)
+</button>
+
+  at button in components/ui/sidebar.tsx:515:5
+  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
+  at DropdownMenuTrigger in components/ui/dropdown-menu.tsx:27:5
+  at li in components/team-switcher.tsx:40:9
+  at SidebarMenuItem in components/ui/sidebar.tsx:467:5
+  at SidebarMenu in components/ui/sidebar.tsx:456:5
+  at TeamSwitcher in components/team-switcher.tsx:22:10
+
+</selected_element>`,
+  },
+  {
+    name: "Keyboard Shortcut Badge",
+    prompt:
+      "Find the keyboard shortcut indicator showing ⌘1 in the team dropdown menu",
+    expectedFile: "components/team-switcher.tsx",
+    reactGrabOutput: `<selected_element>
+
+<span class="ml-auto text-xs tracking-w...">
+  ⌘1
+</span>
+
+  at span in components/ui/dropdown-menu.tsx:184:7
+  at DropdownMenuShortcut in components/ui/dropdown-menu.tsx:179:10
+  at div in components/team-switcher.tsx:67:13
+  at DropdownMenuItem in components/ui/dropdown-menu.tsx:72:5
+  at div in components/ui/dropdown-menu.tsx:41:7
+  at DropdownMenuContent in components/ui/dropdown-menu.tsx:34:10
+
+</selected_element>`,
+  },
+  {
+    name: "GitHub Link Button",
+    prompt: "Find the GitHub link button in the header toolbar",
+    expectedFile: "components/site-header.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button class="inline-flex items-centers ju..." asChild size="sm">
+  (1 element)
+  GitHub
+</button>
+
+  at button in components/ui/button.tsx:52:5
+  at Button in components/ui/button.tsx:39:10
+  at div in components/site-header.tsx:15:9
+  at div in components/site-header.tsx:8:7
+  at header in components/site-header.tsx:7:5
+  at SiteHeader in components/site-header.tsx:5:10
+
+</selected_element>`,
+  },
+  {
+    name: "Sidebar Trigger Toggle",
+    prompt: "Find the sidebar toggle trigger button at the top of the header",
+    expectedFile: "components/site-header.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button data-sidebar="trigger" class="inline-flex items-centers ju..." aria-label="Toggle Sidebar">
+  (1 element)
+</button>
+
+  at button in components/ui/button.tsx:52:5
+  at SidebarTrigger in components/ui/sidebar.tsx:256:10
+  at div in components/site-header.tsx:8:7
+  at header in components/site-header.tsx:7:5
+  at SiteHeader in components/site-header.tsx:5:10
+
+</selected_element>`,
+  },
+  {
+    name: "Full Name Input Field",
+    prompt:
+      "Find the full name input field with placeholder John Doe in the signup form",
+    expectedFile: "components/signup-form.tsx",
+    reactGrabOutput: `<selected_element>
+
+<input id="name" type="text" placeholder="John Doe" required class="flex h-9 w-full rounded-md ..." />
+
+  at input in components/signup-form.tsx:31:15
+  at Field in components/ui/field.tsx:87:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at form in components/signup-form.tsx:27:11
+  at div in components/ui/card.tsx:66:5
+  at CardContent in components/ui/card.tsx:64:10
+  at SignupForm in components/signup-form.tsx:17:10
+
+</selected_element>`,
+  },
+  {
+    name: "Field Description Text",
+    prompt:
+      "Find the helper text saying We'll use this to contact you below the email input",
+    expectedFile: "components/signup-form.tsx",
+    reactGrabOutput: `<selected_element>
+
+<p class="text-[0.8rem] text-muted-fo...">
+  We'll use this to contact you. We will not share your email with anyone else.
+</p>
+
+  at p in components/ui/field.tsx:143:5
+  at FieldDescription in components/ui/field.tsx:141:10
+  at Field in components/ui/field.tsx:87:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at form in components/signup-form.tsx:27:11
+  at div in components/ui/card.tsx:66:5
+  at CardContent in components/ui/card.tsx:64:10
+  at SignupForm in components/signup-form.tsx:17:10
+
+</selected_element>`,
+  },
+  {
+    name: "Sign Up With Google Button",
+    prompt:
+      "Find the Sign up with Google button with outline variant in the signup form",
+    expectedFile: "components/signup-form.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button class="inline-flex items-center ju..." variant="outline" type="button">
+  Sign up with Google
+</button>
+
+  at button in components/signup-form.tsx:63:17
+  at Field in components/ui/field.tsx:87:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at FieldGroup in components/ui/field.tsx:46:5
+  at form in components/signup-form.tsx:27:11
+  at div in components/ui/card.tsx:66:5
+  at CardContent in components/ui/card.tsx:64:10
+  at SignupForm in components/signup-form.tsx:17:10
+
+</selected_element>`,
+  },
+  {
+    name: "Revenue Card Badge",
+    prompt:
+      "Find the trending up badge showing +12.5% in the Total Revenue card",
+    expectedFile: "components/section-cards.tsx",
+    reactGrabOutput: `<selected_element>
+
+<div class="inline-flex items-centers ro..." variant="outline">
+  (1 element)
+  +12.5%
+</div>
+
+  at div in components/ui/badge.tsx:38:5
+  at Badge in components/ui/badge.tsx:28:10
+  at div in components/section-cards.tsx:23:13
+  at CardAction in components/ui/card.tsx:52:5
+  at div in components/ui/card.tsx:20:5
+  at CardHeader in components/ui/card.tsx:18:10
+  at div in components/ui/card.tsx:7:5
+  at Card in components/ui/card.tsx:5:10
+  at div in components/section-cards.tsx:15:7
+  at SectionCards in components/section-cards.tsx:13:10
+
+</selected_element>`,
+  },
+  {
+    name: "Calendar Date Cell",
+    prompt:
+      "Find the selected date cell in the calendar component showing June 12",
+    expectedFile: "components/calendar-01.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button name="day" class="inline-flex items-centers ju..." role="gridcell" tabindex="0" aria-selected="true">
+  12
+</button>
+
+  at button in components/ui/calendar.tsx:29:7
+  at Calendar in components/ui/calendar.tsx:14:10
+  at Calendar01 in components/calendar-01.tsx:7:19
+
+</selected_element>`,
+  },
+  {
+    name: "Projects More Button",
+    prompt:
+      "Find the More button with horizontal dots icon at the bottom of the projects list",
+    expectedFile: "components/nav-projects.tsx",
+    reactGrabOutput: `<selected_element>
+
+<button data-sidebar="menu-button" class="peer/menu-button flex w-full ..." data-size="default" data-active="false">
+  (1 element)
+  More
+</button>
+
+  at button in components/ui/sidebar.tsx:515:5
+  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
+  at li in components/nav-projects.tsx:80:9
+  at SidebarMenuItem in components/ui/sidebar.tsx:467:5
+  at ul in components/nav-projects.tsx:42:7
+  at SidebarMenu in components/ui/sidebar.tsx:456:5
+  at SidebarGroup in components/ui/sidebar.tsx:387:5
+  at NavProjects in components/nav-projects.tsx:28:10
+
+</selected_element>`,
+  },
+];
+
+
+--- packages/benchmarks/vite.config.ts ---
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  publicDir: "public",
+  build: {
+    outDir: "dist",
+    rollupOptions: {
+      input: {
+        main: "./index.html",
+      },
+    },
+  },
+});
+
+
+--- packages/benchmarks/shadcn-dashboard/instrumentation-client.ts ---
+
+
+--- packages/benchmarks/shadcn-dashboard/next.config.ts ---
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+--- .changeset/README.md ---
+# Changesets
+
+Hello and welcome! This folder has been automatically generated by `@changesets/cli`, a build tool that works
+with multi-package repos, or single-package repos to help you version and publish your code. You can
+find the full documentation for it [in our repository](https://github.com/changesets/changesets)
+
+We have a quick list of common questions to get you started engaging with this project in
+[our documentation](https://github.com/changesets/changesets/blob/main/docs/common-questions.md)
+
+
+## Links discovered
+- [in our repository](https://github.com/changesets/changesets)
+- [our documentation](https://github.com/changesets/changesets/blob/main/docs/common-questions.md)
+
+--- AGENTS.md ---
+- MUST: We use @antfu/ni. Use `ni` to install, `nr SCRIPT_NAME` to run script, `nun` to uninstall package
+- MUST: Use TypeScript interfaces over types
+- MUST: Use arrow functions over function declarations
+- NEVER comment unless absolutely necessary.
+  - If it is a hack, such as a setTimeout or potentially confusing code, it should be prefixed with // HACK: reason for hack
+- MUST: Use kebab-case for files
+- MUST: Use descriptive names for variables (avoid shorthands, or 1-2 character names).
+  - Example: for .map(), you can use `innerX` instead of `x`
+  - Example: instead of `moved` use `didPositionChange`
+- MUST: Do not type cast ("as") unless absolutely necessary
+- MUST: Keep interfaces or types on the global scope.
+- MUST: Remove unused code and don't repeat yourself.
+
+
+--- README.md ---
+# <img src="https://github.com/aidenybai/react-grab/blob/main/.github/public/logo.png?raw=true" width="60" align="center" /> React Grab
+
+[![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)](https://bundlephobia.com/package/react-grab)
+[![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
+[![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
+
+React Grab allows you to select an element and copy its context (like HTML, React component, and file source)
+
+It makes tools like Cursor, Claude Code, Copilot run up to [**55% faster**](https://react-grab.com/blog/intro)
+
+### [Try out a demo! →](https://react-grab.com)
+
+![Demo](https://react-grab.com/demo.gif)
+
+## Install
+
+> [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
+
+Get started in 1 minute by adding this script tag to your app:
+
+```html
+<script
+  src="//www.react-grab.com/script.js"
+  crossorigin="anonymous"
+></script>
+```
+
+If you're using a React framework or build tool, view instructions below:
+
+#### Next.js (App router)
+
+Add this inside of your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {/* put this in the <head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {/* rest of your scripts go under */}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+#### Next.js (Pages router)
+
+Add this into your `pages/_document.tsx`:
+
+```jsx
+import { Html, Head, Main, NextScript } from "next/document";
+
+export default function Document() {
+  return (
+    <Html lang="en">
+      <Head>
+        {/* put this in the <Head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {/* rest of your scripts go under */}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
+}
+```
+
+#### Vite
+
+Your `index.html` could look like this:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <script type="module">
+      // first npm i react-grab
+      // then in head:
+      if (import.meta.env.DEV) {
+        import("react-grab");
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+#### Webpack
+
+First, install React Grab:
+
+```bash
+npm install react-grab
+```
+
+Then add this at the top of your main entry file (e.g., `src/index.tsx` or `src/main.tsx`):
+
+```tsx
+if (process.env.NODE_ENV === "development") {
+  import("react-grab");
+}
+```
+
+## Extending React Grab
+
+React Grab provides an public customization API. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options for extending React Grab.
+
+```typescript
+import { init } from "react-grab/core";
+
+const api = init({
+  theme: {
+    enabled: true, // disable all UI by setting to false
+    hue: 180, // shift colors by 180 degrees (pink → cyan/turquoise)
+    crosshair: {
+      enabled: false, // disable crosshair
+    },
+    elementLabel: {
+      // when hovering over an element
+      backgroundColor: "#000000",
+      textColor: "#ffffff",
+    },
+  },
+
+  onElementSelect: (element) => {
+    console.log("Selected:", element);
+  },
+  onCopySuccess: (elements, content) => {
+    console.log("Copied to clipboard:", content);
+  },
+  onStateChange: (state) => {
+    console.log("Active:", state.isActive);
+  },
+});
+
+api.activate();
+api.copyElement(document.querySelector(".my-element"));
+console.log(api.getState());
+```
+
+## Resources & Contributing Back
+
+Want to try it out? Check the [our demo](https://react-grab.com).
+
+Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
+
+Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
+
+Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
+
+We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
+
+[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+### License
+
+React Grab is MIT-licensed open-source software.
+
+
+## Links discovered
+- [![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)
+- [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)
+- [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)
+- [**55% faster**](https://react-grab.com/blog/intro)
+- [Try out a demo! →](https://react-grab.com)
+- [Demo](https://react-grab.com/demo.gif)
+- [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
+- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
+- [our demo](https://react-grab.com)
+- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Discord](https://discord.com/invite/G7zxfUzkm7)
+- [issue tracker](https://github.com/aidenybai/react-grab/issues)
+- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
+- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+--- packages/react-grab/README.md ---
+# <img src="https://github.com/aidenybai/react-grab/blob/main/.github/public/logo.png?raw=true" width="60" align="center" /> React Grab
+
+[![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)](https://bundlephobia.com/package/react-grab)
+[![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
+[![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
+
+React Grab allows you to select an element and copy its context (like HTML, React component, and file source)
+
+It makes tools like Cursor, Claude Code, Copilot run up to [**55% faster**](https://react-grab.com/blog/intro)
+
+### [Try out a demo! →](https://react-grab.com)
+
+![Demo](https://react-grab.com/demo.gif)
+
+## Install
+
+> [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
+
+Get started in 1 minute by adding this script tag to your app:
+
+```html
+<script
+  src="//unpkg.com/react-grab/dist/index.global.js"
+  crossorigin="anonymous"
+></script>
+```
+
+If you're using a React framework or build tool, view instructions below:
+
+#### Next.js (App router)
+
+Add this inside of your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {/* put this in the <head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {/* rest of your scripts go under */}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+#### Next.js (Pages router)
+
+Add this into your `pages/_document.tsx`:
+
+```jsx
+import { Html, Head, Main, NextScript } from "next/document";
+
+export default function Document() {
+  return (
+    <Html lang="en">
+      <Head>
+        {/* put this in the <Head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {/* rest of your scripts go under */}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
+}
+```
+
+#### Vite
+
+Your `index.html` could look like this:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <script type="module">
+      // first npm i react-grab
+      // then in head:
+      if (import.meta.env.DEV) {
+        import("react-grab");
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+#### Webpack
+
+First, install React Grab:
+
+```bash
+npm install react-grab
+```
+
+Then add this at the top of your main entry file (e.g., `src/index.tsx` or `src/main.tsx`):
+
+```tsx
+if (process.env.NODE_ENV === "development") {
+  import("react-grab");
+}
+```
+
+## Extending React Grab
+
+React Grab provides an public customization API. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options for extending React Grab.
+
+```typescript
+import { init } from "react-grab/core";
+
+const api = init({
+  theme: {
+    enabled: true, // disable all UI by setting to false
+    hue: 180, // shift colors by 180 degrees (pink → cyan/turquoise)
+    crosshair: {
+      enabled: false, // disable crosshair
+    },
+    elementLabel: {
+      // when hovering over an element
+      backgroundColor: "#000000",
+      textColor: "#ffffff",
+    },
+  },
+
+  onElementSelect: (element) => {
+    console.log("Selected:", element);
+  },
+  onCopySuccess: (elements, content) => {
+    console.log("Copied to clipboard:", content);
+  },
+  onStateChange: (state) => {
+    console.log("Active:", state.isActive);
+  },
+});
+
+api.activate();
+api.copyElement(document.querySelector(".my-element"));
+console.log(api.getState());
+```
+
+## Resources & Contributing Back
+
+Want to try it out? Check the [our demo](https://react-grab.com).
+
+Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
+
+Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
+
+Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
+
+We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
+
+[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+### License
+
+React Grab is MIT-licensed open-source software.
+
+
+## Links discovered
+- [![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)
+- [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)
+- [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)
+- [**55% faster**](https://react-grab.com/blog/intro)
+- [Try out a demo! →](https://react-grab.com)
+- [Demo](https://react-grab.com/demo.gif)
+- [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
+- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
+- [our demo](https://react-grab.com)
+- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Discord](https://discord.com/invite/G7zxfUzkm7)
+- [issue tracker](https://github.com/aidenybai/react-grab/issues)
+- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
+- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+--- packages/vite-playground/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script type="module">
+      if (import.meta.env.DEV) {
+        import("react-grab");
+      }
+    </script>
+
+    <title>Kitchen Sink - Vite</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- packages/react-grab/eslint.config.js ---
+import tseslint from "typescript-eslint";
+
+export default tseslint.config(
+  {
+    ignores: [
+      "node_modules/**",
+      "dist/**",
+      "eslint.config.mjs",
+      "bundled_*.mjs",
+      "*.mjs",
+      "*.cjs",
+      "*.js",
+      "*.json",
+      "*.md",
+    ],
+  },
+  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+    rules: {
+      "import/order": "off",
+    },
+  },
+);
+
+
+--- packages/next-playground/instrumentation-client.ts ---
+import "react-grab";
+
+
+--- packages/website/instrumentation-client.ts ---
+import { init } from "react-grab";
+
+if (typeof window !== "undefined") {
+  init({
+    onActivate: () => {
+      window.dispatchEvent(new CustomEvent("react-grab:activated"));
+    },
+    onDeactivate: () => {
+      window.dispatchEvent(new CustomEvent("react-grab:deactivated"));
+    },
+  });
+}
+
+
+--- packages/next-playground/next.config.ts ---
+import type { NextConfig } from 'next';
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
+--- packages/website/next.config.ts ---
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  serverExternalPackages: ["react-grab"],
+  // this causes sources to be mangled
+  reactCompiler: false,
+  productionBrowserSourceMaps: true,
+  turbopack: {},
+  webpack: (config, { dev, isServer }) => {
+    if (!isServer && !dev) {
+      config.devtool = "source-map";
+    }
+    return config;
+  },
+  redirects: async () => {
+    return [
+      {
+        source: "/benchmarks",
+        destination: "/blog/intro",
+        permanent: true,
+      },
+    ];
+  },
+  rewrites: async () => {
+    return {
+      beforeFiles: [
+        {
+          source: "/",
+          destination: "/llms.txt",
+          has: [
+            {
+              type: "header",
+              key: "accept",
+              value: "(.*)text/markdown(.*)",
+            },
+          ],
+        },
+        {
+          source: "/llm.txt",
+          destination: "/llms.txt",
+        },
+      ],
+    };
+  },
+};
+
+export default nextConfig;
+
+
+--- packages/react-grab/tsup.config.ts ---
+import fs from "node:fs";
+import { defineConfig, type Options } from "tsup";
+// @ts-expect-error -- esbuild-plugin-babel is not typed
+import babel from "esbuild-plugin-babel";
+
+const banner = `/**
+ * @license MIT
+ *
+ * Copyright (c) 2025 Aiden Bai
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */`;
+
+const DEFAULT_OPTIONS: Options = {
+  banner: {
+    js: banner,
+  },
+  clean: ["**/*", "!styles.css"],
+  dts: true,
+  entry: [],
+  env: {
+    NODE_ENV: process.env.NODE_ENV ?? "development",
+    VERSION:
+      process.env.VERSION ??
+      (JSON.parse(fs.readFileSync("package.json", "utf8")) as { version: string })
+        .version,
+  },
+  external: [],
+  format: [],
+  loader: {
+    ".css": "text",
+  },
+  minify: false,
+  noExternal: ["clsx", "tailwind-merge", "solid-js", "bippy"],
+  onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
+  outDir: "./dist",
+  platform: "browser",
+  sourcemap: false,
+  splitting: false,
+  target: "esnext",
+  treeshake: true,
+};
+
+export default defineConfig([
+  {
+    ...DEFAULT_OPTIONS,
+    entry: ["./src/index.ts"],
+    format: ["iife"],
+    globalName: "ReactGrab",
+    loader: {
+      ".css": "text",
+    },
+    minify: process.env.NODE_ENV === "production",
+    outDir: "./dist",
+    esbuildPlugins: [
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- babel is not typed
+      babel({
+        filter: /\.(tsx|jsx)$/,
+        config: {
+          presets: [
+            ["@babel/preset-typescript", { onlyRemoveTypeImports: true }],
+            "babel-preset-solid",
+          ],
+        },
+      }),
+    ],
+  },
+  {
+    ...DEFAULT_OPTIONS,
+    clean: false,
+    entry: ["./src/index.ts", "./src/core.tsx"],
+    format: ["cjs", "esm"],
+    loader: {
+      ".css": "text",
+    },
+    outDir: "./dist",
+    splitting: true,
+    esbuildPlugins: [
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- babel is not typed
+      babel({
+        filter: /\.(tsx|jsx)$/,
+        config: {
+          presets: [
+            ["@babel/preset-typescript", { onlyRemoveTypeImports: true }],
+            "babel-preset-solid",
+          ],
+        },
+      }),
+    ],
+  },
+]);
+
+
+--- packages/vite-playground/vite.config.ts ---
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+});
+
+
+--- packages/web-extension/vite.config.ts ---
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import webExtension from 'vite-plugin-web-extension';
+
+export default defineConfig({
+  plugins: [
+    react(),
+    webExtension({
+      manifest: './src/manifest.json',
+      watchFilePaths: ['src/**/*'],
+      browser: 'chrome',
+    }),
+  ],
+  resolve: {
+    alias: {
+      '@': '/src',
+    },
+  },
+  publicDir: 'public',
+});

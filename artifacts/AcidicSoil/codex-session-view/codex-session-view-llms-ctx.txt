@@ -1,0 +1,2791 @@
+<project title="Codex Session View" summary="Codex Session Viewer is designed to empower developers and AI engineers to deeply inspect, replay, and debug interactive user sessions with precision. By offering a rich timeline view, filtering capabilities, and AI-powered analysis (via the “Session Coach” module), it helps identify misalignments, track conversational context, and generate actionable remediation prompts. The tool supports session persistence, repo metadata grouping, and integrates with modern tooling like TanStack, shadcn/ui, and Browser Echo for robust client-side debugging.">**Remember:**
+- Session Replay
+- Timeline View
+- Event Filtering (ACTION, MUTATION, LOG)
+- Repo-aware Session Explorer
+- Chat Dock & Discovery Panel
+- Misalignment Detection & Remediation<docs><doc title="Avoid Useeffect Summary" desc="docs page.">
+Don’t fetch or derive app state in useEffect.
+
+1. Fetch on navigation via TanStack Router loaders (SSR + streaming). Optionally seed TanStack Query in the loader with queryClient.ensureQueryData. \[1]
+2. Do server work on the server via TanStack Start Server Functions; after mutations call router.invalidate() and/or queryClient.invalidateQueries(). \[2]
+3. Keep page/UI state in the URL with typed search params (validateSearch, Route.useSearch, navigate). \[3]
+4. Reserve useEffect for real external side-effects only (DOM, subscriptions, analytics). \[4]\[6]
+
+# If your useEffect was doing X → Use Y
+
+Fetching on mount/params change → route loader (+ ensureQueryData). \[1]
+Submitting/mutating → Server Function → invalidate router/queries. \[2]
+Syncing UI to querystring → typed search params + navigate. \[3]
+Derived state → compute during render (useMemo only if expensive). \[4]
+Subscribing to external stores → useSyncExternalStore. \[5]
+DOM/non-React widgets/listeners → small useEffect/useLayoutEffect. \[6]
+
+# Idiomatic patterns (names only, no boilerplate)
+
+Loader: queryClient.ensureQueryData(queryOptions({ queryKey, queryFn })) → useSuspenseQuery reads hydrated cache. \[1]
+Mutation: createServerFn(...).handler(...) → onSuccess: qc.invalidateQueries, router.invalidate. Supports <form action={serverFn.url}> for progressive enhancement. \[2]
+Search params as state: validateSearch → Route.useSearch → navigate({ search }). \[3]
+External store read: useSyncExternalStore(subscribe, getSnapshot). \[5]
+
+# Decision checklist
+
+Data needed at render → loader (defer/stream as needed). \[1]
+User changed data → Server Function → invalidate. \[2]
+Belongs in URL → typed search params. \[3]
+Purely derived → compute in render. \[4]
+External system only → useEffect/useLayoutEffect. \[6]
+SSR/SEO → loader-based fetching; configure streaming/deferred. \[7]
+
+# React 19 helpers
+
+useActionState for form pending/error/result (pairs with Server Functions or TanStack Form). \[8]
+use to suspend on promises (client or server). \[9]
+
+# Zustand in TanStack Start (where it fits)
+
+Use for client/UI/session and push-based domain state (theme, modals, wizards, optimistic UI, WebSocket buffers). Keep server data in loaders/Query.
+Per request store instance to avoid SSR leaks. Inject via Router context; provide with Wrap; dehydrate/hydrate via router.dehydrate/router.hydrate so snapshots stream with the page. After navigation resolution, clear transient UI (router.subscribe('onResolved', ...)).
+Mutations: do work in Server Function → optionally update store optimistically → router.invalidate to reconcile with loader data.
+Add persist middleware only for client/session state; avoid touching storage during SSR.
+Use atomic selectors (useStore(s => slice)) and equality helpers to limit re-renders.
+
+Docs map: \[1] Router data loading, \[2] Server Functions, \[3] Search Params, \[4] You Might Not Need an Effect, \[5] useSyncExternalStore, \[6] Synchronizing with Effects, \[7] SSR, \[8] useActionState, \[9] use.</doc><doc title="Failing Test Context Help" desc="docs page.">* Affected files:
+
+  * tests/SessionList.test.tsx: all 6 tests fail with “Maximum update depth exceeded”
+  * tests/DiscoveryPanel.test.tsx: both tests fail with the same error
+  * src/components/viewer/session-list/useSessionExplorerModel.ts: creates an unstable `currentSearch` fallback (`?? {}`) and has an effect that unconditionally calls `setExpandedGroupIds`, which can form a render→effect→state-update loop
+  * src/components/viewer/SessionList.tsx: renders based on `useSessionExplorerModel`; also calls `onFiltersRender(filterToolbarNode)` in an effect, which can amplify churn if the toolbar node changes every render
+  * src/components/viewer/DiscoveryPanel.tsx: thin wrapper around `SessionList`, so it inherits the loop
+  * src/features/viewer/sessionExplorer.search: parse/apply helpers determine how “empty search” is represented; `useSessionExplorerModel` passes an object even when search is absent, so referential stability matters
+
+* Root cause:
+
+  * `useSessionExplorerModel` sets `currentSearch` to `(locationState?.search ?? {})`. When `locationState.search` is `undefined` (common in unit-test router setups), that `{}`
+    is a new object every render .
+  * Because `filters` is memoized on `[currentSearch]`, a new `{}` forces a new `filters` object each render . That in turn causes `filteredGroups` to be recomputed, which retriggers the “prune expanded groups” effect.
+  * The prune effect always calls `setExpandedGroupIds((current) => current.filter(...))` without checking if the result is identical; `[].filter(...)` returns a new array reference, so React treats it as a state change and re-renders, repeating indefinitely .
+  * The thrown stack points into Radix ref composition because the loop forces repeated mount/update cycles through Radix-based UI used in the filters/sheet path; the ref callback is where React detects the nested update depth .
+  * Environmental factor: React 19 + current Radix packages are in the failing stack, but they are not the primary cause; they are where the infinite updates surface .
+
+* Proposed fix:
+
+  * Steps/patch outline:
+
+    1. Make the “empty search” fallback referentially stable in `useSessionExplorerModel`.
+
+       * Add a module-level constant:
+
+         * `const EMPTY_SEARCH: Record<string, unknown> = {}`
+       * Replace:
+
+         * `const currentSearch = (locationState?.search as Record<string, unknown> | undefined) ?? {}`
+       * With:
+
+         * `const currentSearch = (locationState?.search as Record<string, unknown> | undefined) ?? EMPTY_SEARCH`
+
+    2. Make the expanded-group pruning effect a no-op when it would not change state.
+
+       * Replace:
+
+         * `setExpandedGroupIds((current) => current.filter((id) => visibleIds.has(id)));`
+       * With a guarded setter:
+
+         * compute `next = current.filter(...)`
+         * if `next.length === current.length` and every element matches, return `current`; else return `next`
+
+    3. Optional hardening (not required to stop the loop, but prevents extra churn when `onFiltersRender` is used):
+
+       * Split `SessionList`’s `onFiltersRender(null)` cleanup so it only runs on unmount, not on every toolbar-node update (current effect cleanup runs before re-run) .
+  * Side effects:
+
+    * State pruning still works, but no longer triggers redundant renders when the pruned list is identical.
+    * `currentSearch` is treated as immutable; code must not mutate it (same expectation as before).
+  * Tests:
+
+    * Existing failing tests in `tests/SessionList.test.tsx` and `tests/DiscoveryPanel.test.tsx` should pass once the infinite loop is removed .
+    * Add a regression test that renders `SessionList` with a router location where `search` is `undefined` and asserts render completes without throwing (this specifically covers the `?? {}` trap in `useSessionExplorerModel`) .
+    * Add a regression test that ensures the “prune expanded groups” effect does not update state when `expandedGroupIds` is already consistent with `filteredGroups` (covers the unconditional `filter()` state update) .
+
+* Documentation gaps:
+
+  * AGENTS.md (add a short rule under “Search params as state”): avoid `?? {}` (or other object literals) in render when the value is used as a dependency; use a shared constant to preserve referential stability .
+  * Viewer/session explorer internal docs (create a short section near the search-param helpers): “`location.search` may be undefined; treat empty search as a stable constant; never trigger state updates in effects unless the next state differs.” This aligns with the existing guidance to avoid effect-driven derived-state loops
+
+* Open questions/assumptions:
+
+  * Assumption: in the test router setup, `locationState.search` is `undefined` (or otherwise unstable), triggering the `?? {}` allocation path .
+  * Assumption: no code mutates `locationState.search` or the empty-search fallback; the fix relies on immutability conventions.</doc><doc title="Session Export" desc="docs page."># Session Export Feature
+
+The Session Inspector now supports granular data exports directly from the timeline header. Click **Export** to open the modal and choose:
+
+- **Scope** – Entire session, current filter view, selected range (based on timeline range controls), or the last selected event.
+- **Formats** – Markdown (`.md`), JSON (`.json`), CSV (`.csv`), or plaintext (`.txt`).
+- **Options** – Opt in to timestamps or hidden metadata (IDs, diagnostic fields); secrets such as session instructions stay redacted.
+
+Downloads are generated client-side from the parsed session data and use filenames like `session-range-partial-20251213-153000.md`. JSON exports include `metadata.schemaVersion`, `metadata.scope`, and `metadata.isPartial` so future importers can distinguish partial vs full session snapshots.</doc><doc title="Tanstack Rc1 Upgrade Guide" desc="docs page."># TanStack Start RC1 Upgrade Guide
+
+This guide captures the mandatory changes and local patches we applied while upgrading the project to TanStack Start RC1 (router v1.132.x).
+
+## Platform Requirements
+
+- Node.js **>= 22.12** (enforced via `package.json` / engines).
+- Vite **>= 7**. Install `@vitejs/plugin-react` (or the matching framework plugin) manually; the Start plugin no longer autoconfigures React/Solid.
+
+## Vite Configuration
+
+- `tanstackStart()` options renamed:
+  - `tsr` → `router` for the virtual route config.
+  - `srcDirectory` moved to the top level of the plugin options.
+- Wrap `defineConfig` with a factory and call `loadEnv(mode, process.cwd(), '')`, then `Object.assign(process.env, ...)`. This restores the pre-RC behaviour where all `.env` keys are exposed (RC1 regression currently filters out non-`VITE_` prefixes).
+- Ensure `tanstackStart()` is registered **before** `viteReact()` in the plugin array. The RC1 router plugin throws if React runs first.
+- Continue including `viteReact()`, `tailwindcss()`, and other project plugins explicitly.
+
+## Router Entry
+
+- `createRouter` export renamed to `getRouter`. Update module augmentation to reference `ReturnType<typeof getRouter>`.
+- Initialising any browser-only tooling (like Browser Echo) should be wrapped in `if (typeof window !== 'undefined')` to keep SSR builds safe.
+- Route tree generation now emits the module declaration automatically; remove any manual declarations in `routeTree.gen.ts`.
+
+## Server Functions & Helpers
+
+- `.validator()` → `.inputValidator()`.
+- `getWebRequest` → `getRequest`, `getHeaders` → `getRequestHeaders`, etc. Apply the full set of renames listed in `docs/tasks/03-upgrade-tanstack-rc1.md`.
+- Response modes were removed—return a `Response` directly when needed.
+- Keep shared types (e.g. `Theme`) exported from server modules so route loaders and components can import them without circular dependencies.
+- Filesystem discovery (sessions, repo metadata, etc.) should live entirely inside `createServerFn` handlers. Route loaders call the server fn, return the snapshot, and never import Node `fs` or `path` directly. UI filters/search/expand state stays in client components so loader revalidations never refetch purely because of display interactions.
+
+## API Routes
+
+- Replace `createServerFileRoute` with `createFileRoute` and wrap server handlers inside `server: { handlers: { ... } }`.
+
+## Global Middleware
+
+- `registerGlobalMiddleware` was removed. Create `src/start.ts` and export `startInstance = createStart(async () => ({ ... }))`, registering request/function middleware there.
+- Harden `src/utils/loggingMiddleware.tsx`: drop the `{ type: 'function' }` option and guard every context read before logging timings so RC1's reordered execution doesn't crash the client.
+
+## Client Entry
+
+- Import `StartClient` from `@tanstack/react-start/client` and render `<StartClient />` without the router prop.
+- Add `src/entry-client.tsx` that hydrates `<StartClient />` via `startTransition()` and `StrictMode`.
+
+## Known Regressions / Local Patches
+
+- **Env loading**: Add the `loadEnv(..., '', )` workaround in `vite.config.ts` until the upstream fix lands.
+- **Logging middleware**: Use the guarded implementation noted above; RC1 sometimes runs the server middleware before the client context exists.
+- **Root Route Devtools**: Mount `<ReactQueryDevtools />` and `<TanStackRouterDevtools />` behind `import.meta.env.DEV`, and ensure the root route imports any loader types it returns.
+
+## Validation Steps
+
+- Rebuild after changes: `pnpm vite build` (confirms route tree generation and SSR build succeed).
+- Verify the dev server launches without env validation errors or blank screens.</doc><doc title="Agent Instruction File Format Guide" desc="docs page."># **Agent Instruction File Format Guide**
+
+The Session Coach and Chatbot parse .md files throughout the repository (e.g., AGENTS.md, .ruler/\*.md) to understand project-specific constraints and guidelines.
+
+## **File Discovery**
+
+The system automatically scans for files matching these patterns:
+
+* \*\*/AGENTS.md
+* \*\*/.ruler/\*.md
+* \*\*/.cursor/rules/\*.md
+
+## **Structure Requirements**
+
+The parser expects standard Markdown. Each **Heading** (H1-H6) creates a distinct rule. The content immediately following the heading becomes the rule's description.
+
+### **Basic Syntax**
+
+\# Rule Title (Brief & Actionable)
+
+A short summary paragraph describing the rule. This is used to match the rule against conversation context.
+
+\- Specific requirement or constraint (bullet point)
+\- Another detailed instruction
+\- Exceptions to the rule
+
+### **Severity Inference**
+
+The system automatically assigns a severity level (High, Medium, Low, or Info) based on keywords detected in the heading or body text.
+
+| Severity | Keywords to Use | Visual Indicator |
+| :---- | :---- | :---- |
+| **High** | MUST NOT, NEVER, DO NOT, CRITICAL | Red / Error |
+| **Medium** | AVOID, SHOULD NOT, WARN, CAUTION | Orange / Warning |
+| **Low** | PREFER, CONSIDER, OPTIONAL | Blue / Info |
+| **Info** | (Default if no keywords found) | Gray |
+
+## **Examples**
+
+### **1\. High Severity Rule (Critical)**
+
+Use strong negation language to flag this as a critical constraint.
+
+\# Never Commit Secrets to Source Control
+
+Do not hardcode API keys, passwords, or tokens in the codebase. Use environment variables.
+
+\- Detects patterns like \`const apiKey \= "sk-..."\`
+\- Applies to \`.env\` files committed to git
+
+### **2\. Medium Severity Rule (Best Practice)**
+
+Use "Avoid" or "Should" to denote architectural preferences.
+
+\# Avoid useEffect for Data Fetching
+
+Data fetching should occur in Loaders or Server Functions, not inside \`useEffect\`.
+
+\- Prevents waterfalls
+\- Ensures hydration compatibility
+
+### **3\. Grouping Rules**
+
+You can group related rules in a single file using multiple headings.
+
+**File:** src/features/auth/AGENTS.md
+
+\# Auth Pattern Guidelines
+
+\#\# Prefer Server-Side Validation
+Validation must happen in \`zod\` schemas on the server, not just client-side forms.
+
+\#\# Avoid LocalStorage for Session Tokens
+Do not store sensitive JWTs in \`localStorage\`. Use \`httpOnly\` cookies.
+
+## **Parsing Logic Details**
+
+1. **Headings:** Regex ^(\#{1,6})\\s+(.+)$ is used to split the file into sections.
+2. **Bullets:** Lines starting with \-, \*, or \+ are extracted as specific sub-constraints.
+3. **Keywords:** The parser generates search keywords from the heading and bullet points to improve retrieval relevance during chat sessions.</doc><doc title="Canary Check" desc="docs page."># The Purple Elephant Directive
+
+All responses must include the phrase "Purple Elephant" to confirm project alignment.
+
+- This is a sanity check rule.
+- It has High severity.</doc><doc title="New Integrating Openai Agents Js" desc="docs page.">## You asked:
+
+package.json
+
+File
+
+src.md
+
+File
+
+README.md
+
+File
+
+How can I wire in and utilize the openai-agents-js framework with my existing providers for my app ? `https://github.com/AcidicSoil/codex-session-view` `https://github.com/openai/openai-agents-js/tree/main/examples/model-providers` `https://github.com/openai/openai-agents-js/tree/main/examples` I want to utilize the new tanstack ai framework as well so keep that in mind.
+
+---
+
+## ChatGPT Replied:
+
+Looked for available tools
+
+Thought for 6s
+
+Called tool
+
+Called tool
+
+Thought for 1m 3s
+
+Use AI SDK as the shared provider layer, put TanStack AI on the UI + app-chat path, and embed OpenAI Agents as a server-side orchestration layer that reuses the same providers through the Agents AI SDK adapter. This matches your dependency set and architecture direction in this repo.
+
+package
+
+README
+
+[OpenAI GitHub](https://openai.github.io/openai-agents-js/extensions/ai-sdk?utm_source=chatgpt.com) [TanStack](https://tanstack.com/ai/latest/docs/getting-started/overview?utm_source=chatgpt.com)
+
+Target architecture
+-------------------
+
+1.  **Providers (single source of truth)**
+    
+
+*   Keep your existing Vercel AI SDK providers:
+    
+    *   `@ai-sdk/openai-compatible` (LM Studio style endpoints),
+        
+    *   `@ai-sdk/google`,
+        
+    *   `ai-sdk-provider-codex-cli`,
+        
+    *   `ai-sdk-provider-gemini-cli`,
+        
+    *   plus anything else you already mount.
+        
+        package
+        
+*   The OpenAI Agents SDK can consume these via `@openai/agents-extensions` `aisdk()` adapter. This adapter supports AI SDK v5 provider v2 modules. [OpenAI GitHub](https://openai.github.io/openai-agents-js/extensions/ai-sdk?utm_source=chatgpt.com)
+    
+
+2.  **Interactive app chat**
+    
+
+*   Use **TanStack AI** for ChatDock-style experiences:
+    
+    *   `@tanstack/ai` core,
+        
+    *   `@tanstack/ai-react` hooks,
+        
+    *   `@tanstack/ai-openai` or custom adapters as needed.
+        
+        package
+        
+        [TanStack+1](https://tanstack.com/ai?utm_source=chatgpt.com)
+        
+*   Keep provider-specific code out of components and route through unified chat engines/tools, aligning with your local AI rules.
+    
+    src
+    
+
+3.  **Agentic/multi-step workflows**
+    
+
+*   Use **openai-agents-js** on the server for:
+    
+    *   multi-agent handoffs,
+        
+    *   guardrails,
+        
+    *   resumable runs,
+        
+    *   tracing,
+        
+    *   voice/realtime if you add it later. [GitHub+1](https://github.com/openai/openai-agents-js?utm_source=chatgpt.com)
+        
+*   Expose these workflows to TanStack AI as **server tools**.
+    
+
+This gives one provider layer, two execution surfaces:
+
+*   TanStack AI = “chat UI + tool-first app logic”
+    
+*   OpenAI Agents = “orchestration engine invoked by tools”
+    
+
+Concrete wiring steps
+---------------------
+
+### 1) Add Agents packages
+
+    pnpm add @openai/agents @openai/agents-extensions
+    
+
+### 2) Create a model factory that wraps your existing AI SDK providers
+
+Create `src/ai/providers/agentsModels.server.ts`:
+
+    import { aisdk } from "@openai/agents-extensions";
+    
+    // Example imports — adjust to your actual provider entrypoints:
+    import { openaiCompatible } from "@ai-sdk/openai-compatible";
+    import { google } from "@ai-sdk/google";
+    // import { codexCli } from "ai-sdk-provider-codex-cli";
+    // import { geminiCli } from "ai-sdk-provider-gemini-cli";
+    
+    const lmstudio = openaiCompatible({
+      baseURL: process.env.AI_LMSTUDIO_BASE_URL!,
+      // headers/auth if required by your local setup
+    });
+    
+    export function getAgentsModel(modelId: string) {
+      // Route by prefix or env config used by your app
+      if (modelId.startsWith("lmstudio:")) {
+        const name = modelId.replace("lmstudio:", "");
+        return aisdk(lmstudio(name));
+      }
+    
+      if (modelId.startsWith("google:")) {
+        const name = modelId.replace("google:", "");
+        return aisdk(google(name));
+      }
+    
+      // Add codex-cli, gemini-cli, etc. similarly
+    
+      // Default fallback
+      return aisdk(lmstudio("local-default"));
+    }
+    
+
+This reuses your existing provider strategy referenced in README and scripts.
+
+README
+
+package
+
+[OpenAI GitHub](https://openai.github.io/openai-agents-js/extensions/ai-sdk?utm_source=chatgpt.com)
+
+### 3) Build an Agents-backed server function for complex analyses
+
+Create `src/server/agents/runSessionCoach.server.ts`:
+
+    import { Agent, run } from "@openai/agents";
+    import { z } from "zod";
+    import { getAgentsModel } from "~/ai/providers/agentsModels.server";
+    
+    export const SessionSummarySchema = z.object({
+      goals: z.array(z.string()),
+      mainChanges: z.array(z.string()),
+      issues: z.array(z.string()),
+      followUps: z.array(z.string()),
+    });
+    
+    export async function runSessionSummaryAgent(input: {
+      modelId: string;
+      sessionJson: unknown;
+    }) {
+      const model = getAgentsModel(input.modelId);
+    
+      const agent = new Agent({
+        name: "Session Coach - Summary",
+        instructions:
+          "Analyze the session JSON and produce a structured summary.",
+        model,
+        outputType: SessionSummarySchema, // Agents supports schema-validated outputs
+      });
+    
+      const result = await run(agent, JSON.stringify(input.sessionJson));
+      return result.finalOutput;
+    }
+    
+
+Agents supports structured outputs, tool-calling, guardrails, and tracing out of the box. [GitHub+1](https://github.com/openai/openai-agents-js?utm_source=chatgpt.com)
+
+### 4) Expose that as a TanStack AI server tool
+
+Create `src/ai/tools/sessionCoach.server.ts`:
+
+    import { toolDefinition } from "@tanstack/ai";
+    import { z } from "zod";
+    import { runSessionSummaryAgent } from "~/server/agents/runSessionCoach.server";
+    
+    export const sessionSummaryTool = toolDefinition({
+      name: "session_summary",
+      description: "Generate a structured summary of a Codex session JSON.",
+      inputSchema: z.object({
+        modelId: z.string(),
+        sessionJson: z.unknown(),
+      }),
+      outputSchema: z.object({
+        goals: z.array(z.string()),
+        mainChanges: z.array(z.string()),
+        issues: z.array(z.string()),
+        followUps: z.array(z.string()),
+      }),
+    }).server(async ({ input }) => {
+      return await runSessionSummaryAgent(input);
+    });
+    
+
+This follows your local rule set: tools hold side effects and business logic; UI stays provider-agnostic.
+
+src
+
+[TanStack+1](https://tanstack.com/ai/latest/docs/getting-started/overview?utm_source=chatgpt.com)
+
+### 5) Wire TanStack AI chat route to include this tool
+
+In your server chat handler (e.g., `/api/chatbot/stream` equivalent), use TanStack AI’s `chat` with tools:
+
+    import { chat } from "@tanstack/ai";
+    import { openai } from "@tanstack/ai-openai";
+    import { sessionSummaryTool } from "~/ai/tools/sessionCoach.server";
+    
+    const adapter = openai({
+      apiKey: process.env.OPENAI_API_KEY,
+      // Or point at an OpenAI-compatible baseURL if your adapter supports it
+    });
+    
+    export function streamChat(messages: any[], model = "gpt-5") {
+      return chat({
+        adapter,
+        model,
+        messages,
+        tools: [sessionSummaryTool],
+        agentLoopStrategy: "maxIterations(3)", // use the exact API from your current TanStack AI version
+      });
+    }
+    
+
+TanStack AI provides type-safe tools, automatic execution, and streaming across providers. [TanStack+2TanStack+2](https://tanstack.com/ai?utm_source=chatgpt.com)
+
+### 6) Keep your existing ChatDock UX unchanged
+
+*   Replace any direct provider calls inside ChatDock-related code with TanStack AI `useChat` + your server transport.
+    
+*   Use the tool results to fill the existing Summary/Commits panels described in your README.
+    
+    README
+    
+    src
+    
+
+Provider-unification outcome
+----------------------------
+
+After this wiring:
+
+*   **One configuration surface** for models:
+    
+    *   Your existing environment-driven model IDs (`AI_SESSION_DEFAULT_MODEL`, etc.).
+        
+        README
+        
+*   **Two execution engines consuming the same providers**:
+    
+    *   TanStack AI for interactive chat.
+        
+    *   OpenAI Agents for multi-agent/guardrail-heavy tasks invoked by tools, using AI SDK adapter. [OpenAI GitHub+1](https://openai.github.io/openai-agents-js/extensions/ai-sdk?utm_source=chatgpt.com)
+        
+
+Practical placement in this repo
+--------------------------------
+
+Add folders:
+
+    src/ai/
+      providers/
+        agentsModels.server.ts
+      tools/
+        sessionCoach.server.ts
+    
+    src/server/
+      agents/
+        runSessionCoach.server.ts
+    
+
+Keep this boundary:
+
+*   Components import only TanStack AI hooks/types.
+    
+*   Providers and Agents stay server-only.
+    
+*   No secrets in client bundles.
+    
+    src
+    
+
+Version reality check
+---------------------
+
+*   Your `@tanstack/ai*` packages are at `^0.0.1`, labeled alpha in upstream docs. Expect API churn.
+    
+    package
+    
+    [TanStack+1](https://tanstack.com/ai?utm_source=chatgpt.com)
+    
+*   The Agents AI SDK adapter is beta. Expect edge cases with smaller providers. [OpenAI GitHub](https://openai.github.io/openai-agents-js/extensions/ai-sdk?utm_source=chatgpt.com)
+
+---
+</doc><doc title="Viewer Architecture" desc="core concept."># Viewer Architecture & Implementation Notes
+
+This document captures the technical details that would otherwise bloat the top-level README. It covers how the viewer route is composed, what guarantees the virtualized timeline provides, and the configuration heuristics that keep uploads organized.
+
+## Route + Loader Flow
+
+- `src/routes/(site)/viewer/index.tsx` renders `ViewerPage`, which is backed by `src/features/viewer/viewer.loader.ts`.
+- The loader calls a dedicated server function that performs filesystem discovery before render. Because the loader ignores client search params, every revalidation always re-hits the server function and never discards the discovered sessions.
+- Repo/branch grouping, search text, size ranges, ASC/DESC toggles, and expand state all live in client state inside `DiscoverySection`, ensuring instant, in-memory filtering without retriggering the loader.
+- When `SESSION_COACH_ENABLED` resolves truthy (default: `true` for dev, `false` for prod), the loader also calls `fetchChatbotState` so the viewer hydrates with the latest `{ sessionId, chat history, misalignments, context sections }`. Because this rides through a TanStack Start server function, the client never runs manual `fetch` calls in `useEffect`.
+
+## Session Coach Chatbot
+
+- **Models & persistence**: Shared types live in `src/lib/sessions/model.ts`. `chat-messages` and `misalignments` TanStack DB collections (under `src/server/persistence`) keep per-session, per-mode chat turns and status transitions scoped to the current process, mirroring the existing todos/session upload stores.
+- **AI pipeline**: `src/lib/ai/client.ts` centralizes provider limits + prompt helpers; `features/chatbot/context-builder.ts` builds trimmed prompt sections, while `misalignment-detector.ts` heuristically tags rules parsed from `src/lib/agents-rules/parser.ts`. Fixture snapshots live in `tests/fixtures/` for regression tests/token budgeting.
+- **APIs**: `src/server/chatbot-api.server.ts` powers `POST /api/chatbot/stream` (streaming session mode) and `POST /api/chatbot/analyze` (summary/commit pop-outs). Non-session modes short-circuit with `{ code: 'MODE_NOT_ENABLED' }`. Misalignment status mutations use `createServerFn` via `src/server/function/misalignments.ts`.
+- **Hookify gate**: Every "Add to chat" action now calls `hookifyAddToChat` (`src/server/function/hookifyAddToChat.ts`), which evaluates the prompt against AGENT rules via `hookifyRuntime` and persists the decision in the `hookify-decisions` collection. High/critical hits block the action and surface the brutalist Hook Gate UI, while lower severities inject markdown annotations ahead of the prompt so Session Coach always sees the warnings.
+- **Viewer integration**: `viewer.loader.ts` now returns `{ ...snapshot, sessionId, sessionCoach }`. `ViewerPage` swaps the legacy `ChatDock` for `components/chatbot/ChatDockPanel`, which renders persisted chat history, inline streaming, summary/commit buttons, and acknowledgement/dismissal controls without any client-side fetching in `useEffect`.
+- **Feature flag**: `src/config/features.ts` reads `SESSION_COACH_ENABLED` with sane defaults (true locally, false in prod unless overridden). When disabled, `ChatDockPanel` falls back to the classic placeholder UI so no UX surface disappears.
+
+## Virtualized Timeline Invariants
+
+- `TimelineView` precomputes cumulative offsets from measured row heights. The first rendered item must be the last offset less than or equal to the viewport’s top; otherwise tall rows disappear mid-scroll. The helper `findLastOffsetBeforeOrEqual` enforces that rule for both the start and end indices.
+- Measurements come from `Row`’s `useLayoutEffect`. Estimated heights only seed the offsets until a row is measured—don’t rely on them for logic.
+- Programmatic scrolls (`scrollToIndex`) jump directly to the measured offset, so keep offsets up to date if you introduce new animations or height adjustments.
+- Timeline numbering (the `#N — …` prefix) always reflects the event’s original chronological position, even when filters hide intermediate events or the UI toggles into descending order. The numbering metadata is derived once from the raw event stream and shared with the virtualized list so re-sorting never re-labels entries.
+
+## Timeline Range & Command Filters
+
+- `TimelineRangeControls` (`src/components/viewer/TimelineRangeControls.tsx`) owns the dual numeric inputs + slider. Inputs clamp to `[0, totalEvents - 1]`, automatically swap if a user enters values out of order, and keep the “Showing N of M events” summary in sync with router search params via `applyViewerSearchUpdates`.
+- Command families live in `src/lib/session-events/toolMetadata.ts` as declarative metadata (id, regex pattern, category, hint). `ToolCommandFilter` renders them through the taki-ui combobox so analysts can pick any number of families *or* type ad-hoc substrings in the same control. Selections sync to `timelinePreferences.commandFilter`, persist via `useUiSettingsStore`, and hydrate from the `cmd/cmdQ` URL params during navigation.
+- Badges on each timeline event call `buildEventBadges`, ensuring the newly parsed `commandToken` + first file path always surface directly on the collapsed card face so there’s no mismatch between the filters and what users read in the list.
+
+## Search Highlighting Defaults
+
+- Both the timeline (`AnimatedTimelineList`) and the session explorer (`SessionList`) now parse the search box text into tokens or regex literals, require every matcher to hit, and share the same `HighlightedText` wrapper for rendering matches.
+- Highlight spans are rendered inline via `<mark>` with MagicUI-inspired styling to keep accessibility intact while avoiding hydration flicker; `findHighlightRanges` enforces limits so virtualized lists keep scrolling under 5 ms.
+- When we eventually add a user-facing settings surface, expose a toggle that pipes through to `HighlightedText` so advanced users can disable the markup without touching the filter semantics.
+
+## Session Explorer Filters & URL Sync
+
+- Session Explorer filters still live entirely in router search params. `src/features/viewer/sessionExplorer.search.ts` parses/stringifies them so reloads, tab shares, and navigation rehydrate the exact state without extra loaders or client `fetch` calls.
+- Namespaced param keys (all prefixed with `sx`) now focus on the four surviving categories:
+  - `sxSearch` (text query), `sxSort` + `sxSortDir` (field/direction).
+  - `sxSizeMin`, `sxSizeMinUnit`, `sxSizeMax`, `sxSizeMaxUnit` for the MB inputs (units default to `MB` but still parse legacy `KB` values).
+  - `sxTsFrom`, `sxTsTo` (ISO `datetime-local` strings) and `sxRecency` (`all`, `24h`, `7d`, `30d`).
+- Deprecated facets (`sxSources`, `sxBranches`, `sxTags`) have been removed end-to-end from state, URL params, and persistence. Upload workflows now keep search state untouched instead of forcing a “source=upload” filter.
+- `useSessionExplorerModel` mirrors parsed filters into `useUiSettingsStore` for persistence, warns when the user enters invalid ranges, and exposes helpers for badge clearing/resetting without any `useEffect` fetching.
+- The Filters UI is now a Cult UI `FamilyDrawer` with a root navigation view (summaries + Reset/Apply buttons) and four dedicated child views (Sort Order, Recency, Size Range, Timestamp Range). Each child renders just its controls, uses `useFamilyDrawer` to handle Back navigation, and mutates router-backed state via `updateFilter`, keeping the main layout focused on the session list.
+
+## Session Metadata Heuristics
+
+To group sessions correctly, the viewer looks for repository info in this order:
+
+1. `repository_url` or `repo_url` field on the session meta line.
+2. `git.repo` / `git.remote` from the captured session header.
+3. `repoLabel` (if provided by your capture tooling).
+4. The parent folder of `cwd` (e.g., `/path/to/<repo>/src` → `<repo>`).
+
+If none of those exist, the session is grouped under **Unknown repo**. To avoid fallback heuristics, update your capture pipeline to emit `repository_url` or `repoLabel` in the first line of each session file.
+
+## UI Toolkit & Configuration Notes
+
+- **shadcn/ui**: use `npx shadcn@latest add <component>` to pull in primitives (e.g., button, card, input). Components live under `src/components/kibo-ui/` to match existing conventions.
+- **Tailwind CSS v4**: configured via `app.config.ts`; global styles live in `src/app/styles/`. Treat it as CSS-first—utility classes come directly from Tailwind’s new compiler.
+- **TypeScript**: Route files must be `.tsx`. Aliases: `@` resolves to the repo root and `~` resolves to `./src`, matching the TanStack Start defaults.
+
+Keeping these details collected here prevents the README from drifting into implementation minutiae while still giving contributors a single reference for deeper technical context.</doc><doc title="01 Chat Dock Session Intelligence Regressions" desc="docs page.">Context
+
+* Chat Dock workflows regress: Add to Chat only seeds Session Coach, tabs lose active session context, and chat history sometimes vanishes or resurrects after tab changes.
+* Instruction Source, rule selection, and layout remain fixed-width/hardcoded, so cross-repo sessions display the wrong guidance and long chats truncate.
+* Session Intelligence crashes with `Unexpected 'className' prop`, and related surfaces (Logger route) lack scroll bounds, signaling deeper renderer/state coupling issues.
+
+Success criteria
+
+* General and Session Coach share the same active session/event context, persist it through tab switches, and mirror indicators + rule sources for any repo.
+* Chat history renders immediately for loaded threads, maintains chronological ordering with repeatable IDs, and new/cleared chats behave deterministically.
+* Session Intelligence Summary + Hook Discovery run without error boundaries, showing rendered output; Logger route log view stays scrollable without page growth.
+* Layout accommodates long chat content while keeping Instruction Source accessible via responsive or collapsible UI.
+
+Deliverables
+
+* Shared session/event context model plus updated Add to Chat handlers, tab containers, and Instruction Source wiring.
+* Deterministic chat thread lifecycle (new/clear/history side panel) with persistence aligned to product storage.
+* Refined chat/message renderer enforcing chronological ordering and immediate hydration-safe rendering.
+* Session Intelligence renderer fix (className issue), plus Logger route scroll container adjustments.
+* Automated test coverage: store/message unit tests and end-to-end coverage for Add to Chat, tab switching, Session Intelligence, and Logger interactions.
+
+Approach
+
+1. **Discovery:** Trace current Chat Dock architecture (stores, routes, Instruction Source, Session Intelligence, Logger) to document ownership boundaries and existing persistence.
+2. **Shared context model:** Define a single source of truth (session id, repo id, event ids, label) and refactor Add to Chat + tab entry points to read/write it, ensuring hydration-safe storage (e.g., TanStack DB collection or Zustand slice above the tabs).
+3. **Tab + history stabilization:** Decouple tab views from context/thread stores, implement explicit New/Clear/History flows, and guarantee switching tabs never mutates thread history unless user action demands it.
+4. **Message rendering + layout:** Normalize/sort messages on ingestion, audit virtualization/suspense triggers for immediate render, and rework Chat Dock layout so chat pane flexes while Instruction Source becomes collapsible or header-mounted.
+5. **Repo-aware Instruction Source:** Replace hardcoded rule data with lookups based on active context repo; invalidate on context change and show active repo indicators.
+6. **Session Intelligence + Logger fixes:** Identify renderer violating `className` contract, wrap or adjust component to accept props safely, and bound Logger logs in a scrollable container with pagination/backpressure if volume is high.
+7. **Validation:** Write regression unit tests covering the shared context store, message ordering helpers, and renderer props; add Playwright cases for Add to Chat, tab switching, Session Intelligence, Logger, and chat history persistence.
+
+Risks / unknowns
+
+* Unknown persistence strategy (server vs client) for chat history may constrain history panel scope and requires confirmation.
+* Session Intelligence crash root cause might live in an external shared renderer or dependency, possibly necessitating broader upgrades.
+* Ensuring deterministic ordering may require backend timestamps; if missing, a monotonic sequence generator must be added without breaking existing data.
+
+Testing & validation
+
+* Unit: shared context store transitions, message normalization/sorting, history lifecycle reducers, Session Intelligence renderer props.
+* Component/integration: Chat Dock tabs displaying identical context indicators, Instruction Source repo switch rendering, Session Intelligence output rendering, Logger scroll container.
+* E2E (Playwright): Add to Chat from Session Explorer and Timeline Inspector, repeated tab switching without context loss, chat history new/clear/resume, Session Intelligence Summary/Hook Discovery runs, Logger scroll behavior under large log volume.
+
+Rollback / escape hatch
+
+* Feature-flag the new shared context/history model and Instruction Source UI so the legacy behavior can be restored quickly if regressions appear.
+* Keep renderer fixes isolated (wrapper component) and allow toggling back to the prior renderer while investigating.
+
+Owner / date
+
+* Codex Assistant / 2025-12-15</doc><doc title="02 Follow Up Chat Dock" desc="docs page.">Context
+
+* Need an explicit follow-up audit confirming that the Chat Dock regressions from `01-chat-dock-session-intelligence-regressions` stay fixed after recent refactors (shared context, history panel, Session Intelligence renderer, logger scroll).
+* PMs want proof that General/Session Coach parity, repo-specific rule sourcing, and Session Intelligence workflows work for real sessions (multi-repo, multi-tab, persisted chats) before sign-off.
+* Logger stability, telemetry on “Add to Chat” vs. actual sends, and documentation of remaining edge cases must be verified without introducing new regressions.
+
+Success criteria
+
+* Regression checklist covering Add to Chat, context persistence, rule switching, AI Analysis, history panel, and logger scroll is executed and documented with evidence.
+* Automated tests (unit + e2e) fail if any previously fixed regression reappears; telemetry dashboards show Add-to-Chat success rate and AI Analysis crash rate ≤ agreed thresholds.
+* Written verification report shared with stakeholders summarizing scenarios tested, data sources, and any residual risks/open bugs.
+
+Deliverables
+
+* Verification playbook (markdown) detailing scenarios, expected vs. actual results, and evidence links/screenshots.
+* Automated test additions/updates (Playwright + Vitest) targeting Add to Chat broadcast, thread selection/history, Session Intelligence render, and logger scrolling.
+* Telemetry/metrics wiring (Add-to-Chat success, AI Analysis completion, logger overflow) plus dashboard snapshots or SQL queries showing healthy baselines.
+* Risk/issue log capturing any deviations or newly observed bugs.
+
+Approach
+
+1. **Scope alignment:** Review `01-chat-dock-session-intelligence-regressions` and recent commits to list exact behaviors to verify (tabs, context, repo rules, history, AI Analysis, logger). Align with PM on baseline telemetry thresholds.
+2. **Test harness updates:** Extend existing Vitest/Playwright suites with cases for dual-tab Add-to-Chat propagation, thread persistence, repo rule switching, Session Intelligence rendering, and logger scroll containment.
+3. **Manual verification run:** Execute the regression checklist in staging (multi-repo sessions, cross-tab switching, clearing chats) capturing screenshots/logs; file bugs for any deviations.
+4. **Telemetry instrumentation:** Ensure Add-to-Chat, AI Analysis, and logger scroll metrics are emitted; configure dashboards/alerts and backfill data to confirm crash rate ≤ target.
+5. **Reporting:** Compile results + evidence into a follow-up report (include test run IDs, telemetry snapshots) and share via docs/tasks + stakeholder channel.
+
+Risks / unknowns
+
+* Telemetry plumbing may require access to analytics pipelines not currently exposed in dev envs.
+* Multi-repo verification depends on availability of representative session assets; missing data could block realistic testing.
+* Playwright coverage might be flaky unless we stabilize mock data or seed deterministic sessions.
+
+Testing & validation
+
+* Vitest: ChatDockPanel unit tests for thread management, renderer stability, repo labels.
+* Playwright/E2E: Add-to-Chat from Session Explorer + Timeline, tab toggles, history panel selection, Session Intelligence Summary/Hook Discovery, logger scrolling.
+* Telemetry dashboards/queries verifying Add-to-Chat success rate, AI Analysis completion rate, logger scroll event counts.
+
+Rollback / escape hatch
+
+* Keep previous regression fixes behind feature flags; if verification uncovers blockers, disable new telemetry/reporting surfaces while leaving chat fixes intact. Document outstanding gaps and next steps instead of partial sign-off.
+
+Owner/Date
+
+* Codex Assistant / 2025-12-16</doc></docs><tutorials><doc title="Chatgpt" desc="worked example."><svg viewBox="0 0 800 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- Background + core gradients -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#050510"/>
+      <stop offset="45%" stop-color="#050015"/>
+      <stop offset="100%" stop-color="#020308"/>
+    </radialGradient>
+
+    <radialGradient id="coreGradient" cx="50%" cy="50%" r="40%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="1" />
+      <stop offset="30%" stop-color="#00FFF6" stop-opacity="0.95" />
+      <stop offset="55%" stop-color="#6B5BFF" stop-opacity="0.7" />
+      <stop offset="80%" stop-color="#FF00C8" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="innerHaloGradient" cx="50%" cy="50%" r="60%">
+      <stop offset="0%" stop-color="#00FFF6" stop-opacity="0.9" />
+      <stop offset="60%" stop-color="#5500FF" stop-opacity="0.0" />
+      <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+    </radialGradient>
+
+    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00FFF6" />
+      <stop offset="30%" stop-color="#6B5BFF" />
+      <stop offset="60%" stop-color="#FF00C8" />
+      <stop offset="100%" stop-color="#FFB347" />
+    </linearGradient>
+
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00FFF6" stop-opacity="0.2" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.7" />
+      <stop offset="100%" stop-color="#FF00C8" stop-opacity="0.2" />
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+      <feColorMatrix
+        in="blur"
+        type="matrix"
+        values="1 0 0 0 0
+                0 1 0 0 0
+                0 0 1 0 0
+                0 0 0 1.5 0"
+        result="glow" />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="grain">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="noStitch" result="noise" />
+      <feColorMatrix
+        in="noise"
+        type="matrix"
+        values="0 0 0 0 0.9
+                0 0 0 0 0.95
+                0 0 0 0 1
+                0 0 0 0.35 0" />
+      <feBlend in="SourceGraphic" in2="noise" mode="soft-light" />
+    </filter>
+
+    <!-- Mask for central lens -->
+    <radialGradient id="lensMaskGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFFFFF" />
+      <stop offset="65%" stop-color="#FFFFFF" />
+      <stop offset="100%" stop-color="#000000" />
+    </radialGradient>
+
+    <mask id="lensMask">
+      <rect width="800" height="800" fill="url(#lensMaskGradient)" />
+    </mask>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="800" fill="url(#bgGradient)" />
+  <rect width="800" height="800" fill="#000000" opacity="0.35" filter="url(#grain)" />
+
+  <!-- Far field rings -->
+  <g opacity="0.3" stroke="url(#ringGradient)" fill="none">
+    <circle cx="400" cy="400" r="360" stroke-width="0.7" />
+    <circle cx="400" cy="400" r="330" stroke-width="0.6" stroke-dasharray="3 10" />
+    <circle cx="400" cy="400" r="300" stroke-width="0.5" stroke-dasharray="1 8" />
+  </g>
+
+  <!-- Main inner aura -->
+  <g mask="url(#lensMask)">
+    <circle cx="400" cy="400" r="260" fill="url(#innerHaloGradient)" opacity="0.7" />
+    <circle cx="400" cy="400" r="220" fill="none" stroke="url(#ringGradient)" stroke-width="2" opacity="0.8" filter="url(#softGlow)" />
+    <circle cx="400" cy="400" r="190" fill="none" stroke="#0FFFEA" stroke-width="0.6" opacity="0.6" stroke-dasharray="2 6" />
+  </g>
+
+  <!-- Radial symmetry grid (24 spokes) -->
+  <g transform="translate(400,400)" stroke="url(#lineGradient)" stroke-width="0.7" opacity="0.45">
+    <!-- 24 radial lines -->
+    <!-- Each line drawn explicitly for clarity/control -->
+    <line x1="0" y1="-260" x2="0" y2="-80" />
+    <line x1="0" y1="260" x2="0" y2="80" />
+    <line x1="-260" y1="0" x2="-80" y2="0" />
+    <line x1="260" y1="0" x2="80" y2="0" />
+
+    <line x1="225" y1="-130" x2="70" y2="-40" />
+    <line x1="-225" y1="130" x2="-70" y2="40" />
+    <line x1="225" y1="130" x2="70" y2="40" />
+    <line x1="-225" y1="-130" x2="-70" y2="-40" />
+
+    <line x1="180" y1="-190" x2="60" y2="-65" />
+    <line x1="-180" y1="190" x2="-60" y2="65" />
+    <line x1="180" y1="190" x2="60" y2="65" />
+    <line x1="-180" y1="-190" x2="-60" y2="-65" />
+
+    <line x1="130" y1="-225" x2="40" y2="-70" />
+    <line x1="-130" y1="225" x2="-40" y2="70" />
+    <line x1="130" y1="225" x2="40" y2="70" />
+    <line x1="-130" y1="-225" x2="-40" y2="-70" />
+
+    <line x1="75" y1="-245" x2="25" y2="-80" />
+    <line x1="-75" y1="245" x2="-25" y2="80" />
+    <line x1="245" y1="-75" x2="80" y2="-25" />
+    <line x1="-245" y1="75" x2="-80" y2="25" />
+
+    <line x1="210" y1="-165" x2="65" y2="-50" />
+    <line x1="-210" y1="165" x2="-65" y2="50" />
+    <line x1="165" y1="-210" x2="50" y2="-65" />
+    <line x1="-165" y1="210" x2="-50" y2="65" />
+  </g>
+
+  <!-- Flower-of-life core (7 circles) -->
+  <g transform="translate(400,400)" stroke="#00FFF6" stroke-width="1.6" opacity="0.85" filter="url(#softGlow)">
+    <circle cx="0" cy="0" r="88" fill="none" />
+    <circle cx="0" cy="-88" r="88" fill="none" />
+    <circle cx="0" cy="88" r="88" fill="none" />
+    <circle cx="76.2" cy="-44" r="88" fill="none" />
+    <circle cx="76.2" cy="44" r="88" fill="none" />
+    <circle cx="-76.2" cy="-44" r="88" fill="none" />
+    <circle cx="-76.2" cy="44" r="88" fill="none" />
+  </g>
+
+  <!-- Inner decagon lattice -->
+  <g transform="translate(400,400)" fill="none" stroke="#FF00C8" stroke-width="1.4" opacity="0.9" filter="url(#softGlow)">
+    <!-- Outer decagon -->
+    <path d="
+      M 0,-150
+      L 88,-120
+      L 142,-60
+      L 160,0
+      L 142,60
+      L 88,120
+      L 0,150
+      L -88,120
+      L -142,60
+      L -160,0
+      L -142,-60
+      L -88,-120
+      Z" />
+    <!-- Star inside -->
+    <path d="
+      M 0,-150
+      L 142,60
+      L -88,120
+      L 88,-120
+      L -142,60
+      L 0,150
+      L 142,-60
+      L -88,-120
+      L 88,120
+      L -142,-60
+      Z" opacity="0.7" />
+  </g>
+
+  <!-- Orbital ellipses -->
+  <g transform="translate(400,400)" fill="none" opacity="0.7">
+    <ellipse cx="0" cy="0" rx="180" ry="60" stroke="#00FFF6" stroke-width="1" />
+    <ellipse cx="0" cy="0" rx="180" ry="60" stroke="#FF00C8" stroke-width="1" transform="rotate(60)" />
+    <ellipse cx="0" cy="0" rx="180" ry="60" stroke="#FFD35F" stroke-width="1" transform="rotate(120)" />
+  </g>
+
+  <!-- Golden-spiral-like arcs -->
+  <g fill="none" stroke="#FFD35F" stroke-width="2" opacity="0.8" filter="url(#softGlow)">
+    <!-- Quadrant arcs approximating spirals -->
+    <path d="M 400 260
+             C 470 260 520 310 520 380
+             C 520 460 460 520 380 520
+             C 300 520 240 460 240 380
+             C 240 310 290 260 360 260" />
+    <path d="M 400 220
+             C 500 220 560 290 560 380
+             C 560 490 490 560 380 560
+             C 270 560 200 490 200 380
+             C 200 270 270 200 380 200" opacity="0.45" />
+  </g>
+
+  <!-- Central lens + singularity -->
+  <g>
+    <circle cx="400" cy="400" r="140" fill="url(#coreGradient)" filter="url(#softGlow)" />
+    <circle cx="400" cy="400" r="4" fill="#FFFFFF" />
+    <circle cx="400" cy="400" r="9" fill="none" stroke="#FFFFFF" stroke-width="1.4" opacity="0.9" />
+    <circle cx="400" cy="400" r="18" fill="none" stroke="#00FFF6" stroke-width="1.2" opacity="0.7" />
+  </g>
+
+  <!-- Quantum filaments -->
+  <g fill="none" stroke="#FF61C6" stroke-width="1" opacity="0.7" filter="url(#softGlow)">
+    <path d="M 140 260
+             C 260 280 300 340 340 400
+             C 380 460 430 520 600 540" />
+    <path d="M 660 260
+             C 560 280 520 340 480 400
+             C 440 460 390 520 200 540" />
+    <path d="M 180 170
+             C 260 230 320 260 400 280
+             C 480 300 540 330 620 400" />
+    <path d="M 620 170
+             C 540 230 480 260 400 280
+             C 320 300 260 330 180 400" />
+  </g>
+
+  <!-- Outer nodes -->
+  <g fill="#FFFFFF" opacity="0.8">
+    <circle cx="400" cy="80" r="3.2" />
+    <circle cx="660" cy="220" r="3" />
+    <circle cx="720" cy="420" r="3" />
+    <circle cx="580" cy="640" r="3" />
+    <circle cx="400" cy="720" r="3.2" />
+    <circle cx="220" cy="640" r="3" />
+    <circle cx="80" cy="420" r="3" />
+    <circle cx="140" cy="220" r="3" />
+  </g>
+
+  <!-- Starfield -->
+  <g fill="#FFFFFF" opacity="0.28">
+    <circle cx="120" cy="120" r="1" />
+    <circle cx="220" cy="90" r="1.3" />
+    <circle cx="320" cy="150" r="1" />
+    <circle cx="520" cy="110" r="1.1" />
+    <circle cx="650" cy="150" r="1.3" />
+    <circle cx="700" cy="260" r="1.1" />
+    <circle cx="690" cy="520" r="1.2" />
+    <circle cx="560" cy="700" r="1" />
+    <circle cx="420" cy="690" r="1.4" />
+    <circle cx="260" cy="710" r="1" />
+    <circle cx="130" cy="600" r="1.2" />
+    <circle cx="90" cy="340" r="1" />
+    <circle cx="180" cy="420" r="0.9" />
+    <circle cx="620" cy="380" r="1" />
+    <circle cx="540" cy="220" r="0.9" />
+    <circle cx="280" cy="260" r="0.9" />
+    <circle cx="500" cy="320" r="1" />
+  </g>
+</svg></doc></tutorials><api><doc title="Chatbot Api.Spec" desc="docs page.">import { expect, test } from '@playwright/test'
+
+function buildApiUrl(pathname: string) {
+  const base = process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:3001/viewer'
+  const url = new URL(base)
+  url.pathname = pathname
+  url.search = ''
+  url.hash = ''
+  return url.toString()
+}
+
+test.describe('chatbot endpoints', () => {
+  test('analyze endpoint accepts session-mode payloads', async ({ request }) => {
+    const response = await request.post(buildApiUrl('/api/chatbot/analyze'), {
+      data: {
+        sessionId: 'session-default',
+        mode: 'session',
+        analysisType: 'summary',
+      },
+      headers: {
+        'content-type': 'application/json',
+      },
+    })
+
+    expect(response.status()).toBe(200)
+    const payload = await response.json()
+    expect(typeof payload.summaryMarkdown).toBe('string')
+    expect(payload.summaryMarkdown).toContain('## Goals')
+  })
+
+  test('stream endpoint returns assistant text', async ({ request }) => {
+    const response = await request.post(buildApiUrl('/api/chatbot/stream'), {
+      data: {
+        sessionId: 'session-default',
+        mode: 'session',
+        prompt: 'Summarize AGENT rules in one sentence.',
+      },
+      headers: {
+        'content-type': 'application/json',
+      },
+    })
+
+    if (response.status() === 503) {
+      test.skip(true, 'LLM provider unavailable for streaming test')
+    }
+
+    expect(response.status()).toBe(200)
+    const body = await response.text()
+    expect(body.length).toBeGreaterThan(0)
+  })
+})</doc><doc title="Chatbot Api.Server" desc="docs page.">import { z } from 'zod';
+import { buildChatContext } from '~/features/chatbot/context-builder';
+import { detectMisalignments } from '~/features/chatbot/misalignment-detector';
+import { assertChatModeEnabled } from '~/features/chatbot/chatModeConfig';
+import { logError, logInfo, logWarn } from '~/lib/logger';
+import type { ChatMessageEvidence, SessionSnapshot } from '~/lib/sessions/model';
+import { appendChatMessage, listChatMessages, activateChatThread } from '~/server/persistence/chatMessages';
+import {
+  ingestMisalignmentCandidates,
+  listMisalignments,
+} from '~/server/persistence/misalignments';
+import type { MisalignmentRecord } from '~/lib/sessions/model';
+import {
+  resolveModelForMode,
+  getChatModelDefinition,
+  generateSessionSummaryMarkdown,
+  generateCommitMessages,
+} from '~/lib/ai/client';
+import { loadAgentRules, loadSessionSnapshot } from '~/server/lib/chatbotData';
+import {
+  generateSessionCoachReply,
+  runGeneralChatTurn,
+  generateSessionAnalysis,
+  type ChatStreamResult,
+  ProviderUnavailableError,
+} from '~/server/lib/aiRuntime';
+import { ensureLmStudioModelsRegistered } from '~/server/lib/lmStudioModels';
+import type { ChatRemediationMetadata } from '~/lib/chatbot/types';
+import { getSessionRepoBinding } from '~/server/persistence/sessionRepoBindings';
+import { getActiveChatThread } from '~/server/persistence/chatThreads';
+
+const metadataSchema = z
+  .object({
+    misalignmentId: z.string().optional(),
+    ruleId: z.string().optional(),
+    severity: z.enum(['info', 'low', 'medium', 'high', 'critical']).optional(),
+    eventRange: z
+      .object({
+        startIndex: z.number().min(0),
+        endIndex: z.number().min(0),
+      })
+      .optional(),
+  })
+  .optional();
+
+const streamInputSchema = z.object({
+  sessionId: z.string().min(1),
+  prompt: z.string().min(1),
+  mode: z.union([z.literal('session'), z.literal('general')]).default('session'),
+  clientMessageId: z.string().optional(),
+  metadata: metadataSchema,
+  modelId: z.string().optional(),
+  threadId: z.string().optional(),
+});
+
+const analyzeInputSchema = z.object({
+  sessionId: z.string().min(1),
+  mode: z.union([z.literal('session'), z.literal('general')]).default('session'),
+  analysisType: z.enum(['summary', 'commits', 'hook-discovery']).default('summary'),
+  prompt: z.string().optional(),
+});
+
+function isProviderUnavailableError(error: unknown): error is ProviderUnavailableError {
+  if (error instanceof ProviderUnavailableError) {
+    return true;
+  }
+  return Boolean(
+    error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      (error as { code?: string }).code === 'MODEL_UNAVAILABLE'
+  );
+}
+
+type AiProviderError = Error & {
+  data?: {
+    error?: {
+      message?: string;
+    };
+  };
+};
+
+function isAiProviderError(error: unknown): error is AiProviderError {
+  return Boolean(
+    error &&
+      typeof error === 'object' &&
+      'data' in error &&
+      typeof (error as { data?: unknown }).data === 'object'
+  );
+}
+
+function getProviderErrorMessage(error: unknown): string {
+  if (isAiProviderError(error)) {
+    const aiMessage = (error.data?.error?.message as string | undefined) ?? error.message;
+    if (aiMessage) {
+      return aiMessage;
+    }
+  }
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === 'string') {
+    return error;
+  }
+  return 'Model is not available right now.';
+}
+
+export async function streamChatFromPayload(payload: unknown): Promise<Response> {
+  const input = streamInputSchema.safeParse(payload);
+  if (!input.success) {
+    return jsonResponse({ error: 'INVALID_INPUT', issues: input.error.flatten() }, 400);
+  }
+  await ensureLmStudioModelsRegistered().catch(() => {});
+  try {
+    assertChatModeEnabled(input.data.mode);
+  } catch (error) {
+    return jsonResponse(
+      { code: (error as Error & { code?: string }).code ?? 'MODE_NOT_ENABLED' },
+      403
+    );
+  }
+  let modelId: string | null = null;
+  try {
+    modelId = resolveModelForMode(input.data.mode, input.data.modelId);
+  } catch (error) {
+    return jsonResponse(
+      {
+        error: 'INVALID_MODEL',
+        message: error instanceof Error ? error.message : 'Invalid model selection',
+      },
+      400
+    );
+  }
+
+  const startedAt = Date.now();
+  try {
+    if (input.data.threadId) {
+      await activateChatThread(input.data.sessionId, input.data.mode, input.data.threadId);
+    }
+    const activeThread = await getActiveChatThread(input.data.sessionId, input.data.mode);
+    if (input.data.mode === 'general') {
+      return await handleGeneralChatStream({
+        sessionId: input.data.sessionId,
+        prompt: input.data.prompt,
+        clientMessageId: input.data.clientMessageId,
+        modelId,
+        startedAt,
+        threadId: activeThread.id,
+      });
+    }
+    return await handleSessionChatStream({
+      sessionId: input.data.sessionId,
+      prompt: input.data.prompt,
+      clientMessageId: input.data.clientMessageId,
+      metadata: input.data.metadata ?? undefined,
+      modelId,
+      startedAt,
+      threadId: activeThread.id,
+    });
+  } catch (error) {
+    if (isProviderUnavailableError(error)) {
+      logWarn('chatbot.stream', 'Requested model is unavailable', {
+        sessionId: input.data.sessionId,
+        mode: input.data.mode,
+        modelId,
+        providerId: (error as ProviderUnavailableError).providerId,
+        durationMs: Date.now() - startedAt,
+      });
+      return jsonResponse(
+        {
+          code: 'MODEL_UNAVAILABLE',
+          message: error instanceof Error ? error.message : 'Model is not available right now.',
+        },
+        503
+      );
+    }
+    logError('chatbot.stream', 'Streaming response failed', {
+      sessionId: input.data.sessionId,
+      mode: input.data.mode,
+      modelId,
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error.message : error,
+      metadata: input.data.metadata ?? null,
+      success: false,
+    });
+    throw error;
+  }
+}
+
+export async function analyzeChatFromPayload(payload: unknown): Promise<Response> {
+  const input = analyzeInputSchema.safeParse(payload);
+  if (!input.success) {
+    return jsonResponse({ error: 'INVALID_INPUT', issues: input.error.flatten() }, 400);
+  }
+  await ensureLmStudioModelsRegistered().catch(() => {});
+  if (input.data.mode !== 'session') {
+    return jsonResponse({ code: 'MODE_NOT_ENABLED' }, 200);
+  }
+  try {
+    assertChatModeEnabled(input.data.mode);
+  } catch (error) {
+    return jsonResponse(
+      { code: (error as Error & { code?: string }).code ?? 'MODE_NOT_ENABLED' },
+      403
+    );
+  }
+
+  const startedAt = Date.now();
+  try {
+    const resolvedModelId = resolveModelForMode(input.data.mode);
+    const modelDefinition = getChatModelDefinition(resolvedModelId);
+
+    const snapshot = await loadSessionSnapshot(input.data.sessionId);
+    const repoBinding = getSessionRepoBinding(input.data.sessionId);
+    const rules = repoBinding ? await loadAgentRules(repoBinding.rootDir) : [];
+    if (!repoBinding) {
+      logWarn('chatbot.analyze', 'Missing repo root for session; continuing without AGENT rules', {
+        sessionId: input.data.sessionId,
+      });
+    }
+    const misalignments = await listMisalignments(input.data.sessionId);
+    const activeThread = await getActiveChatThread(input.data.sessionId, input.data.mode);
+    const history = await listChatMessages(input.data.sessionId, input.data.mode, activeThread.id);
+    const context = buildChatContext({
+      snapshot,
+      misalignments,
+      agentRules: rules,
+      history,
+      providerOverrides: {
+        maxContextTokens: modelDefinition.contextWindow,
+        maxOutputTokens: modelDefinition.maxOutputTokens,
+      },
+    });
+
+    const baseMeta = {
+      sessionId: input.data.sessionId,
+      mode: input.data.mode,
+      analysisType: input.data.analysisType,
+      modelId:
+        input.data.analysisType === 'hook-discovery'
+          ? resolvedModelId
+          : 'builtin:session-insights',
+    };
+
+    const contextHeadings = context.sections.map((section) => section.heading);
+
+    if (input.data.analysisType === 'summary') {
+      const summaryMarkdown = generateSessionSummaryMarkdown({
+        snapshot,
+        misalignments,
+        recentEvents: snapshot.events,
+        contextHeadings,
+        promptSummary: input.data.prompt,
+      });
+
+      logInfo('chatbot.analyze', 'Analyze request processed', {
+        ...baseMeta,
+        durationMs: Date.now() - startedAt,
+        success: true,
+      });
+      return jsonResponse({ summaryMarkdown });
+    }
+
+    if (input.data.analysisType === 'commits') {
+      const commitMessages = generateCommitMessages({
+        snapshot,
+        misalignments,
+        recentEvents: snapshot.events,
+      });
+
+      logInfo('chatbot.analyze', 'Analyze request processed', {
+        ...baseMeta,
+        commitCount: commitMessages.length,
+        durationMs: Date.now() - startedAt,
+        success: true,
+      });
+      return jsonResponse({ commitMessages });
+    }
+
+    const resultText = await generateSessionAnalysis({
+      history,
+      contextPrompt: context.prompt,
+      analysisType: input.data.analysisType,
+      modelId: resolvedModelId,
+      mode: input.data.mode,
+    });
+
+    logInfo('chatbot.analyze', 'Analyze request processed', {
+      ...baseMeta,
+      durationMs: Date.now() - startedAt,
+      success: true,
+    });
+    return jsonResponse({ summaryMarkdown: resultText });
+  } catch (error) {
+    if (isProviderUnavailableError(error) || isAiProviderError(error)) {
+      const message = getProviderErrorMessage(error);
+      logWarn('chatbot.analyze', 'Analyze provider unavailable', {
+        sessionId: input.data.sessionId,
+        mode: input.data.mode,
+        analysisType: input.data.analysisType,
+        durationMs: Date.now() - startedAt,
+        error: message,
+        success: false,
+      });
+      return jsonResponse(
+        {
+          code: 'MODEL_UNAVAILABLE',
+          message,
+        },
+        503
+      );
+    }
+
+    logError('chatbot.analyze', 'Analyze request failed', {
+      sessionId: input.data.sessionId,
+      mode: input.data.mode,
+      analysisType: input.data.analysisType,
+      durationMs: Date.now() - startedAt,
+      error: error instanceof Error ? error.message : error,
+      success: false,
+    });
+    throw error;
+  }
+}
+
+const TEXT_STREAM_HEADERS = {
+  'content-type': 'text/plain; charset=utf-8',
+};
+
+interface SessionStreamOptions {
+  sessionId: string;
+  prompt: string;
+  clientMessageId?: string;
+  metadata?: ChatRemediationMetadata;
+  modelId: string;
+  startedAt: number;
+  threadId: string;
+}
+
+interface GeneralStreamOptions {
+  sessionId: string;
+  prompt: string;
+  clientMessageId?: string;
+  modelId: string;
+  startedAt: number;
+  threadId: string;
+}
+
+async function handleSessionChatStream(options: SessionStreamOptions) {
+  const snapshot = await loadSessionSnapshot(options.sessionId);
+  const repoBinding = getSessionRepoBinding(options.sessionId);
+  const rules = repoBinding ? await loadAgentRules(repoBinding.rootDir) : [];
+  if (!repoBinding) {
+    logWarn('chatbot.stream', 'Missing repo root for session; continuing without AGENT rules', {
+      sessionId: options.sessionId,
+    });
+  }
+  const existingMisalignments = await listMisalignments(options.sessionId);
+  const history = await listChatMessages(options.sessionId, 'session', options.threadId);
+  const userMessage = await appendChatMessage({
+    sessionId: options.sessionId,
+    mode: 'session',
+    threadId: options.threadId,
+    role: 'user',
+    content: options.prompt,
+    clientMessageId: options.clientMessageId,
+  });
+  history.push(userMessage);
+
+  const detected = detectMisalignments({
+    snapshot,
+    agentRules: rules,
+    existing: existingMisalignments,
+  });
+  if (detected.misalignments.length > 0) {
+    await ingestMisalignmentCandidates(options.sessionId, detected.misalignments);
+  }
+  detected.warnings.forEach((warning) => logWarn('chatbot.misalignment', warning));
+
+  const refreshedMisalignments: MisalignmentRecord[] = await listMisalignments(options.sessionId);
+  const modelDefinition = getChatModelDefinition(options.modelId);
+  const context = buildChatContext({
+    snapshot,
+    misalignments: refreshedMisalignments,
+    history,
+    agentRules: rules,
+    providerOverrides: {
+      maxContextTokens: modelDefinition.contextWindow,
+      maxOutputTokens: modelDefinition.maxOutputTokens,
+    },
+  });
+
+  const runtime = generateSessionCoachReply({
+    history,
+    contextPrompt: context.prompt,
+    metadata: options.metadata,
+    modelId: options.modelId,
+  });
+
+  const evidence = buildAssistantEvidence(options.metadata, refreshedMisalignments);
+  const responseStream = streamResultToResponse(runtime, {
+    onComplete: async (assistantText) => {
+      const assistantRecord = await appendChatMessage({
+        sessionId: options.sessionId,
+        mode: 'session',
+        threadId: options.threadId,
+        role: 'assistant',
+        content: assistantText,
+        misalignmentId: options.metadata?.misalignmentId,
+        evidence,
+      });
+      logInfo('chatbot.stream', 'Streaming response', {
+        sessionId: options.sessionId,
+        mode: 'session',
+        messageId: assistantRecord.id,
+        promptTokens: context.usedTokens,
+        trimmedSections: context.trimmedSectionIds,
+        metadata: options.metadata ?? null,
+        modelId: options.modelId,
+        durationMs: Date.now() - options.startedAt,
+        finishReason: await runtime.finishReason.catch(() => 'unknown'),
+        usage: await runtime.totalUsage.catch(() => null),
+        success: true,
+      });
+    },
+    onError: async (error) => {
+      logError('chatbot.stream', 'Streaming response failed mid-stream', {
+        sessionId: options.sessionId,
+        mode: 'session',
+        modelId: options.modelId,
+        durationMs: Date.now() - options.startedAt,
+        error: error instanceof Error ? error.message : error,
+        metadata: options.metadata ?? null,
+        success: false,
+      });
+    },
+  });
+
+  return new Response(responseStream, { headers: TEXT_STREAM_HEADERS });
+}
+
+async function handleGeneralChatStream(options: GeneralStreamOptions) {
+  const history = await listChatMessages(options.sessionId, 'general', options.threadId);
+  const userMessage = await appendChatMessage({
+    sessionId: options.sessionId,
+    mode: 'general',
+    threadId: options.threadId,
+    role: 'user',
+    content: options.prompt,
+    clientMessageId: options.clientMessageId,
+  });
+  history.push(userMessage);
+
+  const runtime = runGeneralChatTurn({ history, modelId: options.modelId });
+  const responseStream = streamResultToResponse(runtime, {
+    onComplete: async (assistantText) => {
+      const assistantRecord = await appendChatMessage({
+        sessionId: options.sessionId,
+        mode: 'general',
+        threadId: options.threadId,
+        role: 'assistant',
+        content: assistantText,
+      });
+      logInfo('chatbot.stream', 'Streaming response', {
+        sessionId: options.sessionId,
+        mode: 'general',
+        messageId: assistantRecord.id,
+        modelId: options.modelId,
+        durationMs: Date.now() - options.startedAt,
+        finishReason: await runtime.finishReason.catch(() => 'unknown'),
+        usage: await runtime.totalUsage.catch(() => null),
+        success: true,
+      });
+    },
+    onError: async (error) => {
+      logError('chatbot.stream', 'Streaming response failed mid-stream', {
+        sessionId: options.sessionId,
+        mode: 'general',
+        modelId: options.modelId,
+        durationMs: Date.now() - options.startedAt,
+        error: error instanceof Error ? error.message : error,
+        success: false,
+      });
+    },
+  });
+  return new Response(responseStream, { headers: TEXT_STREAM_HEADERS });
+}
+
+function streamResultToResponse(
+  runtime: ChatStreamResult,
+  handlers: {
+    onComplete: (text: string) => Promise<void>;
+    onError?: (error: unknown) => Promise<void> | void;
+  }
+) {
+  const encoder = new TextEncoder();
+  return new ReadableStream<Uint8Array>({
+    async start(controller) {
+      let buffer = '';
+      try {
+        for await (const chunk of runtime.textStream) {
+          buffer += chunk;
+          controller.enqueue(encoder.encode(chunk));
+        }
+        await handlers.onComplete(buffer);
+        controller.close();
+      } catch (error) {
+        controller.error(error);
+        if (handlers.onError) {
+          await handlers.onError(error);
+        }
+      }
+    },
+  });
+}
+
+export function buildAssistantEvidence(
+  metadata: ChatRemediationMetadata | undefined,
+  misalignments: MisalignmentRecord[]
+) {
+  if (!metadata?.misalignmentId) {
+    return undefined;
+  }
+  const record = misalignments.find((item) => item.id === metadata.misalignmentId);
+  if (!record || !record.evidence?.length) {
+    return undefined;
+  }
+  return record.evidence.map<ChatMessageEvidence>((entry, index) => ({
+    path:
+      entry.eventId ??
+      (typeof entry.eventIndex === 'number' ? `event-${entry.eventIndex}` : undefined),
+    ruleId: record.ruleId,
+    snippet: entry.highlight ?? entry.message,
+    severity: record.severity,
+    label: record.title ?? entry.message ?? `Evidence #${index + 1}`,
+  }));
+}
+
+function jsonResponse(payload: unknown, status = 200) {
+  return new Response(JSON.stringify(payload), {
+    status,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+    },
+  });
+}</doc><doc title="System Instruction.Module Design" desc="docs page."># MODULE AND FILE DESIGN
+
+---
+
+## SYSTEM INSTRUCTION: MODULE AND FILE DESIGN
+
+You are not allowed to introduce or extend “god modules” (multi-purpose megafiles). Every change must keep code split into small, single-responsibility modules inside clear feature slices.
+
+#### 1. Core rule: one file, one reason to change
+
+When you touch or create a file, it must have exactly one primary responsibility.
+
+The following responsibilities must not coexist in the same file:
+
+* HTTP/transport concerns (routes, request/response)
+* Domain logic or business rules
+* Integration logic (AI, DB, external APIs, SDKs)
+* Complex UI layout or widget implementations
+* Large configuration data (prompts, icon maps, class maps)
+
+If a file does more than one of these, split it.
+
+#### 2. Always work inside a feature slice
+
+All code lives inside a feature-oriented directory (vertical slice), not in generic “utils” or giant shared modules.
+
+Examples of slices (names are illustrative):
+
+* `session-analysis`
+* `session-coach-chat`
+* `session-parser`
+* `viewer`
+* `timeline`
+* `code-block`
+* `ui-primitives`
+
+Within each slice, use these internal layers:
+
+* `core/` – types, invariants, and pure functions (no frameworks, no I/O)
+* `usecases/` or `services/` – “do X” operations composed from core
+* `infra/` or `adapters/` – AI, DB, HTTP clients, logging, SDK wiring
+* `http/` – route handlers, validation, HTTP-level error mapping
+* `ui/` or `components/` – React components and view models
+
+Do not cross these layers inside a single file.
+
+#### 3. Back-end rules
+
+Route files:
+
+* Only define routes, validate input, call a single usecase, and map errors to HTTP.
+* No domain rules, no AI calls, no DB access inside route files.
+
+Usecase/service files:
+
+* A usecase file exports one main function representing a single operation.
+* It only depends on `core` logic and abstractions for infra (interfaces), not concrete SDKs.
+* No framework or transport imports (`express`, `next`, `remix`, etc.) in usecases.
+
+Infra files:
+
+* Wrap specific providers (AI, DB, external APIs).
+* Contain low-level error translation and retry policies.
+* Do not contain domain-level branching (e.g., “if summary vs if hook-discovery”) beyond what’s needed to talk to the provider.
+
+Prompts and large config:
+
+* Long AI prompts and configuration blobs must live in their own modules under the feature slice (e.g. `prompts/` or `config/`).
+* Runtime logic imports these constants; it never embeds large prompt strings or maps inline.
+
+#### 4. Front-end rules
+
+Page/route components:
+
+* Thin shells: read loader data, set up providers, and compose child components.
+* No complex feature logic or massive event orchestration inside pages.
+
+Hooks and state:
+
+* Use dedicated hooks/stores per feature (e.g. `useXxxModel`, `xxx.store.ts`) for complex state and derived calculations.
+* Hooks must not render JSX; they compute data and expose callbacks.
+
+UI components:
+
+* A component file is either:
+
+  * A container component (wires hooks/state to child components), or
+  * A presentational component (pure props → JSX)
+* Do not mix container concerns (data fetching, global coordination) with large presentational trees in the same file if it becomes complex.
+
+Large widgets:
+
+* Complex widgets (date-time input, code block, modal, timeline, inspector) are treated as mini-libraries:
+
+  * `core/` for pure logic and configuration
+  * `ui/` for React components
+  * `infra/` for DOM-level behavior (e.g., search highlighting, portals), if needed
+* Big static maps (icon maps, key bindings) live in separate config files, not inline inside main components.
+
+#### 5. What to do when you touch a large file
+
+If you need to change a file that already violates these rules:
+
+* Do not add new responsibilities to it.
+* Extract the new logic into a new file in the appropriate slice/layer, then call it from the old file.
+* When practical, opportunistically peel off existing responsibilities into new modules instead of expanding the megafile.
+
+#### 6. Hard constraints
+
+* No new file may exceed a single, clear responsibility.
+* No new route file may call AI/DB/SDKs directly; it must call a usecase.
+* No new React page or main panel component may contain more than one major feature’s logic; cross-feature coordination must go through shared hooks/stores, not giant all-in-one components.
+* Prompts and large data/config are never embedded inline with logic.
+
+This instruction is the first thing to check before writing or modifying any code. If a change would violate any of the rules above, restructure the code and create additional files instead of expanding an existing one.</doc><doc title="Test" desc="API reference.">import { createFileRoute } from '@tanstack/react-router';
+import { json } from '@tanstack/react-start';
+
+export const Route = createFileRoute('/api/test')({
+  ...( {
+    server: {
+      handlers: {
+        GET: async ({ request }: { request: Request }) => {
+          return json({
+            message: 'Hello from GET!',
+            method: 'GET',
+            timestamp: new Date().toISOString(),
+            url: request.url,
+          });
+        },
+        POST: async ({ request }: { request: Request }) => {
+          const body = await request.json().catch(() => ({}));
+
+          return json(
+            {
+              message: 'Hello from POST!',
+              method: 'POST',
+              received: body,
+              timestamp: new Date().toISOString(),
+            },
+            {
+              status: 201,
+            }
+          );
+        },
+      },
+    },
+  } as any),
+});</doc><doc title="$Uploadid" desc="API reference.">import { createFileRoute } from '@tanstack/react-router'
+import { z } from 'zod'
+
+export const Route = createFileRoute('/api/uploads/$uploadId')({
+  params: {
+    parse: z.object({ uploadId: z.string().min(1) }).parse,
+  },
+  ...( {
+    server: {
+          handlers: {
+            GET: async ({ params }: { params: { uploadId: string } }) => {
+          const { getSessionUploadContent } = await import('~/server/persistence/sessionUploads')
+          const content = await getSessionUploadContent(params.uploadId)
+          if (!content) {
+            return new Response('Upload not found', { status: 404 })
+          }
+          return new Response(content, {
+            status: 200,
+            headers: {
+              'content-type': 'text/plain; charset=utf-8',
+            },
+          })
+        },
+      },
+    },
+  } as any),
+})</doc><doc title="$Uploadid.Watch" desc="API reference.">import { createFileRoute } from '@tanstack/react-router';
+import { z } from 'zod';
+
+const SSE_HEADERS = {
+  'Content-Type': 'text/event-stream',
+  'Cache-Control': 'no-cache, no-transform',
+  Connection: 'keep-alive',
+};
+
+const encoder = new TextEncoder();
+
+export const Route = createFileRoute('/api/uploads/$uploadId/watch')({
+  params: {
+    parse: z.object({ uploadId: z.string().min(1) }).parse,
+  },
+  ...( {
+    server: {
+          handlers: {
+            GET: async ({ params, request }: { params: { uploadId: string }; request: Request }) => {
+          const [{ subscribeToUploadWatcher }, { getSessionUploadSummaryById }] = await Promise.all([
+            import('~/server/lib/sessionUploadWatchers'),
+            import('~/server/persistence/sessionUploads'),
+          ])
+
+          const summary = getSessionUploadSummaryById(params.uploadId)
+          if (!summary) {
+            return new Response(JSON.stringify({ error: 'Upload not found' }), {
+              status: 404,
+              headers: { 'content-type': 'application/json' },
+            })
+          }
+
+          let cleanup: (() => void) | null = null
+          const stream = new ReadableStream<Uint8Array>({
+            start(controller) {
+              let closed = false
+              const send = (payload: unknown) => {
+                if (closed) return
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`))
+              }
+              const unsubscribe = subscribeToUploadWatcher(params.uploadId, (event) => {
+                send(event)
+              })
+              const heartbeat = setInterval(() => send({ type: 'ping' }), 15000)
+              const close = () => {
+                if (closed) return
+                closed = true
+                clearInterval(heartbeat)
+                unsubscribe()
+                controller.close()
+              }
+              cleanup = close
+              request.signal.addEventListener('abort', close)
+            },
+            cancel() {
+              if (cleanup) {
+                cleanup()
+                cleanup = null
+              }
+            },
+          })
+
+          return new Response(stream, { headers: SSE_HEADERS })
+        },
+      },
+    },
+  } as any),
+})</doc><doc title="Analyze" desc="API reference.">import { createFileRoute } from '@tanstack/react-router';
+
+export const Route = createFileRoute('/api/chatbot/analyze')({
+  ...({
+    server: {
+      handlers: {
+        POST: async ({ request }: { request: Request }) => {
+          const { analyzeChatFromPayload } = await import('~/server/chatbot-api.server');
+          let body: unknown = null;
+          try {
+            body = await request.json();
+          } catch (error) {
+            body = null;
+          }
+          return analyzeChatFromPayload(body);
+        },
+      },
+    },
+  } as any),
+});</doc><doc title="Stream" desc="API reference.">import { createFileRoute } from '@tanstack/react-router'
+
+export const Route = createFileRoute('/api/chatbot/stream')({
+  ...( {
+    server: {
+      handlers: {
+        POST: async ({ request }: { request: Request }) => {
+          const { streamChatFromPayload } = await import('~/server/chatbot-api.server')
+          let body: unknown = null
+          try {
+            body = await request.json()
+          } catch (error) {
+            body = null
+          }
+          return streamChatFromPayload(body)
+        },
+      },
+    },
+  } as any),
+})</doc></api><src><doc title="Claude" desc="docs page.">
+
+
+# ClientOnly
+
+Client-only render to avoid SSR hydration issues. Import from `@tanstack/react-router`:
+
+```typescript
+import { ClientOnly } from '@tanstack/react-router';
+
+<ClientOnly fallback={<span>—</span>}>
+  <ComponentThatUsesClientHooks />
+</ClientOnly>
+```
+
+Alternative: Custom implementation using mounted pattern if needed (see hydration errors below).
+
+# Environment functions
+
+From `@tanstack/react-start`:
+
+## createIsomorphicFn
+
+Adapts to client/server:
+
+```typescript
+import { createIsomorphicFn } from '@tanstack/react-start';
+const getEnv = createIsomorphicFn()
+  .server(() => 'server')
+  .client(() => 'client');
+getEnv(); // 'server' on server, 'client' on client
+```
+
+Partial: `.server()` no-op on client, `.client()` no-op on server.
+
+## createServerOnlyFn / createClientOnlyFn
+
+RC1: `serverOnly` → `createServerOnlyFn`, `clientOnly` → `createClientOnlyFn`
+
+Strict environment execution (throws if called wrong env):
+
+```typescript
+import { createServerOnlyFn, createClientOnlyFn } from '@tanstack/react-start';
+const serverFn = createServerOnlyFn(() => 'bar'); // throws on client
+const clientFn = createClientOnlyFn(() => 'bar'); // throws on server
+```
+
+Tree-shaken: client code removed from server bundle, server code removed from client bundle.
+
+# Hydration errors
+
+Mismatch: Server HTML differs from client render. Common causes: Intl (locale/timezone), Date.now(), random IDs, responsive logic, feature flags, user prefs.
+
+Strategies:
+1. Make server and client match: deterministic locale/timezone on server (cookie or Accept-Language header), compute once and hydrate as initial state.
+2. Let client tell environment: set cookie with client timezone on first visit, SSR uses UTC until then.
+3. Make it client-only: wrap unstable UI in `<ClientOnly>` to avoid SSR mismatches.
+4. Disable/limit SSR: use selective SSR (`ssr: 'data-only'` or `false`) when server HTML cannot be stable.
+5. Last resort: React's `suppressHydrationWarning` for small known-different nodes (use sparingly).
+
+Checklist: Deterministic inputs (locale, timezone, feature flags). Prefer cookies for client context. Use `<ClientOnly>` for dynamic UI. Use selective SSR when server HTML unstable. Avoid blind suppression.
+
+# TanStack Start basics
+
+Depends: @tanstack/react-router, Vite. Router: getRouter() (was createRouter() in beta). routeTree.gen.ts auto-generated on first dev run. Optional: server handler via @tanstack/react-start/server; client hydrate via StartClient from @tanstack/react-start/client. RC1: Import StartClient from @tanstack/react-start/client (not @tanstack/react-start). StartClient no longer requires router prop. Root route head: utf-8, viewport, title; component wraps Outlet in RootDocument. Routes: createFileRoute() code-split + lazy-load; loader runs server/client. Navigation: Link (typed), useNavigate (imperative), useRouter (instance).
+
+# Server functions
+
+createServerFn({ method }) + zod .inputValidator + .handler(ctx). After mutations: router.invalidate(); queryClient.invalidateQueries(['entity', id]).
+
+# Typed Links
+
+Link to="/posts/$postId" with params; activeProps for styling.
+
+
+
+
+# TanStack Query Rules
+
+Server state via TanStack Query + server functions. Type-safe fetching and mutations.
+
+## Query Pattern
+
+Define in `lib/{resource}/queries.ts` using `queryOptions`:
+
+```typescript
+export const todosQueryOptions = () =>
+  queryOptions({
+    queryKey: ['todos'],
+    queryFn: async ({ signal }) => await getTodos({ signal }),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  });
+```
+
+Use: `const { data, isLoading } = useQuery(todosQueryOptions())`. Prefer `useSuspenseQuery` with Suspense.
+
+## Server Functions in Queries
+
+Call server functions directly in `queryFn`. No `useServerFn` hook. TanStack Start proxies. Pass `signal` for cancellation.
+
+## Mutation Pattern
+
+```typescript
+const mutation = useMutation({
+  mutationFn: async (text: string) => await createTodo({ data: { text } }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: todosQueryOptions().queryKey });
+    toast.success('Success');
+  },
+  onError: (error) => toast.error(error.message || 'Failed'),
+});
+```
+
+Call via `mutation.mutate(data)` or `mutateAsync` for promises.
+
+## Query Invalidation
+
+After mutations: `queryClient.invalidateQueries({ queryKey: ... })`. Use specific keys, not broad.
+
+## Mutation States
+
+Access: `isPending`, `isError`, `isSuccess`, `error`, `data`. Disable UI during `isPending`.
+
+## Error Handling
+
+Handle in `onError`. Toast messages. Access: `error.message || 'Default'`.
+
+## Query Keys
+
+Hierarchical: `['todos']`, `['todo', id]`, `['todos', 'completed']`. Include all affecting variables.
+
+## Stale Time vs GC Time
+
+`staleTime`: freshness duration (no refetch). Default 0. Set for stable data.
+`gcTime`: unused cache duration (was `cacheTime`). Default 5min. Memory management.
+
+## Infinite Queries
+
+`useInfiniteQuery` for pagination. Required: `initialPageParam`, `getNextPageParam`, `fetchNextPage`. Access `data.pages`. Check `hasNextPage` before fetching.
+
+## Optimistic Updates
+
+`onMutate` for optimistic updates. Rollback in `onError`. Update cache via `queryClient.setQueryData`.
+
+## Best Practices
+
+1. Queries in `lib/{resource}/queries.ts` with `queryOptions`
+2. Call server functions directly (no `useServerFn` in callbacks)
+3. Invalidate after mutations
+4. Toast for feedback
+5. Handle loading/error states
+6. Use TypeScript types from query options
+7. Set `staleTime`/`gcTime` appropriately
+8. Prefer `useSuspenseQuery` with Suspense</doc><doc title="Start" desc="docs page.">import { createStart } from '@tanstack/react-start';
+export const startInstance = createStart(async () => ({
+  functionMiddleware: [],
+}));</doc><doc title="Tanstack Start.D" desc="docs page.">/// <reference types="vite/client" />
+import './routeTree.gen'</doc><doc title="Browser Echo.D" desc="docs page.">declare module 'virtual:browser-echo';</doc><doc title="Chatdocksettings" desc="docs page.">import { create } from 'zustand'
+import { persist, createJSONStorage } from 'zustand/middleware'
+import type { ChatAiSettings } from '~/lib/chatbot/aiSettings'
+import { DEFAULT_CHAT_AI_SETTINGS } from '~/lib/chatbot/aiSettings'
+
+export interface ChatDockSettingsState {
+  keepLoadedProviders: Record<string, boolean>
+  setKeepLoaded: (providerId: string, value: boolean) => void
+  isKeepLoaded: (providerId: string) => boolean
+  aiSettings: ChatAiSettings
+  setAiSettings: (updater: ChatAiSettings | ((prev: ChatAiSettings) => ChatAiSettings)) => void
+}
+
+const memoryStore = new Map<string, string>()
+const memoryStorage: Storage = {
+  get length() {
+    return memoryStore.size
+  },
+  clear: () => {
+    memoryStore.clear()
+  },
+  getItem: (key: string) => memoryStore.get(key) ?? null,
+  key: (index: number) => Array.from(memoryStore.keys())[index] ?? null,
+  removeItem: (key: string) => {
+    memoryStore.delete(key)
+  },
+  setItem: (key: string, value: string) => {
+    memoryStore.set(key, value)
+  },
+}
+
+const storage = createJSONStorage<ChatDockSettingsState>(() => {
+  if (typeof window === 'undefined' || !window.localStorage) {
+    return memoryStorage
+  }
+  return window.localStorage
+})
+
+export const useChatDockSettings = create<ChatDockSettingsState>()(
+  persist(
+    (set, get) => ({
+      keepLoadedProviders: {},
+      setKeepLoaded: (providerId, value) =>
+        set((state) => ({ keepLoadedProviders: { ...state.keepLoadedProviders, [providerId]: value } })),
+      isKeepLoaded: (providerId) => Boolean(get().keepLoadedProviders[providerId]),
+      aiSettings: { ...DEFAULT_CHAT_AI_SETTINGS },
+      setAiSettings: (updater) =>
+        set((state) => ({
+          aiSettings: typeof updater === 'function' ? (updater as (prev: ChatAiSettings) => ChatAiSettings)(state.aiSettings) : updater,
+        })),
+    }),
+    {
+      name: 'codex-chatdock-settings',
+      storage,
+    },
+  ),
+)</doc><doc title="Client" desc="docs page.">import { createEnv } from '@t3-oss/env-core';
+import * as z from 'zod';
+
+export const env = createEnv({
+  clientPrefix: 'VITE_',
+  client: {
+    VITE_BASE_URL: z.url().default('http://localhost:3000'),
+  },
+  runtimeEnv: import.meta.env,
+});</doc><doc title="Default Browser" desc="docs page.">export default async function defaultBrowser() {
+  return { id: 'com.google.chrome', name: 'Chrome' };
+}</doc><doc title="Default Browser Id" desc="docs page.">export default async function defaultBrowserId() {
+  return { id: 'com.google.chrome', name: 'Chrome' };
+}</doc><doc title="Event Key" desc="docs page.">import type { ResponseItem } from '~/lib/viewer-types';
+
+export function eventKey(item: ResponseItem, absoluteIndex: number): string {
+  const anyItem = item as any
+  if (anyItem?.id) return `${String(anyItem.id)}-${absoluteIndex}`
+  if (typeof anyItem?.index === 'number') return `idx-${anyItem.index}-${absoluteIndex}`
+  const type = typeof anyItem?.type === 'string' ? anyItem.type : 'event'
+  return `${type}-${absoluteIndex}`
+}</doc><doc title="Features" desc="docs page.">import { env } from '~/env/server'
+
+export function isSessionCoachEnabled() {
+  const override = env.SESSION_COACH_ENABLED
+  if (override === 'true' || override === '1') {
+    return true
+  }
+  if (override === 'false' || override === '0') {
+    return false
+  }
+  return true
+}
+
+export const featureFlags = {
+  sessionCoach: {
+    enabled: isSessionCoachEnabled,
+  },
+}</doc></src><tests><doc title="Browserlogs.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { readBrowserLogSnapshot } from '~/server/function/browserLogs'
+import { dirname, resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const testDir = dirname(fileURLToPath(import.meta.url))
+const fixturesDir = resolve(testDir, 'fixtures/browser-logs')
+
+describe('readBrowserLogSnapshot', () => {
+  it('returns a helpful message when directory is missing', async () => {
+    const snapshot = await readBrowserLogSnapshot(resolve(process.cwd(), 'non-existent-dir'))
+    expect(snapshot.text).toMatch(/not found/i)
+    expect(snapshot.source).toBeNull()
+  })
+
+  it('returns a helpful message when directory exists but has no log files', async () => {
+    const dir = resolve(fixturesDir, 'empty-dir')
+    const snapshot = await readBrowserLogSnapshot(dir)
+    expect(snapshot.text).toMatch(/no browser logs/i)
+    expect(snapshot.source).toBeNull()
+  })
+
+  it('reads the latest log file in a directory', async () => {
+    const dir = resolve(fixturesDir, 'default')
+    const snapshot = await readBrowserLogSnapshot(dir, 1000)
+    expect(snapshot.source).toMatch(/dev-2024-05-01/)
+    expect(snapshot.text).toContain('Second fixture log entry')
+    expect(snapshot.truncated).toBe(false)
+  })
+
+  it('ignores non-log files and prefers newest log file', async () => {
+    const dir = resolve(fixturesDir, 'multiple')
+    const snapshot = await readBrowserLogSnapshot(dir)
+    expect(snapshot.source).toMatch(/dev-2024-06-01/)
+    expect(snapshot.text).toContain('Latest multi log entry')
+    expect(snapshot.truncated).toBe(false)
+  })
+
+  it('returns a placeholder when a log file is empty', async () => {
+    const dir = resolve(fixturesDir, 'empty-file')
+    const snapshot = await readBrowserLogSnapshot(dir)
+    expect(snapshot.text).toBe('(log file is empty)')
+    expect(snapshot.source).toMatch(/dev-empty/)
+    expect(snapshot.truncated).toBe(false)
+  })
+
+  it('truncates log output when over the limit', async () => {
+    const dir = resolve(fixturesDir, 'default')
+    const snapshot = await readBrowserLogSnapshot(dir, 50)
+    expect(snapshot.truncated).toBe(true)
+    expect(snapshot.text.length).toBeLessThanOrEqual(50)
+    expect(snapshot.text).toContain('entry')
+  })
+})</doc><doc title="Chatbot.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { parseAgentRules } from '~/lib/agents-rules/parser'
+import { buildChatContext } from '~/features/chatbot/context-builder'
+import { detectMisalignments } from '~/features/chatbot/misalignment-detector'
+import type { MisalignmentRecord, SessionSnapshot } from '~/lib/sessions/model'
+import sessionFixture from './fixtures/session-large.json'
+import misalignmentSessionFixture from './fixtures/sessions/session.misalignment-basic.json'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
+import { generateCommitMessages, generateSessionSummaryMarkdown, getChatModelOptions, resolveModelForMode } from '~/lib/ai/client'
+import { buildAssistantEvidence } from '~/server/chatbot-api.server'
+import type { ChatRemediationMetadata } from '~/lib/chatbot/types'
+
+const sessionSnapshot: SessionSnapshot = {
+  sessionId: 'test-session',
+  meta: sessionFixture.meta,
+  events: sessionFixture.events,
+}
+
+const misalignmentSnapshot: SessionSnapshot = {
+  sessionId: 'session-misalignment-basic',
+  meta: misalignmentSessionFixture.meta,
+  events: misalignmentSessionFixture.events,
+}
+
+const agentsMarkdown = readFileSync(resolve(process.cwd(), 'tests/fixtures/agents/AGENTS.session-coach.md'), 'utf8')
+const agentRules = parseAgentRules(agentsMarkdown)
+
+describe('Agent rule parser', () => {
+  it('extracts headings and severity', () => {
+    expect(agentRules.length).toBeGreaterThan(0)
+    expect(agentRules[0].heading).toContain('Loader')
+    expect(agentRules[0].severity).toBeTypeOf('string')
+  })
+})
+
+describe('Chat context builder', () => {
+  it('builds context within token budgets', () => {
+    const context = buildChatContext({
+      snapshot: sessionSnapshot,
+      misalignments: [],
+      history: [],
+      agentRules,
+      providerOverrides: { maxContextTokens: 4096, maxOutputTokens: 512 },
+    })
+    expect(context.sections.length).toBeGreaterThan(0)
+    expect(context.usedTokens).toBeLessThanOrEqual(3584)
+  })
+})
+
+describe('Misalignment detector', () => {
+  it('flags fixture heuristics', () => {
+    const detection = detectMisalignments({ snapshot: misalignmentSnapshot, agentRules })
+    expect(detection.misalignments.length).toBeGreaterThanOrEqual(1)
+    expect(Array.isArray(detection.warnings)).toBe(true)
+    expect(detection.warnings.length).toBe(0)
+  })
+})
+
+describe('Analysis helpers', () => {
+  const detection = detectMisalignments({ snapshot: misalignmentSnapshot, agentRules })
+  it('exposes warnings array along with misalignments', () => {
+    expect(Array.isArray(detection.warnings)).toBe(true)
+    expect(detection.warnings.length).toBe(0)
+  })
+
+  it('builds markdown with four required sections', () => {
+    const markdown = generateSessionSummaryMarkdown({
+      snapshot: misalignmentSnapshot,
+      misalignments: detection.misalignments,
+      recentEvents: misalignmentSnapshot.events,
+      contextHeadings: ['Session metadata'],
+    })
+    expect(markdown).toContain('## Goals')
+    expect(markdown).toContain('## Main changes')
+    expect(markdown).toContain('## Issues')
+    expect(markdown).toContain('## Follow-ups')
+    const sections = markdown.split('\n## ').length
+    expect(sections).toBeGreaterThanOrEqual(4)
+  })
+
+  it('returns commit subjects under 72 characters', () => {
+    const commits = generateCommitMessages({
+      snapshot: misalignmentSnapshot,
+      misalignments: detection.misalignments,
+      recentEvents: misalignmentSnapshot.events,
+    })
+    expect(commits.length).toBeGreaterThan(0)
+    for (const subject of commits) {
+      expect(subject.length).toBeLessThanOrEqual(72)
+    }
+  })
+})
+
+describe('Chat model registry', () => {
+  it('lists session-safe models with metadata', () => {
+    const models = getChatModelOptions('session')
+    expect(models.length).toBeGreaterThan(0)
+    expect(models[0]).toMatchObject({ id: expect.any(String), provider: expect.any(String) })
+  })
+
+  it('resolves defaults per mode when unset', () => {
+    const modelId = resolveModelForMode('general')
+    expect(typeof modelId).toBe('string')
+    expect(modelId.length).toBeGreaterThan(0)
+  })
+})
+
+describe('Assistant evidence mapping', () => {
+  const sampleMisalignment: MisalignmentRecord = {
+    id: 'mis-1',
+    sessionId: 'session-default',
+    ruleId: 'AGENT-001',
+    title: 'Sample',
+    summary: 'Sample summary',
+    severity: 'high',
+    status: 'open',
+    evidence: [
+      {
+        message: 'src/app.ts has TODO markers',
+        eventIndex: 5,
+        highlight: 'TODO: clean up',
+      },
+    ],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  it('builds evidence when metadata references an existing misalignment', () => {
+    const metadata: ChatRemediationMetadata = { misalignmentId: 'mis-1' }
+    const evidence = buildAssistantEvidence(metadata, [sampleMisalignment])
+    expect(evidence).toBeTruthy()
+    expect(evidence?.[0]?.ruleId).toBe('AGENT-001')
+    expect(evidence?.[0]?.severity).toBe('high')
+    expect(evidence?.[0]?.snippet).toContain('TODO')
+  })
+
+  it('returns undefined when no metadata is provided', () => {
+    const evidence = buildAssistantEvidence(undefined, [sampleMisalignment])
+    expect(evidence).toBeUndefined()
+  })
+  describe('Dynamic Misalignment Detection', () => {
+    // 1. Define a rule that forbids "magic sparkles"
+    const MOCK_RULE_TEXT = `
+# performance rules
+* Avoid using magic sparkles in the render loop.
+`;
+    const rules = parseAgentRules(MOCK_RULE_TEXT);
+
+    // 2. Create a session snapshot that VIOLATES this rule
+    const badSnapshot: SessionSnapshot = {
+      sessionId: 'test-dynamic-detection',
+      meta: sessionFixture.meta,
+      events: [
+        {
+          id: 'evt-1',
+          type: 'Message',
+          role: 'user',
+          content: 'I am adding some magic sparkles to the component render function.',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+
+    it('detects violations based on dynamic keywords', () => {
+      const result = detectMisalignments({
+        snapshot: badSnapshot,
+        agentRules: rules,
+      });
+
+      // Should find 1 misalignment
+      expect(result.misalignments.length).toBe(1);
+      expect(result.warnings.length).toBe(0);
+
+      // Check details
+      const record = result.misalignments[0];
+      expect(record.ruleId).toContain('performance-rules'); // ID derived from heading
+      expect(record.evidence[0].message).toContain('magic');
+      expect(record.evidence[0].message).toContain('sparkles');
+    });
+
+    it('ignores events that do not match keywords', () => {
+      const goodSnapshot: SessionSnapshot = {
+        ...badSnapshot,
+        events: [
+          {
+            id: 'evt-2',
+            type: 'Message',
+            role: 'user',
+            content: 'I am optimizing the render loop with memoization.',
+            createdAt: new Date().toISOString(),
+          },
+        ],
+      };
+
+      const result = detectMisalignments({
+        snapshot: goodSnapshot,
+        agentRules: rules,
+      });
+
+      expect(result.misalignments.length).toBe(0);
+      expect(result.warnings.length).toBe(0);
+    });
+
+    it('emits warnings for invalid regex triggers', () => {
+      const invalidRule = [
+        {
+          id: 'invalid-rule',
+          severity: 'medium',
+          patterns: ['[(unterminated'],
+        },
+      ];
+      const result = detectMisalignments({
+        snapshot: badSnapshot,
+        agentRules: invalidRule,
+      });
+      expect(result.warnings.length).toBeGreaterThan(0);
+      expect(result.warnings[0]).toContain('Invalid regex trigger');
+    });
+  });
+})</doc><doc title="Export.Formatters.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { buildJsonExport } from '~/features/viewer/export/formatters/json'
+import { buildCsvExport } from '~/features/viewer/export/formatters/csv'
+import { buildMarkdownExport } from '~/features/viewer/export/formatters/markdown'
+import type { ExportBuildParams } from '~/features/viewer/export/types'
+
+const sampleEvent = {
+  type: 'Message',
+  role: 'user',
+  content: 'Hello world',
+  at: '2024-01-01T00:00:00Z',
+  id: 'evt-1',
+} as const
+
+function buildParams(overrides?: Partial<ExportBuildParams>): ExportBuildParams {
+  return {
+    scopeResult: {
+      scope: 'entire',
+      events: [sampleEvent as any],
+      isPartial: false,
+      label: 'Entire session',
+    },
+    options: { includeMetadata: false, includeTimestamps: true },
+    filterDescription: null,
+    sessionMeta: {
+      id: 'sess-1',
+      timestamp: '2024-01-01T00:00:00Z',
+      instructions: 'SECRET',
+    },
+    exportedAt: new Date('2024-01-01T01:00:00Z'),
+    ...overrides,
+  }
+}
+
+describe('export formatters', () => {
+  it('redacts instructions from JSON export', () => {
+    const json = buildJsonExport(buildParams())
+    const parsed = JSON.parse(json)
+    expect(parsed.session.meta.instructions).toBeUndefined()
+    expect(parsed.session.events[0].id).toBeUndefined()
+  })
+
+  it('escapes CSV cells and clears metadata when disabled', () => {
+    const csv = buildCsvExport(buildParams())
+    const [headerLine, rowLine] = csv.split('\n')
+    expect(headerLine).toContain('Timestamp')
+    expect(rowLine.split(',')[1]).toBe('') // Event ID stripped
+    expect(rowLine).toContain('Hello world')
+  })
+
+  it('omits timestamps in markdown when option disabled', () => {
+    const output = buildMarkdownExport(
+      buildParams({
+        options: { includeMetadata: false, includeTimestamps: false },
+      }),
+    )
+    expect(output).not.toMatch(/👤 User\s+\(.+\)/)
+  })
+})</doc><doc title="Hookifyruntime.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { evaluateAddToChatContent } from '~/server/lib/hookifyRuntime'
+import type { AgentRule } from '~/lib/agents-rules/parser'
+
+const sampleRules: AgentRule[] = [
+  {
+    id: 'AGENT-001',
+    heading: 'Dangerous commands',
+    level: 2,
+    summary: 'Never nuke the filesystem',
+    body: 'rm -rf is forbidden',
+    bullets: ['rm -rf /'],
+    severity: 'high',
+    keywords: ['rm -rf'],
+  },
+  {
+    id: 'AGENT-010',
+    heading: 'Debug logging',
+    level: 2,
+    summary: 'Avoid console.log spam',
+    body: 'Keep production logs clean',
+    bullets: ['console.log in prod'],
+    severity: 'medium',
+    keywords: ['console.log'],
+  },
+]
+
+describe('hookify runtime', () => {
+  it('allows prompts with no matches', () => {
+    const result = evaluateAddToChatContent({
+      sessionId: 'test',
+      source: 'timeline',
+      content: 'Summarize progress',
+      agentRules: sampleRules,
+    })
+    expect(result.blocked).toBe(false)
+    expect(result.prefill?.prompt).toContain('Summarize progress')
+    expect(result.severity).toBe('none')
+  })
+
+  it('blocks high severity matches and annotates prompt', () => {
+    const result = evaluateAddToChatContent({
+      sessionId: 'test',
+      source: 'timeline',
+      content: 'Should I run rm -rf /tmp?',
+      agentRules: sampleRules,
+    })
+    expect(result.blocked).toBe(true)
+    expect(result.severity).toBe('high')
+    expect(result.rules.length).toBeGreaterThan(0)
+    expect(result.annotations).toContain('Hookify Alignment Notes')
+  })
+
+  it('warns for medium severity and prepends annotation markdown', () => {
+    const result = evaluateAddToChatContent({
+      sessionId: 'test',
+      source: 'manual',
+      content: 'Sprinkle console.log here',
+      agentRules: [sampleRules[1]],
+    })
+    expect(result.blocked).toBe(false)
+    expect(result.severity).toBe('medium')
+    expect(result.prefill?.prompt.startsWith('## Hookify Alignment Notes')).toBe(true)
+  })
+})</doc><doc title="Intl.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { formatClockTime, formatCount, formatDateTime } from '~/utils/intl'
+
+describe('intl helpers', () => {
+  it('formats counts with provided locale', () => {
+    const locale = 'de-DE'
+    const expected = new Intl.NumberFormat(locale).format(12345)
+    expect(formatCount(12345, { locale })).toBe(expected)
+  })
+
+  it('formats date/time with provided locale and timezone', () => {
+    const locale = 'fr-FR'
+    const timeZone = 'Europe/Paris'
+    const date = new Date('2024-02-03T10:15:00Z')
+    const expected = new Intl.DateTimeFormat(locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone,
+    }).format(date)
+
+    expect(formatDateTime(date, { locale, timeZone })).toBe(expected)
+  })
+
+  it('formats clock time with provided locale and timezone', () => {
+    const locale = 'ja-JP'
+    const timeZone = 'Asia/Tokyo'
+    const date = new Date('2024-05-10T00:00:00Z')
+    const expected = new Intl.DateTimeFormat(locale, {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone,
+    }).format(date)
+
+    expect(formatClockTime(date, { locale, timeZone })).toBe(expected)
+  })
+})</doc><doc title="Log Timestamp.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { formatLogTimestamp } from '~/utils/log-timestamp'
+
+describe('formatLogTimestamp', () => {
+  it('returns friendly label with UTC suffix for Z timestamps', () => {
+    const value = '2025-01-01T12:34:56Z'
+    expect(formatLogTimestamp(value)).toBe('Jan 1, 2025 12:34 PM UTC')
+  })
+
+  it('preserves explicit offsets without conversion', () => {
+    const value = '2025-08-15T09:05:00-0500'
+    expect(formatLogTimestamp(value)).toBe('Aug 15, 2025 9:05 AM UTC-05:00')
+  })
+
+  it('supports clock-only formatting with offsets', () => {
+    const value = '2025-11-01T23:45:00+0530'
+    expect(formatLogTimestamp(value, { style: 'clock' })).toBe('11:45 PM UTC+05:30')
+  })
+
+  it('handles date-only inputs', () => {
+    const value = '2025-03-10'
+    expect(formatLogTimestamp(value)).toBe('Mar 10, 2025')
+  })
+
+  it('returns original string when parsing fails', () => {
+    const value = 'not-a-timestamp'
+    expect(formatLogTimestamp(value)).toBe('not-a-timestamp')
+  })
+})</doc><doc title="Repometadata.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import { deriveRepoDetailsFromLine } from '~/lib/repo-metadata'
+
+describe('repo metadata derivation', () => {
+  it('infers repo label from cwd when git info missing', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        cwd: '/home/user/projects/temp/codex-session-view',
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoLabel).toBe('codex-session-view')
+    expect(details.repoMeta?.repo).toBe('codex-session-view')
+    expect(details.repoMeta?.cwd).toBe('/home/user/projects/temp/codex-session-view')
+  })
+
+  it('stores trimmed cwd inside repo metadata for Hookify resolution', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        cwd: '  /opt/repos/sample-app  ',
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoMeta?.cwd).toBe('/opt/repos/sample-app')
+    expect(details.workspaceRoot).toBe('/opt/repos/sample-app')
+  })
+
+  it('prefers repository_url metadata when available', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        repository_url: 'https://github.com/owner/sample-repo.git',
+        cwd: '/tmp/random/path',
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoLabel).toBe('owner/sample-repo')
+  })
+
+  it('derives repo name from parent folders when cwd ends in src', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        cwd: '/home/user/projects/temp/codex-session-viewer/src',
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoLabel).toBe('codex-session-viewer')
+  })
+
+  it('supports nested source repository metadata', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        source: {
+          repository_url: 'https://gitlab.com/example/team/app.git',
+        },
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoLabel).toBe('team/app')
+  })
+
+  it('treats numeric repo names as unknown', () => {
+    const line = JSON.stringify({
+      type: 'session_meta',
+      timestamp: new Date().toISOString(),
+      payload: {
+        timestamp: new Date().toISOString(),
+        repoLabel: '0123456789',
+      },
+    })
+    const details = deriveRepoDetailsFromLine(line)
+    expect(details.repoLabel).toBeUndefined()
+  })
+})</doc><doc title="Search Utils.Test" desc="docs page.">import { describe, expect, it } from 'vitest'
+import {
+  buildSearchMatchers,
+  findHighlightRanges,
+  matchesSearchMatchers,
+} from '~/utils/search'
+
+describe('search utils', () => {
+  it('builds matchers for plain tokens', () => {
+    const matchers = buildSearchMatchers('alpha beta')
+    expect(matchers).toHaveLength(2)
+    expect(matchers[0]).toMatchObject({ raw: 'alpha', isRegex: false })
+    expect(matchers[1]).toMatchObject({ raw: 'beta', isRegex: false })
+  })
+
+  it('supports regex literals with flags', () => {
+    const matchers = buildSearchMatchers('/foo.+/i gamma')
+    expect(matchers[0]).toMatchObject({ raw: '/foo.+/i', isRegex: true })
+    expect(matchers[1]).toMatchObject({ raw: 'gamma', isRegex: false })
+  })
+
+  it('matches text when every matcher passes', () => {
+    const matchers = buildSearchMatchers('alpha beta')
+    expect(matchesSearchMatchers('alpha-beta branch', matchers)).toBe(true)
+    expect(matchesSearchMatchers('alpha only', matchers)).toBe(false)
+  })
+
+  it('finds highlight ranges merged and limited', () => {
+    const matchers = buildSearchMatchers('alpha beta')
+    const ranges = findHighlightRanges('alpha beta alpha', matchers)
+    expect(ranges.length).toBeGreaterThan(0)
+    expect(ranges[0]).toMatchObject({ start: 0 })
+  })
+})
+</doc><doc title="Sessionreporoots.Test" desc="docs page.">import { afterEach, beforeEach, describe, expect, it } from 'vitest'
+import { mkdtemp, mkdir, rm, writeFile } from 'node:fs/promises'
+import path from 'node:path'
+import os from 'node:os'
+import { clearAssetRepoRootCache, resolveRepoRootForAssetPath } from '~/server/lib/sessionRepoRoots'
+import { clearSessionUploadRecords, ensureSessionUploadForFile } from '~/server/persistence/sessionUploads'
+
+function normalize(dir: string) {
+  return dir.replace(/\\/g, '/').replace(/\/+$/, '')
+}
+
+describe('sessionRepoRoots', () => {
+  let repoDir: string
+
+  beforeEach(async () => {
+    repoDir = await mkdtemp(path.join(os.tmpdir(), 'repo-root-'))
+    await mkdir(path.join(repoDir, '.git'), { recursive: true })
+    clearAssetRepoRootCache()
+    await clearSessionUploadRecords()
+  })
+
+  afterEach(async () => {
+    await rm(repoDir, { recursive: true, force: true }).catch(() => {})
+  })
+
+  it('resolves repo root for registered session assets with git metadata', async () => {
+    const sessionFile = path.join(repoDir, 'sessions', 'sample.ndjson')
+    await mkdir(path.dirname(sessionFile), { recursive: true })
+    await writeFile(sessionFile, '{"events": []}', 'utf8')
+
+    await ensureSessionUploadForFile({
+      relativePath: 'tmp/sample.ndjson',
+      absolutePath: sessionFile,
+      source: 'external',
+    })
+
+    const result = await resolveRepoRootForAssetPath('uploads/tmp/sample.ndjson')
+    expect(result.rootDir).toBe(normalize(repoDir))
+    expect(result.reason).toBeUndefined()
+  })
+
+  it('falls back to file directory when git metadata is missing', async () => {
+    const orphanRepo = await mkdtemp(path.join(os.tmpdir(), 'repo-root-missing-'))
+    const orphanFile = path.join(orphanRepo, 'session.ndjson')
+    await writeFile(orphanFile, '{"events": []}', 'utf8')
+
+    await ensureSessionUploadForFile({
+      relativePath: 'tmp/orphan.ndjson',
+      absolutePath: orphanFile,
+      source: 'external',
+    })
+
+    const result = await resolveRepoRootForAssetPath('uploads/tmp/orphan.ndjson')
+    expect(result.rootDir).toBe(normalize(path.dirname(orphanFile)))
+    expect(result.reason).toBeUndefined()
+
+    await rm(orphanRepo, { recursive: true, force: true }).catch(() => {})
+  })
+})</doc><doc title="Sessionsnapshots.Test" desc="docs page.">import { describe, expect, it, beforeEach } from 'vitest';
+import {
+  ACTIVE_SNAPSHOT_ID,
+  clearSessionSnapshot,
+  sessionSnapshotCollection,
+  upsertSessionSnapshot,
+} from '~/db/sessionSnapshots';
+
+describe('sessionSnapshots persistence', () => {
+beforeEach(async () => {
+  sessionSnapshotCollection.startSyncImmediate?.();
+  await clearSessionSnapshot();
+});
+
+  it('clearSessionSnapshot can be called multiple times without throwing', async () => {
+    await clearSessionSnapshot();
+    await expect(clearSessionSnapshot()).resolves.toBeUndefined();
+  });
+
+  it('persists and removes the active snapshot', async () => {
+    const record = {
+      id: ACTIVE_SNAPSHOT_ID,
+      meta: undefined,
+      events: [{ type: 'message', role: 'user', content: 'hello world' } as any],
+      persistedAt: Date.now(),
+    };
+    await upsertSessionSnapshot(record);
+    expect(sessionSnapshotCollection.get(ACTIVE_SNAPSHOT_ID)).toBeDefined();
+    await clearSessionSnapshot();
+    expect(sessionSnapshotCollection.get(ACTIVE_SNAPSHOT_ID)).toBeUndefined();
+  });
+});</doc></tests></project>

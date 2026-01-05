@@ -1,0 +1,2240 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/README.md ---
+# Codexia Docs
+
+- [USAGE](./USAGE.md) — Installation, development, and how to use the app
+- [ARCHITECTURE](./ARCHITECTURE.md) — High-level design and components
+
+
+## Links discovered
+- [USAGE](https://raw.githubusercontent.com/milisp/codexia/main/docs/./USAGE.md)
+- [ARCHITECTURE](https://raw.githubusercontent.com/milisp/codexia/main/docs/./ARCHITECTURE.md)
+
+--- docs/ARCHITECTURE.md ---
+# Codexia Architecture
+
+This document provides a high-level overview of Codexia’s architecture, including the frontend, backend, and how sessions are managed. For app usage, see [USAGE](./USAGE.md).
+
+## Overview
+
+Codexia is a cross‑platform desktop app built with Tauri v2 (Rust backend) and React + TypeScript (frontend). It provides a GUI around the Codex CLI with multi-session handling, streaming responses, and project‑aware workflows.
+
+## Frontend (React + TypeScript)
+
+- Zustand for state management with persistence
+- shadcn/ui for UI components (Radix + Tailwind CSS)
+- Real-time event handling for streaming responses
+- Theme and accent selection persisted via Zustand
+
+## Backend (Rust + Tauri)
+
+- Multi-process management for concurrent Codex sessions
+- JSON-RPC protocol over stdin/stdout to communicate with the Codex CLI
+- Async event streaming from backend to frontend
+- Resource cleanup and process lifecycle management per session
+
+## Session Management
+
+- Independent processes per chat session
+- Configurable startup parameters (model, sandboxing, approval policy, working directory)
+- Event isolation between sessions for security and clarity
+
+important files connect Codexia and Codex CLI via `app-server` json RPC
+ 
+```
+src/hooks/useCodex/useConversationEvents.ts
+src-tauri/src/codex/client
+```
+
+## Project Structure
+
+```
+codexia/
+├── src/                    # React frontend source
+│   ├── components/         # UI components
+│   ├── hooks/              # Custom React hooks
+│   ├── store/              # Zustand state management
+│   ├── services/           # Business logic services
+│   └── types/              # TypeScript type definitions
+├── src-tauri/              # Rust backend source
+│   ├── src/
+│   │   ├── lib.rs          # Main Tauri application
+│   │   └── codex # Codex process management
+│   └── Cargo.toml          # Rust dependencies
+├── public/                 # Static assets
+└── package.json            # Node.js dependencies
+```
+
+## Key Technologies
+
+- Frontend: React 19, TypeScript, Zustand, shadcn/ui, Vite
+- Backend: Rust, Tauri v2, Tokio async runtime
+- Process Communication: JSON-RPC over stdin/stdout
+- State Management: Zustand with persistence middleware
+- UI Framework: shadcn/ui built on Radix UI and Tailwind CSS
+
+
+
+## Links discovered
+- [USAGE](https://raw.githubusercontent.com/milisp/codexia/main/docs/./USAGE.md)
+
+--- docs/auth-codexia.md ---
+# auth for codexia
+
+get supabase for auth login
+
+```
+# .env
+VITE_SUPABASE_URL=https://example.supabase.co
+VITE_SUPABASE_ANON_KEY=eyb...
+VITE_REDIRECT_URL=http://localhost:1420/auth-success
+```
+
+## VITE_REDIRECT_URL
+
+### Next.js
+
+```sh
+next dev # command to run server http://localhost:1420 or other
+```
+
+page.tsx
+
+```js
+"use client";
+
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
+
+function CallbackContent() {
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams) {
+      const query = searchParams.toString();
+      const deepLinkUrl = `codexia://auth/callback?${query}`;
+      window.location.href = deepLinkUrl;
+    }
+  }, [searchParams]);
+
+  return (
+    <div style={{ maxWidth: 600, margin: "100px auto", padding: 16 }}>
+      login success, you can close this page now.
+    </div>
+  );
+}
+
+export default function CallbackPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <CallbackContent />
+    </Suspense>
+  );
+}
+```
+
+### index.html
+
+```sh
+python3 -m http.server 1420 # command to run server http://localhost:1420 or other
+```
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Auth Callback</title>
+    <script>
+      window.onload = function () {
+        const searchParams = window.location.search;
+        const deepLinkUrl = `codexia://auth/callback${searchParams}`;
+        window.location.href = deepLinkUrl;
+      };
+    </script>
+  </head>
+  <body>
+    <div style="max-width: 600px; margin: 100px auto; padding: 16px">
+      login success, you can close this page now.
+    </div>
+  </body>
+</html>
+```
+
+--- docs/performance_optimizations.md ---
+# Performance Optimization Summary: Resolving Text Selection Rendering Issues
+
+## Problem Diagnosis
+Users reported difficulty selecting text in chat messages, suspecting continuous rendering as the cause. Analysis identified several performance bottlenecks:
+
+1. **Frequent component re-renders**: The entire MessageList re-renders every time the text selection changes.
+2. **Repeated calculations**: The `normalizeMessage` function recalculates on every render.
+3. **Redundant TextSelectionMenu instances**: A selection menu component is created for each message.
+4. **Unoptimized selection detection**: Frequent DOM queries and state updates.
+
+## Implemented Optimizations
+
+### 1. Component Separation and Memoization
+- **Created independent `Message` component**: Wrapped with `React.memo` to avoid unnecessary re-renders.
+- **Optimized `MarkdownRenderer`**: Used `React.memo`, re-rendering only when content changes.
+- **Cached computation results**: Used `useMemo` to cache `normalizedMessages`.
+
+### 2. TextSelectionMenu Optimization
+- **Single instance**: Changed from one menu per message to a single global menu.
+- **Smart context detection**: Automatically detect the message context of selected text via DOM attributes.
+- **Reduced component tree**: Removed redundant component instances.
+
+### 3. Text Selection Detection Optimization
+- **Debounce handling**: Added 100ms debounce to avoid frequent state updates.
+- **Passive event listening**: Used `{ passive: true }` to improve scroll performance.
+- **Intelligent state updates**: Update state only when the selected text actually changes.
+- **Improved selector logic**: Included `[data-message-role]` selector.
+
+### 4. Callback Function Optimization
+- **Used `useCallback`**: Prevent function reference changes that cause re-renders.
+- **Reduced dependencies**: Optimized hook dependency arrays.
+
+## Specific Changes
+
+### File Changes:
+1. **Added**: `src/components/chat/Message.tsx` - Independent message component.
+2. **Optimized**: `src/components/chat/MessageList.tsx` - Performance-optimized message list.
+3. **Optimized**: `src/components/chat/TextSelectionMenu.tsx` - Single-instance selection menu.
+4. **Optimized**: `src/components/chat/MarkdownRenderer.tsx` - Memoized renderer.
+5. **Optimized**: `src/hooks/useTextSelection.ts` - Debounced and optimized selection detection.
+
+### Performance Improvements:
+- ✅ **Reduced re-renders**: Message components re-render only when their own content changes.
+- ✅ **Optimized selection experience**: Text selection is smoother and uninterrupted by rendering.
+- ✅ **Memory optimization**: Reduced number of component instances.
+- ✅ **CPU optimization**: Reduced unnecessary computations and DOM operations.
+
+## User Experience Improvements
+
+### Before:
+- Text selection was frequently interrupted.
+- Multiple instances of selection menus could appear.
+- UI response was delayed.
+
+### Now:
+- Text selection is smooth and stable.
+- Floating menu is accurately positioned.
+- UI responds quickly.
+- Selection operations no longer trigger unnecessary re-renders.
+
+## Technical Highlights
+
+1. **React.memo**: Prevent unnecessary component re-renders.
+2. **useMemo/useCallback**: Cache computed results and function references.
+3. **Debounce mechanism**: Reduce high-frequency state updates.
+4. **Smart selectors**: Pass context information via DOM attributes.
+5. **Single-instance pattern**: Reduce the number of component instances.
+
+These optimizations significantly improve the text selection user experience and resolve selection interruptions caused by rendering.
+
+--- docs/test_notepad_integration.md ---
+# Notepad & Chat Integration Test (Updated v2.0)
+
+## Features Implemented:
+
+### 1. Add Message to Notepad (✅ Completed)
+- **Location**: In each chat message, hover to see a notepad icon
+- **Function**: Click to add the entire message to a new note or existing note
+- **Metadata**: Includes timestamp, message role (user/assistant), and source information
+
+### 2. Enhanced Text Selection to Notepad (✅ Completed)  
+- **Function**: Select text within a message to see a floating menu with copy and notepad options
+- **UI**: Floating menu appears above selected text with copy and "Add to Note" buttons
+- **Smart Selection**: Only works within message content areas, ignores UI elements
+- **Metadata**: Includes "Selected text" prefix in the source information
+
+### 3. Add Notepad Content to Chat (✅ Completed)
+- **Location 1**: In NoteEditor header - button to add current note content to chat input
+- **Location 2**: In NoteList - hover over any note to see chat icon to add that note's content to chat input
+- **Function**: Formats content with "From note [title]:" or "From notepad:" prefix
+
+### 4. Improved Markdown Rendering (✅ Completed)
+- **Improvement**: Fixed text selection issues in markdown content
+- **Features**: All text elements are now selectable with `select-text` CSS class
+- **Syntax Highlighting**: Uses rehype-prism for better code block highlighting
+- **Accessibility**: Better text selection UX in all markdown elements
+
+## UI Components Created:
+
+1. **MessageNoteActions.tsx** - Popover with options to add message/selected text to notepad
+2. **TextSelectionMenu.tsx** - NEW: Floating menu for text selection actions (copy, add to note)
+3. **MarkdownRenderer.tsx** - NEW: Enhanced markdown renderer with better text selection
+4. **NoteToChat.tsx** - Button to add note content to chat input  
+5. **useTextSelection.ts** - Enhanced hook for handling text selection across the app
+6. **Updated chatInputStore** - Added global input value management with `setInputValue` and `appendToInput`
+
+## Integration Points:
+
+- MessageList now shows notepad actions on hover
+- NoteEditor has "Add to Chat" button in header  
+- NoteList items have "Add to Chat" action on hover
+- ChatInterface now uses global input store for seamless integration
+
+## Test Instructions:
+
+1. **Test Message to Note**: 
+   - Start a conversation
+   - Hover over a message → Click notepad icon → Choose "Create new note" or add to existing
+   - Check if note was created with proper metadata
+
+2. **Test Enhanced Text Selection to Note**:
+   - Select text within a message
+   - Floating menu should appear above selection with Copy and "Add to Note" buttons
+   - Click "Add to Note" → Choose destination → Note should contain only selected text with "Selected text" metadata
+
+3. **Test Note to Chat**:
+   - Open notepad, create/select a note
+   - Click "Add to Chat" button in note editor OR hover over note in list and click chat icon
+   - Check if content appears in chat input with proper formatting
+
+4. **Test Cross-integration**:
+   - Add message to note → edit note → add note back to chat → send message
+   - Verify the full workflow maintains context and formatting
+
+--- docs/updater-usage.md ---
+# Updater Usage Guide
+
+The updater system allows your Tauri application to automatically check for and install updates from GitHub releases.
+
+## How It Works
+
+1. **Configuration**: The updater is configured in `tauri.conf.json` to check GitHub releases
+2. **Update Check**: The app checks for updates using the Tauri updater plugin
+3. **Download & Install**: If an update is available, it can be downloaded and installed
+4. **Restart**: The app automatically restarts after installation
+
+## Components
+
+### 1. UpdaterService (`src/components/updater.ts`)
+
+A singleton service that handles all update operations:
+
+```typescript
+import { updater } from '@/components/updater';
+
+// Check for updates
+const updateInfo = await updater.checkForUpdates();
+
+// Download and install update
+const success = await updater.downloadAndInstall((progress) => {
+  console.log(`Progress: ${progress.percentage}%`);
+});
+```
+
+### 2. UpdaterComponent (`src/components/UpdaterComponent.tsx`)
+
+A complete React component with UI for update management:
+
+```tsx
+import UpdaterComponent from '@/components/UpdaterComponent';
+
+function MyApp() {
+  return (
+    <div>
+      <UpdaterComponent />
+    </div>
+  );
+}
+```
+
+### 3. useUpdater Hook (`src/hooks/useUpdater.ts`)
+
+A React hook for custom update logic:
+
+```tsx
+import { useUpdater } from '@/hooks/useUpdater';
+
+function MyComponent() {
+  const {
+    updateInfo,
+    isChecking,
+    isDownloading,
+    progress,
+    error,
+    checkForUpdates,
+    downloadAndInstall
+  } = useUpdater();
+
+  return (
+    <div>
+      {updateInfo && (
+        <button onClick={downloadAndInstall}>
+          Update to {updateInfo.version}
+        </button>
+      )}
+    </div>
+  );
+}
+```
+
+## Integration
+
+The updater is already integrated into the Settings page under the "Updates" section. Users can:
+
+1. **Check for Updates**: Click "Check for Updates" to manually check
+2. **View Update Info**: See version, date, and release notes
+3. **Download & Install**: Click the download button to install updates
+4. **Monitor Progress**: See download progress with a progress bar
+
+## Configuration
+
+The updater is configured in `src-tauri/tauri.conf.json`:
+
+```json
+{
+  "plugins": {
+    "updater": {
+      "pubkey": "your-public-key",
+      "endpoints": [
+        "https://github.com/milisp/codexia/releases/download/{{version}}/updater.json"
+      ]
+    }
+  },
+  "bundle": {
+    "createUpdaterArtifacts": true
+  }
+}
+```
+
+## Release Process
+
+To create an update:
+
+1. **Build the app** with `bun run build`
+2. **Create a GitHub release** with the new version
+3. **Upload the updater artifacts** (generated in `src-tauri/target/release/bundle/`)
+4. **The updater.json file** will be automatically created
+
+## Features
+
+- ✅ Automatic update checking
+- ✅ Progress tracking during download
+- ✅ Error handling
+- ✅ Release notes display
+- ✅ Manual check for updates
+- ✅ Beautiful UI with shadcn components
+- ✅ TypeScript support
+- ✅ React hooks for custom integration
+
+## Error Handling
+
+The updater handles various error scenarios:
+
+- Network failures during update check
+- Download failures
+- Installation failures
+- Invalid update signatures
+
+All errors are displayed to the user with appropriate messages.
+
+## Security
+
+Updates are cryptographically signed using the public key in the configuration. Only updates signed with the corresponding private key will be installed.
+
+
+--- docs/USAGE.md ---
+# Using Codexia
+
+This guide covers installation, development, common workflows, and troubleshooting. See also: [Architecture](./ARCHITECTURE.md).
+
+## Download from github release
+
+[github release](https://github.com/milisp/codexia/releases) or [modern-github-release](https://milisp.github.io/modern-github-release/#/repo/milisp/codexia)
+
+## Build from source Prerequisites
+
+- Tauri prerequisites: https://v2.tauri.app/start/prerequisites/
+
+### Installation
+
+Clone and install dependencies:
+```bash
+git clone https://github.com/milisp/codexia
+cd codexia
+bun install
+```
+
+Run development build:
+```bash
+bun tauri dev
+```
+
+Build for production:
+```bash
+codex generate-ts --out src/bindings  # if you didn't run `bun tauri dev`
+bun tauri build
+```
+
+## App Usage
+
+### Creating Sessions
+- Click the Pencil button in the session sidebar to create a new chat session.
+- Each session starts its own Codex process and maintains independent configuration and context.
+
+### Managing Conversations
+- Switch between sessions via the sidebar; inactive sessions continue running in the background.
+
+### Configuration
+- Use the Settings icon to open the configuration panel.
+- Changes apply to the active session and persist automatically.
+
+### Theme & Accent Selection
+- Toggle light/dark with the sun/moon button in the header.
+- Pick an accent color from the palette button next to the theme toggle.
+- Defaults: dark mode with a pink accent. Choices persist via Zustand.
+
+### Chat pane
+
+- toggle brain icon
+
+## Troubleshooting / FAQ
+
+### 1) App fails to start after dependency changes
+Fix: Reinstall dependencies.
+```bash
+rm -rf node_modules bun.lock
+bun install
+```
+
+### 2) Can I use ChatGPT Plus/Pro instead of the API?
+Yes. Login via Codex first, then select ChatGPT:
+```bash
+codex  # then choose ChatGPT
+```
+
+
+
+## Links discovered
+- [Architecture](https://raw.githubusercontent.com/milisp/codexia/main/docs/./ARCHITECTURE.md)
+- [github release](https://github.com/milisp/codexia/releases)
+- [modern-github-release](https://milisp.github.io/modern-github-release/#/repo/milisp/codexia)
+
+--- docs/vision.md ---
+## 🌟 Vision
+
+Codexia aims to become the missing GUI for Codex CLI — a lightweight, cross-platform desktop app that makes working with AI coding agents more intuitive, powerful, and fun.
+
+Our goal is to bridge the gap between raw CLI power and a modern, user-friendly experience, so developers can focus on building, not fighting the interface.
+
+Codexia is built with Tauri, React, and Rust to deliver:
+- ⚡ Speed & performance of a native app
+- 🖥️ Cross-platform support (macOS, Windows, Linux)
+- 🤖 Deep integration with Codex CLI workflows
+
+⸻
+
+## 🛣️ Roadmap
+
+- ✅ Multi-session support with forking and editing
+- ✅ Real-time AI streaming output
+- ✅ Theme & accent customization
+- 🔄 Better message rendering with collapsible threads
+- 📂 Improved file-tree integration & notepad
+- 🧩 Plugin system for extending Codexia (slash commands)
+- 📦 Project-based session management (~/.codex/projects/{project}/{session})
+- 📸 Screenshot ✅ & export features (for sharing insights)
+- 🎨 UX improvements with shortcuts, drag-and-drop, better navigation
+- 🌍 Marketplace for community plugins & themes
+- ✅ 🔗 Integration with other AI tools (MCP servers)
+- 🛠️ Collaboration features (shareable sessions, real-time co-chat)
+- 📊 Analytics & session history search
+
+⸻
+
+🚀 Call to Action
+
+Codexia is open-source and community-driven.
+We welcome feedback, feature requests, and contributions.
+
+If you’re a developer, designer, or AI tinkerer — join us in shaping the future of AI-powered coding GUIs.
+
+--- CLAUDE.example.md ---
+# Claude Development Notes on macOS
+
+must be english in file
+
+## Project Info
+- The GUI for `codex cli` - coding agent
+- use proto -  `codex proto --oss -m {model}` enter non-interactive model use mistral
+- source code at folder `<codex-source-code-home>`
+- message sessions at `~/.codex/sessions/{year}/{month}/{date}/rollout-{datetime}-{session_id}.jsonl` use jsonl
+- `~/.codex/history.jsonl` - user conversation first text
+  - format `{"session_id": uuid,"ts":1755040085,"text":prompt}`
+
+### Project tech
+- Package manager: bun
+- Framework: React + shadcn + tailwindcss + TypeScript + Tauri v2
+- UI: shadcn UI components
+- code comment language: English-only
+- Zustand: for state management with persistence
+
+## Common Commands
+- `bun tauri dev` - read the backend output
+- `bun run build` - test frontend
+- `bunx --bun shadcn@latest add <dep>` - add shadcn dep
+- `cargo build` - only `cargo build at <root>/src-tauri` when rust code change
+- `codex -h` - Codex CLI for help
+
+## Project Structure
+- `src/components/` - React components
+- `src/pages/` - Page components
+- `src/hooks/` - Custom hooks and stores
+- `src/components/common/RouteTracker.tsx` - App routing configuration
+- use `@/hooks` `@/types` etc.
+
+## codex cli source code
+
+- `codex-rs` - rust code
+
+## ignore error
+
+model_reasoning_summary: auto medium low - this is codex bug
+
+
+--- CHANGELOG.md ---
+# Changelog
+
+## [0.7.1] - 2025-10-23
+
+### Features
+- Add DeltaEventLog component and integrate delta event handling in ChatPanel and ChatCompose.
+- Implement SourceControl component for Git status and file diff handling in the chat interface.
+- Add AttachedFilesTab component to manage and display attached files in the chat interface.
+- Add task page to use codex app-server.
+- Add search functionality to ProjectsPage and update AppHeader link text.
+- Add base_url to CodexConfig and session management for improved provider configuration logging.
+- Remove close_session and get_running_sessions methods from commands and client; clean up session management.
+- Remove SessionManager component and related session management methods from sessionManager service.
+- Enhance useDeepLink hook to conditionally access deep-link plugin based on runtime environment.
+- Implement AccentColorSelector component and refactor AppHeader to use it; remove unused explore, profile, and share pages.
+- Remove LogoSettings component and update SettingsSidebar for remote access.
+- Remove unused streaming styles from streaming.css.
+- Migrate tauri-remote-ui from submodule to direct Git dependency in Cargo.toml.
+- Update version to 0.7.0 and enhance documentation with new features and FAQs.
+- Integrate deep linking and enhance OAuth login logging in AuthPage.
+- Implement remote mode checks for various components and dialogs to restrict functionality.
+- Add remote UI functionality with configuration and status management.
+- Add BouncingDotsLoader component and integrate it into MessageList; create WelcomeSection for initial user experience.
+- Update README and add config.toml for new model providers.
+- Add token usage tracking and display in ChatInterface.
+- Refactor event handling in useCodexEvents hook.
+- Enhance session file parsing and metadata extraction.
+- Enhance event handling and token usage tracking.
+- Add vendor platform detection and binary discovery.
+- Add functionality to create new windows in the Tauri application.
+- Add model and provider.
+
+### Fixes
+- Update profile assignment logic in getNewConversationParams to handle OpenAI provider correctly.
+- Adjust button class in ConversationList for better text truncation and layout.
+- Update McpDialog to use openUrl from plugin-shell and improve error handling in ProjectsPage with toast notifications.
+- Update feature request link and correct license badge color in README.
+- Chat mode defaultApprovalPolicy to untrusted.
+- Fix selector label fallback in Sandbox component.
+- Improve current directory name retrieval in FileTreeHeader.
+
+### Refactor
+- Reorganize event components and enhance event handling in ChatPanel.
+- Integrate Zustand persistence in useConversationStore for improved state management.
+- Enhance ProviderModels component to fetch and manage Ollama models dynamically.
+- Update event key generation in ChatPanel to include index for improved uniqueness.
+- Remove old codex and chat files.
+- Remove ChatCompose component and update ChatPanel and NewChatView to use Zustand for input state management.
+- Integrate @radix-ui/react-toast for enhanced user notifications and update ChatPanel to utilize new event handling and state management features.
+- Change model field in Profile struct to be optional for improved flexibility.
+- Refactor src-tauri/src/config.rs to folder.
+- Memoize NewChatView to optimize rendering performance and update ChatPage to use the memoized component.
+- Replace ChatCompose with ChatInput in ChatPanel for enhanced input features and integrate Zustand for state management.
+- Enhance NewChatView and ProviderModels components with improved state management and model removal functionality.
+- Update ChatCompose, ChatPanel, and NewChatView to use Textarea for multi-line input; enhance event handling in useConversationStore.
+- Remove TaskPage and streamline ChatView component with new NewChatView integration.
+- Clean up AppHeader by removing unused logoSettings and simplifying logo rendering.
+- Remove filetree watch.
+- Remove image tab.
+- Set updater false.
+- Refactor: set env_key as option.
+- Refactor CodexClient from proto to app-server and related modules for improved JSON-RPC handling.
+- Redesign chat interface sandbox and approval controls.
+- Simplify FileTreeItem component's chat input handling.
+
+### Chore
+- Bump version to 0.7.1 in package.json, Cargo.toml, and Cargo.lock.
+- Update issue report template title and enhance CI workflows to use codex for TypeScript bindings generation.
+- Update CI workflows to export TypeScript bindings before building Tauri app and improve documentation for generating TS bindings.
+- Cargo check to cargo build.
+- Bump version to 0.6.0 in package.json, Cargo.toml, and Cargo.lock.
+
+### Documentation
+- Add related projects section to README with links to Codexia, Codexsm, MCP Linker, and awesome-codex-cli.
+- Add how to pass MacOS damaged warning.
+- Update README and add config.toml for new model providers.
+- Update CHANGELOG with new features and fixes.
+- Update issue_report.md.
+- Update README with new features and news.
+
+## [0.6.0] - 2025-09-26
+
+### Features
+- Add token usage tracking and display in ChatInterface.
+- Refactor event handling in useCodexEvents hook.
+- Enhance session file parsing and metadata extraction.
+- Enhance event handling and token usage tracking.
+- Add vendor platform detection and binary discovery.
+- Add functionality to create new windows in the Tauri application.
+- Add model and provider.
+
+### Fixes
+- Update McpDialog to use openUrl from plugin-shell and improve error handling in ProjectsPage with toast notifications.
+- Improve current directory name retrieval in FileTreeHeader.
+
+### Refactor
+- Simplify FileTreeItem component's chat input handling.
+
+### Chore
+- Bump version to 0.6.0 in package.json, Cargo.toml, and Cargo.lock.
+
+### Documentation
+- Update CHANGELOG with new features and fixes.
+- Update issue_report.md.
+- Update README with new features and news.
+
+## 2025-09-24
+
+### Feature
+- a button to create new window and a tauri command
+
+## [0.5.2] - 2025-09-24
+
+### Feature
+- optional login to share project
+
+### Fix
+- GitHub login issues on Linux and Windows
+
+## [0.5.1] - 2025-09-24
+
+Make Github login simple
+
+## [0.5.0] - 2025-09-23
+
+### Features
+- Implement user profile, share project to community and find co-founder features.
+- Enhance MCP management via updated `McpDialog`.
+- Improve FileTreeHeader with better search input focus handling.
+- Improve reasoning message handling in `useCodexEvents`.
+- Add Prompt Optimizer settings and control components.
+- Add `ConversationCategoryDialog` and `ResumeSessionsDialog` components.
+- Enhance `ReasoningEffortSelector` with dynamic effort options.
+
+### Fixes
+- Fix navigation logic in `ExploreProjectsPage`.
+- Improve layout overflow handling in `Layout` component.
+- Handle Tauri errors on macOS to prevent unexpected application errors.
+- Improve layout spacing in `AppHeader`.
+
+### Refactor
+- Streamline authentication logic and improve `AppHeader`.
+- Remove `FileReferenceList` and simplify `ChatInput`.
+- Simplify session file retrieval and rollout path search.
+
+### Documentation
+- Multiple README updates to improve clarity, feature descriptions, and community information.
+- Add issue report template to improve bug reporting.
+
+## [0.4.0] - 2025-09-15
+
+- add gpt-5-codex as default model
+- move model select ui between mode and Reasoning Effort
+
+### Change publish Strategy
+- change `.github/workflows/release.yml` manual publish binary package
+
+## [0.3.0] - 2025-09-11
+
+### Featrues
+- support codex built-in web search
+- file and FileTree change detect and refresh
+- enhance MessageList with feature cards for improved user onboarding
+- add ChangesSummary component for improved file diff display
+
+## [0.2.0] - 2025-09-11
+
+### Features
+- Enhance chat interface with diff viewer and inline reasoning.
+- Improve plan update handling in chat components.
+- Add ForkOriginBanner to display source conversation details.
+- Enhance edit-and-resend flow in Chat and Message components.
+- Add multi-select and session resume capabilities in ChatView.
+- Add category management for conversations.
+
+### Fixes
+- Adjust message component styles; remove unused timeline line.
+- CI: fix Linux artifact paths and signature file path.
+
+### Documentation
+- Add and refine docs for contributing, architecture, and usage.
+- Update README with refined vision and links.
+
+### CI/CD
+- Add Tauri signing keys to workflows; enhance CI/CD configuration.
+- Version chores and workflow improvements.
+
+## [0.1.2] - 2025-09-06
+
+### Features
+- Implement in-app updater and expose in Settings.
+- Add theme and accent color selection.
+- Support forking chats from existing conversations.
+- Improve message editing capabilities.
+- Split window utilities for Manual view.
+- Enhance ApprovalMessage and event summaries for clearer diffs.
+
+### Fixes
+- Correct chat forking logic.
+- Show MessageFooter on hover only.
+
+### Improvements
+- Streamline message type detection and message handling across components.
+- Replace NormalizedMessage with ChatMessage in message components.
+- Improve conversation history formatting in ChatInterface.
+- Simplify conversation creation and session management flows; remove legacy session features.
+- Improve content extraction and semantics in command/approval messages.
+
+### Documentation
+- Update README with newly added features and enhancements.
+
+## [0.1.1] - 2025-09-04
+
+### Initial Release 🚀
+- First public release of **Codexia** — a cross-platform GUI for the Codex CLI.
+- Features multi-session chat, live streaming responses, file-tree integration, and notepad support.
+- Supports multiple AI providers and sandboxed command execution.
+- Clean, professional UI built with Tauri, React, and shadcn/ui.
+- Persistent session storage and session-specific configuration.
+- Ready for development and production builds.
+
+> Codexia is an independent open-source project and not affiliated with OpenAI.
+
+
+--- CONTRIBUTING.md ---
+# Contributing to Codexia
+
+Thanks for your interest in improving Codexia! This guide explains how to set up your environment, make changes, and submit contributions.
+
+## Development Setup
+
+Prerequisites:
+- Tauri v2 toolchain (see https://v2.tauri.app/start/prerequisites/)
+- Bun package manager
+- Rust toolchain (for the Tauri backend)
+
+## Installation
+
+Clone:
+```bash
+git clone https://github.com/milisp/codexia
+cd codexia
+```
+
+Install dependencies:
+```bash
+bun install
+```
+
+Option step note or conversaion in the cloud if user require in the future:
+```sh
+cp .env.example .env
+```
+
+Run the app in development:
+```bash
+bun tauri dev
+```
+
+Build the frontend only:
+```bash
+codex generate-ts --out src/bindings  # if you didn't run `bun tauri dev`
+bun run build
+```
+
+Rust checks and formatting:
+```bash
+cd src-tauri && cargo check
+cd src-tauri && cargo fmt --all
+```
+
+Optional: copy the pre-commit hook used in this repo to prevent common frontend issues.
+```bash
+cp docs/pre-commit .git/hooks/pre-commit
+```
+
+## Pull Request Process
+
+1. Fork the repository.
+2. Create a feature branch: `git checkout -b feature/amazing-feature`.
+3. Make changes with clear, English-only code comments and docs.
+4. Before pushing, verify builds pass:
+   - `bun run build`
+   - `cd src-tauri && cargo check`
+5. Push your branch: `git push origin feature/amazing-feature`.
+6. Open a Pull Request and describe your changes, rationale, and testing steps.
+
+## Reporting Bugs and Requesting Features
+
+- Use GitHub Issues for bug reports and feature requests.
+- Include steps to reproduce, expected vs. actual behavior, logs/screenshots, and environment details.
+
+## Style and Conventions
+
+- Language: English-only for code comments and documentation.
+- UI: shadcn UI components with Tailwind CSS.
+- State: Zustand with persistence.
+- Keep changes minimal, focused, and consistent with the existing codebase.
+
+## Related Docs
+
+- Project usage: [USAGE](docs/USAGE.md)
+- Architecture overview: [ARCHITECTURE](docs/ARCHITECTURE.md)
+
+## Learning Resources
+
+- Tauri v2: https://v2.tauri.app/start/
+- LLM Notes (Tauri): https://tauri.app/llms.txt
+
+
+
+## Links discovered
+- [USAGE](https://raw.githubusercontent.com/milisp/codexia/main//docs/USAGE.md)
+- [ARCHITECTURE](https://raw.githubusercontent.com/milisp/codexia/main//docs/ARCHITECTURE.md)
+
+--- README.md ---
+<div align="center">
+  <img src="src-tauri/icons/128x128@2x.png" alt="Codexia Logo" width="120" height="120" />
+
+  # Codexia
+
+  A powerful GUI and Toolkit for Codex CLI
+
+Create custom agents, manage interactive Codex CLI sessions, run secure background agents, ~~fork chat~~, file-tree integration, prompt notepad, git diff, build-in pdf csv/xlsx viewer, and more.
+
+  <p>
+    <a href="#-features"><img src="https://img.shields.io/badge/Features-✨-blue?style=for-the-badge" alt="Features"></a>
+    <a href="#-installation"><img src="https://img.shields.io/badge/Install-🚀-green?style=for-the-badge" alt="Installation"></a>
+    <a href="#-usage"><img src="https://img.shields.io/badge/Usage-📖-purple?style=for-the-badge" alt="Usage"></a>
+    <a href="#-development"><img src="https://img.shields.io/badge/Develop-🛠️-orange?style=for-the-badge" alt="Development"></a>
+    <a href="https://discord.gg/zAjtD4kf5K"><img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord"></a>
+  </p>
+</div>
+
+> [!TIP]
+> **⭐ Star the repo and follow [@lisp_mi](https://x.com/lisp_mi) on X for more**.
+
+## 🌟 Overview
+
+**codexia** is a powerful desktop application that transforms how you interact with Codex CLI. Built with Tauri 2, it provides a beautiful GUI for managing your Codex CLI sessions, creating custom agents, tracking usage, and much more.
+
+Think of codexia as your command center for Codex CLI - bridging the gap between the command-line tool and a visual experience that makes AI-assisted development more intuitive and productive.
+
+![Reasoning](public/codexia-reason.png)
+
+▶️ [Watch the automation video on Twitter](https://x.com/lisp_mi/status/1966147638266589376)
+
+## ✨ Features
+
+### 🗂️ **Project & Session Management**
+- **Visual Project Browser**: Navigate through all your Codex CLI projects in `~/.codex/config.toml`
+- **Session History**: View and resume past coding sessions with full context, Rename chat title, manage `~/.codex/sessions`
+- **multiple windows**: open multiple projects at the same time
+- **Category and fav** conversatins
+
+### git worktree and sync file changes
+- worktree + sync to prevent accident delete all the changes. undo function.
+
+### remote control
+- remote control from browser via any device
+
+### Build-in Mutil file viewer format support
+
+- PDF text selection
+- CSV/XLSX preview & selection
+
+### Prompt notepad
+- Notepad-chat integration
+
+### ⚙️ **Flexible Configuration**
+- Multiple AI providers (OpenAI, Ollama, Gemini, openrouter, xAI, Custom) - see [config.toml](docs/config.toml)
+- Per-session model configs
+- Adjustable sandbox policies
+- Custom approval workflows
+
+### 📊 **Usage Analytics Dashboard**
+- **Cost Tracking**: Monitor your usage and costs in real-time
+- **Token Analytics**: Detailed breakdown by model, project, and time period
+- **Visual Charts**: Beautiful charts showing usage trends and patterns
+
+### 🔌 **MCP Server Management**
+- **Server Registry**: Manage Model Context Protocol servers from a central UI
+- **Easy Configuration**: Add servers via UI or import from existing configs
+- **Want more?**: use [mcp-linker](https://github.com/milisp/mcp-linker) to manage mutil clients include Codex CLI with marketplace.
+
+### Codex CLI features
+- Sandbox execution modes for safe code running
+- Approval workflows for sensitive operations
+- Configurable command execution policies
+- Isolated processes per session for security
+- image input
+- Screenshot as image input
+- toggle codex built-in gpt-5 web search
+
+### 📝 **AGENTS.md**
+- **Built-in Editor**: Edit AGENTS.md file directly within the app
+- **Live Preview**: See your markdown rendered in real-time
+- **Syntax Highlighting**: Full markdown support with syntax highlighting
+
+### 🎯 **Professional UX**
+- Responsive UI with shadcn/ui
+- Config panel
+- Syntax-highlighted markdown
+- Todo plan display
+- ~~Fork chat~~
+- Persistent UI state
+- Auto WebPreview (e.g., Next.js http://localhost:3000)
+- Theme & Accent selection
+
+## 📖 Usage
+
+### Getting Started
+
+1. **Launch codexia**: Open the application after installation
+2. **Welcome Screen**: Choose a project or open a project
+3. **First Time Setup**: codexia will automatically detect your `~/.codex` directory
+
+### Managing Projects
+
+```
+Projects → Select/Open Project → View Sessions → Resume or Start New
+```
+
+- Click on any project to view its sessions
+- Each session shows the first message and timestamp
+- Resume sessions directly or start new ones
+
+### Creating Agents
+
+```
+Configure → Input your prompt → Agent start → Execute
+```
+
+1. **Design Your Agent**: Input your prompt, 
+  * option steps
+  - type @ to show file select
+  - One-click @ file or folder
+  - Prompt optimizer
+2. **Set Permissions**: chat and plan, Agent, Agent(full), Configure file read/write and toggle network access icon
+3. **Configure Model**: Choose between available Codex models
+4. **Set Reasoning Effort**: Configure reasoning models, choose between available Reasoning Effort levels
+5. **(option) Choose image or screenshot**: click image icon or screenshot icon
+6. **Execute Tasks**: Run your agent on selected project by sending prompt
+
+### Manage Sessions
+
+```
+Select/Open Project -> Manage Sessions
+```
+
+1. **Select/Open Project**
+2. **Manage Sessions**: Rename/batch Delete/Delete/Fav/Category
+
+### Tracking Usage
+
+```
+Menu → Usage Dashboard → View Analytics
+```
+
+- Monitor costs by model, project, and date
+
+### Working with MCP Servers
+
+```
+Menu → MCP Manager → Add Server → Configure
+```
+
+- Quick Add Servers - desktop-commander and deepwiki
+- Manage MPC Servers - Add, Edit, delete, enable/disable
+- If you want more features for MCP Servers, get [mcp-linker](https://github.com/milisp/mcp-linker) - mcp marketplace, add and sync mcp servers for multi clients
+
+### Remote control
+
+```
+Menu → Settings → Remote access → Static bundle path - start
+```
+
+1. build static asset
+```sh
+bun run export:bindings
+bun run build
+```
+2. start remote server
+
+## 💖 Support
+
+Your donation will be used to support Codexia’s continued development, server costs,
+new feature research, and long-term maintenance. Thank you for helping this project grow!
+
+- [Polar Donate](https://buy.polar.sh/polar_cl_4hLxfGGjyEuiyX6zBlVp2HNzygaGJZuPT3AvC2cUzlH) (credit card friendly)
+- **Crypto donations**
+  - **USDC (ERC20)**: `0xBE18F2cf09eE294781B98DBB1653f64ed54a911C`
+  - **Bitcoin (BTC)**: `bc1qg6xyywh76wkz9glf7n5pnt458yczzgk9eykkt9`
+
+ ## 📋 Supported Codex Features
+
+- ✅ Interactive chat
+- ✅ Code generation/editing
+- ✅ File operations with sandbox
+- ✅ Command execution with approval
+- ✅ Multiple AI providers
+- ✅ Project-aware assistance
+- ✅ Streaming responses
+- ✅ Built-in Web Search
+
+## 🚀 Installation
+
+### Prerequisites
+- **Codex CLI**: Install from [github Codex](https://github.com/openai/codex)
+- **Git**: recommend option install [git](https://git-scm.com)
+
+### Download
+
+- [release](https://github.com/milisp/codexia/releases)
+- [modern-github-release](https://milisp.github.io/modern-github-release/#/repo/milisp/codexia)
+
+### macOS homebrew
+
+```sh
+brew tap milisp/codexia
+brew install --cask codexia
+```
+
+## 🔨 Build from Source
+
+### Prerequisites
+
+Before building codexia from source, ensure you have the following installed:
+
+#### System Requirements
+
+- **Operating System**: Windows 10/11, macOS 11+, or Linux (Ubuntu 20.04+)
+- **RAM**: Minimum 4GB (8GB recommended)
+- **Storage**: At least 1GB free space
+
+#### Required Tools
+
+1. **Rust** (1.70.0 or later)
+   ```bash
+   # Install via rustup
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. **Bun** (latest version)
+   ```bash
+   # Install bun
+   curl -fsSL https://bun.sh/install | bash
+   ```
+
+3. **Git**
+   ```bash
+   # Usually pre-installed, but if not:
+   # Ubuntu/Debian: sudo apt install git
+   # macOS: brew install git
+   # Windows: Download from https://git-scm.com
+   ```
+
+#### Platform-Specific Dependencies
+
+**Linux (Ubuntu/Debian)**
+```bash
+# Install system dependencies
+sudo apt update
+sudo apt install -y \
+  libwebkit2gtk-4.1-dev \
+  libgtk-3-dev \
+  libayatana-appindicator3-dev \
+  librsvg2-dev \
+  patchelf \
+  build-essential \
+  curl \
+  wget \
+  file \
+  libssl-dev \
+  libxdo-dev \
+  libsoup-3.0-dev \
+  libjavascriptcoregtk-4.1-dev
+```
+
+**macOS**
+```bash
+# Install Xcode Command Line Tools
+xcode-select --install
+
+# Install additional dependencies via Homebrew (optional)
+brew install pkg-config
+```
+
+**Windows**
+- Install [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- Install [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/) (usually pre-installed on Windows 11)
+
+### Build Steps
+
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/milisp/codexia.git
+   cd codexia
+   ```
+
+2. **Install Frontend Dependencies**
+   ```bash
+   bun install
+   ```
+
+3. **Build the Application**
+   
+   **For Development (with hot reload)**
+   ```bash
+   bun tauri dev
+   ```
+   
+   **For Production Build**
+   ```bash
+   # Build the application
+   bun run export:bindings or codex generate-ts --out src/bindings
+   bun tauri build
+   
+   # The built executable will be in:
+   # src-tauri/target/release/
+   ```
+
+4. **Platform-Specific Build Options**
+   
+   **Debug Build (faster compilation, larger binary)**
+   ```bash
+   bun tauri build --debug
+   ```
+   
+   **Universal Binary for macOS (Intel + Apple Silicon)**
+   ```bash
+   bun tauri build --target universal-apple-darwin
+   ```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **"cargo not found" error**
+   - Ensure Rust is installed and `~/.cargo/bin` is in your PATH
+   - Run `source ~/.cargo/env` or restart your terminal
+
+2. **Linux: "webkit2gtk not found" error**
+   - Install the webkit2gtk development packages listed above
+   - On newer Ubuntu versions, you might need `libwebkit2gtk-4.0-dev`
+
+3. **Windows: "MSVC not found" error**
+   - Install Visual Studio Build Tools with C++ support
+   - Restart your terminal after installation
+
+4. **"codex command not found" error**
+   - Ensure Codex CLI is installed and in your PATH
+   - Run `type codex` to show codex path
+   - Test with `codex --version`
+
+5. **Build fails with "out of memory"**
+   - Try building with fewer parallel jobs: `cargo build -j 2`
+   - Close other applications to free up RAM
+
+#### Verify Your Build
+
+After building, you can verify the application works:
+```bash
+# Run the built executable directly
+# Linux/macOS
+./src-tauri/target/release/codexia
+
+# Windows
+./src-tauri/target/release/codexia.exe
+```
+
+### Build Artifacts
+
+The build process creates several artifacts:
+
+- **Executable**: The main codexia application
+- **Installers** (when using `tauri build`):
+  - `.deb` package (Linux)
+  - `.AppImage` (Linux)
+  - `.dmg` installer (macOS)
+  - `.msi` installer (Windows)
+  - `.exe` installer (Windows)
+
+All artifacts are located in `src-tauri/target/release/`.
+
+## 🛠️ Development
+
+### Tech Stack
+
+- **Frontend**: React 19 + TypeScript + Vite 7
+- **Backend**: Rust with Tauri 2
+- **UI Framework**: Tailwind CSS v4 + shadcn/ui
+- **Package Manager**: Bun
+
+### Project Structure
+
+```
+codexia/
+├── src/                    # React frontend source
+│   ├── components/         # UI components
+│   ├── hooks/              # Custom React hooks
+│   ├── store/              # Zustand state management
+│   ├── services/           # Business logic services
+│   └── types/              # TypeScript type definitions
+├── src-tauri/              # Rust backend source
+│   ├── src/
+│   │   ├── lib.rs          # Main Tauri application
+│   │   └── codex           # Codex process management
+├── public/                 # Public assets
+```
+
+### Development Commands
+
+```bash
+# Start development server
+bun tauri dev
+
+# Run frontend only
+bun run dev
+
+# Type checking
+bunx tsc --noEmit
+
+# Run Rust tests
+cd src-tauri && cargo test
+
+# Format code
+cd src-tauri && cargo fmt
+```
+
+## 🛡️ **Security & Control**
+
+Codexia prioritizes your privacy and security:
+
+#### Privacy
+- **Local Storage**: All data stays on your machine
+- **No Telemetry**: No data collection or tracking
+- **Open Source**: Full transparency through open source code
+
+## FAQ
+
+- MacOS damaged warning
+[🎥Youtube](https://www.youtube.com/watch?v=MEHFd0PCQh4)
+The app not sign yet, You can open it by running the terminal command:
+
+```sh
+xattr -cr /Applications/codexia.app
+open -a /Applications/codexia.app  # or click the Codexia app
+```
+
+## 🛣️ Roadmap
+
+- [x] MCP tool call
+- More file format support
+- Better UI customization
+- Plugin system
+- Advanced debugging tools
+- Real-time collaboration
+- Performance optimizations
+- [x] token count
+
+🚀 **Call to Action**
+
+If you’re a developer, designer, or AI tinkerer — Join us on this exciting journey to redefine the developer experience with AI. Contribute to the project, share your feedback, and help build the future of intelligent coding environments. Together, we can make Codexia the go-to platform for developers worldwide!
+
+## 💬 Discussions
+
+Join the [Discussions](https://github.com/milisp/codexia/discussions)
+
+## Community forks
+
+- [jeremiahodom/codex-ui](https://github.com/jeremiahodom/codex-ui) - Node.js backend with API/SSE communication
+- [Itexoft/codexia](https://github.com/Itexoft/codexia) - SSH integration
+- [nuno5645/codexia](https://github.com/nuno5645/codexia) - add support for new reasoning and token count events
+
+## Related project
+- [awesome-codex-cli](https://github.com/milisp/awesome-codex-cli) - A curated list of awesome resources, tools for OpenAI Codex CLI
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+### Areas for Contribution
+
+- 🐛 Bug fixes and improvements
+- ✨ New features and enhancements
+- 📚 Documentation improvements
+- 🎨 UI/UX enhancements
+- 🧪 Test coverage
+- 🌐 Internationalization
+
+## 💖 Contributors
+
+Thanks to all our wonderful contributors!
+
+<a href="https://github.com/milisp/codexia/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=milisp/codexia" />
+</a>
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Disclaimer
+
+Codexia is an independent open-source project and is not built by OpenAI or any company.
+
+## 🙏 Acknowledgments
+
+- [Plux](https://github.com/milisp/plux) one click @files from FileTree & notepad
+- [Claude code](https://www.anthropic.com/claude-code) Co-Authored-By Claude code
+- [codex](https://chatgpt.com/codex) for the Codex CLI
+- [Tauri](https://tauri.app/) for the excellent desktop app framework
+- [shadcn/ui](https://ui.shadcn.com/) for the beautiful UI components
+- [ChatGPT](https://chatgpt.com) Some code suggest by ChatGPT
+- The open source community for the amazing tools and libraries
+
+---
+
+<div align="center">
+  <p>
+    <strong>Made with ❤️ by <a href="https://github.com/milisp">milisp</a></strong>
+  </p>
+  <p>
+    <a href="https://github.com/milisp/codexia/issues">Report Bug · Request Feature</a>
+  </p>
+</div>
+
+## 📈 Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=milisp/codexia&type=Date)](https://star-history.com/#milisp/codexia)
+
+
+## Links discovered
+- [@lisp_mi](https://x.com/lisp_mi)
+- [Reasoning](https://raw.githubusercontent.com/milisp/codexia/main//public/codexia-reason.png)
+- [Watch the automation video on Twitter](https://x.com/lisp_mi/status/1966147638266589376)
+- [config.toml](https://raw.githubusercontent.com/milisp/codexia/main//docs/config.toml)
+- [mcp-linker](https://github.com/milisp/mcp-linker)
+- [Polar Donate](https://buy.polar.sh/polar_cl_4hLxfGGjyEuiyX6zBlVp2HNzygaGJZuPT3AvC2cUzlH)
+- [github Codex](https://github.com/openai/codex)
+- [git](https://git-scm.com)
+- [release](https://github.com/milisp/codexia/releases)
+- [modern-github-release](https://milisp.github.io/modern-github-release/#/repo/milisp/codexia)
+- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+- [WebView2](https://developer.microsoft.com/microsoft-edge/webview2/)
+- [🎥Youtube](https://www.youtube.com/watch?v=MEHFd0PCQh4)
+- [Discussions](https://github.com/milisp/codexia/discussions)
+- [jeremiahodom/codex-ui](https://github.com/jeremiahodom/codex-ui)
+- [Itexoft/codexia](https://github.com/Itexoft/codexia)
+- [nuno5645/codexia](https://github.com/nuno5645/codexia)
+- [awesome-codex-cli](https://github.com/milisp/awesome-codex-cli)
+- [Contributing Guide](https://raw.githubusercontent.com/milisp/codexia/main//CONTRIBUTING.md)
+- [LICENSE](https://raw.githubusercontent.com/milisp/codexia/main//LICENSE)
+- [Plux](https://github.com/milisp/plux)
+- [Claude code](https://www.anthropic.com/claude-code)
+- [codex](https://chatgpt.com/codex)
+- [Tauri](https://tauri.app/)
+- [shadcn/ui](https://ui.shadcn.com/)
+- [ChatGPT](https://chatgpt.com)
+- [![Star History Chart](https://api.star-history.com/svg?repos=milisp/codexia&type=Date)
+- [<img src="https://img.shields.io/badge/Discord-Join-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Discord">](https://discord.gg/zAjtD4kf5K)
+- [<img src="https://contrib.rocks/image?repo=milisp/codexia" />](https://github.com/milisp/codexia/graphs/contributors)
+- [milisp](https://github.com/milisp)
+- [Report Bug · Request Feature](https://github.com/milisp/codexia/issues)
+
+--- index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tauri + React + Typescript</title>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- vite.config.ts ---
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+import tailwindcss from "@tailwindcss/vite";
+import path from "path";
+
+// @ts-expect-error process is a nodejs global
+const host = process.env.TAURI_DEV_HOST;
+
+// https://vitejs.dev/config/
+export default defineConfig(async () => ({
+  plugins: [react(), tailwindcss()],
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+  // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
+  //
+  // 1. prevent vite from obscuring rust errors
+  clearScreen: false,
+  // 2. tauri expects a fixed port, fail if that port is not available
+  server: {
+    port: 1420,
+    strictPort: true,
+    host: host || false,
+    hmr: host
+      ? {
+          protocol: "ws",
+          host,
+          port: 1421,
+        }
+      : undefined,
+    watch: {
+      // 3. tell vite to ignore watching `src-tauri`
+      ignored: ["**/src-tauri/**", "**/src/bindings/**"],
+    },
+  },
+}));
+
+
+--- src/vite-env.d.ts ---
+/// <reference types="vite/client" />
+
+
+--- src/utils/backendErrorListener.ts ---
+import { listen } from "@/lib/tauri-proxy";
+import { useEffect } from "react";
+import { useSessionStore } from "@/stores/useSessionStore";
+import { toast } from "sonner";
+
+export interface BackendErrorPayload {
+  code: number;
+  message: string;
+  data?: unknown;
+}
+
+export function useBackendErrorListener() {
+  const resetBusyState = useSessionStore((state) => state.reset);
+
+  useEffect(() => {
+    let backendErrorUnlisten: (() => void) | null = null;
+
+    (async () => {
+      try {
+        backendErrorUnlisten = await listen<BackendErrorPayload>(
+          "codex:backend-error",
+          (event) => {
+            const { code, message } = event.payload;
+            toast.error(
+              `Backend error (code: ${code}): ${message || "Unknown error"}`,
+            );
+            resetBusyState();
+          },
+        );
+      } catch (err) {
+        const message =
+          err && typeof err === "object" && "message" in err
+            ? (err as any).message
+            : String(err);
+        toast.error(
+          "Failed to listen for backend errors:" +
+            (message ? ` ${message}` : ""),
+        );
+      }
+    })();
+
+    return () => {
+      backendErrorUnlisten?.();
+    };
+  }, [resetBusyState]);
+}
+
+
+--- src/utils/beep.ts ---
+export function playBeep() {
+  const audioCtx = new window.AudioContext();
+  const oscillator = audioCtx.createOscillator();
+  oscillator.type = "sine";
+  oscillator.frequency.setValueAtTime(440, audioCtx.currentTime);
+  oscillator.connect(audioCtx.destination);
+  oscillator.start();
+  oscillator.stop(audioCtx.currentTime + 0.3);
+}
+
+
+--- src/utils/buildParams.ts ---
+import { InputItem } from "@/bindings/InputItem";
+import { SendUserMessageParams } from "@/bindings/SendUserMessageParams";
+import { MediaAttachment } from "@/types/chat";
+
+export function buildMessageParams(
+    conversationId: string,
+    text: string,
+    attachments: MediaAttachment[] = [],
+  ): SendUserMessageParams {
+    const textItem: InputItem = { type: "text", data: { text } };
+    const imageItems: InputItem[] = attachments
+      .filter((attachment) => attachment.type === "image")
+      .map((attachment) => ({ type: "localImage", data: { path: attachment.path } }));
+  
+    if (imageItems.length < attachments.length) {
+      const unsupportedTypes = attachments
+        .filter((attachment) => attachment.type !== "image")
+        .map((attachment) => attachment.type);
+      if (unsupportedTypes.length > 0) {
+        console.warn(
+          "[chat] Unsupported attachment types omitted: ",
+          unsupportedTypes.join(", "),
+        );
+      }
+    }
+  
+    return {
+      conversationId,
+      items: [textItem, ...imageItems],
+    };
+  }
+
+--- src/types/chat.ts ---
+import type { EventMsg } from "@/bindings/EventMsg";
+
+export interface EventMeta {
+  streamKey?: string;
+  streamStartedAt?: number;
+  streamDurationMs?: number;
+  persisted?: boolean;
+}
+
+export interface CodexEvent {
+  id: number;
+  event: string; // "codex:event"
+  payload: {
+    method: string; // e.g. "codex/event/agent_message"
+    params: {
+      conversationId: string;
+      id: string;
+      msg: EventMsg;
+    };
+  };
+  meta?: EventMeta;
+}
+
+export type ResumeConversationResult = {
+  conversationId: string;
+  model: string;
+  initialMessages?: CodexEvent["payload"]["params"]["msg"][] | null;
+};
+
+export const extractInitialMessages = (
+  response: ResumeConversationResult,
+): CodexEvent["payload"]["params"]["msg"][] | null => {
+  return response.initialMessages ?? null;
+};
+
+// dont need exec_command_output_delta
+export const DELTA_EVENT_TYPES = new Set<EventMsg["type"]>([
+  "agent_message_delta",
+  "agent_message_content_delta",
+  "agent_reasoning_delta",
+  "agent_reasoning_raw_content_delta",
+  "reasoning_content_delta",
+  "reasoning_raw_content_delta",
+]);
+
+export interface MediaAttachment {
+  id: string;
+  type: "image" | "audio";
+  path: string;
+  name: string;
+  mimeType?: string;
+}
+
+
+--- src/stores/chatInputStore.ts ---
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { MediaAttachment } from '@/types/chat';
+
+export interface FileReference {
+  path: string;
+  relativePath: string;
+  name: string;
+  is_directory: boolean;
+  size?: number;
+  extension?: string;
+}
+
+interface ChatInputStore {
+  // File references for current input
+  fileReferences: FileReference[];
+  
+  // Recently accessed files for quick selectionw
+  recentFiles: FileReference[];
+
+  // Media attachments (images, audio)
+  mediaAttachments: MediaAttachment[];
+  
+  // Input value (not persisted)
+  inputValue: string;
+
+  // Prompt optimization history (local stack, not persisted)
+  promptHistory: string[];
+  
+  // Actions for file references
+  addFileReference: (path: string, relativePath: string, name: string, is_directory: boolean) => void;
+  removeFileReference: (path: string) => void;
+  clearFileReferences: () => void;
+  replaceFileReferences: (files: FileReference[]) => void;
+  addRecentFile: (file: FileReference) => void;
+  
+  // Actions for media attachments
+  addMediaAttachment: (attachment: MediaAttachment) => void;
+  removeMediaAttachment: (id: string) => void;
+  clearMediaAttachments: () => void;
+  
+  // Input actions
+  setInputValue: (value: string) => void;
+  appendToInput: (value: string) => void;
+
+  // Prompt optimization history actions
+  pushPromptHistory: (value: string) => void;
+  popPromptHistory: () => string | null;
+  clearPromptHistory: () => void;
+  
+  // Focus control
+  focusSignal: number;
+  requestFocus: () => void;
+  
+  // Edit & resend target
+  editingTarget: { conversationId: string; messageId: string } | null;
+  setEditingTarget: (conversationId: string, messageId: string) => void;
+  clearEditingTarget: () => void;
+
+  // Clear all
+  clearAll: () => void;
+  
+  // Utility
+  hasFileReference: (path: string) => boolean;
+  hasMediaAttachment: (path: string) => boolean;
+}
+
+export const useChatInputStore = create<ChatInputStore>()(
+  persist(
+    (set, get) => ({
+      fileReferences: [],
+      recentFiles: [],
+      mediaAttachments: [],
+      inputValue: "",
+      promptHistory: [],
+      
+      // Focus control (increments to trigger effects)
+      focusSignal: 0,
+      editingTarget: null,
+
+      // File reference actions
+      addFileReference: (path: string, relativePath: string, name: string, is_directory: boolean) => {
+        const { fileReferences, addRecentFile } = get();
+        const exists = fileReferences.some(ref => ref.path === path);
+        
+        const newFileRef = { path, relativePath, name, is_directory };
+
+        if (!exists) {
+          set({
+            fileReferences: [...fileReferences, newFileRef]
+          });
+        }
+        addRecentFile(newFileRef);
+      },
+
+      addRecentFile: (file: FileReference) => {
+        const { recentFiles } = get();
+        // Remove if already exists to move to front
+        const filtered = recentFiles.filter(ref => ref.path !== file.path);
+        // Add to front, limit to 10
+        set({ recentFiles: [file, ...filtered].slice(0, 10) });
+      },
+
+      removeFileReference: (path: string) => {
+        set((state) => ({
+          fileReferences: state.fileReferences.filter(ref => ref.path !== path)
+        }));
+      },
+
+      clearFileReferences: () => {
+        set({ fileReferences: [] });
+      },
+
+      replaceFileReferences: (files: FileReference[]) => {
+        set({ fileReferences: files });
+      },
+
+      // Media attachment actions
+      addMediaAttachment: (attachment: MediaAttachment) => {
+        const { mediaAttachments } = get();
+        const exists = mediaAttachments.some(media => media.path === attachment.path);
+        
+        if (!exists) {
+          set({
+            mediaAttachments: [...mediaAttachments, attachment]
+          });
+        }
+      },
+
+      removeMediaAttachment: (id: string) => {
+        set((state) => ({
+          mediaAttachments: state.mediaAttachments.filter(media => media.id !== id)
+        }));
+      },
+
+      clearMediaAttachments: () => {
+        set({ mediaAttachments: [] });
+      },
+
+      // Input actions – also sync with optional external setter for compatibility
+      setInputValue: (value: string) => {
+        set({ inputValue: value });
+      },
+
+      appendToInput: (value: string) => {
+        const { inputValue } = get();
+        const separator = inputValue.trim() ? '\n\n' : '';
+        const newVal = inputValue + separator + value;
+        set({ inputValue: newVal });
+      },
+
+      pushPromptHistory: (value: string) => {
+        const { promptHistory } = get();
+        const lastEntry = promptHistory[promptHistory.length - 1];
+        const shouldAdd = value.trim().length > 0 && value !== lastEntry;
+
+        if (!shouldAdd) {
+          return;
+        }
+
+        set({ promptHistory: [value] });
+      },
+
+      popPromptHistory: () => {
+        const { promptHistory } = get();
+        if (promptHistory.length === 0) {
+          return null;
+        }
+
+        const previousValue = promptHistory[promptHistory.length - 1];
+        set({ promptHistory: promptHistory.slice(0, -1) });
+        return previousValue;
+      },
+
+      clearPromptHistory: () => {
+        set({ promptHistory: [] });
+      },
+      
+      // Focus control: bump signal to notify listeners
+      requestFocus: () => {
+        set((state) => ({ focusSignal: state.focusSignal + 1 }));
+      },
+
+      // Clear all
+      clearAll: () => {
+        set({ 
+          fileReferences: [],
+          mediaAttachments: [],
+          inputValue: "",
+          promptHistory: [],
+        });
+      },
+
+      // Edit target
+      setEditingTarget: (conversationId: string, messageId: string) => {
+        set({ editingTarget: { conversationId, messageId } });
+      },
+      clearEditingTarget: () => {
+        set({ editingTarget: null });
+      },
+
+      // Utilities
+      hasFileReference: (path: string) => {
+        const { fileReferences } = get();
+        return fileReferences.some(ref => ref.path === path);
+      },
+
+      hasMediaAttachment: (path: string) => {
+        const { mediaAttachments } = get();
+        return mediaAttachments.some(media => media.path === path);
+      },
+    }),
+    {
+      name: 'codexia-chat-input-store',
+      // Only persist references, not input value
+      partialize: (state) => ({
+        fileReferences: state.fileReferences,
+        mediaAttachments: state.mediaAttachments,
+      }),
+    }
+  )
+);
+
+
+--- src/types/codex.ts ---
+export interface ApprovalRequest {
+  id: string;
+  type: "exec" | "patch" | "apply_patch";
+  command?: string;
+  cwd?: string;
+  patch?: string;
+  files?: string[];
+  call_id?: string;
+  changes?: any;
+  reason?: string;
+  grant_root?: string;
+}
+
+export interface CodexConfig {
+  workingDirectory: string;
+  model: string;
+  provider: string; // Support any provider from config.toml
+  useOss: boolean;
+  customArgs?: string[];
+  approvalPolicy: "untrusted" | "on-failure" | "on-request" | "never";
+  sandboxMode: "read-only" | "workspace-write" | "danger-full-access";
+  codexPath?: string;
+  reasoningEffort?: "high" | "medium" | "low" | "minimal";
+  // Optional: resume a previous session from a rollout file
+  resumePath?: string;
+  // Enable experimental web search tool for the agent
+  webSearchEnabled?: boolean;
+}
+
+export const SANDBOX_MODES: Record<
+  CodexConfig["sandboxMode"],
+  {
+    label: string;
+    shortLabel: string;
+    description: string;
+    defaultApprovalPolicy: CodexConfig["approvalPolicy"];
+  }
+> = {
+  "read-only": {
+    label: "Read Only",
+    shortLabel: "Chat or plan",
+    description: "View files only, requires approval for edits/commands",
+    defaultApprovalPolicy: "untrusted",
+  },
+  "workspace-write": {
+    label: "Workspace Write",
+    shortLabel: "Agent",
+    description: "Edit project files, approval for network/external access",
+    defaultApprovalPolicy: "on-request",
+  },
+  "danger-full-access": {
+    label: "Full Access",
+    shortLabel: "Agent (Full)",
+    description: "System-wide access without restrictions",
+    defaultApprovalPolicy: "never",
+  },
+};
+
+export const APPROVAL_POLICIES: Array<{
+  value: CodexConfig["approvalPolicy"];
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "untrusted",
+    label: "Untrusted",
+    description: "Always prompt before running commands, editing, or using tools.",
+  },
+  {
+    value: "on-failure",
+    label: "On Failure",
+    description: "Try actions automatically and only prompt if sandbox blocks them.",
+  },
+  {
+    value: "on-request",
+    label: "On Request",
+    description: "Ask before risky actions like editing, running commands, or network access.",
+  },
+  {
+    value: "never",
+    label: "Never",
+    description: "Never prompt; Codex decides autonomously. Use with caution.",
+  },
+];
+
+export const DEFAULT_CONFIG: CodexConfig = {
+  workingDirectory: "",
+  model: "gpt-5-codex",
+  provider: "openai",
+  useOss: false,
+  approvalPolicy: "on-request",
+  sandboxMode: "workspace-write",
+  webSearchEnabled: false,
+};
+
+--- src/types/config.ts ---
+export interface ModelProvider {
+  name: string;
+  base_url: string;
+  env_key?: string;
+}
+
+export interface Profile {
+  model_provider: string;
+  model?: string;
+}
+
+export interface ProviderConfig {
+  provider: ModelProvider;
+  profile?: Profile;
+}
+
+
+--- src/services/configService.ts ---
+import { invoke } from "@/lib/tauri-proxy";
+import { ModelProvider, Profile, ProviderConfig } from "@/types/config";
+
+export class ConfigService {
+  static async getProviderConfig(
+    providerName: string,
+  ): Promise<ProviderConfig | null> {
+    try {
+      const result = await invoke<[ModelProvider, Profile | null] | null>(
+        "get_provider_config",
+        {
+          providerName,
+        },
+      );
+
+      if (result) {
+        const [provider, profile] = result;
+        return {
+          provider,
+          profile: profile || undefined,
+        };
+      }
+
+      return null;
+    } catch (error) {
+      console.error(
+        `Failed to get provider config for ${providerName}:`,
+        error,
+      );
+      return null;
+    }
+  }
+
+  static async getProfileConfig(profileName: string): Promise<Profile | null> {
+    try {
+      const result = await invoke<Profile | null>("get_profile_config", {
+        profileName,
+      });
+
+      return result;
+    } catch (error) {
+      console.error(`Failed to get profile config for ${profileName}:`, error);
+      return null;
+    }
+  }
+
+  static async getAllProviders(): Promise<Record<string, ModelProvider>> {
+    try {
+      const result = await invoke<Record<string, ModelProvider>>(
+        "read_model_providers",
+      );
+      return result;
+    } catch (error) {
+      console.error("Failed to get all providers:", error);
+      return {};
+    }
+  }
+
+  static async getAllProfiles(): Promise<Record<string, Profile>> {
+    try {
+      const result = await invoke<Record<string, Profile>>("read_profiles");
+      return result;
+    } catch (error) {
+      console.error("Failed to get all profiles:", error);
+      return {};
+    }
+  }
+
+  static async addOrUpdateProfile(
+    profileName: string,
+    profile: Profile,
+  ): Promise<void> {
+    try {
+      await invoke("add_or_update_profile", {
+        profileName,
+        profile,
+      });
+    } catch (error) {
+      console.error(`Failed to add/update profile ${profileName}:`, error);
+      throw new Error(`Failed to add/update profile: ${error}`);
+    }
+  }
+
+  static async addProviderWithProfile(options: {
+    providerId: string;
+    providerName: string;
+    baseUrl?: string;
+    envKey?: string;
+    model?: string;
+  }): Promise<void> {
+    const { providerId, providerName, baseUrl, envKey, model } = options;
+
+    const providerPayload: ModelProvider = {
+      name: providerName,
+      base_url: baseUrl || "",
+      env_key: envKey || undefined,
+    };
+
+    await this.addOrUpdateModelProvider(providerId, providerPayload);
+
+    if (model) {
+      try {
+        await this.addOrUpdateProfile(providerId, {
+          model_provider: providerId,
+          model,
+        });
+      } catch (error) {
+        try {
+          await this.deleteModelProvider(providerId);
+        } catch (rollbackError) {
+          console.error(
+            `Failed to rollback provider ${providerId} after profile error:`,
+            rollbackError,
+          );
+        }
+        throw error;
+      }
+    }
+  }
+
+  static async deleteProfile(profileName: string): Promise<void> {
+    try {
+      await invoke("delete_profile", {
+        profileName,
+      });
+    } catch (error) {
+      console.error(`Failed to delete profile ${profileName}:`, error);
+      throw new Error(`Failed to delete profile: ${error}`);
+    }
+  }
+
+  static async addOrUpdateModelProvider(
+    providerName: string,
+    provider: ModelProvider,
+  ): Promise<void> {
+    try {
+      await invoke("add_or_update_model_provider", {
+        providerName,
+        provider,
+      });
+    } catch (error) {
+      console.error(
+        `Failed to add/update model provider ${providerName}:`,
+        error,
+      );
+      throw new Error(`Failed to add/update model provider: ${error}`);
+    }
+  }
+
+  static async deleteModelProvider(providerName: string): Promise<void> {
+    try {
+      await invoke("delete_model_provider", {
+        providerName,
+      });
+    } catch (error) {
+      console.error(
+        `Failed to delete model provider ${providerName}:`,
+        error,
+      );
+      throw new Error(`Failed to delete model provider: ${error}`);
+    }
+  }
+}
+
+
+--- src/stores/ContextFilesStore.ts ---
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+
+interface ContextFile {
+  path: string;
+  name: string;
+  addedAt: number;
+}
+
+interface ContextFilesState {
+  contextFiles: ContextFile[];
+  addFile: (path: string) => void;
+  removeFile: (path: string) => void;
+  clearFiles: () => void;
+  getFileName: (path: string) => string;
+}
+
+export const useContextFilesStore = create<ContextFilesState>()(
+  persist(
+    (set, get) => ({
+      contextFiles: [],
+
+      addFile: (path: string) => {
+        const fileName = get().getFileName(path);
+        const newFile: ContextFile = {
+          path,
+          name: fileName,
+          addedAt: Date.now(),
+        };
+
+        set((state) => ({
+          contextFiles: state.contextFiles.some((f) => f.path === path)
+            ? state.contextFiles
+            : [...state.contextFiles, newFile],
+        }));
+      },
+
+      removeFile: (path: string) => {
+        set((state) => ({
+          contextFiles: state.contextFiles.filter((f) => f.path !== path),
+        }));
+      },
+
+      clearFiles: () => {
+        set({ contextFiles: [] });
+      },
+
+      getFileName: (path: string) => {
+        return path.split("/").pop() || path;
+      },
+    }),
+    {
+      name: "context-files-storage",
+    },
+  ),
+);

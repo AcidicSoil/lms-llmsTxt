@@ -1,0 +1,4241 @@
+<project title="Ai Sdk Provider Codex Cli" summary="This project serves as a community-built adapter that bridges the Vercel AI SDK v5 with OpenAI’s Codex CLI, allowing developers to leverage GPT-5.1 class models via the Codex CLI tool. It enables seamless integration of text generation, object generation with Zod schemas, and tool streaming for real-time monitoring of autonomous tool execution. The provider is designed for Node.js environments, supports CI/CD workflows, and offers granular control over model behavior, logging, and sandboxing, making it suitable for automation, large-scale applications, and enterprise-grade AI workflows.">**Remember:**
+- Codex CLI
+- GPT-5.1 class models
+- AI SDK v5 (LanguageModelV2)
+- Streaming and non-streaming text generation
+- Tool streaming (real-time tool execution monitoring)
+- Native JSON Schema validation via --output-schema<docs><doc title="Configuration" desc="docs page."># Configuration Reference
+
+This provider wraps the `codex exec` CLI in non‑interactive mode and maps settings to CLI flags/config overrides.
+
+## Settings
+
+- `allowNpx` (boolean): If true, runs `npx -y @openai/codex` when Codex isn’t found on PATH.
+- `codexPath` (string): Explicit path to Codex JS entry (`bin/codex.js`), bypassing PATH resolution.
+- `cwd` (string): Working directory for the spawned process.
+- `addDirs` (string[]): Additional directories Codex can read/write. Emits one `--add-dir <path>` per entry (useful in monorepos or when sharing resources across packages).
+- `color` ('always' | 'never' | 'auto'): Controls ANSI color emission.
+- `skipGitRepoCheck` (boolean): When true, passes `--skip-git-repo-check`.
+- `fullAuto` (boolean): Sets `--full-auto` (low-friction sandboxed execution).
+- `dangerouslyBypassApprovalsAndSandbox` (boolean): Maps to `--dangerously-bypass-approvals-and-sandbox`.
+- `approvalMode` ('untrusted' | 'on-failure' | 'on-request' | 'never'): Applied via `-c approval_policy=...`.
+- `sandboxMode` ('read-only' | 'workspace-write' | 'danger-full-access'): Applied via `-c sandbox_mode=...`.
+- `outputLastMessageFile` (string): File path to write the last agent message. If omitted, a temp file is created.
+- `env` (Record<string,string>): Extra env vars for the child process (e.g., `OPENAI_API_KEY`).
+- `verbose` (boolean): Enable verbose logging mode. When `true`, enables `debug` and `info` log levels. When `false` (default), only `warn` and `error` are logged.
+- `logger` (Logger | false): Custom logger object or `false` to disable logging entirely. Logger must implement four methods: `debug`, `info`, `warn`, and `error`. Default uses `console.*` methods.
+- `rmcpClient` (boolean): Enable the RMCP client so HTTP-based MCP servers can be reached (`-c features.rmcp_client=true`).
+- `mcpServers` (Record<string, McpServerConfig>): Define MCP servers (stdio or HTTP). Keys are server names; values follow the shapes below.
+
+## Model Parameters & Advanced Options (v0.4.0+)
+
+### Reasoning & Verbosity
+
+- **`reasoningEffort`** ('minimal' | 'low' | 'medium' | 'high' | 'xhigh'): Controls reasoning depth for reasoning-capable models (o3, o4-mini, the GPT-5.1 family, and legacy GPT-5). Higher effort produces more thorough reasoning at the cost of latency. Maps to `-c model_reasoning_effort=<value>`.
+  - Per the Codex CLI model preset definitions (`codex-rs/common/src/model_presets.rs`), `gpt-5.1` and `gpt-5.1-codex` expose `low`, `medium`, and `high`; `gpt-5.1-codex-max` adds `xhigh`; and `gpt-5.1-codex-mini` only surfaces `medium` and `high`.
+  - The older `gpt-5` slug still exposed `minimal`, but the GPT-5.1 family does not; passing `minimal` to a GPT-5.1 slug is rejected server-side.
+- **`reasoningSummary`** ('auto' | 'detailed'): Controls reasoning summary detail level. **Note:** Despite API error messages claiming 'concise' and 'none' are valid, they are rejected with 400 errors. Only 'auto' and 'detailed' work. Maps to `-c model_reasoning_summary=<value>`.
+- **`reasoningSummaryFormat`** ('none' | 'experimental'): Controls reasoning summary format (experimental). Maps to `-c model_reasoning_summary_format=<value>`.
+- **`modelVerbosity`** ('low' | 'medium' | 'high'): Controls output length/detail for GPT-5.1 **non-Codex** models (and legacy GPT-5). Codex-specific slugs (`gpt-5.1-codex`, `gpt-5.1-codex-mini`) ignore this, because the CLI disables verbosity for those model families (`codex-rs/core/src/model_family.rs`). Maps to `-c model_verbosity=<value>` when supported.
+
+### Advanced Codex Features
+
+- **`includePlanTool`** (boolean): Include experimental plan tool that the model can use to update its current plan. Maps to `--include-plan-tool`.
+- **`profile`** (string): Configuration profile from config.toml to specify default options. Maps to `--profile <name>`.
+- **`oss`** (boolean): Use OSS provider (experimental). Maps to `--oss`.
+- **`webSearch`** (boolean): Enable web search tool for the model. Maps to `-c tools.web_search=true`.
+
+### MCP Servers (v0.6.0+)
+
+- **`rmcpClient`** (boolean): Enables the RMCP client for HTTP-based MCP servers. Maps to `-c features.rmcp_client=true`.
+- **`mcpServers`** (Record<string, McpServerConfig>): Define MCP servers by name.
+  - Common fields: `enabled?`, `startupTimeoutSec?`, `toolTimeoutSec?`, `enabledTools?`, `disabledTools?`.
+  - **Stdio servers** (`transport: 'stdio'`): `command` (required), `args?`, `env?`, `cwd?`.
+  - **HTTP/RMCP servers** (`transport: 'http'`): `url` (required), `bearerToken?`, `bearerTokenEnvVar?`, `httpHeaders?`, `envHttpHeaders?`.
+
+Example:
+
+```ts
+const model = codexCli('gpt-5.1-codex', {
+  rmcpClient: true,
+  mcpServers: {
+    // Stdio MCP
+    repo: {
+      transport: 'stdio',
+      command: 'node',
+      args: ['tools/repo-mcp.js'],
+      env: { API_KEY: process.env.REPO_KEY ?? '' },
+      enabledTools: ['list', 'read'],
+    },
+    // HTTP/RMCP
+    docs: {
+      transport: 'http',
+      url: 'https://mcp.internal/api',
+      bearerTokenEnvVar: 'MCP_BEARER',
+      httpHeaders: { 'x-tenant': 'acme' },
+    },
+  },
+});
+```
+
+### Generic Config Overrides
+
+- **`configOverrides`** (Record<string, string | number | boolean | object>): Generic Codex CLI config overrides. Allows setting any config value without updating the provider. Each entry maps to `-c <key>=<value>`.
+
+Examples (nested objects are flattened to dotted keys):
+
+```typescript
+{
+  experimental_resume: '/tmp/session.jsonl',           // string
+  hide_agent_reasoning: true,                          // boolean
+  model_context_window: 200000,                        // number
+  sandbox_workspace_write: { network_access: true },   // object → -c sandbox_workspace_write.network_access=true
+  'model_providers.custom.base_url': 'http://localhost:8000'  // nested config path
+}
+```
+
+Values are serialized:
+
+- string → raw string
+- number/boolean → String(value)
+- object → flattened to dotted keys (recursively)
+- array → JSON.stringify(value)
+- non-plain objects (Date, RegExp, Map, etc.) → JSON.stringify(value)
+
+### Per-call Overrides (`providerOptions`, v0.4.0+)
+
+Use AI SDK `providerOptions` to override Codex parameters for a single request without modifying the
+model instance. The provider parses the `codex-cli` entry and applies the keys below:
+
+- `reasoningEffort` → `model_reasoning_effort`
+- `reasoningSummary` → `model_reasoning_summary`
+- `reasoningSummaryFormat` → `model_reasoning_summary_format`
+- `textVerbosity` → `model_verbosity` (AI SDK naming; mirrors constructor `modelVerbosity`)
+- `addDirs` → appends `--add-dir` entries (merged with constructor `addDirs`)
+- `configOverrides` → merged with constructor-level overrides (per-call values win on key conflicts)
+- `mcpServers` → merged with constructor-level MCP servers (per-call values override per server)
+- `rmcpClient` → overrides constructor `rmcpClient`
+
+```ts
+import { generateText } from 'ai';
+import { codexCli } from 'ai-sdk-provider-codex-cli';
+
+const model = codexCli('gpt-5.1', {
+  reasoningEffort: 'medium',
+  modelVerbosity: 'medium',
+});
+
+await generateText({
+  model,
+  prompt: 'Compare the trade-offs of high vs. low verbosity.',
+  providerOptions: {
+    'codex-cli': {
+      reasoningEffort: 'high',
+      reasoningSummary: 'detailed',
+      textVerbosity: 'high',
+      configOverrides: {
+        'sandbox_workspace_write.network_access': true,
+      },
+    },
+  },
+});
+```
+
+**Precedence:** `providerOptions['codex-cli']` > constructor `CodexCliSettings` > Codex CLI defaults.
+
+## Defaults & Recommendations
+
+- Non‑interactive defaults:
+  - `approvalMode: 'on-failure'`
+  - `sandboxMode: 'workspace-write'`
+  - `skipGitRepoCheck: true`
+- For strict automation in controlled environments:
+  - `fullAuto: true` OR `dangerouslyBypassApprovalsAndSandbox: true` (be careful!)
+
+## Flag Mapping
+
+### Core Settings
+
+- `approvalMode` → `-c approval_policy=<mode>`
+- `sandboxMode` → `-c sandbox_mode=<mode>`
+- `skipGitRepoCheck` → `--skip-git-repo-check`
+- `fullAuto` → `--full-auto`
+- `dangerouslyBypassApprovalsAndSandbox` → `--dangerously-bypass-approvals-and-sandbox`
+- `color` → `--color <always|never|auto>`
+- `outputLastMessageFile` → `--output-last-message <path>`
+- `addDirs` → `--add-dir <path>` (emitted once per entry)
+
+### Model Parameters (v0.4.0+)
+
+- `reasoningEffort` → `-c model_reasoning_effort=<value>`
+- `reasoningSummary` → `-c model_reasoning_summary=<value>`
+- `reasoningSummaryFormat` → `-c model_reasoning_summary_format=<value>`
+- `modelVerbosity` → `-c model_verbosity=<value>`
+- `includePlanTool` → `--include-plan-tool`
+- `profile` → `--profile <name>`
+- `oss` → `--oss`
+- `webSearch` → `-c tools.web_search=true`
+- `configOverrides` → `-c <key>=<value>` (for each entry)
+
+### MCP
+
+- `rmcpClient` → `-c features.rmcp_client=true`
+- `mcpServers` → `-c mcp_servers.<name>.<field>=<value>` for each field (e.g., `command`, `args`, `env.KEY`, `url`, `bearer_token_env_var`, `http_headers.Header-Name`).
+
+## JSON Mode (v0.2.0+)
+
+When the AI SDK request uses `responseFormat: { type: 'json' }`, the provider:
+
+1. Converts your Zod schema to JSON Schema format
+2. Sanitizes the schema (removes unsupported fields like `format`, `pattern`, `$schema`, etc.)
+3. Passes the schema via `--output-schema` for native OpenAI strict mode enforcement
+4. The API returns guaranteed valid JSON matching your schema
+5. AI SDK validates the response with Zod
+
+**Breaking change from v0.1.x**: No longer uses prompt engineering. Schemas are enforced at the API level using OpenAI strict mode, which does not support optional fields or format validators.</doc><doc title="Guide" desc="docs page."># Codex CLI Provider – AI SDK v5 Guide
+
+This guide explains how to use the Codex CLI provider with Vercel AI SDK v5 for text generation, streaming, and JSON object generation.
+
+## Getting Started
+
+1. Install Codex CLI and authenticate:
+
+```bash
+npm i -g @openai/codex
+codex login   # or set OPENAI_API_KEY
+```
+
+2. Install AI SDK and this provider:
+
+```bash
+npm i ai ai-sdk-provider-codex-cli
+```
+
+## Basic Usage
+
+```js
+import { generateText, streamText, generateObject } from 'ai';
+import { codexCli } from 'ai-sdk-provider-codex-cli';
+import { z } from 'zod';
+
+const model = codexCli('gpt-5.1-codex', {
+  allowNpx: true,
+  skipGitRepoCheck: true,
+  approvalMode: 'on-failure',
+  sandboxMode: 'workspace-write',
+});
+
+// Text
+const { text } = await generateText({ model, prompt: 'Say hello in one word.' });
+
+// Streaming
+const { textStream } = await streamText({ model, prompt: 'Two short lines.' });
+for await (const chunk of textStream) process.stdout.write(chunk);
+
+// Object (JSON)
+const schema = z.object({ name: z.string(), age: z.number().int() });
+const { object } = await generateObject({ model, schema, prompt: 'Generate a user.' });
+```
+
+## Conversation History
+
+Use AI SDK messages to retain context:
+
+```js
+const messages = [
+  { role: 'user', content: 'My name is Dana.' },
+  { role: 'assistant', content: 'Hi Dana!' },
+  { role: 'user', content: 'What did I just tell you my name was?' },
+];
+const { text } = await generateText({ model, messages });
+```
+
+## Structured Output (JSON)
+
+**v0.2.0+**: The provider uses native `--output-schema` support with OpenAI strict mode for API-level JSON enforcement. Schemas are passed directly to the API, eliminating 100-200 tokens per request and improving reliability.
+
+**⚠️ Important Limitations:**
+
+- Optional fields are **NOT supported** by OpenAI strict mode (all fields must be required)
+- Format validators (`.email()`, `.url()`, `.uuid()`) are stripped (use descriptions instead)
+- Pattern validators (`.regex()`) are stripped (use descriptions instead)
+
+See [LIMITATIONS.md](../../LIMITATIONS.md) for full details.
+
+Tips:
+
+- Add clear field descriptions to your Zod schema (especially for format hints like "UUID format", "YYYY-MM-DD date")
+- All fields must be required (no `.optional()`)
+- Use descriptions instead of format validators
+- Keep constraints realistic for better adherence
+
+## Permissions & Sandbox
+
+The provider applies safe defaults for non‑interactive execution. You can override them per call via provider settings:
+
+- `fullAuto: true` → `--full-auto`
+- `dangerouslyBypassApprovalsAndSandbox: true` → `--dangerously-bypass-approvals-and-sandbox`
+- Otherwise, the provider writes config overrides: `-c approval_policy=...` and `-c sandbox_mode=...`.
+
+Recommended defaults for CI/local automation:
+
+- `approvalMode: 'on-failure'`
+- `sandboxMode: 'workspace-write'`
+- `skipGitRepoCheck: true`
+
+## Streaming Behavior
+
+**Status:** Incremental streaming not currently supported with `--experimental-json` format (expected in future Codex CLI releases)
+
+The `--experimental-json` output format (introduced Sept 25, 2025) currently only emits `item.completed` events with full text content. Incremental streaming via `item.updated` or delta events is not yet implemented by OpenAI.
+
+**What this means:**
+
+- `streamText()` works functionally but delivers the entire response in a single chunk after generation completes
+- No incremental text deltas—you wait for the full response, then receive it all at once
+- The AI SDK's streaming interface is supported, but actual incremental streaming is not available
+
+**How the provider handles this:**
+
+1. Emits `response-metadata` stream part when the session is configured
+2. Waits for `item.completed` event with the final assistant message
+3. Emits a single `text-delta` with the full text
+4. Emits `finish`
+
+**Future support:** The Codex CLI commit (344d4a1d) introducing experimental JSON explicitly notes: "or other item types like `item.output_delta` when we need streaming" and states "more event types and item types to come."
+
+When OpenAI adds streaming support, this provider will be updated to handle those events and enable true incremental streaming. Your code using the AI SDK stream API will remain compatible.
+
+## Logging Configuration
+
+Control how the provider logs execution information, warnings, and errors. The logger supports multiple log levels and a verbose mode for detailed debugging.
+
+### Log Levels
+
+The provider supports four log levels:
+
+- **`debug`**: Detailed execution tracing (request/response, tool calls, stream events)
+- **`info`**: General execution flow information (session initialization, completion)
+- **`warn`**: Warnings about configuration issues or unexpected behavior
+- **`error`**: Error messages for failures and exceptions
+
+### Basic Configuration
+
+```typescript
+import { createCodexCli } from 'ai-sdk-provider-codex-cli';
+
+// Default: logs warnings and errors to console
+const defaultCodex = createCodexCli();
+
+// Disable all logging
+const silentCodex = createCodexCli({
+  defaultSettings: {
+    logger: false,
+  },
+});
+
+// Custom logger - must implement all four log levels
+const customCodex = createCodexCli({
+  defaultSettings: {
+    logger: {
+      debug: (message) => myLogger.debug('Codex:', message),
+      info: (message) => myLogger.info('Codex:', message),
+      warn: (message) => myLogger.warn('Codex:', message),
+      error: (message) => myLogger.error('Codex:', message),
+    },
+  },
+});
+
+// Model-specific logger override
+const model = customCodex('gpt-5.1-codex', {
+  logger: false, // Disable logging for this model only
+});
+```
+
+### Verbose Mode (Debug Logging)
+
+Enable verbose mode to see detailed execution logs, including:
+
+- Request/response tracing
+- Tool execution lifecycle (tool calls, results, errors)
+- Stream event processing
+- Command execution details and token usage
+- Session management
+
+**Without verbose mode**, only `warn` and `error` messages are logged.
+**With verbose mode enabled**, `debug` and `info` messages are also logged.
+
+```typescript
+import { createCodexCli } from 'ai-sdk-provider-codex-cli';
+
+// Enable verbose logging for debugging
+const codexWithDebug = createCodexCli({
+  defaultSettings: {
+    verbose: true, // Enable debug and info logging
+  },
+});
+
+// Use with custom logger
+const codexCustom = createCodexCli({
+  defaultSettings: {
+    verbose: true,
+    logger: {
+      debug: (msg) => console.log(`[DEBUG] ${msg}`),
+      info: (msg) => console.log(`[INFO] ${msg}`),
+      warn: (msg) => console.warn(`[WARN] ${msg}`),
+      error: (msg) => console.error(`[ERROR] ${msg}`),
+    },
+  },
+});
+
+// Model-specific verbose override
+const model = codexWithDebug('gpt-5.1-codex', {
+  verbose: false, // Disable verbose for this specific model
+});
+```
+
+### What Gets Logged in Verbose Mode
+
+With `verbose: true`, you'll see intermediate process logs including:
+
+**For `generateText()` calls:**
+
+```
+[DEBUG] [codex-cli] Starting doGenerate request with model: gpt-5.1-codex
+[DEBUG] [codex-cli] Request mode: regular, response format: none
+[DEBUG] [codex-cli] Converted 2 messages, response format: none
+[DEBUG] [codex-cli] Executing Codex CLI: npx with 15 arguments, cwd: default
+[DEBUG] [codex-cli] Received event type: thread.started
+[DEBUG] [codex-cli] Session started: thread-abc123
+[DEBUG] [codex-cli] Received event type: turn.completed
+[INFO] [codex-cli] Request completed - Session: thread-abc123, Duration: 1523ms, Tokens: 373
+[DEBUG] [codex-cli] Token usage - Input: 245, Output: 128, Total: 373
+```
+
+**For `streamText()` calls with tools:**
+
+```
+[DEBUG] [codex-cli] Starting doStream request with model: gpt-5.1-codex
+[DEBUG] [codex-cli] Converted 1 messages for streaming, response format: none
+[DEBUG] [codex-cli] Executing Codex CLI for streaming: npx with 14 arguments
+[DEBUG] [codex-cli] Stream event: thread.started
+[DEBUG] [codex-cli] Stream session started: thread-xyz789
+[DEBUG] [codex-cli] Stream event: item.started
+[DEBUG] [codex-cli] Tool detected: exec, item type: command_execution
+[DEBUG] [codex-cli] Emitting tool invocation: exec
+[DEBUG] [codex-cli] Stream event: item.completed
+[DEBUG] [codex-cli] Tool completed: exec
+[DEBUG] [codex-cli] Received assistant message, length: 142
+[INFO] [codex-cli] Stream completed - Session: thread-xyz789, Duration: 3241ms, Tokens: 768
+[DEBUG] [codex-cli] Token usage - Input: 512, Output: 256, Total: 768
+```
+
+### Logger Options
+
+- `undefined` (default): Uses `console.debug`, `console.info`, `console.warn`, and `console.error`
+- `false`: Disables all logging
+- Custom `Logger` object: Must implement `debug`, `info`, `warn`, and `error` methods
+
+### Combining with Error Handling
+
+For comprehensive debugging, combine verbose logging with error handling:
+
+```typescript
+import { createCodexCli } from 'ai-sdk-provider-codex-cli';
+import { generateText } from 'ai';
+
+const codexCli = createCodexCli({
+  defaultSettings: {
+    verbose: true,
+    logger: {
+      debug: (msg) => myLogger.debug(msg),
+      info: (msg) => myLogger.info(msg),
+      warn: (msg) => myLogger.warn(msg),
+      error: (msg) => myLogger.error(msg),
+    },
+  },
+});
+
+try {
+  const result = await generateText({
+    model: codexCli('gpt-5.1-codex'),
+    prompt: 'Hello!',
+  });
+} catch (error) {
+  console.error('Generation failed:', error);
+  // Check error.data for additional context (exitCode, stderr, etc.)
+  if (error.data) {
+    console.error('Error details:', error.data);
+  }
+}
+```
+
+## Examples
+
+See `examples/` for runnable scripts that cover:
+
+- Basic text generation and streaming
+- Conversation history and system messages
+- Permissions & sandbox modes
+- JSON object generation: basic, nested, constraints, advanced</doc><doc title="Limitations" desc="docs page."># Limitations
+
+## Runtime & Architecture
+
+- Node.js runtime only (spawns a local process); Edge runtimes are not supported.
+- Image inputs are not supported.
+
+## Streaming Behavior
+
+- Codex `--experimental-json` mode emits events (`thread.started`, `turn.completed`, `item.completed`) rather than streaming text deltas; streaming usually returns a final chunk. The CLI provides the final assistant content in the `item.completed` event, which this provider reads and emits at the end.
+
+## Tool Streaming (v0.3.0+)
+
+- Tool streaming is fully supported - tool invocation and result events are emitted in real-time
+- **Limitation:** Real-time output streaming (`output-delta` events) not yet available. Tool outputs are delivered in the final `tool-result` event via `aggregatedOutput` field, not as incremental deltas during tool execution
+- This limitation exists because Codex CLI's experimental JSON format doesn't currently emit incremental output events during tool execution
+
+## JSON Schema (v0.2.0+)
+
+- **Optional fields NOT supported**: OpenAI strict mode requires all fields to be required (no `.optional()`)
+- **Format validators stripped**: `.email()`, `.url()`, `.uuid()` are removed during sanitization (use descriptions instead)
+- **Pattern validators stripped**: `.regex()` is removed during sanitization (use descriptions instead)
+- See [LIMITATIONS.md](../../LIMITATIONS.md) at repo root for comprehensive details
+
+## AI SDK Parameter Support
+
+- Some AI SDK parameters are not applicable to Codex CLI (e.g., temperature, topP, penalties). The provider surfaces warnings and ignores them.
+
+## Model Parameter Validation (v0.4.0+)
+
+**Known API Quirks:**
+
+### reasoningSummary Parameter
+
+The OpenAI Responses API has misleading error messages for the `reasoningSummary` parameter:
+
+- **Valid values:** `'auto'`, `'detailed'`
+- **Invalid values:** `'concise'`, `'none'` (rejected with 400 errors)
+
+**The quirk:** When you pass an invalid value like `'none'`, the API error claims valid values are `'concise', 'detailed', and 'auto'`. However, if you then try `'concise'`, the API rejects it with: `"Unsupported value: 'concise' is not supported with the 'gpt-5.1-codex' model."`
+
+This provider's type system and validation only allow `'auto'` and `'detailed'` to prevent runtime errors.
+
+## Observability
+
+- Token usage tracking is available via `turn.completed` events (requires Codex CLI >= 0.44.0)
+- Earlier versions (< 0.44.0) will report 0 for all token counts</doc><doc title="Migration 0.2" desc="docs page."># Migration Guide: v0.1.x → v0.2.0
+
+This guide helps you migrate from v0.1.x to v0.2.0 of the AI SDK Provider for Codex CLI.
+
+## Overview
+
+Version 0.2.0 introduces **breaking changes** that significantly improve reliability and token efficiency by leveraging Codex CLI's native JSON schema support.
+
+## Breaking Changes
+
+### 1. Native Schema Support Only
+
+**What changed:**
+
+- Removed prompt engineering for JSON generation
+- Removed `extract-json.ts` extraction logic
+- All JSON output now uses `--output-schema` (API-enforced)
+
+**Impact:**
+
+- ✅ **Better**: 100-200 fewer tokens per JSON request
+- ✅ **Better**: More reliable structured output (API-level enforcement)
+- ✅ **Better**: No more manual JSON extraction
+
+**Migration steps:**
+
+- ⚠️ **IMPORTANT**: Check all Zod schemas for unsupported features (see below)
+- Remove any manual JSON instructions you added to prompts (they're redundant now)
+
+### OpenAI Strict Mode Limitations
+
+**What changed:**
+
+- OpenAI strict mode does NOT support optional fields
+- Format validators (`.email()`, `.url()`, `.uuid()`) are stripped
+- Pattern validators (`.regex()`) are stripped
+
+**Impact:**
+
+- ⚠️ **Breaking**: Schemas with `.optional()` will fail
+- ⚠️ **Breaking**: Format validators are ignored (no validation)
+- ⚠️ **Breaking**: Pattern validators are ignored (no validation)
+
+**Migration steps:**
+
+1. Remove all `.optional()` calls - make fields required or use empty string/null defaults
+2. Replace format validators with descriptions:
+   - `.email()` → `.describe('Valid email address')`
+   - `.url()` → `.describe('Valid URL')`
+   - `.uuid()` → `.describe('UUID format')`
+3. Replace pattern validators with descriptions:
+   - `.regex(/^\d{4}-\d{2}-\d{2}$/)` → `.describe('Date in YYYY-MM-DD format')`
+
+**Example:**
+
+```javascript
+// ❌ Before (v0.1.x) - WILL FAIL in v0.2.0
+const schema = z.object({
+  id: z.string().uuid(),
+  email: z.string().email(),
+  website: z.string().url().optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+// ✅ After (v0.2.0) - Works with OpenAI strict mode
+const schema = z.object({
+  id: z.string().describe('UUID format'),
+  email: z.string().describe('Valid email address'),
+  website: z.string().describe('Personal website URL (or empty string if none)'),
+  date: z.string().describe('Date in YYYY-MM-DD format'),
+});
+```
+
+See [LIMITATIONS.md](../../LIMITATIONS.md) for comprehensive details.
+
+### 2. New Event Format
+
+**What changed:**
+
+- Switched from `--json` to `--experimental-json`
+- Event structure changed from old format
+
+**Old format (v0.1.x):**
+
+```json
+{
+  "id": "evt_123",
+  "msg": {
+    "type": "session_configured",
+    "session_id": "abc123"
+  }
+}
+```
+
+**New format (v0.2.0+):**
+
+```json
+{
+  "type": "session.created",
+  "session_id": "abc123"
+}
+```
+
+**Impact:**
+
+- ✅ **Better**: Structured event types
+- ✅ **Better**: Usage tracking from `turn.completed` events
+- ⚠️ **Breaking**: Event structure is different (handled internally by provider)
+
+**Migration steps:**
+
+- No action needed if you're using the high-level AI SDK APIs (`generateText`, `generateObject`, etc.)
+- If you were parsing raw events, update to new format
+
+### 3. Simplified Internal API
+
+**What changed:**
+
+- Removed `mode` parameter from `mapMessagesToPrompt`
+- Removed `jsonSchema` parameter from `mapMessagesToPrompt`
+- Removed `PromptMode` type
+
+**Impact:**
+
+- ⚠️ **Breaking**: If you were importing and using `mapMessagesToPrompt` directly
+- ✅ **Better**: Simpler internal API
+
+**Migration steps:**
+
+- If you weren't using internal APIs: no action needed
+- If you were: update to simplified signature (just pass `prompt`)
+
+## Benefits of v0.2.0
+
+### Token Efficiency
+
+**Before (v0.1.x):**
+
+```
+Prompt: CRITICAL: You MUST respond with ONLY a JSON object. NO other text.
+Your response MUST start with { and end with }
+The JSON MUST match this EXACT schema:
+{
+  "type": "object",
+  "properties": { ... }
+}
+
+Now, based on the following conversation, generate ONLY the JSON object:
+
+[Your actual prompt here]
+```
+
+**Cost:** ~150 extra tokens
+
+**After (v0.2.0):**
+
+```
+[Your actual prompt here]
+```
+
+**Cost:** 0 extra tokens (schema passed via `--output-schema`)
+
+### Reliability
+
+**Before (v0.1.x):**
+
+- Prompt engineering → model sometimes adds text outside JSON
+- Manual extraction → brittle brace-counting logic
+- No API-level enforcement → model can deviate from schema
+
+**After (v0.2.0):**
+
+- Native schema → API enforces with `strict: true`
+- No extraction needed → guaranteed valid JSON
+- Model cannot deviate from schema
+
+### Code Simplicity
+
+**Removed:**
+
+- ~50 lines of prompt engineering logic
+- ~20 lines of JSON extraction logic
+- Multiple code paths for different modes
+
+**Result:**
+
+- Simpler, more maintainable codebase
+- Fewer edge cases
+- Better error handling
+
+## Migration Checklist
+
+### For Most Users
+
+- [ ] Update package: `npm install ai-sdk-provider-codex-cli@0.2.0`
+- [ ] **CRITICAL**: Review ALL Zod schemas:
+  - [ ] Remove all `.optional()` calls
+  - [ ] Replace `.email()`, `.url()`, `.uuid()` with `.describe()`
+  - [ ] Replace `.regex()` with `.describe()`
+- [ ] Test your existing `generateObject` calls
+- [ ] Review prompts and remove any manual JSON instructions
+- [ ] Verify output matches expectations
+- [ ] Celebrate improved token efficiency! 🎉
+
+### For Advanced Users (using internal APIs)
+
+- [ ] Update `mapMessagesToPrompt` calls if you were using it directly
+- [ ] Update event parsing if you were parsing raw CLI events
+- [ ] Review custom integrations
+
+### For Library Authors
+
+- [ ] Update to v0.2.0 in your dependencies
+- [ ] Test integration with new event format
+- [ ] Update documentation to reflect changes
+
+## Example: Before & After
+
+### Before (v0.1.x)
+
+```javascript
+import { generateObject } from 'ai';
+import { codexCli } from 'ai-sdk-provider-codex-cli';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number().int(),
+});
+
+// Provider adds ~150 tokens of JSON instructions to prompt
+const { object } = await generateObject({
+  model: codexCli('gpt-5'),
+  schema,
+  prompt: 'Generate a person profile',
+});
+```
+
+### After (v0.2.0)
+
+```javascript
+import { generateObject } from 'ai';
+import { codexCli } from 'ai-sdk-provider-codex-cli';
+import { z } from 'zod';
+
+const schema = z.object({
+  name: z.string(),
+  age: z.number().int(),
+});
+
+// Provider passes schema via --output-schema (0 extra tokens!)
+const { object } = await generateObject({
+  model: codexCli('gpt-5'),
+  schema,
+  prompt: 'Generate a person profile',
+});
+```
+
+**Result:** Same API, same code, but:
+
+- 150 fewer tokens per request
+- More reliable output
+- Faster responses
+
+## Troubleshooting
+
+### Issue: "Invalid JSON" errors
+
+**Cause:** Shouldn't happen with native schema enforcement
+
+**Solution:**
+
+1. Verify you're on v0.2.0: `npm list ai-sdk-provider-codex-cli`
+2. Check Codex CLI version: `codex --version` (should support `--output-schema`)
+3. Report issue with example if problem persists
+
+### Issue: Different output format than expected
+
+**Cause:** Schema validation is now stricter (API-level enforcement)
+
+**Solution:**
+
+1. Review your Zod schema
+2. Check for required fields
+3. Verify enum values match expectations
+4. Use examples to test schema design
+
+### Issue: "Unknown flag: --output-schema"
+
+**Cause:** Your Codex CLI version is too old
+
+**Solution:**
+
+1. Update Codex CLI: `npm install -g @openai/codex@latest`
+2. Or use Homebrew: `brew upgrade codex`
+3. Verify: `codex --version`
+
+### Issue: Missing usage stats
+
+**Cause:** Usage stats come from `turn.completed` events in experimental JSON format
+
+**Solution:**
+
+1. Verify the provider is using `--experimental-json` (automatic in v0.2.0)
+2. Check that Codex CLI is returning usage in events
+3. Enable debug logging if needed
+
+## Getting Help
+
+- 📖 Read the [full documentation](./guide.md)
+- 🐛 Report issues on [GitHub](https://github.com/ben-vargas/ai-sdk-provider-codex-cli/issues)
+- 💬 Ask questions in discussions
+- 📝 Check the [CHANGELOG](../../CHANGELOG.md) for detailed changes
+
+## What's Next?
+
+With v0.2.0 stable, future improvements may include:
+
+- Better streaming support when Codex CLI adds it
+- More granular event tracking
+- Performance optimizations
+- Additional configuration options
+
+Stay tuned for updates!</doc><doc title="Troubleshooting" desc="docs page."># Troubleshooting
+
+## "codex not found" / CLI not on PATH
+
+- Install globally: `npm i -g @openai/codex`
+- Or enable fallback: `{ allowNpx: true }` (uses `npx -y @openai/codex`)
+
+## Not authenticated / 401 / "Please login"
+
+- Run `codex login`
+- Ensure `~/.codex/auth.json` exists and is readable
+- Alternatively set `OPENAI_API_KEY` in `env`
+
+## Sandbox / approval errors
+
+- Use safer defaults for non‑interactive runs:
+  - `approvalMode: 'on-failure'`
+  - `sandboxMode: 'workspace-write'`
+  - `skipGitRepoCheck: true`
+- For fully autonomous flows: `fullAuto: true` (be cautious). Avoid `dangerouslyBypassApprovalsAndSandbox` unless the environment is already sandboxed.
+
+## Streaming emits only a final chunk
+
+- Codex `--experimental-json` mode emits events (`session.created`, `turn.completed`, `item.completed`) rather than streaming text deltas; the provider still uses AI SDK's standard stream API. This is expected.
+
+## Object generation fails with empty response
+
+**v0.2.0+**: The provider uses native `--output-schema` with OpenAI strict mode. Common issues:
+
+- **Optional fields**: Remove all `.optional()` calls - OpenAI strict mode requires all fields
+- **Format validators**: Remove `.email()`, `.url()`, `.uuid()` - use descriptions like "Valid email address" or "UUID format" instead
+- **Pattern validators**: Remove `.regex()` - use descriptions like "YYYY-MM-DD format" instead
+
+See [LIMITATIONS.md](../../LIMITATIONS.md) for full details.
+
+## zod v3/v4 compatibility warnings
+
+- NPM warnings may appear due to transitive peers (e.g., `zod-to-json-schema`). They do not affect functionality. The provider works with `zod@^3` and `^4`.</doc></docs><tutorials><doc title="README" desc="install &amp; quickstart."># Codex CLI Provider Examples
+
+This folder showcases how to use the AI SDK Codex CLI provider in practical scenarios. Each example is small, focused, and explains why it matters.
+
+## Prerequisites
+
+- Install and authenticate the Codex CLI:
+  - `npm i -g @openai/codex`
+  - `codex login` (ChatGPT OAuth) or set `OPENAI_API_KEY` for API auth
+- Build the provider: `npm run build`
+
+Tip: All examples set `allowNpx: true`, so they work even if `codex` is not on PATH. The provider is Node-only (it spawns a process), so run these in a Node environment (not Edge).
+
+## How To Run
+
+Run any example from the repo root:
+
+```bash
+npm run build
+node examples/<file>.mjs
+```
+
+## Core Usage
+
+- **basic-usage.mjs:** Minimal generation
+  - Purpose: Prove setup works and show the smallest possible call.
+  - Demonstrates: `generateText`, provider wiring, safe defaults.
+  - Value: Quick sanity check to confirm your environment is correct.
+
+- **basic-usage-gpt-5.1-codex.mjs:** Minimal generation with the Codex-optimized GPT-5.1 slug
+  - Purpose: Confirm the provider works unchanged with the Codex-specific GPT-5.1 model ID.
+  - Demonstrates: Same call path as above, but with the Codex slug so you can sanity check quickly.
+  - Value: Handy regression test when Codex CLI ships new model identifiers.
+
+- **streaming.mjs:** Stream responses
+  - Purpose: Show the AI SDK streaming API shape.
+  - Demonstrates: Reading `textStream` and rendering as chunks.
+  - Value: Build responsive UIs. **Note:** `--experimental-json` format currently doesn't support incremental streaming—you'll receive the full response in a single chunk. The streaming API pattern is correct and will work when OpenAI adds delta event support to Codex CLI.
+
+- **streaming-gpt-5.1-codex.mjs:** Streaming with the `gpt-5.1-codex` slug
+  - Purpose: Validate stream handling with the Codex-specific model identifier.
+  - Demonstrates: Same stream plumbing while calling the Codex slug.
+  - Value: Confidence that streaming stays compatible across Codex model updates. **Note:** Currently delivers full response in single chunk due to experimental JSON format limitations.
+
+- **conversation-history.mjs:** Maintain context
+  - Purpose: Keep multi-turn state using a message array.
+  - Demonstrates: AI SDK message roles (`user`, `assistant`).
+  - Value: Realistic chat patterns where prior turns matter.
+
+- **system-messages.mjs:** Control behavior
+  - Purpose: Use system prompts to steer tone or format.
+  - Demonstrates: `system` role to enforce concise or structured replies.
+  - Value: Consistency across outputs without repeating instructions.
+
+- **system-messages-gpt-5.1-codex.mjs:** System prompts with `gpt-5.1-codex`
+  - Purpose: Mirror the system prompt example against the Codex slug to ensure compatibility.
+  - Demonstrates: That the conversation mapper/system validation still behaves the same.
+  - Value: Fast compatibility regression check for future Codex CLI updates.
+
+- **custom-config.mjs:** Configure runtime
+  - Purpose: Customize CWD and autonomy/sandbox policies per run.
+  - Demonstrates: `cwd`, `approvalMode`, `sandboxMode`, `fullAuto` toggles.
+  - Value: Balance safety vs. friction for local dev or CI use.
+
+- **permissions-and-sandbox.mjs:** Compare modes
+  - Purpose: Understand autonomy levels and sandbox modes.
+  - Demonstrates: `on-failure`, `workspace-write`, `fullAuto`, and `dangerouslyBypassApprovalsAndSandbox`.
+  - Value: Pick the right guardrails for your workflow. Warning: bypass is dangerous; prefer sandboxed modes unless you fully trust the environment.
+
+- **advanced-settings.mjs:** Constructor-level model parameters (v0.4.0+)
+  - Purpose: Demonstrate comprehensive reasoning controls and advanced Codex features at model creation.
+  - Demonstrates: `reasoningEffort`, `reasoningSummary`, `webSearch`, `includePlanTool`, `profile`, `mcpServers`, `rmcpClient`, and `configOverrides`. (Swap to the non-Codex `gpt-5.1` slug if you need `modelVerbosity`.)
+  - Value: See all Phase 1 parameters in action—configure behavior once at construction for consistent settings across all calls.
+
+- **provider-options.mjs:** Per-call overrides (v0.4.0+)
+  - Purpose: Show how to override reasoning and config settings for individual requests.
+  - Demonstrates: `providerOptions['codex-cli']` with `reasoningEffort`, `reasoningSummary`, `textVerbosity`, `mcpServers`, `rmcpClient`, and `configOverrides`.
+  - Value: Tune behavior dynamically (e.g., low-effort quick checks vs. high-effort deep dives) without cloning model instances.
+
+## Reliability & Operations
+
+- **long-running-tasks.mjs:** Abort and timeouts
+  - Purpose: Cancel long operations cleanly.
+  - Demonstrates: `AbortController` with AI SDK calls.
+  - Value: Keep apps responsive and prevent runaway tasks.
+
+- **error-handling.mjs:** Catch and classify errors
+  - Purpose: Handle auth and general failures gracefully.
+  - Demonstrates: Using `isAuthenticationError`, reading provider warnings.
+  - Value: User-friendly errors (e.g., suggest `codex login`) and robust UX.
+
+- **check-cli.mjs:** Troubleshoot setup
+  - Purpose: Verify Codex binary and authentication status.
+  - Demonstrates: Calling `codex --version` and `codex login status` (or `npx`).
+  - Value: Quick diagnosis for PATH/auth issues.
+
+- **limitations.mjs:** Understand unsupported settings
+  - Purpose: Show which AI SDK knobs are ignored by Codex.
+  - Demonstrates: Warnings for temperature/topP/topK/penalties/stop sequences.
+  - Value: Avoid confusion and tune your prompts instead.
+
+## Logging
+
+- **logging-default.mjs:** Default logging behavior
+  - Purpose: Show the default non-verbose logging mode.
+  - Demonstrates: Only warn and error messages are logged, debug/info suppressed.
+  - Value: Clean output for production—only essential logs appear.
+
+- **logging-verbose.mjs:** Verbose mode for debugging
+  - Purpose: Enable detailed execution logs for troubleshooting.
+  - Demonstrates: All log levels (debug, info, warn, error) with full visibility.
+  - Value: Development and debugging—see exactly what the provider is doing internally.
+
+- **logging-custom-logger.mjs:** Custom logger integration
+  - Purpose: Integrate with external logging systems (Winston, Pino, Datadog, etc.).
+  - Demonstrates: Custom logger object with timestamps and prefixes.
+  - Value: Route logs to your observability stack, format messages your way.
+
+- **logging-disabled.mjs:** Silent operation
+  - Purpose: Completely disable all provider logging.
+  - Demonstrates: Setting `logger: false` for zero log output.
+  - Value: Production scenarios where logs interfere with output processing.
+  - Warning: No warnings or errors from the provider will be visible!
+
+## Structured Output (Objects)
+
+**v0.2.0+**: The provider uses native `--output-schema` support with OpenAI strict mode for API-level JSON enforcement. No prompt engineering needed—schemas are passed directly to the API, eliminating 100-200 tokens per request and improving reliability.
+
+**⚠️ Important Limitations:**
+
+- Optional fields are **NOT supported** by OpenAI strict mode (all fields must be required)
+- Format validators (`.email()`, `.url()`, `.uuid()`) are stripped (use descriptions instead)
+- Pattern validators (`.regex()`) are stripped (use descriptions instead)
+
+See [LIMITATIONS.md](../LIMITATIONS.md) for full details.
+
+- **generate-object-basic.mjs:** Fundamentals
+  - Purpose: Start with simple, typed objects.
+  - Demonstrates: Zod primitives, arrays, and numeric constraints.
+  - Value: Cleanly typed responses for standard data collection.
+  - Note: All fields must be required (no `.optional()`).
+
+- **generate-object-basic-gpt-5.1-codex.mjs:** Fundamentals with `gpt-5.1-codex`
+  - Purpose: Exercise JSON object generation against the Codex slug.
+  - Demonstrates: Same Zod-driven prompts, proving compatibility with new identifiers.
+  - Value: Quick regression path when Codex CLI ships new GPT-5 model slugs.
+
+- **generate-object-nested.mjs:** Real-world hierarchies
+  - Purpose: Work with nested objects and arrays of objects.
+  - Demonstrates: Organization charts, product variants, nested specs.
+  - Value: Match the shape of real app payloads and APIs.
+
+- **generate-object-constraints.mjs:** Quality and validation
+  - Purpose: Enforce enums, ranges, and constraints.
+  - Demonstrates: Enums, min/max numeric constraints, string length constraints.
+  - Value: Higher-quality data before it enters your system.
+  - Note: Use descriptions for format hints (e.g., "UUID format", "YYYY-MM-DD date") since format/pattern validators are stripped.
+
+- **generate-object-advanced.mjs:** Complex transformations
+  - Purpose: Tackle richer tasks and data extraction.
+  - Demonstrates: Product comparisons with scoring, HTML-to-JSON extraction, incident classification with recommendations.
+  - Value: Turn free-form inputs into structured, actionable data.
+
+- **generate-object-native-schema.mjs:** Native schema showcase (v0.2.0+)
+  - Purpose: Demonstrate native `--output-schema` capabilities with API-level enforcement.
+  - Demonstrates: Complex nested schemas, enums, constraints enforced by OpenAI strict mode.
+  - Value: See the power of native schema support—no prompt engineering, 100-200 fewer tokens per request, guaranteed valid JSON.
+
+## New in v0.2.0
+
+- **experimental-json-events.mjs:** Event format showcase
+  - Purpose: Understand the new `--experimental-json` event structure.
+  - Demonstrates: `thread.started`, `turn.completed`, `item.completed` events, usage tracking.
+  - Value: Learn the event flow for debugging and observability.
+
+## Tool Streaming
+
+**Note:** Codex CLI executes tools autonomously, so the provider sets `providerExecuted: true` on all tool calls. This means the AI SDK will not attempt to execute tools—it simply receives the results from Codex CLI.
+
+**⚠️ Streaming Limitation:** Real-time output streaming (`output-delta` events) is not yet available. Tool outputs are delivered in the final `tool-result` event via the `aggregatedOutput` field. The provider correctly implements the AI SDK tool streaming API, but incremental stdout/stderr streaming will require additional support in Codex CLI's event format.
+
+- **streaming-tool-calls.mjs:** Basic tool streaming
+  - Purpose: Demonstrate tool streaming API with Codex CLI tool execution.
+  - Demonstrates: `tool-input-start`, `tool-input-delta`, `tool-input-end`, `tool-call`, `tool-result` events for exec commands.
+  - Value: See how tool invocation and results flow through the AI SDK streaming interface. Monitor what tools Codex CLI executes in real time.
+  - Note: Tool outputs appear in final result, not as streaming deltas (see limitation above).
+
+- **streaming-multiple-tools.mjs:** Multiple sequential tool calls
+  - Purpose: Show complex multi-tool workflows with result tracking.
+  - Demonstrates: Sequential tool execution, abbreviated output display, tool call numbering.
+  - Value: Build UIs that track progress across multiple tool invocations. Great for debugging complex agent workflows.
+  - Note: Shows tool inputs immediately and outputs when completed (aggregated, not streaming).
+
+## Suggested Run Order
+
+1. `basic-usage.mjs` → `streaming.mjs` → `conversation-history.mjs`
+2. `custom-config.mjs` → `permissions-and-sandbox.mjs` → `advanced-settings.mjs` → `provider-options.mjs` (v0.4.0 features)
+3. `logging-default.mjs` → `logging-verbose.mjs` → `logging-custom-logger.mjs` → `logging-disabled.mjs` (logging)
+4. `generate-object-basic.mjs` → `generate-object-nested.mjs` → `generate-object-constraints.mjs` → `generate-object-advanced.mjs` → `generate-object-native-schema.mjs`
+5. `experimental-json-events.mjs` (v0.2.0 event format)
+6. `streaming-tool-calls.mjs` → `streaming-multiple-tools.mjs` (tool streaming)
+7. `long-running-tasks.mjs` → `error-handling.mjs` → `limitations.mjs` → `check-cli.mjs`
+
+## Troubleshooting
+
+- Not getting output? Run `node examples/check-cli.mjs`.
+- Auth failures? Run `codex login` or set `OPENAI_API_KEY`.
+- PATH issues? Keep `allowNpx: true` or install `@openai/codex` globally.
+- Streaming not incremental? The `--experimental-json` format (introduced Sept 25, 2025) doesn't yet support streaming deltas—you'll receive the full response in a single chunk. This is expected behavior until OpenAI adds delta event support. The streaming API pattern remains correct for future compatibility.</doc></tutorials><src><doc title="Codex Cli Language Model" desc="docs page.">import { spawn } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
+import { createRequire } from 'node:module';
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import type { ReadableStreamDefaultController } from 'node:stream/web';
+import { z } from 'zod';
+import type {
+  LanguageModelV2,
+  LanguageModelV2CallWarning,
+  LanguageModelV2FinishReason,
+  LanguageModelV2StreamPart,
+  LanguageModelV2Usage,
+  LanguageModelV2Content,
+} from '@ai-sdk/provider';
+import { NoSuchModelError } from '@ai-sdk/provider';
+import { generateId, parseProviderOptions } from '@ai-sdk/provider-utils';
+import { getLogger, createVerboseLogger } from './logger.js';
+import type {
+  CodexCliProviderOptions,
+  CodexCliSettings,
+  Logger,
+  McpServerConfig,
+  McpServerStdio,
+  McpServerHttp,
+} from './types.js';
+import { mcpServersSchema, validateModelId } from './validation.js';
+import { mapMessagesToPrompt } from './message-mapper.js';
+import { createAPICallError, createAuthenticationError } from './errors.js';
+
+export interface CodexLanguageModelOptions {
+  id: string; // model id for Codex (-m)
+  settings?: CodexCliSettings;
+}
+
+// Experimental JSON event format from --experimental-json
+interface ExperimentalJsonEvent {
+  type?: string;
+  session_id?: string;
+  thread_id?: string;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    cached_input_tokens?: number;
+  };
+  item?: {
+    id?: string;
+    item_type?: string; // Flattened from ConversationItemDetails
+    text?: string; // For assistant_message and reasoning items
+    [k: string]: unknown;
+  };
+  message?: string; // For error events
+  error?: {
+    message?: string;
+    [k: string]: unknown;
+  };
+  [k: string]: unknown;
+}
+
+type ExperimentalJsonItem = NonNullable<ExperimentalJsonEvent['item']>;
+
+interface ActiveToolItem {
+  toolCallId: string;
+  toolName: string;
+  inputPayload?: unknown;
+  hasEmittedCall: boolean;
+}
+
+const codexCliProviderOptionsSchema: z.ZodType<CodexCliProviderOptions> = z
+  .object({
+    reasoningEffort: z.enum(['minimal', 'low', 'medium', 'high', 'xhigh']).optional(),
+    reasoningSummary: z.enum(['auto', 'detailed']).optional(),
+    reasoningSummaryFormat: z.enum(['none', 'experimental']).optional(),
+    textVerbosity: z.enum(['low', 'medium', 'high']).optional(),
+    addDirs: z.array(z.string().min(1)).optional(),
+    configOverrides: z
+      .record(
+        z.string(),
+        z.union([
+          z.string(),
+          z.number(),
+          z.boolean(),
+          z.object({}).passthrough(),
+          z.array(z.any()),
+        ]),
+      )
+      .optional(),
+    mcpServers: mcpServersSchema.optional(),
+    rmcpClient: z.boolean().optional(),
+  })
+  .strict();
+
+function resolveCodexPath(
+  explicitPath?: string,
+  allowNpx?: boolean,
+): { cmd: string; args: string[] } {
+  if (explicitPath) return { cmd: 'node', args: [explicitPath] };
+
+  try {
+    const req = createRequire(import.meta.url);
+    const pkgPath = req.resolve('@openai/codex/package.json');
+    const root = pkgPath.replace(/package\.json$/, '');
+    return { cmd: 'node', args: [root + 'bin/codex.js'] };
+  } catch {
+    // Fallback to PATH or npx
+    if (allowNpx) return { cmd: 'npx', args: ['-y', '@openai/codex'] };
+    return { cmd: 'codex', args: [] };
+  }
+}
+
+export class CodexCliLanguageModel implements LanguageModelV2 {
+  readonly specificationVersion = 'v2' as const;
+  readonly provider = 'codex-cli';
+  readonly defaultObjectGenerationMode = 'json' as const;
+  readonly supportsImageUrls = false;
+  readonly supportedUrls = {};
+  readonly supportsStructuredOutputs = true;
+
+  readonly modelId: string;
+  readonly settings: CodexCliSettings;
+
+  private logger: Logger;
+  private sessionId?: string;
+
+  constructor(options: CodexLanguageModelOptions) {
+    this.modelId = options.id;
+    this.settings = options.settings ?? {};
+    const baseLogger = getLogger(this.settings.logger);
+    this.logger = createVerboseLogger(baseLogger, this.settings.verbose ?? false);
+    if (!this.modelId || this.modelId.trim() === '') {
+      throw new NoSuchModelError({ modelId: this.modelId, modelType: 'languageModel' });
+    }
+    const warn = validateModelId(this.modelId);
+    if (warn) this.logger.warn(`Codex CLI model: ${warn}`);
+  }
+
+  private mergeSettings(providerOptions?: CodexCliProviderOptions): CodexCliSettings {
+    if (!providerOptions) return this.settings;
+
+    const mergedConfigOverrides =
+      providerOptions.configOverrides || this.settings.configOverrides
+        ? {
+            ...(this.settings.configOverrides ?? {}),
+            ...(providerOptions.configOverrides ?? {}),
+          }
+        : undefined;
+
+    const mergedAddDirs =
+      providerOptions.addDirs || this.settings.addDirs
+        ? [...(this.settings.addDirs ?? []), ...(providerOptions.addDirs ?? [])]
+        : undefined;
+
+    const mergedMcpServers = this.mergeMcpServers(
+      this.settings.mcpServers,
+      providerOptions.mcpServers,
+    );
+
+    return {
+      ...this.settings,
+      reasoningEffort: providerOptions.reasoningEffort ?? this.settings.reasoningEffort,
+      reasoningSummary: providerOptions.reasoningSummary ?? this.settings.reasoningSummary,
+      reasoningSummaryFormat:
+        providerOptions.reasoningSummaryFormat ?? this.settings.reasoningSummaryFormat,
+      modelVerbosity: providerOptions.textVerbosity ?? this.settings.modelVerbosity,
+      configOverrides: mergedConfigOverrides,
+      addDirs: mergedAddDirs,
+      mcpServers: mergedMcpServers,
+      rmcpClient: providerOptions.rmcpClient ?? this.settings.rmcpClient,
+    };
+  }
+
+  private mergeMcpServers(
+    base?: Record<string, McpServerConfig>,
+    override?: Record<string, McpServerConfig>,
+  ): Record<string, McpServerConfig> | undefined {
+    if (!base) return override;
+    if (!override) return base;
+
+    const merged: Record<string, McpServerConfig> = { ...base };
+    for (const [name, incoming] of Object.entries(override)) {
+      const existing = base[name];
+      merged[name] = this.mergeSingleMcpServer(existing, incoming);
+    }
+    return merged;
+  }
+
+  private mergeSingleMcpServer(
+    existing: McpServerConfig | undefined,
+    incoming: McpServerConfig,
+  ): McpServerConfig {
+    if (!existing || existing.transport !== incoming.transport) {
+      return { ...incoming };
+    }
+
+    if (incoming.transport === 'stdio') {
+      const baseStdio = existing as McpServerStdio;
+      const result: McpServerConfig = {
+        transport: 'stdio',
+        command: incoming.command,
+        args: incoming.args ?? baseStdio.args,
+        env: this.mergeStringRecord(baseStdio.env, incoming.env),
+        cwd: incoming.cwd ?? baseStdio.cwd,
+        enabled: incoming.enabled ?? existing.enabled,
+        startupTimeoutSec: incoming.startupTimeoutSec ?? existing.startupTimeoutSec,
+        toolTimeoutSec: incoming.toolTimeoutSec ?? existing.toolTimeoutSec,
+        enabledTools: incoming.enabledTools ?? existing.enabledTools,
+        disabledTools: incoming.disabledTools ?? existing.disabledTools,
+      } as McpServerConfig;
+      return result;
+    }
+
+    const baseHttp = existing as McpServerHttp;
+    // Treat auth fields as a bundle: if incoming defines either, override both.
+    const hasIncomingAuth =
+      incoming.bearerToken !== undefined || incoming.bearerTokenEnvVar !== undefined;
+    const bearerToken = hasIncomingAuth ? incoming.bearerToken : baseHttp.bearerToken;
+    const bearerTokenEnvVar = hasIncomingAuth
+      ? incoming.bearerTokenEnvVar
+      : baseHttp.bearerTokenEnvVar;
+
+    const result: McpServerConfig = {
+      transport: 'http',
+      url: incoming.url,
+      bearerToken,
+      bearerTokenEnvVar,
+      httpHeaders: this.mergeStringRecord(baseHttp.httpHeaders, incoming.httpHeaders),
+      envHttpHeaders: this.mergeStringRecord(baseHttp.envHttpHeaders, incoming.envHttpHeaders),
+      enabled: incoming.enabled ?? existing.enabled,
+      startupTimeoutSec: incoming.startupTimeoutSec ?? existing.startupTimeoutSec,
+      toolTimeoutSec: incoming.toolTimeoutSec ?? existing.toolTimeoutSec,
+      enabledTools: incoming.enabledTools ?? existing.enabledTools,
+      disabledTools: incoming.disabledTools ?? existing.disabledTools,
+    };
+
+    return result;
+  }
+
+  private mergeStringRecord(
+    base?: Record<string, string>,
+    override?: Record<string, string>,
+  ): Record<string, string> | undefined {
+    if (override !== undefined) {
+      if (Object.keys(override).length === 0) return {};
+      return { ...(base ?? {}), ...override };
+    }
+    if (base) return { ...base };
+    return undefined;
+  }
+
+  // Codex JSONL items use `type` for the item discriminator, but some
+  // earlier fixtures (and defensive parsing) might still surface `item_type`.
+  // This helper returns whichever is present.
+  private getItemType(item?: ExperimentalJsonItem): string | undefined {
+    if (!item) return undefined;
+    const data = item as Record<string, unknown>;
+    const legacy = typeof data.item_type === 'string' ? (data.item_type as string) : undefined;
+    const current = typeof data.type === 'string' ? (data.type as string) : undefined;
+    return legacy ?? current;
+  }
+
+  private buildArgs(
+    promptText: string,
+    responseFormat?: { type: 'json'; schema: unknown },
+    settings: CodexCliSettings = this.settings,
+  ): {
+    cmd: string;
+    args: string[];
+    env: NodeJS.ProcessEnv;
+    cwd?: string;
+    lastMessagePath?: string;
+    lastMessageIsTemp?: boolean;
+    schemaPath?: string;
+  } {
+    const base = resolveCodexPath(settings.codexPath, settings.allowNpx);
+    const args: string[] = [...base.args, 'exec', '--experimental-json'];
+
+    // Approval/sandbox (exec subcommand does not accept -a/-s directly; use -c overrides)
+    if (settings.fullAuto) {
+      args.push('--full-auto');
+    } else if (settings.dangerouslyBypassApprovalsAndSandbox) {
+      args.push('--dangerously-bypass-approvals-and-sandbox');
+    } else {
+      const approval = settings.approvalMode ?? 'on-failure';
+      args.push('-c', `approval_policy=${approval}`);
+      const sandbox = settings.sandboxMode ?? 'workspace-write';
+      args.push('-c', `sandbox_mode=${sandbox}`);
+    }
+
+    if (settings.skipGitRepoCheck !== false) {
+      args.push('--skip-git-repo-check');
+    }
+
+    // Reasoning & verbosity
+    if (settings.reasoningEffort) {
+      args.push('-c', `model_reasoning_effort=${settings.reasoningEffort}`);
+    }
+    if (settings.reasoningSummary) {
+      args.push('-c', `model_reasoning_summary=${settings.reasoningSummary}`);
+    }
+    if (settings.reasoningSummaryFormat) {
+      args.push('-c', `model_reasoning_summary_format=${settings.reasoningSummaryFormat}`);
+    }
+    if (settings.modelVerbosity) {
+      args.push('-c', `model_verbosity=${settings.modelVerbosity}`);
+    }
+
+    // Advanced Codex features
+    if (settings.includePlanTool) {
+      args.push('--include-plan-tool');
+    }
+    if (settings.profile) {
+      args.push('--profile', settings.profile);
+    }
+    if (settings.oss) {
+      args.push('--oss');
+    }
+    if (settings.webSearch) {
+      args.push('-c', 'tools.web_search=true');
+    }
+
+    // MCP configuration
+    this.applyMcpSettings(args, settings);
+
+    // Color handling
+    if (settings.color) {
+      args.push('--color', settings.color);
+    }
+
+    if (this.modelId) {
+      args.push('-m', this.modelId);
+    }
+
+    if (settings.addDirs?.length) {
+      for (const dir of settings.addDirs) {
+        if (typeof dir === 'string' && dir.trim().length > 0) {
+          args.push('--add-dir', dir);
+        }
+      }
+    }
+
+    // Generic config overrides (-c key=value)
+    if (settings.configOverrides) {
+      for (const [key, value] of Object.entries(settings.configOverrides)) {
+        this.addConfigOverride(args, key, value);
+      }
+    }
+
+    // Handle JSON schema if provided
+    let schemaPath: string | undefined;
+    if (responseFormat?.type === 'json' && responseFormat.schema) {
+      const schema = typeof responseFormat.schema === 'object' ? responseFormat.schema : {};
+      const sanitizedSchema = this.sanitizeJsonSchema(schema) as Record<string, unknown>;
+
+      // Only write schema if it has properties (not empty schema like z.any())
+      const hasProperties = Object.keys(sanitizedSchema).length > 0;
+      if (hasProperties) {
+        const dir = mkdtempSync(join(tmpdir(), 'codex-schema-'));
+        schemaPath = join(dir, 'schema.json');
+
+        // OpenAI strict mode requires additionalProperties=false for structured schemas
+        const schemaWithAdditional = {
+          ...sanitizedSchema,
+          additionalProperties: false,
+        };
+
+        writeFileSync(schemaPath, JSON.stringify(schemaWithAdditional, null, 2));
+        args.push('--output-schema', schemaPath);
+      }
+    }
+
+    // Prompt as positional arg (avoid stdin for reliability)
+    args.push(promptText);
+
+    const env: NodeJS.ProcessEnv = {
+      ...process.env,
+      ...(settings.env || {}),
+      RUST_LOG: process.env.RUST_LOG || 'error',
+    };
+
+    // Configure output-last-message
+    let lastMessagePath: string | undefined = settings.outputLastMessageFile;
+    let lastMessageIsTemp = false;
+    if (!lastMessagePath) {
+      // create a temp folder for this run
+      const dir = mkdtempSync(join(tmpdir(), 'codex-cli-'));
+      lastMessagePath = join(dir, 'last-message.txt');
+      lastMessageIsTemp = true;
+    }
+    args.push('--output-last-message', lastMessagePath);
+
+    return {
+      cmd: base.cmd,
+      args,
+      env,
+      cwd: settings.cwd,
+      lastMessagePath,
+      lastMessageIsTemp,
+      schemaPath,
+    };
+  }
+
+  private applyMcpSettings(args: string[], settings: CodexCliSettings): void {
+    if (settings.rmcpClient) {
+      this.addConfigOverride(args, 'features.rmcp_client', true);
+    }
+
+    if (!settings.mcpServers) return;
+
+    for (const [rawName, server] of Object.entries(settings.mcpServers)) {
+      const name = rawName.trim();
+      if (!name) continue;
+      const prefix = `mcp_servers.${name}`;
+
+      if (server.enabled !== undefined) {
+        this.addConfigOverride(args, `${prefix}.enabled`, server.enabled);
+      }
+      if (server.startupTimeoutSec !== undefined) {
+        this.addConfigOverride(args, `${prefix}.startup_timeout_sec`, server.startupTimeoutSec);
+      }
+      if (server.toolTimeoutSec !== undefined) {
+        this.addConfigOverride(args, `${prefix}.tool_timeout_sec`, server.toolTimeoutSec);
+      }
+      if (server.enabledTools !== undefined) {
+        this.addConfigOverride(args, `${prefix}.enabled_tools`, server.enabledTools);
+      }
+      if (server.disabledTools !== undefined) {
+        this.addConfigOverride(args, `${prefix}.disabled_tools`, server.disabledTools);
+      }
+
+      if (server.transport === 'stdio') {
+        this.addConfigOverride(args, `${prefix}.command`, server.command);
+        if (server.args !== undefined) this.addConfigOverride(args, `${prefix}.args`, server.args);
+        if (server.env !== undefined) this.addConfigOverride(args, `${prefix}.env`, server.env);
+        if (server.cwd) this.addConfigOverride(args, `${prefix}.cwd`, server.cwd);
+      } else {
+        this.addConfigOverride(args, `${prefix}.url`, server.url);
+        if (server.bearerToken !== undefined)
+          this.addConfigOverride(args, `${prefix}.bearer_token`, server.bearerToken);
+        if (server.bearerTokenEnvVar)
+          this.addConfigOverride(args, `${prefix}.bearer_token_env_var`, server.bearerTokenEnvVar);
+        if (server.httpHeaders !== undefined)
+          this.addConfigOverride(args, `${prefix}.http_headers`, server.httpHeaders);
+        if (server.envHttpHeaders !== undefined)
+          this.addConfigOverride(args, `${prefix}.env_http_headers`, server.envHttpHeaders);
+      }
+    }
+  }
+
+  private addConfigOverride(
+    args: string[],
+    key: string,
+    value: string | number | boolean | object,
+  ): void {
+    if (this.isPlainObject(value)) {
+      const entries = Object.entries(value);
+      if (entries.length === 0) {
+        args.push('-c', `${key}={}`);
+        return;
+      }
+      for (const [childKey, childValue] of entries) {
+        this.addConfigOverride(
+          args,
+          `${key}.${childKey}`,
+          childValue as string | number | boolean | object,
+        );
+      }
+      return;
+    }
+    const serialized = this.serializeConfigValue(value);
+    args.push('-c', `${key}=${serialized}`);
+  }
+
+  /**
+   * Serialize a config override value into a CLI-safe string.
+   */
+  private serializeConfigValue(value: string | number | boolean | object): string {
+    if (typeof value === 'string') return value;
+    if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+    if (Array.isArray(value)) {
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    if (value && typeof value === 'object') {
+      // Remaining plain objects are flattened earlier; fallback to JSON.
+      try {
+        return JSON.stringify(value);
+      } catch {
+        return String(value);
+      }
+    }
+    return String(value);
+  }
+
+  private isPlainObject(value: unknown): value is Record<string, unknown> {
+    return (
+      typeof value === 'object' &&
+      value !== null &&
+      !Array.isArray(value) &&
+      Object.prototype.toString.call(value) === '[object Object]'
+    );
+  }
+
+  private sanitizeJsonSchema(value: unknown): unknown {
+    // Remove fields that OpenAI strict mode doesn't support
+    // Based on codex-rs/core/src/openai_tools.rs sanitize_json_schema
+    if (typeof value !== 'object' || value === null) {
+      return value;
+    }
+
+    if (Array.isArray(value)) {
+      return value.map((item) => this.sanitizeJsonSchema(item));
+    }
+
+    const obj = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+
+    for (const [key, val] of Object.entries(obj)) {
+      // Special handling for 'properties' - preserve all property names, sanitize their schemas
+      if (key === 'properties' && typeof val === 'object' && val !== null && !Array.isArray(val)) {
+        const props = val as Record<string, unknown>;
+        const sanitizedProps: Record<string, unknown> = {};
+        for (const [propName, propSchema] of Object.entries(props)) {
+          // Keep property name, sanitize its schema
+          sanitizedProps[propName] = this.sanitizeJsonSchema(propSchema);
+        }
+        result[key] = sanitizedProps;
+        continue;
+      }
+
+      // Remove unsupported metadata fields
+      if (
+        key === '$schema' ||
+        key === '$id' ||
+        key === '$ref' ||
+        key === '$defs' ||
+        key === 'definitions' ||
+        key === 'title' ||
+        key === 'examples' ||
+        key === 'default' ||
+        key === 'format' || // OpenAI strict mode doesn't support format
+        key === 'pattern' // OpenAI strict mode doesn't support pattern
+      ) {
+        continue;
+      }
+
+      // Recursively sanitize nested objects and arrays
+      result[key] = this.sanitizeJsonSchema(val);
+    }
+
+    return result;
+  }
+
+  private mapWarnings(
+    options: Parameters<LanguageModelV2['doGenerate']>[0],
+  ): LanguageModelV2CallWarning[] {
+    const unsupported: LanguageModelV2CallWarning[] = [];
+    const add = (setting: unknown, name: string) => {
+      if (setting !== undefined)
+        unsupported.push({
+          type: 'unsupported-setting',
+          setting: name,
+          details: `Codex CLI does not support ${name}; it will be ignored.`,
+        } as LanguageModelV2CallWarning);
+    };
+    add(options.temperature, 'temperature');
+    add(options.topP, 'topP');
+    add(options.topK, 'topK');
+    add(options.presencePenalty, 'presencePenalty');
+    add(options.frequencyPenalty, 'frequencyPenalty');
+    add(options.stopSequences?.length ? options.stopSequences : undefined, 'stopSequences');
+    add((options as { seed?: unknown }).seed, 'seed');
+    return unsupported;
+  }
+
+  private parseExperimentalJsonEvent(line: string): ExperimentalJsonEvent | undefined {
+    try {
+      return JSON.parse(line) as ExperimentalJsonEvent;
+    } catch {
+      return undefined;
+    }
+  }
+
+  private extractUsage(evt: ExperimentalJsonEvent): LanguageModelV2Usage | undefined {
+    const reported = evt.usage;
+    if (!reported) return undefined;
+    const inputTokens = reported.input_tokens ?? 0;
+    const outputTokens = reported.output_tokens ?? 0;
+    const cachedInputTokens = reported.cached_input_tokens ?? 0;
+    return {
+      inputTokens,
+      outputTokens,
+      // totalTokens should not double-count cached tokens; track cached separately
+      totalTokens: inputTokens + outputTokens,
+      cachedInputTokens,
+    };
+  }
+
+  private getToolName(item?: ExperimentalJsonItem): string | undefined {
+    if (!item) return undefined;
+    const itemType = this.getItemType(item);
+    switch (itemType) {
+      case 'command_execution':
+        return 'exec';
+      case 'file_change':
+        return 'patch';
+      case 'mcp_tool_call': {
+        const tool = (item as Record<string, unknown>).tool;
+        if (typeof tool === 'string' && tool.length > 0) return tool;
+        return 'mcp_tool';
+      }
+      case 'web_search':
+        return 'web_search';
+      default:
+        return undefined;
+    }
+  }
+
+  private buildToolInputPayload(item?: ExperimentalJsonItem): unknown {
+    if (!item) return undefined;
+    const data = item as Record<string, unknown>;
+    switch (this.getItemType(item)) {
+      case 'command_execution': {
+        const payload: Record<string, unknown> = {};
+        if (typeof data.command === 'string') payload.command = data.command;
+        if (typeof data.status === 'string') payload.status = data.status;
+        if (typeof data.cwd === 'string') payload.cwd = data.cwd;
+        return Object.keys(payload).length ? payload : undefined;
+      }
+      case 'file_change': {
+        const payload: Record<string, unknown> = {};
+        if (Array.isArray(data.changes)) payload.changes = data.changes;
+        if (typeof data.status === 'string') payload.status = data.status;
+        return Object.keys(payload).length ? payload : undefined;
+      }
+      case 'mcp_tool_call': {
+        const payload: Record<string, unknown> = {};
+        if (typeof data.server === 'string') payload.server = data.server;
+        if (typeof data.tool === 'string') payload.tool = data.tool;
+        if (typeof data.status === 'string') payload.status = data.status;
+        // Include arguments so consumers can see what parameters were passed
+        if (data.arguments !== undefined) payload.arguments = data.arguments;
+        return Object.keys(payload).length ? payload : undefined;
+      }
+      case 'web_search': {
+        const payload: Record<string, unknown> = {};
+        if (typeof data.query === 'string') payload.query = data.query;
+        return Object.keys(payload).length ? payload : undefined;
+      }
+      default:
+        return undefined;
+    }
+  }
+
+  private buildToolResultPayload(item?: ExperimentalJsonItem): {
+    result: unknown;
+    metadata?: Record<string, string>;
+  } {
+    if (!item) return { result: {} };
+    const data = item as Record<string, unknown>;
+    const metadata: Record<string, string> = {};
+    const itemType = this.getItemType(item);
+    if (typeof itemType === 'string') metadata.itemType = itemType;
+    if (typeof item.id === 'string') metadata.itemId = item.id;
+    if (typeof data.status === 'string') metadata.status = data.status;
+
+    const buildResult = (result: Record<string, unknown>) => ({
+      result,
+      metadata: Object.keys(metadata).length ? metadata : undefined,
+    });
+
+    switch (itemType) {
+      case 'command_execution': {
+        const result: Record<string, unknown> = {};
+        if (typeof data.command === 'string') result.command = data.command;
+        if (typeof data.aggregated_output === 'string')
+          result.aggregatedOutput = data.aggregated_output;
+        if (typeof data.exit_code === 'number') result.exitCode = data.exit_code;
+        if (typeof data.status === 'string') result.status = data.status;
+        return buildResult(result);
+      }
+      case 'file_change': {
+        const result: Record<string, unknown> = {};
+        if (Array.isArray(data.changes)) result.changes = data.changes;
+        if (typeof data.status === 'string') result.status = data.status;
+        return buildResult(result);
+      }
+      case 'mcp_tool_call': {
+        const result: Record<string, unknown> = {};
+        if (typeof data.server === 'string') {
+          result.server = data.server;
+          metadata.server = data.server;
+        }
+        if (typeof data.tool === 'string') result.tool = data.tool;
+        if (typeof data.status === 'string') result.status = data.status;
+        // Include result payload so consumers can see what the tool returned
+        if (data.result !== undefined) result.result = data.result;
+        // Include error details if present
+        if (data.error !== undefined) result.error = data.error;
+        return buildResult(result);
+      }
+      case 'web_search': {
+        const result: Record<string, unknown> = {};
+        if (typeof data.query === 'string') result.query = data.query;
+        if (typeof data.status === 'string') result.status = data.status;
+        return buildResult(result);
+      }
+      default: {
+        const result = { ...data };
+        return buildResult(result);
+      }
+    }
+  }
+
+  private safeStringify(value: unknown): string {
+    if (value === undefined) return '';
+    if (typeof value === 'string') return value;
+    try {
+      return JSON.stringify(value);
+    } catch {
+      return '';
+    }
+  }
+
+  private emitToolInvocation(
+    controller: ReadableStreamDefaultController<LanguageModelV2StreamPart>,
+    toolCallId: string,
+    toolName: string,
+    inputPayload: unknown,
+  ): void {
+    const inputString = this.safeStringify(inputPayload);
+    controller.enqueue({ type: 'tool-input-start', id: toolCallId, toolName });
+    if (inputString) {
+      controller.enqueue({ type: 'tool-input-delta', id: toolCallId, delta: inputString });
+    }
+    controller.enqueue({ type: 'tool-input-end', id: toolCallId });
+    controller.enqueue({
+      type: 'tool-call',
+      toolCallId,
+      toolName,
+      input: inputString,
+      providerExecuted: true,
+    });
+  }
+
+  private emitToolResult(
+    controller: ReadableStreamDefaultController<LanguageModelV2StreamPart>,
+    toolCallId: string,
+    toolName: string,
+    item: ExperimentalJsonItem,
+    resultPayload: unknown,
+    metadata?: Record<string, string>,
+  ): void {
+    const providerMetadataEntries: Record<string, string> = {
+      ...(metadata ?? {}),
+    };
+    const itemType = this.getItemType(item);
+    if (itemType && providerMetadataEntries.itemType === undefined) {
+      providerMetadataEntries.itemType = itemType;
+    }
+    if (item.id && providerMetadataEntries.itemId === undefined) {
+      providerMetadataEntries.itemId = item.id;
+    }
+
+    // Determine error status for command executions
+    let isError: boolean | undefined;
+    if (itemType === 'command_execution') {
+      const data = item as Record<string, unknown>;
+      const exitCode = typeof data.exit_code === 'number' ? (data.exit_code as number) : undefined;
+      const status = typeof data.status === 'string' ? (data.status as string) : undefined;
+      if ((exitCode !== undefined && exitCode !== 0) || status === 'failed') {
+        isError = true;
+      }
+    }
+
+    controller.enqueue({
+      type: 'tool-result',
+      toolCallId,
+      toolName,
+      result: resultPayload ?? {},
+      ...(isError ? { isError: true } : {}),
+      ...(Object.keys(providerMetadataEntries).length
+        ? { providerMetadata: { 'codex-cli': providerMetadataEntries } }
+        : {}),
+    });
+  }
+
+  private handleSpawnError(err: unknown, promptExcerpt: string) {
+    const e =
+      err && typeof err === 'object'
+        ? (err as {
+            message?: unknown;
+            code?: unknown;
+            exitCode?: unknown;
+            stderr?: unknown;
+          })
+        : undefined;
+    const message = String((e?.message ?? err) || 'Failed to run Codex CLI');
+    // crude auth detection
+    if (/login|auth|unauthorized|not\s+logged/i.test(message)) {
+      throw createAuthenticationError(message);
+    }
+    throw createAPICallError({
+      message,
+      code: typeof e?.code === 'string' ? e.code : undefined,
+      exitCode: typeof e?.exitCode === 'number' ? e.exitCode : undefined,
+      stderr: typeof e?.stderr === 'string' ? e.stderr : undefined,
+      promptExcerpt,
+    });
+  }
+
+  async doGenerate(
+    options: Parameters<LanguageModelV2['doGenerate']>[0],
+  ): Promise<Awaited<ReturnType<LanguageModelV2['doGenerate']>>> {
+    this.logger.debug(`[codex-cli] Starting doGenerate request with model: ${this.modelId}`);
+
+    const { promptText, warnings: mappingWarnings } = mapMessagesToPrompt(options.prompt);
+    const promptExcerpt = promptText.slice(0, 200);
+    const warnings = [
+      ...this.mapWarnings(options),
+      ...(mappingWarnings?.map((m) => ({ type: 'other', message: m })) || []),
+    ] as LanguageModelV2CallWarning[];
+
+    this.logger.debug(
+      `[codex-cli] Converted ${options.prompt.length} messages, response format: ${options.responseFormat?.type ?? 'none'}`,
+    );
+
+    const providerOptions = await parseProviderOptions<CodexCliProviderOptions>({
+      provider: this.provider,
+      providerOptions: options.providerOptions,
+      schema: codexCliProviderOptionsSchema,
+    });
+    const effectiveSettings = this.mergeSettings(providerOptions);
+
+    const responseFormat =
+      options.responseFormat?.type === 'json'
+        ? { type: 'json' as const, schema: options.responseFormat.schema }
+        : undefined;
+    const { cmd, args, env, cwd, lastMessagePath, lastMessageIsTemp, schemaPath } = this.buildArgs(
+      promptText,
+      responseFormat,
+      effectiveSettings,
+    );
+
+    this.logger.debug(
+      `[codex-cli] Executing Codex CLI: ${cmd} with ${args.length} arguments, cwd: ${cwd ?? 'default'}`,
+    );
+
+    let text = '';
+    const usage: LanguageModelV2Usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+    const finishReason: LanguageModelV2FinishReason = 'stop';
+    const startTime = Date.now();
+
+    const child = spawn(cmd, args, { env, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+
+    // Abort support
+    let onAbort: (() => void) | undefined;
+    if (options.abortSignal) {
+      if (options.abortSignal.aborted) {
+        child.kill('SIGTERM');
+        throw options.abortSignal.reason ?? new Error('Request aborted');
+      }
+      onAbort = () => child.kill('SIGTERM');
+      options.abortSignal.addEventListener('abort', onAbort, { once: true });
+    }
+
+    try {
+      await new Promise<void>((resolve, reject) => {
+        let stderr = '';
+        let turnFailureMessage: string | undefined;
+        child.stderr.on('data', (d) => (stderr += String(d)));
+        child.stdout.setEncoding('utf8');
+        child.stdout.on('data', (chunk: string) => {
+          const lines = chunk.split(/\r?\n/).filter(Boolean);
+          for (const line of lines) {
+            const event = this.parseExperimentalJsonEvent(line);
+            if (!event) continue;
+
+            this.logger.debug(`[codex-cli] Received event type: ${event.type ?? 'unknown'}`);
+
+            if (event.type === 'thread.started' && typeof event.thread_id === 'string') {
+              this.sessionId = event.thread_id;
+              this.logger.debug(`[codex-cli] Session started: ${this.sessionId}`);
+            }
+            if (event.type === 'session.created' && typeof event.session_id === 'string') {
+              // Backwards compatibility in case older events appear
+              this.sessionId = event.session_id;
+              this.logger.debug(`[codex-cli] Session created: ${this.sessionId}`);
+            }
+
+            if (event.type === 'turn.completed') {
+              const usageEvent = this.extractUsage(event);
+              if (usageEvent) {
+                usage.inputTokens = usageEvent.inputTokens;
+                usage.outputTokens = usageEvent.outputTokens;
+                usage.totalTokens = usageEvent.totalTokens;
+              }
+            }
+
+            if (
+              event.type === 'item.completed' &&
+              this.getItemType(event.item) === 'assistant_message' &&
+              typeof event.item?.text === 'string'
+            ) {
+              text = event.item.text;
+            }
+
+            if (event.type === 'turn.failed') {
+              const errorText =
+                (event.error && typeof event.error.message === 'string' && event.error.message) ||
+                (typeof event.message === 'string' ? event.message : undefined);
+              turnFailureMessage = errorText ?? turnFailureMessage ?? 'Codex turn failed';
+              this.logger.error(`[codex-cli] Turn failed: ${turnFailureMessage}`);
+            }
+
+            if (event.type === 'error') {
+              const errorText = typeof event.message === 'string' ? event.message : undefined;
+              turnFailureMessage = errorText ?? turnFailureMessage ?? 'Codex error';
+              this.logger.error(`[codex-cli] Error event: ${turnFailureMessage}`);
+            }
+          }
+        });
+        child.on('error', (e) => {
+          this.logger.error(`[codex-cli] Spawn error: ${String(e)}`);
+          reject(this.handleSpawnError(e, promptExcerpt));
+        });
+        child.on('close', (code) => {
+          const duration = Date.now() - startTime;
+          if (code === 0) {
+            if (turnFailureMessage) {
+              reject(
+                createAPICallError({
+                  message: turnFailureMessage,
+                  stderr,
+                  promptExcerpt,
+                }),
+              );
+              return;
+            }
+            this.logger.info(
+              `[codex-cli] Request completed - Session: ${this.sessionId ?? 'N/A'}, Duration: ${duration}ms, Tokens: ${usage.totalTokens}`,
+            );
+            this.logger.debug(
+              `[codex-cli] Token usage - Input: ${usage.inputTokens}, Output: ${usage.outputTokens}, Total: ${usage.totalTokens}`,
+            );
+            resolve();
+          } else {
+            this.logger.error(`[codex-cli] Process exited with code ${code} after ${duration}ms`);
+            reject(
+              createAPICallError({
+                message: `Codex CLI exited with code ${code}`,
+                exitCode: code ?? undefined,
+                stderr,
+                promptExcerpt,
+              }),
+            );
+          }
+        });
+      });
+    } finally {
+      if (options.abortSignal && onAbort) options.abortSignal.removeEventListener('abort', onAbort);
+      // Clean up temp schema file
+      if (schemaPath) {
+        try {
+          const schemaDir = dirname(schemaPath);
+          rmSync(schemaDir, { recursive: true, force: true });
+        } catch {}
+      }
+    }
+
+    // Fallback: read last message file if needed
+    if (!text && lastMessagePath) {
+      try {
+        const fileText = readFileSync(lastMessagePath, 'utf8');
+        if (fileText && typeof fileText === 'string') {
+          text = fileText.trim();
+        }
+      } catch {}
+      // best-effort cleanup for temp paths only
+      if (lastMessageIsTemp) {
+        try {
+          rmSync(lastMessagePath, { force: true });
+        } catch {}
+      }
+    }
+
+    // No JSON extraction needed - native schema guarantees valid JSON
+
+    const content: LanguageModelV2Content[] = [{ type: 'text', text }];
+    return {
+      content,
+      usage,
+      finishReason,
+      warnings,
+      response: { id: generateId(), timestamp: new Date(), modelId: this.modelId },
+      request: { body: promptText },
+      providerMetadata: {
+        'codex-cli': { ...(this.sessionId ? { sessionId: this.sessionId } : {}) },
+      },
+    };
+  }
+
+  async doStream(
+    options: Parameters<LanguageModelV2['doStream']>[0],
+  ): Promise<Awaited<ReturnType<LanguageModelV2['doStream']>>> {
+    this.logger.debug(`[codex-cli] Starting doStream request with model: ${this.modelId}`);
+
+    const { promptText, warnings: mappingWarnings } = mapMessagesToPrompt(options.prompt);
+    const promptExcerpt = promptText.slice(0, 200);
+    const warnings = [
+      ...this.mapWarnings(options),
+      ...(mappingWarnings?.map((m) => ({ type: 'other', message: m })) || []),
+    ] as LanguageModelV2CallWarning[];
+
+    this.logger.debug(
+      `[codex-cli] Converted ${options.prompt.length} messages for streaming, response format: ${options.responseFormat?.type ?? 'none'}`,
+    );
+
+    const providerOptions = await parseProviderOptions<CodexCliProviderOptions>({
+      provider: this.provider,
+      providerOptions: options.providerOptions,
+      schema: codexCliProviderOptionsSchema,
+    });
+    const effectiveSettings = this.mergeSettings(providerOptions);
+
+    const responseFormat =
+      options.responseFormat?.type === 'json'
+        ? { type: 'json' as const, schema: options.responseFormat.schema }
+        : undefined;
+    const { cmd, args, env, cwd, lastMessagePath, lastMessageIsTemp, schemaPath } = this.buildArgs(
+      promptText,
+      responseFormat,
+      effectiveSettings,
+    );
+
+    this.logger.debug(
+      `[codex-cli] Executing Codex CLI for streaming: ${cmd} with ${args.length} arguments`,
+    );
+
+    const stream = new ReadableStream<LanguageModelV2StreamPart>({
+      start: (controller) => {
+        const startTime = Date.now();
+        const child = spawn(cmd, args, { env, cwd, stdio: ['ignore', 'pipe', 'pipe'] });
+
+        // Emit stream-start
+        controller.enqueue({ type: 'stream-start', warnings });
+
+        let stderr = '';
+        let accumulatedText = '';
+        const activeTools = new Map<string, ActiveToolItem>();
+        let responseMetadataSent = false;
+        let lastUsage: LanguageModelV2Usage | undefined;
+        let turnFailureMessage: string | undefined;
+
+        const sendMetadata = (meta: Record<string, string> = {}) => {
+          controller.enqueue({
+            type: 'response-metadata',
+            id: randomUUID(),
+            timestamp: new Date(),
+            modelId: this.modelId,
+            ...(Object.keys(meta).length ? { providerMetadata: { 'codex-cli': meta } } : {}),
+          });
+        };
+
+        const handleItemEvent = (event: ExperimentalJsonEvent) => {
+          const item = event.item;
+          if (!item) return;
+
+          if (
+            event.type === 'item.completed' &&
+            this.getItemType(item) === 'assistant_message' &&
+            typeof item.text === 'string'
+          ) {
+            accumulatedText = item.text;
+            this.logger.debug(
+              `[codex-cli] Received assistant message, length: ${item.text.length}`,
+            );
+            return;
+          }
+
+          const toolName = this.getToolName(item);
+          if (!toolName) {
+            return;
+          }
+
+          this.logger.debug(
+            `[codex-cli] Tool detected: ${toolName}, item type: ${this.getItemType(item)}`,
+          );
+
+          const mapKey = typeof item.id === 'string' && item.id.length > 0 ? item.id : randomUUID();
+          let toolState = activeTools.get(mapKey);
+          const latestInput = this.buildToolInputPayload(item);
+
+          if (!toolState) {
+            toolState = {
+              toolCallId: mapKey,
+              toolName,
+              inputPayload: latestInput,
+              hasEmittedCall: false,
+            };
+            activeTools.set(mapKey, toolState);
+          } else {
+            toolState.toolName = toolName;
+            if (latestInput !== undefined) {
+              toolState.inputPayload = latestInput;
+            }
+          }
+
+          if (!toolState.hasEmittedCall) {
+            this.logger.debug(`[codex-cli] Emitting tool invocation: ${toolState.toolName}`);
+            this.emitToolInvocation(
+              controller,
+              toolState.toolCallId,
+              toolState.toolName,
+              toolState.inputPayload,
+            );
+            toolState.hasEmittedCall = true;
+          }
+
+          if (event.type === 'item.completed') {
+            const { result, metadata } = this.buildToolResultPayload(item);
+            this.logger.debug(`[codex-cli] Tool completed: ${toolState.toolName}`);
+            this.emitToolResult(
+              controller,
+              toolState.toolCallId,
+              toolState.toolName,
+              item,
+              result,
+              metadata,
+            );
+            activeTools.delete(mapKey);
+          }
+        };
+
+        // Abort support
+        const onAbort = () => {
+          child.kill('SIGTERM');
+        };
+        if (options.abortSignal) {
+          if (options.abortSignal.aborted) {
+            child.kill('SIGTERM');
+            controller.error(options.abortSignal.reason ?? new Error('Request aborted'));
+            return;
+          }
+          options.abortSignal.addEventListener('abort', onAbort, { once: true });
+        }
+
+        const finishStream = (code: number | null) => {
+          const duration = Date.now() - startTime;
+
+          if (code !== 0) {
+            this.logger.error(
+              `[codex-cli] Stream process exited with code ${code} after ${duration}ms`,
+            );
+            controller.error(
+              createAPICallError({
+                message: `Codex CLI exited with code ${code}`,
+                exitCode: code ?? undefined,
+                stderr,
+                promptExcerpt,
+              }),
+            );
+            return;
+          }
+
+          if (turnFailureMessage) {
+            this.logger.error(`[codex-cli] Stream failed: ${turnFailureMessage}`);
+            controller.error(
+              createAPICallError({
+                message: turnFailureMessage,
+                stderr,
+                promptExcerpt,
+              }),
+            );
+            return;
+          }
+
+          // Emit text (non-streaming JSONL suppresses deltas; we send final text once)
+          let finalText = accumulatedText;
+          if (!finalText && lastMessagePath) {
+            try {
+              const fileText = readFileSync(lastMessagePath, 'utf8');
+              if (fileText) finalText = fileText.trim();
+            } catch {}
+            if (lastMessageIsTemp) {
+              try {
+                rmSync(lastMessagePath, { force: true });
+              } catch {}
+            }
+          }
+
+          // No JSON extraction needed - native schema guarantees valid JSON
+          if (finalText) {
+            const textId = randomUUID();
+            controller.enqueue({ type: 'text-start', id: textId });
+            controller.enqueue({ type: 'text-delta', id: textId, delta: finalText });
+            controller.enqueue({ type: 'text-end', id: textId });
+          }
+
+          const usageSummary = lastUsage ?? { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+          this.logger.info(
+            `[codex-cli] Stream completed - Session: ${this.sessionId ?? 'N/A'}, Duration: ${duration}ms, Tokens: ${usageSummary.totalTokens}`,
+          );
+          this.logger.debug(
+            `[codex-cli] Token usage - Input: ${usageSummary.inputTokens}, Output: ${usageSummary.outputTokens}, Total: ${usageSummary.totalTokens}`,
+          );
+          controller.enqueue({
+            type: 'finish',
+            finishReason: 'stop',
+            usage: usageSummary,
+          });
+          controller.close();
+        };
+
+        child.stderr.on('data', (d) => (stderr += String(d)));
+        child.stdout.setEncoding('utf8');
+        child.stdout.on('data', (chunk: string) => {
+          const lines = chunk.split(/\r?\n/).filter(Boolean);
+          for (const line of lines) {
+            const event = this.parseExperimentalJsonEvent(line);
+            if (!event) continue;
+
+            this.logger.debug(`[codex-cli] Stream event: ${event.type ?? 'unknown'}`);
+
+            if (event.type === 'thread.started' && typeof event.thread_id === 'string') {
+              this.sessionId = event.thread_id;
+              this.logger.debug(`[codex-cli] Stream session started: ${this.sessionId}`);
+              if (!responseMetadataSent) {
+                responseMetadataSent = true;
+                sendMetadata();
+              }
+              continue;
+            }
+
+            if (event.type === 'session.created' && typeof event.session_id === 'string') {
+              this.sessionId = event.session_id;
+              this.logger.debug(`[codex-cli] Stream session created: ${this.sessionId}`);
+              if (!responseMetadataSent) {
+                responseMetadataSent = true;
+                sendMetadata();
+              }
+              continue;
+            }
+
+            if (event.type === 'turn.completed') {
+              const usageEvent = this.extractUsage(event);
+              if (usageEvent) {
+                lastUsage = usageEvent;
+              }
+              continue;
+            }
+
+            if (event.type === 'turn.failed') {
+              const errorText =
+                (event.error && typeof event.error.message === 'string' && event.error.message) ||
+                (typeof event.message === 'string' ? event.message : undefined);
+              turnFailureMessage = errorText ?? turnFailureMessage ?? 'Codex turn failed';
+              this.logger.error(`[codex-cli] Stream turn failed: ${turnFailureMessage}`);
+              sendMetadata({ error: turnFailureMessage });
+              continue;
+            }
+
+            if (event.type === 'error') {
+              const errorText = typeof event.message === 'string' ? event.message : undefined;
+              const effective = errorText ?? 'Codex error';
+              turnFailureMessage = turnFailureMessage ?? effective;
+              this.logger.error(`[codex-cli] Stream error event: ${effective}`);
+              sendMetadata({ error: effective });
+              continue;
+            }
+
+            if (event.type && event.type.startsWith('item.')) {
+              handleItemEvent(event);
+            }
+          }
+        });
+
+        const cleanupSchema = () => {
+          if (!schemaPath) return;
+          try {
+            const schemaDir = dirname(schemaPath);
+            rmSync(schemaDir, { recursive: true, force: true });
+          } catch {}
+        };
+
+        child.on('error', (e) => {
+          this.logger.error(`[codex-cli] Stream spawn error: ${String(e)}`);
+          if (options.abortSignal) options.abortSignal.removeEventListener('abort', onAbort);
+          cleanupSchema();
+          controller.error(this.handleSpawnError(e, promptExcerpt));
+        });
+        child.on('close', (code) => {
+          if (options.abortSignal) options.abortSignal.removeEventListener('abort', onAbort);
+
+          // Clean up temp schema file
+          cleanupSchema();
+
+          // Use setImmediate to ensure all stdout 'data' events are processed first
+          setImmediate(() => finishStream(code));
+        });
+      },
+      cancel: () => {},
+    });
+
+    return { stream, request: { body: promptText } } as Awaited<
+      ReturnType<LanguageModelV2['doStream']>
+    >;
+  }
+}</doc><doc title="Codex Cli Provider" desc="docs page.">import type { LanguageModelV2, ProviderV2 } from '@ai-sdk/provider';
+import { NoSuchModelError } from '@ai-sdk/provider';
+import { CodexCliLanguageModel } from './codex-cli-language-model.js';
+import type { CodexCliProviderSettings, CodexCliSettings } from './types.js';
+import { getLogger } from './logger.js';
+import { validateSettings } from './validation.js';
+
+export interface CodexCliProvider extends ProviderV2 {
+  (modelId: string, settings?: CodexCliSettings): LanguageModelV2;
+  languageModel(modelId: string, settings?: CodexCliSettings): LanguageModelV2;
+  chat(modelId: string, settings?: CodexCliSettings): LanguageModelV2;
+  textEmbeddingModel(modelId: string): never;
+  imageModel(modelId: string): never;
+}
+
+export function createCodexCli(options: CodexCliProviderSettings = {}): CodexCliProvider {
+  const logger = getLogger(options.defaultSettings?.logger);
+
+  if (options.defaultSettings) {
+    const v = validateSettings(options.defaultSettings);
+    if (!v.valid) {
+      throw new Error(`Invalid default settings: ${v.errors.join(', ')}`);
+    }
+    for (const w of v.warnings) logger.warn(`Codex CLI Provider: ${w}`);
+  }
+
+  const createModel = (modelId: string, settings: CodexCliSettings = {}): LanguageModelV2 => {
+    const merged: CodexCliSettings = { ...options.defaultSettings, ...settings };
+    const v = validateSettings(merged);
+    if (!v.valid) throw new Error(`Invalid settings: ${v.errors.join(', ')}`);
+    for (const w of v.warnings) logger.warn(`Codex CLI: ${w}`);
+    return new CodexCliLanguageModel({ id: modelId, settings: merged });
+  };
+
+  const provider = function (modelId: string, settings?: CodexCliSettings) {
+    if (new.target) throw new Error('The Codex CLI provider function cannot be called with new.');
+    return createModel(modelId, settings);
+  } as CodexCliProvider;
+
+  provider.languageModel = createModel;
+  provider.chat = createModel;
+  provider.textEmbeddingModel = ((modelId: string) => {
+    throw new NoSuchModelError({ modelId, modelType: 'textEmbeddingModel' });
+  }) as never;
+  provider.imageModel = ((modelId: string) => {
+    throw new NoSuchModelError({ modelId, modelType: 'imageModel' });
+  }) as never;
+
+  return provider;
+}
+
+export const codexCli = createCodexCli();</doc><doc title="Errors" desc="docs page.">import { APICallError, LoadAPIKeyError } from '@ai-sdk/provider';
+
+export interface CodexErrorMetadata {
+  code?: string;
+  exitCode?: number;
+  stderr?: string;
+  promptExcerpt?: string;
+}
+
+export function createAPICallError({
+  message,
+  code,
+  exitCode,
+  stderr,
+  promptExcerpt,
+  isRetryable = false,
+}: CodexErrorMetadata & { message: string; isRetryable?: boolean }): APICallError {
+  const data: CodexErrorMetadata = { code, exitCode, stderr, promptExcerpt };
+  return new APICallError({
+    message,
+    isRetryable,
+    url: 'codex-cli://exec',
+    requestBodyValues: promptExcerpt ? { prompt: promptExcerpt } : undefined,
+    data,
+  });
+}
+
+export function createAuthenticationError(message?: string): LoadAPIKeyError {
+  return new LoadAPIKeyError({
+    message: message || 'Authentication failed. Ensure Codex CLI is logged in (codex login).',
+  });
+}
+
+export function isAuthenticationError(err: unknown): boolean {
+  if (err instanceof LoadAPIKeyError) return true;
+  if (err instanceof APICallError) {
+    const data = err.data as CodexErrorMetadata | undefined;
+    if (data?.exitCode === 401) return true;
+  }
+  return false;
+}</doc><doc title="Index" desc="docs page.">export { createCodexCli, codexCli } from './codex-cli-provider.js';
+export type { CodexCliProvider } from './codex-cli-provider.js';
+
+export type {
+  CodexCliSettings,
+  CodexCliProviderSettings,
+  CodexCliProviderOptions,
+  Logger,
+  ReasoningEffort,
+  ReasoningSummary,
+  ReasoningSummaryFormat,
+  ModelVerbosity,
+} from './types.js';
+
+export { CodexCliLanguageModel } from './codex-cli-language-model.js';
+
+// Error helpers
+export { isAuthenticationError } from './errors.js';</doc><doc title="Logger" desc="docs page.">import type { Logger } from './types.js';
+
+/**
+ * Default logger that uses console with level tags.
+ */
+/* eslint-disable no-console -- Default logger legitimately uses all console methods */
+const defaultLogger: Logger = {
+  debug: (message: string) => console.debug(`[DEBUG] ${message}`),
+  info: (message: string) => console.info(`[INFO] ${message}`),
+  warn: (message: string) => console.warn(`[WARN] ${message}`),
+  error: (message: string) => console.error(`[ERROR] ${message}`),
+};
+/* eslint-enable no-console */
+
+/**
+ * No-op logger that discards all messages.
+ */
+const noopLogger: Logger = {
+  debug: () => {},
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+};
+
+/**
+ * Gets the appropriate logger based on configuration.
+ *
+ * @param logger - Logger configuration from settings
+ * @returns The logger to use
+ */
+export function getLogger(logger: Logger | false | undefined): Logger {
+  if (logger === false) {
+    return noopLogger;
+  }
+
+  if (logger === undefined) {
+    return defaultLogger;
+  }
+
+  return logger;
+}
+
+/**
+ * Creates a verbose-aware logger that only logs debug/info when verbose is enabled.
+ * Warn and error are always logged regardless of verbose setting.
+ *
+ * @param logger - Base logger to wrap
+ * @param verbose - Whether to enable verbose (debug/info) logging
+ * @returns Logger with verbose-aware behavior
+ */
+export function createVerboseLogger(logger: Logger, verbose: boolean = false): Logger {
+  if (verbose) {
+    // When verbose is enabled, use all log levels
+    return logger;
+  }
+
+  // When verbose is disabled, only allow warn/error
+  // Bind methods to preserve 'this' context for class-based loggers
+  return {
+    debug: () => {}, // No-op when not verbose
+    info: () => {}, // No-op when not verbose
+    warn: logger.warn.bind(logger),
+    error: logger.error.bind(logger),
+  };
+}</doc><doc title="Message Mapper" desc="docs page.">import type { ModelMessage } from 'ai';
+
+type TextPart = { type: 'text'; text: string };
+type ImagePart = { type: 'image'; [k: string]: unknown };
+type ToolOutputText = { type: 'text'; value: string };
+type ToolOutputJson = { type: 'json'; value: unknown };
+type ToolItem = { toolName: string; output: ToolOutputText | ToolOutputJson };
+
+function isTextPart(p: unknown): p is TextPart {
+  return (
+    typeof p === 'object' &&
+    p !== null &&
+    'type' in p &&
+    (p as { type?: unknown }).type === 'text' &&
+    'text' in p &&
+    typeof (p as { text?: unknown }).text === 'string'
+  );
+}
+
+function isImagePart(p: unknown): p is ImagePart {
+  return (
+    typeof p === 'object' && p !== null && 'type' in p && (p as { type?: unknown }).type === 'image'
+  );
+}
+
+function isToolItem(p: unknown): p is ToolItem {
+  if (typeof p !== 'object' || p === null) return false;
+  const obj = p as { toolName?: unknown; output?: unknown };
+  if (typeof obj.toolName !== 'string') return false;
+  const out = obj.output as { type?: unknown; value?: unknown } | undefined;
+  if (!out || (out.type !== 'text' && out.type !== 'json')) return false;
+  if (out.type === 'text' && typeof out.value !== 'string') return false;
+  return true;
+}
+
+export function mapMessagesToPrompt(prompt: readonly ModelMessage[]): {
+  promptText: string;
+  warnings?: string[];
+} {
+  const warnings: string[] = [];
+  const parts: string[] = [];
+
+  let systemText: string | undefined;
+
+  for (const msg of prompt) {
+    if (msg.role === 'system') {
+      systemText = typeof msg.content === 'string' ? msg.content : String(msg.content);
+      continue;
+    }
+
+    if (msg.role === 'user') {
+      if (typeof msg.content === 'string') {
+        parts.push(`Human: ${msg.content}`);
+      } else if (Array.isArray(msg.content)) {
+        const text = msg.content
+          .filter(isTextPart)
+          .map((p) => p.text)
+          .join('\n');
+        if (text) parts.push(`Human: ${text}`);
+        const images = msg.content.filter(isImagePart);
+        if (images.length) warnings.push('Image inputs ignored by Codex CLI integration.');
+      }
+      continue;
+    }
+
+    if (msg.role === 'assistant') {
+      if (typeof msg.content === 'string') {
+        parts.push(`Assistant: ${msg.content}`);
+      } else if (Array.isArray(msg.content)) {
+        const text = msg.content
+          .filter(isTextPart)
+          .map((p) => p.text)
+          .join('\n');
+        if (text) parts.push(`Assistant: ${text}`);
+      }
+      continue;
+    }
+
+    if (msg.role === 'tool') {
+      if (Array.isArray(msg.content)) {
+        for (const maybeTool of msg.content) {
+          if (!isToolItem(maybeTool)) continue;
+          const value =
+            maybeTool.output.type === 'text'
+              ? maybeTool.output.value
+              : JSON.stringify(maybeTool.output.value);
+          parts.push(`Tool Result (${maybeTool.toolName}): ${value}`);
+        }
+      }
+      continue;
+    }
+  }
+
+  let promptText = '';
+  if (systemText) promptText += systemText + '\n\n';
+  promptText += parts.join('\n\n');
+
+  return { promptText, ...(warnings.length ? { warnings } : {}) };
+}</doc><doc title="Types" desc="docs page.">// Types and settings for Codex CLI provider
+
+/**
+ * Logger interface for custom logging.
+ * Allows consumers to provide their own logging implementation
+ * or disable logging entirely.
+ *
+ * @example
+ * ```typescript
+ * const customLogger: Logger = {
+ *   debug: (message) => myLoggingService.debug(message),
+ *   info: (message) => myLoggingService.info(message),
+ *   warn: (message) => myLoggingService.warn(message),
+ *   error: (message) => myLoggingService.error(message),
+ * };
+ * ```
+ */
+export interface Logger {
+  /**
+   * Log a debug message. Only logged when verbose mode is enabled.
+   * Used for detailed execution tracing and troubleshooting.
+   */
+  debug: (message: string) => void;
+
+  /**
+   * Log an informational message. Only logged when verbose mode is enabled.
+   * Used for general execution flow information.
+   */
+  info: (message: string) => void;
+
+  /**
+   * Log a warning message.
+   */
+  warn: (message: string) => void;
+
+  /**
+   * Log an error message.
+   */
+  error: (message: string) => void;
+}
+
+export type ApprovalMode = 'untrusted' | 'on-failure' | 'on-request' | 'never';
+
+export type SandboxMode = 'read-only' | 'workspace-write' | 'danger-full-access';
+
+export type ReasoningEffort = 'minimal' | 'low' | 'medium' | 'high' | 'xhigh';
+/**
+ * Reasoning summary detail level.
+ * Note: The API error messages claim 'concise' and 'none' are valid, but they are
+ * actually rejected with 400 errors. Only 'auto' and 'detailed' work in practice.
+ */
+export type ReasoningSummary = 'auto' | 'detailed';
+export type ReasoningSummaryFormat = 'none' | 'experimental';
+export type ModelVerbosity = 'low' | 'medium' | 'high';
+
+export interface McpServerBase {
+  /**
+   * Enable/disable this MCP server without removing its definition.
+   * Maps to: `mcp_servers.<name>.enabled`
+   */
+  enabled?: boolean;
+
+  /**
+   * Time allowed for the MCP server to start (in seconds).
+   * Maps to: `mcp_servers.<name>.startup_timeout_sec`
+   */
+  startupTimeoutSec?: number;
+
+  /**
+   * Max time a single MCP tool call may run (in seconds).
+   * Maps to: `mcp_servers.<name>.tool_timeout_sec`
+   */
+  toolTimeoutSec?: number;
+
+  /**
+   * Explicit allow/deny lists for tools exposed by the server.
+   * Maps to: `mcp_servers.<name>.enabled_tools` / `disabled_tools`
+   */
+  enabledTools?: string[];
+  disabledTools?: string[];
+}
+
+export interface McpServerStdio extends McpServerBase {
+  /** Execute an MCP server over stdio */
+  transport: 'stdio';
+
+  /** Command to start the MCP server (e.g., `node`, `python`, or a binary path). */
+  command: string;
+
+  /** Arguments passed to the command. */
+  args?: string[];
+
+  /** Environment variables passed to the MCP process. */
+  env?: Record<string, string>;
+
+  /** Optional working directory for the MCP server process. */
+  cwd?: string;
+}
+
+export interface McpServerHttp extends McpServerBase {
+  /** Use an HTTP-based MCP server (RMCP). */
+  transport: 'http';
+
+  /** Base URL for the MCP server. */
+  url: string;
+
+  /** Bearer token supplied inline (use env var variant to avoid embedding secrets). */
+  bearerToken?: string;
+
+  /** Name of env var that holds the bearer token. */
+  bearerTokenEnvVar?: string;
+
+  /** Static HTTP headers to send with each MCP request. */
+  httpHeaders?: Record<string, string>;
+
+  /** Names of env vars whose values should be sent as HTTP headers. */
+  envHttpHeaders?: Record<string, string>;
+}
+
+export type McpServerConfig = McpServerStdio | McpServerHttp;
+
+export interface CodexCliSettings {
+  // Path to the codex CLI JS entry (bin/codex.js) or executable. If omitted, the provider tries to resolve @openai/codex.
+  codexPath?: string;
+
+  // Set working directory for the Codex process
+  cwd?: string;
+
+  // Additional directories Codex should be allowed to read/write (maps to repeated --add-dir)
+  addDirs?: string[];
+
+  // Approval policy for command execution
+  approvalMode?: ApprovalMode;
+
+  // Sandbox mode for command execution
+  sandboxMode?: SandboxMode;
+
+  // Convenience: fully auto (equivalent to --full-auto)
+  fullAuto?: boolean;
+
+  // Danger mode which bypasses approvals and sandbox (equivalent to --dangerously-bypass-approvals-and-sandbox)
+  dangerouslyBypassApprovalsAndSandbox?: boolean;
+
+  // Skip Git repo safety check (recommended for CI/non-repo usage)
+  skipGitRepoCheck?: boolean;
+
+  // Force color handling in Codex CLI output; defaults to auto
+  color?: 'always' | 'never' | 'auto';
+
+  // Allow falling back to `npx @openai/codex` if the binary cannot be resolved
+  allowNpx?: boolean;
+
+  // Optional: write last agent message to this file (Codex CLI flag)
+  outputLastMessageFile?: string;
+
+  // Extra environment variables for the spawned process (e.g., OPENAI_API_KEY)
+  env?: Record<string, string>;
+
+  // Enable verbose provider logging
+  verbose?: boolean;
+
+  // Custom logger; set to false to disable logging
+  logger?: Logger | false;
+
+  // ===== Reasoning & Verbosity =====
+
+  /**
+   * Controls reasoning effort for reasoning-capable models (o3, o4-mini, the GPT-5.1 family,
+   * and legacy GPT-5 slugs). Higher effort produces more thorough reasoning at the cost of latency.
+   *
+   * Codex CLI model presets currently expose `low`/`medium`/`high` for `gpt-5.1` and `gpt-5.1-codex`.
+   * `gpt-5.1-codex-max` additionally supports `xhigh`. `gpt-5.1-codex-mini` only offers `medium`/`high`.
+   * The legacy `gpt-5` slug still allowed `minimal`, but GPT-5.1 rejects it.
+   *
+   * Maps to: `-c model_reasoning_effort=<value>`
+   * @see https://platform.openai.com/docs/guides/reasoning
+   */
+  reasoningEffort?: ReasoningEffort;
+
+  /**
+   * Controls reasoning summary detail level.
+   *
+   * Valid values: 'auto' | 'detailed'
+   * Note: Despite API error messages claiming 'concise' and 'none' are valid,
+   * they are rejected with 400 errors in practice.
+   *
+   * Maps to: `-c model_reasoning_summary=<value>`
+   * @see https://platform.openai.com/docs/guides/reasoning#reasoning-summaries
+   */
+  reasoningSummary?: ReasoningSummary;
+
+  /**
+   * Controls reasoning summary format (experimental).
+   *
+   * Maps to: `-c model_reasoning_summary_format=<value>`
+   */
+  reasoningSummaryFormat?: ReasoningSummaryFormat;
+
+  /**
+   * Controls output length/detail for GPT-5.1 (non-Codex) and legacy GPT-5 models.
+   * Codex-specific slugs ignore this flag because the CLI disables verbosity for them.
+   * Only applies to models using the Responses API.
+   *
+   * Maps to: `-c model_verbosity=<value>`
+   */
+  modelVerbosity?: ModelVerbosity;
+
+  // ===== MCP configuration =====
+
+  /**
+   * Configure MCP servers (stdio or HTTP/RMCP). Keys are server names.
+   * Each entry maps to the Codex CLI `mcp_servers.<name>` table.
+   */
+  mcpServers?: Record<string, McpServerConfig>;
+
+  /**
+   * Enable the RMCP client so HTTP-based MCP servers can be contacted.
+   * Maps to: `-c features.rmcp_client=true`
+   */
+  rmcpClient?: boolean;
+
+  // ===== Advanced Codex Features =====
+
+  /**
+   * Include experimental plan tool that the model can use to update its current plan.
+   *
+   * Maps to: `--include-plan-tool`
+   */
+  includePlanTool?: boolean;
+
+  /**
+   * Configuration profile from config.toml to specify default options.
+   *
+   * Maps to: `--profile <name>`
+   */
+  profile?: string;
+
+  /**
+   * Use OSS provider (experimental).
+   *
+   * Maps to: `--oss`
+   */
+  oss?: boolean;
+
+  /**
+   * Enable web search tool for the model.
+   *
+   * Maps to: `-c tools.web_search=true`
+   */
+  webSearch?: boolean;
+
+  // ===== Generic config overrides (maps to -c key=value) =====
+
+  /**
+   * Generic Codex CLI config overrides. Allows setting any config value
+   * without updating the provider.
+   *
+   * Each entry maps to: `-c <key>=<value>`
+   *
+   * Examples:
+   * - `{ experimental_resume: '/tmp/session.jsonl' }`
+   * - `{ 'model_providers.custom.base_url': 'http://localhost:8000' }`
+   * - `{ 'sandbox_workspace_write': { network_access: true } }`
+   *
+   * Values are serialized:
+   * - string → raw string
+   * - number/boolean → String(value)
+   * - plain objects → flattened recursively to dotted keys
+   * - arrays → JSON.stringify(value)
+   * - other objects (Date, RegExp, Map, etc.) → JSON.stringify(value)
+   */
+  configOverrides?: Record<string, string | number | boolean | object>;
+}
+
+export interface CodexCliProviderSettings {
+  // Default settings applied to language models created by this provider
+  defaultSettings?: CodexCliSettings;
+}
+
+/**
+ * Per-call overrides supplied through AI SDK providerOptions.
+ * These values take precedence over constructor-level CodexCliSettings.
+ */
+export interface CodexCliProviderOptions {
+  /**
+   * Per-call override for reasoning depth.
+   * Maps to `model_reasoning_effort`.
+   */
+  reasoningEffort?: ReasoningEffort;
+
+  /**
+   * Per-call override for reasoning summary detail level.
+   * Maps to `model_reasoning_summary`.
+   */
+  reasoningSummary?: ReasoningSummary;
+
+  /**
+   * Per-call override for reasoning summary format.
+   * Maps to `model_reasoning_summary_format`.
+   */
+  reasoningSummaryFormat?: ReasoningSummaryFormat;
+
+  /**
+   * AI SDK naming for per-call verbosity overrides.
+   * Maps to Codex `model_verbosity`.
+   */
+  textVerbosity?: ModelVerbosity;
+
+  /**
+   * Per-call override for extra directories Codex can access.
+   * Maps to repeated `--add-dir` flags.
+   */
+  addDirs?: string[];
+
+  /**
+   * Per-call Codex CLI config overrides. These are merged with
+   * constructor-level overrides with per-call values taking precedence.
+   */
+  configOverrides?: Record<string, string | number | boolean | object>;
+
+  /**
+   * Per-call MCP server definitions. Merged with constructor definitions
+   * (per-call servers and fields take precedence).
+   */
+  mcpServers?: Record<string, McpServerConfig>;
+
+  /**
+   * Per-call override for RMCP client enablement.
+   */
+  rmcpClient?: boolean;
+}</doc><doc title="Validation" desc="docs page.">import { z } from 'zod';
+import type { CodexCliSettings } from './types.js';
+
+const loggerFunctionSchema = z.object({
+  debug: z.any().refine((val) => typeof val === 'function', {
+    message: 'debug must be a function',
+  }),
+  info: z.any().refine((val) => typeof val === 'function', {
+    message: 'info must be a function',
+  }),
+  warn: z.any().refine((val) => typeof val === 'function', {
+    message: 'warn must be a function',
+  }),
+  error: z.any().refine((val) => typeof val === 'function', {
+    message: 'error must be a function',
+  }),
+});
+
+const mcpServerBaseSchema = z.object({
+  enabled: z.boolean().optional(),
+  startupTimeoutSec: z.number().int().positive().optional(),
+  toolTimeoutSec: z.number().int().positive().optional(),
+  enabledTools: z.array(z.string()).optional(),
+  disabledTools: z.array(z.string()).optional(),
+});
+
+const mcpServerStdioSchema = mcpServerBaseSchema.extend({
+  transport: z.literal('stdio'),
+  command: z.string().min(1),
+  args: z.array(z.string()).optional(),
+  env: z.record(z.string(), z.string()).optional(),
+  cwd: z.string().optional(),
+});
+
+const mcpServerHttpSchema = mcpServerBaseSchema.extend({
+  transport: z.literal('http'),
+  url: z.string().min(1),
+  bearerToken: z.string().optional(),
+  bearerTokenEnvVar: z.string().optional(),
+  httpHeaders: z.record(z.string(), z.string()).optional(),
+  envHttpHeaders: z.record(z.string(), z.string()).optional(),
+});
+
+const mcpServerSchema = z.discriminatedUnion('transport', [
+  mcpServerStdioSchema,
+  mcpServerHttpSchema,
+]);
+
+export const mcpServersSchema = z.record(z.string(), mcpServerSchema);
+
+const settingsSchema = z
+  .object({
+    codexPath: z.string().optional(),
+    cwd: z.string().optional(),
+    addDirs: z.array(z.string().min(1)).optional(),
+    approvalMode: z.enum(['untrusted', 'on-failure', 'on-request', 'never']).optional(),
+    sandboxMode: z.enum(['read-only', 'workspace-write', 'danger-full-access']).optional(),
+    fullAuto: z.boolean().optional(),
+    dangerouslyBypassApprovalsAndSandbox: z.boolean().optional(),
+    skipGitRepoCheck: z.boolean().optional(),
+    color: z.enum(['always', 'never', 'auto']).optional(),
+    allowNpx: z.boolean().optional(),
+    outputLastMessageFile: z.string().optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    verbose: z.boolean().optional(),
+    logger: z.union([z.literal(false), loggerFunctionSchema]).optional(),
+
+    // NEW: Reasoning & Verbosity
+    reasoningEffort: z.enum(['minimal', 'low', 'medium', 'high', 'xhigh']).optional(),
+    // Note: API rejects 'concise' and 'none' despite error messages claiming they're valid
+    reasoningSummary: z.enum(['auto', 'detailed']).optional(),
+    reasoningSummaryFormat: z.enum(['none', 'experimental']).optional(),
+    modelVerbosity: z.enum(['low', 'medium', 'high']).optional(),
+
+    // NEW: Advanced features
+    includePlanTool: z.boolean().optional(),
+    profile: z.string().optional(),
+    oss: z.boolean().optional(),
+    webSearch: z.boolean().optional(),
+    mcpServers: mcpServersSchema.optional(),
+    rmcpClient: z.boolean().optional(),
+
+    // NEW: Generic overrides
+    configOverrides: z
+      .record(
+        z.string(),
+        z.union([
+          z.string(),
+          z.number(),
+          z.boolean(),
+          z.object({}).passthrough(),
+          z.array(z.any()),
+        ]),
+      )
+      .optional(),
+  })
+  .strict();
+
+export function validateSettings(settings: unknown): {
+  valid: boolean;
+  warnings: string[];
+  errors: string[];
+} {
+  const warnings: string[] = [];
+  const errors: string[] = [];
+
+  const parsed = settingsSchema.safeParse(settings);
+  if (!parsed.success) {
+    // zod v3 => error.errors, zod v4 => error.issues
+    type ZodIssueLike = { path?: (string | number)[]; message?: string };
+    const raw = parsed.error as unknown;
+    let issues: ZodIssueLike[] = [];
+    if (raw && typeof raw === 'object') {
+      const v4 = (raw as { issues?: unknown }).issues;
+      const v3 = (raw as { errors?: unknown }).errors;
+      if (Array.isArray(v4)) issues = v4 as ZodIssueLike[];
+      else if (Array.isArray(v3)) issues = v3 as ZodIssueLike[];
+    }
+    for (const i of issues) {
+      const path = Array.isArray(i?.path) ? i.path.join('.') : '';
+      const message = i?.message || 'Invalid value';
+      errors.push(`${path ? path + ': ' : ''}${message}`);
+    }
+    return { valid: false, warnings, errors };
+  }
+
+  const s = parsed.data as CodexCliSettings;
+  if (s.fullAuto && s.dangerouslyBypassApprovalsAndSandbox) {
+    warnings.push(
+      'Both fullAuto and dangerouslyBypassApprovalsAndSandbox specified; fullAuto takes precedence.',
+    );
+  }
+
+  // Note: Previously warned about reasoningSummary='none', but 'none' is now rejected
+  // by the schema as an invalid value (only 'auto' and 'detailed' are accepted)
+
+  return { valid: true, warnings, errors };
+}
+
+export function validateModelId(modelId: string): string | undefined {
+  if (!modelId || modelId.trim() === '') return 'Model ID cannot be empty';
+  // We don’t restrict model values here; Codex forwards to Responses API
+  return undefined;
+}</doc><doc title="Codex Cli Language Model.Test" desc="docs page.">import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { CodexCliLanguageModel } from '../codex-cli-language-model.js';
+import { PassThrough } from 'node:stream';
+import { EventEmitter } from 'node:events';
+import { writeFileSync, mkdtempSync, readFileSync, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+// Helper to create a mock spawn that emits JSONL events
+function makeMockSpawn(lines: string[], exitCode = 0) {
+  return vi.fn((_cmd: string, args: string[]) => {
+    const child = new EventEmitter() as any;
+    child.stdout = new PassThrough();
+    child.stderr = new PassThrough();
+    child.kill = vi.fn();
+
+    // If our code passes --output-last-message <path>, write there too
+    const idx = args.indexOf('--output-last-message');
+    if (idx !== -1 && args[idx + 1]) {
+      try {
+        writeFileSync(args[idx + 1], 'Fallback last message\n');
+      } catch {}
+    }
+
+    // emit lines asynchronously
+    setTimeout(() => {
+      for (const l of lines) child.stdout.write(l + '\n');
+      child.stdout.end();
+      child.emit('close', exitCode);
+    }, 5);
+
+    return child;
+  });
+}
+
+// Mock child_process
+vi.mock('node:child_process', async () => {
+  let currentMock: (cmd: string, args: string[]) => any = makeMockSpawn([], 0) as any;
+  const mod = {
+    spawn: (cmd: string, args: string[]) => currentMock(cmd, args),
+    __setSpawnMock: (fn: any) => {
+      currentMock = fn;
+    },
+  } as any;
+  return mod;
+});
+
+// Access the helper to swap mocks inside tests
+const childProc = await import('node:child_process');
+
+describe('CodexCliLanguageModel', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('doGenerate returns text and sessionId from experimental JSON events', async () => {
+    const lines = [
+      JSON.stringify({
+        type: 'thread.started',
+        thread_id: 'thread-123',
+      }),
+      JSON.stringify({
+        type: 'turn.completed',
+        usage: { input_tokens: 10, output_tokens: 5 },
+      }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: { item_type: 'assistant_message', text: 'Hello JSON' },
+      }),
+    ];
+    (childProc as any).__setSpawnMock(makeMockSpawn(lines, 0));
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    const res = await model.doGenerate({ prompt: [{ role: 'user', content: 'Say hi' }] as any });
+    expect(res.content[0]).toMatchObject({ type: 'text', text: 'Hello JSON' });
+    expect(res.providerMetadata?.['codex-cli']).toMatchObject({ sessionId: 'thread-123' });
+    expect(res.usage).toMatchObject({ inputTokens: 10, outputTokens: 5, totalTokens: 15 });
+  });
+
+  it('doStream yields response-metadata, text-delta, finish', async () => {
+    const lines = [
+      JSON.stringify({ type: 'thread.started', thread_id: 'thread-1' }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: { item_type: 'assistant_message', text: 'Streamed hello' },
+      }),
+      JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 0, output_tokens: 0 } }),
+    ];
+    (childProc as any).__setSpawnMock(makeMockSpawn(lines, 0));
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    const { stream } = await model.doStream({
+      prompt: [{ role: 'user', content: 'Say hi' }] as any,
+    });
+
+    const received: any[] = [];
+    const _reader = (stream as any).getReader ? undefined : null; // ensure Web stream compat
+    const rs = stream as ReadableStream<any>;
+    const it = (rs as any)[Symbol.asyncIterator]();
+    for await (const part of it) received.push(part);
+
+    const types = received.map((p) => p.type);
+    expect(types).toContain('response-metadata');
+    expect(types).toContain('text-delta');
+    expect(types).toContain('finish');
+    const deltaPayload = received.find((p) => p.type === 'text-delta');
+    expect(deltaPayload?.delta).toBe('Streamed hello');
+  });
+
+  it('streams tool events for command execution items', async () => {
+    const lines = [
+      JSON.stringify({ type: 'thread.started', thread_id: 'thread-tools' }),
+      JSON.stringify({
+        type: 'item.started',
+        item: {
+          id: 'item_0',
+          item_type: 'command_execution',
+          command: 'ls -la',
+          aggregated_output: '',
+          exit_code: null,
+          status: 'in_progress',
+        },
+      }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: {
+          id: 'item_0',
+          item_type: 'command_execution',
+          command: 'ls -la',
+          aggregated_output: 'README.md\n',
+          exit_code: 0,
+          status: 'completed',
+        },
+      }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: { id: 'item_1', item_type: 'assistant_message', text: 'done' },
+      }),
+      JSON.stringify({
+        type: 'turn.completed',
+        usage: { input_tokens: 4, output_tokens: 2, cached_input_tokens: 1 },
+      }),
+    ];
+    (childProc as any).__setSpawnMock(makeMockSpawn(lines, 0));
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    const { stream } = await model.doStream({
+      prompt: [{ role: 'user', content: 'List files' }] as any,
+    });
+
+    const received: any[] = [];
+    const rs = stream as ReadableStream<any>;
+    const iterator = (rs as any)[Symbol.asyncIterator]();
+    for await (const part of iterator) received.push(part);
+
+    const toolCall = received.find((p) => p.type === 'tool-call');
+    expect(toolCall?.toolName).toBe('exec');
+    expect(toolCall?.providerExecuted).toBe(true);
+    expect(toolCall?.input).toContain('ls -la');
+
+    const toolResult = received.find((p) => p.type === 'tool-result');
+    expect(toolResult?.toolCallId).toBe(toolCall?.toolCallId);
+    expect(toolResult?.result).toMatchObject({
+      command: 'ls -la',
+      aggregatedOutput: 'README.md\n',
+      exitCode: 0,
+      status: 'completed',
+    });
+
+    const finish = received.find((p) => p.type === 'finish');
+    expect(finish?.usage).toEqual({
+      inputTokens: 4,
+      outputTokens: 2,
+      totalTokens: 6,
+      cachedInputTokens: 1,
+    });
+  });
+
+  it('includes approval/sandbox flags and output-last-message; uses npx with allowNpx', async () => {
+    let seen: any = { cmd: '', args: [] as string[] };
+    const lines = [
+      JSON.stringify({ type: 'thread.started', thread_id: 'thread-2' }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: { item_type: 'assistant_message', text: 'OK' },
+      }),
+    ];
+    (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+      seen = { cmd, args };
+      return makeMockSpawn(lines, 0)(cmd, args);
+    });
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: {
+        allowNpx: true,
+        color: 'never',
+        approvalMode: 'on-failure',
+        sandboxMode: 'workspace-write',
+        skipGitRepoCheck: true,
+        outputLastMessageFile: join(mkdtempSync(join(tmpdir(), 'codex-test-')), 'last.txt'),
+      },
+    });
+
+    await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+    expect(['npx', 'node']).toContain(seen.cmd);
+    expect(seen.args).toContain('exec');
+    expect(seen.args).toContain('--experimental-json');
+    expect(seen.args).not.toContain('--json');
+    expect(seen.args).toContain('-c');
+    expect(seen.args).toContain('approval_policy=on-failure');
+    expect(seen.args).toContain('sandbox_mode=workspace-write');
+    expect(seen.args).toContain('--skip-git-repo-check');
+    expect(seen.args).toContain('--output-last-message');
+  });
+
+  it('retains user-provided outputLastMessageFile when fallback is used', async () => {
+    let outputPath = '';
+    const lines = [JSON.stringify({ type: 'thread.started', thread_id: 'thread-last-user' })];
+    (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+      const idx = args.indexOf('--output-last-message');
+      outputPath = idx !== -1 ? args[idx + 1] : '';
+      return makeMockSpawn(lines, 0)(cmd, args);
+    });
+
+    const dir = mkdtempSync(join(tmpdir(), 'codex-last-msg-user-'));
+    const filePath = join(dir, 'last.txt');
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: {
+        allowNpx: true,
+        color: 'never',
+        outputLastMessageFile: filePath,
+      },
+    });
+
+    const res = await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+    expect(res.content[0]).toMatchObject({ type: 'text', text: 'Fallback last message' });
+    expect(outputPath).toBe(filePath);
+    expect(existsSync(filePath)).toBe(true);
+    expect(readFileSync(filePath, 'utf8')).toContain('Fallback last message');
+  });
+
+  it('cleans up auto-created outputLastMessageFile after fallback', async () => {
+    let outputPath = '';
+    const lines = [JSON.stringify({ type: 'thread.started', thread_id: 'thread-last-auto' })];
+    (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+      const idx = args.indexOf('--output-last-message');
+      outputPath = idx !== -1 ? args[idx + 1] : '';
+      return makeMockSpawn(lines, 0)(cmd, args);
+    });
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: {
+        allowNpx: true,
+        color: 'never',
+      },
+    });
+
+    const res = await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+    expect(res.content[0]).toMatchObject({ type: 'text', text: 'Fallback last message' });
+    expect(outputPath).toBeTruthy();
+    expect(existsSync(outputPath)).toBe(false);
+  });
+
+  it('sets isError for failed command execution', async () => {
+    const lines = [
+      JSON.stringify({ type: 'thread.started', thread_id: 'thread-fail' }),
+      JSON.stringify({
+        type: 'item.started',
+        item: {
+          id: 'item_fail',
+          item_type: 'command_execution',
+          command: 'false',
+          aggregated_output: '',
+          exit_code: null,
+          status: 'in_progress',
+        },
+      }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: {
+          id: 'item_fail',
+          item_type: 'command_execution',
+          command: 'false',
+          aggregated_output: '',
+          exit_code: 1,
+          status: 'failed',
+        },
+      }),
+      JSON.stringify({
+        type: 'item.completed',
+        item: { id: 'item_1', item_type: 'assistant_message', text: 'oops' },
+      }),
+      JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 0, output_tokens: 0 } }),
+    ];
+    (childProc as any).__setSpawnMock(makeMockSpawn(lines, 0));
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    const { stream } = await model.doStream({
+      prompt: [{ role: 'user', content: 'fail please' }] as any,
+    });
+
+    const received: any[] = [];
+    const rs = stream as ReadableStream<any>;
+    for await (const part of (rs as any)[Symbol.asyncIterator]()) received.push(part);
+
+    const toolResult = received.find((p) => p.type === 'tool-result');
+    expect(toolResult?.isError).toBe(true);
+    expect(toolResult?.toolName).toBe('exec');
+    expect(toolResult?.result).toMatchObject({
+      command: 'false',
+      exitCode: 1,
+      status: 'failed',
+    });
+  });
+
+  it('uses --full-auto when specified and omits -c flags', async () => {
+    let lastArgs: string[] = [];
+    const lines = [
+      JSON.stringify({
+        id: '1',
+        msg: {
+          type: 'session_configured',
+          session_id: 'sess-3',
+          model: 'gpt-5',
+          history_log_id: 0,
+          history_entry_count: 0,
+        },
+      }),
+      JSON.stringify({ id: '2', msg: { type: 'task_complete', last_agent_message: 'OK' } }),
+    ];
+    (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+      lastArgs = args;
+      return makeMockSpawn(lines, 0)(cmd, args);
+    });
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, fullAuto: true, color: 'never' },
+    });
+    await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+    expect(lastArgs).toContain('--full-auto');
+    // No -c flags when fullAuto
+    expect(lastArgs.join(' ')).not.toMatch(/approval_policy|sandbox_mode/);
+  });
+
+  it('rejects with APICallError on non-zero exit', async () => {
+    (childProc as any).__setSpawnMock(makeMockSpawn([], 2));
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    await expect(
+      model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any }),
+    ).rejects.toMatchObject({
+      name: 'AI_APICallError',
+      data: { exitCode: 2 },
+    });
+  });
+
+  // Note: auth error mapping is covered via error helpers; CLI error path requires real process semantics.
+
+  it('propagates pre-aborted signal reason and kills child', async () => {
+    let killed = false;
+    (childProc as any).__setSpawnMock((_cmd: string, _args: string[]) => {
+      const child = new EventEmitter() as any;
+      child.stdout = new PassThrough();
+      child.stderr = new PassThrough();
+      child.kill = vi.fn(() => {
+        killed = true;
+      });
+      return child;
+    });
+
+    const model = new CodexCliLanguageModel({
+      id: 'gpt-5',
+      settings: { allowNpx: true, color: 'never' },
+    });
+    const ac = new AbortController();
+    const reason = new Error('aborted');
+    ac.abort(reason);
+    await expect(
+      model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        abortSignal: ac.signal,
+      }),
+    ).rejects.toBe(reason);
+    expect(killed).toBe(true);
+  });
+
+  describe('Phase 1: constructor-level parameters', () => {
+    it('emits -c model_reasoning_* and model_verbosity args when set', async () => {
+      let seen: any = { args: [] as string[] };
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-reason' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        seen = { args };
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5-codex',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          reasoningEffort: 'high',
+          reasoningSummary: 'detailed',
+          reasoningSummaryFormat: 'experimental',
+          modelVerbosity: 'low',
+        },
+      });
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      const a = seen.args as string[];
+      expect(a).toContain('-c');
+      expect(a).toContain('model_reasoning_effort=high');
+      expect(a).toContain('model_reasoning_summary=detailed');
+      expect(a).toContain('model_reasoning_summary_format=experimental');
+      expect(a).toContain('model_verbosity=low');
+    });
+
+    it('emits advanced feature flags (--include-plan-tool, --profile, --oss) and webSearch config', async () => {
+      let seen: any = { args: [] as string[] };
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-adv' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        seen = { args };
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          includePlanTool: true,
+          profile: 'production',
+          oss: true,
+          webSearch: true,
+          color: 'never',
+        },
+      });
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      const a = seen.args as string[];
+      expect(a).toContain('--include-plan-tool');
+      expect(a).toContain('--profile');
+      expect(a).toContain('production');
+      expect(a).toContain('--oss');
+      expect(a).toContain('tools.web_search=true');
+    });
+
+    it('emits MCP stdio server config and rmcp client toggle', async () => {
+      let captured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-mcp' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        captured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          rmcpClient: true,
+          mcpServers: {
+            files: {
+              transport: 'stdio',
+              command: 'node',
+              args: ['mcp.js'],
+              env: { API_KEY: 'abc' },
+              cwd: '/tmp/mcp',
+              enabled: true,
+              startupTimeoutSec: 5,
+              toolTimeoutSec: 15,
+              enabledTools: ['list'],
+              disabledTools: ['write'],
+            },
+          },
+        },
+      });
+
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      expect(captured).toContain('features.rmcp_client=true');
+      expect(captured).toContain('mcp_servers.files.command=node');
+      expect(captured).toContain('mcp_servers.files.args=["mcp.js"]');
+      expect(captured).toContain('mcp_servers.files.env.API_KEY=abc');
+      expect(captured).toContain('mcp_servers.files.cwd=/tmp/mcp');
+      expect(captured).toContain('mcp_servers.files.enabled=true');
+      expect(captured).toContain('mcp_servers.files.startup_timeout_sec=5');
+      expect(captured).toContain('mcp_servers.files.tool_timeout_sec=15');
+      expect(captured).toContain('mcp_servers.files.enabled_tools=["list"]');
+      expect(captured).toContain('mcp_servers.files.disabled_tools=["write"]');
+    });
+
+    it('emits --add-dir for each additional directory', async () => {
+      let captured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-add-dir' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        captured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          addDirs: ['../shared', '/tmp/lib'],
+        },
+      });
+
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      const addDirFlags = captured.filter((v) => v === '--add-dir');
+      expect(addDirFlags).toHaveLength(2);
+      expect(captured).toContain('../shared');
+      expect(captured).toContain('/tmp/lib');
+    });
+
+    it('emits -c for configOverrides with string, number, boolean, and object', async () => {
+      let seen: any = { args: [] as string[] };
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-over' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        seen = { args };
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          configOverrides: {
+            experimental_resume: '/tmp/session.jsonl',
+            hide_agent_reasoning: true,
+            model_context_window: 200000,
+            sandbox_workspace_write: { network_access: true },
+          },
+        },
+      });
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      const a = seen.args as string[];
+      expect(a).toContain('experimental_resume=/tmp/session.jsonl');
+      expect(a).toContain('hide_agent_reasoning=true');
+      expect(a).toContain('model_context_window=200000');
+      expect(a).toContain('sandbox_workspace_write.network_access=true');
+    });
+
+    it('handles deep nesting, arrays, and dotted keys in configOverrides', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-over-2' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          configOverrides: {
+            deep: { nested: { value: true } },
+            arr: [1, 2],
+            'dotted.key': 'val',
+          },
+        },
+      });
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      expect(argsCaptured).toContain('deep.nested.value=true');
+      expect(argsCaptured).toContain('arr=[1,2]');
+      expect(argsCaptured).toContain('dotted.key=val');
+    });
+
+    it('keeps reasoning flags when fullAuto is enabled (but omits approval/sandbox overrides)', async () => {
+      let lastArgs: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-fa' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        lastArgs = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: { allowNpx: true, color: 'never', fullAuto: true, reasoningEffort: 'medium' },
+      });
+      await model.doGenerate({ prompt: [{ role: 'user', content: 'Hi' }] as any });
+
+      expect(lastArgs).toContain('--full-auto');
+      expect(lastArgs.join(' ')).not.toMatch(/approval_policy|sandbox_mode/);
+      expect(lastArgs).toContain('model_reasoning_effort=medium');
+    });
+  });
+
+  describe('Phase 2: providerOptions overrides', () => {
+    it('overrides constructor reasoning settings per call', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-phase2' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5-codex',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          reasoningEffort: 'low',
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            reasoningEffort: 'high',
+            reasoningSummary: 'detailed',
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('model_reasoning_effort=high');
+      expect(argsCaptured.join(' ')).not.toContain('model_reasoning_effort=low');
+      expect(argsCaptured).toContain('model_reasoning_summary=detailed');
+    });
+
+    it('merges configOverrides with per-call overrides taking precedence', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-config' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          configOverrides: {
+            setting1: 'value1',
+            setting2: 'value2',
+          },
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            configOverrides: {
+              setting2: 'override',
+              setting3: 'value3',
+            },
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('setting1=value1');
+      expect(argsCaptured).toContain('setting2=override');
+      expect(argsCaptured.join(' ')).not.toContain('setting2=value2');
+      expect(argsCaptured).toContain('setting3=value3');
+    });
+
+    it('merges MCP servers across constructor and providerOptions', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-mcp-merge' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          mcpServers: {
+            local: {
+              transport: 'stdio',
+              command: 'node',
+              args: ['base.js'],
+              env: { BASE: '1' },
+            },
+          },
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            rmcpClient: true,
+            mcpServers: {
+              local: {
+                transport: 'stdio',
+                command: 'node',
+                args: ['override.js'],
+                env: { EXTRA: '2' },
+              },
+              remote: {
+                transport: 'http',
+                url: 'https://mcp.example',
+                bearerTokenEnvVar: 'MCP_TOKEN',
+                httpHeaders: { 'x-debug': '1' },
+              },
+            },
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('features.rmcp_client=true');
+      expect(argsCaptured).toContain('mcp_servers.local.command=node');
+      expect(argsCaptured).toContain('mcp_servers.local.args=["override.js"]');
+      expect(argsCaptured).toContain('mcp_servers.local.env.BASE=1');
+      expect(argsCaptured).toContain('mcp_servers.local.env.EXTRA=2');
+      expect(argsCaptured).toContain('mcp_servers.remote.url=https://mcp.example');
+      expect(argsCaptured).toContain('mcp_servers.remote.bearer_token_env_var=MCP_TOKEN');
+      expect(argsCaptured).toContain('mcp_servers.remote.http_headers.x-debug=1');
+    });
+
+    it('allows clearing stdio MCP args and tool lists with empty arrays', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-mcp-empty' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          mcpServers: {
+            local: {
+              transport: 'stdio',
+              command: 'node',
+              args: ['base.js'],
+              enabledTools: ['one'],
+              disabledTools: ['two'],
+            },
+          },
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            mcpServers: {
+              local: {
+                transport: 'stdio',
+                command: 'node',
+                args: [],
+                enabledTools: [],
+                disabledTools: [],
+              },
+            },
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('mcp_servers.local.args=[]');
+      expect(argsCaptured).toContain('mcp_servers.local.enabled_tools=[]');
+      expect(argsCaptured).toContain('mcp_servers.local.disabled_tools=[]');
+    });
+
+    it('allows clearing HTTP MCP headers with empty objects', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-mcp-http-empty' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          mcpServers: {
+            remote: {
+              transport: 'http',
+              url: 'https://base.example',
+              httpHeaders: { 'x-base': '1' },
+              envHttpHeaders: { BASE_ENV: 'BASE_ENV' },
+            },
+          },
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            mcpServers: {
+              remote: {
+                transport: 'http',
+                url: 'https://base.example',
+                httpHeaders: {},
+                envHttpHeaders: {},
+              },
+            },
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('mcp_servers.remote.http_headers={}');
+      expect(argsCaptured).toContain('mcp_servers.remote.env_http_headers={}');
+    });
+
+    it('clears base bearerToken when overriding with bearerTokenEnvVar (auth bundle replacement)', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-auth-bundle' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: {
+          allowNpx: true,
+          color: 'never',
+          mcpServers: {
+            remote: {
+              transport: 'http',
+              url: 'https://api.example.com',
+              bearerToken: 'base-token-secret', // Should be cleared
+            },
+          },
+        },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            mcpServers: {
+              remote: {
+                transport: 'http',
+                url: 'https://api.example.com',
+                bearerTokenEnvVar: 'NEW_ENV_VAR', // Should replace the token
+              },
+            },
+          },
+        },
+      });
+
+      // Should contain the new env var
+      expect(argsCaptured).toContain('mcp_servers.remote.bearer_token_env_var=NEW_ENV_VAR');
+      // Should NOT contain the old token
+      expect(argsCaptured.some((arg) => arg.includes('mcp_servers.remote.bearer_token=base-token-secret'))).toBe(false);
+    });
+
+    it('merges addDirs from providerOptions with constructor settings', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-add-dir-override' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: { allowNpx: true, color: 'never', addDirs: ['./base'] },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            addDirs: ['../feature'],
+          },
+        },
+      });
+
+      const addDirFlags = argsCaptured.filter((v) => v === '--add-dir');
+      expect(addDirFlags).toHaveLength(2);
+      expect(argsCaptured).toContain('./base');
+      expect(argsCaptured).toContain('../feature');
+    });
+
+    it('maps textVerbosity provider option to model_verbosity flag', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-verbosity' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'ok' },
+        }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: { allowNpx: true, color: 'never' },
+      });
+
+      await model.doGenerate({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            textVerbosity: 'high',
+          },
+        },
+      });
+
+      expect(argsCaptured).toContain('model_verbosity=high');
+    });
+
+    it('applies providerOptions during streaming calls', async () => {
+      let argsCaptured: string[] = [];
+      const lines = [
+        JSON.stringify({ type: 'thread.started', thread_id: 'thread-stream' }),
+        JSON.stringify({
+          type: 'item.completed',
+          item: { item_type: 'assistant_message', text: 'stream ok' },
+        }),
+        JSON.stringify({ type: 'turn.completed', usage: { input_tokens: 0, output_tokens: 0 } }),
+      ];
+      (childProc as any).__setSpawnMock((cmd: string, args: string[]) => {
+        argsCaptured = args;
+        return makeMockSpawn(lines, 0)(cmd, args);
+      });
+
+      const model = new CodexCliLanguageModel({
+        id: 'gpt-5',
+        settings: { allowNpx: true, color: 'never' },
+      });
+
+      const { stream } = await model.doStream({
+        prompt: [{ role: 'user', content: 'Hi' }] as any,
+        providerOptions: {
+          'codex-cli': {
+            reasoningEffort: 'medium',
+            textVerbosity: 'low',
+          },
+        },
+      });
+
+      const reader = (stream as any)[Symbol.asyncIterator]();
+      for await (const _ of reader) {
+        // exhaust stream to ensure spawn completes
+      }
+
+      expect(argsCaptured).toContain('model_reasoning_effort=medium');
+      expect(argsCaptured).toContain('model_verbosity=low');
+    });
+  });
+});</doc><doc title="Codex Cli Provider.Test" desc="docs page.">import { describe, it, expect } from 'vitest';
+import { createCodexCli } from '../codex-cli-provider.js';
+
+describe('createCodexCli', () => {
+  it('creates a model with merged defaults', () => {
+    const provider = createCodexCli({ defaultSettings: { skipGitRepoCheck: true } });
+    const model: any = provider('gpt-5', { color: 'never' });
+    expect(model.provider).toBe('codex-cli');
+    expect(model.modelId).toBe('gpt-5');
+  });
+
+  it('accepts addDirs in defaultSettings', () => {
+    const provider = createCodexCli({
+      defaultSettings: { addDirs: ['../shared', '/tmp/lib'] },
+    });
+    const model: any = provider('gpt-5');
+    expect(model.provider).toBe('codex-cli');
+    expect(model.modelId).toBe('gpt-5');
+  });
+
+  it('accepts addDirs in per-model settings', () => {
+    const provider = createCodexCli();
+    const model: any = provider('gpt-5', { addDirs: ['../shared'] });
+    expect(model.provider).toBe('codex-cli');
+    expect(model.modelId).toBe('gpt-5');
+  });
+
+  it('accepts outputLastMessageFile in settings', () => {
+    const provider = createCodexCli();
+    const model: any = provider('gpt-5', { outputLastMessageFile: '/tmp/last.txt' });
+    expect(model.provider).toBe('codex-cli');
+    expect(model.modelId).toBe('gpt-5');
+  });
+});</doc></src></project>

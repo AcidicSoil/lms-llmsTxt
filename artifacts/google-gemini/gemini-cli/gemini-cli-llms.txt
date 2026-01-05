@@ -1,0 +1,91 @@
+# Gemini Cli
+
+> Gemini CLI aims to bring powerful AI capabilities — including multimodal understanding, large context windows, and tool integration — directly into the terminal for developers. It empowers users to analyze codebases, automate workflows, generate content, and collaborate with AI in a lightweight, extensible, and secure environment. The project supports both personal and enterprise use cases, with options for free tier access, API key management, or Vertex AI integration, while maintaining an open-source Apache 2.0 license.
+
+**Remember:**
+- Gemini CLI: Terminal-based AI agent for Google's Gemini models
+- MCP (Model Context Protocol): Framework for extending Gemini with custom tools and integrations
+- Built-in Tools: File operations, shell commands, web search, and more
+- Checkpointing: Save and resume long-running AI conversations
+- Custom Commands & Extensions: User-defined commands via TOML files
+- Trusted Folders: Secure execution policies by folder
+
+## Docs
+- [Extensions Install.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/extensions-install.test.ts): install & quickstart.
+- [Getting Started Extensions](https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/getting-started-extensions.md): install & quickstart.
+- [Installation](https://github.com/google-gemini/gemini-cli/blob/main/docs/get-started/installation.md): install & quickstart.
+- [Uninstall](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/uninstall.md): install & quickstart.
+- [Ide Installer](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/ide/ide-installer.ts): install & quickstart.
+- [Ide Installer.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/ide/ide-installer.test.ts): install & quickstart.
+- [Installationinfo](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/utils/installationInfo.ts): install & quickstart.
+- [Installationinfo.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/utils/installationInfo.test.ts): install & quickstart.
+- [Installationmanager](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/installationManager.ts): install & quickstart.
+- [Installationmanager.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/installationManager.test.ts): install & quickstart.
+
+## Tutorials
+- [Example](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/example.ts): worked example.
+- [Example.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/example.test.ts): worked example.
+- [Gemini](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/context/GEMINI.md): worked example.
+
+## API
+- [Apikeycredentialstorage](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.ts): API reference.
+- [Apikeycredentialstorage.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.test.ts): API reference.
+- [Errorclassification](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/availability/errorClassification.ts): docs page.
+- [Sdk](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/telemetry/sdk.ts): docs page.
+- [Sdk.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/telemetry/sdk.test.ts): docs page.
+- [Classifierstrategy](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/routing/strategies/classifierStrategy.ts): docs page.
+- [Classifierstrategy.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/routing/strategies/classifierStrategy.test.ts): docs page.
+
+## Optional
+- [Contributing](https://github.com/google-gemini/gemini-cli/blob/main/CONTRIBUTING.md): docs page.
+- [Security](https://github.com/google-gemini/gemini-cli/blob/main/SECURITY.md): security policy.
+- [Get Release Version](https://github.com/google-gemini/gemini-cli/blob/main/scripts/get-release-version.js): version history.
+- [Prepare Github Release](https://github.com/google-gemini/gemini-cli/blob/main/scripts/prepare-github-release.js): version history.
+- [Get Release Version.Test](https://github.com/google-gemini/gemini-cli/blob/main/scripts/tests/get-release-version.test.js): version history.
+- [Check Vscode Release](https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/scripts/check-vscode-release.js): version history.
+- [Pull Request Template](https://github.com/google-gemini/gemini-cli/blob/main/.github/pull_request_template.md): docs page.
+- [Gemini](https://github.com/google-gemini/gemini-cli/blob/main/GEMINI.md): docs page.
+- [README](https://github.com/google-gemini/gemini-cli/blob/main/README.md): docs page.
+- [Roadmap](https://github.com/google-gemini/gemini-cli/blob/main/ROADMAP.md): docs page.
+- [Esbuild.Config](https://github.com/google-gemini/gemini-cli/blob/main/esbuild.config.js): docs page.
+- [Eslint.Config](https://github.com/google-gemini/gemini-cli/blob/main/eslint.config.js): docs page.
+
+## Integration Tests
+- [Context Compress Interactive.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/context-compress-interactive.test.ts): docs page.
+- [Ctrl C Exit.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/ctrl-c-exit.test.ts): docs page.
+- [Extensions Reload.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/extensions-reload.test.ts): docs page.
+- [File System Interactive.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/file-system-interactive.test.ts): docs page.
+- [File System.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/file-system.test.ts): docs page.
+- [Flicker.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/flicker.test.ts): docs page.
+- [Globalsetup](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/globalSetup.ts): docs page.
+- [Google Web Search.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/google_web_search.test.ts): docs page.
+- [Hooks System.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/hooks-system.test.ts): docs page.
+- [Json Output.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/json-output.test.ts): docs page.
+
+## Packages
+- [README](https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/README.md): install & quickstart.
+- [README](https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/README.md): install & quickstart.
+- [Development](https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/development.md): docs page.
+- [Development Extension Rfc](https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/development-extension-rfc.md): docs page.
+- [Esbuild](https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/esbuild.js): docs page.
+- [Index](https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/index.ts): docs page.
+- [Index](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/index.ts): docs page.
+- [Index](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/index.ts): docs page.
+- [Index](https://github.com/google-gemini/gemini-cli/blob/main/packages/test-utils/index.ts): docs page.
+- [Notices](https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/NOTICES.txt): docs page.
+
+## Scripts
+- [Build](https://github.com/google-gemini/gemini-cli/blob/main/scripts/build.js): docs page.
+- [Build Package](https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_package.js): docs page.
+- [Build Sandbox](https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_sandbox.js): docs page.
+- [Build Vscode Companion](https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_vscode_companion.js): docs page.
+- [Check Build Status](https://github.com/google-gemini/gemini-cli/blob/main/scripts/check-build-status.js): docs page.
+- [Check Lockfile](https://github.com/google-gemini/gemini-cli/blob/main/scripts/check-lockfile.js): docs page.
+- [Clean](https://github.com/google-gemini/gemini-cli/blob/main/scripts/clean.js): docs page.
+- [Copy Bundle Assets](https://github.com/google-gemini/gemini-cli/blob/main/scripts/copy_bundle_assets.js): docs page.
+- [Copy Files](https://github.com/google-gemini/gemini-cli/blob/main/scripts/copy_files.js): docs page.
+- [Deflake](https://github.com/google-gemini/gemini-cli/blob/main/scripts/deflake.js): docs page.
+
+## Third Party
+- [Downloadripgrep](https://github.com/google-gemini/gemini-cli/blob/main/third_party/get-ripgrep/src/downloadRipGrep.js): docs page.
+- [Index](https://github.com/google-gemini/gemini-cli/blob/main/third_party/get-ripgrep/src/index.js): docs page.

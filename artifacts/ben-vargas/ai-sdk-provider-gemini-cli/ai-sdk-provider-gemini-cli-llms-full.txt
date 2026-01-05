@@ -1,0 +1,5368 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/README.md ---
+# AI SDK Provider for Gemini CLI - Technical Documentation
+
+This directory contains technical documentation for the AI SDK Provider for Gemini CLI implementation.
+
+## AI SDK v5 Documentation
+
+This provider is compatible with Vercel AI SDK v5. For v5-specific documentation, see:
+
+- **[ai-sdk-v5/GUIDE.md](ai-sdk-v5/GUIDE.md)** - Comprehensive usage guide for v5
+- **[ai-sdk-v5/BREAKING_CHANGES.md](ai-sdk-v5/BREAKING_CHANGES.md)** - Breaking changes and migration guide from v4
+- **[ai-sdk-v5/TROUBLESHOOTING.md](ai-sdk-v5/TROUBLESHOOTING.md)** - Common issues and solutions for v5
+
+## Documentation Overview
+
+### 1. [Project Structure](./project-structure.md)
+Complete codebase map showing the organization of source files, examples, and documentation.
+
+### 2. [Authentication Options](./gemini-cli-auth-options.md)
+Comprehensive guide to the three authentication methods supported by `@google/gemini-cli-core`:
+- OAuth with Google Personal Account (`oauth-personal`)
+- Gemini API Key (`gemini-api-key`)
+- Vertex AI (`vertex-ai`)
+
+### 3. [Language Model V2 Implementation](./language-model-v2-implementation.md)
+Detailed specification of the Vercel AI SDK Language Model V2 interface implementation for v5:
+- Core interfaces and types
+- Message format specifications
+- Tool calling interfaces
+- Implementation patterns
+
+### 4. [Tool Schema Mapping](./tool-schema-mapping.md)
+Guide for mapping between Vercel AI SDK's tool schemas and Gemini's FunctionDeclaration format:
+- Type mapping tables
+- Implementation approach
+- Unsupported features
+- Testing considerations
+
+### 5. [Zod to Gemini Mapping](./zod-to-gemini-mapping.md)
+Comprehensive mapping between Zod schemas and Gemini's Schema format:
+- Type conversions
+- Constraint mappings
+- Special case handling
+- Implementation guidelines
+
+## Quick Reference
+
+### Authentication Setup
+```typescript
+// OAuth (default)
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal'
+});
+
+// API Key
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY
+});
+```
+
+### Supported Models
+- `gemini-3-pro-preview` - Latest next-generation model (Preview)
+- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens)
+- `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
+
+### Key Features
+- ✅ Text generation and streaming
+- ✅ System instructions
+- ✅ Object generation with Zod schemas
+- ✅ Tool calling (function calls)
+- ✅ Multimodal inputs (text and images)
+- ✅ Conversation history
+- ✅ Abort signal support
+
+## Architecture Notes
+
+The provider implements a direct integration with Google's Cloud Code endpoints through the `@google/gemini-cli-core` library. This ensures:
+- Native OAuth support with cached credentials
+- Direct access to Gemini models
+- Optimal performance without intermediate layers
+- Full compatibility with Vercel AI SDK v5 patterns
+
+For implementation examples, see the [examples directory](../examples/).
+
+## Links discovered
+- [ai-sdk-v5/GUIDE.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/GUIDE.md)
+- [ai-sdk-v5/BREAKING_CHANGES.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/BREAKING_CHANGES.md)
+- [ai-sdk-v5/TROUBLESHOOTING.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/TROUBLESHOOTING.md)
+- [Project Structure](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/./project-structure.md)
+- [Authentication Options](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/./gemini-cli-auth-options.md)
+- [Language Model V2 Implementation](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/./language-model-v2-implementation.md)
+- [Tool Schema Mapping](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/./tool-schema-mapping.md)
+- [Zod to Gemini Mapping](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/./zod-to-gemini-mapping.md)
+- [examples directory](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/../examples/)
+
+--- docs/dependency-notes.md ---
+# Dependency Version Pinning Notes
+
+## @google/gemini-cli-core
+
+**Current Version:** 0.1.22 (EXACT - no caret or tilde)
+
+### Why Exact Version Pinning?
+
+The `@google/gemini-cli-core` package has been introducing breaking changes in patch versions, which violates semantic versioning principles. Examples of breaking changes observed:
+
+### Breaking Changes Timeline
+
+| Version | Release Date | Breaking Changes |
+|---------|-------------|------------------|
+| 0.1.12 | 2025-07-13 | Baseline version |
+| 0.1.13 | 2025-07-19 | Unknown - worked with original code |
+| 0.1.14 | 2025-07-25 | Potential breaking changes introduced |
+| 0.1.15 | 2025-07-30 | - |
+| 0.1.16 | 2025-08-02 | - |
+| 0.1.17 | 2025-08-05 | - |
+| 0.1.18 | 2025-08-06 | - |
+| 0.1.19 | 2025-08-12 | - |
+| 0.1.20 | 2025-08-13 | - |
+| 0.1.21 | 2025-08-14 | Added telemetry tracking (session events, install IDs) |
+| 0.1.22 | 2025-08-18 | Added session ID support |
+
+### Specific Breaking Changes (0.1.13 → 0.1.22)
+
+1. **Config Object Requirements:**
+   - Added required `getUsageStatisticsEnabled()` method to config object
+   - This method is used for telemetry control (introduced around v0.1.21)
+
+2. **ContentGenerator Method Signatures:**
+   - `generateContent()` now requires `userPromptId: string` as second parameter
+   - `generateContentStream()` now requires `userPromptId: string` as second parameter
+   - These are used for API request logging and telemetry
+
+3. **Factory Function Changes:**
+   - `createContentGenerator()` now accepts optional third parameter `sessionId`
+   - Used for session tracking (added in v0.1.22)
+
+### Evidence from Source Code
+
+From `google-gemini/gemini-cli` repository, the current implementation shows:
+```typescript
+// Method calls now require prompt_id
+contentGenerator.generateContent(request, prompt_id)
+contentGenerator.generateContentStream(request, prompt_id)
+```
+
+These changes were made without incrementing the minor or major version, violating semantic versioning where:
+- Patch versions (0.0.X) should only contain backwards-compatible bug fixes
+- Minor versions (0.X.0) should contain backwards-compatible functionality
+- Major versions (X.0.0) should contain breaking changes
+
+### Version Compatibility Matrix
+
+| ai-sdk-provider-gemini-cli | @google/gemini-cli-core | Status |
+|---------------------------|------------------------|---------|
+| 0.1.0 - 0.1.1            | ~0.1.13                | ❌ Broken with 0.1.22 |
+| 0.1.2+                   | 0.1.22 (exact)         | ✅ Working |
+| 1.0.0+                   | 0.1.21                 | ❌ Missing 0.1.22 fixes |
+| 1.1.0+                   | 0.1.22 (exact)         | ✅ Working |
+
+### Upgrade Strategy
+
+Before upgrading `@google/gemini-cli-core`:
+
+1. Review the changelog for breaking changes (if available)
+2. Test thoroughly with the new version
+3. Update our code to handle any breaking changes
+4. Update this document with new compatibility information
+5. Consider maintaining multiple versions if needed for backward compatibility
+
+### Current Implementation: Hybrid Approach
+
+We've implemented a robust hybrid solution that protects against future breaking changes:
+
+#### Phase 1: Core Safety Methods ✅
+- Implemented 14 commonly-used config methods with safe defaults
+- Covers telemetry, session, debug, and file handling methods
+- Provides immediate protection against known breaking changes
+
+#### Phase 2: Proxy Safety Net ✅
+- Proxy wrapper catches ALL unknown method calls
+- Returns intelligent defaults based on method naming patterns
+- Prevents runtime errors from missing methods
+
+#### Phase 3: Debug Logging ✅
+- Set `DEBUG=true` environment variable to log unknown method calls
+- Helps identify which methods are actually used in practice
+- Guides future implementation decisions
+
+### How the Proxy Works
+
+```typescript
+// Unknown methods are caught and handled gracefully:
+config.getSomeNewMethod() // Returns safe default, logs if DEBUG=true
+
+// Smart defaults based on naming patterns:
+- is* methods → false (boolean checks)
+- has* methods → false (capability checks)
+- get*Enabled/get*Mode methods → false
+- get*Registry/get*Client/get*Service methods → undefined  
+- get*Config/get*Options methods → {}
+- get*Command/get*Path methods → undefined
+- All others → undefined
+```
+
+### OAuth-Specific Methods
+
+The config includes critical OAuth methods required for LOGIN_WITH_GOOGLE authentication:
+- `isBrowserLaunchSuppressed()` → returns `false` (allows browser launch for OAuth flow)
+
+### Benefits
+
+1. **Future-proof**: New methods in gemini-cli-core won't break the integration
+2. **Observable**: Debug logging shows what's actually being called
+3. **Maintainable**: Only implement methods that are actually used
+4. **Safe**: All unknown methods return appropriate defaults
+
+### Recommendation
+
+Until Google/Gemini follows proper semantic versioning:
+
+1. **Keep exact version pinning** - `"0.1.22"` without caret
+2. **Monitor debug logs** - Track which methods are actually called
+3. **Test thoroughly** before any version updates
+4. **Use the Proxy pattern** - Provides safety net for unknown methods
+
+### Related Issues
+
+- Initial compatibility issue discovered: August 2025
+- Breaking changes were introduced without major version bump
+- No official migration guide provided by Google
+
+### Contact
+
+For questions about version compatibility, please open an issue on the repository.
+
+--- docs/gemini-cli-auth-options.md ---
+# @google/gemini-cli-core Authentication Options
+
+Based on my analysis of the `@google/gemini-cli-core` package, here are the supported authentication options:
+
+## Authentication Types
+
+The core package supports three authentication methods, defined in the `AuthType` enum:
+
+```typescript
+export enum AuthType {
+  LOGIN_WITH_GOOGLE = 'oauth-personal',
+  USE_GEMINI = 'gemini-api-key',
+  USE_VERTEX_AI = 'vertex-ai'
+}
+```
+
+## 1. OAuth with Google Personal Account (`oauth-personal`)
+
+- **Auth Type**: `AuthType.LOGIN_WITH_GOOGLE`
+- **How it works**: Uses OAuth2 flow with Google authentication
+- **Client ID**: `681255809395-oo8ft2oprdrnp9e3aqf6av3hmdib135j.apps.googleusercontent.com`
+- **Scopes**: 
+  - `https://www.googleapis.com/auth/cloud-platform`
+  - `https://www.googleapis.com/auth/userinfo.email`
+  - `https://www.googleapis.com/auth/userinfo.profile`
+- **Credentials cached at**: `~/.gemini/oauth_creds.json`
+- **No API key required** - uses OAuth tokens instead
+
+## 2. API Key Authentication
+
+This provider supports both AI SDK standard and Gemini-specific auth types:
+
+### AI SDK Standard (`api-key`) - Recommended
+- **Auth Type**: `'api-key'` (AI SDK compliant)
+- **Environment Variable**: `GEMINI_API_KEY`
+- **How it works**: Direct API key authentication with Gemini service
+- **Used with**: `GoogleGenAI` client from `@google/genai` package
+- **Maps to**: `AuthType.USE_GEMINI`
+
+### Gemini-Specific (`gemini-api-key`) - Alternative
+- **Auth Type**: `'gemini-api-key'` (Gemini-specific)
+- **Environment Variable**: `GEMINI_API_KEY`
+- **How it works**: Same as above, alternative naming
+- **Maps to**: `AuthType.USE_GEMINI`
+
+## 3. Vertex AI (`vertex-ai`)
+
+- **Auth Type**: `AuthType.USE_VERTEX_AI`
+- **Environment Variables Required**:
+  - `GOOGLE_API_KEY` - The API key for authentication
+  - `GOOGLE_CLOUD_PROJECT` - The GCP project ID
+  - `GOOGLE_CLOUD_LOCATION` - The GCP location/region
+- **How it works**: Uses Vertex AI endpoint with API key authentication
+- **Used with**: `GoogleGenAI` client with `vertexai: true` flag
+
+## Client Initialization
+
+The `GeminiClient` is initialized with a `Config` object that includes authentication configuration:
+
+```typescript
+// Create content generator config with auth type
+const contentConfig = await createContentGeneratorConfig(
+  model,
+  authType,
+  config
+);
+
+// Initialize the client
+const geminiClient = new GeminiClient(config);
+await geminiClient.initialize(contentConfig);
+```
+
+## Content Generator Configuration
+
+The `ContentGeneratorConfig` interface includes:
+
+```typescript
+export type ContentGeneratorConfig = {
+  model: string;
+  apiKey?: string;
+  vertexai?: boolean;
+  authType?: AuthType | undefined;
+};
+```
+
+## Additional Configuration
+
+- **Proxy Support**: The client supports HTTP proxy configuration via the `proxy` parameter
+- **Model Selection**: The model can be specified during initialization and changed at runtime
+- **Flash Fallback**: OAuth users can fallback to Flash model when hitting rate limits
+
+## Usage Example
+
+```typescript
+import { Config, GeminiClient, AuthType } from '@google/gemini-cli-core';
+
+// Example with Gemini API Key
+const config = new Config({
+  sessionId: 'unique-session-id',
+  targetDir: '/path/to/project',
+  cwd: process.cwd(),
+  model: 'gemini-2.0-flash-exp',
+  debugMode: false
+});
+
+// Initialize with specific auth type
+await config.refreshAuth(AuthType.USE_GEMINI);
+
+// Get the client
+const client = config.getGeminiClient();
+```
+
+## Authentication Setup
+
+### For OAuth Authentication
+```bash
+# Initial setup - run and follow interactive prompts
+gemini
+
+# Or change auth method inside CLI
+/auth
+```
+
+### For API Key Authentication
+```bash
+# Get your API key from Google AI Studio
+export GEMINI_API_KEY="your-api-key-here"
+
+# Or set in .gemini/.env file
+mkdir -p .gemini
+echo 'GEMINI_API_KEY="your-api-key"' >> .gemini/.env
+```
+
+### For Vertex AI Authentication
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+export GOOGLE_CLOUD_LOCATION="us-central1"
+export GOOGLE_GENAI_USE_VERTEXAI=true
+export GEMINI_API_KEY="your-api-key"
+```
+
+## Key Points
+
+1. **OAuth authentication** provides a seamless experience without requiring API keys
+2. **API key authentication** supports both AI SDK standard (`'api-key'`) and Gemini-specific (`'gemini-api-key'`) auth types
+3. **Credentials are cached** for OAuth to avoid repeated authentication
+4. **The authentication type must be specified** when initializing the client
+5. **Environment variables are checked** automatically based on the auth type
+6. **Model selection is handled** differently for different auth types (with fallback logic for API keys)
+7. **No "gemini auth login" command exists** - use `gemini` for interactive setup or `/auth` inside CLI
+
+--- docs/language-model-v2-implementation.md ---
+# LanguageModelV2 Implementation Summary for AI SDK v5
+
+## Overview
+
+The `doGenerate` and `doStream` methods are the core generation methods that all Language Model V2 providers must implement for AI SDK v5 compatibility. These methods handle standardized prompts and options, call the underlying model API, and return standardized results.
+
+## Key Interfaces and Types
+
+### 1. LanguageModelV2 Interface
+
+The main interface that providers must implement for v5:
+
+```typescript
+export type LanguageModelV2 = {
+  readonly specificationVersion: 'v2';
+  readonly provider: string;
+  readonly modelId: string;
+  readonly defaultObjectGenerationMode: 'json' | 'tool' | undefined;
+  readonly supportsImageUrls?: boolean;
+  readonly supportsStructuredOutputs?: boolean;
+  
+  doGenerate(options: LanguageModelV1CallOptions): PromiseLike<{
+    text?: string;
+    reasoning?: string | Array<...>;
+    files?: Array<{ data: string | Uint8Array; mimeType: string }>;
+    toolCalls?: Array<LanguageModelV1FunctionToolCall>;
+    finishReason: LanguageModelV1FinishReason;
+    usage: { promptTokens: number; completionTokens: number };
+    rawCall: { rawPrompt: unknown; rawSettings: Record<string, unknown> };
+    rawResponse?: { headers?: Record<string, string>; body?: unknown };
+    request?: { body?: string };
+    response?: { id?: string; timestamp?: Date; modelId?: string };
+    warnings?: LanguageModelV1CallWarning[];
+    providerMetadata?: LanguageModelV1ProviderMetadata;
+    sources?: LanguageModelV1Source[];
+    logprobs?: LanguageModelV1LogProbs;
+  }>;
+  
+  doStream(options: LanguageModelV1CallOptions): PromiseLike<{
+    stream: ReadableStream<LanguageModelV1StreamPart>;
+    // ... other properties
+  }>;
+};
+```
+
+### 2. LanguageModelV2CallOptions
+
+The options passed to doGenerate and doStream in v5:
+
+```typescript
+export type LanguageModelV1CallOptions = LanguageModelV1CallSettings & {
+  inputFormat: 'messages' | 'prompt';
+  mode:
+    | {
+        type: 'regular';
+        tools?: Array<LanguageModelV1FunctionTool | LanguageModelV1ProviderDefinedTool>;
+        toolChoice?: LanguageModelV1ToolChoice;
+      }
+    | {
+        type: 'object-json';
+        schema?: JSONSchema7;
+        name?: string;
+        description?: string;
+      }
+    | {
+        type: 'object-tool';
+        tool: LanguageModelV1FunctionTool;
+      };
+  prompt: LanguageModelV1Prompt;
+  providerMetadata?: LanguageModelV1ProviderMetadata;
+};
+```
+
+### 3. LanguageModelV1CallSettings
+
+Common generation settings:
+
+```typescript
+export type LanguageModelV1CallSettings = {
+  maxTokens?: number;
+  temperature?: number;
+  stopSequences?: string[];
+  topP?: number;
+  topK?: number;
+  presencePenalty?: number;
+  frequencyPenalty?: number;
+  responseFormat?: 
+    | { type: 'text' }
+    | { 
+        type: 'json'; 
+        schema?: JSONSchema7;
+        name?: string;
+        description?: string;
+      };
+  seed?: number;
+  abortSignal?: AbortSignal;
+  headers?: Record<string, string | undefined>;
+};
+```
+
+### 4. LanguageModelV1Prompt
+
+The standardized prompt format:
+
+```typescript
+export type LanguageModelV1Prompt = Array<LanguageModelV1Message>;
+
+export type LanguageModelV1Message = 
+  | {
+      role: 'system';
+      content: string;
+    }
+  | {
+      role: 'user';
+      content: Array<
+        | LanguageModelV1TextPart
+        | LanguageModelV1ImagePart
+        | LanguageModelV1FilePart
+      >;
+    }
+  | {
+      role: 'assistant';
+      content: Array<
+        | LanguageModelV1TextPart
+        | LanguageModelV1FilePart
+        | LanguageModelV1ReasoningPart
+        | LanguageModelV1RedactedReasoningPart
+        | LanguageModelV1ToolCallPart
+      >;
+    }
+  | {
+      role: 'tool';
+      content: Array<LanguageModelV1ToolResultPart>;
+    };
+```
+
+### 5. Content Part Types
+
+#### Text Part
+```typescript
+interface LanguageModelV1TextPart {
+  type: 'text';
+  text: string;
+  providerMetadata?: LanguageModelV1ProviderMetadata;
+}
+```
+
+#### Image Part
+```typescript
+interface LanguageModelV1ImagePart {
+  type: 'image';
+  image: Uint8Array | URL;
+  mimeType?: string;
+  providerMetadata?: LanguageModelV1ProviderMetadata;
+}
+```
+
+#### Tool Call Part
+```typescript
+interface LanguageModelV1ToolCallPart {
+  type: 'tool-call';
+  toolCallId: string;
+  toolName: string;
+  args: unknown;
+  providerMetadata?: LanguageModelV1ProviderMetadata;
+}
+```
+
+#### Tool Result Part
+```typescript
+interface LanguageModelV1ToolResultPart {
+  type: 'tool-result';
+  toolCallId: string;
+  toolName: string;
+  result: unknown;
+  isError?: boolean;
+  content?: Array<{ type: 'text'; text: string } | { type: 'image'; data: string; mimeType?: string }>;
+  providerMetadata?: LanguageModelV1ProviderMetadata;
+}
+```
+
+### 6. Tool-Related Types
+
+#### Function Tool Definition
+```typescript
+export type LanguageModelV1FunctionTool = {
+  type: 'function';
+  name: string;
+  description?: string;
+  parameters: JSONSchema7;
+};
+```
+
+#### Tool Call Result
+```typescript
+export type LanguageModelV1FunctionToolCall = {
+  toolCallType: 'function';
+  toolCallId: string;
+  toolName: string;
+  args: string; // Stringified JSON
+};
+```
+
+#### Tool Choice
+```typescript
+export type LanguageModelV1ToolChoice =
+  | { type: 'auto' }
+  | { type: 'none' }
+  | { type: 'required' }
+  | { type: 'tool'; toolName: string };
+```
+
+### 7. Result Types
+
+#### Finish Reason
+```typescript
+export type LanguageModelV1FinishReason =
+  | 'stop'           // model generated stop sequence
+  | 'length'         // model generated maximum number of tokens
+  | 'content-filter' // content filter violation stopped the model
+  | 'tool-calls'     // model triggered tool calls
+  | 'error'          // model stopped because of an error
+  | 'other'          // model stopped for other reasons
+  | 'unknown';       // the model has not transmitted a finish reason
+```
+
+#### Call Warning
+```typescript
+export type LanguageModelV1CallWarning = 
+  | {
+      type: 'unsupported-setting';
+      setting: 'temperature' | 'maxTokens' | 'topP' | 'topK' | 'presencePenalty' | 'frequencyPenalty' | 'stopSequences' | 'seed';
+      details?: string;
+    }
+  | {
+      type: 'other';
+      message: string;
+    };
+```
+
+## Implementation Pattern
+
+Based on the Claude Code provider example, here's the typical implementation pattern:
+
+1. **Parse and validate options**
+   - Extract settings from `LanguageModelV1CallOptions`
+   - Validate model parameters
+   - Generate warnings for unsupported settings
+
+2. **Convert prompt to provider format**
+   - Transform `LanguageModelV1Prompt` to provider-specific format
+   - Handle different message roles and content types
+   - Process multimodal content (images, files)
+
+3. **Call the underlying API**
+   - Use provider SDK/API with converted prompt
+   - Handle abort signals
+   - Manage authentication and errors
+
+4. **Process the response**
+   - Extract text, tool calls, and other content
+   - Calculate token usage
+   - Determine finish reason
+   - For object-json mode, output is already schema-constrained via native `responseJsonSchema`
+
+5. **Return standardized result**
+   - Include all required fields (text, usage, finishReason, rawCall)
+   - Add optional fields as available (toolCalls, warnings, providerMetadata)
+   - Provide debugging information (rawResponse, request)
+
+## Key Considerations
+
+1. **Error Handling**: Use `@ai-sdk/provider` error types like `APICallError`, `NoSuchModelError`, `LoadAPIKeyError`
+
+2. **Abort Signal**: Properly handle `options.abortSignal` for cancellation
+
+3. **Mode Handling**:
+   - `regular`: Standard text generation with optional tools
+   - `object-json`: JSON generation mode (uses native `responseJsonSchema` for schema-constrained output)
+   - `object-tool`: Tool-based object generation
+
+4. **Warnings**: Generate warnings for unsupported parameters or validation issues
+
+5. **Provider Metadata**: Pass through provider-specific data that doesn't fit standard fields
+
+6. **Raw Data**: Include raw prompt/settings in `rawCall` for debugging and observability
+
+This summary provides the essential types and patterns needed to implement a compliant `doGenerate` method for the Vercel AI SDK Language Model V1 interface.
+
+--- docs/project-structure.md ---
+# Project Structure
+
+This document provides an overview of the ai-sdk-provider-gemini-cli codebase organization.
+
+```
+ai-sdk-provider-gemini-cli/
+├── src/                                      # Source code
+│   ├── index.ts                              # Main exports
+│   ├── gemini-provider.ts                    # Provider factory function
+│   ├── gemini-language-model.ts              # Core LanguageModelV2 implementation (v5)
+│   ├── client.ts                             # Gemini CLI Core client initialization
+│   ├── message-mapper.ts                     # Maps AI SDK messages to Gemini format
+│   ├── tool-mapper.ts                        # Maps AI SDK tools to Gemini format
+│   ├── error.ts                              # Error handling and mapping
+│   ├── validation.ts                         # Input validation utilities
+│   ├── types.ts                              # TypeScript type definitions
+│   └── __tests__/                            # Unit tests
+│       ├── client.test.ts                    # Client initialization tests
+│       ├── error.test.ts                     # Error handling tests
+│       ├── gemini-language-model.test.ts     # Language model tests
+│       ├── gemini-provider.test.ts           # Provider creation tests
+│       ├── index.test.ts                     # Main exports tests
+│       ├── message-mapper.test.ts            # Message mapping tests
+│       ├── tool-mapper.test.ts               # Tool mapping tests
+│       └── validation.test.ts                # Validation logic tests
+│
+├── examples/                                 # Usage examples
+│   ├── README.md                             # Examples documentation
+│   ├── check-auth.mjs                        # Authentication verification
+│   ├── basic-usage.mjs                       # Simple text generation
+│   ├── streaming.mjs                         # Streaming responses
+│   ├── conversation-history.mjs              # Multi-turn conversations
+│   ├── system-messages.mjs                   # System prompts
+│   ├── custom-config.mjs                     # Provider configuration
+│   ├── error-handling.mjs                    # Error handling patterns
+│   ├── long-running-tasks.mjs                # Timeout management
+│   ├── integration-test.mjs                  # Comprehensive testing
+│   └── generate-object-*.mjs                 # Object generation examples
+│       ├── basic.mjs                         # Basic object generation
+│       ├── nested.mjs                        # Nested structures
+│       ├── constraints.mjs                   # Validation constraints
+│       └── advanced.mjs                      # Complex real-world examples
+│
+├── docs/                                     # Technical documentation
+│   ├── README.md                             # Documentation index
+│   ├── project-structure.md                  # This file
+│   ├── gemini-cli-auth-options.md            # Authentication details
+│   ├── language-model-v2-implementation.md   # AI SDK v5 interface
+│   ├── tool-schema-mapping.md                # Tool schema conversion
+│   ├── zod-to-gemini-mapping.md              # Zod to Gemini mapping
+│   └── ai-sdk-v5/                            # v5 specific docs
+│       ├── BREAKING_CHANGES.md               # Migration guide from v4
+│       ├── DEVELOPMENT_STATUS.md             # Current development status
+│       ├── GUIDE.md                          # Comprehensive usage guide
+│       └── TROUBLESHOOTING.md                # Common issues and solutions
+│
+├── dist/                                     # Build output (generated)
+│   ├── index.js                              # CommonJS bundle
+│   ├── index.mjs                             # ES Module bundle
+│   ├── index.d.ts                            # TypeScript declarations
+│   └── *.map                                 # Source maps
+│
+├── Configuration Files
+│   ├── package.json                          # Project metadata and scripts
+│   ├── tsconfig.json                         # TypeScript configuration
+│   ├── tsconfig.build.json                   # Build-specific TS config
+│   ├── tsup.config.ts                        # Build tool configuration
+│   ├── vitest.config.ts                      # Test runner configuration
+│   ├── eslint.config.js                      # ESLint configuration (flat config)
+│   ├── .gitignore                            # Git ignore patterns
+│   ├── .npmignore                            # NPM publish ignore patterns
+│   └── .prettierrc                           # Code formatter configuration
+│
+└── Root Files
+    ├── README.md                             # Main project documentation
+    ├── CONTRIBUTING.md                       # Contributing guidelines
+    └── LICENSE                               # MIT license
+
+```
+
+## Key Components
+
+### Core Implementation (`src/`)
+
+- **Provider Entry Points**
+  - `index.ts` - Exports all public APIs
+  - `gemini-provider.ts` - Factory function for creating providers
+
+- **Language Model**
+  - `gemini-language-model.ts` - Implements Vercel AI SDK's LanguageModelV2 interface for v5
+  - Handles both streaming and non-streaming generation
+  - Manages authentication and client initialization
+  - Supports abort signals (with limitations)
+
+- **Message & Tool Processing**
+  - `message-mapper.ts` - Converts AI SDK message format to Gemini format
+  - `tool-mapper.ts` - Converts function tools from Zod/JSON Schema to Gemini
+
+- **Utilities**
+  - `client.ts` - Initializes Gemini CLI Core with proper auth
+  - `error.ts` - Maps Gemini errors to AI SDK error types
+  - `validation.ts` - Validates model IDs and configurations
+  - `logger.ts` - Logging utilities with verbose mode support
+
+### Examples (`examples/`)
+
+Organized by complexity and use case:
+- **Getting Started**: Authentication, basic usage, streaming
+- **Advanced Features**: Object generation, system messages, error handling
+- **Testing**: Integration tests covering all features
+
+### Documentation (`docs/`)
+
+Technical documentation covering:
+- Authentication options and setup
+- Vercel AI SDK interface implementation
+- Schema mapping and conversion details
+- This project structure guide
+
+## Development Workflow
+
+1. **Source Code**: All TypeScript source in `src/`
+2. **Build Output**: Generated in `dist/` via `npm run build`
+3. **Examples**: Runnable examples in `examples/`
+4. **Testing**: Run examples as integration tests
+
+## Key Design Decisions
+
+- **Minimal Dependencies**: Only essential packages included
+- **Direct Integration**: Uses Gemini CLI Core directly without abstraction layers
+- **Type Safety**: Full TypeScript support with comprehensive types
+- **AI SDK Compatibility**: Implements standard LanguageModelV2 interface for v5
+- **OAuth First**: Designed for OAuth authentication via Gemini CLI
+
+## Test Coverage
+
+The project includes comprehensive unit tests covering:
+- Provider creation and configuration
+- Message and tool mapping
+- Error handling and validation
+- Native JSON schema structured output
+- Client initialization
+- All core functionality
+
+Current test coverage: ~98%
+
+--- docs/tool-schema-mapping.md ---
+# Tool Schema Mapping: Vercel AI SDK to Gemini
+
+## Overview
+
+This document outlines the mapping between Vercel AI SDK's Zod-based tool schemas and Google Gemini's FunctionDeclaration format.
+
+**Note**: This mapping applies to both AI SDK v4 and v5. The tool schema format remains consistent across versions.
+
+## Vercel AI SDK Tool Structure
+
+```typescript
+// Note: In v5, this is LanguageModelV2FunctionTool
+// but the structure remains the same
+interface LanguageModelV1FunctionTool {
+  type: 'function';
+  name: string;
+  description?: string;
+  parameters: JSONSchema7;
+}
+```
+
+The AI SDK uses `zodSchema()` utility to convert Zod schemas to JSON Schema 7 format.
+
+## Gemini FunctionDeclaration Format
+
+```typescript
+interface FunctionDeclaration {
+  name: string;
+  description?: string;
+  // Option 1: Native Gemini Schema format
+  parameters?: Schema;
+  // Option 2: Standard JSON Schema (alternative)
+  parametersJsonSchema?: object;
+}
+
+interface Schema {
+  type: 'STRING' | 'NUMBER' | 'INTEGER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT';
+  description?: string;
+  nullable?: boolean;
+  enum?: string[];
+  items?: Schema;  // For arrays
+  properties?: { [key: string]: Schema };  // For objects
+  required?: string[];  // For objects
+  // Constraints (note: some use string type)
+  minLength?: string;
+  maxLength?: string;
+  pattern?: string;
+  minimum?: number;
+  maximum?: number;
+  minItems?: string;
+  maxItems?: string;
+}
+```
+
+## Type Mapping Table
+
+### Basic Types
+
+| JSON Schema Type | Gemini Schema Type | Notes |
+|-----------------|-------------------|-------|
+| `string` | `STRING` | |
+| `number` | `NUMBER` | |
+| `integer` | `INTEGER` | |
+| `boolean` | `BOOLEAN` | |
+| `array` | `ARRAY` | Requires `items` |
+| `object` | `OBJECT` | Requires `properties` |
+
+### Zod to JSON Schema to Gemini
+
+| Zod Type | JSON Schema | Gemini Schema |
+|----------|-------------|---------------|
+| `z.string()` | `{type: 'string'}` | `{type: 'STRING'}` |
+| `z.number()` | `{type: 'number'}` | `{type: 'NUMBER'}` |
+| `z.boolean()` | `{type: 'boolean'}` | `{type: 'BOOLEAN'}` |
+| `z.array(T)` | `{type: 'array', items: T}` | `{type: 'ARRAY', items: T}` |
+| `z.object({...})` | `{type: 'object', properties: {...}}` | `{type: 'OBJECT', properties: {...}}` |
+| `z.enum([...])` | `{enum: [...]}` | `{enum: [...]}` |
+| `z.optional(T)` | `T` (not in required) | `T` (not in required) |
+| `z.nullable(T)` | `{type: [T, 'null']}` | `{...T, nullable: true}` |
+
+## Special Conversions
+
+### Nullable Types
+JSON Schema: `{type: ['string', 'null']}`
+Gemini: `{type: 'STRING', nullable: true}`
+
+### Const Values
+JSON Schema: `{const: 'value'}`
+Gemini: `{enum: ['value']}`
+
+### Numeric Constraints
+Note: Some Gemini constraints use string type:
+- `minLength`, `maxLength`: string representation of number
+- `minItems`, `maxItems`: string representation of number
+- `minimum`, `maximum`: number type
+
+### Union Types (anyOf)
+Both formats support `anyOf` for union types.
+
+## Implementation Approach
+
+### Current Implementation: Convert to Native Gemini Schema
+```typescript
+function mapToolsToGeminiFormat(tools: LanguageModelV1FunctionTool[]): Tool[] {
+  const functionDeclarations: FunctionDeclaration[] = [];
+
+  for (const tool of tools) {
+    functionDeclarations.push({
+      name: tool.name,
+      description: tool.description,
+      parameters: convertToolParameters(tool.parameters),
+    });
+  }
+
+  return [{ functionDeclarations }];
+}
+```
+
+The implementation uses the native Gemini Schema format (`parameters` field) rather than `parametersJsonSchema`. This ensures maximum compatibility with the Gemini CLI Core library.
+
+## Unsupported Features
+
+1. **References ($ref)**: Gemini doesn't support JSON Schema references
+2. **allOf**: Not directly supported, needs manual merging
+3. **Tuple arrays**: Not supported in Gemini
+4. **Complex validation**: Some JSON Schema validation rules have no Gemini equivalent
+
+## Testing Considerations
+
+1. Test with simple types (string, number, boolean)
+2. Test with nested objects and arrays
+3. Test with optional and nullable fields
+4. Test with enums and const values
+5. Test with complex real-world schemas
+6. Verify constraint conversion (especially string vs number types)
+
+--- docs/zod-to-gemini-mapping.md ---
+# Zod to Gemini Function Declaration Mapping
+
+## Overview
+
+This document provides a comprehensive mapping between Vercel AI SDK's use of Zod schemas for tool definitions and Google Gemini's FunctionDeclaration format requirements.
+
+**Compatibility Note**: This mapping applies to both AI SDK v4 and v5. While v5 uses `LanguageModelV2` interfaces, the Zod schema conversion process remains the same.
+
+## Core Type Definitions
+
+### Vercel AI SDK Tool Structure
+
+```typescript
+// From @ai-sdk/provider
+// Note: In v5 this is LanguageModelV2FunctionTool
+interface LanguageModelV1FunctionTool {
+  type: 'function';
+  name: string;
+  description?: string;
+  parameters: JSONSchema7;  // JSON Schema format
+}
+
+// From @ai-sdk/ai-core
+interface Tool<PARAMETERS extends ToolParameters = any, RESULT = any> {
+  parameters: PARAMETERS;  // Can be z.ZodTypeAny or Schema<any>
+  description?: string;
+  execute?: (args: inferParameters<PARAMETERS>, options: ToolExecutionOptions) => PromiseLike<RESULT>;
+}
+```
+
+### Google Gemini FunctionDeclaration
+
+```typescript
+// From @google/genai
+interface FunctionDeclaration {
+  name: string;
+  description?: string;
+  parameters?: Schema;  // Gemini's custom Schema format
+  parametersJsonSchema?: unknown;  // Alternative: standard JSON Schema
+  behavior?: Behavior;
+}
+
+interface Schema {
+  type?: Type;  // 'TYPE_UNSPECIFIED' | 'STRING' | 'NUMBER' | 'INTEGER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT'
+  format?: string;
+  description?: string;
+  nullable?: boolean;
+  enum?: string[];
+  items?: Schema;  // For arrays
+  properties?: { [key: string]: Schema };  // For objects
+  required?: string[];  // For objects
+  anyOf?: Schema[];
+  default?: unknown;
+  example?: unknown;
+  
+  // String constraints
+  maxLength?: string;
+  minLength?: string;
+  pattern?: string;
+  
+  // Number constraints
+  minimum?: number;
+  maximum?: number;
+  exclusiveMinimum?: boolean;
+  exclusiveMaximum?: boolean;
+  
+  // Array constraints
+  minItems?: string;
+  maxItems?: string;
+  uniqueItems?: boolean;
+  
+  // Object constraints
+  minProperties?: string;
+  maxProperties?: string;
+  additionalProperties?: boolean;
+}
+```
+
+## Conversion Strategy
+
+### 1. Tool Definition Conversion
+
+```typescript
+function convertVercelToolToGemini(tool: LanguageModelV1FunctionTool): FunctionDeclaration {
+  return {
+    name: tool.name,
+    description: tool.description,
+    parameters: convertJSONSchemaToGeminiSchema(tool.parameters)
+  };
+}
+```
+
+### 2. Zod to JSON Schema to Gemini Schema
+
+The conversion happens in two steps:
+1. **Zod → JSON Schema**: Using `zod-to-json-schema` library (already done by Vercel AI SDK)
+2. **JSON Schema → Gemini Schema**: Custom conversion logic
+
+### 3. Type Mapping Table
+
+| Zod Type | JSON Schema Type | Gemini Schema Type | Notes |
+|----------|------------------|-------------------|-------|
+| `z.string()` | `{ type: 'string' }` | `{ type: 'STRING' }` | |
+| `z.number()` | `{ type: 'number' }` | `{ type: 'NUMBER' }` | |
+| `z.boolean()` | `{ type: 'boolean' }` | `{ type: 'BOOLEAN' }` | |
+| `z.literal()` | `{ const: value }` | `{ enum: [value] }` | Single enum value |
+| `z.enum()` | `{ enum: [...] }` | `{ type: 'STRING', enum: [...] }` | |
+| `z.array()` | `{ type: 'array', items: {...} }` | `{ type: 'ARRAY', items: {...} }` | |
+| `z.object()` | `{ type: 'object', properties: {...} }` | `{ type: 'OBJECT', properties: {...} }` | |
+| `z.union()` | `{ anyOf: [...] }` | `{ anyOf: [...] }` | |
+| `z.optional()` | `{ type: [..., 'null'] }` | `{ nullable: true }` | |
+| `z.nullable()` | `{ type: [..., 'null'] }` | `{ nullable: true }` | |
+| `z.record()` | `{ type: 'object', additionalProperties: {...} }` | `{ type: 'OBJECT', additionalProperties: true }` | |
+| `z.tuple()` | `{ type: 'array', items: [...] }` | Not directly supported | Convert to array with items schema |
+| `z.intersection()` | `{ allOf: [...] }` | Not directly supported | Merge properties |
+| `z.lazy()` | `{ $ref: '...' }` | Not supported | Requires schema flattening |
+
+### 4. Format Mapping
+
+| Zod/JSON Schema Format | Gemini Format | Notes |
+|----------------------|---------------|-------|
+| `email` | `email` | |
+| `url` | `uri` | |
+| `uuid` | `uuid` | |
+| `date-time` | `date-time` | |
+| `date` | `date` | |
+| `time` | `time` | |
+| `ipv4` | `ipv4` | |
+| `ipv6` | `ipv6` | |
+| `hostname` | Not supported | Use string |
+| `json-pointer` | Not supported | Use string |
+| `regex` | Use `pattern` property | |
+
+### 5. Constraint Mapping
+
+#### String Constraints
+```typescript
+// Zod
+z.string().min(5).max(100).regex(/^[A-Z]/)
+
+// JSON Schema
+{
+  type: 'string',
+  minLength: 5,
+  maxLength: 100,
+  pattern: '^[A-Z]'
+}
+
+// Gemini Schema
+{
+  type: 'STRING',
+  minLength: '5',  // Note: string type
+  maxLength: '100', // Note: string type
+  pattern: '^[A-Z]'
+}
+```
+
+#### Number Constraints
+```typescript
+// Zod
+z.number().min(0).max(100).int()
+
+// JSON Schema
+{
+  type: 'integer',
+  minimum: 0,
+  maximum: 100
+}
+
+// Gemini Schema
+{
+  type: 'INTEGER',
+  minimum: 0,
+  maximum: 100
+}
+```
+
+#### Array Constraints
+```typescript
+// Zod
+z.array(z.string()).min(1).max(10)
+
+// JSON Schema
+{
+  type: 'array',
+  items: { type: 'string' },
+  minItems: 1,
+  maxItems: 10
+}
+
+// Gemini Schema
+{
+  type: 'ARRAY',
+  items: { type: 'STRING' },
+  minItems: '1',  // Note: string type
+  maxItems: '10'  // Note: string type
+}
+```
+
+## Implementation Guidelines
+
+### 1. Conversion Function Structure
+
+```typescript
+function convertJSONSchemaToGeminiSchema(jsonSchema: JSONSchema7): Schema {
+  // Handle boolean schemas
+  if (typeof jsonSchema === 'boolean') {
+    return { type: 'BOOLEAN' };
+  }
+
+  const geminiSchema: Schema = {};
+
+  // Convert type
+  if (jsonSchema.type) {
+    geminiSchema.type = mapJSONSchemaTypeToGemini(jsonSchema.type);
+  }
+
+  // Convert constraints based on type
+  if (geminiSchema.type === 'STRING') {
+    if (jsonSchema.minLength !== undefined) {
+      geminiSchema.minLength = String(jsonSchema.minLength);
+    }
+    if (jsonSchema.maxLength !== undefined) {
+      geminiSchema.maxLength = String(jsonSchema.maxLength);
+    }
+    if (jsonSchema.pattern) {
+      geminiSchema.pattern = jsonSchema.pattern;
+    }
+  }
+
+  // Handle objects
+  if (geminiSchema.type === 'OBJECT' && jsonSchema.properties) {
+    geminiSchema.properties = {};
+    for (const [key, value] of Object.entries(jsonSchema.properties)) {
+      geminiSchema.properties[key] = convertJSONSchemaToGeminiSchema(value);
+    }
+    if (jsonSchema.required) {
+      geminiSchema.required = jsonSchema.required;
+    }
+  }
+
+  // Handle arrays
+  if (geminiSchema.type === 'ARRAY' && jsonSchema.items) {
+    geminiSchema.items = convertJSONSchemaToGeminiSchema(jsonSchema.items);
+  }
+
+  // Copy common properties
+  if (jsonSchema.description) {
+    geminiSchema.description = jsonSchema.description;
+  }
+  if (jsonSchema.enum) {
+    geminiSchema.enum = jsonSchema.enum.map(String);
+  }
+  if (jsonSchema.default !== undefined) {
+    geminiSchema.default = jsonSchema.default;
+  }
+
+  return geminiSchema;
+}
+```
+
+### 2. Type Mapping Helper
+
+```typescript
+function mapJSONSchemaTypeToGemini(type: JSONSchema7TypeName | JSONSchema7TypeName[]): string {
+  if (Array.isArray(type)) {
+    // Handle nullable types
+    const nonNullTypes = type.filter(t => t !== 'null');
+    if (nonNullTypes.length === 1) {
+      return mapSingleType(nonNullTypes[0]);
+    }
+    // Multiple non-null types not directly supported
+    return 'TYPE_UNSPECIFIED';
+  }
+  return mapSingleType(type);
+}
+
+function mapSingleType(type: JSONSchema7TypeName): string {
+  switch (type) {
+    case 'string': return 'STRING';
+    case 'number': return 'NUMBER';
+    case 'integer': return 'INTEGER';
+    case 'boolean': return 'BOOLEAN';
+    case 'array': return 'ARRAY';
+    case 'object': return 'OBJECT';
+    case 'null': return 'TYPE_UNSPECIFIED';
+    default: return 'TYPE_UNSPECIFIED';
+  }
+}
+```
+
+### 3. Special Cases Handling
+
+#### Nullable Types
+```typescript
+// JSON Schema: { type: ['string', 'null'] }
+// Gemini: { type: 'STRING', nullable: true }
+```
+
+#### Union Types (anyOf)
+```typescript
+// JSON Schema: { anyOf: [{ type: 'string' }, { type: 'number' }] }
+// Gemini: { anyOf: [{ type: 'STRING' }, { type: 'NUMBER' }] }
+```
+
+#### Empty Objects
+```typescript
+// JSON Schema: { type: 'object', properties: {} }
+// Gemini: omit parameters entirely or use parametersJsonSchema
+```
+
+## Alternative Approach: Using parametersJsonSchema
+
+Gemini also supports standard JSON Schema through the `parametersJsonSchema` field:
+
+```typescript
+function convertVercelToolToGeminiWithJsonSchema(tool: LanguageModelV1FunctionTool): FunctionDeclaration {
+  return {
+    name: tool.name,
+    description: tool.description,
+    parametersJsonSchema: tool.parameters  // Use JSON Schema directly
+  };
+}
+```
+
+This approach may be simpler but requires verifying that Gemini CLI Core supports this field.
+
+## Testing Considerations
+
+1. **Type Coverage**: Test all Zod primitive types and their combinations
+2. **Constraint Validation**: Ensure numeric constraints are properly converted to strings where required
+3. **Nested Structures**: Test deeply nested objects and arrays
+4. **Edge Cases**: Empty objects, null values, undefined properties
+5. **Schema References**: Handle or reject recursive schemas appropriately
+
+## Recommendations
+
+1. **Primary Approach**: Convert to Gemini's native Schema format for maximum compatibility
+2. **Fallback**: Use `parametersJsonSchema` if supported by Gemini CLI Core
+3. **Validation**: Implement runtime validation to ensure converted schemas are valid
+4. **Documentation**: Document any limitations or unsupported features
+5. **Error Handling**: Provide clear error messages for unsupported schema patterns
+
+--- docs/ai-sdk-v5/BREAKING_CHANGES.md ---
+# Breaking Changes: AI SDK v5
+
+This document outlines the breaking changes when migrating from AI SDK v4 to v5 for the Gemini CLI provider.
+
+## Overview
+
+The Vercel AI SDK v5 introduces significant architectural changes that affect how providers are implemented and used. This provider has been updated to be fully compatible with v5.
+
+## Key Breaking Changes
+
+### 1. Response Format Changes
+
+**v4 Response:**
+```typescript
+const { text, usage } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Hello',
+});
+```
+
+**v5 Response:**
+```typescript
+const result = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Hello',
+});
+
+// Access properties differently:
+console.log(result.text);           // The generated text
+console.log(result.usage);          // Token usage info
+console.log(result.content[0].text); // Alternative access
+```
+
+### 2. Parameter Name Changes
+
+Several parameter names have been updated to align with v5 conventions:
+
+| v4 Parameter | v5 Parameter | Notes |
+|--------------|-------------------|-------|
+| `maxTokens` | `maxOutputTokens` | Maximum tokens to generate |
+| `stopWords` | `stopSequences` | Sequences that stop generation |
+
+### 3. Streaming API Changes
+
+**v4 Streaming:**
+```typescript
+const { textStream } = await streamText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Tell me a story',
+});
+
+for await (const chunk of textStream) {
+  process.stdout.write(chunk);
+}
+```
+
+**v5 Streaming:**
+```typescript
+const result = await streamText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Tell me a story',
+});
+
+// Now returns a promise with stream properties
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+
+// Can also access the full text after streaming
+const fullText = await result.text;
+```
+
+### 4. Token Usage Property Names
+
+Token usage reporting has been standardized:
+
+**v4:**
+```typescript
+{
+  promptTokens: 10,
+  completionTokens: 50,
+  totalTokens: 60
+}
+```
+
+**v5:**
+```typescript
+{
+  inputTokens: 10,
+  outputTokens: 50,
+  totalTokens: 60
+}
+```
+
+### 5. Message Format Requirements
+
+v5 enforces stricter message formats:
+
+```typescript
+// Messages must have proper role types
+messages: [
+  { role: 'user', content: 'Hello' },
+  { role: 'assistant', content: 'Hi there!' },
+  { role: 'user', content: 'How are you?' }
+]
+```
+
+### 6. Provider Interface Changes
+
+The provider now extends `ProviderV2` and implements `LanguageModelV2`:
+
+```typescript
+// Provider extends ProviderV2
+class GeminiProvider extends ProviderV2 {
+  // Returns LanguageModelV2 instances
+}
+```
+
+### 7. Error Handling
+
+Error handling has been improved with better error types and messages:
+
+```typescript
+try {
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    prompt: 'Hello',
+  });
+} catch (error) {
+  // Errors now have consistent structure
+  if (error.name === 'AbortError') {
+    // Handle cancellation
+  }
+}
+```
+
+### 8. Object Generation
+
+The `generateObject` function now has stricter schema validation:
+
+```typescript
+// Schema validation errors now show as:
+// "No object generated: could not parse the response"
+// This actually means validation failed, not parsing
+```
+
+## Migration Guide
+
+### Step 1: Update Dependencies
+
+```bash
+npm install ai-sdk-provider-gemini-cli@beta ai@beta
+```
+
+### Step 2: Update Import Statements
+
+No changes needed - imports remain the same:
+
+```typescript
+import { generateText, streamText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+```
+
+### Step 3: Update Response Handling
+
+Replace all instances of destructured responses:
+
+```typescript
+// Old
+const { text, usage } = await generateText(...);
+
+// New
+const result = await generateText(...);
+const text = result.text;
+const usage = result.usage;
+```
+
+### Step 4: Update Parameter Names
+
+Search and replace parameter names:
+- `maxTokens` → `maxOutputTokens`
+- `stopWords` → `stopSequences`
+
+### Step 5: Update Token Usage Access
+
+Update any code that accesses token usage:
+
+```typescript
+// Old
+console.log(usage.promptTokens);
+console.log(usage.completionTokens);
+
+// New
+console.log(usage.inputTokens);
+console.log(usage.outputTokens);
+```
+
+### Step 6: Test Thoroughly
+
+Run all tests and examples to ensure compatibility:
+
+```bash
+npm run build
+npm run example:test
+```
+
+## Known Issues
+
+1. **maxOutputTokens with gemini-2.5-pro**: Setting `maxOutputTokens` can cause empty responses with gemini-2.5-pro. Consider omitting this parameter or using gemini-2.5-flash.
+
+2. **Abort Signal Limitation**: The underlying gemini-cli-core doesn't support request cancellation. Abort signals work from the SDK perspective but requests continue in the background.
+
+3. **Schema Validation Messages**: When using `generateObject`, validation failures show misleading "could not parse" errors even though JSON parsing succeeded.
+
+## Need Help?
+
+- Check the [examples](../../examples/) directory for v5 usage patterns
+- Review the [GUIDE.md](./GUIDE.md) for detailed usage instructions
+- See [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues
+
+## Links discovered
+- [examples](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/../../examples/)
+- [GUIDE.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/./GUIDE.md)
+- [TROUBLESHOOTING.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/./TROUBLESHOOTING.md)
+
+--- docs/ai-sdk-v5/DEVELOPMENT_STATUS.md ---
+# Development Status for AI SDK v5
+
+## Overview
+
+This document tracks the development status of the Gemini CLI Provider for Vercel AI SDK v5 compatibility.
+
+## Current Status: ✅ COMPLETE
+
+The provider has been fully migrated to support AI SDK v5.
+
+## Completed Features
+
+### Core Functionality
+- ✅ **Provider Interface**: Extends `ProviderV2` correctly
+- ✅ **Language Model**: Implements `LanguageModelV2` interface
+- ✅ **Text Generation**: Full `generateText` support with v5 response format
+- ✅ **Streaming**: Complete `streamText` implementation with promise-based API
+- ✅ **Object Generation**: `generateObject` with Zod schema validation
+- ✅ **System Messages**: Proper system instruction support
+- ✅ **Conversation History**: Multi-turn conversation support
+- ✅ **Multimodal**: Base64 image support (URL images not supported by design)
+
+### Authentication
+- ✅ **OAuth Personal**: Default authentication via Gemini CLI
+- ✅ **API Key**: Both `api-key` and `gemini-api-key` auth types
+- ✅ **Credential Management**: Uses `~/.gemini/oauth_creds.json`
+
+### Models
+- ✅ **gemini-3-pro-preview**: Full support (Preview)
+- ✅ **gemini-2.5-pro**: Full support (Previous generation)
+- ✅ **gemini-2.5-flash**: Full support for faster responses
+
+### Error Handling
+- ✅ **Error Mapping**: Proper error types for v5
+- ✅ **Abort Signals**: Correct AbortError handling (with limitations)
+- ✅ **Validation Errors**: Clear error messages for schema failures
+
+### Documentation
+- ✅ **Breaking Changes Guide**: Complete migration guide from v4
+- ✅ **Usage Guide**: Comprehensive v5 patterns and examples
+- ✅ **Troubleshooting**: Common issues and solutions documented
+- ✅ **API Documentation**: All interfaces documented
+
+### Examples
+- ✅ All 14 example files updated and tested with v5
+- ✅ Examples use gemini-2.5-pro for consistency
+- ✅ Clear documentation of patterns and best practices
+
+## Known Limitations
+
+### 1. Abort Signal Support
+- **Status**: Partial
+- **Issue**: The underlying `gemini-cli-core` doesn't support request cancellation
+- **Impact**: Abort signals work from SDK perspective but HTTP requests continue in background
+- **Workaround**: None - this is a limitation of the underlying library
+
+### 2. maxOutputTokens with gemini-2.5-pro
+- **Status**: Known Issue
+- **Issue**: Setting `maxOutputTokens` can cause empty responses
+- **Impact**: Users may get unexpected empty results
+- **Workaround**: Omit the parameter or use gemini-2.5-flash
+
+### 3. Image URL Support
+- **Status**: Not Supported
+- **Issue**: Only base64-encoded images are supported
+- **Impact**: Users must convert images to base64
+- **Workaround**: Read images as buffers and encode to base64
+
+### 4. Unsupported Parameters
+- **frequencyPenalty**: Not supported by Gemini
+- **presencePenalty**: Not supported by Gemini
+- **seed**: Not supported by Gemini
+- **responseFormat**: Partially supported (JSON mode only)
+
+## Testing Status
+
+### Unit Tests
+- ✅ All tests updated for v5 compatibility
+- ✅ 98.85% test coverage achieved
+- ✅ All tests passing
+
+### Integration Tests
+- ✅ All examples run successfully
+- ✅ Authentication verified
+- ✅ Model responses validated
+
+### Manual Testing
+- ✅ Basic text generation
+- ✅ Streaming responses
+- ✅ Object generation
+- ✅ System messages
+- ✅ Conversation history
+- ✅ Error scenarios
+- ✅ Timeout/abort handling
+
+## Migration Checklist
+
+- [x] Update dependencies to v5 versions
+- [x] Implement ProviderV2 interface
+- [x] Implement LanguageModelV2 interface
+- [x] Update message format handling
+- [x] Update streaming implementation
+- [x] Update token usage property names
+- [x] Update parameter names (maxTokens → maxOutputTokens)
+- [x] Update error handling
+- [x] Update all examples
+- [x] Update all documentation
+- [x] Run comprehensive tests
+
+## Version Information
+
+- **Provider Version**: 1.0.0-beta.x
+- **AI SDK Version**: 5.0.0-beta.26+
+- **AI SDK Provider**: 2.0.0-beta.1+
+- **Node.js**: ≥20 required
+
+## Future Considerations
+
+1. **Request Cancellation**: If `gemini-cli-core` adds abort support, update provider
+2. **New Models**: Add support for new Gemini models as they become available
+3. **Additional Features**: Monitor AI SDK v5 for new features to support
+4. **Performance**: Consider optimization opportunities for streaming
+
+## Support
+
+For issues or questions:
+- Review [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+- Check [examples](../../examples/) for patterns
+- File issues on GitHub repository
+
+## Links discovered
+- [TROUBLESHOOTING.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/./TROUBLESHOOTING.md)
+- [examples](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/../../examples/)
+
+--- docs/ai-sdk-v5/GUIDE.md ---
+# Gemini CLI Provider for AI SDK v5 Guide
+
+This guide covers how to use the Gemini CLI Provider with Vercel AI SDK v5.
+
+## Table of Contents
+
+- [Installation](#installation)
+- [Authentication](#authentication)
+- [Basic Usage](#basic-usage)
+- [Streaming](#streaming)
+- [Conversation History](#conversation-history)
+- [System Messages](#system-messages)
+- [Structured Output](#structured-output)
+- [Error Handling](#error-handling)
+- [Advanced Features](#advanced-features)
+- [Best Practices](#best-practices)
+
+## Installation
+
+```bash
+# Install the beta versions
+npm install ai-sdk-provider-gemini-cli@beta ai@beta
+
+# Install and set up Gemini CLI
+npm install -g @google/gemini-cli
+gemini  # Follow authentication setup
+```
+
+## Authentication
+
+### OAuth Authentication (Recommended)
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+```
+
+### API Key Authentication
+
+```typescript
+const gemini = createGeminiProvider({
+  authType: 'api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+```
+
+## Basic Usage
+
+### Text Generation
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+async function generate() {
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    prompt: 'Write a haiku about coding',
+  });
+
+  console.log(result.text);
+  console.log(`Tokens used: ${result.usage?.totalTokens}`);
+}
+```
+
+### Model Configuration
+
+```typescript
+const model = gemini('gemini-2.5-pro', {
+  temperature: 0.7,        // Creativity (0-2)
+  maxOutputTokens: 1000,   // Max tokens to generate
+  topP: 0.95,             // Nucleus sampling
+  topK: 40,               // Top-k sampling
+});
+```
+
+## Streaming
+
+### Basic Streaming
+
+```typescript
+import { streamText } from 'ai';
+
+async function stream() {
+  const result = await streamText({
+    model: gemini('gemini-2.5-pro'),
+    prompt: 'Tell me a story about a robot',
+  });
+
+  // Stream chunks as they arrive
+  for await (const chunk of result.textStream) {
+    process.stdout.write(chunk);
+  }
+
+  // Access full text after streaming
+  const fullText = await result.text;
+  console.log('\n\nFull text length:', fullText.length);
+}
+```
+
+### Progress Tracking
+
+```typescript
+async function streamWithProgress() {
+  const result = await streamText({
+    model: gemini('gemini-2.5-pro'),
+    prompt: 'Write a detailed article about AI',
+  });
+
+  let charCount = 0;
+  const startTime = Date.now();
+
+  for await (const chunk of result.textStream) {
+    charCount += chunk.length;
+    const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+    process.stdout.write(`\r📝 Generated: ${charCount} chars | Time: ${elapsed}s`);
+  }
+
+  console.log('\n✅ Complete!');
+}
+```
+
+## Conversation History
+
+### Multi-turn Conversations
+
+```typescript
+async function conversation() {
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    messages: [
+      { role: 'user', content: 'My name is Alice' },
+      { role: 'assistant', content: 'Nice to meet you, Alice! How can I help you today?' },
+      { role: 'user', content: 'What is my name?' },
+    ],
+  });
+
+  console.log(result.text); // Should remember "Alice"
+}
+```
+
+### Building Conversation Context
+
+```typescript
+const messages = [];
+
+function addUserMessage(content: string) {
+  messages.push({ role: 'user', content });
+}
+
+function addAssistantMessage(content: string) {
+  messages.push({ role: 'assistant', content });
+}
+
+async function continueConversation(userInput: string) {
+  addUserMessage(userInput);
+  
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    messages,
+  });
+
+  addAssistantMessage(result.text);
+  return result.text;
+}
+```
+
+## System Messages
+
+### Setting Model Behavior
+
+```typescript
+async function withSystemMessage() {
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    system: 'You are a helpful coding assistant. Always include code examples in your responses.',
+    prompt: 'How do I read a file in Node.js?',
+  });
+
+  console.log(result.text); // Will include code examples
+}
+```
+
+### Complex System Instructions
+
+```typescript
+const system = `You are an expert TypeScript developer.
+- Always use modern ES6+ syntax
+- Include type annotations
+- Follow best practices
+- Explain your code clearly`;
+
+const result = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  system,
+  prompt: 'Create a generic cache class',
+});
+```
+
+## Structured Output
+
+### Basic Object Generation
+
+```typescript
+import { generateObject } from 'ai';
+import { z } from 'zod';
+
+async function generateProduct() {
+  const result = await generateObject({
+    model: gemini('gemini-2.5-pro'),
+    schema: z.object({
+      name: z.string().describe('Product name'),
+      price: z.number().describe('Price in USD'),
+      inStock: z.boolean().describe('Availability'),
+    }),
+    prompt: 'Generate a laptop product',
+  });
+
+  console.log(result.object);
+  // { name: "UltraBook Pro", price: 1299.99, inStock: true }
+}
+```
+
+### Nested Structures
+
+```typescript
+const CompanySchema = z.object({
+  name: z.string(),
+  founded: z.number(),
+  employees: z.array(z.object({
+    name: z.string(),
+    role: z.string(),
+    department: z.string(),
+  })),
+  metrics: z.object({
+    revenue: z.number(),
+    growth: z.number(),
+  }),
+});
+
+const result = await generateObject({
+  model: gemini('gemini-2.5-pro'),
+  schema: CompanySchema,
+  prompt: 'Generate a tech startup company profile',
+});
+```
+
+### Handling Validation
+
+```typescript
+try {
+  const result = await generateObject({
+    model: gemini('gemini-2.5-pro'),
+    schema: z.object({
+      description: z.string().max(100), // Strict limit
+    }),
+    prompt: 'Describe quantum computing',
+  });
+} catch (error) {
+  // Note: Error may say "could not parse" but usually means
+  // validation failed (e.g., string too long)
+  console.error('Validation failed:', error.message);
+}
+```
+
+## Error Handling
+
+### Basic Error Handling
+
+```typescript
+try {
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    prompt: 'Hello',
+  });
+} catch (error) {
+  if (error.name === 'AbortError') {
+    console.log('Request was cancelled');
+  } else if (error.message.includes('quota')) {
+    console.log('Rate limit exceeded');
+  } else {
+    console.error('Unexpected error:', error);
+  }
+}
+```
+
+### Timeout Management
+
+```typescript
+async function withTimeout() {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000); // 10 seconds
+
+  try {
+    const result = await generateText({
+      model: gemini('gemini-2.5-pro'),
+      prompt: 'Write a detailed analysis',
+      abortSignal: controller.signal,
+    });
+    
+    clearTimeout(timeout);
+    return result.text;
+  } catch (error) {
+    if (error.name === 'AbortError') {
+      console.log('Request timed out');
+    }
+    throw error;
+  }
+}
+```
+
+**Note**: Due to gemini-cli-core limitations, aborted requests continue in the background even though the SDK throws AbortError.
+
+## Advanced Features
+
+### Multimodal Input (Images)
+
+```typescript
+import { readFileSync } from 'fs';
+
+async function analyzeImage() {
+  const imageBuffer = readFileSync('diagram.png');
+  const base64Image = imageBuffer.toString('base64');
+
+  const result = await generateText({
+    model: gemini('gemini-2.5-pro'),
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'text', text: 'What is shown in this image?' },
+        { type: 'image', data: base64Image },
+      ],
+    }],
+  });
+
+  console.log(result.text);
+}
+```
+
+### Token Usage Monitoring
+
+```typescript
+async function trackUsage() {
+  const results = [];
+  
+  for (const prompt of prompts) {
+    const result = await generateText({
+      model: gemini('gemini-2.5-pro'),
+      prompt,
+    });
+    
+    results.push({
+      prompt: prompt.substring(0, 50),
+      inputTokens: result.usage?.inputTokens || 0,
+      outputTokens: result.usage?.outputTokens || 0,
+      totalTokens: result.usage?.totalTokens || 0,
+    });
+  }
+  
+  const totalTokens = results.reduce((sum, r) => sum + r.totalTokens, 0);
+  console.log('Total tokens used:', totalTokens);
+}
+```
+
+## Best Practices
+
+### 1. Model Selection
+
+- Use **gemini-3-pro-preview** for enhanced reasoning capabilities
+- Use **gemini-2.5-pro** for production workloads requiring the previous generation stable model
+- Use **gemini-2.5-flash** for simpler tasks where speed is important
+
+### 2. Prompt Engineering
+
+```typescript
+// Be specific and clear
+const goodPrompt = `Write a Python function that:
+1. Takes a list of integers as input
+2. Returns the sum of even numbers
+3. Includes type hints
+4. Has a docstring`;
+
+// Avoid vague prompts
+const badPrompt = 'Write a function';
+```
+
+### 3. Error Recovery
+
+```typescript
+async function generateWithRetry(prompt: string, maxRetries = 3) {
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      const result = await generateText({
+        model: gemini('gemini-2.5-pro'),
+        prompt,
+      });
+      return result;
+    } catch (error) {
+      if (i === maxRetries - 1) throw error;
+      
+      // Wait before retry (exponential backoff)
+      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, i)));
+    }
+  }
+}
+```
+
+### 4. Memory Management
+
+For long conversations, consider truncating message history:
+
+```typescript
+function truncateMessages(messages: any[], maxMessages = 20) {
+  if (messages.length <= maxMessages) return messages;
+  
+  // Keep system message (if any) and recent messages
+  const systemMsg = messages.find(m => m.role === 'system');
+  const recentMessages = messages.slice(-maxMessages);
+  
+  return systemMsg ? [systemMsg, ...recentMessages] : recentMessages;
+}
+```
+
+### 5. Streaming Best Practices
+
+```typescript
+// Clean up resources on error
+async function safeStream() {
+  let result;
+  
+  try {
+    result = await streamText({
+      model: gemini('gemini-2.5-pro'),
+      prompt: 'Tell me a story',
+    });
+    
+    for await (const chunk of result.textStream) {
+      process.stdout.write(chunk);
+    }
+  } catch (error) {
+    console.error('Stream error:', error);
+    // Ensure stream is properly closed
+    if (result?.textStream) {
+      result.textStream.return?.();
+    }
+  }
+}
+```
+
+## Next Steps
+
+- Explore the [examples](../../examples/) directory for more patterns
+- Check [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) for common issues
+- Review [BREAKING_CHANGES.md](./BREAKING_CHANGES.md) if migrating from v4
+
+## Links discovered
+- [examples](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/../../examples/)
+- [TROUBLESHOOTING.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/./TROUBLESHOOTING.md)
+- [BREAKING_CHANGES.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/./BREAKING_CHANGES.md)
+
+--- examples/README.md ---
+# Gemini CLI AI SDK Provider Examples
+
+This directory contains curated examples demonstrating the key features of the Gemini CLI AI SDK Provider. Each example shows how to use Google's Gemini models through the Cloud Code endpoints with the Vercel AI SDK.
+
+## Prerequisites
+
+1. Authenticate with Google Cloud Code:
+```bash
+# Run the gemini CLI and follow interactive setup
+gemini
+```
+
+2. Build the provider:
+```bash
+npm run build
+```
+
+3. Verify your setup:
+```bash
+node examples/check-auth.mjs
+```
+
+## Quick Start Examples
+
+### 1. Basic Usage (`basic-usage.mjs`)
+**Purpose**: The simplest example - generate text with Gemini and display metadata.
+```bash
+node examples/basic-usage.mjs
+```
+**Key concepts**: Text generation, token usage, OAuth authentication
+
+### 2. Streaming (`streaming.mjs`)
+**Purpose**: Demonstrate real-time streaming for responsive user experiences.
+```bash
+node examples/streaming.mjs
+```
+**Key concepts**: Stream processing, chunk handling, real-time output
+
+### 3. Conversation History (`conversation-history.mjs`)
+**Purpose**: Show how to maintain context across multiple messages.
+```bash
+node examples/conversation-history.mjs
+```
+**Key concepts**: Message history, context preservation, multi-turn conversations
+
+## Logging Examples
+
+The provider includes a flexible logging system that can be configured for different use cases. These examples demonstrate all logging modes:
+
+### 4. Default Logging (`logging-default.mjs`)
+
+**Purpose**: Understand the default logging behavior (non-verbose mode).
+
+```bash
+node examples/logging-default.mjs
+```
+
+**Key concepts**: Default behavior, warn/error only, clean output
+
+**What you'll see**: Only warning and error messages appear. Debug and info logs are suppressed for clean output.
+
+### 5. Verbose Logging (`logging-verbose.mjs`)
+
+**Purpose**: Enable detailed logging for development and troubleshooting.
+
+```bash
+node examples/logging-verbose.mjs
+```
+
+**Key concepts**: Verbose mode, debug/info logs, execution tracing
+
+**What you'll see**: All log levels (debug, info, warn, error) showing detailed provider activity.
+
+### 6. Custom Logger (`logging-custom-logger.mjs`)
+
+**Purpose**: Integrate with external logging systems (Winston, Pino, Datadog, etc.).
+
+```bash
+node examples/logging-custom-logger.mjs
+```
+
+**Key concepts**: Custom logger implementation, external integration, log formatting
+
+**What you'll see**: Custom-formatted logs with timestamps and prefixes, demonstrating integration patterns.
+
+### 7. Disabled Logging (`logging-disabled.mjs`)
+
+**Purpose**: Completely silent operation with no logs.
+
+```bash
+node examples/logging-disabled.mjs
+```
+
+**Key concepts**: Silent mode, production deployments, zero output
+
+**What you'll see**: No provider logs at all - completely silent operation.
+
+## Advanced Configuration
+
+### 8. Custom Config (`custom-config.mjs`)
+**Purpose**: Demonstrate provider configuration options.
+```bash
+node examples/custom-config.mjs
+```
+**Key concepts**: API key auth, OAuth auth, model settings
+
+### 9. System Messages (`system-messages.mjs`)
+**Purpose**: Use system prompts to control model behavior.
+```bash
+node examples/system-messages.mjs
+```
+**Key concepts**: System instructions, persona control, response formatting
+
+### 10. Long-Running Tasks (`long-running-tasks.mjs`)
+**Purpose**: Handle complex tasks with proper timeout management.
+```bash
+node examples/long-running-tasks.mjs
+```
+**Key concepts**: AbortSignal, timeout handling, complex reasoning
+
+## Object Generation (Structured Output)
+
+### 11. Object Generation Basic (`generate-object-basic.mjs`)
+**Purpose**: Learn structured output generation step-by-step.
+```bash
+node examples/generate-object-basic.mjs
+```
+**Key concepts**: Zod schemas, JSON generation, validation
+
+### 12. Nested Structures (`generate-object-nested.mjs`)
+**Purpose**: Generate complex hierarchical data structures.
+```bash
+node examples/generate-object-nested.mjs
+```
+**Key concepts**: Nested objects, arrays of objects, complex relationships
+
+### 13. Validation Constraints (`generate-object-constraints.mjs`)
+**Purpose**: Enforce data quality with validation rules.
+```bash
+node examples/generate-object-constraints.mjs
+```
+**Key concepts**: Enums, ranges, patterns, business rules
+
+### 14. Advanced Object Generation (`generate-object-advanced.mjs`)
+**Purpose**: Real-world examples of complex object generation.
+```bash
+node examples/generate-object-advanced.mjs
+```
+**Key concepts**: Product catalogs, analytics data, form generation
+
+## Testing & Troubleshooting
+
+### 15. Check Authentication (`check-auth.mjs`)
+**Purpose**: Verify Google Cloud Code authentication status.
+```bash
+node examples/check-auth.mjs
+```
+**Key concepts**: OAuth validation, credential refresh, troubleshooting
+
+### 16. Integration Test (`integration-test.mjs`)
+**Purpose**: Comprehensive test suite to verify all features.
+```bash
+node examples/integration-test.mjs
+```
+**Key concepts**: Feature verification, error handling, test patterns
+
+### 17. Error Handling (`error-handling.mjs`)
+**Purpose**: Demonstrate proper error handling patterns.
+```bash
+node examples/error-handling.mjs
+```
+**Key concepts**: Authentication errors, rate limits, retry logic
+
+## Common Patterns
+
+### OAuth Authentication
+```javascript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Uses ~/.gemini/oauth_creds.json automatically
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal'
+});
+```
+
+### API Key Authentication
+```javascript
+const gemini = createGeminiProvider({
+  authType: 'api-key',
+  apiKey: process.env.GEMINI_API_KEY
+});
+```
+
+### Message History
+```javascript
+const messages = [
+  { role: 'user', content: 'My name is Alice' },
+  { role: 'assistant', content: 'Nice to meet you, Alice!' },
+  { role: 'user', content: 'What is my name?' }
+];
+
+const { text } = await generateText({
+  model: gemini('gemini-3-pro-preview'),
+  messages,
+});
+```
+
+### Custom Timeouts
+```javascript
+const controller = new AbortController();
+const timeout = setTimeout(() => controller.abort(), 60000); // 1 minute
+
+try {
+  const { text } = await generateText({
+    model: gemini('gemini-3-pro-preview'),
+    prompt: 'Complex analysis...',
+    abortSignal: controller.signal,
+  });
+  clearTimeout(timeout);
+} catch (error) {
+  // Handle timeout
+}
+```
+
+## Quick Reference
+
+| Example | Primary Use Case | Key Feature |
+|---------|-----------------|-------------|
+| basic-usage | Getting started | Simple generation |
+| streaming | Responsive UIs | Real-time output |
+| conversation-history | Chatbots | Context retention |
+| logging-default | Default behavior | Warn/error only |
+| logging-verbose | Development/debugging | All log levels |
+| logging-custom-logger | External integration | Custom logger impl |
+| logging-disabled | Silent operation | No logs at all |
+| custom-config | Authentication | OAuth vs API key |
+| system-messages | Response control | System prompts |
+| generate-object-basic | Learning | Structured output |
+| generate-object-nested | Complex data | Hierarchical JSON |
+| check-auth | Setup | Authentication status |
+
+## Learning Path
+
+1. **Beginners**: `check-auth.mjs` → `basic-usage.mjs` → `streaming.mjs` → `conversation-history.mjs`
+2. **Logging**: `logging-default.mjs` → `logging-verbose.mjs` → `logging-custom-logger.mjs` → `logging-disabled.mjs`
+3. **Object Generation**: `generate-object-basic.mjs` → `generate-object-nested.mjs` → `generate-object-advanced.mjs`
+4. **Advanced**: `system-messages.mjs` → `long-running-tasks.mjs` → `error-handling.mjs`
+5. **Testing**: Run `integration-test.mjs` to verify everything works
+
+## Cloud Code Endpoints
+
+This provider uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.com) through the gemini-cli-core library. The available models include:
+- `gemini-3-pro-preview` - Latest next-generation model (Preview) - **Recommended for all examples**
+- `gemini-2.5-pro` - Previous generation production-ready model (64K output tokens)
+- `gemini-2.5-flash` - Faster, efficient model (64K output tokens)
+- And more models as they become available
+
+**Note**: The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities. You can override this with the `maxTokens` parameter if needed.
+
+## Troubleshooting
+
+If you encounter authentication issues:
+1. Run `gemini` and follow setup prompts to authenticate
+2. Check `~/.gemini/oauth_creds.json` exists
+3. Run `node examples/check-auth.mjs` to verify
+
+If you encounter rate limit errors:
+- Add delays between requests if running multiple examples
+- Consider reducing the number of concurrent requests
+- Check your quota in the Google Cloud Console
+
+For object generation issues:
+- Very strict character length constraints (e.g., exactly 60-80 chars) can be challenging
+- Consider using ranges or slightly more flexible constraints
+- The model may occasionally exceed limits by a few characters
+- **Important**: When using `generateObject`, validation failures will throw an error saying "No object generated: could not parse the response"
+  - This error message is misleading - the JSON was likely parsed successfully but failed schema validation
+  - The actual generated object is available in the error's `text` property
+  - For production use with strict schemas, consider using `generateText` with JSON mode for more control over validation
+
+For more details, see the main [README](../README.md).
+
+## Links discovered
+- [README](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/examples/../README.md)
+
+--- CHANGELOG.md ---
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+## [1.4.0] - 2025-11-23
+
+### Added
+
+- **Native Structured Output Support**: Implemented native `responseJsonSchema` support for Gemini API
+  - Enables `supportsStructuredOutputs = true` for improved AI SDK integration
+  - Schema is now passed directly to Gemini API via `responseJsonSchema` in generation config
+  - Provides cleaner, more reliable JSON output without post-processing
+
+- **JSON Without Schema Handling**: Graceful downgrade when JSON format is requested without a schema
+  - Emits `unsupported-setting` warning to inform users
+  - Downgrades to `text/plain` response format (prevents fenced/raw JSON leaking)
+  - Aligns with Claude-code provider behavior for cross-provider consistency
+  - Works in both streaming and non-streaming modes
+
+### Changed
+
+- **Dependency Updates** (aligned with @google/gemini-cli-core 0.17.1):
+  - `@ai-sdk/provider-utils`: 3.0.3 → 3.0.17
+  - `@google/gemini-cli-core`: 0.16.0 → 0.17.1
+  - `@google/genai`: 1.14.0 → 1.16.0 (aligned with gemini-cli-core)
+  - `google-auth-library`: 10.2.1 → ^9.11.0 (aligned with gemini-cli-core)
+  - `zod-to-json-schema`: 3.24.6 → 3.25.0
+
+### Removed
+
+- **Prompt-based Schema Injection**: Removed workaround that injected schema instructions into user prompts
+  - No longer needed with native `responseJsonSchema` support
+- **JSON Extraction Utility**: Removed `extract-json.ts` and related post-processing
+  - Gemini now returns clean JSON directly when schema is provided
+
+### Technical Details
+
+- Streaming now outputs JSON chunks directly without accumulation
+- Simplified codebase with shared `prepareGenerationConfig` helper for consistent behavior
+- Tests updated to use JSON Schema objects instead of Zod schemas (matching what AI SDK passes to providers)
+- All 175 tests passing (including new no-schema downgrade tests)
+
+## [1.3.0] - 2025-11-18
+
+### Added
+
+- **Support for Gemini 3**: Added support for `gemini-3-pro-preview` model
+- **Dependency Update**: Updated `@google/gemini-cli-core` to `0.16.0` (pinned)
+- **Security Updates**: Updated dev dependencies (Vite 6, Vitest 4) to resolve security vulnerabilities
+
+### Changed
+
+- **Node.js Requirement**: Updated engine requirement to `node >= 20` to align with `@google/gemini-cli-core` v0.16.0
+- **CI/CD**: Removed Node 18 from CI matrix
+
+### Fixed
+
+- **Async Configuration**: Fixed compatibility with `gemini-cli-core` v0.16.0 async configuration loading
+- **Example Compatibility**: Ensured core health-check examples (`check-auth.mjs`, `integration-test.mjs`) use GA models (`gemini-2.5-pro`) for broader compatibility
+
+## [1.2.0] - 2025-10-21
+
+### Added
+
+- **Comprehensive debug logging and verbose mode** - Enhanced logging capabilities for better debugging and troubleshooting
+  - Added `debug` and `info` log levels to complement existing `warn` and `error` levels
+  - New `verbose` setting to control debug/info logging visibility
+  - Detailed execution tracing including request/response flow, token usage, and timing information
+  - `createVerboseLogger()` utility that filters debug/info logs based on verbose mode
+  - When `verbose: false` (default), only `warn` and `error` messages are logged
+  - When `verbose: true`, all log levels including `debug` and `info` are logged
+  - Comprehensive test coverage for all logging scenarios and custom logger implementations
+
+### Changed
+
+- **Logger Interface**: Extended the `Logger` interface from 2 methods to 4 methods
+  - Added `debug(message: string): void` - for detailed execution tracing (verbose mode only)
+  - Added `info(message: string): void` - for general flow information (verbose mode only)
+  - Existing `warn(message: string): void` - for warnings (always shown)
+  - Existing `error(message: string): void` - for errors (always shown)
+- **Settings**: Added optional `logger` and `verbose` settings to model configuration
+  - `logger`: `Logger | false | undefined` - custom logger, disabled, or default console
+  - `verbose`: `boolean` - enable/disable debug and info logging (default: false)
+
+### Migration for custom logger users
+
+**Who is affected:** Only users with custom `Logger` implementations.
+
+**What changed:** The `Logger` interface now requires 4 methods instead of 2:
+
+```typescript
+// Before (v1.1.2 and earlier) - if you had a custom logger
+const logger = {
+  warn: (msg) => myLogger.warn(msg),
+  error: (msg) => myLogger.error(msg),
+};
+
+// After (v1.2.0+)
+const logger = {
+  debug: (msg) => myLogger.debug(msg), // Add this
+  info: (msg) => myLogger.info(msg), // Add this
+  warn: (msg) => myLogger.warn(msg),
+  error: (msg) => myLogger.error(msg),
+};
+```
+
+**Most users are unaffected:**
+
+- Users without a custom logger (using default `console`) - no changes needed
+- Users with `logger: false` - no changes needed
+- The default logger automatically handles all log levels
+
+### Example Usage
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Enable verbose logging for debugging
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+const model = gemini('gemini-2.5-flash', {
+  verbose: true, // Enable debug and info logging
+});
+
+// Use with custom logger
+const modelWithCustomLogger = gemini('gemini-2.5-flash', {
+  verbose: true,
+  logger: {
+    debug: (msg) => console.log(`[DEBUG] ${msg}`),
+    info: (msg) => console.log(`[INFO] ${msg}`),
+    warn: (msg) => console.warn(`[WARN] ${msg}`),
+    error: (msg) => console.error(`[ERROR] ${msg}`),
+  },
+});
+```
+
+## [1.1.2] - 2025-10-01
+
+### Fixed
+
+- **Multimodal Support**: Fixed image handling crash due to AI SDK v5 API change
+  - Updated `LanguageModelV2FilePart` property from `contentType` to `mediaType`
+  - Resolves critical issue preventing image attachments from working
+- **Import Style**: Changed to use `import type` for type-only imports for better tree-shaking
+
+### Added
+
+- **ToolChoice Support**: Complete implementation of AI SDK toolChoice functionality
+  - Added `mapGeminiToolConfig()` function to convert AI SDK toolChoice to Gemini format
+  - Proper `allowedFunctionNames` mapping when specific tool is forced
+  - Support for all toolChoice types: `auto`, `none`, `required`, `tool`
+- **Streaming Parity**: Added `toolConfig` to both `doGenerate` and `doStream` methods
+- **Test Coverage**: Added 5 comprehensive tests for `mapGeminiToolConfig` covering all toolChoice scenarios
+
+### Changed
+
+- **Dependency Update**: Updated `@google/gemini-cli-core` from 0.1.22 to 0.6.1
+  - Fully tested for backward compatibility
+  - All 205 tests passing
+  - All 12 examples verified working
+
+### Technical Details
+
+- Combines fixes from community PRs #16 (multimodal crash) and #17 (toolChoice support)
+- Enhanced with additional refinements, streaming parity, and comprehensive testing
+- No breaking changes - fully backward compatible
+
+## [1.1.1] - 2025-08-22
+
+### Fixed
+
+- **Critical OAuth Fix**: Added `isBrowserLaunchSuppressed()` config method to prevent crashes during OAuth authentication (LOGIN_WITH_GOOGLE)
+- **Compatibility**: Full compatibility with @google/gemini-cli-core@0.1.22
+  - Updated `generateContent` and `generateContentStream` to use UUID for `userPromptId` parameter
+  - Added third `sessionId` parameter to `createContentGenerator` call
+  - Pinned exact version `0.1.22` to prevent breaking changes from patch updates
+
+### Added
+
+- **Robust Proxy Pattern**: Enhanced config Proxy to handle multiple method patterns
+  - Supports `is*` methods (return false by default)
+  - Supports `has*` methods (return false by default)
+  - Existing `get*` methods with intelligent defaults based on naming
+- **Session Management**: Generate and cache stable session ID per provider instance for better telemetry correlation
+- **Comprehensive Documentation**: Added `docs/dependency-notes.md` explaining version pinning rationale and Proxy implementation
+
+### Changed
+
+- Improved type consistency for `authType` in config object
+- Updated tests to cover OAuth methods and Proxy behavior
+
+## [1.1.0] - 2025-08-18
+
+### Added
+
+- **Zod 4 Compatibility**: Added support for Zod v4 while maintaining backward compatibility with Zod v3
+  - Runtime detection automatically uses the appropriate conversion method
+  - Zod v3: Uses `zod-to-json-schema` package
+  - Zod v4: Uses native `z.toJSONSchema()` function
+  - Both versions listed in peerDependencies: `"^3.0.0 || ^4.0.0"`
+
+### Changed
+
+- Moved `zod` from dependencies to devDependencies to allow users to choose their version
+- Updated tool mapping to handle different JSON Schema outputs between Zod versions
+  - Union types: Arrays in v3 vs `anyOf` in v4
+
+### Technical Details
+
+- Added `convertZodToJsonSchema` function for runtime version detection
+- Tests updated to handle both Zod v3 and v4 union type representations
+- Maintained full compatibility with existing API
+
+## [1.0.1] - 2025-08-15
+
+### Changed
+
+- **Stable Release**: Vercel AI SDK v5 is now stable (no longer beta)
+- Updated all references from "v5-beta" to "v5"
+- Package marked as stable release
+
+### Fixed
+
+- Improved documentation clarity for abort signal limitations
+- Updated examples to reflect stable v5 API
+
+### Notes
+
+This is the stable release of v1.0.0-beta.1 with Vercel AI SDK v5 now being officially stable. No breaking changes from v1.0.0-beta.1.
+
+## [1.0.0-beta.1] - 2025-07-24
+
+### BREAKING CHANGES
+
+This version is compatible with Vercel AI SDK v5. For v4 compatibility, please use version 0.x.x.
+
+### Changed
+
+- **Provider Interface**: Migrated from `ProviderV1` to `ProviderV2` interface
+  - Updated `createGeminiProvider()` to return `ProviderV2` interface
+  - Provider now extends ProviderV2 base class
+
+- **Language Model**: Migrated from `LanguageModelV1` to `LanguageModelV2` interface
+  - Changed `specificationVersion` from 'v1' to 'v2'
+  - Updated response format to use v5 patterns
+  - Improved streaming implementation with promise-based responses
+
+- **Message Format**: Updated to v5 message format
+  - Messages now use `ModelMessage` types from v5
+  - Tool results integrated into message flow
+  - System messages properly supported
+
+- **Response Format**: Updated response structure
+  - Streaming now returns promise with stream properties
+  - Direct access to `result.text` and `result.usage`
+  - Improved token usage tracking
+
+- **Parameter Changes**: Updated parameter names
+  - `maxTokens` → `maxOutputTokens` in generation options
+  - Token usage: `promptTokens` → `inputTokens`, `completionTokens` → `outputTokens`
+
+- **Error Handling**: Enhanced error handling
+  - Proper AbortError support for AI SDK retry logic
+  - Better error mapping from Gemini errors
+  - Safety status mapping for blocked content
+
+### Added
+
+- Comprehensive abort signal support (with documented limitations)
+- New documentation structure in `docs/ai-sdk-v5/`
+  - BREAKING_CHANGES.md - Migration guide
+  - GUIDE.md - Comprehensive usage guide
+  - TROUBLESHOOTING.md - Common issues and solutions
+  - DEVELOPMENT_STATUS.md - Implementation status
+
+### Fixed
+
+- System message implementation now works correctly
+- Error handling for "Failed after 3 attempts" issue
+- Stream error simulation in examples
+- Progress indicators in long-running tasks example
+
+### Known Issues
+
+- Abort signals work but underlying gemini-cli-core doesn't support request cancellation
+- maxOutputTokens may cause empty responses with gemini-2.5-pro
+- Schema validation errors show misleading "could not parse" messages
+
+## [0.1.1] - 2025-01-20
+
+### Added
+
+- Compatibility with gemini-cli-core 0.1.12+ breaking changes
+- Comprehensive test suite with 98.85% coverage
+- GitHub Actions for automated testing
+
+### Fixed
+
+- Authentication type handling for new gemini-cli-core API
+- Error messages and types alignment
+
+## [0.1.0] - 2025-01-15
+
+### Added
+
+- Full support for Vercel AI SDK v4
+- OAuth authentication via Gemini CLI
+- API key authentication support
+- Comprehensive examples directory
+- Tool/function calling support
+- Multimodal support (text and images)
+- Streaming responses
+
+### Changed
+
+- Stable API for v4 compatibility
+- Improved error handling
+- Better TypeScript types
+
+## [0.0.4] - 2025-01-10
+
+### Fixed
+
+- Authentication configuration issues
+- Type definition exports
+
+## [0.0.3] - 2025-01-05
+
+### Added
+
+- System message support
+- Object generation with Zod schemas
+- More comprehensive examples
+
+### Fixed
+
+- Message mapping for complex conversations
+
+## [0.0.2] - 2025-06-28
+
+### BREAKING CHANGES
+
+- Removed pre-configured geminiProvider export
+- Users must now use createGeminiProvider() to create provider instances
+
+### Added
+
+- ESLint with modern flat config and TypeScript support
+- Vitest test suite with initial tests
+- Test coverage reporting (31.69% initial coverage)
+- Alpha warning badge to README
+
+### Changed
+
+- Simplified provider structure
+- Improved type safety throughout codebase
+
+### Fixed
+
+- TypeScript strict mode compliance issues
+
+## [0.0.1] - 2025-06-25
+
+### Added
+
+- Initial release
+- Basic text generation support
+- OAuth authentication via Gemini CLI
+- Streaming support
+- Basic error handling
+
+[1.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.1...v1.1.0
+[1.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v1.0.0-beta.1...v1.0.1
+[1.0.0-beta.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.1...v1.0.0-beta.1
+[0.1.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.1.0...v0.1.1
+[0.1.0]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.0.4...v0.1.0
+[0.0.4]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.0.3...v0.0.4
+[0.0.3]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.0.2...v0.0.3
+[0.0.2]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/compare/v0.0.1...v0.0.2
+[0.0.1]: https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/releases/tag/v0.0.1
+
+
+--- CONTRIBUTING.md ---
+# Contributing to AI SDK Provider for Gemini CLI
+
+Thank you for your interest in contributing! We welcome contributions from the community.
+
+## Getting Started
+
+1. Fork the repository
+2. Clone your fork: `git clone https://github.com/YOUR_USERNAME/ai-sdk-provider-gemini-cli.git`
+3. Install dependencies: `npm install`
+4. Build the project: `npm run build`
+5. Run examples to verify setup: `npm run example:check`
+
+## Development Workflow
+
+1. Create a feature branch: `git checkout -b feature/your-feature-name`
+2. Make your changes
+3. Run type checking: `npm run type-check`
+4. Build the project: `npm run build`
+5. Test your changes with examples
+6. Commit using conventional commits (e.g., `feat:`, `fix:`, `docs:`)
+
+## Pull Request Process
+
+1. Ensure your code follows the existing style
+2. Update documentation as needed
+3. Add examples if introducing new features
+4. Ensure all examples still work
+5. Submit a pull request with a clear description
+
+## Code Style
+
+- TypeScript for all source code
+- Follow existing patterns in the codebase
+- Use meaningful variable and function names
+- Add JSDoc comments for public APIs
+
+## Testing
+
+While we don't have unit tests yet, please:
+
+- Test your changes using the examples
+- Add new examples for new features
+- Run `npm run example:test` to verify integration
+
+## Reporting Issues
+
+- Use GitHub Issues for bug reports and feature requests
+- Provide clear reproduction steps for bugs
+- Include relevant error messages and logs
+
+## Questions?
+
+Feel free to open an issue for any questions about contributing.
+
+
+--- README.md ---
+<p align="center">
+  <img src="https://img.shields.io/badge/status-stable-00A79E" alt="stable status">
+  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm stable version" /></a>
+  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" /></a>
+  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" /></a>
+  <a href="https://nodejs.org/en/about/releases/"><img src="https://img.shields.io/badge/node-%3E%3D20-00A79E" alt="Node.js ≥ 20" /></a>
+  <a href="https://www.npmjs.com/package/ai-sdk-provider-gemini-cli"><img src="https://img.shields.io/npm/l/ai-sdk-provider-gemini-cli?color=00A79E" alt="License: MIT" /></a>
+  <a href="https://github.com/Piebald-AI/awesome-gemini-cli"><img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Gemini CLI" /></a>
+</p>
+
+# AI SDK Provider for Gemini CLI
+
+> **Stable Release**: This version is compatible with AI SDK v5. For AI SDK v4 support, use version 0.x.
+
+A community provider for the [Vercel AI SDK](https://sdk.vercel.ai/docs) that enables using Google's Gemini models through the [@google/gemini-cli-core](https://www.npmjs.com/package/@google/gemini-cli-core) library and Google Cloud Code endpoints.
+
+> **Note**: This provider includes robust compatibility measures for @google/gemini-cli-core, protecting against breaking changes in patch versions through intelligent proxy patterns and exact version pinning.
+
+## Version Compatibility
+
+| Provider Version | AI SDK Version | NPM Tag     | Status | Branch                                                                                 |
+| ---------------- | -------------- | ----------- | ------ | -------------------------------------------------------------------------------------- |
+| 1.x              | v5             | `latest`    | Stable | `main`                                                                                 |
+| 0.x              | v4             | `ai-sdk-v4` | Stable | [`ai-sdk-v4`](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/tree/ai-sdk-v4) |
+
+### Installing the Right Version
+
+**For AI SDK v5 (current, default):**
+
+```bash
+npm install ai-sdk-provider-gemini-cli ai
+```
+
+**For AI SDK v4 (legacy):**
+
+```bash
+npm install ai-sdk-provider-gemini-cli@ai-sdk-v4 ai@^4.3.16
+```
+
+## Disclaimer
+
+**This is an unofficial community provider** and is not affiliated with or endorsed by Google or Vercel. By using this provider:
+
+- You understand that your data will be sent to Google's servers through the Gemini CLI Core library
+- You agree to comply with [Google's Terms of Service](https://policies.google.com/terms)
+- You acknowledge this software is provided "as is" without warranties of any kind
+
+Please ensure you have appropriate permissions and comply with all applicable terms when using this provider.
+
+## Features
+
+- 🚀 Compatible with Vercel AI SDK (v4 and v5)
+- ☁️ Uses Google Cloud Code endpoints (https://cloudcode-pa.googleapis.com)
+- 🔄 Streaming support for real-time responses
+- 🛠️ Tool/function calling capabilities
+- 🖼️ Multimodal support (text and base64 images)
+- 🔐 OAuth authentication using Gemini CLI credentials
+- 📝 TypeScript support with full type safety
+- 🎯 Structured object generation with Zod schemas
+- 🐛 Comprehensive logging with verbose mode for debugging
+
+## Installation
+
+### 1. Install and set up the Gemini CLI
+
+```bash
+npm install -g @google/gemini-cli
+gemini  # Follow the interactive authentication setup
+```
+
+### 2. Add the provider
+
+```bash
+# For AI SDK v5 (current, default)
+npm install ai-sdk-provider-gemini-cli ai
+
+# For AI SDK v4 (legacy)
+npm install ai-sdk-provider-gemini-cli@ai-sdk-v4 ai@^4.3.16
+```
+
+## Quick Start
+
+### AI SDK v5
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Create provider with OAuth authentication
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const result = await generateText({
+  model: gemini('gemini-3-pro-preview'),
+  prompt: 'Write a haiku about coding',
+});
+
+console.log(result.content[0].text);
+```
+
+### AI SDK v4
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const { text } = await generateText({
+  model: gemini('gemini-3-pro-preview'),
+  prompt: 'Write a haiku about coding',
+});
+
+console.log(text);
+```
+
+## Breaking Changes in v1.x
+
+See [CHANGELOG.md](CHANGELOG.md) for details on migrating from v0.x to v1.x.
+
+Key changes:
+
+- Requires AI SDK v5
+- New response format with content arrays
+- Updated parameter names (maxTokens → maxOutputTokens)
+- New streaming API patterns
+- Updated token usage properties
+
+## Documentation
+
+- **[Examples](examples/)** - Comprehensive examples demonstrating all features
+- **[API Reference](docs/)** - Technical documentation and implementation details
+- **[Authentication Guide](docs/gemini-cli-auth-options.md)** - Detailed authentication options
+- **[Migration Guide](CHANGELOG.md)** - v0.x to v1.x migration guide
+
+## Examples
+
+The `examples/` directory contains comprehensive examples demonstrating all features:
+
+### Getting Started
+
+- `check-auth.mjs` - Verify your authentication setup
+- `basic-usage.mjs` - Simple text generation examples
+- `streaming.mjs` - Real-time streaming responses
+- `conversation-history.mjs` - Multi-turn conversations
+
+### Advanced Features
+
+- `generate-object-basic.mjs` - Structured output with Zod schemas
+- `generate-object-nested.mjs` - Complex nested data structures
+- `generate-object-constraints.mjs` - Data validation and constraints
+- `system-messages.mjs` - Control model behavior with system prompts
+- `error-handling.mjs` - Robust error handling patterns
+
+### Run Examples
+
+```bash
+# First build the project
+npm run build
+
+# Check authentication
+npm run example:check
+
+# Run basic examples
+npm run example:basic
+
+# Run all tests
+npm run example:test
+```
+
+See the [examples README](examples/README.md) for detailed documentation.
+
+## Authentication
+
+The provider uses OAuth authentication with Google Cloud Code endpoints:
+
+### OAuth Authentication (Recommended)
+
+```typescript
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+```
+
+This uses your existing Gemini CLI credentials from `~/.gemini/oauth_creds.json`. To set up authentication:
+
+```bash
+# Initial setup - follow interactive prompts
+gemini
+
+# Or change auth method inside CLI with slash command
+/auth
+```
+
+### API Key Authentication
+
+```typescript
+// Using AI SDK standard auth type (recommended)
+const gemini = createGeminiProvider({
+  authType: 'api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+
+// Alternative: Gemini-specific auth type
+const gemini = createGeminiProvider({
+  authType: 'gemini-api-key',
+  apiKey: process.env.GEMINI_API_KEY,
+});
+```
+
+Get your API key from [Google AI Studio](https://aistudio.google.com/apikey) and set it as an environment variable:
+
+```bash
+export GEMINI_API_KEY="your-api-key-here"
+```
+
+## Usage Examples
+
+### Text Generation
+
+\*\*AI SDK v5:
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const result = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Explain quantum computing in simple terms',
+  maxOutputTokens: 500,
+});
+
+console.log(result.content[0].text);
+console.log(`Tokens used: ${result.usage?.totalTokens}`);
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text, usage } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Explain quantum computing in simple terms',
+  maxTokens: 500,
+});
+
+console.log(text);
+console.log(`Tokens used: ${usage?.totalTokens}`);
+```
+
+### Streaming Responses
+
+```typescript
+import { streamText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const result = await streamText({
+  model: gemini('gemini-2.5-pro'),
+  prompt: 'Write a story about a robot learning to paint',
+});
+
+// v5: Access text stream
+for await (const chunk of result.textStream) {
+  process.stdout.write(chunk);
+}
+
+// v4: Same API for streaming
+```
+
+### Object Generation (Structured Output)
+
+```typescript
+import { generateObject } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { z } from 'zod';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const result = await generateObject({
+  model: gemini('gemini-2.5-pro'),
+  schema: z.object({
+    name: z.string().describe('Product name'),
+    price: z.number().describe('Price in USD'),
+    features: z.array(z.string()).describe('Key features'),
+  }),
+  prompt: 'Generate a laptop product listing',
+});
+
+console.log(result.object);
+```
+
+### System Messages
+
+\*\*AI SDK v5:
+
+```typescript
+import { generateText } from 'ai';
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+const result = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  system: 'You are a helpful coding assistant. Always include code examples.',
+  prompt: 'How do I read a file in Node.js?',
+});
+
+console.log(result.content[0].text);
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  system: 'You are a helpful coding assistant. Always include code examples.',
+  prompt: 'How do I read a file in Node.js?',
+});
+
+console.log(text);
+```
+
+### Conversation History
+
+\*\*AI SDK v5:
+
+```typescript
+const result = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  messages: [
+    { role: 'user', content: 'My name is Alice' },
+    { role: 'assistant', content: 'Nice to meet you, Alice!' },
+    { role: 'user', content: 'What is my name?' },
+  ],
+});
+
+console.log(result.content[0].text); // Should mention "Alice"
+```
+
+**AI SDK v4:**
+
+```typescript
+const { text } = await generateText({
+  model: gemini('gemini-2.5-pro'),
+  messages: [
+    { role: 'user', content: 'My name is Alice' },
+    { role: 'assistant', content: 'Nice to meet you, Alice!' },
+    { role: 'user', content: 'What is my name?' },
+  ],
+});
+
+console.log(text); // Should mention "Alice"
+```
+
+## Supported Models
+
+- **`gemini-3-pro-preview`** - Latest next-generation model with enhanced reasoning capabilities (Preview)
+- **`gemini-2.5-pro`** - Previous generation production-ready model (64K output tokens)
+- **`gemini-2.5-flash`** - Faster, efficient model (64K output tokens)
+
+**Note**: This provider uses Google Cloud Code endpoints, which may have different model availability and rate limits than the direct Gemini API. The provider defaults to 64K output tokens to take full advantage of Gemini 2.5's capabilities.
+
+## Configuration
+
+### Model Settings
+
+\*\*AI SDK v5:
+
+```typescript
+const model = gemini('gemini-2.5-pro', {
+  // Standard AI SDK v5 parameters:
+  temperature: 0.7,
+  maxOutputTokens: 1000,
+  topP: 0.95,
+});
+```
+
+**AI SDK v4:**
+
+```typescript
+const model = gemini('gemini-2.5-pro', {
+  // Standard AI SDK v4 parameters:
+  temperature: 0.7,
+  maxTokens: 1000,
+  topP: 0.95,
+});
+```
+
+### Logging Configuration
+
+Control how the provider logs execution information, warnings, and errors. The logger supports multiple log levels and a verbose mode for detailed debugging.
+
+#### Log Levels
+
+The provider supports four log levels:
+
+- **`debug`**: Detailed execution tracing (request/response, token usage, timing)
+- **`info`**: General execution flow information (request completion, duration)
+- **`warn`**: Warnings about configuration issues or unexpected behavior
+- **`error`**: Error messages for failures and exceptions
+
+#### Basic Configuration
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+
+// Default: logs warnings and errors to console
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+// Disable all logging
+const model = gemini('gemini-2.5-flash', {
+  logger: false,
+});
+
+// Custom logger - must implement all four log levels
+const customModel = gemini('gemini-2.5-flash', {
+  logger: {
+    debug: (message) => myLogger.debug('Gemini:', message),
+    info: (message) => myLogger.info('Gemini:', message),
+    warn: (message) => myLogger.warn('Gemini:', message),
+    error: (message) => myLogger.error('Gemini:', message),
+  },
+});
+```
+
+#### Verbose Mode (Debug Logging)
+
+Enable verbose mode to see detailed execution logs, including:
+
+- Request/response tracing
+- Message conversion details
+- Token usage (input, output, total)
+- Request duration and timing
+- Finish reasons
+
+**Without verbose mode** (default), only `warn` and `error` messages are logged.
+**With verbose mode enabled**, `debug` and `info` messages are also logged.
+
+```typescript
+import { createGeminiProvider } from 'ai-sdk-provider-gemini-cli';
+import { generateText } from 'ai';
+
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+});
+
+// Enable verbose logging for debugging
+const model = gemini('gemini-2.5-flash', {
+  verbose: true, // Enable debug and info logging
+});
+
+const result = await generateText({
+  model,
+  prompt: 'Hello!',
+});
+```
+
+#### Custom Logger with Verbose Mode
+
+```typescript
+const model = gemini('gemini-2.5-flash', {
+  verbose: true,
+  logger: {
+    debug: (msg) => console.log(`[DEBUG] ${msg}`),
+    info: (msg) => console.log(`[INFO] ${msg}`),
+    warn: (msg) => console.warn(`[WARN] ${msg}`),
+    error: (msg) => console.error(`[ERROR] ${msg}`),
+  },
+});
+```
+
+#### What Gets Logged in Verbose Mode
+
+With `verbose: true`, you'll see detailed execution logs:
+
+```
+[DEBUG] Starting doGenerate request with model: gemini-2.5-flash
+[DEBUG] Request mode: regular, response format: none
+[DEBUG] Converted 2 messages
+[DEBUG] Executing generateContent request
+[INFO] Request completed - Duration: 1523ms
+[DEBUG] Token usage - Input: 245, Output: 128, Total: 373
+[DEBUG] Finish reason: stop
+```
+
+For streaming requests:
+
+```
+[DEBUG] Starting doStream request with model: gemini-2.5-flash
+[DEBUG] Stream mode: regular, response format: none
+[DEBUG] Converted 2 messages for streaming
+[DEBUG] Starting generateContentStream request
+[DEBUG] Stream started, processing chunks
+[INFO] Stream completed - Duration: 2341ms
+[DEBUG] Stream token usage - Input: 512, Output: 256, Total: 768
+[DEBUG] Stream finish reason: stop
+[DEBUG] Stream finalized, closing stream
+```
+
+#### Logger Options
+
+- `undefined` (default): Uses `console.debug`, `console.info`, `console.warn`, and `console.error`
+- `false`: Disables all logging
+- Custom `Logger` object: Must implement `debug`, `info`, `warn`, and `error` methods
+
+### Provider Options
+
+```typescript
+const gemini = createGeminiProvider({
+  authType: 'oauth-personal',
+  // Uses ~/.gemini/oauth_creds.json by default
+});
+```
+
+## Key Features
+
+This provider uses Google's Cloud Code endpoints through the Gemini CLI Core library:
+
+- 🔐 Secure OAuth authentication
+- ☁️ Access to Google Cloud Code models
+- 🚀 Core Vercel AI SDK features
+- 📊 Structured output with JSON schemas
+- 🔄 Streaming support for real-time responses
+
+## Limitations
+
+- Requires Node.js ≥ 20
+- OAuth authentication requires the Gemini CLI to be installed globally
+- Rate limits may vary from the direct Gemini API
+- Very strict character length constraints in schemas may be challenging for the model
+- Image URLs not supported (use base64-encoded images)
+- Some AI SDK parameters not supported: `frequencyPenalty`, `presencePenalty`, `seed`
+- Only function tools supported (no provider-defined tools)
+- **Abort signals have limited support**: While the provider correctly handles abort signals and throws `AbortError`, the underlying `gemini-cli-core` does not support request cancellation. This means aborted requests will continue running in the background until completion, though the provider will throw an `AbortError` as soon as it detects the abort signal
+
+## Contributing
+
+Contributions are welcome! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## License
+
+MIT - see [LICENSE](LICENSE) for details.
+
+
+## Links discovered
+- [Vercel AI SDK](https://sdk.vercel.ai/docs)
+- [@google/gemini-cli-core](https://www.npmjs.com/package/@google/gemini-cli-core)
+- [`ai-sdk-v4`](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/tree/ai-sdk-v4)
+- [Google's Terms of Service](https://policies.google.com/terms)
+- [CHANGELOG.md](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//CHANGELOG.md)
+- [Examples](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//examples/)
+- [API Reference](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//docs/)
+- [Authentication Guide](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//docs/gemini-cli-auth-options.md)
+- [Migration Guide](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//CHANGELOG.md)
+- [examples README](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//examples/README.md)
+- [Google AI Studio](https://aistudio.google.com/apikey)
+- [Contributing Guide](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//CONTRIBUTING.md)
+- [LICENSE](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main//LICENSE)
+- [<img src="https://img.shields.io/npm/v/ai-sdk-provider-gemini-cli?color=00A79E" alt="npm stable version" />](https://www.npmjs.com/package/ai-sdk-provider-gemini-cli)
+- [<img src="https://img.shields.io/npm/unpacked-size/ai-sdk-provider-gemini-cli?color=00A79E" alt="install size" />](https://www.npmjs.com/package/ai-sdk-provider-gemini-cli)
+- [<img src="https://img.shields.io/npm/dy/ai-sdk-provider-gemini-cli.svg?color=00A79E" alt="npm downloads" />](https://www.npmjs.com/package/ai-sdk-provider-gemini-cli)
+- [<img src="https://img.shields.io/badge/node-%3E%3D20-00A79E" alt="Node.js ≥ 20" />](https://nodejs.org/en/about/releases/)
+- [<img src="https://img.shields.io/npm/l/ai-sdk-provider-gemini-cli?color=00A79E" alt="License: MIT" />](https://www.npmjs.com/package/ai-sdk-provider-gemini-cli)
+- [<img src="https://awesome.re/mentioned-badge.svg" alt="Mentioned in Awesome Gemini CLI" />](https://github.com/Piebald-AI/awesome-gemini-cli)
+
+--- eslint.config.js ---
+import eslint from '@eslint/js';
+import tseslint from 'typescript-eslint';
+import globals from 'globals';
+
+export default tseslint.config(
+  // Base configurations
+  eslint.configs.recommended,
+  ...tseslint.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked,
+
+  // Global ignores
+  {
+    ignores: ['dist/**', 'node_modules/**', 'resources/**', '*.config.js', '*.config.ts']
+  },
+
+  // TypeScript parser options
+  {
+    languageOptions: {
+      parserOptions: {
+        project: './tsconfig.eslint.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  // Source files - strict rules
+  {
+    files: ['src/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+      '@typescript-eslint/await-thenable': 'error',
+      '@typescript-eslint/no-misused-promises': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_'
+      }],
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+
+  // Logger file - allow all console methods for logger implementation
+  {
+    files: ['src/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
+
+  // Test files - relaxed rules
+  {
+    files: ['**/*.test.ts', '**/*.spec.ts'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        // Vitest globals
+        describe: 'readonly',
+        it: 'readonly',
+        expect: 'readonly',
+        beforeEach: 'readonly',
+        afterEach: 'readonly',
+        beforeAll: 'readonly',
+        afterAll: 'readonly',
+        vi: 'readonly',
+      },
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/unbound-method': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', { 
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_'
+      }],
+      'no-console': 'off',
+    },
+  },
+
+  // Example files - relaxed rules
+  {
+    files: ['examples/**/*.ts', 'examples/**/*.mjs'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+    },
+    rules: {
+      'no-console': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+    },
+  },
+);
+
+--- tsup.config.ts ---
+import { defineConfig } from 'tsup';
+
+export default defineConfig({
+  entry: ['src/index.ts'],
+  format: ['esm', 'cjs'],
+  dts: true,
+  sourcemap: true,
+  clean: true,
+  shims: true,
+  external: [
+    '@ai-sdk/provider',
+    '@ai-sdk/provider-utils',
+    '@google/gemini-cli-core',
+    'zod'
+  ],
+  minify: false,
+  tsconfig: './tsconfig.build.json',
+  outExtension({ format }) {
+    return {
+      js: format === 'esm' ? '.mjs' : '.js',
+    };
+  },
+});
+
+--- vitest.config.ts ---
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['src/**/*.{test,spec}.{js,ts,jsx,tsx}'],
+    exclude: ['node_modules', 'dist', 'resources'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: [
+        'node_modules/**',
+        'dist/**',
+        'examples/**',
+        '**/*.test.ts',
+        '**/*.spec.ts',
+        'src/__tests__/**',
+        '*.config.ts',
+        '*.config.js',
+      ],
+    },
+  },
+});
+
+--- src/client.ts ---
+import { randomUUID } from 'node:crypto';
+import type {
+  ContentGenerator,
+  ContentGeneratorConfig,
+} from '@google/gemini-cli-core';
+import {
+  createContentGenerator,
+  createContentGeneratorConfig,
+  AuthType,
+} from '@google/gemini-cli-core';
+import type { GeminiProviderOptions } from './types';
+
+export interface GeminiClient {
+  client: ContentGenerator;
+  config: ContentGeneratorConfig;
+  sessionId: string;
+}
+
+/**
+ * Initializes the Gemini client with the provided authentication options
+ */
+export async function initializeGeminiClient(
+  options: GeminiProviderOptions,
+  modelId: string
+): Promise<GeminiClient> {
+  // Map our auth types to Gemini CLI Core auth types
+  let authType: AuthType | undefined;
+
+  if (options.authType === 'api-key' || options.authType === 'gemini-api-key') {
+    authType = AuthType.USE_GEMINI;
+  } else if (options.authType === 'vertex-ai') {
+    authType = AuthType.USE_VERTEX_AI;
+  } else if (
+    options.authType === 'oauth' ||
+    options.authType === 'oauth-personal'
+  ) {
+    authType = AuthType.LOGIN_WITH_GOOGLE;
+  } else if (options.authType === 'google-auth-library') {
+    // Google Auth Library is not directly supported by AuthType enum
+    // We'll need to handle this differently or use a default
+    authType = AuthType.USE_GEMINI;
+  }
+
+  // Generate a stable session ID for this provider instance
+  const sessionId = randomUUID();
+
+  // Phase 1: Core config methods with safe defaults
+  const baseConfig = {
+    // Required methods (currently working)
+    getModel: () => modelId,
+    getProxy: () =>
+      options.proxy ||
+      process.env.HTTP_PROXY ||
+      process.env.HTTPS_PROXY ||
+      undefined,
+    getUsageStatisticsEnabled: () => false, // Disable telemetry by default
+    getContentGeneratorConfig: () => ({
+      authType: authType, // Keep as AuthType | undefined for consistency
+      model: modelId,
+      apiKey: 'apiKey' in options ? options.apiKey : undefined,
+      vertexai: options.authType === 'vertex-ai' ? true : undefined,
+      proxy: options.proxy,
+    }),
+
+    // Core safety methods - most likely to be called
+    getSessionId: () => sessionId,
+    getDebugMode: () => false,
+    getTelemetryEnabled: () => false,
+    getTargetDir: () => process.cwd(),
+    getFullContext: () => false,
+    getIdeMode: () => false,
+    getCoreTools: () => [],
+    getExcludeTools: () => [],
+    getMaxSessionTurns: () => 100,
+    getFileFilteringRespectGitIgnore: () => true,
+
+    // OAuth-specific methods (required for LOGIN_WITH_GOOGLE auth)
+    isBrowserLaunchSuppressed: () => false, // Allow browser launch for OAuth flow
+  };
+
+  // Phase 2: Proxy wrapper to catch any unknown method calls
+  const configMock = new Proxy(baseConfig, {
+    get(target, prop) {
+      if (prop in target) {
+        return target[prop as keyof typeof target];
+      }
+
+      // Log unknown method calls (helps identify what else might be needed)
+      if (typeof prop === 'string') {
+        // Handle different method patterns
+        if (
+          prop.startsWith('get') ||
+          prop.startsWith('is') ||
+          prop.startsWith('has')
+        ) {
+          if (process.env.DEBUG) {
+            console.warn(
+              `[ai-sdk-provider-gemini-cli] Unknown config method called: ${prop}()`
+            );
+          }
+
+          // Return safe defaults based on method prefix and naming patterns
+          return () => {
+            // Boolean methods (is*, has*)
+            if (prop.startsWith('is') || prop.startsWith('has')) {
+              return false; // Safe default for boolean checks
+            }
+
+            // Getter methods (get*)
+            if (prop.startsWith('get')) {
+              // Return undefined for most unknown methods (safest default)
+              if (prop.includes('Enabled') || prop.includes('Mode')) {
+                return false; // Booleans default to false
+              }
+              if (
+                prop.includes('Registry') ||
+                prop.includes('Client') ||
+                prop.includes('Service')
+              ) {
+                return undefined; // Objects/services default to undefined
+              }
+              if (prop.includes('Config') || prop.includes('Options')) {
+                return {}; // Config objects default to empty
+              }
+              if (prop.includes('Command') || prop.includes('Path')) {
+                return undefined; // Strings default to undefined
+              }
+              return undefined; // Default fallback
+            }
+
+            return undefined; // Fallback for any other pattern
+          };
+        }
+      }
+
+      return undefined;
+    },
+  });
+
+  // Create the configuration
+  const config = await createContentGeneratorConfig(
+    configMock as unknown as Parameters<typeof createContentGeneratorConfig>[0],
+    authType
+  );
+
+  // Apply additional configuration based on auth type
+  if (
+    (options.authType === 'api-key' || options.authType === 'gemini-api-key') &&
+    options.apiKey
+  ) {
+    config.apiKey = options.apiKey;
+  } else if (options.authType === 'vertex-ai' && options.vertexAI) {
+    config.vertexai = true;
+    // Note: Vertex AI project/location configuration might need to be
+    // handled through environment variables or other means
+  }
+
+  // Create content generator - pass the configMock as the second parameter and sessionId
+  const client = await createContentGenerator(
+    config,
+    configMock as unknown as Parameters<typeof createContentGenerator>[1],
+    sessionId
+  );
+
+  return { client, config, sessionId };
+}
+
+
+--- src/error.ts ---
+import { APICallError, LoadAPIKeyError } from '@ai-sdk/provider';
+
+/**
+ * Custom error metadata for Gemini CLI errors
+ */
+export interface GeminiCLIErrorMetadata {
+  code?: string;
+  exitCode?: number;
+  stderr?: string;
+  promptExcerpt?: string;
+}
+
+/**
+ * Creates an API call error with Gemini-specific metadata
+ */
+export function createAPICallError({
+  message,
+  code,
+  exitCode,
+  stderr,
+  promptExcerpt,
+  isRetryable = false,
+  statusCode = 500,
+}: GeminiCLIErrorMetadata & {
+  message: string;
+  isRetryable?: boolean;
+  statusCode?: number;
+}): APICallError {
+  return new APICallError({
+    url: 'gemini-cli-core://command',
+    requestBodyValues: promptExcerpt ? { prompt: promptExcerpt } : {},
+    statusCode,
+    responseHeaders: {},
+    message,
+    data: {
+      code,
+      exitCode,
+      stderr,
+    },
+    isRetryable,
+  });
+}
+
+/**
+ * Creates an authentication error
+ */
+export function createAuthenticationError({
+  message,
+}: {
+  message: string;
+}): LoadAPIKeyError {
+  return new LoadAPIKeyError({
+    message,
+  });
+}
+
+/**
+ * Creates a timeout error
+ */
+export function createTimeoutError({
+  message,
+  promptExcerpt,
+}: {
+  message: string;
+  promptExcerpt?: string;
+}): APICallError {
+  return createAPICallError({
+    message,
+    code: 'TIMEOUT',
+    promptExcerpt,
+    isRetryable: true,
+    statusCode: 504,
+  });
+}
+
+/**
+ * Checks if an error is an authentication error
+ */
+export function isAuthenticationError(error: unknown): boolean {
+  if (error instanceof LoadAPIKeyError) {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return (
+      message.includes('unauthorized') ||
+      message.includes('authentication') ||
+      message.includes('api key') ||
+      message.includes('credentials')
+    );
+  }
+
+  return false;
+}
+
+/**
+ * Checks if an error is a timeout error
+ */
+export function isTimeoutError(error: unknown): boolean {
+  if (error instanceof APICallError) {
+    return (
+      error.statusCode === 504 ||
+      (error.data as GeminiCLIErrorMetadata)?.code === 'TIMEOUT'
+    );
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return message.includes('timeout') || message.includes('timed out');
+  }
+
+  return false;
+}
+
+/**
+ * Gets error metadata from an error
+ */
+export function getErrorMetadata(
+  error: unknown
+): GeminiCLIErrorMetadata | undefined {
+  if (error instanceof APICallError) {
+    return error.data as GeminiCLIErrorMetadata;
+  }
+
+  return undefined;
+}
+
+/**
+ * Maps Gemini errors to Vercel AI SDK errors (v5 pattern)
+ */
+export function mapGeminiError(error: unknown): APICallError | LoadAPIKeyError {
+  if (error instanceof Error) {
+    // Don't wrap abort errors - they should pass through unchanged
+    if (error.name === 'AbortError') {
+      throw error;
+    }
+
+    const message = error.message.toLowerCase();
+
+    // Check for authentication errors
+    if (isAuthenticationError(error)) {
+      return createAuthenticationError({
+        message: error.message,
+      });
+    }
+
+    // Check for rate limit errors
+    if (message.includes('rate limit') || message.includes('quota')) {
+      return createAPICallError({
+        message: error.message,
+        code: 'RATE_LIMIT',
+        isRetryable: true,
+        statusCode: 429,
+      });
+    }
+
+    // Check for timeout errors
+    if (isTimeoutError(error)) {
+      return createTimeoutError({
+        message: error.message,
+      });
+    }
+
+    // Check for model not found (check this before general invalid errors)
+    if (
+      message.includes('not found') ||
+      message.includes('no such model') ||
+      (message.includes('model') &&
+        (message.includes('invalid') || message.includes('not found')))
+    ) {
+      return createAPICallError({
+        message: error.message,
+        code: 'MODEL_NOT_FOUND',
+        isRetryable: false,
+        statusCode: 404,
+      });
+    }
+
+    // Check for invalid request errors
+    if (message.includes('invalid') || message.includes('bad request')) {
+      return createAPICallError({
+        message: error.message,
+        code: 'INVALID_REQUEST',
+        isRetryable: false,
+        statusCode: 400,
+      });
+    }
+
+    // Default to internal server error
+    return createAPICallError({
+      message: error.message,
+      code: 'INTERNAL_ERROR',
+      isRetryable: true,
+      statusCode: 500,
+    });
+  }
+
+  // Unknown error type
+  return createAPICallError({
+    message: 'An unknown error occurred',
+    code: 'UNKNOWN_ERROR',
+    isRetryable: true,
+    statusCode: 500,
+  });
+}
+
+
+--- src/gemini-language-model.ts ---
+import { randomUUID } from 'node:crypto';
+import type {
+  LanguageModelV2,
+  LanguageModelV2CallOptions,
+  LanguageModelV2CallWarning,
+  LanguageModelV2FinishReason,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2StreamPart,
+  LanguageModelV2Content,
+  LanguageModelV2Usage,
+} from '@ai-sdk/provider';
+import type {
+  ContentGenerator,
+  ContentGeneratorConfig,
+} from '@google/gemini-cli-core';
+import type {
+  GenerateContentParameters,
+  GenerateContentConfig,
+} from '@google/genai';
+import { initializeGeminiClient } from './client';
+import { mapPromptToGeminiFormat } from './message-mapper';
+import { mapGeminiToolConfig, mapToolsToGeminiFormat } from './tool-mapper';
+import { mapGeminiError } from './error';
+import type { GeminiProviderOptions, Logger } from './types';
+import { getLogger, createVerboseLogger } from './logger';
+
+export interface GeminiLanguageModelOptions {
+  modelId: string;
+  providerOptions: GeminiProviderOptions;
+  settings?: Record<string, unknown> & {
+    logger?: Logger | false;
+    verbose?: boolean;
+  };
+}
+
+/**
+ * Map Gemini finish reasons to Vercel AI SDK finish reasons
+ */
+function mapGeminiFinishReason(
+  geminiReason?: string
+): LanguageModelV2FinishReason {
+  switch (geminiReason) {
+    case 'STOP':
+      return 'stop';
+    case 'MAX_TOKENS':
+      return 'length';
+    case 'SAFETY':
+    case 'RECITATION':
+      return 'content-filter';
+    case 'OTHER':
+      return 'other';
+    default:
+      return 'unknown';
+  }
+}
+
+/**
+ * Prepare generation config with proper handling for JSON mode.
+ *
+ * When JSON response format is requested WITHOUT a schema, we downgrade to
+ * text/plain and emit a warning. This aligns with Claude-code provider behavior
+ * and prevents raw fenced JSON from leaking to clients.
+ *
+ * When a schema IS provided, we use native responseJsonSchema for structured output.
+ */
+function prepareGenerationConfig(
+  options: LanguageModelV2CallOptions,
+  settings?: Record<string, unknown>
+): {
+  generationConfig: GenerateContentConfig;
+  warnings: LanguageModelV2CallWarning[];
+} {
+  const warnings: LanguageModelV2CallWarning[] = [];
+
+  // Extract schema if JSON mode with schema is requested
+  const responseFormat = options.responseFormat;
+  const isJsonMode = responseFormat?.type === 'json';
+  const schema = isJsonMode ? responseFormat.schema : undefined;
+  const hasSchema = isJsonMode && schema !== undefined;
+
+  // JSON without schema: downgrade to text/plain with warning
+  if (isJsonMode && !hasSchema) {
+    warnings.push({
+      type: 'unsupported-setting',
+      setting: 'responseFormat',
+      details:
+        'JSON response format without a schema is not supported. Treating as plain text. Provide a schema for structured output.',
+    });
+  }
+
+  const generationConfig: GenerateContentConfig = {
+    temperature:
+      options.temperature ?? (settings?.temperature as number | undefined),
+    topP: options.topP ?? (settings?.topP as number | undefined),
+    topK: options.topK ?? (settings?.topK as number | undefined),
+    maxOutputTokens:
+      options.maxOutputTokens ??
+      (settings?.maxOutputTokens as number | undefined),
+    stopSequences: options.stopSequences,
+    // Only use application/json when we have a schema to enforce it
+    responseMimeType: hasSchema ? 'application/json' : 'text/plain',
+    // Pass schema directly to Gemini API for native structured output
+    responseJsonSchema: hasSchema ? schema : undefined,
+    toolConfig: mapGeminiToolConfig(options),
+  };
+
+  return { generationConfig, warnings };
+}
+
+export class GeminiLanguageModel implements LanguageModelV2 {
+  readonly specificationVersion = 'v2' as const;
+  readonly provider = 'gemini-cli-core';
+  readonly defaultObjectGenerationMode = 'json' as const;
+  readonly supportsImageUrls = false; // CLI Core uses base64 data, not URLs
+  readonly supportedUrls = {}; // No native URL support
+  readonly supportsStructuredOutputs = true; // Native Gemini responseJsonSchema support
+
+  private contentGenerator?: ContentGenerator;
+  private config?: ContentGeneratorConfig;
+  private initPromise?: Promise<void>;
+
+  readonly modelId: string;
+  readonly settings?: Record<string, unknown>;
+  private providerOptions: GeminiProviderOptions;
+  private logger: Logger;
+
+  constructor(options: GeminiLanguageModelOptions) {
+    this.modelId = options.modelId;
+    this.providerOptions = options.providerOptions;
+    this.settings = options.settings;
+
+    // Create logger that respects verbose setting
+    const baseLogger = getLogger(options.settings?.logger);
+    this.logger = createVerboseLogger(
+      baseLogger,
+      options.settings?.verbose ?? false
+    );
+  }
+
+  private async ensureInitialized(): Promise<{
+    contentGenerator: ContentGenerator;
+    config: ContentGeneratorConfig;
+  }> {
+    if (this.contentGenerator && this.config) {
+      return { contentGenerator: this.contentGenerator, config: this.config };
+    }
+
+    if (!this.initPromise) {
+      this.initPromise = this.initialize();
+    }
+
+    await this.initPromise;
+    return { contentGenerator: this.contentGenerator!, config: this.config! };
+  }
+
+  private async initialize(): Promise<void> {
+    try {
+      const { client, config } = await initializeGeminiClient(
+        this.providerOptions,
+        this.modelId
+      );
+      this.contentGenerator = client;
+      this.config = config;
+    } catch (error) {
+      throw new Error(`Failed to initialize Gemini model: ${String(error)}`);
+    }
+  }
+
+  /**
+   * Non-streaming generation method
+   */
+  async doGenerate(options: LanguageModelV2CallOptions): Promise<{
+    content: LanguageModelV2Content[];
+    finishReason: LanguageModelV2FinishReason;
+    usage: LanguageModelV2Usage;
+    rawCall: {
+      rawPrompt: unknown;
+      rawSettings: Record<string, unknown>;
+    };
+    rawResponse?: {
+      body?: unknown;
+    };
+    response?: {
+      id?: string;
+      timestamp?: Date;
+      modelId?: string;
+    };
+    warnings: LanguageModelV2CallWarning[];
+  }> {
+    this.logger.debug(
+      `[gemini-cli] Starting doGenerate request with model: ${this.modelId}`
+    );
+
+    try {
+      const { contentGenerator } = await this.ensureInitialized();
+
+      // Map the prompt to Gemini format
+      const { contents, systemInstruction } = mapPromptToGeminiFormat(options);
+
+      this.logger.debug(
+        `[gemini-cli] Request mode: ${options.responseFormat?.type === 'json' ? 'object-json' : 'regular'}, response format: ${options.responseFormat?.type ?? 'none'}`
+      );
+
+      this.logger.debug(
+        `[gemini-cli] Converted ${options.prompt.length} messages`
+      );
+
+      // Prepare generation config with proper JSON mode handling
+      // (downgrades to text/plain with warning if JSON requested without schema)
+      const { generationConfig, warnings } = prepareGenerationConfig(
+        options,
+        this.settings
+      );
+
+      // Map tools if provided in regular mode
+      let tools;
+      if (options.tools) {
+        // Filter to only function tools (not provider-defined tools)
+        const functionTools = options.tools.filter(
+          (tool): tool is LanguageModelV2FunctionTool =>
+            tool.type === 'function'
+        );
+        if (functionTools.length > 0) {
+          tools = mapToolsToGeminiFormat(functionTools);
+        }
+      }
+
+      // Create the request parameters
+      const request: GenerateContentParameters = {
+        model: this.modelId,
+        contents,
+        config: {
+          ...generationConfig,
+          systemInstruction: systemInstruction,
+          tools: tools,
+        },
+      };
+
+      // Set up abort handling
+      let abortListener: (() => void) | undefined;
+      if (options.abortSignal) {
+        // Check if already aborted
+        if (options.abortSignal.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+
+        // Set up listener for abort signal
+        // LIMITATION: The gemini-cli-core library doesn't expose request cancellation
+        // We can only check abort status before/after the request, not cancel in-flight
+        abortListener = () => {
+          // Track abort state - actual cancellation happens via status checks
+        };
+        options.abortSignal.addEventListener('abort', abortListener, {
+          once: true,
+        });
+      }
+
+      // Generate content (new signature requires userPromptId)
+      let response;
+      const startTime = Date.now();
+      try {
+        this.logger.debug('[gemini-cli] Executing generateContent request');
+
+        response = await contentGenerator.generateContent(
+          request,
+          randomUUID()
+        );
+
+        const duration = Date.now() - startTime;
+        this.logger.info(
+          `[gemini-cli] Request completed - Duration: ${duration}ms`
+        );
+
+        // Check if aborted during generation
+        if (options.abortSignal?.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+      } finally {
+        // Clean up abort listener
+        if (options.abortSignal && abortListener) {
+          options.abortSignal.removeEventListener('abort', abortListener);
+        }
+      }
+
+      // Extract the result
+      const candidate = response.candidates?.[0];
+      const responseContent = candidate?.content;
+
+      // Build content array for v2 format
+      const content: LanguageModelV2Content[] = [];
+
+      if (responseContent?.parts) {
+        for (const part of responseContent.parts) {
+          if (part.text) {
+            // With native responseJsonSchema, the output is already clean JSON
+            content.push({
+              type: 'text',
+              text: part.text,
+            });
+          } else if (part.functionCall) {
+            content.push({
+              type: 'tool-call',
+              toolCallId: randomUUID(),
+              toolName: part.functionCall.name || '',
+              input: JSON.stringify(part.functionCall.args || {}),
+            } as LanguageModelV2Content);
+          }
+        }
+      }
+
+      // Calculate token usage
+      const inputTokens = response.usageMetadata?.promptTokenCount || 0;
+      const outputTokens = response.usageMetadata?.candidatesTokenCount || 0;
+      const totalTokens = inputTokens + outputTokens;
+
+      const usage: LanguageModelV2Usage = {
+        inputTokens,
+        outputTokens,
+        totalTokens,
+      };
+
+      this.logger.debug(
+        `[gemini-cli] Token usage - Input: ${inputTokens}, Output: ${outputTokens}, Total: ${totalTokens}`
+      );
+
+      const finishReason = mapGeminiFinishReason(candidate?.finishReason);
+      this.logger.debug(`[gemini-cli] Finish reason: ${finishReason}`);
+
+      return {
+        content,
+        finishReason,
+        usage,
+        rawCall: {
+          rawPrompt: { contents, systemInstruction, generationConfig, tools },
+          rawSettings: generationConfig as Record<string, unknown>,
+        },
+        rawResponse: {
+          body: response,
+        },
+        response: {
+          id: randomUUID(),
+          timestamp: new Date(),
+          modelId: this.modelId,
+        },
+        warnings,
+      };
+    } catch (error) {
+      this.logger.debug(
+        `[gemini-cli] Error during doGenerate: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw mapGeminiError(error);
+    }
+  }
+
+  /**
+   * Streaming generation method
+   */
+  async doStream(options: LanguageModelV2CallOptions): Promise<{
+    stream: ReadableStream<LanguageModelV2StreamPart>;
+    rawCall: {
+      rawPrompt: unknown;
+      rawSettings: Record<string, unknown>;
+    };
+  }> {
+    this.logger.debug(
+      `[gemini-cli] Starting doStream request with model: ${this.modelId}`
+    );
+
+    try {
+      const { contentGenerator } = await this.ensureInitialized();
+
+      // Map the prompt to Gemini format
+      const { contents, systemInstruction } = mapPromptToGeminiFormat(options);
+
+      this.logger.debug(
+        `[gemini-cli] Stream mode: ${options.responseFormat?.type === 'json' ? 'object-json' : 'regular'}, response format: ${options.responseFormat?.type ?? 'none'}`
+      );
+
+      this.logger.debug(
+        `[gemini-cli] Converted ${options.prompt.length} messages for streaming`
+      );
+
+      // Prepare generation config with proper JSON mode handling
+      // (downgrades to text/plain with warning if JSON requested without schema)
+      const { generationConfig, warnings } = prepareGenerationConfig(
+        options,
+        this.settings
+      );
+
+      // Map tools if provided in regular mode
+      let tools;
+      if (options.tools) {
+        // Filter to only function tools (not provider-defined tools)
+        const functionTools = options.tools.filter(
+          (tool): tool is LanguageModelV2FunctionTool =>
+            tool.type === 'function'
+        );
+        if (functionTools.length > 0) {
+          tools = mapToolsToGeminiFormat(functionTools);
+        }
+      }
+
+      // Create the request parameters
+      const request: GenerateContentParameters = {
+        model: this.modelId,
+        contents,
+        config: {
+          ...generationConfig,
+          systemInstruction: systemInstruction,
+          tools: tools,
+        },
+      };
+
+      // Set up abort handling
+      let abortListener: (() => void) | undefined;
+      if (options.abortSignal) {
+        // Check if already aborted
+        if (options.abortSignal.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+
+        // Set up listener for abort signal
+        // LIMITATION: The gemini-cli-core library doesn't expose stream cancellation
+        // We can only check abort status during iteration, not cancel the underlying stream
+        abortListener = () => {
+          // Track abort state - actual cancellation happens via status checks
+        };
+        options.abortSignal.addEventListener('abort', abortListener, {
+          once: true,
+        });
+      }
+
+      // Create streaming response (new signature requires userPromptId)
+      let streamResponse;
+      try {
+        this.logger.debug(
+          '[gemini-cli] Starting generateContentStream request'
+        );
+
+        streamResponse = await contentGenerator.generateContentStream(
+          request,
+          randomUUID()
+        );
+
+        // Check if aborted during stream creation
+        if (options.abortSignal?.aborted) {
+          const abortError = new Error('Request aborted');
+          abortError.name = 'AbortError';
+          throw abortError;
+        }
+      } catch (error) {
+        // Clean up abort listener on error
+        if (options.abortSignal && abortListener) {
+          options.abortSignal.removeEventListener('abort', abortListener);
+        }
+        throw error;
+      }
+
+      // Capture modelId, logger, and warnings for use in stream
+      const modelId = this.modelId;
+      const logger = this.logger;
+      const streamWarnings = warnings;
+
+      // Transform the stream to AI SDK v5 format
+      const stream = new ReadableStream<LanguageModelV2StreamPart>({
+        async start(controller) {
+          try {
+            // Check for abort signal in stream
+            if (options.abortSignal?.aborted) {
+              const abortError = new Error('Request aborted');
+              abortError.name = 'AbortError';
+              controller.error(abortError);
+              return;
+            }
+            let totalInputTokens = 0;
+            let totalOutputTokens = 0;
+
+            // Emit stream-start event with any warnings
+            controller.enqueue({
+              type: 'stream-start',
+              warnings: streamWarnings,
+            });
+
+            const streamStartTime = Date.now();
+            logger.debug('[gemini-cli] Stream started, processing chunks');
+
+            for await (const chunk of streamResponse) {
+              // Check if aborted during streaming
+              if (options.abortSignal?.aborted) {
+                const abortError = new Error('Request aborted');
+                abortError.name = 'AbortError';
+                controller.error(abortError);
+                break;
+              }
+
+              const candidate = chunk.candidates?.[0];
+              const content = candidate?.content;
+
+              // Update token counts if available
+              if (chunk.usageMetadata) {
+                totalInputTokens = chunk.usageMetadata.promptTokenCount || 0;
+                totalOutputTokens =
+                  chunk.usageMetadata.candidatesTokenCount || 0;
+              }
+
+              if (content?.parts) {
+                for (const part of content.parts) {
+                  if (part.text) {
+                    // With native responseJsonSchema, stream text directly
+                    // (output is already clean JSON when schema is provided)
+                    controller.enqueue({
+                      type: 'text-delta',
+                      id: randomUUID(),
+                      delta: part.text,
+                    });
+                  } else if (part.functionCall) {
+                    // Emit tool call as a single event
+                    controller.enqueue({
+                      type: 'tool-call',
+                      toolCallId: randomUUID(),
+                      toolName: part.functionCall.name || '',
+                      input: JSON.stringify(part.functionCall.args || {}),
+                    });
+                  }
+                }
+              }
+
+              if (candidate?.finishReason) {
+                const duration = Date.now() - streamStartTime;
+                logger.info(
+                  `[gemini-cli] Stream completed - Duration: ${duration}ms`
+                );
+
+                logger.debug(
+                  `[gemini-cli] Stream token usage - Input: ${totalInputTokens}, Output: ${totalOutputTokens}, Total: ${totalInputTokens + totalOutputTokens}`
+                );
+
+                const finishReason = mapGeminiFinishReason(
+                  candidate.finishReason
+                );
+                logger.debug(
+                  `[gemini-cli] Stream finish reason: ${finishReason}`
+                );
+
+                // Emit response metadata
+                controller.enqueue({
+                  type: 'response-metadata',
+                  id: randomUUID(),
+                  timestamp: new Date(),
+                  modelId: modelId,
+                });
+
+                // Emit finish event
+                controller.enqueue({
+                  type: 'finish',
+                  finishReason,
+                  usage: {
+                    inputTokens: totalInputTokens,
+                    outputTokens: totalOutputTokens,
+                    totalTokens: totalInputTokens + totalOutputTokens,
+                  },
+                });
+              }
+            }
+
+            logger.debug('[gemini-cli] Stream finalized, closing stream');
+            controller.close();
+          } catch (error) {
+            logger.debug(
+              `[gemini-cli] Error during doStream: ${error instanceof Error ? error.message : String(error)}`
+            );
+            controller.error(mapGeminiError(error));
+          } finally {
+            // Clean up abort listener
+            if (options.abortSignal && abortListener) {
+              options.abortSignal.removeEventListener('abort', abortListener);
+            }
+          }
+        },
+        cancel: () => {
+          // Clean up abort listener on cancel
+          if (options.abortSignal && abortListener) {
+            options.abortSignal.removeEventListener('abort', abortListener);
+          }
+        },
+      });
+
+      return {
+        stream,
+        rawCall: {
+          rawPrompt: { contents, systemInstruction, generationConfig, tools },
+          rawSettings: generationConfig as Record<string, unknown>,
+        },
+      };
+    } catch (error) {
+      this.logger.debug(
+        `[gemini-cli] Error creating stream: ${error instanceof Error ? error.message : String(error)}`
+      );
+      throw mapGeminiError(error);
+    }
+  }
+}
+
+
+--- src/gemini-provider.ts ---
+import type {
+  ProviderV2,
+  LanguageModelV2,
+  EmbeddingModelV2,
+  ImageModelV2,
+} from '@ai-sdk/provider';
+import { NoSuchModelError } from '@ai-sdk/provider';
+import { GeminiLanguageModel } from './gemini-language-model';
+import type { GeminiProviderOptions } from './types';
+import { validateAuthOptions } from './validation';
+
+export interface GeminiProvider extends ProviderV2 {
+  (modelId: string, settings?: Record<string, unknown>): LanguageModelV2;
+  languageModel(
+    modelId: string,
+    settings?: Record<string, unknown>
+  ): LanguageModelV2;
+  chat(modelId: string, settings?: Record<string, unknown>): LanguageModelV2;
+  textEmbeddingModel(modelId: string): EmbeddingModelV2<string>;
+  imageModel(modelId: string): ImageModelV2;
+}
+
+/**
+ * Creates a new Gemini provider instance.
+ *
+ * @param options - Configuration options for the provider
+ * @returns A configured provider function
+ * @throws Error if authentication options are invalid
+ *
+ * @example
+ * ```typescript
+ * // Using API key authentication
+ * const gemini = createGeminiProvider({
+ *   authType: 'gemini-api-key',
+ *   apiKey: process.env.GEMINI_API_KEY
+ * });
+ *
+ * // Use with Vercel AI SDK
+ * const model = gemini('gemini-1.5-flash');
+ * const result = await generateText({
+ *   model,
+ *   prompt: 'Hello, world!'
+ * });
+ * ```
+ */
+export function createGeminiProvider(
+  options: GeminiProviderOptions = {}
+): GeminiProvider {
+  // Validate authentication options
+  const validatedOptions = validateAuthOptions(options);
+
+  // Create the language model factory function
+  const createLanguageModel = (
+    modelId: string,
+    settings?: Record<string, unknown>
+  ) => {
+    return new GeminiLanguageModel({
+      modelId,
+      providerOptions: validatedOptions,
+      settings: {
+        maxOutputTokens: 65536, // 64K output tokens for Gemini 2.5 models
+        ...settings,
+      },
+    });
+  };
+
+  // Create the provider function
+  const provider = Object.assign(
+    function (modelId: string, settings?: Record<string, unknown>) {
+      if (new.target) {
+        throw new Error(
+          'The provider function cannot be called with the new keyword.'
+        );
+      }
+
+      return createLanguageModel(modelId, settings);
+    },
+    {
+      languageModel: createLanguageModel,
+      chat: createLanguageModel,
+      textEmbeddingModel: (modelId: string): never => {
+        throw new NoSuchModelError({
+          modelId,
+          modelType: 'textEmbeddingModel',
+          message: `Gemini provider does not support text embedding models.`,
+        });
+      },
+      imageModel: (modelId: string): never => {
+        throw new NoSuchModelError({
+          modelId,
+          modelType: 'imageModel',
+          message: `Gemini provider does not support image models.`,
+        });
+      },
+    }
+  ) as GeminiProvider;
+
+  return provider;
+}
+
+
+--- src/index.ts ---
+// Main exports
+export { createGeminiProvider } from './gemini-provider';
+
+// Type exports
+export type { GeminiProvider } from './gemini-provider';
+export type { GeminiProviderOptions, Logger } from './types';
+
+// Legacy compatibility exports (for backward compatibility)
+export { createGeminiProvider as createGeminiCliCoreProvider } from './gemini-provider';
+export type { GeminiProvider as GeminiCliCoreProvider } from './gemini-provider';
+export type { GeminiProviderOptions as GeminiCliCoreProviderOptions } from './types';
+
+// Re-export types from AI SDK for convenience
+export type {
+  LanguageModelV2,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2ToolCall,
+  LanguageModelV2FinishReason,
+  LanguageModelV2CallOptions,
+  LanguageModelV2CallWarning,
+  LanguageModelV2StreamPart,
+  LanguageModelV2Content,
+  LanguageModelV2Usage,
+  ProviderV2,
+} from '@ai-sdk/provider';
+
+
+--- src/logger.ts ---
+import type { Logger } from './types.js';
+
+/**
+ * Default logger that uses console with level tags.
+ */
+const defaultLogger: Logger = {
+  debug: (message: string) => console.debug(`[DEBUG] ${message}`),
+  info: (message: string) => console.info(`[INFO] ${message}`),
+  warn: (message: string) => console.warn(`[WARN] ${message}`),
+  error: (message: string) => console.error(`[ERROR] ${message}`),
+};
+
+/**
+ * No-op logger that discards all messages.
+ */
+const noopLogger: Logger = {
+  debug: () => {},
+  info: () => {},
+  warn: () => {},
+  error: () => {},
+};
+
+/**
+ * Gets the appropriate logger instance based on the provided option.
+ *
+ * @param logger - Logger configuration: undefined (default console), false (no logging), or custom Logger
+ * @returns Logger instance to use for all logging operations
+ */
+export function getLogger(logger: Logger | false | undefined): Logger {
+  if (logger === false) {
+    return noopLogger;
+  }
+
+  if (logger === undefined) {
+    return defaultLogger;
+  }
+
+  return logger;
+}
+
+/**
+ * Creates a verbose-aware logger that only logs debug/info when verbose is enabled.
+ * Warn and error are always logged regardless of verbose setting.
+ *
+ * When verbose is false (default), debug and info calls are suppressed.
+ * When verbose is true, all log levels are passed through to the underlying logger.
+ *
+ * @param logger - The underlying logger to wrap
+ * @param verbose - Whether to enable verbose (debug/info) logging. Defaults to false.
+ * @returns A logger that filters debug/info based on verbose mode
+ *
+ * @example
+ * ```typescript
+ * const baseLogger = getLogger(undefined); // console logger
+ * const verboseLogger = createVerboseLogger(baseLogger, true);
+ *
+ * verboseLogger.debug('This will be logged');
+ * verboseLogger.info('This will be logged');
+ * verboseLogger.warn('Always logged');
+ * verboseLogger.error('Always logged');
+ * ```
+ */
+export function createVerboseLogger(
+  logger: Logger,
+  verbose: boolean = false
+): Logger {
+  if (verbose) {
+    // When verbose is enabled, pass through all log levels
+    return logger;
+  }
+
+  // When verbose is disabled, suppress debug and info, but keep warn and error
+  return {
+    debug: () => {}, // Suppressed in non-verbose mode
+    info: () => {}, // Suppressed in non-verbose mode
+    warn: logger.warn.bind(logger),
+    error: logger.error.bind(logger),
+  };
+}
+
+
+--- src/message-mapper.ts ---
+import type {
+  LanguageModelV2CallOptions,
+  LanguageModelV2FilePart,
+  LanguageModelV2Message,
+} from '@ai-sdk/provider';
+import type { Content, Part } from '@google/genai';
+
+export interface GeminiPromptResult {
+  contents: Content[];
+  systemInstruction?: Content;
+}
+
+/**
+ * Maps Vercel AI SDK messages to Gemini format
+ *
+ * Note: Schema is now passed directly via responseJsonSchema in the generation config,
+ * so we no longer inject schema instructions into the prompt.
+ */
+export function mapPromptToGeminiFormat(
+  options: LanguageModelV2CallOptions
+): GeminiPromptResult {
+  const messages = options.prompt;
+  const contents: Content[] = [];
+  let systemInstruction: Content | undefined;
+
+  for (const message of messages) {
+    switch (message.role) {
+      case 'system':
+        // Gemini uses a separate systemInstruction field
+        systemInstruction = {
+          role: 'user',
+          parts: [{ text: message.content }],
+        };
+        break;
+
+      case 'user':
+        contents.push(mapUserMessage(message));
+        break;
+
+      case 'assistant':
+        contents.push(mapAssistantMessage(message));
+        break;
+
+      case 'tool': {
+        // Tool results in v5 are part of tool messages
+        const parts: Part[] = [];
+        for (const part of message.content) {
+          if (part.type === 'tool-result') {
+            parts.push({
+              functionResponse: {
+                name: part.toolName,
+                response: (typeof part.output === 'string'
+                  ? { result: part.output }
+                  : part.output) as Record<string, unknown>,
+              },
+            });
+          }
+        }
+        contents.push({
+          role: 'user',
+          parts,
+        });
+        break;
+      }
+    }
+  }
+
+  return { contents, systemInstruction };
+}
+
+/**
+ * Maps a user message to Gemini format
+ */
+function mapUserMessage(
+  message: LanguageModelV2Message & { role: 'user' }
+): Content {
+  const parts: Part[] = [];
+
+  for (const part of message.content) {
+    switch (part.type) {
+      case 'text':
+        parts.push({ text: part.text });
+        break;
+
+      case 'file': {
+        // Handle file parts (images, etc.)
+        const mediaType = part.mediaType || 'application/octet-stream';
+        if (mediaType.startsWith('image/')) {
+          parts.push(mapImagePart(part));
+        } else {
+          throw new Error(`Unsupported file type: ${mediaType}`);
+        }
+        break;
+      }
+    }
+  }
+
+  return { role: 'user', parts };
+}
+
+/**
+ * Maps an assistant message to Gemini format
+ */
+function mapAssistantMessage(
+  message: LanguageModelV2Message & { role: 'assistant' }
+): Content {
+  const parts: Part[] = [];
+
+  for (const part of message.content) {
+    switch (part.type) {
+      case 'text':
+        parts.push({ text: part.text });
+        break;
+
+      case 'tool-call':
+        // In v5, tool calls have input as an object already
+        parts.push({
+          functionCall: {
+            name: part.toolName,
+            args: (part.input || {}) as Record<string, unknown>,
+          },
+        });
+        break;
+    }
+  }
+
+  return { role: 'model', parts };
+}
+
+/**
+ * Maps an image part to Gemini format
+ */
+function mapImagePart(part: LanguageModelV2FilePart): Part {
+  if (part.data instanceof URL) {
+    throw new Error(
+      'URL images are not supported by Gemini CLI Core. Please provide base64-encoded image data.'
+    );
+  }
+
+  // Extract mime type and base64 data
+  const mimeType = part.mediaType || 'image/jpeg';
+  let base64Data: string;
+
+  if (typeof part.data === 'string') {
+    // Already base64 encoded
+    base64Data = part.data;
+  } else if (part.data instanceof Uint8Array) {
+    // Convert Uint8Array to base64
+    base64Data = Buffer.from(part.data).toString('base64');
+  } else {
+    throw new Error('Unsupported image format');
+  }
+
+  return {
+    inlineData: {
+      mimeType,
+      data: base64Data,
+    },
+  };
+}
+
+
+--- src/tool-mapper.ts ---
+import type {
+  LanguageModelV2CallOptions,
+  LanguageModelV2FunctionTool,
+  LanguageModelV2ToolChoice,
+} from '@ai-sdk/provider';
+import {
+  Tool,
+  FunctionDeclaration,
+  Schema,
+  ToolConfig,
+  FunctionCallingConfigMode,
+} from '@google/genai';
+import { z } from 'zod';
+
+// Type for JSON Schema objects with common properties
+interface JsonSchemaObject {
+  $schema?: string;
+  $ref?: string;
+  $defs?: unknown;
+  definitions?: unknown;
+  properties?: Record<string, unknown>;
+  items?: unknown;
+  additionalProperties?: unknown;
+  allOf?: unknown[];
+  anyOf?: unknown[];
+  oneOf?: unknown[];
+  [key: string]: unknown;
+}
+
+/**
+ * Maps Vercel AI SDK tools to Gemini format
+ */
+export function mapToolsToGeminiFormat(
+  tools: LanguageModelV2FunctionTool[]
+): Tool[] {
+  const functionDeclarations: FunctionDeclaration[] = [];
+
+  for (const tool of tools) {
+    functionDeclarations.push({
+      name: tool.name,
+      description: tool.description,
+      parameters: convertToolParameters(tool.inputSchema),
+    });
+  }
+
+  return [{ functionDeclarations }];
+}
+
+/**
+ * Attempts to convert a Zod schema to JSON Schema using available methods
+ */
+function convertZodToJsonSchema(zodSchema: z.ZodSchema): unknown {
+  // Try Zod v4's native toJSONSchema function first (if available)
+  const zodWithToJSONSchema = z as unknown as {
+    toJSONSchema?: (schema: z.ZodSchema) => unknown;
+  };
+
+  if (
+    zodWithToJSONSchema.toJSONSchema &&
+    typeof zodWithToJSONSchema.toJSONSchema === 'function'
+  ) {
+    try {
+      // Zod v4 uses z.toJSONSchema(schema) as a standalone function
+      return zodWithToJSONSchema.toJSONSchema(zodSchema);
+    } catch {
+      // Method exists but failed, try fallback
+    }
+  }
+
+  // Try zod-to-json-schema for Zod v3 compatibility
+  try {
+    // Lazy load zod-to-json-schema to avoid import errors with Zod v4
+    // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
+    const zodToJsonSchemaModule = require('zod-to-json-schema');
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+    return zodToJsonSchemaModule.zodToJsonSchema(zodSchema);
+  } catch {
+    // zod-to-json-schema not available or not compatible
+  }
+
+  // No conversion method available
+  console.warn(
+    'Unable to convert Zod schema to JSON Schema. ' +
+      'For Zod v3, install zod-to-json-schema. ' +
+      'For Zod v4, use z.toJSONSchema() function.'
+  );
+
+  // Return a basic object schema as fallback
+  return { type: 'object' };
+}
+
+/**
+ * Converts tool parameters from Zod schema or JSON schema to Gemini format
+ */
+function convertToolParameters(parameters: unknown): Schema {
+  // If it's already a plain object (JSON schema), clean it
+  if (isJsonSchema(parameters)) {
+    return cleanJsonSchema(parameters as JsonSchemaObject) as Schema;
+  }
+
+  // If it's a Zod schema, convert to JSON schema first
+  if (isZodSchema(parameters)) {
+    const jsonSchema = convertZodToJsonSchema(parameters as z.ZodSchema);
+    return cleanJsonSchema(jsonSchema as JsonSchemaObject) as Schema;
+  }
+
+  // Return a basic schema if we can't identify the format
+  return parameters as Schema;
+}
+
+/**
+ * Checks if an object is a JSON schema
+ */
+function isJsonSchema(obj: unknown): boolean {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    ('type' in obj || 'properties' in obj || '$schema' in obj)
+  );
+}
+
+/**
+ * Checks if an object is a Zod schema
+ */
+function isZodSchema(obj: unknown): obj is z.ZodTypeAny {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    '_def' in obj &&
+    typeof (obj as z.ZodTypeAny)._def === 'object'
+  );
+}
+
+/**
+ * Cleans JSON schema for Gemini compatibility
+ * Removes $schema and other metadata that Gemini doesn't support
+ */
+function cleanJsonSchema(schema: JsonSchemaObject): JsonSchemaObject {
+  if (typeof schema !== 'object' || schema === null) {
+    return schema;
+  }
+
+  const cleaned = { ...schema };
+
+  // Remove $schema property
+  delete cleaned.$schema;
+  delete cleaned.$ref;
+  delete cleaned.$defs;
+  delete cleaned.definitions;
+
+  // Recursively clean nested schemas
+  if (cleaned.properties && typeof cleaned.properties === 'object') {
+    const cleanedProps: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(cleaned.properties)) {
+      cleanedProps[key] = cleanJsonSchema(value as JsonSchemaObject);
+    }
+    cleaned.properties = cleanedProps;
+  }
+
+  if (cleaned.items) {
+    cleaned.items = cleanJsonSchema(cleaned.items as JsonSchemaObject);
+  }
+
+  if (
+    cleaned.additionalProperties &&
+    typeof cleaned.additionalProperties === 'object'
+  ) {
+    cleaned.additionalProperties = cleanJsonSchema(
+      cleaned.additionalProperties as JsonSchemaObject
+    );
+  }
+
+  // Clean arrays
+  for (const key of ['allOf', 'anyOf', 'oneOf'] as const) {
+    const arrayProp = cleaned[key];
+    if (Array.isArray(arrayProp)) {
+      cleaned[key] = arrayProp.map((item) =>
+        cleanJsonSchema(item as JsonSchemaObject)
+      );
+    }
+  }
+
+  return cleaned;
+}
+
+/**
+ * Maps Vercel AI SDK tool config options to Gemini format
+ */
+export function mapGeminiToolConfig(
+  options: LanguageModelV2CallOptions
+): ToolConfig | undefined {
+  if (options.toolChoice) {
+    // Restrict allowed function names when a specific tool is forced.
+    // Gemini expects that when forcing a tool call, the function name is
+    // provided via `allowedFunctionNames` while `mode` is set to ANY.
+    const allowedFunctionNames =
+      options.toolChoice.type === 'tool'
+        ? [options.toolChoice.toolName]
+        : undefined;
+
+    return {
+      functionCallingConfig: {
+        allowedFunctionNames,
+        mode: mapToolChoiceToGeminiFormat(options.toolChoice),
+      },
+    };
+  }
+  return undefined;
+}
+
+function mapToolChoiceToGeminiFormat(
+  toolChoice: LanguageModelV2ToolChoice
+): FunctionCallingConfigMode {
+  switch (toolChoice.type) {
+    case 'auto':
+      return FunctionCallingConfigMode.AUTO;
+    case 'none':
+      return FunctionCallingConfigMode.NONE;
+    case 'required':
+    case 'tool':
+      return FunctionCallingConfigMode.ANY;
+    default:
+      // this should never happen if types are correct
+      return FunctionCallingConfigMode.MODE_UNSPECIFIED;
+  }
+}
+
+
+--- src/types.ts ---
+import type { GoogleAuth } from 'google-auth-library';
+
+/**
+ * Base options available for all authentication types
+ */
+export interface BaseProviderOptions {
+  /**
+   * HTTP proxy URL to use for requests
+   * Can also be set via HTTP_PROXY or HTTPS_PROXY environment variables
+   */
+  proxy?: string;
+}
+
+/**
+ * Provider options for configuring Gemini authentication and behavior
+ */
+export type GeminiProviderOptions =
+  | (GeminiApiKeyAuth & BaseProviderOptions)
+  | (VertexAIAuth & BaseProviderOptions)
+  | (OAuthAuth & BaseProviderOptions)
+  | (GoogleAuthLibraryAuth & BaseProviderOptions)
+  | ({ authType?: undefined } & BaseProviderOptions);
+
+/**
+ * Gemini API key authentication (supports both AI SDK standard and Gemini-specific auth types)
+ */
+export interface GeminiApiKeyAuth {
+  authType: 'api-key' | 'gemini-api-key';
+  apiKey?: string;
+}
+
+/**
+ * Vertex AI authentication
+ */
+export interface VertexAIAuth {
+  authType: 'vertex-ai';
+  vertexAI: {
+    projectId: string;
+    location: string;
+    apiKey?: string;
+  };
+}
+
+/**
+ * OAuth authentication (personal or service account)
+ */
+export interface OAuthAuth {
+  authType: 'oauth' | 'oauth-personal';
+  cacheDir?: string;
+}
+
+/**
+ * Google Auth Library authentication
+ */
+export interface GoogleAuthLibraryAuth {
+  authType: 'google-auth-library';
+  googleAuth?: GoogleAuth;
+  googleAuthClient?: unknown; // For backward compatibility
+}
+
+/**
+ * Logger interface for provider diagnostics and debugging.
+ *
+ * Supports four log levels:
+ * - `debug`: Detailed execution tracing (request/response, tool calls, stream events)
+ * - `info`: General execution flow information (session initialization, completion)
+ * - `warn`: Warnings about configuration issues or unexpected behavior
+ * - `error`: Error messages for failures and exceptions
+ *
+ * When implementing a custom logger, all four methods must be provided.
+ *
+ * @example
+ * ```typescript
+ * const customLogger: Logger = {
+ *   debug: (msg) => myLogger.debug(msg),
+ *   info: (msg) => myLogger.info(msg),
+ *   warn: (msg) => myLogger.warn(msg),
+ *   error: (msg) => myLogger.error(msg),
+ * };
+ * ```
+ */
+export interface Logger {
+  /**
+   * Log detailed execution tracing (only shown when verbose mode is enabled).
+   * Used for request/response details, tool calls, stream events, and token usage.
+   */
+  debug(message: string): void;
+
+  /**
+   * Log general execution flow information (only shown when verbose mode is enabled).
+   * Used for session initialization, request completion, and major state transitions.
+   */
+  info(message: string): void;
+
+  /**
+   * Log warnings about configuration issues or unexpected behavior.
+   * Always shown regardless of verbose mode setting.
+   */
+  warn(message: string): void;
+
+  /**
+   * Log error messages for failures and exceptions.
+   * Always shown regardless of verbose mode setting.
+   */
+  error(message: string): void;
+}
+
+
+--- src/validation.ts ---
+import type { GeminiProviderOptions } from './types';
+
+/**
+ * Validates the authentication options for the Gemini provider.
+ * Ensures that the provided configuration has valid authentication credentials.
+ *
+ * @param options - The provider options to validate
+ * @returns The validated options
+ * @throws Error if authentication configuration is invalid
+ */
+export function validateAuthOptions(
+  options: GeminiProviderOptions = {}
+): GeminiProviderOptions {
+  // Default to oauth-personal if no authType specified
+  const authType = options.authType || 'oauth-personal';
+
+  // Validate based on auth type
+  switch (authType) {
+    case 'api-key':
+    case 'gemini-api-key':
+      if (!('apiKey' in options) || !options.apiKey) {
+        throw new Error(`API key is required for ${authType} auth type`);
+      }
+      return { ...options, authType };
+
+    case 'vertex-ai':
+      if ('vertexAI' in options && options.vertexAI) {
+        if (
+          !options.vertexAI.projectId ||
+          options.vertexAI.projectId.trim() === ''
+        ) {
+          throw new Error('Project ID is required for vertex-ai auth type');
+        }
+        if (
+          !options.vertexAI.location ||
+          options.vertexAI.location.trim() === ''
+        ) {
+          throw new Error('Location is required for vertex-ai auth type');
+        }
+      } else {
+        throw new Error(
+          'Vertex AI configuration is required for vertex-ai auth type'
+        );
+      }
+      return { ...options, authType };
+
+    case 'oauth':
+    case 'oauth-personal':
+      // No additional validation needed for oauth
+      return { ...options, authType };
+
+    case 'google-auth-library':
+      if (!('googleAuth' in options) || !options.googleAuth) {
+        throw new Error(
+          'Google Auth Library instance is required for google-auth-library auth type'
+        );
+      }
+      return { ...options, authType };
+
+    default:
+      throw new Error(`Invalid auth type: ${String(authType)}`);
+  }
+}

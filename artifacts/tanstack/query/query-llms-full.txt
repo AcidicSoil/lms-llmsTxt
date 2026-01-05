@@ -1,0 +1,3208 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/framework/angular/installation.md ---
+---
+id: installation
+title: Installation
+---
+
+> IMPORTANT: This library is currently in an experimental stage. This means that breaking changes will happen in minor AND patch releases. Upgrade carefully. If you use this in production while in experimental stage, please lock your version to a patch-level version to avoid unexpected breaking changes.
+
+### NPM
+
+_Angular Query is compatible with Angular v16 and higher_
+
+```bash
+npm i @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+pnpm add @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+yarn add @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+bun add @tanstack/angular-query-experimental
+```
+
+> Wanna give it a spin before you download? Try out the [simple](./examples/simple) or [basic](./examples/basic) examples!
+
+
+## Links discovered
+- [simple](https://github.com/tanstack/query/blob/main/docs/framework/angular/examples/simple.md)
+- [basic](https://github.com/tanstack/query/blob/main/docs/framework/angular/examples/basic.md)
+
+--- docs/framework/react/installation.md ---
+---
+id: installation
+title: Installation
+---
+
+You can install React Query via [NPM](https://npmjs.com/),
+or a good ol' `<script>` via
+[ESM.sh](https://esm.sh/).
+
+### NPM
+
+```bash
+npm i @tanstack/react-query
+```
+
+or
+
+```bash
+pnpm add @tanstack/react-query
+```
+
+or
+
+```bash
+yarn add @tanstack/react-query
+```
+
+or
+
+```bash
+bun add @tanstack/react-query
+```
+
+React Query is compatible with React v18+ and works with ReactDOM and React Native.
+
+> Wanna give it a spin before you download? Try out the [simple](./examples/simple) or [basic](./examples/basic) examples!
+
+### CDN
+
+If you're not using a module bundler or package manager, you can also use this library via an ESM-compatible CDN such as [ESM.sh](https://esm.sh/). Simply add a `<script type="module">` tag to the bottom of your HTML file:
+
+```html
+<script type="module">
+  import React from 'https://esm.sh/react@18.2.0'
+  import ReactDOM from 'https://esm.sh/react-dom@18.2.0'
+  import { QueryClient } from 'https://esm.sh/@tanstack/react-query'
+</script>
+```
+
+> You can find instructions on how to use React without JSX [here](https://react.dev/reference/react/createElement#creating-an-element-without-jsx).
+
+### Requirements
+
+React Query is optimized for modern browsers. It is compatible with the following browsers config
+
+```
+Chrome >= 91
+Firefox >= 90
+Edge >= 91
+Safari >= 15
+iOS >= 15
+Opera >= 77
+```
+
+> Depending on your environment, you might need to add polyfills. If you want to support older browsers, you need to transpile the library from `node_modules` yourselves.
+
+### Recommendations
+
+It is recommended to also use our [ESLint Plugin Query](../../eslint/eslint-plugin-query.md) to help you catch bugs and inconsistencies while you code. You can install it via:
+
+```bash
+npm i -D @tanstack/eslint-plugin-query
+```
+
+or
+
+```bash
+pnpm add -D @tanstack/eslint-plugin-query
+```
+
+or
+
+```bash
+yarn add -D @tanstack/eslint-plugin-query
+```
+
+or
+
+```bash
+bun add -D @tanstack/eslint-plugin-query
+```
+
+
+## Links discovered
+- [NPM](https://npmjs.com/)
+- [ESM.sh](https://esm.sh/)
+- [simple](https://github.com/tanstack/query/blob/main/docs/framework/react/examples/simple.md)
+- [basic](https://github.com/tanstack/query/blob/main/docs/framework/react/examples/basic.md)
+- [here](https://react.dev/reference/react/createElement#creating-an-element-without-jsx)
+- [ESLint Plugin Query](https://github.com/tanstack/query/blob/main/docs/eslint/eslint-plugin-query.md)
+
+--- docs/framework/solid/installation.md ---
+---
+id: installation
+title: Installation
+---
+
+You can install Solid Query via [NPM](https://npmjs.com/),
+or a good ol' `<script>` via
+[ESM.sh](https://esm.sh/).
+
+### NPM
+
+```bash
+npm i @tanstack/solid-query
+```
+
+or
+
+```bash
+pnpm add @tanstack/solid-query
+```
+
+or
+
+```bash
+yarn add @tanstack/solid-query
+```
+
+or
+
+```bash
+bun add @tanstack/solid-query
+```
+
+> Wanna give it a spin before you download? Try out the [simple](./examples/simple) or [basic](./examples/basic) examples!
+
+### CDN
+
+If you're not using a module bundler or package manager, you can also use this library via an ESM-compatible CDN such as [ESM.sh](https://esm.sh/). Simply add a `<script type="module">` tag to the bottom of your HTML file:
+
+```html
+<script type="module">
+  import { QueryClient } from 'https://esm.sh/@tanstack/solid-query'
+</script>
+```
+
+### Requirements
+
+Solid Query is optimized for modern browsers. It is compatible with the following browsers config
+
+```
+Chrome >= 91
+Firefox >= 90
+Edge >= 91
+Safari >= 15
+iOS >= 15
+Opera >= 77
+```
+
+> Depending on your environment, you might need to add polyfills. If you want to support older browsers, you need to transpile the library from `node_modules` yourselves.
+
+
+## Links discovered
+- [NPM](https://npmjs.com/)
+- [ESM.sh](https://esm.sh/)
+- [simple](https://github.com/tanstack/query/blob/main/docs/framework/solid/examples/simple.md)
+- [basic](https://github.com/tanstack/query/blob/main/docs/framework/solid/examples/basic.md)
+
+--- docs/framework/svelte/installation.md ---
+---
+id: installation
+title: Installation
+---
+
+You can install Svelte Query via [NPM](https://npmjs.com).
+
+### NPM
+
+```bash
+npm i @tanstack/svelte-query
+```
+
+or
+
+```bash
+pnpm add @tanstack/svelte-query
+```
+
+or
+
+```bash
+yarn add @tanstack/svelte-query
+```
+
+or
+
+```bash
+bun add @tanstack/svelte-query
+```
+
+> Wanna give it a spin before you download? Try out the [basic](./examples/basic) example!
+
+
+## Links discovered
+- [NPM](https://npmjs.com)
+- [basic](https://github.com/tanstack/query/blob/main/docs/framework/svelte/examples/basic.md)
+
+--- docs/framework/vue/installation.md ---
+---
+id: installation
+title: Installation
+---
+
+You can install Vue Query via [NPM](https://npmjs.com).
+
+### NPM
+
+```bash
+npm i @tanstack/vue-query
+```
+
+or
+
+```bash
+pnpm add @tanstack/vue-query
+```
+
+or
+
+```bash
+yarn add @tanstack/vue-query
+```
+
+or
+
+```bash
+bun add @tanstack/vue-query
+```
+
+> Wanna give it a spin before you download? Try out the [basic](./examples/basic) example!
+
+Vue Query is compatible with Vue 2.x and 3.x
+
+> If you are using Vue 2.6, make sure to also setup [@vue/composition-api](https://github.com/vuejs/composition-api)
+
+### Vue Query Initialization
+
+Before using Vue Query, you need to initialize it using `VueQueryPlugin`
+
+```tsx
+import { VueQueryPlugin } from '@tanstack/vue-query'
+
+app.use(VueQueryPlugin)
+```
+
+### Use of Composition API with `<script setup>`
+
+All examples in our documentation use [`<script setup>`](https://staging.vuejs.org/api/sfc-script-setup.html) syntax.
+
+Vue 2 users can also use that syntax using [this plugin](https://github.com/antfu/unplugin-vue2-script-setup). Please check the plugin documentation for installation details.
+
+If you are not a fan of `<script setup>` syntax, you can easily translate all the examples into normal Composition API syntax by moving the code under `setup()` function and returning the values used in the template.
+
+```vue
+<script setup>
+import { useQuery } from '@tanstack/vue-query'
+
+const { isPending, isFetching, isError, data, error } = useQuery({
+  queryKey: ['todos'],
+  queryFn: getTodos,
+})
+</script>
+
+<template>...</template>
+```
+
+
+## Links discovered
+- [NPM](https://npmjs.com)
+- [basic](https://github.com/tanstack/query/blob/main/docs/framework/vue/examples/basic.md)
+- [@vue/composition-api](https://github.com/vuejs/composition-api)
+- [`<script setup>`](https://staging.vuejs.org/api/sfc-script-setup.html)
+- [this plugin](https://github.com/antfu/unplugin-vue2-script-setup)
+
+--- docs/framework/angular/overview.md ---
+---
+id: overview
+title: Overview
+---
+
+> IMPORTANT: This library is currently in an experimental stage. This means that breaking changes will happen in minor AND patch releases. Upgrade carefully. If you use this in production while in experimental stage, please lock your version to a patch-level version to avoid unexpected breaking changes.
+
+The `@tanstack/angular-query-experimental` package offers a 1st-class API for using TanStack Query via Angular.
+
+## Feedback welcome!
+
+We are in the process of getting to a stable API for TanStack Query on Angular. If you have any feedback, please contact us at the [TanStack Discord](https://tlinz.com/discord) server or [visit this discussion](https://github.com/TanStack/query/discussions/6293) on Github.
+
+## Supported Angular Versions
+
+TanStack Query is compatible with Angular v16 and higher.
+
+TanStack Query (FKA React Query) is often described as the missing data-fetching library for web applications, but in more technical terms, it makes **fetching, caching, synchronizing and updating server state** in your web applications a breeze.
+
+## Motivation
+
+Most core web frameworks **do not** come with an opinionated way of fetching or updating data in a holistic way. Because of this developers end up building either meta-frameworks which encapsulate strict opinions about data-fetching, or they invent their own ways of fetching data. This usually means cobbling together component-based state and side-effects, or using more general purpose state management libraries to store and provide asynchronous data throughout their apps.
+
+While most traditional state management libraries are great for working with client state, they are **not so great at working with async or server state**. This is because **server state is totally different**. For starters, server state:
+
+- Is persisted remotely in a location you may not control or own
+- Requires asynchronous APIs for fetching and updating
+- Implies shared ownership and can be changed by other people without your knowledge
+- Can potentially become "out of date" in your applications if you're not careful
+
+Once you grasp the nature of server state in your application, **even more challenges will arise** as you go, for example:
+
+- Caching... (possibly the hardest thing to do in programming)
+- Deduping multiple requests for the same data into a single request
+- Updating "out of date" data in the background
+- Knowing when data is "out of date"
+- Reflecting updates to data as quickly as possible
+- Performance optimizations like pagination and lazy loading data
+- Managing memory and garbage collection of server state
+- Memoizing query results with structural sharing
+
+If you're not overwhelmed by that list, then that must mean that you've probably solved all of your server state problems already and deserve an award. However, if you are like a vast majority of people, you either have yet to tackle all or most of these challenges and we're only scratching the surface!
+
+TanStack Query is hands down one of the _best_ libraries for managing server state. It works amazingly well **out-of-the-box, with zero-config, and can be customized** to your liking as your application grows.
+
+TanStack Query allows you to defeat and overcome the tricky challenges and hurdles of _server state_ and control your app data before it starts to control you.
+
+On a more technical note, TanStack Query will likely:
+
+- Help you remove **many** lines of complicated and misunderstood code from your application and replace with just a handful of lines of Angular Query logic.
+- Make your application more maintainable and easier to build new features without worrying about wiring up new server state data sources
+- Have a direct impact on your end-users by making your application feel faster and more responsive than ever before.
+- Potentially help you save on bandwidth and increase memory performance
+
+[//]: # 'Example'
+
+## Enough talk, show me some code already!
+
+In the example below, you can see TanStack Query in its most basic and simple form being used to fetch the GitHub stats for the TanStack Query GitHub project itself:
+
+[Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/angular/simple)
+
+```angular-ts
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core'
+import { HttpClient } from '@angular/common/http'
+import { CommonModule } from '@angular/common'
+import { injectQuery } from '@tanstack/angular-query-experimental'
+import { lastValueFrom } from 'rxjs'
+
+@Component({
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  selector: 'simple-example',
+  template: `
+    @if (query.isPending()) {
+      Loading...
+    }
+    @if (query.error()) {
+      An error has occurred: {{ query.error().message }}
+    }
+    @if (query.data(); as data) {
+      <h1>{{ data.name }}</h1>
+      <p>{{ data.description }}</p>
+      <strong>👀 {{ data.subscribers_count }}</strong>
+      <strong>✨ {{ data.stargazers_count }}</strong>
+      <strong>🍴 {{ data.forks_count }}</strong>
+    }
+  `
+})
+export class SimpleExampleComponent {
+  http = inject(HttpClient)
+
+  query = injectQuery(() => ({
+    queryKey: ['repoData'],
+    queryFn: () =>
+      lastValueFrom(
+        this.http.get<Response>('https://api.github.com/repos/tanstack/query'),
+      ),
+  }))
+}
+
+interface Response {
+  name: string
+  description: string
+  subscribers_count: number
+  stargazers_count: number
+  forks_count: number
+}
+```
+
+## You talked me into it, so what now?
+
+- Learn TanStack Query at your own pace with our amazingly thorough [Walkthrough Guide](./installation.md) and [API Reference](./reference/functions/injectQuery.md)
+
+
+## Links discovered
+- [TanStack Discord](https://tlinz.com/discord)
+- [visit this discussion](https://github.com/TanStack/query/discussions/6293)
+- [Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/angular/simple)
+- [Walkthrough Guide](https://github.com/tanstack/query/blob/main/docs/framework/angular/installation.md)
+- [API Reference](https://github.com/tanstack/query/blob/main/docs/framework/angular/reference/functions/injectQuery.md)
+
+--- docs/framework/react/overview.md ---
+---
+id: overview
+title: Overview
+---
+
+TanStack Query (formerly known as React Query) is often described as the missing data-fetching library for web applications, but in more technical terms, it makes **fetching, caching, synchronizing and updating server state** in your web applications a breeze.
+
+## Motivation
+
+Most core web frameworks **do not** come with an opinionated way of fetching or updating data in a holistic way. Because of this developers end up building either meta-frameworks which encapsulate strict opinions about data-fetching, or they invent their own ways of fetching data. This usually means cobbling together component-based state and side-effects, or using more general purpose state management libraries to store and provide asynchronous data throughout their apps.
+
+While most traditional state management libraries are great for working with client state, they are **not so great at working with async or server state**. This is because **server state is totally different**. For starters, server state:
+
+- Is persisted remotely in a location you may not control or own
+- Requires asynchronous APIs for fetching and updating
+- Implies shared ownership and can be changed by other people without your knowledge
+- Can potentially become "out of date" in your applications if you're not careful
+
+Once you grasp the nature of server state in your application, **even more challenges will arise** as you go, for example:
+
+- Caching... (possibly the hardest thing to do in programming)
+- Deduping multiple requests for the same data into a single request
+- Updating "out of date" data in the background
+- Knowing when data is "out of date"
+- Reflecting updates to data as quickly as possible
+- Performance optimizations like pagination and lazy loading data
+- Managing memory and garbage collection of server state
+- Memoizing query results with structural sharing
+
+If you're not overwhelmed by that list, then that must mean that you've probably solved all of your server state problems already and deserve an award. However, if you are like a vast majority of people, you either have yet to tackle all or most of these challenges and we're only scratching the surface!
+
+TanStack Query is hands down one of the _best_ libraries for managing server state. It works amazingly well **out-of-the-box, with zero-config, and can be customized** to your liking as your application grows.
+
+TanStack Query allows you to defeat and overcome the tricky challenges and hurdles of _server state_ and control your app data before it starts to control you.
+
+On a more technical note, TanStack Query will likely:
+
+- Help you remove **many** lines of complicated and misunderstood code from your application and replace with just a handful of lines of TanStack Query logic
+- Make your application more maintainable and easier to build new features without worrying about wiring up new server state data sources
+- Have a direct impact on your end-users by making your application feel faster and more responsive than ever before
+- Potentially help you save on bandwidth and increase memory performance
+
+[//]: # 'Example'
+
+## Enough talk, show me some code already!
+
+In the example below, you can see TanStack Query in its most basic and simple form being used to fetch the GitHub stats for the TanStack Query GitHub project itself:
+
+[Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/react/simple)
+
+```tsx
+import {
+  QueryClient,
+  QueryClientProvider,
+  useQuery,
+} from '@tanstack/react-query'
+
+const queryClient = new QueryClient()
+
+export default function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <Example />
+    </QueryClientProvider>
+  )
+}
+
+function Example() {
+  const { isPending, error, data } = useQuery({
+    queryKey: ['repoData'],
+    queryFn: () =>
+      fetch('https://api.github.com/repos/TanStack/query').then((res) =>
+        res.json(),
+      ),
+  })
+
+  if (isPending) return 'Loading...'
+
+  if (error) return 'An error has occurred: ' + error.message
+
+  return (
+    <div>
+      <h1>{data.name}</h1>
+      <p>{data.description}</p>
+      <strong>👀 {data.subscribers_count}</strong>{' '}
+      <strong>✨ {data.stargazers_count}</strong>{' '}
+      <strong>🍴 {data.forks_count}</strong>
+    </div>
+  )
+}
+```
+
+[//]: # 'Example'
+[//]: # 'Materials'
+
+## You talked me into it, so what now?
+
+- Consider taking the official [TanStack Query Course](https://query.gg?s=tanstack) (or buying it for your whole team!)
+- Learn TanStack Query at your own pace with our amazingly thorough [Walkthrough Guide](./installation.md) and [API Reference](./reference/useQuery.md)
+- See the Article [Why You Want React Query](https://tkdodo.eu/blog/why-you-want-react-query).
+
+[//]: # 'Materials'
+
+
+## Links discovered
+- [Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/react/simple)
+- [TanStack Query Course](https://query.gg?s=tanstack)
+- [Walkthrough Guide](https://github.com/tanstack/query/blob/main/docs/framework/react/installation.md)
+- [API Reference](https://github.com/tanstack/query/blob/main/docs/framework/react/reference/useQuery.md)
+- [Why You Want React Query](https://tkdodo.eu/blog/why-you-want-react-query)
+
+--- docs/framework/solid/overview.md ---
+---
+id: overview
+title: Overview
+---
+
+Solid Query is the official SolidJS adapter of TanStack Query that makes **fetching, caching, synchronizing and updating server state** in your web applications a breeze.
+
+## Motivation
+
+SolidJS has been gaining popularity as a fast, reactive, and declarative library for building user interfaces. It comes packed with a lot of features out of the box. Primitives like `createSignal`, `createStore` are great for managing client state. And, unlike other UI libraries, SolidJS has strong opinions about managing asynchronous data. The `createResource` API is a great primitive for handling server state in SolidJS apps. A `resource` is a special kind of signal that can be used to trigger `Suspense` boundaries when the data is in a loading state.
+
+```tsx
+import { createResource, ErrorBoundary, Suspense } from 'solid-js'
+import { render } from 'solid-js/web'
+
+function App() {
+  const [repository] = createResource(async () => {
+    const result = await fetch('https://api.github.com/repos/TanStack/query')
+    if (!result.ok) throw new Error('Failed to fetch data')
+    return result.json()
+  })
+
+  return (
+    <div>
+      <div>Static Content</div>
+      {/* An error while fetching will be caught by the ErrorBoundary */}
+      <ErrorBoundary fallback={<div>Something went wrong!</div>}>
+        {/* Suspense will trigger a loading state while the data is being fetched */}
+        <Suspense fallback={<div>Loading...</div>}>
+          <div>{repository()?.updated_at}</div>
+        </Suspense>
+      </ErrorBoundary>
+    </div>
+  )
+}
+
+const root = document.getElementById('root')
+
+render(() => <App />, root!)
+```
+
+This is amazing! In a few lines of code, you can fetch data from an API and handle loading and error states. But, as your application grows in complexity, you will need more features to manage server state effectively. This is because **server state is totally different from client state**. For starters, server state:
+
+- Is persisted remotely in a location you do not control or own
+- Requires asynchronous APIs for fetching and updating
+- Implies shared ownership and can be changed by other people without your knowledge
+- Can potentially become "out of date" in your applications if you're not careful
+
+Once you grasp the nature of server state in your application, **even more challenges will arise** as you go, for example:
+
+- Caching... (possibly the hardest thing to do in programming)
+- Deduping multiple requests for the same data into a single request
+- Updating "out of date" data in the background
+- Knowing when data is "out of date"
+- Reflecting updates to data as quickly as possible
+- Performance optimizations like pagination and lazy loading data
+- Managing memory and garbage collection of server state
+- Memoizing query results with structural sharing
+
+This is where **Solid Query** comes in. The library wraps around `createResource` and provides a set of hooks and utilities to manage server state effectively. It works amazingly well **out-of-the-box, with zero-config, and can be customized** to your liking as your application grows.
+
+On a more technical note, Solid Query will likely:
+
+- Help you remove **many** lines of complicated and misunderstood code from your application and replace with just a handful of lines of Solid Query logic.
+- Make your application more maintainable and easier to build new features without worrying about wiring up new server state data sources
+- Have a direct impact on your end-users by making your application feel faster and more responsive than ever before.
+- Potentially help you save on bandwidth and increase memory performance
+
+## Enough talk, show me some code already!
+
+In the example below, you can see Solid Query in its most basic and simple form being used to fetch the GitHub stats for the TanStack Query GitHub project itself:
+
+```tsx
+import { ErrorBoundary, Suspense } from 'solid-js'
+import {
+  useQuery,
+  QueryClient,
+  QueryClientProvider,
+} from '@tanstack/solid-query'
+
+function App() {
+  const repositoryQuery = useQuery(() => ({
+    queryKey: ['TanStack Query'],
+    queryFn: async () => {
+      const result = await fetch('https://api.github.com/repos/TanStack/query')
+      if (!result.ok) throw new Error('Failed to fetch data')
+      return result.json()
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    throwOnError: true, // Throw an error if the query fails
+  }))
+
+  return (
+    <div>
+      <div>Static Content</div>
+      {/* An error while fetching will be caught by the ErrorBoundary */}
+      <ErrorBoundary fallback={<div>Something went wrong!</div>}>
+        {/* Suspense will trigger a loading state while the data is being fetched */}
+        <Suspense fallback={<div>Loading...</div>}>
+          {/* 
+            The `data` property on a query is a SolidJS resource  
+            so it will work with Suspense and transitions out of the box! 
+          */}
+          <div>{repositoryQuery.data?.updated_at}</div>
+        </Suspense>
+      </ErrorBoundary>
+    </div>
+  )
+}
+
+const root = document.getElementById('root')
+const client = new QueryClient()
+
+render(
+  () => (
+    <QueryClientProvider client={client}>
+      <App />
+    </QueryClientProvider>
+  ),
+  root!,
+)
+```
+
+## Well, that seems like more lines of code to do the same thing?
+
+Yes it is! But, these few lines of code unlock a whole new world of possibilities. In the example above, your query is cached for 5 minutes, meaning that if a new component mounts anywhere in your app that uses the same query within 5 minutes, it will not re-fetch the data but instead use the cached data. This is just one of the many features that Solid Query provides out of the box. Some other features include:
+
+- **Automatic Refetching**: Queries automatically refetch in the background when they become "stale" (out of date according to the `staleTime` option)
+- **Automatic Caching**: Queries are cached by default and shared across your application
+- **Request Deduplication**: Multiple components can share the same query and make one request
+- **Automatic Garbage Collection**: Queries are garbage collected when they are no longer needed
+- **Window Focus Refetching**: Queries automatically refetch when the application comes back into focus
+- **Pagination**: Built-in support for pagination
+- **Request Cancellation**: Automatically cancels outdated or unwanted requests
+- **Polling/Realtime**: It's easy to add polling or realtime updates to your queries with a simple `refetchInterval` option
+- **SSR Support**: Solid Query works great with server-side rendering
+- **Optimistic Updates**: Easily update your cache with optimistic updates
+- **And much more...**
+
+
+--- docs/framework/svelte/overview.md ---
+---
+id: overview
+title: Overview
+---
+
+The `@tanstack/svelte-query` package offers a 1st-class API for using TanStack Query via Svelte.
+
+> Migrating from stores to the runes syntax? See the [migration guide](./migrate-from-v5-to-v6).
+
+## Example
+
+Include the QueryClientProvider near the root of your project:
+
+```svelte
+<script lang="ts">
+  import { QueryClient, QueryClientProvider } from '@tanstack/svelte-query'
+  import Example from './lib/Example.svelte'
+
+  const queryClient = new QueryClient()
+</script>
+
+<QueryClientProvider client={queryClient}>
+  <Example />
+</QueryClientProvider>
+```
+
+Then call any function (e.g. createQuery) from any component:
+
+```svelte
+<script lang="ts">
+  import { createQuery } from '@tanstack/svelte-query'
+
+  const query = createQuery(() => ({
+    queryKey: ['todos'],
+    queryFn: () => fetchTodos(),
+  }))
+</script>
+
+<div>
+  {#if query.isLoading}
+    <p>Loading...</p>
+  {:else if query.isError}
+    <p>Error: {query.error.message}</p>
+  {:else if query.isSuccess}
+    {#each query.data as todo}
+      <p>{todo.title}</p>
+    {/each}
+  {/if}
+</div>
+```
+
+## SvelteKit
+
+If you are using SvelteKit, please have a look at [SSR & SvelteKit](./ssr).
+
+## Available Functions
+
+Svelte Query offers useful functions and components that will make managing server state in Svelte apps easier.
+
+- `createQuery`
+- `createQueries`
+- `createInfiniteQuery`
+- `createMutation`
+- `useQueryClient`
+- `useIsFetching`
+- `useIsMutating`
+- `useMutationState`
+- `useIsRestoring`
+- `useHydrate`
+- `<QueryClientProvider>`
+- `<HydrationBoundary>`
+
+## Important Differences between Svelte Query & React Query
+
+Svelte Query offers an API similar to React Query, but there are some key differences to be mindful of.
+
+- The arguments to the `create*` functions must be wrapped in a function to preserve reactivity.
+
+
+## Links discovered
+- [migration guide](https://github.com/tanstack/query/blob/main/docs/framework/svelte/migrate-from-v5-to-v6.md)
+- [SSR & SvelteKit](https://github.com/tanstack/query/blob/main/docs/framework/svelte/ssr.md)
+
+--- docs/framework/vue/overview.md ---
+---
+id: overview
+title: Overview
+ref: docs/framework/react/overview.md
+replace: { 'React': 'Vue', 'react-query': 'vue-query' }
+---
+
+[//]: # 'Example'
+[//]: # 'Example'
+[//]: # 'Materials'
+
+## You talked me into it, so what now?
+
+- Learn Vue Query at your own pace with our amazingly thorough [Walkthrough Guide](./installation) and [API Reference](./reference/useQuery)
+
+[//]: # 'Materials'
+
+
+## Links discovered
+- [Walkthrough Guide](https://github.com/tanstack/query/blob/main/docs/framework/vue/installation.md)
+- [API Reference](https://github.com/tanstack/query/blob/main/docs/framework/vue/reference/useQuery.md)
+
+--- examples/angular/auto-refetching/README.md ---
+# TanStack Query Angular auto-refetching example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/basic-persister/README.md ---
+# TanStack Query Angular basic persister example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/basic/README.md ---
+# TanStack Query Angular basic example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/devtools-panel/README.md ---
+# TanStack Query Angular devtools panel example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/infinite-query-with-max-pages/README.md ---
+# TanStack Query Angular infinite query example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/optimistic-updates/README.md ---
+# TanStack Query Angular optimistic-updates example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/pagination/README.md ---
+# TanStack Query Angular pagination example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/query-options-from-a-service/README.md ---
+# TanStack Query Angular query options from a service example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/router/README.md ---
+# TanStack Query Angular router example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- examples/angular/rxjs/README.md ---
+# TanStack Query Angular RxJS Example
+
+To run this example:
+
+- `npm install` or `yarn` or `pnpm i` or `bun i`
+- `npm run start` or `yarn start` or `pnpm start` or `bun start`
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+## Questions
+
+If you have questions about implementation details, help or support, then please use our dedicated community forum at [GitHub Discussions](https://github.com/TanStack/query/discussions) **PLEASE NOTE:** If you choose to instead open an issue for your question, your issue will be immediately closed and redirected to the forum.
+
+## Reporting Issues
+
+If you have found what you think is a bug, please [file an issue](https://github.com/TanStack/query/issues/new/choose). **PLEASE NOTE:** Issues that are identified as implementation questions or non-issues will be immediately closed and redirected to [GitHub Discussions](https://github.com/TanStack/query/discussions)
+
+## Suggesting new features
+
+If you are here to suggest a feature, first create an issue if it does not already exist. From there, we will discuss use-cases for the feature and then finally discuss how it could be implemented.
+
+## Development
+
+_TanStack/query uses **symlink-based** configuration files. For smooth development in a local environment, we recommend developing in an environment that supports symlinks(ex: Linux, macOS, Windows Subsystem for Linux / WSL)._
+
+If you have been assigned to fix an issue or develop a new feature, please follow these steps to get started:
+
+- Fork this repository.
+- Install dependencies
+
+  ```bash
+  pnpm install
+  ```
+
+  - We use [pnpm](https://pnpm.io/) v10 for package management (run in case of pnpm-related issues).
+
+    ```bash
+    corepack enable && corepack prepare
+    ```
+
+  - We use [nvm](https://github.com/nvm-sh/nvm) to manage node versions - please make sure to use the version mentioned in `.nvmrc`
+
+    ```bash
+    nvm use
+    ```
+
+- Build all packages.
+
+  ```bash
+  pnpm build:all
+  ```
+
+- Run development server.
+
+  ```bash
+  pnpm run watch
+  ```
+
+- Implement your changes and tests to files in the `src/` directory and corresponding test files.
+- Document your changes in the appropriate doc page.
+- Git stage your required changes and commit (see below commit guidelines).
+- Submit PR for review.
+
+### Editing the docs locally and previewing the changes
+
+The documentations for all the TanStack projects are hosted on [tanstack.com](https://tanstack.com), which is a TanStack Start application (https://github.com/TanStack/tanstack.com). You need to run this app locally to preview your changes in the `TanStack/query` docs.
+
+> [!NOTE]
+> The website fetches the doc pages from GitHub in production, and searches for them at `../query/docs` in development. Your local clone of `TanStack/query` needs to be in the same directory as the local clone of `TanStack/tanstack.com`.
+
+You can follow these steps to set up the docs for local development:
+
+1. Make a new directory called `tanstack`.
+
+```sh
+mkdir tanstack
+```
+
+2. Enter that directory and clone the [`TanStack/query`](https://github.com/TanStack/query) and [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com) repos.
+
+```sh
+cd tanstack
+git clone git@github.com:TanStack/query.git
+# We probably don't need all the branches and commit history
+# from the `tanstack.com` repo, so let's just create a shallow
+# clone of the latest version of the `main` branch.
+# Read more about shallow clones here:
+# https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/#user-content-shallow-clones
+git clone git@github.com:TanStack/tanstack.com.git --depth=1 --single-branch --branch=main
+```
+
+> [!NOTE]
+> Your `tanstack` directory should look like this:
+>
+> ```
+> tanstack/
+>    |
+>    +-- query/ (<-- this directory cannot be called anything else!)
+>    |
+>    +-- tanstack.com/
+> ```
+
+3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+
+```sh
+cd tanstack.com
+pnpm i
+# The app will run on https://localhost:3000 by default
+pnpm dev
+```
+
+4. Now you can visit http://localhost:3000/query/latest/docs/framework/react/overview in the browser and see the changes you make in `tanstack/query/docs` there.
+
+> [!WARNING]
+> You will need to update the `docs/config.json` file (in `TanStack/query`) if you add a new documentation page!
+
+You can see the whole process in the screen capture below:
+
+https://github.com/fulopkovacs/form/assets/43729152/9d35a3c3-8153-4e74-9cb2-af275f7a269b
+
+### Running examples
+
+- Make sure you've installed the dependencies in the repo's root directory.
+
+  ```bash
+  pnpm install
+  ```
+
+- If you want to run the example against your local changes, run below in the repo's root directory. Otherwise, it will be run against the latest TanStack Query release.
+
+  ```bash
+  pnpm run watch
+  ```
+
+- Run below in the selected examples' directory.
+
+  ```bash
+  pnpm run dev
+  ```
+
+#### Note on standalone execution
+
+If you want to run an example without installing dependencies for the whole repo, just follow the instructions from the example's README.md file. It will then be run against the latest TanStack Query release.
+
+## Online one-click setup
+
+You can use Gitpod (An Online open-source VS Code-like IDE that is free for Open Source) for developing online. With a single click it will start a workspace and automatically:
+
+- clone the `TanStack/query` repo.
+- install all the dependencies in `/` and `/docs`.
+- run below in the root(`/`) to Auto-build files.
+
+  ```bash
+  npm start
+  ```
+
+- run below in `/docs`.
+
+  ```bash
+  npm run dev
+  ```
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/TanStack/query)
+
+## Changesets
+
+This repo uses [Changesets](https://github.com/changesets/changesets) to automate releases. If your PR should release a new package version (patch, minor, or major), please run run `pnpm changeset` and commit the file. If needed, changeset descriptions can be more descriptive, and will be included in the changelog. If your PR affects docs, examples, styles, etc., you probably don't need to generate a changeset.
+
+## Pull requests
+
+Maintainers merge pull requests by squashing all commits and editing the commit message if necessary using the GitHub user interface.
+
+Use an appropriate commit type. Be especially careful with breaking changes.
+
+## Releases
+
+For each new commit added to `main`, a GitHub Workflow is triggered which runs the [Changesets Action](https://github.com/changesets/action). This generates a preview PR showing the impact of all changesets. When this PR is merged, the package will be published to NPM.
+
+## 🧪 Test
+
+TanStack Query uses [Nx](https://nx.dev/) as its monorepo tool.
+To run tests in a local environment, you should use `nx` commands from the root directory.
+
+### ✅ Run all tests
+
+To run tests for **all packages**, run:
+
+```bash
+npm run test
+```
+
+### ✅ Run tests for a specific package
+
+To run tests for a specific package, use the following command:
+
+```bash
+npx nx run @tanstack/{package-name}:test:lib
+```
+
+For example:
+
+```bash
+npx nx run @tanstack/react-query:test:lib
+```
+
+### ⚠️ Caution
+
+Do not run `pnpm run test:lib` inside individual package folders.
+This can cause test failures due to dependencies between packages.
+Always run tests from the **root folder** using `nx` commands.
+
+
+## Links discovered
+- [GitHub Discussions](https://github.com/TanStack/query/discussions)
+- [file an issue](https://github.com/TanStack/query/issues/new/choose)
+- [pnpm](https://pnpm.io/)
+- [nvm](https://github.com/nvm-sh/nvm)
+- [tanstack.com](https://tanstack.com)
+- [`TanStack/query`](https://github.com/TanStack/query)
+- [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com)
+- [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)
+- [Changesets](https://github.com/changesets/changesets)
+- [Changesets Action](https://github.com/changesets/action)
+- [Nx](https://nx.dev/)
+
+--- packages/angular-query-experimental/CHANGELOG.md ---
+# @tanstack/angular-query-experimental
+
+## 5.90.16
+
+### Patch Changes
+
+- Updated dependencies [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)]:
+  - @tanstack/query-core@5.90.12
+
+## 5.90.15
+
+### Patch Changes
+
+- Updated dependencies [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)]:
+  - @tanstack/query-core@5.90.11
+
+## 5.90.14
+
+## 5.90.13
+
+## 5.90.12
+
+### Patch Changes
+
+- Updated dependencies [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26), [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)]:
+  - @tanstack/query-core@5.90.10
+
+## 5.90.11
+
+### Patch Changes
+
+- Updated dependencies [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)]:
+  - @tanstack/query-core@5.90.9
+
+## 5.90.10
+
+### Patch Changes
+
+- Updated dependencies [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)]:
+  - @tanstack/query-core@5.90.8
+
+## 5.90.9
+
+### Patch Changes
+
+- Updated dependencies [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)]:
+  - @tanstack/query-core@5.90.7
+
+## 5.90.8
+
+### Patch Changes
+
+- Updated dependencies [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)]:
+  - @tanstack/query-core@5.90.6
+
+## 5.90.7
+
+### Patch Changes
+
+- Make `injectIsMutating` signal read-only to prevent external modifications to the internal state ([#9801](https://github.com/TanStack/query/pull/9801))
+
+## 5.90.6
+
+### Patch Changes
+
+- Rename `DeveloperToolsFeature` to `DevtoolsFeature` for consistency with internal naming conventions and ecosystem ([#9794](https://github.com/TanStack/query/pull/9794))
+
+## 5.90.5
+
+### Patch Changes
+
+- Updated dependencies [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)]:
+  - @tanstack/query-core@5.90.5
+
+## 5.90.4
+
+### Patch Changes
+
+- Updated dependencies [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)]:
+  - @tanstack/query-core@5.90.4
+
+## 5.90.3
+
+### Patch Changes
+
+- Updated dependencies [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)]:
+  - @tanstack/query-core@5.90.3
+
+
+## Links discovered
+- [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)
+- [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)
+- [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26)
+- [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)
+- [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)
+- [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)
+- [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)
+- [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)
+- [#9801](https://github.com/TanStack/query/pull/9801)
+- [#9794](https://github.com/TanStack/query/pull/9794)
+- [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)
+- [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)
+- [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)
+
+--- packages/angular-query-persist-client/CHANGELOG.md ---
+# @tanstack/angular-query-persist-client
+
+## 5.62.19
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.16
+  - @tanstack/query-persist-client-core@5.91.11
+
+## 5.62.18
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.15
+  - @tanstack/query-persist-client-core@5.91.10
+
+## 5.62.17
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.12
+  - @tanstack/query-persist-client-core@5.91.9
+
+## 5.62.16
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.11
+  - @tanstack/query-persist-client-core@5.91.8
+
+## 5.62.15
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.10
+  - @tanstack/query-persist-client-core@5.91.7
+
+## 5.62.14
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.9
+  - @tanstack/query-persist-client-core@5.91.6
+
+## 5.62.13
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.8
+  - @tanstack/query-persist-client-core@5.91.5
+
+## 5.62.12
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.5
+  - @tanstack/query-persist-client-core@5.91.4
+
+## 5.62.11
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.4
+  - @tanstack/query-persist-client-core@5.91.3
+
+## 5.62.10
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @tanstack/angular-query-experimental@5.90.3
+  - @tanstack/query-persist-client-core@5.91.2
+
+## 5.62.9
+
+### Patch Changes
+
+- Updated dependencies [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)]:
+  - @tanstack/query-persist-client-core@5.91.1
+
+## 5.62.8
+
+### Patch Changes
+
+- Updated dependencies [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)]:
+  - @tanstack/query-persist-client-core@5.91.0
+
+
+## Links discovered
+- [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)
+- [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)
+
+--- packages/eslint-plugin-query/CHANGELOG.md ---
+# @tanstack/eslint-plugin-query
+
+## 5.91.2
+
+### Patch Changes
+
+- fix: allow useQueries with combine property in no-unstable-deps rule ([#9720](https://github.com/TanStack/query/pull/9720))
+
+## 5.91.1
+
+### Patch Changes
+
+- avoid typescript import in no-void-query-fn rule ([#9759](https://github.com/TanStack/query/pull/9759))
+
+## 5.91.0
+
+### Minor Changes
+
+- feat: improve type of exported plugin ([#9700](https://github.com/TanStack/query/pull/9700))
+
+## 5.90.2
+
+### Patch Changes
+
+- fix: exhaustive-deps with variables and type assertions ([#9687](https://github.com/TanStack/query/pull/9687))
+
+
+## Links discovered
+- [#9720](https://github.com/TanStack/query/pull/9720)
+- [#9759](https://github.com/TanStack/query/pull/9759)
+- [#9700](https://github.com/TanStack/query/pull/9700)
+- [#9687](https://github.com/TanStack/query/pull/9687)
+
+--- packages/query-async-storage-persister/CHANGELOG.md ---
+# @tanstack/query-async-storage-persister
+
+## 5.90.14
+
+### Patch Changes
+
+- Updated dependencies [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)]:
+  - @tanstack/query-core@5.90.12
+  - @tanstack/query-persist-client-core@5.91.11
+
+## 5.90.13
+
+### Patch Changes
+
+- Updated dependencies [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)]:
+  - @tanstack/query-core@5.90.11
+  - @tanstack/query-persist-client-core@5.91.10
+
+## 5.90.12
+
+### Patch Changes
+
+- Updated dependencies [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26), [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)]:
+  - @tanstack/query-core@5.90.10
+  - @tanstack/query-persist-client-core@5.91.9
+
+## 5.90.11
+
+### Patch Changes
+
+- Updated dependencies [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)]:
+  - @tanstack/query-core@5.90.9
+  - @tanstack/query-persist-client-core@5.91.8
+
+## 5.90.10
+
+### Patch Changes
+
+- Updated dependencies [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)]:
+  - @tanstack/query-core@5.90.8
+  - @tanstack/query-persist-client-core@5.91.7
+
+## 5.90.9
+
+### Patch Changes
+
+- Updated dependencies [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)]:
+  - @tanstack/query-core@5.90.7
+  - @tanstack/query-persist-client-core@5.91.6
+
+## 5.90.8
+
+### Patch Changes
+
+- Updated dependencies [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)]:
+  - @tanstack/query-core@5.90.6
+  - @tanstack/query-persist-client-core@5.91.5
+
+## 5.90.7
+
+### Patch Changes
+
+- Updated dependencies [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)]:
+  - @tanstack/query-core@5.90.5
+  - @tanstack/query-persist-client-core@5.91.4
+
+## 5.90.6
+
+### Patch Changes
+
+- Updated dependencies [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)]:
+  - @tanstack/query-core@5.90.4
+  - @tanstack/query-persist-client-core@5.91.3
+
+## 5.90.5
+
+### Patch Changes
+
+- Updated dependencies [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)]:
+  - @tanstack/query-core@5.90.3
+  - @tanstack/query-persist-client-core@5.91.2
+
+## 5.90.4
+
+### Patch Changes
+
+- Updated dependencies [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)]:
+  - @tanstack/query-persist-client-core@5.91.1
+
+## 5.90.3
+
+### Patch Changes
+
+- Updated dependencies [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)]:
+  - @tanstack/query-persist-client-core@5.91.0
+
+
+## Links discovered
+- [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)
+- [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)
+- [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26)
+- [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)
+- [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)
+- [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)
+- [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)
+- [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)
+- [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)
+- [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)
+- [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)
+- [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)
+- [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)
+
+--- packages/query-broadcast-client-experimental/CHANGELOG.md ---
+# @tanstack/query-broadcast-client-experimental
+
+## 5.90.12
+
+### Patch Changes
+
+- Updated dependencies [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)]:
+  - @tanstack/query-core@5.90.12
+
+## 5.90.11
+
+### Patch Changes
+
+- Updated dependencies [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)]:
+  - @tanstack/query-core@5.90.11
+
+## 5.90.10
+
+### Patch Changes
+
+- Updated dependencies [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26), [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)]:
+  - @tanstack/query-core@5.90.10
+
+## 5.90.9
+
+### Patch Changes
+
+- Updated dependencies [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)]:
+  - @tanstack/query-core@5.90.9
+
+## 5.90.8
+
+### Patch Changes
+
+- Updated dependencies [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)]:
+  - @tanstack/query-core@5.90.8
+
+## 5.90.7
+
+### Patch Changes
+
+- Updated dependencies [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)]:
+  - @tanstack/query-core@5.90.7
+
+## 5.90.6
+
+### Patch Changes
+
+- Updated dependencies [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)]:
+  - @tanstack/query-core@5.90.6
+
+## 5.90.5
+
+### Patch Changes
+
+- Updated dependencies [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)]:
+  - @tanstack/query-core@5.90.5
+
+## 5.90.4
+
+### Patch Changes
+
+- Updated dependencies [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)]:
+  - @tanstack/query-core@5.90.4
+
+## 5.90.3
+
+### Patch Changes
+
+- Updated dependencies [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)]:
+  - @tanstack/query-core@5.90.3
+
+
+## Links discovered
+- [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)
+- [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)
+- [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26)
+- [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)
+- [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)
+- [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)
+- [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)
+- [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)
+- [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)
+- [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)
+- [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)
+
+--- packages/query-core/CHANGELOG.md ---
+# @tanstack/query-core
+
+## 5.90.12
+
+### Patch Changes
+
+- fix: update react and nextJs ([#9944](https://github.com/TanStack/query/pull/9944))
+
+## 5.90.11
+
+### Patch Changes
+
+- Prevent infinite render loops when useSuspenseQueries has duplicate queryKeys ([#9886](https://github.com/TanStack/query/pull/9886))
+
+## 5.90.10
+
+### Patch Changes
+
+- fix(types): allow QueryFilters union with different lengths ([#9878](https://github.com/TanStack/query/pull/9878))
+
+- Fix streamedQuery to avoid returning undefined when the stream yields no values ([#9876](https://github.com/TanStack/query/pull/9876))
+
+## 5.90.9
+
+### Patch Changes
+
+- fix(types): do not drop readonly for partial QueryFilter matching ([#9872](https://github.com/TanStack/query/pull/9872))
+
+## 5.90.8
+
+### Patch Changes
+
+- fix: allow partial query keys in `QueryFilters` ([#9686](https://github.com/TanStack/query/pull/9686))
+
+## 5.90.7
+
+### Patch Changes
+
+- fix(core): only attach .then and .catch onto a promise if it gets dehydrated ([#9847](https://github.com/TanStack/query/pull/9847))
+
+## 5.90.6
+
+### Patch Changes
+
+- Fixed isFetchedAfterMount in cases where initialData is applied ([#9743](https://github.com/TanStack/query/pull/9743))
+
+## 5.90.5
+
+### Patch Changes
+
+- fix: observing "promise" needs to implicitly observe "data" ([#9772](https://github.com/TanStack/query/pull/9772))
+
+## 5.90.4
+
+### Patch Changes
+
+- fix(types): remove duplicate Array condition in MutationKey type ([#9754](https://github.com/TanStack/query/pull/9754))
+
+## 5.90.3
+
+### Patch Changes
+
+- Avoid unhandled promise rejection errors during de/rehydration of pending queries. ([#9752](https://github.com/TanStack/query/pull/9752))
+
+
+## Links discovered
+- [#9944](https://github.com/TanStack/query/pull/9944)
+- [#9886](https://github.com/TanStack/query/pull/9886)
+- [#9878](https://github.com/TanStack/query/pull/9878)
+- [#9876](https://github.com/TanStack/query/pull/9876)
+- [#9872](https://github.com/TanStack/query/pull/9872)
+- [#9686](https://github.com/TanStack/query/pull/9686)
+- [#9847](https://github.com/TanStack/query/pull/9847)
+- [#9743](https://github.com/TanStack/query/pull/9743)
+- [#9772](https://github.com/TanStack/query/pull/9772)
+- [#9754](https://github.com/TanStack/query/pull/9754)
+- [#9752](https://github.com/TanStack/query/pull/9752)
+
+--- packages/query-devtools/CHANGELOG.md ---
+# @tanstack/query-devtools
+
+## 5.91.1
+
+### Patch Changes
+
+- improves accessibility of devtools ([#9806](https://github.com/TanStack/query/pull/9806))
+
+## 5.91.0
+
+### Minor Changes
+
+- feat(devtools): allow passing a theme via prop ([#9887](https://github.com/TanStack/query/pull/9887))
+
+
+## Links discovered
+- [#9806](https://github.com/TanStack/query/pull/9806)
+- [#9887](https://github.com/TanStack/query/pull/9887)
+
+--- packages/query-persist-client-core/CHANGELOG.md ---
+# @tanstack/query-persist-client-core
+
+## 5.91.11
+
+### Patch Changes
+
+- Updated dependencies [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)]:
+  - @tanstack/query-core@5.90.12
+
+## 5.91.10
+
+### Patch Changes
+
+- Updated dependencies [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)]:
+  - @tanstack/query-core@5.90.11
+
+## 5.91.9
+
+### Patch Changes
+
+- Updated dependencies [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26), [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)]:
+  - @tanstack/query-core@5.90.10
+
+## 5.91.8
+
+### Patch Changes
+
+- Updated dependencies [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)]:
+  - @tanstack/query-core@5.90.9
+
+## 5.91.7
+
+### Patch Changes
+
+- Updated dependencies [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)]:
+  - @tanstack/query-core@5.90.8
+
+## 5.91.6
+
+### Patch Changes
+
+- Updated dependencies [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)]:
+  - @tanstack/query-core@5.90.7
+
+## 5.91.5
+
+### Patch Changes
+
+- Updated dependencies [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)]:
+  - @tanstack/query-core@5.90.6
+
+## 5.91.4
+
+### Patch Changes
+
+- Updated dependencies [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)]:
+  - @tanstack/query-core@5.90.5
+
+## 5.91.3
+
+### Patch Changes
+
+- Updated dependencies [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)]:
+  - @tanstack/query-core@5.90.4
+
+## 5.91.2
+
+### Patch Changes
+
+- Updated dependencies [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)]:
+  - @tanstack/query-core@5.90.3
+
+## 5.91.1
+
+### Patch Changes
+
+- allow restoring null values ([#9747](https://github.com/TanStack/query/pull/9747))
+
+## 5.91.0
+
+### Minor Changes
+
+- Added a refetchOnRestore setting to control refetching after restoring persisted queries ([#9745](https://github.com/TanStack/query/pull/9745))
+
+
+## Links discovered
+- [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)
+- [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)
+- [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26)
+- [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)
+- [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)
+- [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)
+- [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)
+- [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)
+- [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)
+- [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)
+- [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)
+- [#9747](https://github.com/TanStack/query/pull/9747)
+- [#9745](https://github.com/TanStack/query/pull/9745)
+
+--- packages/query-sync-storage-persister/CHANGELOG.md ---
+# @tanstack/query-sync-storage-persister
+
+## 5.90.14
+
+### Patch Changes
+
+- Updated dependencies [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)]:
+  - @tanstack/query-core@5.90.12
+  - @tanstack/query-persist-client-core@5.91.11
+
+## 5.90.13
+
+### Patch Changes
+
+- Updated dependencies [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)]:
+  - @tanstack/query-core@5.90.11
+  - @tanstack/query-persist-client-core@5.91.10
+
+## 5.90.12
+
+### Patch Changes
+
+- Updated dependencies [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26), [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)]:
+  - @tanstack/query-core@5.90.10
+  - @tanstack/query-persist-client-core@5.91.9
+
+## 5.90.11
+
+### Patch Changes
+
+- Updated dependencies [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)]:
+  - @tanstack/query-core@5.90.9
+  - @tanstack/query-persist-client-core@5.91.8
+
+## 5.90.10
+
+### Patch Changes
+
+- Updated dependencies [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)]:
+  - @tanstack/query-core@5.90.8
+  - @tanstack/query-persist-client-core@5.91.7
+
+## 5.90.9
+
+### Patch Changes
+
+- Updated dependencies [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)]:
+  - @tanstack/query-core@5.90.7
+  - @tanstack/query-persist-client-core@5.91.6
+
+## 5.90.8
+
+### Patch Changes
+
+- Updated dependencies [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)]:
+  - @tanstack/query-core@5.90.6
+  - @tanstack/query-persist-client-core@5.91.5
+
+## 5.90.7
+
+### Patch Changes
+
+- Updated dependencies [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)]:
+  - @tanstack/query-core@5.90.5
+  - @tanstack/query-persist-client-core@5.91.4
+
+## 5.90.6
+
+### Patch Changes
+
+- Updated dependencies [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)]:
+  - @tanstack/query-core@5.90.4
+  - @tanstack/query-persist-client-core@5.91.3
+
+## 5.90.5
+
+### Patch Changes
+
+- Updated dependencies [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)]:
+  - @tanstack/query-core@5.90.3
+  - @tanstack/query-persist-client-core@5.91.2
+
+## 5.90.4
+
+### Patch Changes
+
+- Updated dependencies [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)]:
+  - @tanstack/query-persist-client-core@5.91.1
+
+## 5.90.3
+
+### Patch Changes
+
+- Updated dependencies [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)]:
+  - @tanstack/query-persist-client-core@5.91.0
+
+
+## Links discovered
+- [[`72d8ac5`](https://github.com/TanStack/query/commit/72d8ac5c592004b8f9c3ee086fcb9c3cd615ca05)
+- [[`c01b150`](https://github.com/TanStack/query/commit/c01b150e3673e11d6533768529a5e6fe3ebee68c)
+- [[`8e2e174`](https://github.com/TanStack/query/commit/8e2e174e9fd2e7b94cd232041e49c9d014d74e26)
+- [`eb559a6`](https://github.com/TanStack/query/commit/eb559a66dc0d77dd46435f624fa64fc068bef9ae)
+- [[`08b211f`](https://github.com/TanStack/query/commit/08b211f8aa475e05d2f13a36517fc556861ef962)
+- [[`c0ec9fe`](https://github.com/TanStack/query/commit/c0ec9fe0d1426fe3f233adda3ebf23989ffaa110)
+- [[`b4cd121`](https://github.com/TanStack/query/commit/b4cd121a39d07cefaa3a3411136d342cc54ce8fb)
+- [[`1638c02`](https://github.com/TanStack/query/commit/1638c028df55648995d04431179904371a189772)
+- [[`e42ddfe`](https://github.com/TanStack/query/commit/e42ddfe919f34f847ca101aeef162c69845f9a1e)
+- [[`20ef922`](https://github.com/TanStack/query/commit/20ef922a0a7c3aee00150bf69123c338b0922922)
+- [[`4e1c433`](https://github.com/TanStack/query/commit/4e1c4338a72f7384600bbda99e44bc1891695df4)
+- [[`846d53d`](https://github.com/TanStack/query/commit/846d53d98992d50606c40634efa43dea9965b787)
+- [[`5cd86c6`](https://github.com/TanStack/query/commit/5cd86c6ef1720b87b13e1ab70ee823616f1f029a)
+
+--- .github/pull_request_template.md ---
+## 🎯 Changes
+
+<!-- What changes are made in this PR? Describe the change and its motivation. -->
+
+## ✅ Checklist
+
+- [ ] I have followed the steps in the [Contributing guide](https://github.com/TanStack/query/blob/main/CONTRIBUTING.md).
+- [ ] I have tested this code locally with `pnpm run test:pr`.
+
+## 🚀 Release Impact
+
+- [ ] This change affects published code, and I have generated a [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md).
+- [ ] This change is docs/CI/dev-only (no release).
+
+
+## Links discovered
+- [Contributing guide](https://github.com/TanStack/query/blob/main/CONTRIBUTING.md)
+- [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
+
+--- README.md ---
+<img referrerpolicy="no-referrer-when-downgrade" src="https://static.scarf.sh/a.png?x-pxid=be2d8a11-9712-4c1d-9963-580b2d4fb133" />
+
+<div align="center">
+  <img src="./media/header_query.png" alt="TanStack Query" />
+</div>
+
+<br />
+
+<div align="center">
+<a href="https://www.npmjs.com/package/@tanstack/query-core" target="_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" alt="npm downloads" />
+</a>
+ <a href="https://github.com/TanStack/query/stargazers" target="_parent">
+  <img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" alt="GitHub stars" />
+</a>
+<a href="https://bundlejs.com/?q=%40tanstack%2Freact-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react-dom%22%5D%7D%7D&badge=" target="_parent">
+  <img alt="" src="https://deno.bundlejs.com/?q=@tanstack/react-query&config={%22esbuild%22:{%22external%22:[%22react%22,%22react-dom%22]}}&badge=detailed" alt="Bundle size" />
+</a>
+</div>
+
+<div align="center">
+<a href="#badge">
+    <img src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg" alt="semantic-release">
+  </a>
+<a href="https://bestofjs.org/projects/tanstack-query"><img src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" alt="Best of JS" /></a>
+  <a href="https://twitter.com/tan_stack"><img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/></a>
+</div>
+
+<div align="center">
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+</div>
+
+# TanStack Query
+
+An async state management library built to simplify fetching, caching, synchronizing, and updating server state.
+
+- Protocol‑agnostic fetching (REST, GraphQL, promises, etc.)
+- Caching, refetching, pagination & infinite scroll
+- Mutations, dependent queries & background updates
+- Prefetching, cancellation & React Suspense support
+
+### <a href="https://tanstack.com/query">Read the docs →</b></a>
+
+## Get Involved
+
+- We welcome issues and pull requests!
+- Participate in [GitHub discussions](https://github.com/TanStack/query/discussions)
+- Chat with the community on [Discord](https://discord.com/invite/WrRKjPJ)
+- See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions
+
+## Partners
+
+<table align="center">
+  <tr>
+    <td>
+      <a href="https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS" >
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" />
+          <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" />
+          <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" />
+        </picture>
+      </a>
+    </td>
+    <td>
+      <a href="https://www.cloudflare.com?utm_source=tanstack">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" />
+          <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" />
+          <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" />
+        </picture>
+      </a>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+<img src="./media/partner_logo.svg" alt="Query & you?" height="65">
+<p>
+We're looking for TanStack Query Partners to join our mission! Partner with us to push the boundaries of TanStack Query and build amazing things together.
+</p>
+<a href="mailto:partners@tanstack.com?subject=TanStack Query Partnership"><b>LET'S CHAT</b></a>
+</div>
+
+</div>
+
+## Explore the TanStack Ecosystem
+
+- <a href="https://github.com/tanstack/config"><b>TanStack Config</b></a> – Tooling for JS/TS packages
+- <a href="https://github.com/tanstack/db"><b>TanStack DB</b></a> – Reactive sync client store
+- <a href="https://github.com/tanstack/devtools"><b>TanStack DevTools</b></a> – Unified devtools panel
+- <a href="https://github.com/tanstack/form"><b>TanStack Form</b></a> – Type‑safe form state
+- <a href="https://github.com/tanstack/pacer"><b>TanStack Pacer</b></a> – Debouncing, throttling, batching <br/>
+- <a href="https://github.com/tanstack/query"><b>TanStack Query</b></a> – Async state & caching
+- <a href="https://github.com/tanstack/ranger"><b>TanStack Ranger</b></a> – Range & slider primitives
+- <a href="https://github.com/tanstack/router"><b>TanStack Router</b></a> – Type‑safe routing, caching & URL state
+- <a href="https://github.com/tanstack/router"><b>TanStack Start</b></a> – Full‑stack SSR & streaming
+- <a href="https://github.com/tanstack/store"><b>TanStack Store</b></a> – Reactive data store
+- <a href="https://github.com/tanstack/table"><b>TanStack Table</b></a> – Headless datagrids
+- <a href="https://github.com/tanstack/virtual"><b>TanStack Virtual</b></a> – Virtualized rendering
+
+… and more at <a href="https://tanstack.com"><b>TanStack.com »</b></a>
+
+<!-- Use the force, Luke -->
+
+
+## Links discovered
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [GitHub discussions](https://github.com/TanStack/query/discussions)
+- [Discord](https://discord.com/invite/WrRKjPJ)
+- [CONTRIBUTING.md](https://github.com/tanstack/query/blob/main/CONTRIBUTING.md)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" alt="npm downloads" />](https://www.npmjs.com/package/@tanstack/query-core)
+- [<img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" alt="GitHub stars" />](https://github.com/TanStack/query/stargazers)
+- [<img alt="" src="https://deno.bundlejs.com/?q=@tanstack/react-query&config={%22esbuild%22:{%22external%22:[%22react%22,%22react-dom%22]}}&badge=detailed" alt="Bundle size" />](https://bundlejs.com/?q=%40tanstack%2Freact-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react-dom%22%5D%7D%7D&badge=)
+- [<img src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" alt="Best of JS" />](https://bestofjs.org/projects/tanstack-query)
+- [<img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/>](https://twitter.com/tan_stack)
+- [Read the docs →</b>](https://tanstack.com/query)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" /> <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" /> </picture>](https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" /> <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" /> </picture>](https://www.cloudflare.com?utm_source=tanstack)
+- [<b>TanStack Config</b>](https://github.com/tanstack/config)
+- [<b>TanStack DB</b>](https://github.com/tanstack/db)
+- [<b>TanStack DevTools</b>](https://github.com/tanstack/devtools)
+- [<b>TanStack Form</b>](https://github.com/tanstack/form)
+- [<b>TanStack Pacer</b>](https://github.com/tanstack/pacer)
+- [<b>TanStack Query</b>](https://github.com/tanstack/query)
+- [<b>TanStack Ranger</b>](https://github.com/tanstack/ranger)
+- [<b>TanStack Router</b>](https://github.com/tanstack/router)
+- [<b>TanStack Start</b>](https://github.com/tanstack/router)
+- [<b>TanStack Store</b>](https://github.com/tanstack/store)
+- [<b>TanStack Table</b>](https://github.com/tanstack/table)
+- [<b>TanStack Virtual</b>](https://github.com/tanstack/virtual)
+- [<b>TanStack.com »</b>](https://tanstack.com)
+
+--- eslint.config.js ---
+// @ts-check
+
+// @ts-ignore Needed due to moduleResolution Node vs Bundler
+import { tanstackConfig } from '@tanstack/eslint-config'
+import pluginCspell from '@cspell/eslint-plugin'
+import vitest from '@vitest/eslint-plugin'
+
+export default [
+  ...tanstackConfig,
+  {
+    name: 'tanstack/temp',
+    plugins: {
+      cspell: pluginCspell,
+    },
+    rules: {
+      'cspell/spellchecker': [
+        'warn',
+        {
+          cspell: {
+            words: [
+              'Promisable', // Our public interface
+              'TSES', // @typescript-eslint package's interface
+              'codemod', // We support our codemod
+              'combinate', // Library name
+              'datatag', // Query options tagging
+              'extralight', // Our public interface
+              'jscodeshift',
+              'refetches', // Query refetch operations
+              'retryer', // Our public interface
+              'solidjs', // Our target framework
+              'tabular-nums', // https://developer.mozilla.org/en-US/docs/Web/CSS/font-variant-numeric
+              'tanstack', // Our package scope
+              'todos', // Too general word to be caught as error
+              'tsqd', // Our public interface (TanStack Query Devtools shorthand)
+              'tsup', // We use tsup as builder
+              'typecheck', // Field of vite.config.ts
+              'vue-demi', // dependency of @tanstack/vue-query
+              'ɵkind', // Angular specific
+              'ɵproviders', // Angular specific
+            ],
+          },
+        },
+      ],
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      'no-case-declarations': 'off',
+      'prefer-const': 'off',
+    },
+  },
+  {
+    files: ['**/*.spec.ts*', '**/*.test.ts*', '**/*.test-d.ts*'],
+    plugins: { vitest },
+    rules: vitest.configs.recommended.rules,
+    settings: { vitest: { typecheck: true } },
+  },
+]
+
+
+--- prettier.config.js ---
+// @ts-check
+
+/** @type {import('prettier').Config} */
+const config = {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  plugins: ['prettier-plugin-svelte'],
+  overrides: [{ files: '*.svelte', options: { parser: 'svelte' } }],
+}
+
+export default config
+
+
+--- integrations/angular-cli-20/README.md ---
+# AngularCli20
+
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.0.0-rc.2.
+
+## Development server
+
+To start a local development server, run:
+
+```bash
+ng serve
+```
+
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+
+## Code scaffolding
+
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+
+```bash
+ng generate component component-name
+```
+
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+
+```bash
+ng generate --help
+```
+
+## Building
+
+To build the project run:
+
+```bash
+ng build
+```
+
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
+
+## Running unit tests
+
+To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+
+```bash
+ng test
+```
+
+## Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli)
+
+--- integrations/react-next-14/README.md ---
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+
+## Links discovered
+- [Next.js](https://nextjs.org/)
+- [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)
+- [http://localhost:3000](http://localhost:3000)
+- [`next/font`](https://nextjs.org/docs/basic-features/font-optimization)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [the Next.js GitHub repository](https://github.com/vercel/next.js/)
+- [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
+- [Next.js deployment documentation](https://nextjs.org/docs/deployment)
+
+--- integrations/react-next-15/README.md ---
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+
+## Links discovered
+- [Next.js](https://nextjs.org/)
+- [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)
+- [http://localhost:3000](http://localhost:3000)
+- [`next/font`](https://nextjs.org/docs/basic-features/font-optimization)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [the Next.js GitHub repository](https://github.com/vercel/next.js/)
+- [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
+- [Next.js deployment documentation](https://nextjs.org/docs/deployment)
+
+--- integrations/react-next-16/README.md ---
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+## Getting Started
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+
+This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+
+## Learn More
+
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+
+
+## Links discovered
+- [Next.js](https://nextjs.org/)
+- [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)
+- [http://localhost:3000](http://localhost:3000)
+- [`next/font`](https://nextjs.org/docs/basic-features/font-optimization)
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
+- [the Next.js GitHub repository](https://github.com/vercel/next.js/)
+- [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
+- [Next.js deployment documentation](https://nextjs.org/docs/deployment)
+
+--- integrations/react-vite/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vite + React</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>
+
+
+--- integrations/solid-vite/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vite + Solid</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/index.jsx"></script>
+  </body>
+</html>
+
+
+--- integrations/svelte-vite/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vite + Svelte</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+
+
+--- integrations/vue-vite/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vite + Vue + TS</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
+
+
+--- integrations/react-webpack-4/public/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>react-webpack-4</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+
+
+--- integrations/react-webpack-5/public/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>react-webpack-5</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
+
+
+--- packages/angular-query-experimental/README.md ---
+![TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+
+[![npm version](https://img.shields.io/npm/v/@tanstack/angular-query-experimental)](https://www.npmjs.com/package/@tanstack/angular-query-experimental)
+[![npm license](https://img.shields.io/npm/l/@tanstack/angular-query-experimental)](https://github.com/TanStack/query/blob/main/LICENSE)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/angular-query-experimental)](https://bundlephobia.com/package/@tanstack/angular-query-experimental)
+[![npm](https://img.shields.io/npm/dm/@tanstack/angular-query-experimental)](https://www.npmjs.com/package/@tanstack/angular-query-experimental)
+
+# Angular Query
+
+> IMPORTANT: This library is currently in an experimental stage. This means that breaking changes may happen in minor AND patch releases. Upgrade carefully. If you use this in production while in experimental stage, please lock your version to a patch-level version to avoid unexpected breaking changes.
+
+Functions for fetching, caching and updating asynchronous data in Angular
+
+# Documentation
+
+Visit https://tanstack.com/query/latest/docs/framework/angular/overview
+
+## Quick Features
+
+- Transport/protocol/backend agnostic data fetching (REST, GraphQL, promises, whatever!)
+- Auto Caching + Refetching (stale-while-revalidate, Window Refocus, Polling/Realtime)
+- Parallel + Dependent Queries
+- Mutations + Reactive Query Refetching
+- Multi-layer Cache + Automatic Garbage Collection
+- Paginated + Cursor-based Queries
+- Load-More + Infinite Scroll Queries w/ Scroll Recovery
+- Request Cancellation
+- Dedicated Devtools
+
+# Quick Start
+
+> The Angular adapter for TanStack Query requires Angular 16 or higher.
+
+1. Install `angular-query`
+
+```bash
+$ npm i @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+$ pnpm add @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+$ yarn add @tanstack/angular-query-experimental
+```
+
+or
+
+```bash
+$ bun add @tanstack/angular-query-experimental
+```
+
+2. Initialize **TanStack Query** by adding **provideTanStackQuery** to your application
+
+```ts
+import { provideTanStackQuery } from '@tanstack/angular-query-experimental'
+import { QueryClient } from '@tanstack/angular-query-experimental'
+
+bootstrapApplication(AppComponent, {
+  providers: [provideTanStackQuery(new QueryClient())],
+})
+```
+
+or in a NgModule-based app
+
+```ts
+import { provideHttpClient } from '@angular/common/http'
+import {
+  provideTanStackQuery,
+  QueryClient,
+} from '@tanstack/angular-query-experimental'
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule],
+  providers: [provideTanStackQuery(new QueryClient())],
+  bootstrap: [AppComponent],
+})
+```
+
+3. Inject query
+
+```ts
+import { injectQuery } from '@tanstack/angular-query-experimental'
+import { Component } from '@angular/core'
+
+@Component({...})
+export class TodosComponent {
+  info = injectQuery(() => ({ queryKey: ['todos'], queryFn: fetchTodoList }))
+}
+```
+
+4. If you need to update options on your query dynamically, make sure to pass them as signals. The query will refetch automatically if data for an updated query key is stale or not present.
+
+[Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/angular/router)
+
+```ts
+@Component({})
+export class PostComponent {
+  #postsService = inject(PostsService)
+  postId = input.required({
+    transform: numberAttribute,
+  })
+
+  postQuery = injectQuery(() => ({
+    queryKey: ['post', this.postId()],
+    queryFn: () => {
+      return lastValueFrom(this.#postsService.postById$(this.postId()))
+    },
+  }))
+}
+
+@Injectable({
+  providedIn: 'root',
+})
+export class PostsService {
+  #http = inject(HttpClient)
+
+  postById$ = (postId: number) =>
+    this.#http.get<Post>(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+}
+
+export interface Post {
+  id: number
+  title: string
+  body: string
+}
+```
+
+<!-- -->
+
+
+## Links discovered
+- [TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+- [![npm version](https://img.shields.io/npm/v/@tanstack/angular-query-experimental)
+- [![npm license](https://img.shields.io/npm/l/@tanstack/angular-query-experimental)
+- [![bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/angular-query-experimental)
+- [![npm](https://img.shields.io/npm/dm/@tanstack/angular-query-experimental)
+- [Open in StackBlitz](https://stackblitz.com/github/TanStack/query/tree/main/examples/angular/router)
+
+--- packages/react-query/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=be2d8a11-9712-4c1d-9963-580b2d4fb133" />
+
+![TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+
+Hooks for fetching, caching and updating asynchronous data in React
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">
+</a><a href="https://discord.com/invite/WrRKjPJ" target="\_parent">
+  <img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />
+</a><a href="https://github.com/TanStack/query/actions?query=workflow%3A%22react-query+tests%22">
+<img src="https://github.com/TanStack/query/workflows/react-query%20tests/badge.svg" />
+</a><a href="https://www.npmjs.com/package/@tanstack/query-core" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" />
+</a><a href="https://bundlejs.com/?q=%40tanstack%2Freact-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react-dom%22%5D%7D%7D&badge=" target="\_parent">
+  <img alt="" src="https://deno.bundlejs.com/?q=@tanstack/react-query&config={%22esbuild%22:{%22external%22:[%22react%22,%22react-dom%22]}}&badge=detailed" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/TanStack/query/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://bestofjs.org/projects/tanstack-query"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" /></a><a href="https://github.com/TanStack/query/" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />
+</a> <a href="https://gitpod.io/from-referrer/">
+  <img src="https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod" alt="Gitpod Ready-to-Code"/>
+</a>
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [TanStack Table](https://github.com/TanStack/table), [TanStack Router](https://github.com/tanstack/router), [TanStack Virtual](https://github.com/tanstack/virtual), [React Charts](https://github.com/TanStack/react-charts), [React Ranger](https://github.com/TanStack/ranger)
+
+## Visit [tanstack.com/query](https://tanstack.com/query) for docs, guides, API and more!
+
+## Quick Features
+
+- Transport/protocol/backend agnostic data fetching (REST, GraphQL, promises, whatever!)
+- Auto Caching + Refetching (stale-while-revalidate, Window Refocus, Polling/Realtime)
+- Parallel + Dependent Queries
+- Mutations + Reactive Query Refetching
+- Multi-layer Cache + Automatic Garbage Collection
+- Paginated + Cursor-based Queries
+- Load-More + Infinite Scroll Queries w/ Scroll Recovery
+- Request Cancellation
+- [React Suspense](https://react.dev/reference/react/Suspense) + Fetch-As-You-Render Query Prefetching
+- Dedicated Devtools
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+<!-- Use the force, Luke -->
+
+
+## Links discovered
+- [TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+- [TanStack](https://tanstack.com)
+- [TanStack Table](https://github.com/TanStack/table)
+- [TanStack Router](https://github.com/tanstack/router)
+- [TanStack Virtual](https://github.com/tanstack/virtual)
+- [React Charts](https://github.com/TanStack/react-charts)
+- [React Ranger](https://github.com/TanStack/ranger)
+- [tanstack.com/query](https://tanstack.com/query)
+- [React Suspense](https://react.dev/reference/react/Suspense)
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />](https://discord.com/invite/WrRKjPJ)
+- [<img src="https://github.com/TanStack/query/workflows/react-query%20tests/badge.svg" />](https://github.com/TanStack/query/actions?query=workflow%3A%22react-query+tests%22)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" />](https://www.npmjs.com/package/@tanstack/query-core)
+- [<img alt="" src="https://deno.bundlejs.com/?q=@tanstack/react-query&config={%22esbuild%22:{%22external%22:[%22react%22,%22react-dom%22]}}&badge=detailed" />](https://bundlejs.com/?q=%40tanstack%2Freact-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22react%22%2C%22react-dom%22%5D%7D%7D&badge=)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/TanStack/query/discussions)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" />](https://bestofjs.org/projects/tanstack-query)
+- [<img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" />](https://github.com/TanStack/query/)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />](https://twitter.com/tannerlinsley)
+- [<img src="https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod" alt="Gitpod Ready-to-Code"/>](https://gitpod.io/from-referrer/)
+
+--- packages/solid-query/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=be2d8a11-9712-4c1d-9963-580b2d4fb133" />
+
+![TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+
+Hooks for fetching, caching and updating asynchronous data in Solid
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">
+</a><a href="https://discord.com/invite/WrRKjPJ" target="\_parent">
+  <img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />
+</a><a href="https://github.com/TanStack/query/actions?query=workflow%3A%ci%22">
+<img src="https://github.com/TanStack/query/workflows/ci/badge.svg" />
+</a><a href="https://www.npmjs.com/package/@tanstack/query-core" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" />
+</a><a href="https://bundlejs.com/?q=%40tanstack%2Fsolid-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22solid-js%22%2C%5D%7D%7D&badge=" target="\_parent">
+  <img alt="" src="https://deno.bundlejs.com/?q=@tanstack/solid-query&config={%22esbuild%22:{%22external%22:[%22solid-js%22]}}&badge=detailed" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/TanStack/query/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://bestofjs.org/projects/tanstack-query"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" /></a><a href="https://github.com/TanStack/query/" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />
+</a> <a href="https://gitpod.io/from-referrer/">
+  <img src="https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod" alt="Gitpod Ready-to-Code"/>
+</a>
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [TanStack Table](https://github.com/TanStack/table), [TanStack Router](https://github.com/tanstack/router), [TanStack Virtual](https://github.com/tanstack/virtual)
+
+## Visit [tanstack.com/query](https://tanstack.com/query) for docs, guides, API and more!
+
+## Quick Features
+
+- Transport/protocol/backend agnostic data fetching (REST, GraphQL, promises, whatever!)
+- Auto Caching + Refetching (stale-while-revalidate, Window Refocus, Polling/Realtime)
+- Parallel + Dependent Queries
+- Mutations + Reactive Query Refetching
+- Multi-layer Cache + Automatic Garbage Collection
+- Paginated + Cursor-based Queries
+- Load-More + Infinite Scroll Queries w/ Scroll Recovery
+- Request Cancellation
+- Suspense + Fetch-As-You-Render Query Prefetching
+- Dedicated Devtools
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+<!-- Use the force, Luke -->
+
+
+## Links discovered
+- [TanStack Query Header](https://github.com/TanStack/query/raw/main/media/repo-header.png)
+- [TanStack](https://tanstack.com)
+- [TanStack Table](https://github.com/TanStack/table)
+- [TanStack Router](https://github.com/tanstack/router)
+- [TanStack Virtual](https://github.com/tanstack/virtual)
+- [tanstack.com/query](https://tanstack.com/query)
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />](https://discord.com/invite/WrRKjPJ)
+- [<img src="https://github.com/TanStack/query/workflows/ci/badge.svg" />](https://github.com/TanStack/query/actions?query=workflow%3A%ci%22)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/query-core.svg" />](https://www.npmjs.com/package/@tanstack/query-core)
+- [<img alt="" src="https://deno.bundlejs.com/?q=@tanstack/solid-query&config={%22esbuild%22:{%22external%22:[%22solid-js%22]}}&badge=detailed" />](https://bundlejs.com/?q=%40tanstack%2Fsolid-query&config=%7B%22esbuild%22%3A%7B%22external%22%3A%5B%22solid-js%22%2C%5D%7D%7D&badge=)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/TanStack/query/discussions)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fquery%26since=daily" />](https://bestofjs.org/projects/tanstack-query)
+- [<img alt="" src="https://img.shields.io/github/stars/TanStack/query.svg?style=social&label=Star" />](https://github.com/TanStack/query/)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow" />](https://twitter.com/tannerlinsley)
+- [<img src="https://img.shields.io/badge/Gitpod-Ready--to--Code-blue?logo=gitpod" alt="Gitpod Ready-to-Code"/>](https://gitpod.io/from-referrer/)
+
+--- packages/vue-query/README.md ---
+[![Vue Query logo](https://raw.githubusercontent.com/TanStack/query/main/packages/vue-query/media/vue-query.png)](https://github.com/TanStack/query/tree/main/packages/vue-query)
+
+[![npm version](https://img.shields.io/npm/v/@tanstack/vue-query)](https://www.npmjs.com/package/@tanstack/vue-query)
+[![npm license](https://img.shields.io/npm/l/@tanstack/vue-query)](https://github.com/TanStack/query/blob/main/LICENSE)
+[![bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/vue-query)](https://bundlephobia.com/package/@tanstack/vue-query)
+[![npm](https://img.shields.io/npm/dm/@tanstack/vue-query)](https://www.npmjs.com/package/@tanstack/vue-query)
+
+# Vue Query
+
+Hooks for fetching, caching and updating asynchronous data in Vue.
+
+Support for Vue 2.x via [vue-demi](https://github.com/vueuse/vue-demi)
+
+# Documentation
+
+Visit https://tanstack.com/query/latest/docs/vue/overview
+
+# Quick Features
+
+- Transport/protocol/backend agnostic data fetching (REST, GraphQL, promises, whatever!)
+- Auto Caching + Refetching (stale-while-revalidate, Window Refocus, Polling/Realtime)
+- Parallel + Dependent Queries
+- Mutations + Reactive Query Refetching
+- Multi-layer Cache + Automatic Garbage Collection
+- Paginated + Cursor-based Queries
+- Load-More + Infinite Scroll Queries w/ Scroll Recovery
+- Request Cancellation
+- (experimental) [Suspense](https://v3.vuejs.org/guide/migration/suspense.html#introduction) + Fetch-As-You-Render Query Prefetching
+- (experimental) SSR support
+- Dedicated Devtools
+- [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/vue-query)](https://bundlephobia.com/package/@tanstack/vue-query) (depending on features imported)
+
+# Quick Start
+
+1. Install `vue-query`
+
+   ```bash
+   $ npm i @tanstack/vue-query
+   ```
+
+   or
+
+   ```bash
+   $ pnpm add @tanstack/vue-query
+   ```
+
+   or
+
+   ```bash
+   $ yarn add @tanstack/vue-query
+   ```
+
+   or
+
+   ```bash
+   $ bun add @tanstack/vue-query
+   ```
+
+   > If you are using Vue 2.6, make sure to also setup [@vue/composition-api](https://github.com/vuejs/composition-api)
+
+2. Initialize **Vue Query** via **VueQueryPlugin**
+
+   ```tsx
+   import { createApp } from 'vue'
+   import { VueQueryPlugin } from '@tanstack/vue-query'
+
+   import App from './App.vue'
+
+   createApp(App).use(VueQueryPlugin).mount('#app')
+   ```
+
+3. Use query
+
+   ```tsx
+   import { defineComponent } from 'vue'
+   import { useQuery } from '@tanstack/vue-query'
+
+   export default defineComponent({
+     name: 'MyComponent',
+     setup() {
+       const query = useQuery({ queryKey: ['todos'], queryFn: getTodos })
+
+       return {
+         query,
+       }
+     },
+   })
+   ```
+
+4. If you need to update options on your query dynamically, make sure to pass them as reactive variables
+
+   ```tsx
+   const id = ref(1)
+   const enabled = ref(false)
+
+   const query = useQuery({
+     queryKey: ['todos', id],
+     queryFn: () => getTodos(id),
+     enabled,
+   })
+   ```
+
+
+## Links discovered
+- [![Vue Query logo](https://raw.githubusercontent.com/TanStack/query/main/packages/vue-query/media/vue-query.png)
+- [![npm version](https://img.shields.io/npm/v/@tanstack/vue-query)
+- [![npm license](https://img.shields.io/npm/l/@tanstack/vue-query)
+- [![bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/vue-query)
+- [![npm](https://img.shields.io/npm/dm/@tanstack/vue-query)
+- [vue-demi](https://github.com/vueuse/vue-demi)
+- [Suspense](https://v3.vuejs.org/guide/migration/suspense.html#introduction)
+- [![npm bundle size](https://img.shields.io/bundlephobia/minzip/@tanstack/vue-query)
+- [@vue/composition-api](https://github.com/vuejs/composition-api)
+
+--- packages/angular-query-experimental/eslint.config.js ---
+// @ts-check
+
+import vitest from '@vitest/eslint-plugin'
+import rootConfig from './root.eslint.config.js'
+
+export default [
+  ...rootConfig,
+  {
+    plugins: { vitest },
+    rules: {
+      'vitest/expect-expect': [
+        'error',
+        { assertFunctionNames: ['expect', 'expectSignals'] },
+      ],
+    },
+  },
+  {
+    files: ['**/__tests__/**'],
+    rules: {
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/require-await': 'off',
+    },
+  },
+]
+
+
+--- packages/angular-query-persist-client/eslint.config.js ---
+// @ts-check
+
+import pluginJsdoc from 'eslint-plugin-jsdoc'
+import rootConfig from './root.eslint.config.js'
+
+export default [
+  ...rootConfig,
+  pluginJsdoc.configs['flat/recommended-typescript'],
+  {
+    rules: {
+      'cspell/spellchecker': [
+        'warn',
+        {
+          cspell: {
+            ignoreRegExpList: ['\\ɵ.+'],
+          },
+        },
+      ],
+      'jsdoc/require-hyphen-before-param-description': 1,
+      'jsdoc/sort-tags': 1,
+      'jsdoc/require-throws': 1,
+      'jsdoc/check-tag-names': [
+        'warn',
+        {
+          // Not compatible with Api Extractor @public
+          typed: false,
+        },
+      ],
+    },
+  },
+]
+
+
+--- packages/eslint-plugin-query/eslint.config.js ---
+// @ts-check
+
+import vitest from '@vitest/eslint-plugin'
+import rootConfig from './root.eslint.config.js'
+
+export default [
+  ...rootConfig,
+  {
+    plugins: { vitest },
+    rules: {
+      ...vitest.configs.recommended.rules,
+      'vitest/expect-expect': [
+        'warn',
+        {
+          assertFunctionNames: ['expect', 'expectArrayEqualIgnoreOrder'],
+        },
+      ],
+    },
+  },
+]
+
+
+--- packages/query-async-storage-persister/eslint.config.js ---
+// @ts-check
+
+import rootConfig from './root.eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/query-broadcast-client-experimental/eslint.config.js ---
+// @ts-check
+
+import rootConfig from './root.eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/query-core/eslint.config.js ---
+// @ts-check
+
+import rootConfig from './root.eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- scripts/generate-labeler-config.ts ---
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as prettier from 'prettier'
+
+/** Pairs of package labels and their corresponding paths */
+type LabelerPair = [string, string]
+
+function readPairsFromFs(): Array<LabelerPair> {
+  const ignored = new Set(['.DS_Store'])
+
+  const pairs: Array<LabelerPair> = []
+
+  // Add subfolders in the packages folder, i.e. packages/**
+  fs.readdirSync(path.resolve('packages'))
+    .filter((folder) => !ignored.has(folder))
+    .forEach((folder) => {
+      // Check if package.json exists for the folder before adding it
+      if (
+        fs.existsSync(
+          path.resolve(path.join('packages', folder, 'package.json')),
+        )
+      ) {
+        pairs.push([`package: ${folder}`, `packages/${folder}/**/*`])
+      } else {
+        console.info(
+          `Skipping \`${folder}\` as it does not have a \`package.json\` file.`,
+        )
+      }
+    })
+
+  // Sort by package name in alphabetical order
+  pairs.sort((a, b) => a[0].localeCompare(b[0]))
+
+  return pairs
+}
+
+async function generateLabelerYaml(pairs: Array<LabelerPair>): Promise<string> {
+  function s(n = 1) {
+    return ' '.repeat(n)
+  }
+
+  // Convert the pairs into valid yaml
+  const formattedPairs = pairs
+    .map(([packageLabel, packagePath]) => {
+      const result = [
+        `'${packageLabel}':`,
+        `${s(2)}-${s(1)}changed-files:`,
+        `${s(4)}-${s(1)}any-glob-to-any-file:${s(1)}'${packagePath}'`,
+      ].join('\n')
+
+      return result
+    })
+    .join('\n')
+
+  // Get the location of the Prettier config file
+  const prettierConfigPath = await prettier.resolveConfigFile()
+  if (!prettierConfigPath) {
+    throw new Error(
+      'No Prettier config file found. Please ensure you have a Prettier config file in your project.',
+    )
+  }
+  console.info('using prettier config file at:', prettierConfigPath)
+
+  // Resolve the Prettier config
+  const prettierConfig = await prettier.resolveConfig(prettierConfigPath)
+  console.info('using resolved prettier config:', prettierConfig)
+
+  // Format the YAML string using Prettier
+  const formattedStr = await prettier.format(formattedPairs, {
+    parser: 'yaml',
+    ...prettierConfig,
+  })
+
+  return formattedStr
+}
+
+async function run() {
+  console.info('Generating labeler config...')
+
+  // Generate the pairs of package labels and their corresponding paths
+  const pairs = readPairsFromFs()
+
+  // Always add the docs folder
+  pairs.push(['documentation', 'docs/**/*'])
+
+  // Convert the pairs into valid yaml
+  const yamlStr = await generateLabelerYaml(pairs)
+
+  // Write to 'labeler-config.yml'
+  const configPath = path.resolve('labeler-config.yml')
+  fs.writeFileSync(configPath, yamlStr, {
+    encoding: 'utf-8',
+  })
+
+  console.info(`Generated labeler config at \`${configPath}\`!`)
+  return
+}
+
+try {
+  run().then(() => {
+    process.exit(0)
+  })
+} catch (error) {
+  console.error('Error generating labeler config:', error)
+  process.exit(1)
+}
+
+
+--- scripts/getTsupConfig.js ---
+// @ts-check
+
+import { esbuildPluginFilePathExtensions } from 'esbuild-plugin-file-path-extensions'
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string[]} opts.entry - The entry array.
+ * @returns {import('tsup').Options}
+ */
+export function modernConfig(opts) {
+  return {
+    entry: opts.entry,
+    format: ['cjs', 'esm'],
+    target: ['chrome91', 'firefox90', 'edge91', 'safari15', 'ios15', 'opera77'],
+    outDir: 'build/modern',
+    dts: true,
+    sourcemap: true,
+    clean: true,
+    esbuildPlugins: [esbuildPluginFilePathExtensions({ esmExtension: 'js' })],
+  }
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string[]} opts.entry - The entry array.
+ * @returns {import('tsup').Options}
+ */
+export function legacyConfig(opts) {
+  return {
+    entry: opts.entry,
+    format: ['cjs', 'esm'],
+    target: ['es2020', 'node16'],
+    outDir: 'build/legacy',
+    dts: true,
+    sourcemap: true,
+    clean: true,
+    esbuildPlugins: [esbuildPluginFilePathExtensions({ esmExtension: 'js' })],
+  }
+}
+
+
+--- scripts/getViteAliases.js ---
+// @ts-check
+
+import path from 'node:path'
+import ts from 'typescript'
+
+const tsconfig = ts.readConfigFile(
+  path.resolve(__dirname, '..', 'tsconfig.json'),
+  ts.sys.readFile,
+).config
+
+export const dynamicAliases = Object.entries(
+  tsconfig.compilerOptions.paths || {},
+).reduce((aliases, [key, [value]]) => {
+  const aliasKey = key.replace('/*', '')
+  aliases[aliasKey] = path.resolve(value.replace('/*', ''))
+  return aliases
+}, /** @type {Record<string, string>} */ ({}))
+
+
+--- scripts/verify-links.ts ---
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
+import { glob } from 'tinyglobby'
+// @ts-ignore Could not find a declaration file for module 'markdown-link-extractor'.
+import markdownLinkExtractor from 'markdown-link-extractor'
+
+const errors: Array<{
+  file: string
+  link: string
+  resolvedPath: string
+  reason: string
+}> = []
+
+function isRelativeLink(link: string) {
+  return (
+    !link.startsWith('/') &&
+    !link.startsWith('http://') &&
+    !link.startsWith('https://') &&
+    !link.startsWith('//') &&
+    !link.startsWith('#') &&
+    !link.startsWith('mailto:')
+  )
+}
+
+/** Remove any trailing .md */
+function stripExtension(p: string): string {
+  return p.replace(`${extname(p)}`, '')
+}
+
+function relativeLinkExists(link: string, file: string): boolean {
+  // Remove hash if present
+  const linkWithoutHash = link.split('#')[0]
+  // If the link is empty after removing hash, it's not a file
+  if (!linkWithoutHash) return false
+
+  // Strip the file/link extensions
+  const filePath = stripExtension(file)
+  const linkPath = stripExtension(linkWithoutHash)
+
+  // Resolve the path relative to the markdown file's directory
+  // Nav up a level to simulate how links are resolved on the web
+  let absPath = resolve(filePath, '..', linkPath)
+
+  // Ensure the resolved path is within /docs
+  const docsRoot = resolve('docs')
+  if (!absPath.startsWith(docsRoot)) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Path outside /docs',
+    })
+    return false
+  }
+
+  // Check if this is an example path
+  const isExample = absPath.includes('/examples/')
+
+  let exists = false
+
+  if (isExample) {
+    // Transform /docs/framework/{framework}/examples/ to /examples/{framework}/
+    absPath = absPath.replace(
+      /\/docs\/framework\/([^/]+)\/examples\//,
+      '/examples/$1/',
+    )
+    // For examples, we want to check if the directory exists
+    exists = existsSync(absPath) && statSync(absPath).isDirectory()
+  } else {
+    // For non-examples, we want to check if the .md file exists
+    if (!absPath.endsWith('.md')) {
+      absPath = `${absPath}.md`
+    }
+    exists = existsSync(absPath)
+  }
+
+  if (!exists) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Not found',
+    })
+  }
+  return exists
+}
+
+async function verifyMarkdownLinks() {
+  // Find all markdown files in docs directory
+  const markdownFiles = await glob('docs/**/*.md', {
+    ignore: ['**/node_modules/**'],
+  })
+
+  console.log(`Found ${markdownFiles.length} markdown files\n`)
+
+  // Process each file
+  for (const file of markdownFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const links: Array<string> = markdownLinkExtractor(content)
+
+    const relativeLinks = links.filter((link: string) => {
+      return isRelativeLink(link)
+    })
+
+    if (relativeLinks.length > 0) {
+      relativeLinks.forEach((link) => {
+        relativeLinkExists(link, file)
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`\n❌ Found ${errors.length} broken links:`)
+    errors.forEach((err) => {
+      console.log(
+        `${err.file}\n  link:      ${err.link}\n  resolved:  ${err.resolvedPath}\n  why:       ${err.reason}\n`,
+      )
+    })
+    process.exit(1)
+  } else {
+    console.log('\n✅ No broken links found!')
+  }
+}
+
+verifyMarkdownLinks().catch(console.error)

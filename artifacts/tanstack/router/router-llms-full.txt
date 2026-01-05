@@ -1,0 +1,3543 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- examples/react/quickstart/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/solid/quickstart/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/quickstart-esbuild-file-based/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      html {
+        color-scheme: light dark;
+      }
+      * {
+        @apply border-gray-200 dark:border-gray-800;
+      }
+      body {
+        @apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/dist/main.js"></script>
+  </body>
+</html>
+
+
+--- examples/solid/quickstart-esbuild-file-based/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <style type="text/tailwindcss">
+      html {
+        color-scheme: light dark;
+      }
+      * {
+        @apply border-gray-200 dark:border-gray-800;
+      }
+      body {
+        @apply bg-gray-50 text-gray-950 dark:bg-gray-900 dark:text-gray-200;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/dist/main.js"></script>
+  </body>
+</html>
+
+
+--- examples/react/quickstart-file-based/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite App</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/solid/quickstart-file-based/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
+
+--- examples/react/quickstart-webpack-file-based/public/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TanStack router</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+
+
+--- examples/solid/quickstart-webpack-file-based/public/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TanStack router</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+  </body>
+</html>
+
+
+--- examples/solid/quickstart-esbuild-file-based/build.js ---
+#!/usr/bin/env node
+import * as esbuild from 'esbuild'
+import { solidPlugin } from 'esbuild-plugin-solid'
+import { tanstackRouter } from '@tanstack/router-plugin/esbuild'
+
+const isDev = process.argv.includes('--dev')
+
+const ctx = await esbuild.context({
+  entryPoints: ['src/main.tsx'],
+  outfile: 'dist/main.js',
+  minify: !isDev,
+  bundle: true,
+  format: 'esm',
+  target: ['esnext'],
+  sourcemap: true,
+  conditions: ['style'],
+  plugins: [
+    solidPlugin(),
+    tanstackRouter({ target: 'solid', autoCodeSplitting: true }),
+  ],
+})
+
+if (isDev) {
+  await ctx.watch()
+  const { host, port } = await ctx.serve({ servedir: '.', port: 3005 })
+  console.log(`Server running at http://${host || 'localhost'}:${port}`)
+} else {
+  await ctx.rebuild()
+  await ctx.dispose()
+}
+
+
+--- examples/react/quickstart-esbuild-file-based/esbuild.config.js ---
+import { tanstackRouter } from '@tanstack/router-plugin/esbuild'
+
+export default {
+  jsx: 'transform',
+  minify: true,
+  sourcemap: true,
+  bundle: true,
+  format: 'esm',
+  target: ['esnext'],
+  plugins: [tanstackRouter({ target: 'react', autoCodeSplitting: true })],
+}
+
+
+--- examples/react/authenticated-routes-firebase/README.md ---
+# TanStack Router - Authenticated Routes with Firebase Example
+
+An example demonstrating authentication with Firebase and protected routes.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+- [Firebase Documentation](https://firebase.google.com/docs)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/authenticated-routes-firebase authenticated-routes-firebase
+```
+
+## Firebase Setup
+
+1. Create a [Firebase project](https://console.firebase.google.com/)
+   1. By default, firebase will configure an accepted domain for localhost...update if necessary!
+2. Enable Authentication in the Firebase console
+3. Add GitHub as an authentication provider:
+   - Go to **Authentication** > **Sign-in method** > **GitHub**
+   - Enable GitHub authentication
+   - You'll need to set up OAuth in your GitHub account:
+     - Go to [GitHub Developer Settings](https://github.com/settings/developers)
+     - Create a new OAuth app
+     - Set the homepage URL to your local or production URL
+     - Set the callback URL to: `https://your-firebase-project-id.firebaseapp.com/__/auth/handler`
+     - Copy the Client ID and Client Secret
+   - Return to Firebase console and paste the GitHub Client ID and Client Secret
+   - Save the changes
+
+4. Create a web app in your Firebase project:
+   - Go to **Project Overview** > **Add app** > **Web**
+   - Register the app with a nickname
+   - Copy the Firebase configuration object for later use
+
+## Setup .env.local
+
+Copy the .env.example provided and configure with your firebase credentials:
+
+```
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Firebase authentication integration
+- Protected routes with Firebase Auth
+- Route guards
+- Login/logout with Firebase
+- User session management
+- Public vs private routes
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+- [Firebase Documentation](https://firebase.google.com/docs)
+- [Firebase project](https://console.firebase.google.com/)
+- [GitHub Developer Settings](https://github.com/settings/developers)
+
+--- examples/react/authenticated-routes/README.md ---
+# TanStack Router - Authenticated Routes Example
+
+An example demonstrating authentication and protected routes.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/authenticated-routes authenticated-routes
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Authentication flow
+- Protected routes
+- Route guards
+- Login/logout functionality
+- Redirect after authentication
+- Public vs private routes
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-default-search-params/README.md ---
+# TanStack Router - Default Search Params Example
+
+An example demonstrating default search parameters.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-default-search-params basic-default-search-params
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Default search parameter values
+- Type-safe search params
+- Search param validation
+- URL state management
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-devtools-panel/README.md ---
+# TanStack Router - DevTools Panel Example
+
+An example demonstrating the TanStack Router DevTools panel.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-devtools-panel basic-devtools-panel
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- TanStack Router DevTools integration
+- DevTools panel configuration
+- Route debugging
+- State inspection
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-file-based/README.md ---
+# TanStack Router - File-Based Routing Example
+
+An example demonstrating file-based routing with TanStack Router.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-file-based basic-file-based
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- File-based route generation
+- Automatic route tree creation
+- Route file conventions
+- Type-safe routing with file-based routes
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-non-nested-devtools/README.md ---
+# TanStack Router - Non-Nested DevTools Example
+
+An example demonstrating TanStack Router DevTools in a non-nested configuration.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-non-nested-devtools basic-non-nested-devtools
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- TanStack Router DevTools
+- Non-nested DevTools configuration
+- Alternative DevTools placement
+- DevTools customization
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-react-query-file-based/README.md ---
+# TanStack Router - React Query File-Based Example
+
+An example combining file-based routing with TanStack Query integration.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+- [TanStack Query Docs](https://tanstack.com/query)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-react-query-file-based basic-react-query-file-based
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- File-based routing with TanStack Router
+- TanStack Query integration
+- Type-safe data fetching
+- Automatic route generation
+- Query-based data loading per route
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+- [TanStack Query Docs](https://tanstack.com/query)
+
+--- examples/react/basic-react-query/README.md ---
+# TanStack Router - React Query Example
+
+An example demonstrating integration between TanStack Router and TanStack Query.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+- [TanStack Query Docs](https://tanstack.com/query)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-react-query basic-react-query
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Integrating TanStack Query with TanStack Router
+- Data fetching with queries
+- Route-level data loading
+- Cache management
+- Prefetching data on route navigation
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+- [TanStack Query Docs](https://tanstack.com/query)
+
+--- examples/react/basic-ssr-file-based/README.md ---
+# TanStack Router - SSR File-Based Example
+
+An example demonstrating server-side rendering (SSR) with file-based routing.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-ssr-file-based basic-ssr-file-based
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Server-side rendering with TanStack Router
+- File-based routing
+- SSR data loading
+- Hydration
+- SEO-friendly routing
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- examples/react/basic-ssr-streaming-file-based/README.md ---
+# TanStack Router - SSR Streaming File-Based Example
+
+An example demonstrating server-side rendering with streaming and file-based routing.
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+## Start a new project based on this example
+
+To start a new project based on this example, run:
+
+```sh
+npx gitpick TanStack/router/tree/main/examples/react/basic-ssr-streaming-file-based basic-ssr-streaming-file-based
+```
+
+## Getting Started
+
+Install dependencies:
+
+```sh
+pnpm install
+```
+
+Start the development server:
+
+```sh
+pnpm dev
+```
+
+## Build
+
+Build for production:
+
+```sh
+pnpm build
+```
+
+## About This Example
+
+This example demonstrates:
+
+- Server-side rendering with streaming
+- File-based routing
+- Progressive rendering
+- Suspense boundaries
+- Optimized time-to-first-byte
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+
+--- packages/virtual-file-routes/src/api.ts ---
+import type {
+  IndexRoute,
+  LayoutRoute,
+  PhysicalSubtree,
+  Route,
+  VirtualRootRoute,
+  VirtualRouteNode,
+} from './types'
+
+export function rootRoute(
+  file: string,
+  children?: Array<VirtualRouteNode>,
+): VirtualRootRoute {
+  return {
+    type: 'root',
+    file,
+    children,
+  }
+}
+
+export function index(file: string): IndexRoute {
+  return {
+    type: 'index',
+    file,
+  }
+}
+
+export function layout(
+  file: string,
+  children: Array<VirtualRouteNode>,
+): LayoutRoute
+export function layout(
+  id: string,
+  file: string,
+  children: Array<VirtualRouteNode>,
+): LayoutRoute
+
+export function layout(
+  idOrFile: string,
+  fileOrChildren: string | Array<VirtualRouteNode>,
+  children?: Array<VirtualRouteNode>,
+): LayoutRoute {
+  if (Array.isArray(fileOrChildren)) {
+    return {
+      type: 'layout',
+      file: idOrFile,
+      children: fileOrChildren,
+    }
+  } else {
+    return {
+      type: 'layout',
+      id: idOrFile,
+      file: fileOrChildren,
+      children,
+    }
+  }
+}
+
+export function route(path: string, children: Array<VirtualRouteNode>): Route
+export function route(path: string, file: string): Route
+export function route(
+  path: string,
+  file: string,
+  children: Array<VirtualRouteNode>,
+): Route
+export function route(
+  path: string,
+  fileOrChildren: string | Array<VirtualRouteNode>,
+  children?: Array<VirtualRouteNode>,
+): Route {
+  if (typeof fileOrChildren === 'string') {
+    return {
+      type: 'route',
+      file: fileOrChildren,
+      path,
+      children,
+    }
+  }
+  return {
+    type: 'route',
+    path,
+    children: fileOrChildren,
+  }
+}
+
+export function physical(
+  pathPrefix: string,
+  directory: string,
+): PhysicalSubtree {
+  return {
+    type: 'physical',
+    directory,
+    pathPrefix,
+  }
+}
+
+
+--- packages/start-server-core/src/virtual-modules.ts ---
+export const VIRTUAL_MODULES = {
+  startManifest: 'tanstack-start-manifest:v',
+  injectedHeadScripts: 'tanstack-start-injected-head-scripts:v',
+  serverFnManifest: '#tanstack-start-server-fn-manifest',
+} as const
+
+
+--- e2e/react-start/basic-react-query/src/routes/api.users.ts ---
+import { createFileRoute } from '@tanstack/react-router'
+import { json } from '@tanstack/react-start'
+import axios from 'redaxios'
+import type { User } from '../utils/users'
+
+let queryURL = 'https://jsonplaceholder.typicode.com'
+
+if (import.meta.env.VITE_NODE_ENV === 'test') {
+  queryURL = `http://localhost:${import.meta.env.VITE_EXTERNAL_PORT}`
+}
+
+export const Route = createFileRoute('/api/users')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        console.info('Fetching users... @', request.url)
+        const res = await axios.get<Array<User>>(`${queryURL}/users`)
+        const list = res.data.slice(0, 10)
+        return json(
+          list.map((u) => ({ id: u.id, name: u.name, email: u.email })),
+        )
+      },
+    },
+  },
+})
+
+
+--- e2e/react-start/basic/src/routes/api.users.ts ---
+import { createFileRoute } from '@tanstack/react-router'
+import { json } from '@tanstack/react-start'
+import axios from 'redaxios'
+
+import type { User } from '~/utils/users'
+
+let queryURL = 'https://jsonplaceholder.typicode.com'
+
+if (import.meta.env.VITE_NODE_ENV === 'test') {
+  queryURL = `http://localhost:${import.meta.env.VITE_EXTERNAL_PORT}`
+}
+
+export const Route = createFileRoute('/api/users')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        console.info('Fetching users... @', request.url)
+        const res = await axios.get<Array<User>>(`${queryURL}/users`)
+
+        const list = res.data.slice(0, 10)
+
+        return json(
+          list.map((u) => ({ id: u.id, name: u.name, email: u.email })),
+        )
+      },
+    },
+  },
+})
+
+
+--- e2e/react-start/custom-basepath/src/routes/api.users.ts ---
+import { createFileRoute } from '@tanstack/react-router'
+import { json } from '@tanstack/react-start'
+import axios from 'redaxios'
+
+import type { User } from '~/utils/users'
+
+let queryURL = 'https://jsonplaceholder.typicode.com'
+
+if (import.meta.env.VITE_NODE_ENV === 'test') {
+  queryURL = `http://localhost:${import.meta.env.VITE_EXTERNAL_PORT}`
+}
+
+export const Route = createFileRoute('/api/users')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        console.info('Fetching users... @', request.url)
+        const res = await axios.get<Array<User>>(`${queryURL}/users`)
+
+        const list = res.data.slice(0, 10)
+
+        return json(
+          list.map((u) => ({ id: u.id, name: u.name, email: u.email })),
+        )
+      },
+    },
+  },
+})
+
+
+--- e2e/solid-start/basic-solid-query/src/routes/api.users.ts ---
+import { createFileRoute } from '@tanstack/solid-router'
+import { json } from '@tanstack/solid-start'
+import axios from 'redaxios'
+import type { User } from '../utils/users'
+
+let queryURL = 'https://jsonplaceholder.typicode.com'
+
+if (import.meta.env.VITE_NODE_ENV === 'test') {
+  queryURL = `http://localhost:${import.meta.env.VITE_EXTERNAL_PORT}`
+}
+
+export const Route = createFileRoute('/api/users')({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        console.info('Fetching users... @', request.url)
+        const res = await axios.get<Array<User>>(`${queryURL}/users`)
+        const list = res.data.slice(0, 10)
+        return json(
+          list.map((u) => ({ id: u.id, name: u.name, email: u.email })),
+        )
+      },
+    },
+  },
+})
+
+
+--- e2e/react-start/basic-auth/src/prisma-generated/internal/class.ts ---
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck
+/*
+ * WARNING: This is an internal file that is subject to change!
+ *
+ * 🛑 Under no circumstances should you import this file directly! 🛑
+ *
+ * Please import the `PrismaClient` class from the `client.ts` file instead.
+ */
+
+import * as runtime from '@prisma/client/runtime/client'
+import type * as Prisma from './prismaNamespace'
+
+const config: runtime.GetPrismaClientConfig = {
+  previewFeatures: [],
+  clientVersion: '7.0.0',
+  engineVersion: '0c19ccc313cf9911a90d99d2ac2eb0280c76c513',
+  activeProvider: 'sqlite',
+  inlineSchema:
+    '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../src/prisma-generated"\n}\n\ndatasource db {\n  provider = "sqlite"\n}\n\nmodel User {\n  email    String @id @unique\n  password String\n}\n',
+  runtimeDataModel: {
+    models: {},
+    enums: {},
+    types: {},
+  },
+}
+
+config.runtimeDataModel = JSON.parse(
+  '{"models":{"User":{"fields":[{"name":"email","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"}],"dbName":null}},"enums":{},"types":{}}',
+)
+
+async function decodeBase64AsWasm(
+  wasmBase64: string,
+): Promise<WebAssembly.Module> {
+  const { Buffer } = await import('node:buffer')
+  const wasmArray = Buffer.from(wasmBase64, 'base64')
+  return new WebAssembly.Module(wasmArray)
+}
+
+config.compilerWasm = {
+  getRuntime: async () =>
+    await import('@prisma/client/runtime/query_compiler_bg.sqlite.mjs'),
+
+  getQueryCompilerWasmModule: async () => {
+    const { wasm } = await import(
+      '@prisma/client/runtime/query_compiler_bg.sqlite.wasm-base64.mjs'
+    )
+    return await decodeBase64AsWasm(wasm)
+  },
+}
+
+export type LogOptions<ClientOptions extends Prisma.PrismaClientOptions> =
+  'log' extends keyof ClientOptions
+    ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition>
+      ? Prisma.GetEvents<ClientOptions['log']>
+      : never
+    : never
+
+export interface PrismaClientConstructor {
+  /**
+   * ## Prisma Client
+   *
+   * Type-safe database client for TypeScript
+   * @example
+   * ```
+   * const prisma = new PrismaClient()
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+   */
+
+  new <
+    Options extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
+    LogOpts extends LogOptions<Options> = LogOptions<Options>,
+    OmitOpts extends Prisma.PrismaClientOptions['omit'] = Options extends {
+      omit: infer U
+    }
+      ? U
+      : Prisma.PrismaClientOptions['omit'],
+    ExtArgs extends
+      runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+  >(
+    options: Prisma.Subset<Options, Prisma.PrismaClientOptions>,
+  ): PrismaClient<LogOpts, OmitOpts, ExtArgs>
+}
+
+/**
+ * ## Prisma Client
+ *
+ * Type-safe database client for TypeScript
+ * @example
+ * ```
+ * const prisma = new PrismaClient()
+ * // Fetch zero or more Users
+ * const users = await prisma.user.findMany()
+ * ```
+ *
+ * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+ */
+
+export interface PrismaClient<
+  in LogOpts extends Prisma.LogLevel = never,
+  in out OmitOpts extends Prisma.PrismaClientOptions['omit'] = undefined,
+  in out ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> {
+  [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
+
+  $on<V extends LogOpts>(
+    eventType: V,
+    callback: (
+      event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent,
+    ) => void,
+  ): PrismaClient
+
+  /**
+   * Connect with the database
+   */
+  $connect(): runtime.Types.Utils.JsPromise<void>
+
+  /**
+   * Disconnect from the database
+   */
+  $disconnect(): runtime.Types.Utils.JsPromise<void>
+
+  /**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRaw<T = unknown>(
+    query: TemplateStringsArray | Prisma.Sql,
+    ...values: any[]
+  ): Prisma.PrismaPromise<number>
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRawUnsafe<T = unknown>(
+    query: string,
+    ...values: any[]
+  ): Prisma.PrismaPromise<number>
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRaw<T = unknown>(
+    query: TemplateStringsArray | Prisma.Sql,
+    ...values: any[]
+  ): Prisma.PrismaPromise<T>
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRawUnsafe<T = unknown>(
+    query: string,
+    ...values: any[]
+  ): Prisma.PrismaPromise<T>
+
+  /**
+   * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
+   * @example
+   * ```
+   * const [george, bob, alice] = await prisma.$transaction([
+   *   prisma.user.create({ data: { name: 'George' } }),
+   *   prisma.user.create({ data: { name: 'Bob' } }),
+   *   prisma.user.create({ data: { name: 'Alice' } }),
+   * ])
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   */
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(
+    arg: [...P],
+    options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
+  ): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+
+  $transaction<R>(
+    fn: (
+      prisma: Omit<PrismaClient, runtime.ITXClientDenyList>,
+    ) => runtime.Types.Utils.JsPromise<R>,
+    options?: {
+      maxWait?: number
+      timeout?: number
+      isolationLevel?: Prisma.TransactionIsolationLevel
+    },
+  ): runtime.Types.Utils.JsPromise<R>
+
+  $extends: runtime.Types.Extensions.ExtendsHook<
+    'extends',
+    Prisma.TypeMapCb<OmitOpts>,
+    ExtArgs,
+    runtime.Types.Utils.Call<
+      Prisma.TypeMapCb<OmitOpts>,
+      {
+        extArgs: ExtArgs
+      }
+    >
+  >
+
+  /**
+   * `prisma.user`: Exposes CRUD operations for the **User** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
+   * ```
+   */
+  get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>
+}
+
+export function getPrismaClientClass(): PrismaClientConstructor {
+  return runtime.getPrismaClient(config) as unknown as PrismaClientConstructor
+}
+
+
+## Links discovered
+- [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client)
+- [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access)
+- [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions)
+
+--- e2e/solid-start/basic-auth/src/prisma-generated/internal/class.ts ---
+/* !!! This is code generated by Prisma. Do not edit directly. !!! */
+/* eslint-disable */
+// biome-ignore-all lint: generated file
+// @ts-nocheck
+/*
+ * WARNING: This is an internal file that is subject to change!
+ *
+ * 🛑 Under no circumstances should you import this file directly! 🛑
+ *
+ * Please import the `PrismaClient` class from the `client.ts` file instead.
+ */
+
+import * as runtime from '@prisma/client/runtime/client'
+import type * as Prisma from './prismaNamespace'
+
+const config: runtime.GetPrismaClientConfig = {
+  previewFeatures: [],
+  clientVersion: '7.0.0',
+  engineVersion: '0c19ccc313cf9911a90d99d2ac2eb0280c76c513',
+  activeProvider: 'sqlite',
+  inlineSchema:
+    '// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\ngenerator client {\n  provider = "prisma-client"\n  output   = "../src/prisma-generated"\n}\n\ndatasource db {\n  provider = "sqlite"\n}\n\nmodel User {\n  email    String @id @unique\n  password String\n}\n',
+  runtimeDataModel: {
+    models: {},
+    enums: {},
+    types: {},
+  },
+}
+
+config.runtimeDataModel = JSON.parse(
+  '{"models":{"User":{"fields":[{"name":"email","kind":"scalar","type":"String"},{"name":"password","kind":"scalar","type":"String"}],"dbName":null}},"enums":{},"types":{}}',
+)
+
+async function decodeBase64AsWasm(
+  wasmBase64: string,
+): Promise<WebAssembly.Module> {
+  const { Buffer } = await import('node:buffer')
+  const wasmArray = Buffer.from(wasmBase64, 'base64')
+  return new WebAssembly.Module(wasmArray)
+}
+
+config.compilerWasm = {
+  getRuntime: async () =>
+    await import('@prisma/client/runtime/query_compiler_bg.sqlite.mjs'),
+
+  getQueryCompilerWasmModule: async () => {
+    const { wasm } = await import(
+      '@prisma/client/runtime/query_compiler_bg.sqlite.wasm-base64.mjs'
+    )
+    return await decodeBase64AsWasm(wasm)
+  },
+}
+
+export type LogOptions<ClientOptions extends Prisma.PrismaClientOptions> =
+  'log' extends keyof ClientOptions
+    ? ClientOptions['log'] extends Array<Prisma.LogLevel | Prisma.LogDefinition>
+      ? Prisma.GetEvents<ClientOptions['log']>
+      : never
+    : never
+
+export interface PrismaClientConstructor {
+  /**
+   * ## Prisma Client
+   *
+   * Type-safe database client for TypeScript
+   * @example
+   * ```
+   * const prisma = new PrismaClient()
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+   */
+
+  new <
+    Options extends Prisma.PrismaClientOptions = Prisma.PrismaClientOptions,
+    LogOpts extends LogOptions<Options> = LogOptions<Options>,
+    OmitOpts extends Prisma.PrismaClientOptions['omit'] = Options extends {
+      omit: infer U
+    }
+      ? U
+      : Prisma.PrismaClientOptions['omit'],
+    ExtArgs extends
+      runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+  >(
+    options: Prisma.Subset<Options, Prisma.PrismaClientOptions>,
+  ): PrismaClient<LogOpts, OmitOpts, ExtArgs>
+}
+
+/**
+ * ## Prisma Client
+ *
+ * Type-safe database client for TypeScript
+ * @example
+ * ```
+ * const prisma = new PrismaClient()
+ * // Fetch zero or more Users
+ * const users = await prisma.user.findMany()
+ * ```
+ *
+ * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client).
+ */
+
+export interface PrismaClient<
+  in LogOpts extends Prisma.LogLevel = never,
+  in out OmitOpts extends Prisma.PrismaClientOptions['omit'] = undefined,
+  in out ExtArgs extends
+    runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs,
+> {
+  [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['other'] }
+
+  $on<V extends LogOpts>(
+    eventType: V,
+    callback: (
+      event: V extends 'query' ? Prisma.QueryEvent : Prisma.LogEvent,
+    ) => void,
+  ): PrismaClient
+
+  /**
+   * Connect with the database
+   */
+  $connect(): runtime.Types.Utils.JsPromise<void>
+
+  /**
+   * Disconnect from the database
+   */
+  $disconnect(): runtime.Types.Utils.JsPromise<void>
+
+  /**
+   * Executes a prepared raw query and returns the number of affected rows.
+   * @example
+   * ```
+   * const result = await prisma.$executeRaw`UPDATE User SET cool = ${true} WHERE email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRaw<T = unknown>(
+    query: TemplateStringsArray | Prisma.Sql,
+    ...values: any[]
+  ): Prisma.PrismaPromise<number>
+
+  /**
+   * Executes a raw query and returns the number of affected rows.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$executeRawUnsafe('UPDATE User SET cool = $1 WHERE email = $2 ;', true, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $executeRawUnsafe<T = unknown>(
+    query: string,
+    ...values: any[]
+  ): Prisma.PrismaPromise<number>
+
+  /**
+   * Performs a prepared raw query and returns the `SELECT` data.
+   * @example
+   * ```
+   * const result = await prisma.$queryRaw`SELECT * FROM User WHERE id = ${1} OR email = ${'user@email.com'};`
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRaw<T = unknown>(
+    query: TemplateStringsArray | Prisma.Sql,
+    ...values: any[]
+  ): Prisma.PrismaPromise<T>
+
+  /**
+   * Performs a raw query and returns the `SELECT` data.
+   * Susceptible to SQL injections, see documentation.
+   * @example
+   * ```
+   * const result = await prisma.$queryRawUnsafe('SELECT * FROM User WHERE id = $1 OR email = $2;', 1, 'user@email.com')
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access).
+   */
+  $queryRawUnsafe<T = unknown>(
+    query: string,
+    ...values: any[]
+  ): Prisma.PrismaPromise<T>
+
+  /**
+   * Allows the running of a sequence of read/write operations that are guaranteed to either succeed or fail as a whole.
+   * @example
+   * ```
+   * const [george, bob, alice] = await prisma.$transaction([
+   *   prisma.user.create({ data: { name: 'George' } }),
+   *   prisma.user.create({ data: { name: 'Bob' } }),
+   *   prisma.user.create({ data: { name: 'Alice' } }),
+   * ])
+   * ```
+   *
+   * Read more in our [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions).
+   */
+  $transaction<P extends Prisma.PrismaPromise<any>[]>(
+    arg: [...P],
+    options?: { isolationLevel?: Prisma.TransactionIsolationLevel },
+  ): runtime.Types.Utils.JsPromise<runtime.Types.Utils.UnwrapTuple<P>>
+
+  $transaction<R>(
+    fn: (
+      prisma: Omit<PrismaClient, runtime.ITXClientDenyList>,
+    ) => runtime.Types.Utils.JsPromise<R>,
+    options?: {
+      maxWait?: number
+      timeout?: number
+      isolationLevel?: Prisma.TransactionIsolationLevel
+    },
+  ): runtime.Types.Utils.JsPromise<R>
+
+  $extends: runtime.Types.Extensions.ExtendsHook<
+    'extends',
+    Prisma.TypeMapCb<OmitOpts>,
+    ExtArgs,
+    runtime.Types.Utils.Call<
+      Prisma.TypeMapCb<OmitOpts>,
+      {
+        extArgs: ExtArgs
+      }
+    >
+  >
+
+  /**
+   * `prisma.user`: Exposes CRUD operations for the **User** model.
+   * Example usage:
+   * ```ts
+   * // Fetch zero or more Users
+   * const users = await prisma.user.findMany()
+   * ```
+   */
+  get user(): Prisma.UserDelegate<ExtArgs, { omit: OmitOpts }>
+}
+
+export function getPrismaClientClass(): PrismaClientConstructor {
+  return runtime.getPrismaClient(config) as unknown as PrismaClientConstructor
+}
+
+
+## Links discovered
+- [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client)
+- [docs](https://www.prisma.io/docs/reference/tools-and-interfaces/prisma-client/raw-database-access)
+- [docs](https://www.prisma.io/docs/concepts/components/prisma-client/transactions)
+
+--- e2e/react-start/server-routes/src/routes/api/middleware-context.ts ---
+import { createFileRoute } from '@tanstack/react-router'
+import { createMiddleware, json } from '@tanstack/react-start'
+
+const testParentMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next({ context: { testParent: true } })
+  return result
+})
+
+const testMiddleware = createMiddleware()
+  .middleware([testParentMiddleware])
+  .server(async ({ next }) => {
+    const result = await next({ context: { test: true } })
+    return result
+  })
+
+export const Route = createFileRoute('/api/middleware-context')({
+  server: {
+    middleware: [testMiddleware],
+    handlers: {
+      GET: ({ request, context }) => {
+        return json({
+          url: request.url,
+          context: context,
+          expectedContext: { testParent: true, test: true },
+        })
+      },
+    },
+  },
+})
+
+
+--- e2e/solid-start/server-routes/src/routes/api/middleware-context.ts ---
+import { createFileRoute } from '@tanstack/solid-router'
+import { createMiddleware, json } from '@tanstack/solid-start'
+
+const testParentMiddleware = createMiddleware().server(async ({ next }) => {
+  const result = await next({ context: { testParent: true } })
+  return result
+})
+
+const testMiddleware = createMiddleware()
+  .middleware([testParentMiddleware])
+  .server(async ({ next }) => {
+    const result = await next({ context: { test: true } })
+    return result
+  })
+
+export const Route = createFileRoute('/api/middleware-context')({
+  server: {
+    middleware: [testMiddleware],
+    handlers: {
+      GET: ({ request, context }) => {
+        return json({
+          url: request.url,
+          context: context,
+          expectedContext: { testParent: true, test: true },
+        })
+      },
+    },
+  },
+})
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+- Clone the repo
+  - `gh repo clone TanStack/router`
+- Ensure `node` is installed
+  - https://nodejs.org/en/
+- Ensure `pnpm` is installed
+  - https://pnpm.io/installation
+  - Why? We use `pnpm` to manage workspace dependencies. It's easily the best monorepo/workspace experience available as of when this was written.
+- Install dependencies
+  - `pnpm install`
+  - This installs dependencies for all of the packages in the monorepo, even examples!
+  - Dependencies inside of the packages and examples are automatically linked together as local/dynamic dependencies.
+- Install test dependencies
+  - `pnpm exec playwright install` (required for e2e tests)
+- Run the build or dev watcher
+  - `pnpm build:all` (build all packages) or
+  - `pnpm build` (cached build with [nx affected](https://nx.dev/nx-api/nx/documents/affected)) or
+  - `pnpm dev`
+- Navigate to an example
+  - `cd examples/react/basic`
+- Run the example
+  - `pnpm dev`
+- Make changes to the code
+  - If you ran `pnpm dev` the dev watcher will automatically rebuild the code that has changed
+- Editing the docs locally and previewing the changes
+  - The documentations for all the TanStack projects are hosted on [tanstack.com](https://tanstack.com), which is a TanStack Start application (https://github.com/TanStack/tanstack.com). You need to run this app locally to preview your changes in the `TanStack/router` docs.
+
+> [!NOTE]
+> The website fetches the doc pages from GitHub in production, and searches for them at `../router/docs` in development. Your local clone of `TanStack/router` needs to be in the same directory as the local clone of `TanStack/tanstack.com`.
+
+You can follow these steps to set up the docs for local development:
+
+1. Make a new directory called `tanstack`.
+
+```sh
+mkdir tanstack
+```
+
+2. Enter that directory and clone the [`TanStack/router`](https://github.com/TanStack/router) and [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com) repos.
+
+```sh
+cd tanstack
+git clone git@github.com:TanStack/router.git
+# We probably don't need all the branches and commit history
+# from the `tanstack.com` repo, so let's just create a shallow
+# clone of the latest version of the `main` branch.
+# Read more about shallow clones here:
+# https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/#user-content-shallow-clones
+git clone git@github.com:TanStack/tanstack.com.git --depth=1 --single-branch --branch=main
+```
+
+> [!NOTE]
+> Your `tanstack` directory should look like this:
+>
+> ```
+> tanstack/
+>    |
+>    +-- router/ (<-- this directory cannot be called anything else!)
+>    |
+>    +-- tanstack.com/
+> ```
+
+3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+
+```sh
+cd tanstack.com
+pnpm i
+# The app will run on https://localhost:3000 by default
+pnpm dev
+```
+
+4. Now you can visit http://localhost:3000/router/latest/docs/framework/react/overview in the browser and see the changes you make in `tanstack/router/docs` there.
+
+> [!WARNING]
+> You will need to update the `docs/(router or start)config.json` file (in `TanStack/router`) if you add a new documentation page!
+
+You can see the whole process in the screen capture below:
+
+https://github.com/fulopkovacs/form/assets/43729152/9d35a3c3-8153-4e74-9cb2-af275f7a269b
+
+
+## Links discovered
+- [nx affected](https://nx.dev/nx-api/nx/documents/affected)
+- [tanstack.com](https://tanstack.com)
+- [`TanStack/router`](https://github.com/TanStack/router)
+- [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com)
+
+--- AGENTS.md ---
+# AGENTS.md
+
+## Project overview
+
+TanStack Router is a type-safe router with built-in caching and URL state management for React and Solid applications. This monorepo contains two main products:
+
+- **TanStack Router** - Core routing library with type-safe navigation, search params, and path params
+- **TanStack Start** - Full-stack framework built on top of TanStack Router
+
+## Setup commands
+
+- Install deps: `pnpm install`
+- Setup e2e testing: `pnpm exec playwright install`
+- Build packages: `pnpm build` (affected) or `pnpm build:all` (force all)
+- Start dev server: `pnpm dev`
+- Run tests: `pnpm test`
+
+## Code style
+
+- TypeScript strict mode with extensive type safety
+- Framework-agnostic core logic separated from React/Solid bindings
+- Type-safe routing with search params and path params
+- Use workspace protocol for internal dependencies (`workspace:*`)
+
+## Dev environment tips
+
+- This is a pnpm workspace monorepo with packages organized by functionality
+- Nx provides caching, affected testing, targeting, and parallel execution for efficiency
+- Use `npx nx show projects` to list all available packages
+- Target specific packages: `npx nx run @tanstack/react-router:test:unit`
+- Target multiple packages: `npx nx run-many --target=test:eslint --projects=@tanstack/history,@tanstack/router-core`
+- Run affected tests only: `npx nx affected --target=test:unit`
+- Exclude patterns: `npx nx run-many --target=test:unit --exclude="examples/**,e2e/**"`
+- Navigate to examples and run `pnpm dev` to test changes: `cd examples/react/basic && pnpm dev`
+- **Granular Vitest testing within packages:**
+  - Navigate first: `cd packages/react-router`
+  - Specific files: `npx vitest run tests/link.test.tsx tests/Scripts.test.tsx`
+  - Test patterns: `npx vitest run tests/ClientOnly.test.tsx -t "should render fallback"`
+  - Name patterns: `npx vitest run -t "navigation"` (all tests with "navigation" in name)
+  - Exclude patterns: `npx vitest run --exclude="**/*link*" tests/`
+  - List tests: `npx vitest list tests/link.test.tsx` or `npx vitest list` (all)
+  - Through nx: `npx nx run @tanstack/react-router:test:unit -- tests/ClientOnly.test.tsx`
+- **Available test targets per package:** `test:unit`, `test:types`, `test:eslint`, `test:build`, `test:perf`, `build`
+- **Testing strategy:** Package level (nx) → File level (vitest) → Test level (-t flag) → Pattern level (exclude)
+
+## Testing instructions
+
+- **Critical**: Always run unit and type tests during development - do not proceed if they fail
+- **Test types:** `pnpm test:unit`, `pnpm test:types`, `pnpm test:eslint`, `pnpm test:e2e`, `pnpm test:build`
+- **Full CI suite:** `pnpm test:ci`
+- **Fix formatting:** `pnpm format`
+- **Efficient targeted testing workflow:**
+  1. **Affected only:** `npx nx affected --target=test:unit` (compares to main branch)
+  2. **Specific packages:** `npx nx run @tanstack/react-router:test:unit`
+  3. **Specific files:** `cd packages/react-router && npx vitest run tests/link.test.tsx`
+  4. **Specific patterns:** `npx vitest run tests/link.test.tsx -t "preloading"`
+- **Pro tips:**
+  - Use `npx vitest list` to explore available tests before running
+  - Use `-t "pattern"` to focus on specific functionality during development
+  - Use `--exclude` patterns to skip unrelated tests
+  - Combine nx package targeting with vitest file targeting for maximum precision
+- **Example workflow:** `npx nx run @tanstack/react-router:test:unit` → `cd packages/react-router && npx vitest run tests/link.test.tsx` → `npx vitest run tests/link.test.tsx -t "preloading"`
+
+## PR instructions
+
+- Always run `pnpm test:eslint`, `pnpm test:types`, and `pnpm test:unit` before committing
+- Test changes in relevant example apps: `cd examples/react/basic && pnpm dev`
+- Update corresponding documentation in `docs/` directory when adding features
+- Add or update tests for any code changes
+- Use internal docs links relative to `docs/` folder (e.g., `./guide/data-loading`)
+
+## Package structure
+
+**Core packages:**
+
+- `packages/router-core/` - Framework-agnostic core router logic
+- `packages/react-router/`, `packages/solid-router/` - React/Solid bindings and components
+- `packages/history/` - Browser history management
+
+**Tooling:**
+
+- `packages/router-cli/` - CLI tools for code generation
+- `packages/router-generator/` - Route generation utilities
+- `packages/router-plugin/` - Universal bundler plugins (Vite, Webpack, ESBuild, Rspack)
+- `packages/virtual-file-routes/` - Virtual file routing system
+
+**Developer experience:**
+
+- `packages/router-devtools/`, `packages/*-router-devtools/` - Development tools
+- `packages/eslint-plugin-router/` - ESLint rules for router
+
+**Validation adapters:**
+
+- `packages/zod-adapter/`, `packages/valibot-adapter/`, `packages/arktype-adapter/`
+
+**Start framework:**
+
+- `packages/*-start/`, `packages/start-*/` - Full-stack framework packages
+
+**Examples & testing:**
+
+- `examples/react/`, `examples/solid/` - Example applications (test changes here)
+- `e2e/` - End-to-end tests (requires Playwright)
+- `docs/router/`, `docs/start/` - Documentation with React/Solid subdirectories
+
+**Dependencies:** Uses workspace protocol (`workspace:*`) - core → framework → start packages
+
+## Common development tasks
+
+**Adding new routes:**
+
+- Use file-based routing in `src/routes/` directories
+- Or use code-based routing with route definitions
+- Run route generation with CLI tools
+
+**Testing changes:**
+
+- Build packages: `pnpm build` or `pnpm dev` (watch mode)
+- Run example apps to test functionality
+- Use devtools for debugging router state
+
+**Documentation updates:**
+
+- Update relevant docs in `docs/` directory
+- Ensure examples reflect documentation changes
+- Test documentation links and references
+- Use relative links to `docs/` folder format
+
+## Framework-specific notes
+
+**React:**
+
+- Uses React Router components and hooks
+- Supports React Server Components (RSC)
+- Examples include React Query integration
+- Package: `@tanstack/react-router`
+
+**Solid:**
+
+- Uses Solid Router components and primitives
+- Supports Solid Start for full-stack applications
+- Examples include Solid Query integration
+- Package: `@tanstack/solid-router`
+
+## Environment requirements
+
+- **Node.js** - Required for development
+- **pnpm** - Package manager (required for workspace features)
+- **Playwright** - Required for e2e tests (`pnpm exec playwright install`)
+
+## Key architecture patterns
+
+- **Type Safety**: Extensive TypeScript for type-safe routing
+- **Framework Agnostic**: Core logic separated from framework bindings
+- **Plugin Architecture**: Universal bundler plugins using unplugin
+- **File-based Routing**: Support for both code-based and file-based routing
+- **Search Params**: First-class support for type-safe search parameters
+
+## Development workflow
+
+1. **Setup**: `pnpm install` and `pnpm exec playwright install`
+2. **Build**: `pnpm build:all` or `pnpm dev` for watch mode
+3. **Test**: Make changes and run relevant tests (use nx for targeted testing)
+4. **Examples**: Navigate to examples and run `pnpm dev` to test changes
+5. **Quality**: Run `pnpm test:eslint`, `pnpm test:types`, `pnpm test:unit` before committing
+
+## References
+
+- **Documentation**: https://tanstack.com/router
+- **GitHub**: https://github.com/TanStack/router
+- **Discord Community**: https://discord.com/invite/WrRKjPJ
+
+
+--- DEBUGGING.md ---
+# Debugging & Testing Guide
+
+_A practical guide for debugging complex issues and running tests effectively, learned from investigating production regressions in large codebases._
+
+## Quick Start Debugging Checklist
+
+When you encounter a bug report or failing test:
+
+1. **Reproduce first** - Create a minimal test case that demonstrates the exact issue
+2. **Establish baseline** - Run existing tests to see what currently works/breaks
+3. **Add targeted logging** - Insert debug output at key decision points
+4. **Trace the data flow** - Follow the path from input to unexpected output
+5. **Check recent changes** - Look for version changes mentioned in bug reports
+6. **Test your hypothesis** - Make small, targeted changes and validate each step
+
+## Essential Testing Commands
+
+### Monorepo with Nx
+
+```bash
+# Run all tests for a package
+npx nx test:unit @package-name
+
+# Run specific test file
+npx nx test:unit @package-name -- --run path/to/test.test.tsx
+
+# Run tests matching a pattern
+npx nx test:unit @package-name -- --run "pattern-in-test-name"
+
+# Run with verbose output
+npx nx test:unit @package-name -- --run --verbose
+```
+
+### Standard npm/yarn projects
+
+```bash
+# Run specific test file
+npm test -- --run path/to/test.test.tsx
+yarn test path/to/test.test.tsx
+
+# Run tests matching pattern
+npm test -- --grep "test pattern"
+```
+
+### Useful test flags
+
+```bash
+# Run only (don't watch for changes)
+--run
+
+# Show full output including console.logs
+--verbose
+
+# Run in specific environment
+--environment=jsdom
+```
+
+## Effective Debugging Strategies
+
+### 1. Strategic Logging
+
+```javascript
+// Use distinctive prefixes for easy filtering
+console.log('[DEBUG useNavigate] from:', from, 'to:', to)
+console.log('[DEBUG router] current location:', state.location.pathname)
+
+// Log both input and output of functions
+console.log('[DEBUG buildLocation] input:', dest)
+// ... function logic ...
+console.log('[DEBUG buildLocation] output:', result)
+```
+
+**Pro tip:** Use `[DEBUG componentName]` prefixes so you can easily filter logs in browser dev tools.
+
+### 2. Reproduction Test Pattern
+
+```javascript
+test('should reproduce the exact issue from bug report', async () => {
+  // Set up the exact scenario described
+  const router = createRouter({
+    /* exact config from bug report */
+  })
+
+  // Perform the exact user actions
+  await navigate({ to: '/initial-route' })
+  await navigate({ to: '.', search: { param: 'value' } })
+
+  // Assert the expected vs actual behavior
+  expect(router.state.location.pathname).toBe('/expected')
+  // This should fail initially, proving reproduction
+})
+```
+
+### 3. Data Flow Tracing
+
+```
+User Action → Hook Call → Router Logic → State Update → UI Update
+     ↓            ↓           ↓           ↓          ↓
+  onClick()  → useNavigate() → buildLocation() → setState() → re-render
+```
+
+Add logging at each step to see where the flow diverges from expectations.
+
+## Common Pitfalls & Solutions
+
+### React Testing Issues
+
+**Problem:** State updates not reflected in tests
+
+```javascript
+// ❌ Bad - missing act() wrapper
+fireEvent.click(button)
+expect(component.state).toBe(newValue)
+
+// ✅ Good - wrapped in act()
+act(() => {
+  fireEvent.click(button)
+})
+expect(component.state).toBe(newValue)
+```
+
+**Problem:** Async operations not completing
+
+```javascript
+// ❌ Bad - not waiting for async
+const result = await someAsyncOperation()
+expect(result).toBe(expected)
+
+// ✅ Good - ensuring completion
+await act(async () => {
+  await someAsyncOperation()
+})
+expect(result).toBe(expected)
+```
+
+### React Router Specific Issues
+
+**Context vs Location confusion:**
+
+- `useMatch({ strict: false })` returns the **component's route context**
+- `router.state.location.pathname` returns the **current URL**
+- These can be different when components are rendered by parent routes
+
+```javascript
+// Component rendered by parent route "/" but URL is "/child"
+const match = useMatch({ strict: false }) // Returns "/" context
+const location = router.state.location.pathname // Returns "/child"
+```
+
+## Search & Investigation Commands
+
+### Finding relevant code
+
+```bash
+# Search for specific patterns in TypeScript/JavaScript files
+grep -r "navigate.*to.*\." --include="*.ts" --include="*.tsx" .
+
+# Find files related to a feature
+find . -name "*navigate*" -type f
+
+# Search with ripgrep (faster)
+rg "useNavigate" --type typescript
+```
+
+### Git investigation
+
+```bash
+# Find when a specific line was changed
+git blame path/to/file.ts
+
+# See recent changes to a file
+git log --oneline -10 path/to/file.ts
+
+# Search commit messages
+git log --grep="navigation" --oneline
+```
+
+## Testing Best Practices
+
+### Test Structure
+
+```javascript
+describe('Feature', () => {
+  beforeEach(() => {
+    // Reset state for each test
+    cleanup()
+    history = createBrowserHistory()
+  })
+
+  test('should handle specific scenario', async () => {
+    // Arrange - set up the test conditions
+    const router = createRouter(config)
+
+    // Act - perform the action being tested
+    await act(async () => {
+      navigate({ to: '/target' })
+    })
+
+    // Assert - verify the results
+    expect(router.state.location.pathname).toBe('/target')
+  })
+})
+```
+
+### Multiple Assertions
+
+```javascript
+test('navigation should update both path and search', async () => {
+  await navigate({ to: '/page', search: { q: 'test' } })
+
+  // Test multiple aspects
+  expect(router.state.location.pathname).toBe('/page')
+  expect(router.state.location.search).toEqual({ q: 'test' })
+  expect(router.state.matches).toHaveLength(2)
+})
+```
+
+## Architecture Investigation Process
+
+### 1. Map the System
+
+```
+User Input → Component → Hook → Core Logic → State → UI
+```
+
+Identify each layer and what it's responsible for.
+
+### 2. Find the Divergence Point
+
+Use logging to identify exactly where expected behavior diverges:
+
+```javascript
+console.log('Input received:', input)
+// ... processing ...
+console.log('After step 1:', intermediate)
+// ... more processing ...
+console.log('Final output:', output) // Is this what we expected?
+```
+
+### 3. Check Assumptions
+
+Common false assumptions:
+
+- "This hook returns the current route" (might return component context)
+- "State updates are synchronous" (often async in React)
+- "This worked before" (check if tests actually covered this case)
+
+## Regression Investigation
+
+### Version Comparison
+
+```bash
+# Check what changed between versions
+git diff v1.120.13..v1.121.34 -- packages/react-router/
+
+# Look for specific changes
+git log v1.120.13..v1.121.34 --oneline --grep="navigate"
+```
+
+### Bisecting Issues
+
+```bash
+# Start bisect to find breaking commit
+git bisect start
+git bisect bad HEAD
+git bisect good v1.120.13
+
+# Test each commit until you find the breaking change
+```
+
+## When to Stop & Reconsider
+
+**Stop changing code when:**
+
+- Your fix breaks multiple existing tests
+- You're changing fundamental assumptions
+- The solution feels hacky or overly complex
+
+**Consider instead:**
+
+- Adding a new API rather than changing existing behavior
+- Documenting the current behavior if it's actually correct
+- Creating a more targeted fix for the specific use case
+
+## Advanced Debugging Techniques
+
+### React DevTools
+
+- Inspect component tree to understand render context
+- Check props and state at each level
+- Use Profiler to identify performance issues
+
+### Browser DevTools
+
+```javascript
+// Add global debugging helpers
+window.debugRouter = router
+window.debugState = () => console.log(router.state)
+
+// Use conditional breakpoints
+if (router.state.location.pathname === '/problematic-route') {
+  debugger
+}
+```
+
+### Test Isolation
+
+```javascript
+// Run only one test to isolate issues
+test.only('this specific failing test', () => {
+  // ...
+})
+
+// Skip problematic tests temporarily
+test.skip('temporarily disabled', () => {
+  // ...
+})
+```
+
+## Key Takeaways
+
+1. **Reproduction beats theory** - A failing test that demonstrates the issue is worth more than understanding the problem in theory
+
+2. **Existing tests are protection** - If your fix breaks many existing tests, you're probably changing the wrong thing
+
+3. **Context matters** - Especially in React, understanding where components are rendered and what context they have access to is crucial
+
+4. **Small changes, frequent validation** - Make small, targeted changes and test each one rather than large refactors
+
+5. **Sometimes the answer is "don't change it"** - Not every reported issue needs a code change; sometimes documentation or a new API is the right solution
+
+---
+
+_This guide was developed while investigating a navigation regression in TanStack Router, where `navigate({ to: "." })` unexpectedly redirected to the root instead of staying on the current route._
+
+
+--- README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+<table>
+<tr>
+<td>
+
+<img
+src="./media/header_router.png"
+alt="TanStack Router"
+/>
+
+## TanStack Router
+
+A modern router designed for type safety, data‑driven navigation, and seamless developer experience.
+
+- End‑to-end type safety (routes, params, loaders)
+- Schema‑driven search params with validation
+- Built‑in caching, prefetching & invalidation
+- Nested layouts, transitions & error boundaries
+
+### [Read the Router Docs →](https://tanstack.com/router)
+
+</td>
+<td>
+
+<img
+src="./media/header_start.png"
+alt="TanStack Start"
+/>
+
+## TanStack Start
+
+A full‑stack framework built on Router, designed for server rendering, streaming, and production‑ready deployments.
+
+- Full‑document SSR & streaming
+- Server functions & end‑to‑end type safety
+- Deployment‑ready bundling & builds
+- All the power of TanStack Router, plus full‑stack features
+
+### [Read the Start Docs →](https://tanstack.com/start)
+
+</td>
+</tr>
+</table>
+
+<br />
+
+<p align="center">
+  <a href="https://npmjs.com/package/@tanstack/react-router"><img src="https://img.shields.io/npm/dm/@tanstack/react-router.svg" alt="npm downloads" /></a> <a href="https://github.com/tanstack/router"><img src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" alt="GitHub stars" /></a> <a href="https://bundlephobia.com/result?p=@tanstack/react-router"><img src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" alt="Bundle size" /></a>
+</p>
+<p align="center">
+  <a href="#badge"><img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg"></a> <a href="https://bestofjs.org/projects/tanstack-router"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Frouter%26since=daily" /></a> <a href="https://twitter.com/tan_stack"><img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/></a>
+</p>
+
+<div align="center">
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+</div>
+
+## Get Involved
+
+- We welcome issues and pull requests!
+- Participate in [GitHub discussions](https://github.com/TanStack/router/discussions)
+- Chat with the community on [Discord](https://discord.com/invite/WrRKjPJ)
+- See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions
+
+## Partners
+
+<table align="center">
+  <tr>
+    <td>
+        <a href="https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS">
+			<picture>
+			  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" />
+			  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" />
+			  <img src="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" alt="CodeRabbit" />
+			</picture>        
+		</a>
+    </td>
+    <td padding="20">
+      <a href="https://www.cloudflare.com?utm_source=tanstack">
+         <picture>
+    		  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" />
+    		  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" />
+    		  <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" />
+    		</picture>
+      </a>
+    </td>
+    <td>
+      <a href="https://netlify.com?utm_source=tanstack">
+      <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/netlify-dark.svg" height="70"/>
+        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/netlify.svg" height="70"/>
+        <img src="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/netlify-dark.svg" height="70" alt="Netlify" />
+      </picture>
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://neon.tech?utm_source=tanstack">
+		  <picture>
+	        <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/neon-dark.svg" height="50"/>
+	        <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/neon.svg" height="50"/>
+	        <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/neon.svg" height="50" alt="Neon" />
+		  </picture>
+	  </a>
+    </td>
+    <td>
+      <a href="https://go.clerk.com/wOwHtuJ">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/clerk-logo-dark-CRE22T_2.svg" height="40"/>
+          <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/clerk.svg" height="40"/>
+          <img src="https://tanstack.com/assets/clerk-logo-dark-CRE22T_2.svg" height="40" alt="Clerk" />
+        </picture>
+      </a>
+    </td>
+    <td>
+      <a href="https://convex.dev?utm_source=tanstack">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/convex-white.svg" height="30"/>
+          <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/convex.svg" height="30"/>
+          <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/convex.svg" height="30" alt="Convex" />
+        </picture>
+      </a>
+    </td>
+  </tr>
+    <tr>
+    <td>
+      <a href="https://sentry.io?utm_source=tanstack">
+        <picture>
+           <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/sentry-wordmark-light.svg" height="50"/>
+          <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/sentry.svg" height="50"/>
+          <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/sentry.svg" height="50" alt="Sentry" />
+        </picture>
+      </a>
+    </td>
+    <td>
+      <a href="https://www.prisma.io?utm_source=tanstack&via=tanstack">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/prisma-dark-DwgDxLwn.svg" height="50"/>
+          <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/prisma-light-Cloa3Onm.svg" height="50"/>
+          <img src="https://tanstack.com/assets/prisma-dark-DwgDxLwn.svg" height="50" alt="Prisma" />
+        </picture>
+      </a>
+    </td>
+    <td>
+      <a href="https://strapi.link/tanstack-start">
+        <picture>
+          <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/strapi-dark-CQ84tQTk.svg" height="40"/>
+          <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/strapi-light-6x7linao.svg" height="40"/>
+          <img src="https://tanstack.com/assets/strapi-dark-CQ84tQTk.svg" height="40" alt="Strapi" />
+        </picture>
+      </a>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+<img src="./media/partner_logo.svg" alt="Router & you?" height="65">
+<p>
+We're looking for TanStack Router & Start Partners to join our mission! Partner with us to push the boundaries of TanStack Router & Start and build amazing things together.
+</p>
+<a href="mailto:partners@tanstack.com?subject=TanStack Router & Start Partnership"><b>LET'S CHAT</b></a>
+</div>
+
+## Explore the TanStack Ecosystem
+
+- <a href="https://github.com/tanstack/config"><b>TanStack Config</b></a> – Tooling for JS/TS packages
+- <a href="https://github.com/tanstack/db"><b>TanStack DB</b></a> – Reactive sync client store
+- <a href="https://github.com/tanstack/devtools"><b>TanStack DevTools</b></a> – Unified devtools panel
+- <a href="https://github.com/tanstack/form"><b>TanStack Form</b></a> – Type‑safe form state
+- <a href="https://github.com/tanstack/pacer"><b>TanStack Pacer</b></a> – Debouncing, throttling, batching <br/>
+- <a href="https://github.com/tanstack/query"><b>TanStack Query</b></a> – Async state & caching
+- <a href="https://github.com/tanstack/ranger"><b>TanStack Ranger</b></a> – Range & slider primitives
+- <a href="https://github.com/tanstack/store"><b>TanStack Store</b></a> – Reactive data store
+- <a href="https://github.com/tanstack/table"><b>TanStack Table</b></a> – Headless datagrids
+- <a href="https://github.com/tanstack/virtual"><b>TanStack Virtual</b></a> – Virtualized rendering
+
+… and more at <a href="https://tanstack.com"><b>TanStack.com »</b></a>
+
+<!-- Use the force, Luke!!! -->
+
+
+## Links discovered
+- [Read the Router Docs →](https://tanstack.com/router)
+- [Read the Start Docs →](https://tanstack.com/start)
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [GitHub discussions](https://github.com/TanStack/router/discussions)
+- [Discord](https://discord.com/invite/WrRKjPJ)
+- [CONTRIBUTING.md](https://github.com/tanstack/router/blob/main/CONTRIBUTING.md)
+- [<img src="https://img.shields.io/npm/dm/@tanstack/react-router.svg" alt="npm downloads" />](https://npmjs.com/package/@tanstack/react-router)
+- [<img src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" alt="GitHub stars" />](https://github.com/tanstack/router)
+- [<img src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" alt="Bundle size" />](https://bundlephobia.com/result?p=@tanstack/react-router)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Frouter%26since=daily" />](https://bestofjs.org/projects/tanstack-router)
+- [<img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/>](https://twitter.com/tan_stack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" /> <img src="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" alt="CodeRabbit" /> </picture>](https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" /> <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" /> </picture>](https://www.cloudflare.com?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/netlify-dark.svg" height="70"/> <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/netlify.svg" height="70"/> <img src="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/netlify-dark.svg" height="70" alt="Netlify" /> </picture>](https://netlify.com?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/neon-dark.svg" height="50"/> <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/neon.svg" height="50"/> <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/neon.svg" height="50" alt="Neon" /> </picture>](https://neon.tech?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/clerk-logo-dark-CRE22T_2.svg" height="40"/> <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/clerk.svg" height="40"/> <img src="https://tanstack.com/assets/clerk-logo-dark-CRE22T_2.svg" height="40" alt="Clerk" /> </picture>](https://go.clerk.com/wOwHtuJ)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/convex-white.svg" height="30"/> <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/convex.svg" height="30"/> <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/convex.svg" height="30" alt="Convex" /> </picture>](https://convex.dev?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/tanstack/tanstack.com/main/src/images/sentry-wordmark-light.svg" height="50"/> <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/sentry.svg" height="50"/> <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/sentry.svg" height="50" alt="Sentry" /> </picture>](https://sentry.io?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/prisma-dark-DwgDxLwn.svg" height="50"/> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/prisma-light-Cloa3Onm.svg" height="50"/> <img src="https://tanstack.com/assets/prisma-dark-DwgDxLwn.svg" height="50" alt="Prisma" /> </picture>](https://www.prisma.io?utm_source=tanstack&via=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/strapi-dark-CQ84tQTk.svg" height="40"/> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/strapi-light-6x7linao.svg" height="40"/> <img src="https://tanstack.com/assets/strapi-dark-CQ84tQTk.svg" height="40" alt="Strapi" /> </picture>](https://strapi.link/tanstack-start)
+- [<b>TanStack Config</b>](https://github.com/tanstack/config)
+- [<b>TanStack DB</b>](https://github.com/tanstack/db)
+- [<b>TanStack DevTools</b>](https://github.com/tanstack/devtools)
+- [<b>TanStack Form</b>](https://github.com/tanstack/form)
+- [<b>TanStack Pacer</b>](https://github.com/tanstack/pacer)
+- [<b>TanStack Query</b>](https://github.com/tanstack/query)
+- [<b>TanStack Ranger</b>](https://github.com/tanstack/ranger)
+- [<b>TanStack Store</b>](https://github.com/tanstack/store)
+- [<b>TanStack Table</b>](https://github.com/tanstack/table)
+- [<b>TanStack Virtual</b>](https://github.com/tanstack/virtual)
+- [<b>TanStack.com »</b>](https://tanstack.com)
+
+--- eslint.config.js ---
+// @ts-check
+
+import { tanstackConfig } from '@tanstack/config/eslint'
+
+import unusedImports from 'eslint-plugin-unused-imports'
+
+export default [
+  ...tanstackConfig,
+  {
+    name: 'tanstack/temp',
+    rules: {
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      'no-shadow': 'off',
+    },
+  },
+  {
+    plugins: {
+      'unused-imports': unusedImports,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': 'off',
+      'unused-imports/no-unused-imports': 'error',
+      'unused-imports/no-unused-vars': [
+        'warn',
+        {
+          vars: 'all',
+          varsIgnorePattern: '^_',
+          args: 'after-used',
+          argsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+]
+
+
+--- gpt/generate.js ---
+// @ts-check
+
+import fs from 'node:fs'
+import { glob } from 'tinyglobby'
+
+const outputPath = './gpt/db.json'
+const packages = []
+const docs = []
+const examples = []
+
+Promise.resolve()
+  .then(() => {
+    return glob('./packages/*').then((dirs) => {
+      return Promise.all(
+        dirs.map((dir) => {
+          const pkg = {
+            name: dir.replace('./packages/', ''),
+            files: [],
+          }
+
+          packages.push(pkg)
+
+          return glob(`./${dir}/src/**/*`, {
+            onlyFiles: true,
+          }).then((files) => {
+            files.forEach((file) => {
+              const content = fs.readFileSync(file, 'utf8')
+
+              pkg.files.push({ file, content })
+            })
+          })
+        }),
+      )
+    })
+  })
+  .then(() => {
+    return glob('./docs/**/*.md').then((files) => {
+      files.forEach((file) => {
+        const content = fs.readFileSync(file, 'utf8')
+        const title = file.replace('./', '').replace('.md', '')
+
+        docs.push({ page: title, content })
+      })
+    })
+  })
+  .then(() => {
+    return glob('./examples/react/*').then((dirs) => {
+      return Promise.all(
+        dirs.map((dir) => {
+          if (dir.includes('wip')) {
+            return
+          }
+          const example = {
+            name: dir.replace('./examples/react/', ''),
+            files: [],
+          }
+
+          examples.push(example)
+
+          return glob(`./${dir}/src/**/*`, {
+            onlyFiles: true,
+          }).then((files) => {
+            files.forEach((file) => {
+              const content = fs.readFileSync(file, 'utf8')
+
+              example.files.push({ file, content })
+            })
+          })
+        }),
+      )
+    })
+  })
+  .then(() => {
+    fs.writeFileSync(
+      outputPath,
+      JSON.stringify({ packages, docs, examples }, null, 2),
+    )
+  })
+  .catch((err) => {
+    console.error('Error reading files:', err)
+    return
+  })
+
+
+--- prettier.config.js ---
+// @ts-check
+
+/** @type {import('prettier').Config} */
+const config = {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+}
+
+export default config
+
+
+--- e2e/react-router/rspack-basic-file-based/README.md ---
+# Example
+
+To run this example:
+
+- `pnpm install`
+- `pnpm dev`
+
+
+--- e2e/react-router/rspack-basic-virtual-named-export-config-file-based/README.md ---
+# Example
+
+To run this example:
+
+- `pnpm install`
+- `pnpm dev`
+
+
+--- e2e/react-router/scroll-restoration-sandbox-vite/README.md ---
+# Scroll Restoration Testing Sandbox with Vite
+
+To run this example:
+
+- `npm install`
+- `npm start`
+
+This sandbox is for testing the scroll restoration behavior.
+
+## Setup
+
+- Create your files in `src/routes` directory.
+- Make sure you update the arrays in the following files with the expected routes
+  - `tests/app.spec.ts` > routes array
+  - `src/routes/__root.tsx` > Nav component, routes array
+  - `src/routes/index.tsx` > Navigation test suite, routes array
+
+
+--- e2e/react-router/view-transitions/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm start` or `yarn start`
+
+
+--- e2e/react-start/basic-tsr-config/README.md ---
+# Welcome to TanStack.com!
+
+This site is built with TanStack Router!
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+It's deployed automagically with Netlify!
+
+- [Netlify](https://netlify.com/)
+
+## Development
+
+From your terminal:
+
+```sh
+pnpm install
+pnpm dev
+```
+
+This starts your app in development mode, rebuilding assets on file changes.
+
+## Editing and previewing the docs of TanStack projects locally
+
+The documentations for all TanStack projects except for `React Charts` are hosted on [https://tanstack.com](https://tanstack.com), powered by this TanStack Router app.
+In production, the markdown doc pages are fetched from the GitHub repos of the projects, but in development they are read from the local file system.
+
+Follow these steps if you want to edit the doc pages of a project (in these steps we'll assume it's [`TanStack/form`](https://github.com/tanstack/form)) and preview them locally :
+
+1. Create a new directory called `tanstack`.
+
+```sh
+mkdir tanstack
+```
+
+2. Enter the directory and clone this repo and the repo of the project there.
+
+```sh
+cd tanstack
+git clone git@github.com:TanStack/tanstack.com.git
+git clone git@github.com:TanStack/form.git
+```
+
+> [!NOTE]
+> Your `tanstack` directory should look like this:
+>
+> ```
+> tanstack/
+>    |
+>    +-- form/
+>    |
+>    +-- tanstack.com/
+> ```
+
+> [!WARNING]
+> Make sure the name of the directory in your local file system matches the name of the project's repo. For example, `tanstack/form` must be cloned into `form` (this is the default) instead of `some-other-name`, because that way, the doc pages won't be found.
+
+3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+
+```sh
+cd tanstack.com
+pnpm i
+# The app will run on https://localhost:3000 by default
+pnpm dev
+```
+
+4. Now you can visit http://localhost:3000/form/latest/docs/overview in the browser and see the changes you make in `tanstack/form/docs`.
+
+> [!NOTE]
+> The updated pages need to be manually reloaded in the browser.
+
+> [!WARNING]
+> You will need to update the `docs/config.json` file (in the project's repo) if you add a new doc page!
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+- [Netlify](https://netlify.com/)
+- [https://tanstack.com](https://tanstack.com)
+- [`TanStack/form`](https://github.com/tanstack/form)
+
+--- e2e/solid-router/rspack-basic-file-based/README.md ---
+# Example
+
+To run this example:
+
+- `pnpm install`
+- `pnpm dev`
+
+
+--- e2e/solid-router/rspack-basic-virtual-named-export-config-file-based/README.md ---
+# Example
+
+To run this example:
+
+- `pnpm install`
+- `pnpm dev`
+
+
+--- e2e/solid-router/scroll-restoration-sandbox-vite/README.md ---
+# Scroll Restoration Testing Sandbox with Vite
+
+To run this example:
+
+- `npm install`
+- `npm start`
+
+This sandbox is for testing the scroll restoration behavior.
+
+## Setup
+
+- Create your files in `src/routes` directory.
+- Make sure you update the arrays in the following files with the expected routes
+  - `tests/app.spec.ts` > routes array
+  - `src/routes/__root.tsx` > Nav component, routes array
+  - `src/routes/index.tsx` > Navigation test suite, routes array
+
+
+--- e2e/solid-router/view-transitions/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `yarn`
+- `npm start` or `yarn start`
+
+
+--- e2e/solid-start/basic-tsr-config/README.md ---
+# Welcome to TanStack.com!
+
+This site is built with TanStack Router!
+
+- [TanStack Router Docs](https://tanstack.com/router)
+
+It's deployed automagically with Netlify!
+
+- [Netlify](https://netlify.com/)
+
+## Development
+
+From your terminal:
+
+```sh
+pnpm install
+pnpm dev
+```
+
+This starts your app in development mode, rebuilding assets on file changes.
+
+## Editing and previewing the docs of TanStack projects locally
+
+The documentations for all TanStack projects except for `React Charts` are hosted on [https://tanstack.com](https://tanstack.com), powered by this TanStack Router app.
+In production, the markdown doc pages are fetched from the GitHub repos of the projects, but in development they are read from the local file system.
+
+Follow these steps if you want to edit the doc pages of a project (in these steps we'll assume it's [`TanStack/form`](https://github.com/tanstack/form)) and preview them locally :
+
+1. Create a new directory called `tanstack`.
+
+```sh
+mkdir tanstack
+```
+
+2. Enter the directory and clone this repo and the repo of the project there.
+
+```sh
+cd tanstack
+git clone git@github.com:TanStack/tanstack.com.git
+git clone git@github.com:TanStack/form.git
+```
+
+> [!NOTE]
+> Your `tanstack` directory should look like this:
+>
+> ```
+> tanstack/
+>    |
+>    +-- form/
+>    |
+>    +-- tanstack.com/
+> ```
+
+> [!WARNING]
+> Make sure the name of the directory in your local file system matches the name of the project's repo. For example, `tanstack/form` must be cloned into `form` (this is the default) instead of `some-other-name`, because that way, the doc pages won't be found.
+
+3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+
+```sh
+cd tanstack.com
+pnpm i
+# The app will run on https://localhost:3000 by default
+pnpm dev
+```
+
+4. Now you can visit http://localhost:3000/form/latest/docs/overview in the browser and see the changes you make in `tanstack/form/docs`.
+
+> [!NOTE]
+> The updated pages need to be manually reloaded in the browser.
+
+> [!WARNING]
+> You will need to update the `docs/config.json` file (in the project's repo) if you add a new doc page!
+
+
+## Links discovered
+- [TanStack Router Docs](https://tanstack.com/router)
+- [Netlify](https://netlify.com/)
+- [https://tanstack.com](https://tanstack.com)
+- [`TanStack/form`](https://github.com/tanstack/form)
+
+--- packages/directive-functions-plugin/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack Directive Functions Plugin
+
+See https://tanstack.com/router/latest/docs/framework/react/routing/file-based-routing
+
+
+--- packages/nitro-v2-vite-plugin/README.md ---
+# Experimental Nitro v2 Vite Plugin
+
+
+--- packages/react-router-devtools/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Router Devtools
+
+See https://tanstack.com/router/latest/docs/framework/react/devtools
+
+
+--- packages/react-router-ssr-query/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Router
+
+![TanStack Router Header](https://github.com/tanstack/router/raw/main/media/header_router.png)
+
+🤖 Type-safe router w/ built-in caching & URL state management for React!
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">
+</a><a href="https://discord.com/invite/WrRKjPJ" target="\_parent">
+  <img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />
+</a><a href="https://npmjs.com/package/@tanstack/react-router" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/router.svg" />
+</a><a href="https://bundlephobia.com/result?p=@tanstack/react-router" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/tanstack/router/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://bestofjs.org/projects/router"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" /></a><a href="https://github.com/tanstack/router" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tan_stack" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />
+</a>
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/tannerlinsley/react-query), [React Table](https://github.com/tanstack/react-table), [React Charts](https://github.com/tannerlinsley/react-charts), [React Virtual](https://github.com/tannerlinsley/react-virtual)
+
+## Visit [tanstack.com/router](https://tanstack.com/router) for docs, guides, API and more!
+
+
+## Links discovered
+- [TanStack Router Header](https://github.com/tanstack/router/raw/main/media/header_router.png)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/tannerlinsley/react-query)
+- [React Table](https://github.com/tanstack/react-table)
+- [React Charts](https://github.com/tannerlinsley/react-charts)
+- [React Virtual](https://github.com/tannerlinsley/react-virtual)
+- [tanstack.com/router](https://tanstack.com/router)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />](https://discord.com/invite/WrRKjPJ)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/router.svg" />](https://npmjs.com/package/@tanstack/react-router)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" />](https://bundlephobia.com/result?p=@tanstack/react-router)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/router/discussions)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" />](https://bestofjs.org/projects/router)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />](https://github.com/tanstack/router)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />](https://twitter.com/tan_stack)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />](https://twitter.com/tannerlinsley)
+
+--- packages/react-router/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Router
+
+![TanStack Router Header](https://github.com/tanstack/router/raw/main/media/header_router.png)
+
+🤖 Type-safe router w/ built-in caching & URL state management for React!
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">
+</a><a href="https://discord.com/invite/WrRKjPJ" target="\_parent">
+  <img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />
+</a><a href="https://npmjs.com/package/@tanstack/react-router" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/router.svg" />
+</a><a href="https://bundlephobia.com/result?p=@tanstack/react-router" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" />
+</a><a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a><a href="https://github.com/tanstack/router/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a><a href="https://bestofjs.org/projects/router"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" /></a><a href="https://github.com/tanstack/router" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />
+</a><a href="https://twitter.com/tan_stack" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />
+</a><a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />
+</a>
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/tannerlinsley/react-query), [React Table](https://github.com/tanstack/react-table), [React Charts](https://github.com/tannerlinsley/react-charts), [React Virtual](https://github.com/tannerlinsley/react-virtual)
+
+## Visit [tanstack.com/router](https://tanstack.com/router) for docs, guides, API and more!
+
+
+## Links discovered
+- [TanStack Router Header](https://github.com/tanstack/router/raw/main/media/header_router.png)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/tannerlinsley/react-query)
+- [React Table](https://github.com/tanstack/react-table)
+- [React Charts](https://github.com/tannerlinsley/react-charts)
+- [React Virtual](https://github.com/tannerlinsley/react-virtual)
+- [tanstack.com/router](https://tanstack.com/router)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />](https://discord.com/invite/WrRKjPJ)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/router.svg" />](https://npmjs.com/package/@tanstack/react-router)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-router" />](https://bundlephobia.com/result?p=@tanstack/react-router)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/router/discussions)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" />](https://bestofjs.org/projects/router)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />](https://github.com/tanstack/router)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />](https://twitter.com/tan_stack)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />](https://twitter.com/tannerlinsley)
+
+--- packages/react-start-client/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Start - Client
+
+This package is not meant to be used directly. It is a dependency of [`@tanstack/react-start`](https://www.npmjs.com/package/@tanstack/react-start).
+
+TanStack React Start is a fullstack-framework made for SSR, Streaming, Server Functions, API Routes, bundling and more powered by [TanStack Router](https://tanstack.com/router).
+
+Head over to [tanstack.com/start](https://tanstack.com/start) for more information about getting started.
+
+
+## Links discovered
+- [`@tanstack/react-start`](https://www.npmjs.com/package/@tanstack/react-start)
+- [TanStack Router](https://tanstack.com/router)
+- [tanstack.com/start](https://tanstack.com/start)
+
+--- packages/react-start-server/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Start - Server
+
+This package is not meant to be used directly. It is a dependency of [`@tanstack/react-start`](https://www.npmjs.com/package/@tanstack/react-start).
+
+TanStack React Start is a fullstack-framework made for SSR, Streaming, Server Functions, API Routes, bundling and more powered by [TanStack Router](https://tanstack.com/router).
+
+Head over to [tanstack.com/start](https://tanstack.com/start) for more information about getting started.
+
+
+## Links discovered
+- [`@tanstack/react-start`](https://www.npmjs.com/package/@tanstack/react-start)
+- [TanStack Router](https://tanstack.com/router)
+- [tanstack.com/start](https://tanstack.com/start)
+
+--- packages/react-start/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack React Start
+
+![TanStack React Start Header](https://github.com/tanstack/router/raw/main/media/header_start.png)
+
+SSR, Streaming, Server Functions, API Routes, bundling and more powered by [TanStack Router](https://tanstack.com/router) and Vite. Ready to deploy to your favorite hosting provider.
+
+<a href="https://twitter.com/intent/tweet?button_hashtag=TanStack" target="\_parent">
+  <img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">
+</a>
+<a href="https://discord.com/invite/WrRKjPJ" target="\_parent">
+  <img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />
+</a>
+<a href="https://npmjs.com/package/@tanstack/react-start" target="\_parent">
+  <img alt="" src="https://img.shields.io/npm/dm/@tanstack/react-start.svg" />
+</a>
+<a href="https://bundlephobia.com/result?p=@tanstack/react-start" target="\_parent">
+  <img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-start" />
+</a>
+<a href="#badge">
+  <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+</a>
+<a href="https://github.com/tanstack/router/discussions">
+  <img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />
+</a>
+<a href="https://bestofjs.org/projects/router">
+  <img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" />
+</a>
+<a href="https://github.com/tanstack/router" target="\_parent">
+  <img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />
+</a>
+<a href="https://twitter.com/tan_stack" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />
+</a>
+<a href="https://twitter.com/tannerlinsley" target="\_parent">
+  <img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />
+</a>
+
+Enjoy this library? Try the entire [TanStack](https://tanstack.com)! [React Query](https://github.com/tannerlinsley/react-query), [React Table](https://github.com/tanstack/react-table), [React Charts](https://github.com/tannerlinsley/react-charts), [React Virtual](https://github.com/tannerlinsley/react-virtual)
+
+Visit [tanstack.com/start](https://tanstack.com/start) for docs, guides, API and more!
+
+
+## Links discovered
+- [TanStack React Start Header](https://github.com/tanstack/router/raw/main/media/header_start.png)
+- [TanStack Router](https://tanstack.com/router)
+- [TanStack](https://tanstack.com)
+- [React Query](https://github.com/tannerlinsley/react-query)
+- [React Table](https://github.com/tanstack/react-table)
+- [React Charts](https://github.com/tannerlinsley/react-charts)
+- [React Virtual](https://github.com/tannerlinsley/react-virtual)
+- [tanstack.com/start](https://tanstack.com/start)
+- [<img alt="#TanStack" src="https://img.shields.io/twitter/url?color=%2308a0e9&label=%23TanStack&style=social&url=https%3A%2F%2Ftwitter.com%2Fintent%2Ftweet%3Fbutton_hashtag%3DTanStack">](https://twitter.com/intent/tweet?button_hashtag=TanStack)
+- [<img alt="" src="https://img.shields.io/badge/Discord-TanStack-%235865F2" />](https://discord.com/invite/WrRKjPJ)
+- [<img alt="" src="https://img.shields.io/npm/dm/@tanstack/react-start.svg" />](https://npmjs.com/package/@tanstack/react-start)
+- [<img alt="" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-start" />](https://bundlephobia.com/result?p=@tanstack/react-start)
+- [<img alt="Join the discussion on Github" src="https://img.shields.io/badge/Github%20Discussions%20%26%20Support-Chat%20now!-blue" />](https://github.com/tanstack/router/discussions)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=tanstack%2Frouter%26since=daily" />](https://bestofjs.org/projects/router)
+- [<img alt="" src="https://img.shields.io/github/stars/tanstack/router.svg?style=social&label=Star" />](https://github.com/tanstack/router)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social&label=Follow @TanStack" />](https://twitter.com/tan_stack)
+- [<img alt="" src="https://img.shields.io/twitter/follow/tannerlinsley.svg?style=social&label=Follow @TannerLinsley" />](https://twitter.com/tannerlinsley)
+
+--- packages/router-cli/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack Router CLI
+
+See https://tanstack.com/router/latest/docs/framework/react/routing/installation/with-router-cli
+
+
+--- packages/router-core/README.md ---
+<img src="https://static.scarf.sh/a.png?x-pxid=d988eb79-b0fc-4a2b-8514-6a1ab932d188" />
+
+# TanStack Router Core
+
+See [https://tanstack.com/router](https://tanstack.com/router) for documentation.
+
+
+## Links discovered
+- [https://tanstack.com/router](https://tanstack.com/router)
+
+--- scripts/generate-labeler-config.ts ---
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import * as prettier from 'prettier'
+
+/** Pairs of package labels and their corresponding paths */
+type LabelerPair = [string, string]
+
+function readPairsFromFs(): Array<LabelerPair> {
+  const ignored = new Set(['.DS_Store'])
+
+  const pairs: Array<LabelerPair> = []
+
+  // Add subfolders in the packages folder, i.e. packages/**
+  fs.readdirSync(path.resolve('packages'))
+    .filter((folder) => !ignored.has(folder))
+    .forEach((folder) => {
+      // Check if package.json exists for the folder before adding it
+      if (
+        fs.existsSync(
+          path.resolve(path.join('packages', folder, 'package.json')),
+        )
+      ) {
+        pairs.push([`package: ${folder}`, `packages/${folder}/**/*`])
+      } else {
+        console.info(
+          `Skipping \`${folder}\` as it does not have a \`package.json\` file.`,
+        )
+      }
+    })
+
+  // Sort by package name in alphabetical order
+  pairs.sort((a, b) => a[0].localeCompare(b[0]))
+
+  return pairs
+}
+
+async function generateLabelerYaml(pairs: Array<LabelerPair>): Promise<string> {
+  function s(n = 1) {
+    return ' '.repeat(n)
+  }
+
+  // Convert the pairs into valid yaml
+  const formattedPairs = pairs
+    .map(([packageLabel, packagePath]) => {
+      const result = [
+        `'${packageLabel}':`,
+        `${s(2)}-${s(1)}changed-files:`,
+        `${s(4)}-${s(1)}any-glob-to-any-file:${s(1)}'${packagePath}'`,
+      ].join('\n')
+
+      return result
+    })
+    .join('\n')
+
+  // Get the location of the Prettier config file
+  const prettierConfigPath = await prettier.resolveConfigFile()
+  if (!prettierConfigPath) {
+    throw new Error(
+      'No Prettier config file found. Please ensure you have a Prettier config file in your project.',
+    )
+  }
+  console.info('using prettier config file at:', prettierConfigPath)
+
+  // Resolve the Prettier config
+  const prettierConfig = await prettier.resolveConfig(prettierConfigPath)
+  console.info('using resolved prettier config:', prettierConfig)
+
+  // Format the YAML string using Prettier
+  const formattedStr = await prettier.format(formattedPairs, {
+    parser: 'yaml',
+    ...prettierConfig,
+  })
+
+  return formattedStr
+}
+
+async function run() {
+  console.info('Generating labeler config...')
+
+  // Generate the pairs of package labels and their corresponding paths
+  const pairs = readPairsFromFs()
+
+  // Always add the docs folder
+  pairs.push(['documentation', 'docs/**/*'])
+
+  // Convert the pairs into valid yaml
+  const yamlStr = await generateLabelerYaml(pairs)
+
+  // Write to 'labeler-config.yml'
+  const configPath = path.resolve('labeler-config.yml')
+  fs.writeFileSync(configPath, yamlStr, {
+    encoding: 'utf-8',
+  })
+
+  console.info(`Generated labeler config at \`${configPath}\`!`)
+  return
+}
+
+try {
+  run().then(() => {
+    process.exit(0)
+  })
+} catch (error) {
+  console.error('Error generating labeler config:', error)
+  process.exit(1)
+}
+
+
+--- scripts/publish.js ---
+// @ts-check
+
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { publish } from '@tanstack/config/publish'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+await publish({
+  packages: [
+    {
+      name: '@tanstack/history',
+      packageDir: 'packages/history',
+    },
+    {
+      name: '@tanstack/router-core',
+      packageDir: 'packages/router-core',
+    },
+    {
+      name: '@tanstack/solid-router',
+      packageDir: 'packages/solid-router',
+    },
+    {
+      name: '@tanstack/react-router',
+      packageDir: 'packages/react-router',
+    },
+    {
+      name: '@tanstack/vue-router',
+      packageDir: 'packages/vue-router',
+    },
+    {
+      name: '@tanstack/solid-router-ssr-query',
+      packageDir: 'packages/solid-router-ssr-query',
+    },
+    {
+      name: '@tanstack/react-router-ssr-query',
+      packageDir: 'packages/react-router-ssr-query',
+    },
+    {
+      name: '@tanstack/vue-router-ssr-query',
+      packageDir: 'packages/vue-router-ssr-query',
+    },
+    {
+      name: '@tanstack/router-ssr-query-core',
+      packageDir: 'packages/router-ssr-query-core',
+    },
+    {
+      name: '@tanstack/zod-adapter',
+      packageDir: 'packages/zod-adapter',
+    },
+    {
+      name: '@tanstack/valibot-adapter',
+      packageDir: 'packages/valibot-adapter',
+    },
+    {
+      name: '@tanstack/arktype-adapter',
+      packageDir: 'packages/arktype-adapter',
+    },
+    {
+      name: '@tanstack/router-devtools',
+      packageDir: 'packages/router-devtools',
+    },
+    {
+      name: '@tanstack/solid-router-devtools',
+      packageDir: 'packages/solid-router-devtools',
+    },
+    {
+      name: '@tanstack/react-router-devtools',
+      packageDir: 'packages/react-router-devtools',
+    },
+    {
+      name: '@tanstack/vue-router-devtools',
+      packageDir: 'packages/vue-router-devtools',
+    },
+    {
+      name: '@tanstack/router-devtools-core',
+      packageDir: 'packages/router-devtools-core',
+    },
+    {
+      name: '@tanstack/router-generator',
+      packageDir: 'packages/router-generator',
+    },
+    {
+      name: '@tanstack/virtual-file-routes',
+      packageDir: 'packages/virtual-file-routes',
+    },
+    {
+      name: '@tanstack/router-cli',
+      packageDir: 'packages/router-cli',
+    },
+    {
+      name: '@tanstack/router-plugin',
+      packageDir: 'packages/router-plugin',
+    },
+    {
+      name: '@tanstack/router-vite-plugin',
+      packageDir: 'packages/router-vite-plugin',
+    },
+    {
+      name: '@tanstack/directive-functions-plugin',
+      packageDir: 'packages/directive-functions-plugin',
+    },
+    {
+      name: '@tanstack/server-functions-plugin',
+      packageDir: 'packages/server-functions-plugin',
+    },
+    {
+      name: '@tanstack/eslint-plugin-router',
+      packageDir: 'packages/eslint-plugin-router',
+    },
+    {
+      name: '@tanstack/solid-start',
+      packageDir: 'packages/solid-start',
+    },
+    {
+      name: '@tanstack/solid-start-client',
+      packageDir: 'packages/solid-start-client',
+    },
+    {
+      name: '@tanstack/solid-start-server',
+      packageDir: 'packages/solid-start-server',
+    },
+    {
+      name: '@tanstack/vue-start',
+      packageDir: 'packages/vue-start',
+    },
+    {
+      name: '@tanstack/vue-start-client',
+      packageDir: 'packages/vue-start-client',
+    },
+    {
+      name: '@tanstack/vue-start-server',
+      packageDir: 'packages/vue-start-server',
+    },
+    {
+      name: '@tanstack/start-client-core',
+      packageDir: 'packages/start-client-core',
+    },
+    {
+      name: '@tanstack/start-server-core',
+      packageDir: 'packages/start-server-core',
+    },
+    {
+      name: '@tanstack/start-storage-context',
+      packageDir: 'packages/start-storage-context',
+    },
+    {
+      name: '@tanstack/react-start',
+      packageDir: 'packages/react-start',
+    },
+    {
+      name: '@tanstack/react-start-client',
+      packageDir: 'packages/react-start-client',
+    },
+    {
+      name: '@tanstack/react-start-server',
+      packageDir: 'packages/react-start-server',
+    },
+    {
+      name: '@tanstack/start-plugin-core',
+      packageDir: 'packages/start-plugin-core',
+    },
+    {
+      name: '@tanstack/start-static-server-functions',
+      packageDir: 'packages/start-static-server-functions',
+    },
+    {
+      name: '@tanstack/router-utils',
+      packageDir: 'packages/router-utils',
+    },
+    {
+      name: '@tanstack/nitro-v2-vite-plugin',
+      packageDir: 'packages/nitro-v2-vite-plugin',
+    },
+  ],
+  branchConfigs: {
+    main: {
+      prerelease: false,
+    },
+    alpha: {
+      prerelease: true,
+    },
+    beta: {
+      prerelease: true,
+    },
+  },
+  rootDir: resolve(__dirname, '..'),
+  branch: process.env.BRANCH,
+  tag: process.env.TAG,
+  ghToken: process.env.GH_TOKEN,
+})
+
+process.exit(0)
+
+
+--- scripts/set-ts-version.js ---
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs'
+import { join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+
+const ROOT_PACKAGE_JSON = join(__dirname, '..', 'package.json')
+const PACKAGES_DIR = join(__dirname, '..', 'packages')
+const SUPPORTED_TS_VERSIONS = ['5.4', '5.5', '5.6', '5.7', '5.8', '5.9']
+const LATEST_TS_VERSION =
+  SUPPORTED_TS_VERSIONS[SUPPORTED_TS_VERSIONS.length - 1]
+
+/**
+ * @param {string} packagePath
+ */
+function updatePackageJson(packagePath) {
+  const PREVIOUS_LATEST_VERSION =
+    SUPPORTED_TS_VERSIONS[SUPPORTED_TS_VERSIONS.length - 2]
+
+  if (PREVIOUS_LATEST_VERSION === undefined) {
+    throw new Error('Previous latest version not found')
+  }
+
+  const packageJsonPath = join(packagePath, 'package.json')
+  if (!existsSync(packageJsonPath)) return
+
+  const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf8'))
+  packageJson.scripts = packageJson.scripts || {}
+
+  const scriptKeys = Object.keys(packageJson.scripts)
+  const updatedScripts = { ...packageJson.scripts }
+  /** @type Record<string, string> */
+  const cliArgs = {}
+
+  // Remove old TS test scripts and store CLI arguments
+  scriptKeys.forEach((key) => {
+    if (key.startsWith('test:types:')) {
+      const script = packageJson.scripts[key]
+      const match = script.match(/(?:node \S+\/tsc\.js|tsc)(.*)/)
+      cliArgs[key] = match ? match[1].trim() : ''
+      delete updatedScripts[key]
+    }
+  })
+
+  // Get CLI arguments from the previous latest version
+  const previousLatestKey = `test:types:ts${PREVIOUS_LATEST_VERSION.replace('.', '')}`
+  const previousLatestArgs = cliArgs[previousLatestKey] || ''
+
+  // Insert new TS test scripts while maintaining order
+  let insertIndex = scriptKeys.findIndex((key) => key.startsWith('test:types:'))
+  if (insertIndex === -1) insertIndex = scriptKeys.length
+
+  /** @type Record<string, string> */
+  const newScripts = {}
+  scriptKeys.forEach((key, index) => {
+    if (index === insertIndex) {
+      SUPPORTED_TS_VERSIONS.forEach((version, i) => {
+        const scriptKey = `test:types:ts${version.replace('.', '')}`
+        if (i === SUPPORTED_TS_VERSIONS.length - 1) {
+          // Use "tsc" directly for the latest version
+          newScripts[scriptKey] = `tsc ${previousLatestArgs}`.trim()
+        } else {
+          const args = cliArgs[scriptKey] || ''
+          newScripts[scriptKey] =
+            `node ../../node_modules/typescript${version.replace('.', '')}/lib/tsc.js ${args}`.trim()
+        }
+      })
+    }
+    if (!key.startsWith('test:types:')) {
+      newScripts[key] = packageJson.scripts[key]
+    }
+  })
+
+  packageJson.scripts = newScripts
+  writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n')
+  console.log(`Updated ${packageJsonPath}`)
+}
+
+function updateRootPackageJson() {
+  if (!existsSync(ROOT_PACKAGE_JSON)) {
+    return
+  }
+
+  const rootPackageJson = JSON.parse(readFileSync(ROOT_PACKAGE_JSON, 'utf8'))
+  rootPackageJson.devDependencies = rootPackageJson.devDependencies || {}
+
+  // Update main TypeScript version
+  rootPackageJson.devDependencies['typescript'] = `^${LATEST_TS_VERSION}.0`
+
+  // Remove old TypeScript aliases
+  Object.keys(rootPackageJson.devDependencies).forEach((dep) => {
+    if (dep.startsWith('typescript') && dep !== 'typescript') {
+      delete rootPackageJson.devDependencies[dep]
+    }
+  })
+
+  // Add supported TypeScript aliases
+  SUPPORTED_TS_VERSIONS.slice(0, -1).forEach((version) => {
+    rootPackageJson.devDependencies[`typescript${version.replace('.', '')}`] =
+      `npm:typescript@${version}`
+  })
+
+  writeFileSync(
+    ROOT_PACKAGE_JSON,
+    JSON.stringify(rootPackageJson, null, 2) + '\n',
+  )
+  console.log(`Updated ${ROOT_PACKAGE_JSON}`)
+}
+
+function updateAllPackages() {
+  if (!existsSync(PACKAGES_DIR)) {
+    throw new Error(`Packages directory not found: ${PACKAGES_DIR}`)
+  }
+
+  const packageDirs = readdirSync(PACKAGES_DIR)
+    .map((name) => join(PACKAGES_DIR, name))
+    .filter((dir) => statSync(dir).isDirectory())
+  packageDirs.forEach(updatePackageJson)
+  updateRootPackageJson()
+}
+
+updateAllPackages()
+
+
+--- scripts/verify-links.ts ---
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
+import { glob } from 'tinyglobby'
+// @ts-ignore Could not find a declaration file for module 'markdown-link-extractor'.
+import markdownLinkExtractor from 'markdown-link-extractor'
+
+const errors: Array<{
+  file: string
+  link: string
+  resolvedPath: string
+  reason: string
+}> = []
+
+function isRelativeLink(link: string) {
+  return (
+    !link.startsWith('/') &&
+    !link.startsWith('http://') &&
+    !link.startsWith('https://') &&
+    !link.startsWith('//') &&
+    !link.startsWith('#') &&
+    !link.startsWith('mailto:')
+  )
+}
+
+/** Remove any trailing .md */
+function stripExtension(p: string): string {
+  return p.replace(`${extname(p)}`, '')
+}
+
+function relativeLinkExists(link: string, file: string): boolean {
+  // Remove hash if present
+  const linkWithoutHash = link.split('#')[0]
+  // If the link is empty after removing hash, it's not a file
+  if (!linkWithoutHash) return false
+
+  // Strip the file/link extensions
+  const filePath = stripExtension(file)
+  const linkPath = stripExtension(linkWithoutHash)
+
+  // Resolve the path relative to the markdown file's directory
+  // Nav up a level to simulate how links are resolved on the web
+  let absPath = resolve(filePath, '..', linkPath)
+
+  // Ensure the resolved path is within /docs
+  const docsRoot = resolve('docs')
+  if (!absPath.startsWith(docsRoot)) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Path outside /docs',
+    })
+    return false
+  }
+
+  // Check if this is an example path
+  const isExample = absPath.includes('/examples/')
+
+  let exists = false
+
+  if (isExample) {
+    // Transform /docs/framework/{framework}/examples/ to /examples/{framework}/
+    absPath = absPath.replace(
+      /\/docs\/framework\/([^/]+)\/examples\//,
+      '/examples/$1/',
+    )
+    // For examples, we want to check if the directory exists
+    exists = existsSync(absPath) && statSync(absPath).isDirectory()
+  } else {
+    // For non-examples, we want to check if the .md file exists
+    if (!absPath.endsWith('.md')) {
+      absPath = `${absPath}.md`
+    }
+    exists = existsSync(absPath)
+  }
+
+  if (!exists) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Not found',
+    })
+  }
+  return exists
+}
+
+async function verifyMarkdownLinks() {
+  // Find all markdown files in docs directory
+  const markdownFiles = await glob('docs/**/*.md', {
+    ignore: ['**/node_modules/**'],
+  })
+
+  console.log(`Found ${markdownFiles.length} markdown files\n`)
+
+  // Process each file
+  for (const file of markdownFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const links: Array<string> = markdownLinkExtractor(content)
+
+    const relativeLinks = links.filter((link: string) => {
+      return isRelativeLink(link)
+    })
+
+    if (relativeLinks.length > 0) {
+      relativeLinks.forEach((link) => {
+        relativeLinkExists(link, file)
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`\n❌ Found ${errors.length} broken links:`)
+    errors.forEach((err) => {
+      console.log(
+        `${err.file}\n  link:      ${err.link}\n  resolved:  ${err.resolvedPath}\n  why:       ${err.reason}\n`,
+      )
+    })
+    process.exit(1)
+  } else {
+    console.log('\n✅ No broken links found!')
+  }
+}
+
+verifyMarkdownLinks().catch(console.error)

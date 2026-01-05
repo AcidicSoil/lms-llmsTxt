@@ -1,0 +1,229 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Codexia",
+    "summary": "<div align=\"center\"> <img src=\"src-tauri/icons/128x128@2x.png\" alt=\"Codexia Logo\" width=\"120\" height=\"120\" />"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Architecture",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/ARCHITECTURE.md",
+          "note": "core concept"
+        },
+        {
+          "title": "Auth Codexia",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/auth-codexia.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Performance Optimizations",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/performance_optimizations.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Notepad Integration",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/test_notepad_integration.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Updater Usage",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/updater-usage.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Usage",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/USAGE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Vision",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/docs/vision.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Claude.Example",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/CLAUDE.example.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Vite.Config",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/vite.config.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "Vite Env.D",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/vite-env.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Backenderrorlistener",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/utils/backendErrorListener.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Beep",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/utils/beep.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Buildparams",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/utils/buildParams.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/types/chat.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Chatinputstore",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/stores/chatInputStore.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/types/codex.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Config",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/types/config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Configservice",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/services/configService.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Contextfilesstore",
+          "url": "https://raw.githubusercontent.com/milisp/codexia/main/src/stores/ContextFilesStore.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

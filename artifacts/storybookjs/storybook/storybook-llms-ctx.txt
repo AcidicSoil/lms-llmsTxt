@@ -1,0 +1,4854 @@
+<project title="Storybook" summary="Storybook is a frontend workshop for building UI components and pages in isolation, enabling teams to develop, test, and document UI components efficiently. It supports multiple frameworks and offers addons for design, testing, and documentation, making it a comprehensive tool for UI development.">**Remember:**
+- UI Component Development
+- Isolated Storybook Environment
+- Framework Support (React, Angular, Vue, Web Components, etc.)
+- Addons for Documentation, Accessibility, Testing, and Interactivity
+- Portability and Reusability of Stories
+- Integration with Testing Frameworks (Jest, Vitest, Playwright)<docs><doc title="Addon A11Y Install" desc="install &amp; quickstart.">```shell renderer="common" language="js" packageManager="npm"
+npm install @storybook/addon-a11y --save-dev
+```
+
+```shell renderer="common" language="js" packageManager="pnpm"
+pnpm add --save-dev @storybook/addon-a11y
+```
+
+```shell renderer="common" language="js" packageManager="yarn"
+yarn add --dev @storybook/addon-a11y
+```</doc><doc title="Addon Test Install" desc="install &amp; quickstart.">```shell renderer="common" language="js" packageManager="npm"
+npx storybook add @storybook/addon-vitest
+```
+
+```shell renderer="common" language="js" packageManager="pnpm"
+pnpm exec storybook add @storybook/addon-vitest
+```
+
+```shell renderer="common" language="js" packageManager="yarn"
+yarn exec storybook add @storybook/addon-vitest
+```</doc><doc title="Angular Install" desc="install &amp; quickstart.">```shell renderer="angular" language="js" packageManager="npm"
+npm install --save-dev @storybook/angular
+```
+
+```shell renderer="angular" language="js" packageManager="pnpm"
+pnpm add --save-dev @storybook/angular
+```
+
+```shell renderer="angular" language="js" packageManager="yarn"
+yarn add --dev @storybook/angular
+```</doc><doc title="Chromatic Install" desc="install &amp; quickstart.">```shell renderer="common" language="js" packageManager="npm"
+npm install chromatic --save-dev
+```
+
+```shell renderer="common" language="js" packageManager="pnpm"
+pnpm add --save-dev chromatic
+```
+
+```shell renderer="common" language="js" packageManager="yarn"
+yarn add --dev chromatic
+```</doc><doc title="Compodoc Install" desc="install &amp; quickstart.">```shell renderer="angular" language="js" packageManager="npm"
+npm install @compodoc/compodoc --save-dev
+```
+
+```shell renderer="angular" language="js" packageManager="pnpm"
+pnpm add --save-dev @compodoc/compodoc
+```
+
+```shell renderer="angular" language="js" packageManager="yarn"
+yarn add --dev @compodoc/compodoc
+```</doc><doc title="Eslint Install" desc="install &amp; quickstart.">```shell renderer="common" language="js" packageManager="npm"
+npm install --save-dev eslint
+```
+
+```shell renderer="common" language="js" packageManager="pnpm"
+pnpm add --save-dev eslint
+```
+
+```shell renderer="common" language="js" packageManager="yarn"
+yarn add --dev eslint
+```</doc><doc title="Eslint Plugin Storybook Install" desc="install &amp; quickstart.">```shell renderer="common" language="js" packageManager="npm"
+npm install --save-dev eslint-plugin-storybook
+```
+
+```shell renderer="common" language="js" packageManager="pnpm"
+pnpm add --save-dev eslint-plugin-storybook
+```
+
+```shell renderer="common" language="js" packageManager="yarn"
+yarn add --dev eslint-plugin-storybook
+```</doc><doc title="Install" desc="install &amp; quickstart.">---
+title: Install Storybook
+sidebar:
+  order: 2
+  title: Install
+---
+
+Use the Storybook CLI to install it in a single command. Run this inside your project’s root directory:
+
+<CodeSnippets path="create-command.md" />
+
+Storybook will look into your project's dependencies during its install process and provide you with the best configuration available.
+
+<YouTubeCallout id="CtfU1UnizHU" title="New Storybook" style={{ marginTop: '1em' }} />
+
+## Project requirements
+
+Storybook is designed to work with a variety of frameworks and environments. If your project is using one of the packages listed here, please ensure that you have the following versions installed:
+
+<div style={{ columns: 2, marginBottom: '1.5rem' }}>
+- Angular 18+
+- Lit 3+
+- Next.js 14+
+- Node.js 20+
+- npm 10+
+- pnpm 9+
+- Preact 8+
+- React Native 0.72+
+- React Native Web 0.19+
+- Svelte 5+
+- SvelteKit 1+
+- TypeScript 4.9+
+- Vite 5+
+- Vitest 3+
+- Vue 3+
+- Webpack 5+
+- Yarn 4+
+</div>
+
+Additionally, the Storybook app supports the following browsers:
+
+- Chrome 131+
+- Edge 134+
+- Firefox 136+
+- Safari 18.3+
+- Opera 117+
+
+<details>
+<summary>How do I use Storybook with older browsers?</summary>
+
+You can use Storybook with older browsers in two ways:
+
+1. Use a version of Storybook prior to `9.0.0`, which will have less strict requirements.
+2. Develop or build your Storybook in ["preview-only" mode](../sharing/publish-storybook.mdx#build-storybook-for-older-browsers), which can be used in older, unsupported browsers.
+
+</details>
+
+## Installation
+
+Run this command inside your project's root directory to install the latest version of Storybook:
+
+<CodeSnippets path="create-command.md" />
+
+<details id="custom-storybook-version">
+  <summary>Install a specific version</summary>
+
+  For installing Storybook 8.3 or newer, you can use the `create` command with a specific version:
+
+  {/* prettier-ignore-start */}
+
+  <CodeSnippets path="create-command-custom-version.md" />
+
+  {/* prettier-ignore-end */}
+
+  To install a Storybook version prior to 8.3, you must use the `init` command:
+
+  {/* prettier-ignore-start */}
+
+  <CodeSnippets path="init-command-custom-version.md" />
+
+  {/* prettier-ignore-end */}
+
+  For either command, you can specify either an npm tag such as `latest` or `next`, or a (partial) version number. For example:
+
+  * `storybook@latest init` will initialize the latest version
+  * `storybook@7.6.10 init` will initialize `7.6.10`
+  * `storybook@7 init` will initialize the newest `7.x.x` version
+
+</details>
+
+When installing, Storybook will present you with a series of interactive prompts to help customize your installation:
+
+**New to Storybook?**
+
+Storybook will ask if you're new to Storybook. If you select "Yes":
+
+* You will be welcomed with an interactive tour
+* Example stories will be created to help you learn
+
+If you're experienced with Storybook, you can skip the onboarding to get a minimal setup.
+
+**What configuration should we install?**
+
+Storybook will ask what type of configuration you want to install:
+
+* **Recommended**: Includes component development, [documentation](../writing-docs/autodocs.mdx), [testing](../writing-tests/integrations/vitest-addon.mdx), and [accessibility](../writing-tests/accessibility-testing.mdx) features
+* **Minimal**: Just the essentials for component development
+
+You can also manually select these features using the `--features` flag. For example:
+
+```bash
+npm create storybook@latest --features docs test a11y
+```
+
+After completing the prompts, the command above will make the following changes to your local environment:
+
+* 📦 Install the required dependencies.
+* 🛠 Set up the necessary scripts to run and build Storybook.
+* 🛠 Add the default Storybook configuration.
+* 📝 Add some boilerplate stories to get you started.
+* 📡 Set up telemetry to help us improve Storybook. Read more about it [here](../configure/telemetry.mdx).
+
+<IfRenderer renderer="react">
+  ## Run the Setup Wizard
+
+  If all goes well, you should see a setup wizard that will help you get started with Storybook introducing you to the main concepts and features, including how the UI is organized, how to write your first story, and how to test your components' response to various inputs utilizing [controls](../essentials/controls.mdx).
+
+  ![Storybook onboarding](../_assets/get-started/example-onboarding-wizard.png)
+
+  If you skipped the wizard, you can always run it again by adding the `?path=/onboarding` query parameter to the URL of your Storybook instance, provided that the example stories are still available.
+</IfRenderer>
+
+## Start Storybook
+
+Storybook comes with a built-in development server featuring everything you need for project development. Depending on your system configuration, running the `storybook` command will start the local development server, output the address for you, and automatically open the address in a new browser tab where a welcome screen greets you.
+
+{/* prettier-ignore-start */}
+
+<CodeSnippets path="storybook-run-dev.md" />
+
+{/* prettier-ignore-end */}
+
+<Callout variant="info">
+  Storybook collects completely anonymous data to help us improve user experience. Participation is optional, and you may [opt-out](../configure/telemetry.mdx#how-to-opt-out) if you'd not like to share any information.
+</Callout>
+
+![Storybook welcome screen](../_assets/get-started/example-welcome.png)
+
+There are some noteworthy items here:
+
+* A collection of useful links for more in-depth configuration and customization options you have at your disposal.
+* A second set of links for you to expand your Storybook knowledge and get involved with the ever-growing Storybook community.
+* A few example stories to get you started.
+
+<details>
+  <summary><h3 id="troubleshooting">Troubleshooting</h3></summary>
+  #### Run Storybook with other package managers
+
+  The Storybook CLI includes support for the industry's popular package managers (e.g., [Yarn](https://yarnpkg.com/), [npm](https://www.npmjs.com/), and [pnpm](https://pnpm.io/)) automatically detecting the one you are using when you initialize Storybook. However, if you want to use a specific package manager as the default, add the `--package-manager` flag to the installation command. For example:
+
+  {/* prettier-ignore-start */}
+
+  <CodeSnippets path="create-command-custom-package-manager.md" />
+
+  {/* prettier-ignore-end */}
+
+  #### The CLI doesn't detect my framework
+
+  If auto‑detection fails or you’re using a custom setup, pass the project type explicitly with `--type` when running the initializer. The allowed values are:
+
+  | Type                          | Framework                          |
+  | ----------------------------- | ---------------------------------- |
+  | `angular`                     | Angular                            |
+  | `ember`                       | Ember                              |
+  | `html`                        | HTML                               |
+  | `nextjs`                      | Next.js                            |
+  | `nuxt`                        | Nuxt                               |
+  | `preact`                      | Preact                             |
+  | `qwik`                        | Qwik                               |
+  | `react`                       | React                              |
+  | `react_native`                | React Native                       |
+  | `react_native_web`            | React Native Web                   |
+  | `react_native_and_rnw`        | React Native (+ Web)               |
+  | `react_scripts`               | Create React App (react-scripts)   |
+  | `react_project`               | React Project                      |
+  | `server`                      | Server renderer                    |
+  | `solid`                       | Solid                              |
+  | `svelte`                      | Svelte                             |
+  | `sveltekit`                   | SvelteKit                          |
+  | `vue3`                        | Vue 3                              |
+  | `web_components`              | Web Components                     |
+
+  {/* prettier-ignore-start */}
+
+  <CodeSnippets path="create-command-manual-framework.md" />
+
+  {/* prettier-ignore-end */}
+
+  #### Yarn Plug'n'Play (PnP) support with Storybook
+
+  If you've enabled Storybook in a project running on a new version of Yarn with [Plug'n'Play](https://yarnpkg.com/features/pnp) (PnP) enabled, you may notice that it will generate `node_modules` with some additional files and folders. This is a known constraint as Storybook relies on some directories (e.g., `.cache`) to store cache files and other data to improve performance and faster builds. You can safely ignore these files and folders, adjusting your `.gitignore` file to exclude them from the version control you're using.
+
+  #### Run Storybook with Webpack 4
+
+  If you previously installed Storybook in a project that uses Webpack 4, it will no longer work. This is because Storybook now uses Webpack 5 by default. To solve this issue, we recommend you upgrade your project to Webpack 5 and then run the following command to migrate your project to the latest version of Storybook:
+
+  {/* prettier-ignore-start */}
+
+  <CodeSnippets path="storybook-automigrate.md" />
+
+  {/* prettier-ignore-end */}
+
+  <If notRenderer="angular">
+
+    #### Storybook doesn't work with an empty directory
+
+    By default, Storybook is configured to detect whether you're initializing it on an empty directory or an existing project. However, if you attempt to initialize Storybook, select a Vite-based framework (e.g., [React](./frameworks/react-vite.mdx)) in a directory that only contains a `package.json` file, you may run into issues with [Yarn Modern](https://yarnpkg.com/getting-started). This is due to how Yarn handles peer dependencies and how Storybook is set up to work with Vite-based frameworks, as it requires the [Vite](https://vitejs.dev/) package to be installed. To solve this issue, you must install Vite manually and initialize Storybook.
+
+  </If>
+
+  <IfRenderer renderer="angular">
+    #### Storybook doesn't work with my Angular project using the Angular CLI
+
+    Out of the box, adding Storybook to an Angular project using the Angular CLI requires you to run the installation command from the root of the project or, if you're working with a monorepo environment, from the directory where the Angular configuration file (i.e., `angular.json`) is located as it will be used to set up the builder configuration necessary to run Storybook. However, if you need, you can extend the builder configuration to customize Storybook's behavior. To learn more about the available options, see the [Angular framework documentation](./frameworks/angular.mdx#how-do-i-configure-angulars-builder-for-storybook).
+  </IfRenderer>
+
+  <IfRenderer renderer="ember">
+    #### The CLI doesn't support my Ember version
+
+    The Ember framework relies on an auxiliary package named [`@storybook/ember-cli-storybook`](https://www.npmjs.com/package/@storybook/ember-cli-storybook) to help you set up Storybook in your project. During the installation process you might run into the following warning message in your terminal:
+
+    ```shell
+    The ember generate entity-name command requires an entity name to be specified.
+    For more details, use ember help.
+    ```
+
+    It may be the case that you're using an outdated version of the package and you need to update it to the latest version to solve this issue.
+  </IfRenderer>
+
+  <IfRenderer renderer="vue">
+    #### Storybook doesn't work with my Vue 2 project
+
+    Vue 2 entered [End of Life](https://v2.vuejs.org/lts/) (EOL) on December 31st, 2023, and is no longer maintained by the Vue team. As a result, Storybook no longer supports Vue 2. We recommend you upgrade your project to Vue 3, which Storybook fully supports. If that's not an option, you can still use Storybook with Vue 2 by installing the latest version of Storybook 7 with the following command:
+
+    {/* prettier-ignore-start */}
+
+    <CodeSnippets path="storybook-init-v7.md" />
+
+    {/* prettier-ignore-end */}
+  </IfRenderer>
+
+  <IfRenderer renderer="svelte">
+    #### Writing native Svelte stories
+
+    Storybook provides a Svelte [addon](https://storybook.js.org/addons/@storybook/addon-svelte-csf) maintained by the community, enabling you to write stories for your Svelte components using the template syntax. Starting with Storybook 8.2, the addon is automatically installed and configured when you initialize your project with the Svelte framework. However, if you installed a [specific version](#custom-storybook-version) of Storybook, you'll need to take additional steps to enable this feature.
+
+    Run the following command to install the addon.
+
+    {/* prettier-ignore-start */}
+
+    <CodeSnippets path="svelte-csf-addon-install.md" />
+
+    {/* prettier-ignore-end */}
+
+    <Callout variant="info">
+
+      The CLI's [`add`](../api/cli-options.mdx#add) command automates the addon's installation and setup. To install it manually, see our [documentation](../addons/install-addons.mdx#manual-installation) on how to install addons.
+
+    </Callout>
+
+    Update your Storybook configuration file (i.e., `.storybook/main.js|ts`) to enable support for this format.
+
+    {/* prettier-ignore-start */}
+
+    <CodeSnippets path="main-config-svelte-csf-register.md" />
+
+    {/* prettier-ignore-end */}
+
+    <Callout variant="info" style={{ marginBottom: "2rem" }}>
+      The community actively maintains the Svelte CSF addon but still lacks some features currently available in the official Storybook Svelte framework support. For more information, see the [addon's documentation](https://github.com/storybookjs/addon-svelte-csf).
+    </Callout>
+  </IfRenderer>
+
+  #### The installation process seems flaky and keeps failing
+
+  If you're still running into some issues during the installation process, we encourage you to check out the following resources:
+
+  <IfRenderer renderer="angular">
+    * Storybook's Angular [framework documentation](./frameworks/angular.mdx) for more information on how to set up Storybook in your Angular project.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="ember">
+    * [Storybook's Ember README](https://github.com/storybookjs/storybook/tree/next/code/frameworks/ember) for more information on how to set up Storybook in your Ember project.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="html">
+    * [Storybook's HTML Vite README](https://github.com/storybookjs/storybook/tree/next/code/frameworks/html-vite) for more information on how to set up Storybook in your HTML project with Vite.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="preact">
+    * Storybook's Preact Vite [framework documentation](./frameworks/preact-vite.mdx) for more information on how to set up Storybook in your Preact project with Vite.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="qwik">
+    * [Storybook's Qwik README](https://github.com/literalpie/storybook-framework-qwik) for more information on how to set up Storybook in your Qwik project.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="react">
+    * Storybook's React Vite [framework documentation](./frameworks/react-vite.mdx) for more information on how to set up Storybook in your React project with Vite.
+    * Storybook's React Webpack [framework documentation](./frameworks/react-webpack5.mdx) for more information on how to set up Storybook in your React project with Webpack 5.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="solid">
+    * [Storybook's SolidJS README](https://github.com/solidjs-community/storybook) for more information on how to set up Storybook in your SolidJS project.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="svelte">
+    * Storybook's SvelteKit [framework documentation](./frameworks/sveltekit.mdx) for more information on how to set up Storybook in your SvelteKit project.
+    * Storybook's Svelte Vite [framework documentation](./frameworks/svelte-vite.mdx) for more information on how to set up Storybook in your Svelte project with Vite.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="vue">
+    * Storybook's Vue 3 Vite [framework documentation](./frameworks/vue3-vite.mdx) for more information on how to set up Storybook in your Vue 3 project with Vite.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+
+  <IfRenderer renderer="web-components">
+    * Storybook's Web Components Vite [framework documentation](./frameworks/web-components-vite.mdx) for more information on how to set up Storybook in your Web Components project with Vite.
+    * [Storybook's help documentation](https://storybook.js.org/community#support) to contact the community and ask for help.
+  </IfRenderer>
+</details>
+
+<IfRenderer renderer="react">
+  Now that you have successfully installed Storybook and understood how it works, let's continue where you left off in the [setup wizard](#run-the-setup-wizard) and delve deeper into writing stories.
+</IfRenderer>
+
+<IfRenderer renderer={['angular', 'vue', 'web-components', 'ember', 'html', 'svelte', 'preact', 'qwik', 'solid' ]}>
+  Now that you installed Storybook successfully, let’s take a look at a story that was written for us.
+</IfRenderer></doc><doc title="Install" desc="install &amp; quickstart.">import { access, rm } from 'node:fs/promises';
+
+import { join } from 'path';
+
+import type { Task } from '../task';
+import { checkDependencies } from '../utils/cli-utils';
+
+const pathExists = async (path: string) => {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const install: Task = {
+  description: 'Install the dependencies of the monorepo',
+  async ready({ codeDir }) {
+    return pathExists(join(codeDir, 'node_modules'));
+  },
+  async run({ codeDir }) {
+    await checkDependencies();
+
+    // these are webpack4 types, we we should never use
+    await rm(join(codeDir, 'node_modules', '@types', 'webpack'), { force: true, recursive: true });
+  },
+};</doc><doc title="Install Addons" desc="install &amp; quickstart.">---
+title: 'Install addons'
+sidebar:
+  order: 1
+  title: Install
+---
+
+Storybook has [hundreds of reusable addons](https://storybook.js.org/integrations) packaged as NPM modules. Let's walk through how to extend Storybook by installing and registering addons.
+
+## Automatic installation
+
+Storybook includes a [`storybook add`](../api/cli-options.mdx#add) command to automate the setup of addons. Several community-led addons can be added using this command, except for preset addons. We encourage you to read the addon's documentation to learn more about its installation process.
+
+Run the `storybook add` command using your chosen package manager, and the CLI will update your Storybook configuration to include the addon and install any necessary dependencies.
+
+{/* prettier-ignore-start */}
+
+<CodeSnippets path="storybook-add-command.md" />
+
+{/* prettier-ignore-end */}
+
+<Callout variant="warning">
+  If you're attempting to install multiple addons at once, it will only install the first addon that was specified. This is a known limitation of the current implementation and will be addressed in a future release.
+</Callout>
+
+### Manual installation
+
+Storybook addons are always added through the [`addons`](../api/main-config/main-config-addons.mdx) configuration array in [`.storybook/main.js|ts`](../configure/index.mdx). The following example shows how to manually add the [Accessibility addon](https://storybook.js.org/addons/@storybook/addon-a11y) to Storybook.
+
+Run the following command with your package manager of choice to install the addon.
+
+{/* prettier-ignore-start */}
+
+<CodeSnippets path="addon-a11y-install.md" />
+
+{/* prettier-ignore-end */}
+
+Next, update `.storybook/main.js|ts` to the following:
+
+{/* prettier-ignore-start */}
+
+<CodeSnippets path="addon-a11y-register.md" />
+
+{/* prettier-ignore-end */}
+
+When you run Storybook, the accessibility testing addon will be enabled.
+
+![Storybook addon installed and registered](../_assets/addons/storybook-addon-installed-registered.png)
+
+### Removing addons
+
+To remove an addon from Storybook, you can choose to manually uninstall it and remove it from the configuration file (i.e., [`.storybook/main.js|ts`](../configure/index.mdx)) or opt-in to do it automatically via the CLI with the [`remove`](../api/cli-options.mdx#remove) command. For example, to remove the [Accessibility addon](https://storybook.js.org/addons/@storybook/addon-a11y) from Storybook with the CLI, run the following command:
+
+{/* prettier-ignore-start */}
+
+<CodeSnippets path="storybook-remove-command.md" />
+
+{/* prettier-ignore-end */}</doc></docs><tutorials><doc title="README" desc="install &amp; quickstart."># Storybook Codemods
+
+Storybook Codemods is a collection of codemod scripts written with JSCodeshift.
+It will help you migrate breaking changes & deprecations.
+
+## CLI Integration
+
+The preferred way to run these codemods is via the CLI's `migrate` command.
+
+To get a list of available codemods:
+
+```
+npx sb migrate --list
+```
+
+To run a codemod `<name-of-codemod>`:
+
+```
+npx sb migrate <name-of-codemod> --glob="**/*.stories.js"
+```
+
+## Installation
+
+If you want to run these codemods by hand:
+
+```sh
+yarn add jscodeshift @storybook/codemod --dev
+```
+
+- `@storybook/codemod` is our collection of codemod scripts.
+- `jscodeshift` is a tool we use to apply our codemods.
+
+After running the migration commands, you can remove them from your `package.json`, if you added them.
+
+## How to run a codemod script
+
+From the directory where you installed both `jscodeshift` and `@storybook/codemod` run:
+
+Example:
+
+```sh
+./node_modules/.bin/jscodeshift -t ./node_modules/@storybook/codemod/dist/transforms/upgrade-hierarchy-separators.js . --ignore-pattern "node_modules|dist"
+```
+
+Explanation:
+
+    <jscodeShiftCommand> -t <transformFileLocation> <pathToSource> --ignore-pattern "<globPatternToIgnore>"
+
+## Transforms
+
+### upgrade-hierarchy-separators
+
+Starting in 5.3, Storybook is moving to using a single path separator, `/`, to specify the story hierarchy. It previously defaulted to `|` for story "roots" (optional) and either `/` or `.` for denoting paths. This codemod updates the old default to the new default.
+
+```sh
+./node_modules/.bin/jscodeshift -t ./node_modules/@storybook/codemod/dist/transforms/upgrade-hierarchy-separators.js . --ignore-pattern "node_modules|dist"
+```
+
+For example:
+
+```js
+storiesOf('Foo|Bar/baz');
+storiesOf('Foo.Bar.baz');
+
+export default {
+  title: 'Foo|Bar/baz.whatever',
+};
+```
+
+Becomes:
+
+```js
+storiesOf('Foo/Bar/baz');
+storiesOf('Foo/Bar/baz');
+
+export default {
+  title: 'Foo/Bar/baz/whatever',
+};
+```
+
+### csf-hoist-story-annotations
+
+Starting in 6.0, Storybook has deprecated the `.story` annotation in CSF and is using hoisted annotations.
+
+```sh
+./node_modules/.bin/jscodeshift -t ./node_modules/@storybook/codemod/dist/transforms/csf-hoist-story-annotations.js . --ignore-pattern "node_modules|dist" --extensions=js
+```
+
+For example:
+
+```js
+export const Basic = () => <Button />
+Basic.story = {
+  name: 'foo',
+  parameters: { ... },
+  decorators: [ ... ],
+};
+```
+
+Becomes:
+
+```js
+export const Basic = () => <Button />
+Basic.storyName = 'foo';
+Basic.parameters = { ... };
+Basic.decorators = [ ... ];
+```
+
+The new syntax is slightly more compact, is more ergonomic, and resembles React's `displayName`/`propTypes`/`defaultProps` annotations.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="Codemod" desc="worked example.">/**
+ * DISCLAIMER:
+ *
+ * This file exists with the sole purpose of assisting the documentation snippets during
+ * introduction of new features. This will probably used only once or twice, but it's REALLY useful
+ * to test codemods as it helps detect many bugs very quickly. It also will be used once we decide
+ * to add extra snippets to more renderers.
+ */
+import os from 'node:os';
+import { join } from 'node:path';
+
+import { program } from 'commander';
+import { promises as fs } from 'fs';
+import pLimit from 'p-limit';
+import picocolors from 'picocolors';
+import prompts from 'prompts';
+// eslint-disable-next-line depend/ban-dependencies
+import slash from 'slash';
+
+import { configToCsfFactory } from '../../code/lib/cli-storybook/src/codemod/helpers/config-to-csf-factory';
+import { storyToCsfFactory } from '../../code/lib/cli-storybook/src/codemod/helpers/story-to-csf-factory';
+import { SNIPPETS_DIRECTORY } from '../utils/constants';
+
+const logger = console;
+
+export const maxConcurrentTasks = Math.max(1, os.cpus().length - 1);
+
+type SnippetInfo = {
+  path: string;
+  source: string;
+  attributes: {
+    filename: string;
+    language: string;
+    renderer: string;
+    tabTitle: string;
+    highlightSyntax: string;
+    [key: string]: string;
+  };
+};
+
+type Codemod = {
+  getTargetSnippet: (snippetInfo: SnippetInfo) => boolean;
+  check: (snippetInfo: SnippetInfo, filePath: string) => boolean;
+  transform: (snippetInfo: SnippetInfo) => string | Promise<string>;
+};
+
+const previousTabTitle = 'CSF 3';
+const newTabTitle = 'CSF Next 🧪';
+
+export async function runSnippetCodemod({
+  glob,
+  check,
+  getTargetSnippet,
+  transform,
+  dryRun = false,
+  promptUser = false,
+}: {
+  glob: string;
+  check: Codemod['check'];
+  getTargetSnippet: Codemod['getTargetSnippet'];
+  transform: Codemod['transform'];
+  dryRun?: boolean;
+  promptUser?: boolean;
+}) {
+  let modifiedCount = 0;
+  let unmodifiedCount = 0;
+  let errorCount = 0;
+  let skippedCount = 0;
+
+  try {
+    // Dynamically import these packages because they are pure ESM modules
+    // eslint-disable-next-line depend/ban-dependencies
+    const { globby } = await import('globby');
+
+    const files = await globby(slash(glob), {
+      followSymbolicLinks: true,
+      ignore: ['node_modules/**', 'dist/**', 'storybook-static/**', 'build/**'],
+    });
+
+    if (!files.length) {
+      logger.error(`No files found for pattern ${glob}`);
+      return;
+    }
+
+    const limit = pLimit(10);
+
+    for (const file of files) {
+      await limit(async () => {
+        try {
+          let source = await fs.readFile(file, 'utf-8');
+          const originalSource = source;
+          const snippets = extractSnippets(source).filter((snip) => check(snip, file));
+
+          if (snippets.length === 0) {
+            unmodifiedCount++;
+            return;
+          }
+
+          const targetSnippet = snippets.find(getTargetSnippet);
+          if (!targetSnippet) {
+            skippedCount++;
+            return;
+          }
+
+          if (promptUser) {
+            logger.log(`\nFile: ${picocolors.yellow(file)}`);
+            const response = await prompts(
+              {
+                type: 'confirm',
+                name: 'apply',
+                message: `Apply codemod?`,
+                initial: true,
+              },
+              {
+                onCancel: () => process.exit(0),
+              }
+            );
+
+            if (!response.apply) {
+              skippedCount++;
+              return;
+            }
+          }
+
+          const counterpartSnippets = snippets.filter((snippet) => {
+            return (
+              snippet !== targetSnippet &&
+              snippet.attributes.tabTitle !== previousTabTitle &&
+              snippet.attributes.tabTitle !== newTabTitle &&
+              snippet.attributes.renderer === targetSnippet.attributes.renderer &&
+              snippet.attributes.language !== targetSnippet.attributes.language
+            );
+          });
+
+          const getSource = (snippet: SnippetInfo) =>
+            `\n\`\`\`${formatAttributes(snippet.attributes)}\n${snippet.source}\n\`\`\`\n`;
+
+          const updateTabTitle = (snippet: SnippetInfo, newTitle: string) => {
+            return snippet.attributes.tabTitle === newTitle
+              ? newTitle
+              : snippet.attributes.tabTitle
+                ? `${snippet.attributes.tabTitle} (${newTitle})`
+                : newTitle;
+          };
+
+          const allSnippets = [targetSnippet, ...counterpartSnippets];
+
+          let lastModifiedSnippet = '';
+          // clone the snippets and apply codemod, then append them to the bottom
+          try {
+            let appendedContent = '';
+
+            if (!dryRun) {
+              // replace attributes of the original snippets with CSF 3
+              await allSnippets.forEach(async (snippet) => {
+                // warn us if there is already a tab title
+                source = source.replace(
+                  formatAttributes(snippet.attributes),
+                  formatAttributes({
+                    ...snippet.attributes,
+                    tabTitle: updateTabTitle(snippet, previousTabTitle),
+                  })
+                );
+                await fs.writeFile(file, source, 'utf-8');
+              });
+            }
+
+            for (const snippet of allSnippets) {
+              // warn us if there is already a tab title
+              if (snippet !== targetSnippet) {
+                appendedContent +=
+                  '\n<!-- JS snippets still needed while providing both CSF 3 & Next -->\n';
+              }
+
+              const newSnippet = { ...snippet };
+              lastModifiedSnippet = formatAttributes(newSnippet.attributes);
+              let transformedSource = getSource({
+                ...newSnippet,
+                attributes: {
+                  ...newSnippet.attributes,
+                  renderer: 'react',
+                  tabTitle: updateTabTitle(newSnippet, newTabTitle),
+                },
+                source: await transform(newSnippet),
+              });
+
+              if (newSnippet.path.includes('.stories')) {
+                transformedSource = transformedSource
+                  .replace(/\/\/ Replace your-framework with .*\n/, '')
+                  .replace(/\* Replace your-framework with .*\n/, '')
+                  .replace(
+                    /(import preview from \"#\.storybook\/preview\";)/g,
+                    `import preview from '../.storybook/preview';`
+                  );
+              } else {
+                transformedSource = transformedSource
+                  .replace(
+                    /Replace your-framework with .*\n/,
+                    'Replace your-framework with the framework you are using (e.g., react-vite, nextjs, nextjs-vite)\n'
+                  )
+                  .replace(
+                    /(import { define(Main|Preview) .*)\n/,
+                    '// Replace your-framework with the framework you are using (e.g., react-vite, nextjs, nextjs-vite)\n$1\n'
+                  );
+              }
+              appendedContent += transformedSource;
+            }
+
+            const updatedSource = source + appendedContent;
+
+            if (!dryRun) {
+              await fs.writeFile(file, updatedSource, 'utf-8');
+            } else {
+              logger.log(
+                `Dry run: would have modified ${picocolors.yellow(file)} with new snippets \n` +
+                  picocolors.green(appendedContent)
+              );
+            }
+
+            modifiedCount++;
+          } catch (transformError) {
+            logger.error(
+              `\nError transforming snippet in file ${picocolors.yellow(file)}:`,
+              '\n',
+              picocolors.green(lastModifiedSnippet),
+              '\n',
+              picocolors.red((transformError as any).message)
+            );
+            errorCount++;
+            await fs.writeFile(file, originalSource, 'utf-8');
+          }
+        } catch (fileError) {
+          logger.error(`Error processing file ${file}:`, fileError);
+          errorCount++;
+        }
+      });
+    }
+  } catch (error) {
+    logger.error('Error applying snippet transform:', error);
+    errorCount++;
+  }
+
+  logger.log(
+    `Summary: ${picocolors.green(`${modifiedCount} files modified`)}, ${picocolors.yellow(`${unmodifiedCount} files unmodified`)}, ${picocolors.gray(`${skippedCount} skipped`)}, ${picocolors.red(`${errorCount} errors`)}`
+  );
+}
+
+export function extractSnippets(source: string): SnippetInfo[] {
+  const snippetRegex =
+    /```(?<highlightSyntax>[a-zA-Z0-9]+)?(?<attributes>[^\n]*)\n(?<content>[\s\S]*?)```/g;
+  const snippets: SnippetInfo[] = [];
+  let match;
+
+  while ((match = snippetRegex.exec(source)) !== null) {
+    const { highlightSyntax, attributes, content } = match.groups || {};
+    const snippetAttributes = parseAttributes(attributes || '');
+    if (highlightSyntax) {
+      snippetAttributes.highlightSyntax = highlightSyntax.trim();
+    }
+
+    snippets.push({
+      path: snippetAttributes.filename || '',
+      source: content.trim(),
+      attributes: snippetAttributes,
+    });
+  }
+
+  return snippets;
+}
+
+export function parseAttributes(attributes: string) {
+  const attributeRegex = /([a-zA-Z0-9.-]+)="([^"]+)"/g;
+  const result: Record<string, string> = {};
+  let match;
+
+  while ((match = attributeRegex.exec(attributes)) !== null) {
+    result[match[1]] = match[2];
+  }
+
+  return result as SnippetInfo['attributes'];
+}
+
+function formatAttributes(attributes: Record<string, string>): string {
+  const formatted = Object.entries(attributes)
+    .filter(([key]) => key !== 'highlightSyntax')
+    .map(([key, value]) => `${key}="${value}"`)
+    .join(' ');
+  return `${attributes.highlightSyntax || 'js'} ${formatted}`;
+}
+
+const codemods: Record<string, Codemod> = {
+  'csf-factory-story': {
+    check: (snippetInfo: SnippetInfo, filePath: string) => {
+      return (
+        snippetInfo.path.includes('.stories') &&
+        !snippetInfo.attributes?.filename?.includes('CSF 2') &&
+        !filePath.split('/')?.pop()?.startsWith('csf-3') &&
+        snippetInfo.attributes.highlightSyntax !== 'mdx' &&
+        snippetInfo.attributes.tabTitle !== previousTabTitle &&
+        snippetInfo.attributes.tabTitle !== newTabTitle
+      );
+    },
+    getTargetSnippet: (snippetInfo: SnippetInfo) => {
+      return (
+        snippetInfo.attributes.language === 'ts' &&
+        snippetInfo.attributes.tabTitle !== previousTabTitle &&
+        snippetInfo.attributes.tabTitle !== newTabTitle &&
+        (snippetInfo.attributes.renderer === 'react' ||
+          snippetInfo.attributes.renderer === 'common')
+      );
+    },
+    transform: (snippetInfo: SnippetInfo) => {
+      return storyToCsfFactory(snippetInfo, {
+        previewConfigPath: undefined,
+        useSubPathImports: true,
+      });
+    },
+  },
+  'csf-factory-config': {
+    check: (snippetInfo: SnippetInfo) => {
+      return (
+        snippetInfo.attributes.tabTitle !== previousTabTitle &&
+        snippetInfo.attributes.tabTitle !== newTabTitle &&
+        (snippetInfo.path.includes('/preview.') || snippetInfo.path.includes('/main.'))
+      );
+    },
+    getTargetSnippet: (snippetInfo: SnippetInfo) => {
+      return (
+        snippetInfo.attributes.language === 'ts' &&
+        snippetInfo.attributes.tabTitle !== previousTabTitle &&
+        snippetInfo.attributes.tabTitle !== newTabTitle &&
+        (snippetInfo.attributes.renderer === 'react' ||
+          snippetInfo.attributes.renderer === 'common')
+      );
+    },
+    transform: (snippetInfo: SnippetInfo) => {
+      const configType = snippetInfo.path.includes('preview') ? 'preview' : 'main';
+      return configToCsfFactory(snippetInfo, {
+        configType,
+        frameworkPackage: '@storybook/your-framework',
+      });
+    },
+  },
+};
+
+program
+  .name('command')
+  .description('A minimal CLI for demonstration')
+  .argument('<id>', 'ID to process')
+  .requiredOption('--glob <pattern>', 'Glob pattern to match')
+  .option('--dry-run', 'Run without making actual changes', false)
+  .option('--prompt', 'Prompt before applying changes', false)
+  .action(async (id, { glob, dryRun, prompt }) => {
+    const codemod = codemods[id as keyof typeof codemods];
+    if (!codemod) {
+      logger.error(`Unknown codemod "${id}"`);
+      logger.log(
+        `\n\nAvailable codemods: ${Object.keys(codemods)
+          .map((c) => `\n- ${c}`)
+          .join('')}`
+      );
+      process.exit(1);
+    }
+
+    await runSnippetCodemod({
+      glob: join(SNIPPETS_DIRECTORY, glob),
+      dryRun,
+      promptUser: prompt,
+      ...codemod,
+    });
+  });
+
+// Parse and validate arguments
+program.parse(process.argv);</doc><doc title="Build Config" desc="worked example.">import type { BuildEntries } from '../../../scripts/build/utils/entry-utils';
+
+const config: BuildEntries = {
+  entries: {
+    node: [
+      {
+        exportEntries: ['.'],
+        entryPoint: './src/index.ts',
+      },
+      {
+        exportEntries: ['./transforms/csf-2-to-3'],
+        entryPoint: './src/transforms/csf-2-to-3.ts',
+        dts: false,
+      },
+      {
+        exportEntries: ['./transforms/find-implicit-spies'],
+        entryPoint: './src/transforms/find-implicit-spies.ts',
+        dts: false,
+      },
+      {
+        exportEntries: ['./transforms/upgrade-deprecated-types'],
+        entryPoint: './src/transforms/upgrade-deprecated-types.ts',
+        dts: false,
+      },
+      {
+        exportEntries: ['./transforms/upgrade-hierarchy-separators'],
+        entryPoint: './src/transforms/upgrade-hierarchy-separators.js',
+        dts: false,
+      },
+    ],
+  },
+};
+
+export default config;</doc><doc title="Polyfill Example.Stories" desc="worked example.">import { hbs } from 'ember-cli-htmlbars';
+
+export default {
+  title: 'EmberOptions/Polyfills',
+};
+
+export const NamedBlockExample = () => {
+  return {
+    template: hbs`
+      <NamedBlock
+      >
+        <:title>This article is awesome!</:title>
+        <:body>
+          My blog has very awesome content, and everyone should
+          read it.
+        </:body>
+      </NamedBlock>
+  `,
+  };
+};</doc><doc title="Vitest.Config" desc="worked example.">import { defineConfig, mergeConfig } from 'vitest/config';
+
+import { vitestCommonConfig } from '../../vitest.shared';
+
+export default mergeConfig(
+  vitestCommonConfig,
+  defineConfig({
+    // Add custom config here
+  })
+);</doc><doc title="Ember Example" desc="worked example.">'use strict';
+
+
+
+;define("ember-example/app", ["exports", "ember-load-initializers", "ember-example/resolver", "ember-example/config/environment"], function (_exports, _emberLoadInitializers, _resolver, _environment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var App = Ember.Application.extend({
+    modulePrefix: _environment.default.modulePrefix,
+    podModulePrefix: _environment.default.podModulePrefix,
+    Resolver: _resolver.default
+  });
+  (0, _emberLoadInitializers.default)(App, _environment.default.modulePrefix);
+  var _default = App;
+  _exports.default = _default;
+});
+;define("ember-example/components/welcome-banner", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  /**
+   *
+   * `WelcomeBanner` renders a friendly message and is used to welcome Ember.js users when they first generate an application.
+   *
+   *
+   * ```js
+   * {{welcome-banner
+   *   backgroundColor=backgroundColor
+   *   titleColor=titleColor
+   *   subTitleColor=subTitleColor
+   *   title=title
+   *   subtitle=subtitle
+   *   click=(action onClick)
+   * }}
+   * ```
+   *
+   * @class WelcomeBanner
+   */
+  var _default = Ember.Component.extend({
+    /**
+     * The hex-formatted color code for the background.
+     * @argument backgroundColor
+     * @type {string}
+     * @default null
+     */
+    backgroundColor: null,
+    /**
+     * The hex-formatted color code for the subtitle.
+     * @argument subTitleColor
+     * @type {string}
+     */
+    subTitleColor: null,
+    /**
+     * The title of the banner.
+     * @argument title
+     * @type {string}
+     */
+    title: null,
+    /**
+     * The subtitle of the banner.
+     * @argument subtitle
+     * @type {string}
+     */
+    subtitle: null
+  });
+  _exports.default = _default;
+});
+;define("ember-example/components/welcome-page", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = Ember.Component.extend({});
+  _exports.default = _default;
+});
+;define("ember-example/helpers/-has-block-params", ["exports", "ember-named-blocks-polyfill/helpers/-has-block-params"], function (_exports, _hasBlockParams) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _hasBlockParams.default;
+    }
+  });
+});
+;define("ember-example/helpers/-has-block", ["exports", "ember-named-blocks-polyfill/helpers/-has-block"], function (_exports, _hasBlock) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _hasBlock.default;
+    }
+  });
+});
+;define("ember-example/helpers/-is-named-block-invocation", ["exports", "ember-named-blocks-polyfill/helpers/-is-named-block-invocation"], function (_exports, _isNamedBlockInvocation) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _isNamedBlockInvocation.default;
+    }
+  });
+});
+;define("ember-example/helpers/-named-block-invocation", ["exports", "ember-named-blocks-polyfill/helpers/-named-block-invocation"], function (_exports, _namedBlockInvocation) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _namedBlockInvocation.default;
+    }
+  });
+});
+;define("ember-example/helpers/app-version", ["exports", "ember-example/config/environment", "ember-cli-app-version/utils/regexp"], function (_exports, _environment, _regexp) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.appVersion = appVersion;
+  _exports.default = void 0;
+  function appVersion(_) {
+    var hash = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    var version = _environment.default.APP.version;
+    // e.g. 1.0.0-alpha.1+4jds75hf
+
+    // Allow use of 'hideSha' and 'hideVersion' For backwards compatibility
+    var versionOnly = hash.versionOnly || hash.hideSha;
+    var shaOnly = hash.shaOnly || hash.hideVersion;
+    var match = null;
+    if (versionOnly) {
+      if (hash.showExtended) {
+        match = version.match(_regexp.versionExtendedRegExp); // 1.0.0-alpha.1
+      }
+      // Fallback to just version
+      if (!match) {
+        match = version.match(_regexp.versionRegExp); // 1.0.0
+      }
+    }
+
+    if (shaOnly) {
+      match = version.match(_regexp.shaRegExp); // 4jds75hf
+    }
+
+    return match ? match[0] : version;
+  }
+  var _default = Ember.Helper.helper(appVersion);
+  _exports.default = _default;
+});
+;define("ember-example/initializers/app-version", ["exports", "ember-cli-app-version/initializer-factory", "ember-example/config/environment"], function (_exports, _initializerFactory, _environment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var name, version;
+  if (_environment.default.APP) {
+    name = _environment.default.APP.name;
+    version = _environment.default.APP.version;
+  }
+  var _default = {
+    name: 'App Version',
+    initialize: (0, _initializerFactory.default)(name, version)
+  };
+  _exports.default = _default;
+});
+;define("ember-example/initializers/container-debug-adapter", ["exports", "ember-resolver/resolvers/classic/container-debug-adapter"], function (_exports, _containerDebugAdapter) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = {
+    name: 'container-debug-adapter',
+    initialize: function initialize() {
+      var app = arguments[1] || arguments[0];
+      app.register('container-debug-adapter:main', _containerDebugAdapter.default);
+      app.inject('container-debug-adapter:main', 'namespace', 'application:main');
+    }
+  };
+  _exports.default = _default;
+});
+;define("ember-example/resolver", ["exports", "ember-resolver"], function (_exports, _emberResolver) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _emberResolver.default;
+    }
+  });
+});
+;define("ember-example/router", ["exports", "ember-example/config/environment"], function (_exports, _environment) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var Router = Ember.Router.extend({
+    location: _environment.default.locationType,
+    rootURL: _environment.default.rootURL
+  });
+  Router.map(function () {
+    return {};
+  });
+  var _default = Router;
+  _exports.default = _default;
+});
+;define("ember-example/services/ajax", ["exports", "ember-ajax/services/ajax"], function (_exports, _ajax) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  Object.defineProperty(_exports, "default", {
+    enumerable: true,
+    get: function get() {
+      return _ajax.default;
+    }
+  });
+});
+;define("ember-example/templates/application", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = Ember.HTMLBars.template({
+    "id": "usNxVfQ3",
+    "block": "{\"symbols\":[],\"statements\":[[1,[34,0]],[2,\"\\n\\n\"],[1,[30,[36,2],[[30,[36,1],null,null]],null]],[2,\"\\n\"]],\"hasEval\":false,\"upvars\":[\"welcome-page\",\"-outlet\",\"component\"]}",
+    "moduleName": "ember-example/templates/application.hbs"
+  });
+  _exports.default = _default;
+});
+;define("ember-example/templates/components/named-block", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = Ember.HTMLBars.template({
+    "id": "0sKgxZrM",
+    "block": "{\"symbols\":[\"&default\"],\"statements\":[[10,\"div\"],[12],[2,\"\\n    \"],[10,\"h1\"],[12],[18,1,[[30,[36,0],[\"title\"],null]]],[13],[2,\"\\n    \"],[10,\"div\"],[12],[18,1,[[30,[36,0],[\"body\"],null]]],[13],[2,\"\\n\"],[13],[2,\"\\n\"]],\"hasEval\":false,\"upvars\":[\"-named-block-invocation\"]}",
+    "moduleName": "ember-example/templates/components/named-block.hbs"
+  });
+  _exports.default = _default;
+});
+;define("ember-example/templates/components/welcome-banner", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = Ember.HTMLBars.template({
+    "id": "cwg4EJtd",
+    "block": "{\"symbols\":[],\"statements\":[[10,\"div\"],[14,0,\"banner\"],[15,5,[31,[\"background-color:\",[34,1],\";\",[34,0]]]],[12],[2,\"\\n  \"],[10,\"h1\"],[14,0,\"banner-header\"],[15,5,[31,[\"color:\",[34,2],\";\"]]],[12],[1,[34,3]],[13],[2,\"\\n  \"],[10,\"p\"],[14,0,\"banner-subtitle\"],[15,5,[31,[\"color:\",[34,4]]]],[12],[2,\"\\n    \"],[1,[34,5]],[2,\"\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"]],\"hasEval\":false,\"upvars\":[\"style\",\"backgroundColor\",\"titleColor\",\"title\",\"subTitleColor\",\"subtitle\"]}",
+    "moduleName": "ember-example/templates/components/welcome-banner.hbs"
+  });
+  _exports.default = _default;
+});
+;define("ember-example/templates/components/welcome-page", ["exports"], function (_exports) {
+  "use strict";
+
+  Object.defineProperty(_exports, "__esModule", {
+    value: true
+  });
+  _exports.default = void 0;
+  var _default = Ember.HTMLBars.template({
+    "id": "Mm/Msqwa",
+    "block": "{\"symbols\":[],\"statements\":[[10,\"div\"],[14,0,\"main\"],[12],[2,\"\\n  \"],[10,\"p\"],[14,0,\"text-align-center\"],[12],[2,\"\\n    \"],[10,\"img\"],[14,0,\"logo\"],[14,\"src\",\"./logo.png\"],[12],[13],[2,\"\\n  \"],[13],[2,\"\\n  \"],[10,\"p\"],[12],[2,\"\\n    We've added some basic stories inside the\\n    \"],[10,\"code\"],[14,0,\"code\"],[12],[2,\"stories\"],[13],[2,\"\\n    directory.\\n    \"],[10,\"br\"],[12],[13],[2,\"\\n    A story is a single state of one or more UI components.\\n    You can have as many stories as you want.\\n    \"],[10,\"br\"],[12],[13],[2,\"\\n    (Basically a story is like a visual test case.)\\n  \"],[13],[2,\"\\n  \"],[10,\"p\"],[12],[2,\"\\n    See these sample\\n    \"],[10,\"a\"],[14,0,\"link\"],[12],[2,\"stories\"],[13],[2,\"\\n    for a component called\\n    \"],[10,\"code\"],[14,0,\"code\"],[12],[2,\"welcome-banner\"],[13],[2,\"\\n    .\\n  \"],[13],[2,\"\\n  \"],[10,\"p\"],[12],[2,\"\\n    Just like that, you can add your own components as stories.\\n    \"],[10,\"br\"],[12],[13],[2,\"\\n    You can also edit those components and see changes right away.\\n    \"],[10,\"br\"],[12],[13],[2,\"\\n    (Try editing the \"],[10,\"code\"],[14,0,\"code\"],[12],[2,\"welcome-banner\"],[13],[2,\" component\\n    located at \"],[10,\"code\"],[14,0,\"code\"],[12],[2,\"app/components/welcome-banner.js\"],[13],[2,\".)\\n  \"],[13],[2,\"\\n  \"],[10,\"p\"],[12],[2,\"\\n    Usually we create stories with smaller UI components in the app.\"],[10,\"br\"],[12],[13],[2,\"\\n    Have a look at the\\n    \"],[10,\"a\"],[14,0,\"link\"],[14,6,\"https://storybook.js.org/basics/writing-stories\"],[14,\"target\",\"_blank\"],[12],[2,\"\\n      Writing Stories\\n    \"],[13],[2,\"\\n    section in our documentation.\\n  \"],[13],[2,\"\\n  \"],[10,\"p\"],[14,0,\"note\"],[12],[2,\"\\n    \"],[10,\"b\"],[12],[2,\"NOTE:\"],[13],[2,\"\\n    \"],[10,\"br\"],[12],[13],[2,\"\\n    Have a look at the\\n    \"],[10,\"code\"],[14,0,\"code\"],[12],[2,\".storybook/webpack.config.js\"],[13],[2,\"\\n    to add webpack\\n    loaders and plugins you are using in this project.\\n  \"],[13],[2,\"\\n\"],[13],[2,\"\\n\"]],\"hasEval\":false,\"upvars\":[]}",
+    "moduleName": "ember-example/templates/components/welcome-page.hbs"
+  });
+  _exports.default = _default;
+});
+;
+
+;define('ember-example/config/environment', [], function() {
+  var prefix = 'ember-example';
+try {
+  var metaName = prefix + '/config/environment';
+  var rawConfig = document.querySelector('meta[name="' + metaName + '"]').getAttribute('content');
+  var config = JSON.parse(decodeURIComponent(rawConfig));
+
+  var exports = { 'default': config };
+
+  Object.defineProperty(exports, '__esModule', { value: true });
+
+  return exports;
+}
+catch(err) {
+  throw new Error('Could not read config from meta tag with name "' + metaName + '".');
+}
+
+});
+
+;
+          if (!runningTests) {
+            require("ember-example/app")["default"].create({"name":"ember-example","version":"7.0.0-alpha.42+f020a9b6"});
+          }
+        
+//# sourceMappingURL=ember-example.map</doc><doc title="Index" desc="worked example.">/* eslint import/prefer-default-export: "off" */
+import { readdirSync } from 'node:fs';
+import { rename as renameAsync } from 'node:fs/promises';
+import { extname, join } from 'node:path';
+
+import { resolvePackageDir } from 'storybook/internal/common';
+
+import { sync as spawnSync } from 'cross-spawn';
+import { glob as tinyglobby } from 'tinyglobby';
+
+import { jscodeshiftToPrettierParser } from './lib/utils';
+
+const TRANSFORM_DIR = join(resolvePackageDir('@storybook/codemod'), 'dist', 'transforms');
+
+export function listCodemods() {
+  return readdirSync(TRANSFORM_DIR)
+    .filter((fname) => fname.endsWith('.js'))
+    .map((fname) => fname.slice(0, -3));
+}
+
+async function renameFile(file: any, from: any, to: any, { logger }: any) {
+  const newFile = file.replace(from, to);
+  logger.log(`Rename: ${file} ${newFile}`);
+  return renameAsync(file, newFile);
+}
+
+export async function runCodemod(
+  codemod: any,
+  {
+    glob,
+    logger,
+    dryRun,
+    rename,
+    parser,
+  }: { glob: any; logger: any; dryRun?: any; rename?: any; parser?: any }
+) {
+  const codemods = listCodemods();
+  if (!codemods.includes(codemod)) {
+    throw new Error(`Unknown codemod ${codemod}. Run --list for options.`);
+  }
+
+  let renameParts = null;
+  if (rename) {
+    renameParts = rename.split(':');
+    if (renameParts.length !== 2) {
+      throw new Error(`Codemod rename: expected format "from:to", got "${rename}"`);
+    }
+  }
+
+  // jscodeshift/prettier know how to handle .ts/.tsx extensions,
+  // so if the user uses one of those globs, we can auto-infer
+  let inferredParser = parser;
+
+  if (!parser) {
+    const extension = extname(glob).slice(1);
+    const knownParser = jscodeshiftToPrettierParser(extension);
+
+    if (knownParser !== 'babel') {
+      inferredParser = extension;
+    }
+  }
+
+  const files = await tinyglobby([glob, '!**/node_modules', '!**/dist']);
+  const extensions = new Set(files.map((file) => extname(file).slice(1)));
+  const commaSeparatedExtensions = Array.from(extensions).join(',');
+
+  logger.step(`Applying ${codemod}: ${files.length} files`);
+
+  if (files.length === 0) {
+    logger.step(`No matching files for glob: ${glob}`);
+    return;
+  }
+
+  if (!dryRun && files.length > 0) {
+    const parserArgs = inferredParser ? ['--parser', inferredParser] : [];
+    const result = spawnSync(
+      'node',
+      [
+        join(resolvePackageDir('jscodeshift'), 'bin', 'jscodeshift'),
+        // this makes sure codeshift doesn't transform our own source code with babel
+        // which is faster, and also makes sure the user won't see babel messages such as:
+        // [BABEL] Note: The code generator has deoptimised the styling of repo/node_modules/prettier/index.js as it exceeds the max of 500KB.
+        '--no-babel',
+        `--extensions=${commaSeparatedExtensions}`,
+        '--fail-on-error',
+        '-t',
+        `${TRANSFORM_DIR}/${codemod}.js`,
+        ...parserArgs,
+        ...files.map((file) => `"${file}"`),
+      ],
+      {
+        stdio: 'inherit',
+      }
+    );
+
+    if (codemod === 'mdx-to-csf' && result.status === 1) {
+      logger.log(
+        'The codemod was not able to transform the files mentioned above. We have renamed the files to .mdx.broken. Please check the files and rename them back to .mdx after you have either manually transformed them to mdx + csf or fixed the issues so that the codemod can transform them.'
+      );
+    } else if (result.status === 1) {
+      logger.log('Skipped renaming because of errors.');
+      return;
+    }
+  }
+
+  if (renameParts) {
+    const [from, to] = renameParts;
+    logger.step(`Renaming ${rename}: ${files.length} files`);
+    await Promise.all(
+      files.map((file) => renameFile(file, new RegExp(`${from}$`), to, { logger }))
+    );
+  }
+}</doc><doc title="Cjsnodemodulemocking.Stories" desc="worked example.">import { global as globalThis } from '@storybook/global';
+
+import { expect } from 'storybook/test';
+import { v4 } from 'uuid';
+
+// This story is used to test the node module mocking for modules which have an exports field in their package.json.
+
+export default {
+  component: globalThis.__TEMPLATE_COMPONENTS__.Pre,
+  decorators: [
+    (storyFn) =>
+      storyFn({
+        args: {
+          text: `UUID Version: ${v4()}`,
+        },
+      }),
+  ],
+  parameters: {
+    layout: 'fullscreen',
+  },
+  play: async ({ canvasElement }) => {
+    await expect(canvasElement.innerHTML).toContain('UUID Version: MOCK-V4');
+  },
+};
+
+export const Original = {};</doc><doc title="Codemod" desc="worked example.">import os from 'node:os';
+
+import { formatFileContent } from 'storybook/internal/common';
+import { logger } from 'storybook/internal/node-logger';
+
+import { promises as fs } from 'fs';
+import picocolors from 'picocolors';
+// eslint-disable-next-line depend/ban-dependencies
+import slash from 'slash';
+
+export const maxConcurrentTasks = Math.max(1, os.cpus().length - 1);
+
+export interface FileInfo {
+  path: string;
+  source: string;
+  [key: string]: any;
+}
+
+/**
+ * Runs a codemod transformation on files matching the specified glob pattern.
+ *
+ * The function processes each file matching the glob pattern, applies the transform function, and
+ * writes the transformed source back to the file if it has changed.
+ *
+ * @example
+ *
+ * ```
+ * await runCodemod('*.stories.tsx', async (fileInfo) => {
+ *   // Transform the file source return
+ *   return fileInfo.source.replace(/foo/g, 'bar');
+ * });
+ * ```
+ */
+export async function runCodemod(
+  globPattern: string = '**/*.stories.*',
+  transform: (source: FileInfo, ...rest: any) => Promise<string>,
+  { dryRun = false, skipFormatting = false }: { dryRun?: boolean; skipFormatting?: boolean } = {}
+) {
+  let modifiedCount = 0;
+  let unmodifiedCount = 0;
+  let errorCount = 0;
+
+  // Dynamically import these packages because they are pure ESM modules
+  // eslint-disable-next-line depend/ban-dependencies
+  const { globby } = await import('globby');
+
+  // glob only supports forward slashes
+  const files = await globby(slash(globPattern), {
+    followSymbolicLinks: true,
+    ignore: ['**/node_modules/**', '**/dist/**', '**/storybook-static/**', '**/build/**'],
+  });
+
+  if (!files.length) {
+    logger.error(
+      `No files found for glob pattern "${globPattern}".\nPlease try a different pattern.\n`
+    );
+    // eslint-disable-next-line local-rules/no-uncategorized-errors
+    throw new Error('No files matched');
+  }
+
+  try {
+    const pLimit = (await import('p-limit')).default;
+
+    const limit = pLimit(maxConcurrentTasks);
+
+    await Promise.all(
+      files.map((file: string) =>
+        limit(async () => {
+          try {
+            let filePath = file;
+            try {
+              filePath = await fs.realpath(file);
+            } catch (err) {
+              // if anything goes wrong when resolving the file, fallback to original path as is set above
+            }
+
+            const source = await fs.readFile(filePath, 'utf-8');
+            const fileInfo: FileInfo = { path: filePath, source };
+            const transformedSource = await transform(fileInfo);
+
+            if (transformedSource !== source) {
+              if (!dryRun) {
+                const fileContent = skipFormatting
+                  ? transformedSource
+                  : await formatFileContent(file, transformedSource);
+                await fs.writeFile(file, fileContent, 'utf-8');
+              }
+              modifiedCount++;
+            } else {
+              unmodifiedCount++;
+            }
+          } catch (fileError) {
+            logger.error(`Error processing file ${file}: ${String(fileError)}`);
+            errorCount++;
+          }
+        })
+      )
+    );
+  } catch (error) {
+    logger.error(`Error applying transform: ${String(error)}`);
+    errorCount++;
+  }
+
+  logger.log(
+    `Summary: ${picocolors.green(`${modifiedCount} transformed`)}, ${picocolors.yellow(`${unmodifiedCount} unmodified`)}, ${picocolors.red(`${errorCount} errors`)}`
+  );
+
+  if (dryRun) {
+    logger.log(
+      picocolors.bold(
+        `This was a dry run. Run without --dry-run to apply the transformation to ${modifiedCount} files.`
+      )
+    );
+  }
+}</doc><doc title="Csf 2 To 3" desc="worked example.">import type { BabelFile, NodePath } from 'storybook/internal/babel';
+import { core as babel, types as t } from 'storybook/internal/babel';
+import type { CsfFile } from 'storybook/internal/csf-tools';
+import { loadCsf, printCsf } from 'storybook/internal/csf-tools';
+import { logger } from 'storybook/internal/node-logger';
+
+import type { API, FileInfo } from 'jscodeshift';
+import prettier from 'prettier';
+import invariant from 'tiny-invariant';
+
+import { upgradeDeprecatedTypes } from './upgrade-deprecated-types';
+
+const { isIdentifier, isTSTypeAnnotation, isTSTypeReference } = t;
+
+const renameAnnotation = (annotation: string) => {
+  return annotation === 'storyName' ? 'name' : annotation;
+};
+
+const getTemplateBindVariable = (init: t.Expression | undefined) =>
+  t.isCallExpression(init) &&
+  t.isMemberExpression(init.callee) &&
+  t.isIdentifier(init.callee.object) &&
+  t.isIdentifier(init.callee.property) &&
+  init.callee.property.name === 'bind' &&
+  (init.arguments.length === 0 ||
+    (init.arguments.length === 1 &&
+      t.isObjectExpression(init.arguments[0]) &&
+      init.arguments[0].properties.length === 0))
+    ? init.callee.object.name
+    : null;
+
+// export const A = ...
+// A.parameters = { ... }; <===
+const isStoryAnnotation = (stmt: t.Statement, objectExports: Record<string, any>) =>
+  t.isExpressionStatement(stmt) &&
+  t.isAssignmentExpression(stmt.expression) &&
+  t.isMemberExpression(stmt.expression.left) &&
+  t.isIdentifier(stmt.expression.left.object) &&
+  objectExports[stmt.expression.left.object.name];
+
+const getNewExport = (stmt: t.Statement, objectExports: Record<string, any>) => {
+  if (
+    t.isExportNamedDeclaration(stmt) &&
+    t.isVariableDeclaration(stmt.declaration) &&
+    stmt.declaration.declarations.length === 1
+  ) {
+    const decl = stmt.declaration.declarations[0];
+    if (t.isVariableDeclarator(decl) && t.isIdentifier(decl.id)) {
+      return objectExports[decl.id.name];
+    }
+  }
+  return null;
+};
+
+// Remove render function when it matches the global render function in react
+// export default { component: Cat };
+// export const A = (args) => <Cat {...args} />;
+const isReactGlobalRenderFn = (csf: CsfFile, storyFn: t.Expression) => {
+  if (
+    csf._meta?.component &&
+    t.isArrowFunctionExpression(storyFn) &&
+    storyFn.params.length === 1 &&
+    t.isJSXElement(storyFn.body)
+  ) {
+    const { openingElement } = storyFn.body;
+    if (
+      openingElement.selfClosing &&
+      t.isJSXIdentifier(openingElement.name) &&
+      openingElement.attributes.length === 1
+    ) {
+      const attr = openingElement.attributes[0];
+      const param = storyFn.params[0];
+      if (
+        t.isJSXSpreadAttribute(attr) &&
+        t.isIdentifier(attr.argument) &&
+        t.isIdentifier(param) &&
+        param.name === attr.argument.name &&
+        csf._meta.component === openingElement.name.name
+      ) {
+        return true;
+      }
+    }
+  }
+  return false;
+};
+
+// A simple CSF story is a no-arg story without any extra annotations (params, args, etc.)
+const isSimpleCSFStory = (init: t.Expression, annotations: t.ObjectProperty[]) =>
+  annotations.length === 0 && t.isArrowFunctionExpression(init) && init.params.length === 0;
+
+function removeUnusedTemplates(csf: CsfFile) {
+  Object.entries(csf._templates).forEach(([template, templateExpression]) => {
+    const references: NodePath[] = [];
+    babel.traverse(csf._ast, {
+      Identifier: (path) => {
+        if (path.node.name === template) {
+          references.push(path as NodePath);
+        }
+      },
+    });
+    // if there is only one reference and this reference is the variable declaration initializing the template
+    // then we are sure the template is unused
+    if (references.length === 1) {
+      const reference = references[0];
+      if (
+        reference.parentPath?.isVariableDeclarator() &&
+        reference.parentPath.node.init === templateExpression
+      ) {
+        reference.parentPath.remove();
+      }
+    }
+  });
+}
+
+export default async function transform(info: FileInfo, api: API, options: { parser?: string }) {
+  const makeTitle = (userTitle?: string) => {
+    return userTitle || 'FIXME';
+  };
+  const csf = loadCsf(info.source, { makeTitle });
+
+  try {
+    csf.parse();
+  } catch (err) {
+    logger.log(`Error ${err}, skipping`);
+    return info.source;
+  }
+
+  // This allows for showing buildCodeFrameError messages
+  // @ts-expect-error File is not yet exposed, see https://github.com/babel/babel/issues/11350#issuecomment-644118606
+
+  const file: BabelFile = new babel.File(
+    { filename: info.path },
+    { code: info.source, ast: csf._ast }
+  );
+
+  const importHelper = new StorybookImportHelper(file, info);
+
+  const objectExports: Record<string, t.Statement> = {};
+  Object.entries(csf._storyExports).forEach(([key, decl]) => {
+    const annotations = Object.entries(csf._storyAnnotations[key]).map(([annotation, val]) => {
+      return t.objectProperty(t.identifier(renameAnnotation(annotation)), val as t.Expression);
+    });
+
+    if (t.isVariableDeclarator(decl as t.Node)) {
+      const { init, id } = decl as any;
+      invariant(init, 'Inital value should be declared');
+      // only replace arrow function expressions && template
+      const template = getTemplateBindVariable(init);
+
+      if (!t.isArrowFunctionExpression(init) && !template) {
+        return;
+      }
+      // Do change the type of no-arg stories without annotations to StoryFn when applicable
+      // Do change the type of no-arg stories without annotations to StoryFn when applicable
+      if (isSimpleCSFStory(init, annotations)) {
+        objectExports[key] = t.exportNamedDeclaration(
+          t.variableDeclaration('const', [
+            t.variableDeclarator(importHelper.updateTypeTo(id, 'StoryFn'), init),
+          ])
+        );
+        return;
+      }
+
+      const storyFn: t.Expression = template ? t.identifier(template) : init;
+
+      // Remove the render function when we can hoist the template
+      // const Template = (args) => <Cat {...args} />;
+      // export const A = Template.bind({});
+      const renderAnnotation = isReactGlobalRenderFn(
+        csf,
+        template ? csf._templates[template] : storyFn
+      )
+        ? []
+        : [t.objectProperty(t.identifier('render'), storyFn)];
+
+      objectExports[key] = t.exportNamedDeclaration(
+        t.variableDeclaration('const', [
+          t.variableDeclarator(
+            importHelper.updateTypeTo(id, 'StoryObj'),
+            t.objectExpression([...renderAnnotation, ...annotations])
+          ),
+        ])
+      );
+    }
+  });
+
+  csf._ast.program.body = csf._ast.program.body.reduce((acc: t.Statement[], stmt: t.Statement) => {
+    const statement = stmt;
+    // remove story annotations & template declarations
+    if (isStoryAnnotation(statement, objectExports)) {
+      return acc;
+    }
+
+    // replace story exports with new object exports
+    const newExport = getNewExport(statement, objectExports);
+    if (newExport) {
+      acc.push(newExport);
+      return acc;
+    }
+
+    // include unknown statements
+    acc.push(statement);
+    return acc;
+  }, []);
+
+  upgradeDeprecatedTypes(file);
+  importHelper.removeDeprecatedStoryImport();
+  removeUnusedTemplates(csf);
+
+  let output = printCsf(csf).code;
+
+  try {
+    output = await prettier.format(output, {
+      ...(await prettier.resolveConfig(info.path)),
+      filepath: info.path,
+    });
+  } catch (e) {
+    logger.log(`Failed applying prettier to ${info.path}.`);
+  }
+
+  return output;
+}
+
+class StorybookImportHelper {
+  constructor(file: BabelFile, info: FileInfo) {
+    this.sbImportDeclarations = this.getAllSbImportDeclarations(file);
+  }
+
+  private sbImportDeclarations: NodePath<t.ImportDeclaration>[];
+
+  private getAllSbImportDeclarations = (file: BabelFile) => {
+    const found: NodePath<t.ImportDeclaration>[] = [];
+
+    file.path.traverse({
+      ImportDeclaration: (path) => {
+        const source = path.node.source.value;
+
+        if (source.startsWith('@storybook/csf') || !source.startsWith('@storybook')) {
+          return;
+        }
+        const isRendererImport = path.get('specifiers').some((specifier) => {
+          if (specifier.isImportNamespaceSpecifier()) {
+            // throw path.buildCodeFrameError(
+            //   `This codemod does not support namespace imports for a ${path.node.source.value} package.\n` +
+            //     'Replace the namespace import with named imports and try again.'
+            // );
+            throw new Error(
+              `This codemod does not support namespace imports for a ${path.node.source.value} package.\n` +
+                'Replace the namespace import with named imports and try again.'
+            );
+          }
+
+          if (!specifier.isImportSpecifier()) {
+            return false;
+          }
+          const imported = specifier.get('imported');
+
+          if (Array.isArray(imported)) {
+            return imported.some((importedSpecifier) => {
+              if (!importedSpecifier.isIdentifier()) {
+                return false;
+              }
+              return [
+                'Story',
+                'StoryFn',
+                'StoryObj',
+                'Meta',
+                'ComponentStory',
+                'ComponentStoryFn',
+                'ComponentStoryObj',
+                'ComponentMeta',
+              ].includes(importedSpecifier.node.name);
+            });
+          }
+
+          if (!imported.isIdentifier()) {
+            return false;
+          }
+          return [
+            'Story',
+            'StoryFn',
+            'StoryObj',
+            'Meta',
+            'ComponentStory',
+            'ComponentStoryFn',
+            'ComponentStoryObj',
+            'ComponentMeta',
+          ].includes(imported.node.name);
+        });
+
+        if (isRendererImport) {
+          found.push(path);
+        }
+      },
+    });
+    return found;
+  };
+
+  getOrAddImport = (type: string): string | undefined => {
+    // prefer type import
+    const sbImport =
+      this.sbImportDeclarations.find((path) => path.node.importKind === 'type') ??
+      this.sbImportDeclarations[0];
+
+    if (sbImport == null) {
+      return undefined;
+    }
+
+    const specifiers = sbImport.get('specifiers');
+    const importSpecifier = specifiers.find((specifier) => {
+      if (!specifier.isImportSpecifier()) {
+        return false;
+      }
+      const imported = specifier.get('imported');
+
+      if (!imported.isIdentifier()) {
+        return false;
+      }
+      return imported.node.name === type;
+    });
+
+    if (importSpecifier) {
+      return importSpecifier.node.local.name;
+    }
+    specifiers[0].insertBefore(t.importSpecifier(t.identifier(type), t.identifier(type)));
+    return type;
+  };
+
+  removeDeprecatedStoryImport = () => {
+    const specifiers = this.sbImportDeclarations.flatMap((it) => it.get('specifiers'));
+    const storyImports = specifiers.filter((specifier) => {
+      if (!specifier.isImportSpecifier()) {
+        return false;
+      }
+      const imported = specifier.get('imported');
+
+      if (!imported.isIdentifier()) {
+        return false;
+      }
+      return imported.node.name === 'Story';
+    });
+    storyImports.forEach((path) => path.remove());
+  };
+
+  getAllLocalImports = () => {
+    return this.sbImportDeclarations
+      .flatMap((it) => it.get('specifiers'))
+      .map((it) => it.node.local.name);
+  };
+
+  updateTypeTo = (id: t.LVal, type: string): t.LVal => {
+    if (
+      isIdentifier(id) &&
+      isTSTypeAnnotation(id.typeAnnotation) &&
+      isTSTypeReference(id.typeAnnotation.typeAnnotation) &&
+      isIdentifier(id.typeAnnotation.typeAnnotation.typeName)
+    ) {
+      const { name } = id.typeAnnotation.typeAnnotation.typeName;
+      if (this.getAllLocalImports().includes(name)) {
+        const localTypeImport = this.getOrAddImport(type);
+        return {
+          ...id,
+          typeAnnotation: t.tsTypeAnnotation(
+            t.tsTypeReference(
+              t.identifier(localTypeImport ?? ''),
+              id.typeAnnotation.typeAnnotation.typeParameters
+            )
+          ),
+        };
+      }
+    }
+    return id;
+  };
+}
+
+export const parser = 'tsx';</doc></tutorials><api><doc title="README" desc="install &amp; quickstart."># Preview API
+
+TODO write proper documentation of this package
+
+# "Sub packages" README documents
+
+This package used to be multiple packages (they have been combined into this one):
+
+- `@storybook/addons` [read (old) docs](./README-addons.md)
+- `@storybook/core-client` [read (old) docs](./README-core-client.md)
+- `@storybook/preview-web` [read (old) docs](./README-preview-web.md)
+- `@storybook/store` [read (old) docs](./README-store.md)</doc><doc title="Readme Addons" desc="install &amp; quickstart."># Storybook Addons
+
+Storybook Addons is a node module which is used to load custom addons to storybook.
+
+It stores addon loaders, communication channel and other resources which can be used by storybook implementations where required.
+
+---
+
+For more information visit: [storybook.js.org](https://storybook.js.org)</doc><doc title="Readme Core Client" desc="install &amp; quickstart."># Storybook Core-Client
+
+This package contains browser-side functionality shared amongst all the frameworks (React, RN, Vue 3, Ember, Angular, etc) in the old "v6" story store back-compatibility layer.
+
+A framework calls the `start(renderToCanvas, { render, decorateStory })` function and provides:
+
+- The `renderToCanvas` function, which tells Storybook how to render the result of a story function to the DOM
+- The `render` function, which is a default mapping of `args` to a story result in CSFv3
+- The `decorateStory` function, which tells Storybook how to combine decorators in the framework.
+
+The `start` function will return a `configure()` function, which can be re-exported to be used in `preview.js` (deprecated), or automatically by the `main.js:stories` field to:
+
+- return a list of CSF files
+- `deprecated` make calls to the `storiesOf` API.</doc><doc title="Readme Preview Web" desc="install &amp; quickstart."># Preview (Web)
+
+This is the main API for the (web) version of the Storybook Preview.
+
+The preview's job is:
+
+1. Read and update the URL (via the URL Store)
+
+2. Listen to instructions on the channel and emit events as things occur.
+
+3. Render the current selection to the web view in either story or docs mode.
+
+## Initialization
+
+- `importFn` - is an async `import()` function
+
+- `getProjectAnnotations` - is a simple function that evaluations `preview.js` and addon config files and combines them. If it errors, the Preview will show the error.
+
+- No `getStoryIndex` function is passed, instead the preview creates a `StoryIndexClient` that pulls `stories.json` from node and watches the event stream for invalidation events.
+
+## Story Rendering and interruptions
+
+The Preview is split into three parts responsible for state management:
+
+- `PreviewWeb` - which story is rendered, receives events and (maybe) changes/re-renders stories
+- `StoryRender` - (imports +) prepares the story, renders it through the various phases
+- `DocsRender` - if a story renders in docs mode, it is "transformed" into a `DocsRender` once we know.
+
+A rendering story goes through these phases:
+
+- `preparing` - (maybe async) import the story file and prepare the story function.
+- `loading` - async loaders are running
+- `rendering` - the `renderToCanvas` function for the framework is running
+- `playing` - the `play` function is running
+- `completed` - the story is done.
+
+It also has two error states:
+
+- `aborted` - the story was stopped midway (see below)
+- `errored` - there was an error thrown somewhere along the way.
+
+### Re-rendering and aborting
+
+A story may re-render due to various events, which can have implications if the story is not in the `completed` phase:
+
+- `UPDATE_STORY_ARGS` / `UPDATE_GLOBALS` -- change of inputs
+- `FORCE_RE_RENDER` - re-render unchanged
+
+If these events happen during a render:
+
+- if the story is `preparing` or `loading`, leave thing unchanged and let the new `args`/`globals` be picked up by the render phase
+- otherwise, use the result of the previous `loaders` run, and simply re-render over the top
+
+- `FORCE_REMOUNT` - remount (or equivalent) the component and re-render.
+
+If this happens during a render, treat `loading` similarly, but:
+
+- if the story is `rendering`, start a new render and abort the previous render immediately afterwards
+- if the story is `playing`, attempt to abort the previous play function, and start a new render.
+
+### Changing story
+
+Also the `SET_CURRENT_STORY` event may change the current story. We need to check:
+
+- If the `storyId` changed
+- If the `viewMode` changed
+- If the story implementation changed (i.e if HMR occurred).
+
+If the _previous_ story is still `preparing`, we cannot know if the implementation changed, so we
+abort the preparing immediately, and let the new story take over.
+
+Otherwise, if all of the above are the same, we do nothing.
+
+If they are different, and the old story is not `completed`, we try to abort it immediately. If that fails (e.g. the `play` function doesn't respond to the `abort` event), then we reload the window.</doc><doc title="Readme Store" desc="install &amp; quickstart."># Storybook Store
+
+The store is responsible for loading a story from a CSF file and preparing into a `Story` type, which is our internal format.
+
+## Story vs StoryContext
+
+Story functions and decorators receive a `StoryContext<Framework>` object (parameterized by their framework).
+
+The `Story` type that we pass around in our code includes all of those fields apart from the `args`, `globals`, `hooks` and `viewMode`, which are mutable and stored separately in the store.
+
+## Identification
+
+The first set of fields on a `Story` are the identifying fields for a story:
+
+- `componentId` - the URL "id" of the component
+- `title` - the title of the component, which generates the sidebar entry
+- `id` - the story "id" (in the URL)
+- `name` - the name of the story
+
+## Annotations
+
+The main fields on a `Story` are the various annotations. Annotations can be set:
+
+- At the project level in `preview.js` (or via addons)
+- At the component level via `export default { ... }` in a CSF file
+- At the story level via `export const Story = {...}` in a CSF file.
+
+Not all annotations can be set at every level but most can.
+
+## Parameters
+
+The story parameters is a static, serializable object of data that provides details about the story. Those details can be used by addons or Storybook itself to render UI or provide defaults about the story rendering.
+
+Parameters _cannot change_ and are synchronized to the manager once when the story is loaded (note over the lifetime of a development Storybook a story can be loaded several times due to hot module reload, so the parameters technically can change for that reason).
+
+Usually addons will read from a single key of `parameters` namespaced by the name of that addon. For instance the configuration of the `backgrounds` addon is driven by the `parameters.backgrounds` namespace.
+
+Parameters are inheritable -- you can set project parameters via `export parameters = {}`, at the component level by the `parameters` key of the component (default) export in CSF, and on a single story via the `parameters` key on the story data.
+
+Some notable parameters:
+
+- `parameters.fileName` - the file that the story was defined in, when available
+
+## Args
+
+Args are "inputs" to stories.
+
+You can think of them equivalently to React props, Angular inputs and outputs, etc.
+
+Changing the args cause the story to be re-rendered with the new set of args.
+
+### Using args in a story
+
+By default the args will be passed to the story as first argument and the context as second:
+
+```js
+const YourStory = ({ x, y } /*, context*/) => /* render your story using `x` and `y` */
+```
+
+### Arg types and values
+
+Arg types are used by the docs addon to populate the props table and are documented there. They are controlled by `argTypes` and can (sometimes) be automatically inferred from type information about the story or the component rendered by the story.
+
+A story can set initial values of its args with the `args` annotation. If you set an initial value for an arg that doesn't have a type a simple type will be inferred from the value.
+
+If an arg doesn't have an initial value, it will start unset, although it can still be set later via user interaction.
+
+Args can be set at the project, component and story level.
+
+### Using args in an addon
+
+Args values are automatically synchronized (via the `changeStoryArgs` and `storyArgsChanged` events) between the preview and manager; APIs exist in `lib/api` to read and set args in the manager.
+
+Args need to be serializable -- so currently cannot include callbacks (this may change in a future version).
+
+Note that arg values are passed directly to a story -- you should only store the actual value that the story needs to render in the arg. If you need more complex information supporting that, use parameters or addon state.
+
+Both `@storybook/preview-api` and `@storybook/manager-api` export a `useArgs()` hook that you can use to access args in decorators or addon panels. The API is as follows:
+
+```js
+import { useArgs } from '@storybook/preview-api';
+
+// or '@storybook/manager-api'
+
+// `args` is the args of the currently rendered story
+// `updateArgs` will update its args. You can pass a subset of the args; other args will not be changed.
+const [args, updateArgs] = useArgs();
+```
+
+## ArgTypes
+
+Arg types add type information and metadata about args that are used to control the docs and controls addons.
+
+### ArgTypes enhancement
+
+To add a argTypes enhancer, `export const argTypesEnhancers = []` from `preview.js` or and addon
+
+There is a default enhancer that ensures that each `arg` in a story has a baseline `argType`. This value can be improved by subsequent enhancers, e.g. those provided by `@storybook/addon-docs`.
+
+## Globals
+
+Globals are rendering information that is global across stories. They are used for things like themes and internationalization (i18n) in stories, where you want Storybook to "remember" your setting as you browse between stories.
+
+They can be accessed in stories and decorators in the `context.globals` key.
+
+### Initial values of globals
+
+To set initial values of globals, `export const globals = {...}` from `preview.js`
+
+### Using globals in an addon
+
+Similar to args, globals are synchronized to the manager and can be accessed via the `useGlobals` hook.
+
+```js
+import { useGlobals } from '@storybook/preview-api';
+
+// or '@storybook/manager-api'
+
+const [globals, updateGlobals] = useGlobals();
+```
+
+## Technical details
+
+### Initialization
+
+- The store is created "uninitialized".
+- It is assumed at some later time it will be initialized with the Story Index, the set of stories (this may be loaded async).
+- You _can_ call `loadStory` prior to that time, in which case it will wait for initialization.
+
+### Caching
+
+- "All story" APIs like `extract()` require all stories to be loaded.
+- For backwards-compatibility, these APIs are _not_ async, so it is required that `store.cacheAllCSFFiles()` is called first
+- In v6 mode, this will be called on initialization but `start.ts`.</doc><doc title="Module Mocking.Spec" desc="docs page.">import { expect, test } from '@playwright/test';
+import process from 'process';
+
+import { SbPage } from './util';
+
+const storybookUrl = process.env.STORYBOOK_URL || 'http://localhost:8001';
+
+test.describe('module-mocking', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(storybookUrl);
+
+    await new SbPage(page, expect).waitUntilLoaded();
+  });
+
+  test('should assert story lifecycle order', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+
+    await sbPage.navigateToStory('core/order-of-hooks', 'order-of-hooks');
+
+    await sbPage.viewAddonPanel('Actions');
+    const panel = sbPage.panelContent();
+    await expect(panel).toBeVisible();
+
+    const expectedTexts = [
+      '1 - [from loaders]',
+      '2 - [from meta beforeEach]',
+      '3 - [from story beforeEach]',
+      '4 - [before mount]',
+      '5 - [from decorator]',
+      '6 - [after mount]',
+      '7 - [from onClick]',
+      '8 - [from story afterEach]',
+      '9 - [from meta afterEach]',
+    ];
+
+    // Collect all logs in the panel but only check the order of the logs
+    // we care about, disregarding any other logs that could appear in between
+    const logItemsCount = await panel.locator('li').count();
+    const actualTexts = [];
+    for (let i = 0; i < logItemsCount; i++) {
+      actualTexts.push(await panel.locator(`li >> nth=${i}`).innerText());
+    }
+
+    let lastMatchIndex = -1;
+
+    for (const expected of expectedTexts) {
+      const foundIndex = actualTexts.findIndex(
+        (text, i) => i > lastMatchIndex && text.includes(expected)
+      );
+      expect(foundIndex, `Expected log "${expected}" to appear in order`).toBeGreaterThan(
+        lastMatchIndex
+      );
+      lastMatchIndex = foundIndex;
+    }
+  });
+
+  test('should assert that utils import is mocked', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+
+    await sbPage.navigateToStory('core/moduleMocking', 'basic');
+
+    await sbPage.viewAddonPanel('Actions');
+    const logItem = sbPage.panelContent().filter({
+      hasText: 'foo: []',
+    });
+    await expect(logItem).toBeVisible();
+  });
+});</doc><doc title="Preview Api.Spec" desc="docs page.">import { expect, test } from '@playwright/test';
+import process from 'process';
+
+import { SbPage } from './util';
+
+const storybookUrl = process.env.STORYBOOK_URL || 'http://localhost:8001';
+const templateName = process.env.STORYBOOK_TEMPLATE_NAME || '';
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+test.describe('preview-api', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(storybookUrl);
+
+    await new SbPage(page, expect).waitUntilLoaded();
+  });
+
+  test('should pass over shortcuts, but not from play functions, story', async ({ page }) => {
+    test.skip(
+      /^(lit)/i.test(`${templateName}`),
+      `Skipping ${templateName}, which does not support addon-interactions`
+    );
+
+    const sbPage = new SbPage(page, expect);
+    await sbPage.deepLinkToStory(storybookUrl, 'core/shortcuts', 'keydown-during-play');
+    await expect(sbPage.page.locator('.sidebar-container')).toBeVisible();
+
+    // wait for the play function to complete
+    await sbPage.viewAddonPanel('Interactions');
+    const interactionsTab = page.getByRole('tab', { name: 'Interactions' });
+    await expect(interactionsTab).toBeVisible();
+    const panel = sbPage.panelContent();
+    const runStatusBadge = panel.locator('[aria-label^="Story status:"]');
+    await expect(runStatusBadge).toContainText(/Pass/);
+
+    // click outside, to remove focus from the input of the story, then press S to toggle sidebar
+    await sbPage.previewRoot().click();
+    await sbPage.previewRoot().press('Alt+s');
+    await expect(sbPage.page.locator('.sidebar-container')).toBeHidden();
+  });
+
+  test('should pass over shortcuts, but not from play functions, docs', async ({ page }) => {
+    test.skip(
+      /^(lit)/i.test(`${templateName}`),
+      `Skipping ${templateName}, which does not support addon-interactions`
+    );
+
+    const sbPage = new SbPage(page, expect);
+    await sbPage.deepLinkToStory(storybookUrl, 'core/shortcuts', 'docs');
+
+    await expect(sbPage.page.locator('.sidebar-container')).toBeVisible();
+
+    await sbPage.previewRoot().getByRole('button').getByText('Submit').first().press('Alt+s');
+    await expect(sbPage.page.locator('.sidebar-container')).toBeHidden();
+  });
+
+  // if rerenders were interleaved the button would have rendered "Error: Interleaved loaders. Changed arg"
+  test('should only render once at a time when rapidly changing args', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    await sbPage.navigateToStory('core/rendering', 'slow-loader');
+
+    const root = sbPage.previewRoot();
+
+    await sbPage.viewAddonPanel('Controls');
+    const labelControl = sbPage.page.locator('#control-label');
+
+    await expect(root.getByText('Loaded. Click me')).toBeVisible();
+    await expect(labelControl).toBeVisible();
+
+    await labelControl.fill('');
+    await labelControl.type('Changed arg', { delay: 50 });
+    await labelControl.blur();
+
+    await expect(root.getByText('Loaded. Changed arg')).toBeVisible();
+  });
+
+  test('should reload plage when remounting while loading', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    await sbPage.navigateToStory('core/rendering', 'slow-loader');
+
+    const root = sbPage.previewRoot();
+
+    await expect(root.getByText('Loaded. Click me')).toBeVisible();
+
+    await sbPage.page.getByRole('button', { name: 'Reload story' }).click();
+    await wait(200);
+    await sbPage.page.getByRole('button', { name: 'Reload story' }).click();
+
+    // the loading spinner indicates the iframe is being fully reloaded
+    await expect(sbPage.previewIframe().locator('.sb-preparing-story > .sb-loader')).toBeVisible();
+    await expect(root.getByText('Loaded. Click me')).toBeVisible();
+  });
+});</doc><doc title="Sb Module Mocking.Spec" desc="docs page.">import { expect, test } from '@playwright/test';
+import process from 'process';
+
+import { SbPage } from './util';
+
+const storybookUrl = process.env.STORYBOOK_URL || 'http://localhost:6006';
+
+test.describe('sb-module-mocking', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.goto(storybookUrl);
+    await new SbPage(page, expect).waitUntilLoaded();
+  });
+
+  test('ModuleMocking: Original, Mocked', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    // Original
+    await sbPage.navigateToStory('core/test/modulemocking', 'original', 'story', true);
+    const root = sbPage.previewRoot();
+    await expect(root.getByText(/Function: no value/)).toBeVisible();
+    // Mocked
+    await sbPage.navigateToStory('core/test/modulemocking', 'mocked', 'story', true);
+    await expect(root.getByText(/Function: mocked value/)).toBeVisible();
+  });
+
+  test('ModuleAutoMocking: Original', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    await sbPage.navigateToStory('core/test/moduleautomocking', 'original', 'story', true);
+    const root = sbPage.previewRoot();
+    await expect(root.getByText(/Function: automocked value/)).toBeVisible();
+  });
+
+  test('ModuleSpyMocking: Original', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    await sbPage.navigateToStory('core/test/modulespymocking', 'original', 'story', true);
+    const root = sbPage.previewRoot();
+    await expect(root.getByText(/Function: original value/)).toBeVisible();
+  });
+
+  test('NodeModuleMocking: Original', async ({ page }) => {
+    const sbPage = new SbPage(page, expect);
+    await sbPage.navigateToStory('core/test/nodemodulemocking', 'original', 'story', true);
+    const root = sbPage.previewRoot();
+    await expect(root.getByText(/Lodash Version: 1.0.0-mocked!/)).toBeVisible();
+    await expect(root.getByText(/Mocked Add \(1,2\): mocked 3/)).toBeVisible();
+    await expect(root.getByText(/Inline Sum \(2,2\): mocked 10/)).toBeVisible();
+  });
+});</doc><doc title="Addons" desc="docs page.">/// <reference path="../typings.d.ts" />
+
+export * from './modules/addons';</doc><doc title="Context" desc="docs page.">import { createContext as ReactCreateContext } from 'react';
+
+import type { Combo } from './root';
+
+export const createContext = ({ api, state }: Combo) => ReactCreateContext({ api, state });</doc></api><.github><doc title="Copilot Instructions" desc="docs page."># GitHub Copilot Instructions for Storybook
+
+This document provides comprehensive instructions for GitHub Copilot when working on the Storybook repository.
+
+## Repository Overview
+
+Storybook is a large monorepo built with TypeScript, React, and various other frameworks. The main codebase is located in the `code/` directory, with additional tooling in `scripts/`.
+
+## System Requirements
+
+- **Node.js**: 22.16.0 (see `.nvmrc`)
+- **Package Manager**: Yarn 4.9.1
+- **Operating System**: Linux/macOS (CI environment)
+
+## Repository Structure
+
+```
+storybook/
+├── .github/           # GitHub configurations and workflows
+├── code/              # Main monorepo codebase
+│   ├── .storybook/    # Configuration for internal UI Storybook
+│   ├── core/          # Core Storybook package
+│   ├── lib/           # Core supporting libraries
+│   ├── addons/        # Core Storybook addons
+│   ├── builders/      # Builder integrations
+│   ├── renderers/     # Renderer integrations
+│   ├── frameworks/    # Framework integrations
+│   ├── presets/       # Preset packages for Webpack-based integrations
+│   └── sandbox/       # Internal build artifacts (not useful for anything, ignore)
+├── sandbox/           # Generated sandbox environments (created by yarn task --task sandbox)
+├── scripts/           # Build and development scripts
+├── docs/              # Documentation
+└── test-storybooks/   # Test configurations
+```
+
+## Essential Commands and Build Times
+
+### Installation & Setup
+```bash
+# Install all dependencies (run from repository root)
+yarn i
+# Time: ~2.5 minutes
+# Timeout: Use 300+ seconds for bash commands
+```
+
+### Compilation
+```bash
+# Compile all packages (run from repository root)
+yarn task --task compile
+# Time: ~3 minutes (tested: 3m0.729s)
+# Timeout: Use 300+ seconds for bash commands
+```
+
+### Linting
+```bash
+# Run all linting checks (run from repository root)
+yarn lint
+# Time: ~4 minutes
+# Timeout: Use 300+ seconds for bash commands
+```
+
+### Type Checking
+```bash
+# Run TypeScript type checking across all packages (run from repository root)
+yarn task --task check
+# Time: Variable, depends on codebase size
+# Timeout: Use 300+ seconds for bash commands
+```
+
+### Development Server
+```bash
+# Start Storybook UI development server (run from code/ directory)
+cd code && yarn storybook:ui
+# Time: ~2.26 seconds startup time
+# Serves on: http://localhost:6006/
+# Note: This runs indefinitely - use timeout or async mode
+# Note: This requires the repository to be compiled first, see Compilation above
+
+# Build Storybook UI for production (run from code/ directory)
+cd code && yarn storybook:ui:build
+# Time: ~1m 46s
+# Output: code/storybook-static/
+# Note: This does NOT run indefinitely
+# Note: This requires the repository to be compiled first, see Compilation above
+```
+
+### Testing
+```bash
+# Run all tests (run from code/ directory)
+cd code && yarn test
+# Time: Variable, depends on test scope
+# Watch mode for continuous testing
+cd code && yarn test:watch
+
+# Storybook UI specific tests
+cd code && yarn storybook:vitest
+
+# Available task-based testing commands
+yarn task --task e2e-tests-build    # E2E tests for built Storybook
+yarn task --task e2e-tests-dev      # E2E tests for dev server
+yarn task --task test-runner-build  # Test runner for built Storybook
+yarn task --task test-runner-dev    # Test runner for dev server
+yarn task --task smoke-test         # Basic smoke tests
+yarn task --task vitest-test        # Vitest integration tests
+```
+
+## Important Warnings and Limitations
+
+### Commands to Avoid
+- **DO NOT RUN**: `yarn task --task dev` - This starts a permanent development server that runs indefinitely and will cause timeouts
+- **DO NOT RUN**: `yarn start` - This also starts a long-running development server
+
+### Available Task Commands
+The repository includes 20 task scripts in `scripts/tasks/`:
+- `bench` - Performance benchmarking
+- `build` - Package building
+- `check` - Package validation
+- `chromatic` - Visual testing with Chromatic
+- `compile` - TypeScript compilation
+- `dev` - Development server (AVOID - runs indefinitely)
+- `e2e-tests-build` - E2E tests for built Storybook
+- `e2e-tests-dev` - E2E tests for dev server
+- `generate` - Code generation
+- `install` - Dependency installation
+- `publish` - Package publishing
+- `run-registry` - Local npm registry
+- `sandbox` - Sandbox creation (may occasionally fail due to environment issues)
+- `serve` - Static serving
+- `smoke-test` - Basic functionality tests
+- `sync-docs` - Documentation synchronization
+- `test-runner-build` - Test runner for built Storybook
+- `test-runner-dev` - Test runner for dev server
+- `vitest-test` - Vitest integration tests
+
+### Known Issues
+1. **Sandbox Generation Dependencies**: Sandbox creation may occasionally fail due to environment-specific issues (like Yarn version conflicts), but the GitHub API rate limiting has been resolved
+   ```bash
+   # Sandbox generation now works in CI environments
+   yarn task --task sandbox --template react-vite/default-ts
+   ```
+
+2. **Dependency Warnings**: The build process shows many peer dependency warnings, but these are expected and don't prevent successful builds
+
+3. **Large Build Times**: Most build operations take several minutes - always use appropriate timeouts
+
+4. **Sandbox Generation**: Generally reliable in CI environments, though may occasionally fail due to dependency or environment-specific issues
+
+## Recommended Development Workflow
+
+### For Code Changes
+1. Install dependencies: `yarn i` (if needed)
+2. Compile packages: `yarn task --task compile`
+3. Make your changes
+4. Compile packages with `cd code && yarn task --task compile`
+5. Test changes with: `cd code && yarn storybook:ui:build`
+6. Run relevant tests: `cd code && yarn test`
+
+### For Testing UI Changes
+1. Generate a sandbox with: `yarn task --task sandbox --template [framework-template]` (may occasionally fail due to environment issues)
+2. If sandbox generation fails, use Storybook UI: `cd code && yarn storybook:ui`
+3. Access at http://localhost:6006/
+
+### For Addon/Framework/Renderers Development
+1. Navigate to the relevant package in `code/addons/`, `code/frameworks/` or `code/renderers/`
+2. Make changes to source files
+3. Rebuild with compilation command
+4. Generate a sandbox that matches the framework/renderer being worked on
+5. Test with the appropriate test tasks
+
+## Bash Command Guidelines
+
+### Timeout Settings
+- **Short commands** (< 30s): Default timeout (120s) is sufficient
+- **Dependency installation**: Use 300+ seconds timeout
+- **Compilation**: Use 300+ seconds timeout  
+- **Linting**: Use 300+ seconds timeout
+- **Development servers**: Use async mode or timeout commands
+
+### Example Bash Commands
+```bash
+# Safe compilation with proper timeout
+bash(command="cd /path/to/storybook && yarn task --task compile", timeout=300, async=false)
+
+# Start development server with timeout to prevent hanging
+bash(command="cd /path/to/storybook/code && timeout 30s yarn storybook:ui", timeout=45, async=false)
+
+# Use async for interactive or long-running commands
+bash(command="cd /path/to/storybook/code && yarn storybook:ui", async=true)
+```
+
+## Sandbox Environments
+
+### Generating New Sandboxes
+Sandboxes are test environments that allow you to test Storybook changes with different framework combinations. **Note**: Sandbox creation generally works in CI environments, though may occasionally fail due to dependency or environment-specific issues.
+
+```bash
+# Generate a new sandbox (run from repository root)
+yarn task --task sandbox --template react-vite/default-ts
+# Creates: sandbox/react-vite-default-ts/
+# Note: May occasionally fail due to environment-specific issues (e.g., Yarn version conflicts)
+```
+
+### Available Framework/Builder Templates
+Common templates include:
+- `react-vite/default-ts` - React with Vite and TypeScript
+- `react-webpack/default-ts` - React with Webpack and TypeScript  
+- `angular-cli/default-ts` - Angular CLI with TypeScript
+- `svelte-vite/default-ts` - Svelte with Vite and TypeScript
+- `vue3-vite/default-ts` - Vue 3 with Vite and TypeScript
+- `nextjs/default-ts` - Next.js with TypeScript
+- And many more...
+
+### Working with Generated Sandboxes
+Once a sandbox is successfully generated, you can work with it:
+```bash
+# Navigate to the generated sandbox (in root sandbox/ directory)
+cd sandbox/react-vite-default-ts
+
+# Install dependencies if needed
+yarn install
+
+# Start the sandbox Storybook
+yarn storybook
+```
+
+### Current Limitations
+- **Environment-Specific Issues**: Sandbox creation may occasionally fail due to dependency conflicts (e.g., Yarn version management), but the GitHub API rate limiting has been resolved
+- **Workaround**: For testing changes when sandbox generation fails, you can work directly with the Storybook UI instead
+- The `code/sandbox/` directory contains internal build artifacts and should not be used for testing
+
+### Testing Changes Without Sandboxes
+When sandbox generation is not available:
+1. Make your changes to the relevant packages in `code/`
+2. Compile: `yarn task --task compile`
+3. Test with Storybook UI: `cd code && yarn storybook:ui`
+4. Access at http://localhost:6006/ to test your changes
+
+## Package Management
+
+### Adding Dependencies
+```bash
+# Add to specific workspace
+cd code/frameworks/react-vite && yarn add <package>
+
+# Add to root workspace
+yarn add <package> -W
+```
+
+### Building Specific Packages
+```bash
+# Build specific package (run from code/ directory)
+cd code && yarn build <package-name>
+```
+
+## Testing Strategy
+
+### Unit Tests
+```bash
+cd code && yarn test
+# Run specific test suites as needed
+```
+
+### Visual Testing
+- Use Storybook UI for visual regression testing
+- Chromatic integration available for visual reviews
+
+### End-to-End Testing
+- Playwright tests available (version 1.52.0 configured)
+- E2E test tasks: `yarn task --task e2e-tests-build` or `yarn task --task e2e-tests-dev`
+- Test runner scenarios: `yarn task --task test-runner-build` or `yarn task --task test-runner-dev`
+- Smoke tests: `yarn task --task smoke-test`
+
+### Watch Mode Commands
+```bash
+# Watch mode for unit tests
+cd code && yarn test:watch
+
+# Watch mode for affected tests only
+yarn affected:test
+
+# Storybook UI vitest watch mode
+cd code && yarn storybook:vitest
+```
+
+## Troubleshooting
+
+### Common Issues
+1. **Build Failures**: Often resolved by running `yarn i` followed by `yarn task --task compile`
+2. **Port Conflicts**: Storybook UI uses port 6006 by default
+3. **Memory Issues**: Large compilation tasks may require increased Node.js memory limits
+4. **Environment-Specific Issues**: Sandbox generation may occasionally fail due to dependency conflicts - use Storybook UI for testing as fallback
+5. **Sandbox Directory Confusion**: Use root `sandbox/` directory for generated sandboxes, not `code/sandbox/`
+
+### Debug Information
+- Storybook logs available in generated sandbox directories
+- Use `--debug` flag with CLI commands for verbose output
+- Check `.cache/` directories for build artifacts
+
+## Performance Tips
+
+1. **Incremental Builds**: Use compilation cache when possible
+2. **Selective Building**: Build only changed packages during development
+3. **Memory Management**: Monitor memory usage during large operations
+4. **Parallel Processing**: Yarn commands use parallel processing by default
+
+## Contributing Guidelines
+
+### Code Style
+- ESLint and Prettier configurations are enforced
+- TypeScript strict mode is enabled
+- Follow existing patterns in the codebase
+
+### Code Quality Checks
+After making file changes, always run both formatting and linting checks:
+1. **Prettier**: Format code with `yarn prettier --write <file>`
+2. **ESLint**: Check for linting issues with `yarn lint:js:cmd <file>`
+   - The full eslint command is: `cross-env NODE_ENV=production eslint --cache --cache-location=../.cache/eslint --ext .js,.jsx,.json,.html,.ts,.tsx,.mjs --report-unused-disable-directives`
+   - Use the `lint:js:cmd` script for convenience
+   - Fix any errors or warnings before committing
+
+### Testing Guidelines
+When writing unit tests:
+1. **Export functions for testing**: If functions need to be tested, export them from the module
+2. **Write meaningful tests**: Tests should actually import and call the functions being tested, not just verify syntax patterns
+3. **Use coverage reports**: Run tests with coverage to identify untested code
+   - Run coverage: `yarn vitest run --coverage <test-file>`
+   - Aim for high coverage of business logic (75%+ for statements/lines)
+   - Use coverage reports to identify missing test cases
+   - Focus on covering:
+     - All branches and conditions
+     - Edge cases and error paths
+     - Different input variations
+4. **Mock external dependencies**: Use `vi.mock()` to mock file system, loggers, and other external dependencies
+5. **Run tests before committing**: Ensure all tests pass with `yarn test` or `yarn vitest run`
+
+### Logging
+When adding logging to code, always use the appropriate logger:
+- **Server-side code** (Node.js): Use `logger` from `storybook/internal/node-logger`
+  ```typescript
+  import { logger } from 'storybook/internal/node-logger';
+  logger.info('Server message');
+  logger.warn('Warning message');
+  logger.error('Error message');
+  ```
+- **Client-side code** (browser): Use `logger` from `storybook/internal/client-logger`
+  ```typescript
+  import { logger } from 'storybook/internal/client-logger';
+  logger.info('Client message');
+  logger.warn('Warning message');
+  logger.error('Error message');
+  ```
+- **DO NOT** use `console.log`, `console.warn`, or `console.error` directly unless in isolated files where importing loggers would significantly increase bundle size
+
+### Git Workflow
+- Work on feature branches
+- Ensure all builds and tests pass before submitting PRs
+- Include relevant documentation updates
+
+### Documentation
+- Update relevant README files for significant changes
+- Include code examples in addon/framework documentation
+- Update migration guides for breaking changes
+
+This document should be updated as the repository evolves and new build requirements or limitations are discovered.</doc><doc title="Pull Request Template" desc="docs page.">Closes #
+
+
+<!--
+
+Thank you for contributing to Storybook! Please submit all PRs to the `next` branch unless they are specific to the current release. Storybook maintainers cherry-pick bug and documentation fixes into the `main` branch as part of the release process, so you shouldn't need to worry about this. For additional guidance: https://storybook.js.org/docs/contribute
+
+-->
+
+## What I did
+
+
+## Checklist for Contributors
+
+### Testing
+
+
+#### The changes in this PR are covered in the following automated tests:
+
+- [ ] stories
+- [ ] unit tests
+- [ ] integration tests
+- [ ] end-to-end tests
+
+#### Manual testing
+
+_This section is mandatory for all contributions. If you believe no manual test is necessary, please state so explicitly. Thanks!_
+
+<!-- Please include the steps to test your changes here. For example:
+
+1. Run a sandbox for template, e.g. `yarn task --task sandbox --start-from auto --template react-vite/default-ts`
+2. Open Storybook in your browser
+3. Access X story
+
+-->
+
+### Documentation
+
+
+- [ ] Add or update documentation reflecting your changes
+- [ ] If you are deprecating/removing a feature, make sure to update
+      [MIGRATION.MD](https://github.com/storybookjs/storybook/blob/next/MIGRATION.md)
+
+## Checklist for Maintainers
+
+- [ ] When this PR is ready for testing, make sure to add `ci:normal`, `ci:merged` or `ci:daily` GH label to it to run a specific set of sandboxes. The particular set of sandboxes can be found in `code/lib/cli-storybook/src/sandbox-templates.ts`
+- [ ] Make sure this PR contains **one** of the labels below:
+   <details>
+     <summary>Available labels</summary>
+
+  - `bug`: Internal changes that fixes incorrect behavior.
+  - `maintenance`: User-facing maintenance tasks.
+  - `dependencies`: Upgrading (sometimes downgrading) dependencies.
+  - `build`: Internal-facing build tooling & test updates. Will not show up in release changelog.
+  - `cleanup`: Minor cleanup style change. Will not show up in release changelog.
+  - `documentation`: Documentation **only** changes. Will not show up in release changelog.
+  - `feature request`: Introducing a new feature.
+  - `BREAKING CHANGE`: Changes that break compatibility in some way with current major version.
+  - `other`: Changes that don't fit in the above categories.
+
+   </details>
+
+### 🦋 Canary release
+
+
+This PR does not have a canary release associated. You can request a canary release of this pull request by mentioning the `@storybookjs/core` team here.
+
+_core team members can create a canary release [here](https://github.com/storybookjs/storybook/actions/workflows/publish.yml) or locally with `gh workflow run --repo storybookjs/storybook publish.yml --field pr=<PR_NUMBER>`_
+
+</doc><doc title="Good First Issue" desc="docs page.">The issue was marked with the `good first issue` label by a maintainer.
+
+This means that it is a good candidate for someone interested in contributing to the project, but does not know where to start.
+
+To get started, read the [Contributing Guide](https://storybook.js.org/docs/contribute/how-to-contribute). When you are ready, open a PR and link back to this issue in the form of adding `Fixes #1234` to the PR description, where `1234` is the issue number. This will automatically close the issue when the PR gets merged, making it easier for us to keep track of what has been fixed.
+
+Please remember to add tests to confirm your code changes will fix the issue and we do not regress in the future.
+
+If you have any questions, feel free to ask below or hop onto the [Storybook Discord](https://discord.gg/storybook) and ask in the #contributing channel. We're looking forward to your contribution! ✨
+
+> [!NOTE]
+> There is no need to ask to be assigned or for permission (e.g. "can I work on this?"). Please, go ahead if there is no linked PR. :slightly_smiling_face:</doc><doc title="Invalid Link" desc="docs page.">We could not detect a valid reproduction link. **Make sure to follow the bug report template carefully.**
+
+### Why was this issue closed?
+
+To be able to investigate, we need access to a reproduction to identify what triggered the issue. We need a link to a **public** GitHub repository, Stackblitz or CodeSandbox. The easiest way to create a reproduction is with [storybook.new](https://storybook.new).
+
+The bug template that you filled out has a section called "To reproduce", which is where you should provide the link to the reproduction.
+
+- If you did not provide a link or the link you provided is not valid, we will close the issue.
+- If you provide a link to a private repository, we will close the issue.
+- If you provide a link to a repository but not in the correct section, we will close the issue.
+
+### What should I do?
+
+Depending on the reason the issue was closed, you can do the following:
+
+- If you did not provide a link, please open a new issue with a link to a reproduction.
+- If you provided a link to a private repository, please open a new issue with a link to a public repository.
+- If you provided a link to a repository but not in the correct section, please open a new issue with a link to a reproduction in the correct section.
+
+**In general, assume that we should not go through a lengthy onboarding process at your company code only to be able to verify an issue.**
+
+### My repository is private and cannot be public
+
+In most cases, a private repo will not be a sufficient **minimal reproduction**, as this codebase might contain a lot of unrelated parts that would make our investigation take longer. Please do **not** make it public. Instead, create a new repository using the templates above, adding the relevant code to reproduce the issue. Common things to look out for:
+
+- Remove any code that is not related to the issue. (pages, API routes, irrelevant components, etc.)
+- Remove any dependencies that are not related to the issue.
+- Remove any third-party service that would require us to sign up for an account to reproduce the issue.
+- Remove any environment variables that are not related to the issue.
+- Remove private packages that we do not have access to.
+- If the issue is not related to a monorepo specifically, try to reproduce the issue without a complex monorepo setup
+
+### I did not open this issue, but it is relevant to me, what can I do to help?
+
+Anyone experiencing the same issue is welcome to provide a minimal reproduction following the above steps by opening a new issue.
+
+### I think my reproduction is good enough, why aren't you looking into it quickly?
+
+We look into every Storybook issue and constantly monitor open issues for new comments.
+
+However, sometimes we might miss one or two due to the popularity/high traffic of the repository. We apologize, and kindly ask you to refrain from tagging core maintainers, as that will usually not result in increased priority.
+
+Upvoting issues to show your interest will help us prioritize and address them as quickly as possible. That said, every issue is important to us, and if an issue gets closed by accident, we encourage you to open a new one linking to the old issue and we will look into it.
+
+### Useful Resources
+
+- [Create a Storybook reproduction](https://storybook.js.org/docs/react/contribute/how-to-reproduce)
+- [How to create a Minimal, Complete, and Verifiable example](https://stackoverflow.com/help/mcve)
+- [Contributing to Storybook](https://storybook.js.org/docs/contribute/how-to-contribute)</doc></.github><.kiro><doc title="Product" desc="docs page."># Product Overview
+
+Storybook is a frontend workshop for building UI components and pages in isolation. It's a tool for UI development, testing, and documentation that supports multiple frameworks including React, Angular, Vue, Svelte, and many others.
+
+## Core Purpose
+
+- Build bulletproof UI components faster
+- Develop UI components in isolation
+- Create comprehensive documentation for components
+- Enable visual testing and interaction testing
+- Support component-driven development workflows
+
+## Key Features
+
+- Multi-framework support (React, Angular, Vue, Svelte, etc.)
+- Extensive addon ecosystem for enhanced functionality
+- Built-in documentation generation
+- Visual testing capabilities
+- Component story format (CSF) for organizing examples
+- Hot module reloading for fast development
+
+## Target Users
+
+- Frontend developers building component libraries
+- Design system teams
+- UI/UX designers collaborating with developers
+- QA teams performing visual testing
+- Documentation writers creating component guides</doc><doc title="Structure" desc="docs page."># Project Structure
+
+## Repository Layout
+
+This is a monorepo with the main codebase in the `code/` directory and supporting files at the root level.
+
+```ascii
+storybook/
+├── code/                   # Main codebase (Nx workspace)
+│   ├── addons/             # Storybook addons (a11y, docs, jest, etc.)
+│   ├── builders/           # Build system integrations
+│   ├── core/               # Core Storybook UI and API
+│   ├── frameworks/         # Framework-specific implementations
+│   ├── lib/                # CLI tools and utilities
+│   ├── presets/            # Configuration presets
+│   ├── renderers/          # Framework renderers
+│   └── sandbox/            # Development sandboxes
+├── docs/                   # Documentation source files
+├── scripts/                # Build and automation scripts
+├── test-storybooks/        # Integration test projects
+└── sandbox/                # Generated sandbox environments
+```
+
+## Code Organization
+
+### Core Packages (`code/`)
+
+- **`core/`**: Main Storybook application (manager UI, preview, server)
+- **`addons/`**: Official addons (a11y, docs, jest, links, etc.)
+- **`frameworks/`**: Framework-specific integrations (angular, nextjs, sveltekit), usually a combination of a renderer and a builder
+- **`renderers/`**: Pure framework renderers (react, vue3, svelte)
+- **`builders/`**: Build tool integrations (vite, webpack5)
+- **`lib/`**: Utilities and CLI tools (cli-sb, codemod, create-storybook)
+- **`presets/`**: Webpack configuration presets for popular setups
+
+### Package Naming Conventions
+
+- Renderer packages: `@storybook/{renderer}` (e.g., `@storybook/react`)
+- Framework + builder: `@storybook/{renderer}-{builder}` OR `@storybook/{framework}` (e.g., `@storybook/react-vite`, `@storybook/sveltekit`)
+- Addons: `@storybook/addon-{name}` (e.g., `@storybook/addon-docs`)
+- Builders: `@storybook/builder-{name}` (e.g., `@storybook/builder-vite`)
+- Presets: `@storybook/preset-{name}` (e.g., `@storybook/preset-create-react-app`)
+
+## File Conventions
+
+### TypeScript Configuration
+
+- Strict TypeScript with `noImplicitAny: true`
+- Module resolution: `bundler` mode
+- Target: `ES2020`
+- JSX: `preserve` mode
+
+### Code Style
+
+- **Prettier**: 100 character line width, single quotes, trailing commas
+- **Import Order**: Node modules → testing → React → Storybook internal → third-party → relative
+- **File Extensions**: Prefer `.ts`/`.tsx` over `.js`/`.jsx`
+- **Naming**: Use kebab-case for files, PascalCase for components
+
+### Testing Structure
+
+- **Unit Tests**: `*.test.ts` files alongside source code
+- **E2E Tests**: `code/e2e-tests/` directory with Playwright
+- **Stories**: `*.stories.ts` files for component examples
+- **Mocks**: `__mocks__/` directories for test fixtures
+
+### Documentation
+
+- **API Docs**: JSDoc comments with TSDoc format
+- **README**: Each package should have comprehensive README
+- **Stories**: Use Component Story Format (CSF) 3.0
+- **Migration Guides**: Document breaking changes
+
+## Development Patterns
+
+### Monorepo Workflow
+
+1. All development happens in `code/` directory
+2. Use `yarn build --watch` for active development
+3. Nx handles dependency graph and caching
+4. All packages are versioned and released together
+
+### Package Dependencies
+
+- **Internal**: Use `workspace:*` for internal package references
+- **Peer Dependencies**: Framework packages are peer dependencies
+- **Dev Dependencies**: Testing and build tools in root package.json
+
+### Build Outputs
+
+- **`dist/`**: Compiled JavaScript and type definitions
+- **`template/`**: Framework-specific template files
+- **`*.d.ts`**: TypeScript declaration files
+
+### Sandbox Development
+
+- Use `yarn start` for quick React TypeScript sandbox
+- Use `yarn task` for custom framework/template selection
+- Sandboxes are generated in `sandbox/` directory
+- Link mode connects to local packages for development</doc><doc title="Tech" desc="docs page."># Technology Stack
+
+## Build System & Package Management
+
+- **Monorepo**: Managed with Nx for build orchestration and caching
+- **Package Manager**: Yarn 4 with workspaces
+- **Node.js**: Version 22+ (specified in .nvmrc)
+- **Build Tool**: Custom build scripts with esbuild and Vite integration
+
+## Core Technologies
+
+- **TypeScript**: Primary language with strict configuration
+- **React**: Main UI framework for Storybook's own interface
+- **Vite**: Build tool and dev server for modern frameworks
+- **Webpack 5**: Alternative bundler support
+- **ESBuild**: Fast JavaScript bundler and minifier
+
+## Testing & Quality
+
+- **Vitest**: Primary test runner with coverage via Istanbul
+- **Playwright**: End-to-end testing framework
+- **ESLint**: Code linting with extensive custom rules
+- **Prettier**: Code formatting with custom plugins
+- **Chromatic**: Visual testing and review
+
+## Development Workflow
+
+- **Hot Module Reloading**: Fast development feedback
+- **Watch Mode**: Automatic rebuilds during development
+- **Parallel Builds**: Nx orchestrates parallel package builds
+- **Caching**: Aggressive build and test caching via Nx
+
+## Common Commands
+
+### Development
+
+```bash
+# Start development environment with React TypeScript sandbox
+yarn start
+
+# Start with custom template selection
+yarn task
+
+# Build specific packages in watch mode
+cd code && yarn build --watch <package-names>
+
+# Run Storybook UI development server
+yarn storybook:ui
+
+# Create a standalone sandbox to develop against a specific framework
+yarn task --task sandbox
+```
+
+### Testing
+
+```bash
+# Run all tests
+yarn test
+
+# Run tests in watch mode
+yarn test:watch
+
+# Run specific package tests
+yarn nx test <package-name>
+
+# Run E2E tests
+yarn playwright test
+```
+
+### Building
+
+```bash
+# Build all packages
+yarn build
+
+# Build in production mode (required for Angular)
+yarn build --prod
+
+# Build with watch mode
+yarn build --watch
+
+# Build specific packages
+yarn build <package-1> <package-2>
+```
+
+### Linting & Formatting
+
+```bash
+# Lint JavaScript/TypeScript
+yarn lint:js
+
+# Lint markdown and code samples
+yarn lint:md
+
+# Auto-fix linting issues
+yarn lint:js --fix
+
+# Format code with Prettier
+yarn lint:prettier
+```
+
+## Framework Support
+
+Storybook supports multiple frontend frameworks through dedicated packages:
+
+- React (react, react-vite, react-webpack5)
+- Angular (angular)
+- Vue (vue3, vue3-vite)
+- Svelte (svelte, svelte-vite, sveltekit)
+- Web Components (web-components, web-components-vite)
+- HTML (html, html-vite)
+- Preact (preact, preact-vite)
+- Next.js (nextjs, nextjs-vite)</doc></.kiro><code><doc title="README" desc="install &amp; quickstart."><p align="center">
+  <a href="https://storybook.js.org/?ref=readme">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://user-images.githubusercontent.com/263385/199832481-bbbf5961-6a26-481d-8224-51258cce9b33.png">
+      <img src="https://user-images.githubusercontent.com/321738/63501763-88dbf600-c4cc-11e9-96cd-94adadc2fd72.png" alt="Storybook" width="400" />
+    </picture>
+    
+  </a>
+  
+</p>
+
+<p align="center">Build bulletproof UI components faster</p>
+
+<br/>
+
+<p align="center">
+Storybook is a frontend workshop for building UI components and pages in isolation. Thousands of teams use it for UI development, testing, and documentation. Find out more at <a href="https://storybook.js.org/?ref=readme">storybook.js.org</a>!
+</p>
+
+<center>
+  <img src="https://raw.githubusercontent.com/storybookjs/storybook/refs/heads/release-6-5/media/storybook-intro.gif" width="100%" />
+</center>
+
+---
+
+# Storybook
+
+The `storybook` package contains Storybook's core. It includes:
+
+- Storybook's CLI and development server
+- Storybook's main UI (aka "the manager")
+- Core functionality including component controls, toolbar controls, action logging, viewport control, and interaction debugger
+- User-facing utility libraries such as `storybook/test`, `theming`, and `viewport`
+- Libraries used by Storybook's ecosystem of frameworks, addons, and builders
+
+It also contains a variety of other libraries and utilities under the `stroybook/internal` namespace, such as utilities for CSF, MDX & Docs.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Storybook Accessibility Addon
+
+The @storybook/addon-a11y package provides accessibility testing for Storybook stories. It uses axe-core to run the tests.
+
+## Getting Started
+
+### Add the addon to an existing Storybook
+
+```bash
+npx storybook add @storybook/addon-a11y
+```
+
+[More on getting started with the accessibility addon](https://storybook.js.org/docs/writing-tests/accessibility-testing#accessibility-checks-with-a11y-addon?ref=readme)
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Story Links Addon
+
+The Storybook Links addon can be used to create links that navigate between stories in [Storybook](https://storybook.js.org?ref=readme).
+
+[Framework Support](https://storybook.js.org/docs/configure/integration/frameworks-feature-support?ref=readme)
+
+## Getting Started
+
+Install this addon by adding the `@storybook/addon-links` dependency:
+
+```sh
+yarn add -D @storybook/addon-links
+```
+
+within `.storybook/main.js`:
+
+```js
+export default {
+  addons: ['@storybook/addon-links'],
+};
+```
+
+Then you can import `linkTo` in your stories and use like this:
+
+```js
+import { linkTo } from '@storybook/addon-links';
+
+export default {
+  title: 'Button',
+};
+
+export const first = () => <button onClick={linkTo('Button', 'second')}>Go to "Second"</button>;
+export const second = () => <button onClick={linkTo('Button', 'first')}>Go to "First"</button>;
+```
+
+Have a look at the linkTo function:
+
+```js
+import { linkTo } from '@storybook/addon-links';
+
+linkTo('Toggle', 'off');
+linkTo(
+  () => 'Toggle',
+  () => 'off'
+);
+linkTo('Toggle'); // Links to the first story in the 'Toggle' kind
+```
+
+With that, you can link an event in a component to any story in the Storybook.
+
+- First parameter is the story kind name (what you named with `title`).
+- Second (optional) parameter is the story name (what you named with `exported name`).
+  If the second parameter is omitted, the link will point to the first story in the given kind.
+
+You can also pass a function instead for any of above parameter. That function accepts arguments emitted by the event and it should return a string:
+
+```js
+import { linkTo } from '@storybook/addon-links';
+import LinkTo from '@storybook/addon-links/react';
+
+export default {
+  title: 'Select',
+};
+
+export const index = () => (
+  <select value="Index" onChange={linkTo('Select', (e) => e.currentTarget.value)}>
+    <option>index</option>
+    <option>first</option>
+    <option>second</option>
+    <option>third</option>
+  </select>
+);
+export const first = () => <LinkTo story="index">Go back</LinkTo>;
+export const second = () => <LinkTo story="index">Go back</LinkTo>;
+export const third = () => <LinkTo story="index">Go back</LinkTo>;
+```
+
+## hrefTo function
+
+If you want to get an URL for a particular story, you may use `hrefTo` function. It returns a promise, which resolves to string containing a relative URL:
+
+```js
+import { hrefTo } from '@storybook/addon-links';
+import { action } from 'storybook/actions';
+
+export default {
+  title: 'Href',
+};
+
+export const log = () => {
+  hrefTo('Href', 'log').then(action('URL of this story'));
+
+  return <span>See action logger</span>;
+};
+```
+
+## withLinks decorator
+
+`withLinks` decorator enables a declarative way of defining story links, using data attributes.
+Here is an example in React, but it works with any framework:
+
+```js
+import { withLinks } from '@storybook/addon-links';
+
+export default {
+  title: 'Button',
+  decorators: [withLinks],
+};
+
+export const first = () => (
+  <button data-sb-kind="OtherKind" data-sb-story="otherStory">
+    Go to "OtherStory"
+  </button>
+);
+```
+
+## LinkTo component (React only)
+
+One possible way of using `hrefTo` is to create a component that uses native `a` element, but prevents page reloads on plain left click, so that one can still use default browser methods to open link in new tab.
+A React implementation of such a component can be imported from `@storybook/addon-links` package:
+
+```js
+import LinkTo from '@storybook/addon-links/react';
+
+export default {
+  title: 'Link',
+};
+
+export const first = () => <LinkTo story="second">Go to Second</LinkTo>;
+export const second = () => <LinkTo story="first">Go to First</LinkTo>;
+```
+
+It accepts all the props the `a` element does, plus `story` and `kind`. It the `kind` prop is omitted, the current kind will be preserved.
+
+```mdx
+<LinkTo
+  kind="Toggle"
+  story="off"
+  target="_blank"
+  title="link to second story"
+  style={{ color: '#1474f3' }}
+>
+  Go to Second
+</LinkTo>
+```
+
+To implement such a component for another framework, you need to add special handling for `click` event on native `a` element. See [`RoutedLink` sources](https://github.com/storybookjs/storybook/blob/next/code/addons/links/src/react/components/RoutedLink.tsx) for reference.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Storybook Addon Onboarding
+
+This addon provides a guided tour in some of Storybook's features, helping you get to know about the basics of Storybook and learn how to write stories!
+
+![](./.github/assets/onboarding-intro.png)
+
+## Triggering the onboarding
+
+This addon comes installed by default in Storybook projects and should trigger automatically.
+If you want to retrigger the addon, you should make sure that your Storybook still contains the example stories that come when initializing Storybook, and you can then navigate to http://localhost:6006/?path=/onboarding after running Storybook.
+
+## Uninstalling
+
+This addon serves to provide you a guided experience on the basics of Storybook. Once you are done, the addon is therefore not needed anymore and will not get activated (unless triggered manually), so you can freely remove it. Here's how to do so:
+
+### 1. Remove the dependency
+
+yarn:
+
+```zsh
+yarn remove @storybook/addon-onboarding
+```
+
+npm:
+
+```zsh
+npm uninstall -D @storybook/addon-onboarding
+```
+
+pnpm:
+
+```zsh
+pnpm remove -D @storybook/addon-onboarding
+```
+
+### 2. Remove the addon in your `.storybook/main.js` file
+
+```diff
+const config = {
+  stories: [
+    "../stories/**/*.stories.mdx",
+    "../stories/**/*.stories.@(js|jsx|ts|tsx)",
+  ],
+  addons: [
+-   "@storybook/addon-onboarding"
+  ],
+};
+export default config;
+```
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."><img src="https://user-images.githubusercontent.com/321738/105224055-f6c29c00-5b5c-11eb-83c9-ba28a7fbadf2.gif" width="80" height="80" alt="">
+
+# Storybook Pseudo States
+
+Toggle CSS pseudo states for your components in Storybook.
+
+<p>
+  <img src="https://user-images.githubusercontent.com/321738/105100903-51e98580-5aae-11eb-82bf-2b625c5a88a3.gif" width="560" alt="" />
+</p>
+
+## Introduction
+
+This addon attempts to "force" your components' pseudo states. It rewrites all document stylesheets to add a class name selector to any rules that target a pseudo-class (`:hover`, `:focus`, etc.). The tool then allows you to toggle these class names on the story container (`#root`) or any other root element you want (via the `rootSelector` param). Additionally, you can set the `pseudo` property on your story `parameters` to set a default value for each pseudo class. This makes it possible to test such states with [Chromatic](https://www.chromatic.com/).
+
+### Limitations
+
+Because this addon rewrites your stylesheets rather than toggle the actual browser behavior like DevTools does, it won't render any of the default user agent (browser) styles. Unfortunately there's no JavaScript API to toggle real pseudo states without using a browser extension.
+
+## Getting Started
+
+To install the addon:
+
+```sh
+npx storybook add storybook-addon-pseudo-states
+```
+
+For Storybook versions before 9.0, use v4.0.3 of the addon:
+
+```sh
+npx storybook add storybook-addon-pseudo-states@4.0.3
+```
+
+### Setting default story states
+
+You can have your stories automatically use a specific set of pseudo states, by setting the `pseudo` property on `parameters`:
+
+```jsx
+export const Hover = () => <Button>Label</Button>;
+Hover.parameters = { pseudo: { hover: true } };
+```
+
+This is what enables snapshot testing your pseudo states in [Chromatic](https://www.chromatic.com/).
+
+### Targeting specific elements
+
+If you don't want to force or toggle pseudo styles to all elements that use them, but rather only enable them on specific elements, you can set a string or array value instead of a boolean:
+
+```jsx
+export const Buttons = () => (
+  <>
+    <Button id="one">Hover</Button>
+    <Button id="two">Hover focus</Button>
+    <Button id="three">Hover focus active</Button>
+  </>
+);
+Buttons.parameters = {
+  pseudo: {
+    hover: ['#one', '#two', '#three'],
+    focus: ['#two', '#three'],
+    active: '#three',
+  },
+};
+```
+
+This accepts a single CSS selector (string), or an array of CSS selectors on which to enable that pseudo style.
+
+### Overriding the default root element
+
+By default, we use `#storybook-root` (or `#root` before Storybook 7) element as the root element for all pseudo classes. If you need to render elements outside Storybook's root element, you can set `parameters.pseudo.rootSelector` to override it. This is convenient for portals, dialogs, tooltips, etc.
+
+For example, consider a `Dialog` component that injects itself to the document's `body` node:
+
+```jsx
+export const DialogButton = () => (
+  <Dialog>
+    <Button>Hover</Button>
+  </Dialog>
+);
+
+DialogButton.parameters = {
+  pseudo: { hover: true, rootSelector: 'body' },
+};
+```
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># @storybook/addon-themes
+
+Storybook Addon Themes can be used to switch between multiple themes for components inside the preview in [Storybook](https://storybook.js.org?ref=readme).
+
+![React Storybook Screenshot](https://user-images.githubusercontent.com/18172605/274302488-77a39112-cdbe-4d16-9966-0d8e9e7e3399.gif)
+
+## Usage
+
+Requires Storybook 7.0 or later. If you need to add it to your Storybook, you can run:
+
+```sh
+npm i -D @storybook/addon-themes
+```
+
+Then, add following content to [`.storybook/main.js`](https://storybook.js.org/docs/configure#configure-your-storybook-project?ref=readme):
+
+```js
+export default {
+  addons: ['@storybook/addon-themes'],
+};
+```
+
+### 👇 Tool specific configuration
+
+For tool-specific setup, check out the recipes below
+
+- [`@emotion/styled`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/emotion.md)
+- [`@mui/material`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/material-ui.md)
+- [`bootstrap`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/bootstrap.md)
+- [`postcss`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/postcss.md)
+- [`styled-components`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/styled-components.md)
+- [`tailwind`](https://github.com/storybookjs/storybook/tree/next/code/addons/themes/docs/getting-started/tailwind.md)
+- [`vuetify@3.x`](https://github.com/storybookjs/storybook/blob/next/code/addons/themes/docs/api.md#writing-a-custom-decorator)
+
+Don't see your favorite tool listed? Don't worry! That doesn't mean this addon isn't for you. Check out the ["Writing a custom decorator"](https://github.com/storybookjs/storybook/blob/next/code/addons/themes/docs/api.md#writing-a-custom-decorator) section of the [api reference](https://github.com/storybookjs/storybook/blob/next/code/addons/themes/docs/api.md).
+
+### ❗️ Overriding theme
+
+If you want to override your theme for a particular component or story, you can use the `globals.theme` parameter.
+
+```js
+import React from 'react';
+import { Button } from './Button';
+
+export default {
+  title: 'Example/Button',
+  component: Button,
+  // meta level override
+  globals: { theme: 'dark' },
+};
+
+export const Primary = {
+  args: {
+    primary: true,
+    label: 'Button',
+  },
+};
+
+export const PrimaryDark = {
+  args: {
+    primary: true,
+    label: 'Button',
+  },
+  // story level override
+  globals: { theme: 'dark' },
+};
+```
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Storybook Addon Test
+
+Addon to integrate Vitest test results with Storybook.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Storybook builder for Vite <!-- omit in toc -->
+
+Build your stories with [vite](https://vitejs.dev/) for fast startup times and near-instant HMR.
+
+# Table of Contents <!-- omit in toc -->
+
+- [Installation](#installation)
+- [Usage](#usage)
+  - [Getting started with Vite and Storybook (on a new project)](#getting-started-with-vite-and-storybook-on-a-new-project)
+  - [Migration from webpack / CRA](#migration-from-webpack--cra)
+  - [Customize Vite config](#customize-vite-config)
+  - [TypeScript](#typescript)
+  - [React Docgen](#react-docgen)
+  - [Note about working directory](#note-about-working-directory)
+- [Known issues](#known-issues)
+- [Contributing](#contributing)
+
+## Installation
+
+Requirements:
+
+- Vite 3.0 or newer (4.X recommended)
+
+When installing Storybook, use the `--builder=vite` flag if you do not have a `vite.config` file at your project root (if you do, the vite builder is chosen automatically).
+
+## Usage
+
+The builder supports both development mode in Storybook and building a static production version.
+
+Your `vite.config` file will be used by Storybook. If you need to customize the Vite config for Storybook, you have two choices:
+
+1. Set values in your `vite.config` conditionally, based on an environment variable, for example.
+2. Add a `viteFinal` config to your `.storybook/main.js` file. See [Customize Vite config](#customize-vite-config) for details.
+
+### Getting started with Vite and Storybook (on a new project)
+
+See https://vitejs.dev/guide/#scaffolding-your-first-vite-project,
+
+```
+npm create vite@latest # follow the prompts
+npx storybook@latest init --builder vite && npm run storybook
+```
+
+### Migration from webpack / CRA
+
+1. Install `vite` and `@storybook/builder-vite`
+2. Remove any explicit project dependencies on `webpack`, `react-scripts`, and any other Webpack plugins or loaders.
+3. If you were previously using `@storybook/manager-webpack5`, you can remove it. Also remove `@storybook/builder-webpack5` or `@storybook/builder-webpack4` if they are installed.
+4. Choose a Vite-based Storybook "framework" to set in the `framework` option of your `.storybook/main.js` file.
+5. Remove Storybook Webpack cache (`rm -rf node_modules/.cache`)
+6. Update your `/public/index.html` file for Vite (be sure there are no `%PUBLIC_URL%` inside it, which is a CRA variable)
+7. Be sure that any files containing JSX syntax use a `.jsx` or `.tsx` file extension, which [Vite requires](https://vitejs.dev/guide/features.html#jsx). This includes `.storybook/preview.jsx` if it contains JSX syntax.
+8. For now you'll need to add a [workaround](https://github.com/storybookjs/storybook/issues/18399) for jest-mock relying on the node `global` variable by creating a `.storybook/preview-head.html` file containing the following:
+
+```html
+<script>
+  window.global = window;
+</script>
+```
+
+9.  Start up your Storybook using the same `yarn storybook` or `npm run storybook` commands you are used to.
+
+For other details about the differences between Vite and Webpack projects, be sure to read through the [Vite documentation](https://vitejs.dev/).
+
+### Customize Vite config
+
+The builder _will_ read your `vite.config.js` file, though it may change some of the options in order to work correctly.
+It looks for the Vite config in the CWD. If your config is located elsewhere, specify the path using the `viteConfigPath` builder option:
+
+```javascript
+// .storybook/main.mjs
+
+const config = {
+  framework: {
+    name: '@storybook/react-vite', // Your framework name here.
+    options: {
+      builder: {
+        viteConfigPath: '.storybook/customViteConfig.js',
+      },
+    },
+  },
+};
+
+export default config;
+```
+
+You can also override the merged Vite config:
+
+```javascript
+// use `mergeConfig` to recursively merge Vite options
+import { mergeConfig } from 'vite';
+
+const config = {
+  async viteFinal(config, { configType }) {
+    // Be sure to return the customized config
+    return mergeConfig(config, {
+      // Customize the Vite config for Storybook
+      resolve: {
+        alias: { foo: 'bar' },
+      },
+    });
+  },
+};
+
+export default config;
+```
+
+The `viteFinal` function will give you `config` which is the combination of your project's Vite config and the builder's own Vite config.
+You can tweak this as you want, for example to set up aliases, add new plugins etc.
+
+The `configType` variable will be either `"DEVELOPMENT"` or `"PRODUCTION"`.
+
+The function should return the updated Vite configuration.
+
+### TypeScript
+
+Configure your `.storybook/main.ts` to use TypeScript:
+
+```typescript
+import type { StorybookConfig } from '@storybook/react-vite';
+
+// (or whatever framework you are using)
+
+const config: StorybookConfig = {
+  // other storybook options...,
+  async viteFinal(config, options) {
+    // modify and return config
+  },
+};
+
+export default config;
+```
+
+See [Customize Vite config](#customize-vite-config) for details about using `viteFinal`.
+
+### React Docgen
+
+Docgen is used in Storybook to populate the props table in docs view, the controls panel, and for several other addons. Docgen is supported in Svelte, Vue 3, and React. React docgen is configurable via the [`typescript.reactDocgen`](https://storybook.js.org/docs/api/main-config-typescript#reactdocgen?ref=readme) setting in `.storybook/main.js`.
+
+```javascript
+export default {
+  typescript: {
+    reactDocgen: 'react-docgen`
+  }
+}
+```
+
+If you're using TypeScript, we encourage you to experiment and see which option works better for your project.
+
+### Note about working directory
+
+The builder will by default enable Vite's [server.fs.strict](https://vitejs.dev/config/#server-fs-strict)
+option, for increased security. The default project `root` is set to the parent directory of the
+Storybook configuration directory. This can be overridden in [viteFinal](https://storybook.js.org/docs/api/main-config-vite-final?ref=readme).
+
+## Known issues
+
+- HMR: saving a story file does not hot-module-reload, a full reload happens instead. HMR works correctly when saving component files.
+
+## Contributing
+
+The Vite builder cannot build itself.
+
+Are you willing to contribute? We are especially looking for Vue and Svelte experts, as the current maintainers are React users.
+
+Have a look at the GitHub issues with the `vite` label for known bugs. If you find any new bugs,
+feel free to create an issue or send a pull request!
+
+Please read the [How to contribute](/CONTRIBUTING.md) guide.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Builder-Webpack5
+
+Builder implemented with `webpack5` and `webpack5`-compatible loaders/plugins/config, used by `@storybook/core-server` to build the preview iframe.
+
+```js
+export default {
+  core: {
+    builder: '@storybook/builder-webpack5',
+  },
+};
+```
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc><doc title="README" desc="install &amp; quickstart."># Storybook for Angular
+
+See [documentation](https://storybook.js.org/docs/get-started/frameworks/angular?renderer=angular&ref=readme) for installation instructions, usage examples, APIs, and more.
+
+Learn more about Storybook at [storybook.js.org](https://storybook.js.org/?ref=readme).</doc></code><scripts><doc title="README" desc="install &amp; quickstart.">## ESLint plugin local rules
+
+This package serves as a local ESLint plugin to be used in the monorepo and help maintainers keep certain code standards.
+
+### Development
+
+If you're fixing a rule or creating a new one, make sure to:
+
+1. Make your code changes
+2. Rerun yarn install in the `code` directory. It's necessary to update the module reference
+3. Update the necessary `.eslintrc.js` files (if you are adding a new rule)
+4. Restart the ESLint server in your IDE</doc><doc title="Build Package" desc="docs page.">/**
+ * This is the entrypoint for when you run:
+ *
+ * @example `nr build storybook --watch`
+ *
+ * You can pass a list of package names to build, or use the `--all` flag to build all packages.
+ *
+ * You can also pass the `--watch` flag to build in watch mode.
+ *
+ * You can also pass the `--prod` flag to build in production mode.
+ *
+ * When you pass no package names, you will be prompted to select which packages to build.
+ */
+import { readFile } from 'node:fs/promises';
+
+import { exec } from 'child_process';
+import { program } from 'commander';
+import { posix, resolve, sep } from 'path';
+import picocolors from 'picocolors';
+import prompts from 'prompts';
+import windowSize from 'window-size';
+
+import { findMostMatchText } from './utils/diff';
+import { getWorkspaces } from './utils/workspace';
+
+async function run() {
+  const packages = (await getWorkspaces()).filter(({ name }) => name !== '@storybook/root');
+  const packageTasks = packages
+    .map((pkg) => {
+      let suffix = pkg.name.replace('@storybook/', '');
+      if (pkg.name === '@storybook/cli') {
+        suffix = 'sb-cli';
+      }
+      return {
+        ...pkg,
+        suffix,
+        defaultValue: false,
+        helpText: `build only the ${pkg.name} package`,
+      };
+    })
+    .reduce(
+      (acc, next) => {
+        acc[next.name] = next;
+        return acc;
+      },
+      {} as Record<
+        string,
+        { name: string; defaultValue: boolean; suffix: string; helpText: string }
+      >
+    );
+
+  const tasks: Record<
+    string,
+    {
+      name: string;
+      defaultValue: boolean;
+      suffix: string;
+      helpText: string;
+      value?: any;
+      location?: string;
+    }
+  > = {
+    watch: {
+      name: `watch`,
+      defaultValue: false,
+      suffix: '--watch',
+      helpText: 'build on watch mode',
+    },
+    prod: {
+      name: `prod`,
+      defaultValue: false,
+      suffix: '--prod',
+      helpText: 'build on production mode',
+    },
+    ...packageTasks,
+  };
+
+  const main = program
+    .version('5.0.0')
+    .option('--all', `build everything ${picocolors.gray('(all)')}`);
+
+  Object.keys(tasks)
+    .reduce((acc, key) => acc.option(tasks[key].suffix, tasks[key].helpText), main)
+    .parse(process.argv);
+
+  Object.keys(tasks).forEach((key) => {
+    const opts = program.opts();
+    // checks if a flag is passed e.g. yarn build --@storybook/addon-docs --watch
+    const containsFlag = program.args.includes(tasks[key].suffix);
+    tasks[key].value = containsFlag || opts.all;
+  });
+
+  let watchMode = process.argv.includes('--watch');
+  let prodMode = process.argv.includes('--prod');
+  let selection = Object.keys(tasks)
+    .map((key) => tasks[key])
+    .filter((item) => !['watch', 'prod'].includes(item.name) && item.value === true);
+
+  // user has passed invalid package name(s) - try to guess the correct package name(s)
+  if ((!selection.length && main.args.length >= 1) || selection.length !== main.args.length) {
+    const suffixList = Object.values(tasks)
+      .filter((t) => t.name.includes('@storybook'))
+      .map((t) => t.suffix);
+
+    for (const arg of main.args) {
+      if (!suffixList.includes(arg)) {
+        const matchText = findMostMatchText(suffixList, arg);
+
+        if (matchText) {
+          console.log(
+            `${picocolors.red('Error')}: ${picocolors.cyan(
+              arg
+            )} is not a valid package name, Did you mean ${picocolors.cyan(matchText)}?`
+          );
+        }
+      }
+    }
+
+    process.exit(0);
+  }
+
+  if (!selection.length) {
+    selection = await prompts(
+      [
+        {
+          type: 'toggle',
+          name: 'watch',
+          message: 'Start in watch mode',
+          initial: false,
+          active: 'yes',
+          inactive: 'no',
+        },
+        {
+          type: 'toggle',
+          name: 'prod',
+          message: 'Start in production mode',
+          initial: false,
+          active: 'yes',
+          inactive: 'no',
+        },
+        {
+          type: 'autocompleteMultiselect',
+          message: 'Select the packages to build',
+          name: 'todo',
+          min: 1,
+          hint: 'You can also run directly with package name like `yarn build core`, or `yarn build --all` for all packages!',
+          // @ts-expect-error @types incomplete
+          optionsPerPage: windowSize.height - 3, // 3 lines for extra info
+          choices: packages.map(({ name: key }) => ({
+            value: key,
+            title: tasks[key].name || key,
+            selected: (tasks[key] && tasks[key].defaultValue) || false,
+          })),
+        },
+      ],
+      { onCancel: () => process.exit(0) }
+    ).then(({ watch, prod, todo }: { watch: boolean; prod: boolean; todo: Array<string> }) => {
+      watchMode = watch;
+      prodMode = prod;
+      return todo?.map((key) => tasks[key]);
+    });
+  }
+
+  console.log('Building selected packages...');
+  let lastName = '';
+
+  selection.forEach(async (v) => {
+    const content = await readFile(resolve('../code', v.location, 'package.json'), 'utf-8');
+    const command = JSON.parse(content).scripts?.prep.split(posix.sep).join(sep);
+
+    if (!command) {
+      console.log(`No prep script found for ${v.name}`);
+      return;
+    }
+
+    const cwd = resolve(__dirname, '..', 'code', v.location);
+    const sub = exec(
+      `${command}${watchMode ? ' --watch' : ''}${prodMode ? ' --optimized' : ''} --reset`,
+      {
+        cwd,
+        env: {
+          NODE_ENV: 'production',
+          ...process.env,
+          FORCE_COLOR: '1',
+        },
+      }
+    );
+
+    sub.stdout?.on('data', (data) => {
+      if (lastName !== v.name) {
+        const prefix = `${picocolors.cyan(v.name)}:\n`;
+        process.stdout.write(prefix);
+      }
+      lastName = v.name;
+      process.stdout.write(data);
+    });
+    sub.stderr?.on('data', (data) => {
+      if (lastName !== v.name) {
+        const prefix = `${picocolors.cyan(v.name)}:\n`;
+        process.stdout.write(prefix);
+      }
+      lastName = v.name;
+      process.stderr.write(data);
+    });
+  });
+}
+
+run();</doc><doc title="Check Dependencies" desc="docs page.">// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
+/**
+ * This file needs to be run before any other script to ensure dependencies are installed Therefore,
+ * we cannot transform this file to Typescript, because it would require esbuild to be installed
+ */
+import { spawn } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import * as url from 'node:url';
+
+const logger = console;
+
+const dirname = url.fileURLToPath(new URL('.', import.meta.url));
+
+const checkDependencies = async () => {
+  const scriptsPath = join(dirname);
+  const codePath = join(dirname, '..', 'code');
+
+  const tasks = [];
+
+  if (!existsSync(join(scriptsPath, 'node_modules'))) {
+    tasks.push(
+      spawn('yarn', ['install'], {
+        cwd: scriptsPath,
+        shell: true,
+        stdio: ['inherit', 'inherit', 'inherit'],
+      })
+    );
+  }
+  if (!existsSync(join(codePath, 'node_modules'))) {
+    tasks.push(
+      spawn('yarn', ['install'], {
+        cwd: codePath,
+        shell: true,
+        stdio: ['inherit', 'inherit', 'inherit'],
+      })
+    );
+  }
+
+  if (tasks.length > 0) {
+    logger.log('installing dependencies');
+
+    await Promise.all(
+      tasks.map(
+        (t) =>
+          new Promise((res, rej) => {
+            t.on('exit', (code) => {
+              if (code !== 0) {
+                rej();
+              } else {
+                res();
+              }
+            });
+          })
+      )
+    ).catch(() => {
+      tasks.forEach((t) => t.kill());
+      throw new Error('Failed to install dependencies');
+    });
+
+    // give the filesystem some time
+    await new Promise((res) => {
+      setTimeout(res, 1000);
+    });
+  }
+};
+
+checkDependencies().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});</doc><doc title="Check Package" desc="docs page.">// This script makes sure that we can support type checking,
+// without having to build dts files for all packages in the monorepo.
+// It is not implemented yet for angular, svelte and vue.
+import { readFile } from 'node:fs/promises';
+
+import { program } from 'commander';
+// eslint-disable-next-line depend/ban-dependencies
+import { execaCommand } from 'execa';
+import { resolve } from 'path';
+import picocolors from 'picocolors';
+import prompts from 'prompts';
+import windowSize from 'window-size';
+
+import { getWorkspaces } from './utils/workspace';
+
+async function run() {
+  const packages = await getWorkspaces();
+  const packageTasks = packages
+    .map((pkg) => {
+      return {
+        ...pkg,
+        suffix: pkg.name.replace('@storybook/', ''),
+        defaultValue: false,
+        helpText: `check only the ${pkg.name} package`,
+      };
+    })
+    .reduce(
+      (acc, next) => {
+        acc[next.name] = next;
+        return acc;
+      },
+      {} as Record<
+        string,
+        { name: string; defaultValue: boolean; suffix: string; helpText: string }
+      >
+    );
+
+  const tasks: Record<
+    string,
+    {
+      name: string;
+      defaultValue: boolean;
+      suffix: string;
+      helpText: string;
+      value?: any;
+      location?: string;
+    }
+  > = {
+    watch: {
+      name: `watch`,
+      defaultValue: false,
+      suffix: '--watch',
+      helpText: 'check on watch mode',
+    },
+    ...packageTasks,
+  };
+
+  const main = program
+    .version('5.0.0')
+    .option('--all', `check everything ${picocolors.gray('(all)')}`);
+
+  Object.keys(tasks)
+    .reduce((acc, key) => acc.option(tasks[key].suffix, tasks[key].helpText), main)
+    .parse(process.argv);
+
+  Object.keys(tasks).forEach((key) => {
+    const opts = program.opts();
+    // checks if a flag is passed e.g. yarn check --@storybook/addon-docs --watch
+    const containsFlag = program.args.includes(tasks[key].suffix);
+    tasks[key].value = containsFlag || opts.all;
+  });
+
+  let selection;
+  let watchMode = false;
+  if (
+    !Object.keys(tasks)
+      .map((key) => tasks[key].value)
+      .filter(Boolean).length
+  ) {
+    selection = await prompts([
+      {
+        type: 'toggle',
+        name: 'mode',
+        message: 'Start in watch mode',
+        initial: false,
+        active: 'yes',
+        inactive: 'no',
+      },
+      {
+        type: 'autocompleteMultiselect',
+        message: 'Select the packages to check',
+        name: 'todo',
+        min: 1,
+        hint: 'You can also run directly with package name like `yarn check core`, or `yarn check --all` for all packages!',
+        // @ts-expect-error @types incomplete
+        optionsPerPage: windowSize.height - 3, // 3 lines for extra info
+        choices: packages.map(({ name: key }) => ({
+          value: key,
+          title: tasks[key].name || key,
+          selected: (tasks[key] && tasks[key].defaultValue) || false,
+        })),
+      },
+    ]).then(({ mode, todo }: { mode: boolean; todo: Array<string> }) => {
+      watchMode = mode;
+      return todo?.map((key) => tasks[key]);
+    });
+  } else {
+    // hits here when running yarn check --packagename
+    watchMode = process.argv.includes('--watch');
+    selection = Object.keys(tasks)
+      .map((key) => tasks[key])
+      .filter((item) => item.name !== 'watch' && item.value === true);
+  }
+
+  selection?.filter(Boolean).forEach(async (v) => {
+    const content = await readFile(resolve('../code', v.location, 'package.json'), 'utf-8');
+    const command = JSON.parse(content).scripts.check;
+    const cwd = resolve(__dirname, '..', 'code', v.location);
+    const sub = execaCommand(`${command}${watchMode ? ' --watch' : ''}`, {
+      cwd,
+      buffer: false,
+      shell: true,
+      cleanup: true,
+      env: {
+        NODE_ENV: 'production',
+      },
+    });
+
+    sub.stdout.on('data', (data) => {
+      process.stdout.write(`${picocolors.cyan(v.name)}:\n${data}`);
+    });
+    sub.stderr.on('data', (data) => {
+      process.stderr.write(`${picocolors.red(v.name)}:\n${data}`);
+    });
+  });
+}
+
+run().catch((e) => {
+  console.log(e);
+  process.exit(1);
+});</doc><doc title="Combine Compodoc" desc="docs page.">// Compodoc does not follow symlinks (it ignores them and their contents entirely)
+// So, we need to run a separate compodoc process on every symlink inside the project,
+// then combine the results into one large documentation.json
+import { lstat, readFile, realpath, writeFile } from 'node:fs/promises';
+
+// eslint-disable-next-line depend/ban-dependencies
+import { execaCommand } from 'execa';
+// eslint-disable-next-line depend/ban-dependencies
+import { globSync } from 'glob';
+import { join, resolve } from 'path';
+
+import { temporaryDirectory } from '../code/core/src/common/utils/cli';
+import { esMain } from './utils/esmain';
+
+const logger = console;
+
+// Find all symlinks in a directory. There may be more efficient ways to do this, but this works.
+async function findSymlinks(dir: string) {
+  const potentialDirs = await globSync(`${dir}/**/*/`);
+
+  return (
+    await Promise.all(
+      potentialDirs.map(
+        async (p) => [p, (await lstat(p.replace(/\/$/, ''))).isSymbolicLink()] as [string, boolean]
+      )
+    )
+  )
+    .filter(([, s]) => s)
+    .map(([p]) => p);
+}
+
+async function run(cwd: string) {
+  const dirs = [
+    cwd,
+    ...(await findSymlinks(resolve(cwd, './src'))),
+    ...(await findSymlinks(resolve(cwd, './stories'))),
+    ...(await findSymlinks(resolve(cwd, './template-stories'))),
+  ];
+
+  const docsArray: Record<string, any>[] = await Promise.all(
+    dirs.map(async (dir) => {
+      const outputDir = await temporaryDirectory();
+      const resolvedDir = await realpath(dir);
+      await execaCommand(
+        `yarn --cwd ${cwd} compodoc ${resolvedDir} -p ./tsconfig.json -e json -d ${outputDir}`,
+        { cwd }
+      );
+      const contents = await readFile(join(outputDir, 'documentation.json'), 'utf8');
+      try {
+        return JSON.parse(contents);
+      } catch (err) {
+        logger.error(`Error parsing JSON at ${outputDir}\n\n`);
+        logger.error(contents);
+        throw err;
+      }
+    })
+  );
+
+  // Compose together any array entries, discard anything else (we happen to only read the array fields)
+  const documentation = docsArray.slice(1).reduce((acc, entry) => {
+    return Object.fromEntries(
+      Object.entries(acc).map(([key, accValue]) => {
+        if (Array.isArray(accValue)) {
+          return [key, [...accValue, ...entry[key]]];
+        }
+        return [key, accValue];
+      })
+    );
+  }, docsArray[0]);
+
+  await writeFile(join(cwd, 'documentation.json'), JSON.stringify(documentation));
+}
+
+if (esMain(import.meta.url)) {
+  run(resolve(process.argv[2]))
+    .then(() => process.exit(0))
+    .catch((err) => {
+      logger.error();
+      logger.error(err);
+      process.exit(1);
+    });
+}</doc><doc title="Create Nx Sandbox Projects" desc="docs page.">import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+
+import * as templates from '../code/lib/cli-storybook/src/sandbox-templates';
+
+// @ts-expect-error somehow TS thinks there is a default export
+const { allTemplates, merged, daily, normal } = (templates.default ||
+  templates) as typeof templates;
+
+const projectJson = (name: string, framework: string, tags: string[]) => ({
+  name,
+  projectType: 'application',
+  implicitDependencies: [
+    'cli',
+    'test',
+    'essentials',
+    'interactions',
+    'addon-vitest',
+    'links',
+    'onboarding',
+    'blocks',
+    ...(!['storybook-framework-qwik', 'storybook-solidjs-vite'].includes(framework)
+      ? [framework]
+      : []),
+  ],
+  targets: {
+    sandbox: {},
+    'sb:dev': {},
+    'sb:build': {},
+  },
+  tags,
+});
+Object.entries(allTemplates).forEach(([key, value]) => {
+  const p = key.replaceAll('/', '-');
+  const full = join(process.cwd(), '../code/sandbox', p, 'project.json');
+
+  console.log(full);
+  const framework = value.expected.framework.replace('@storybook/', '');
+  console.log(framework);
+  console.log();
+  const tags = [
+    ...(normal.includes(key as any) ? ['ci:normal'] : []),
+    ...(merged.includes(key as any) ? ['ci:merged'] : []),
+    ...(daily.includes(key as any) ? ['ci:daily'] : []),
+  ];
+  ensureDirectoryExistence(full);
+  console.log(full);
+  writeFileSync(
+    full,
+    '// auto-generated from scripts/create-nx-sandbox-projects.ts\n' +
+      JSON.stringify(projectJson(key, framework, tags), null, 2),
+    {
+      encoding: 'utf-8',
+    }
+  );
+});
+
+function ensureDirectoryExistence(filePath: string): void {
+  const dir = dirname(filePath);
+  if (existsSync(dir)) {
+    return;
+  }
+  ensureDirectoryExistence(dir);
+  mkdirSync(dir);
+}</doc><doc title="Dangerfile" desc="docs page.">/**
+ * IMPORTANT: This file has unique constraints due to how Danger.js executes it.
+ *
+ * Restrictions:
+ *
+ * - NO TypeScript: This file runs without any transpilation/transformation
+ * - NO external dependencies: Scripts dependencies are not installed in CI
+ * - NO Node.js built-ins: Even `fs` and other core modules don't work in Danger's runtime
+ * - MUST use `import` for Danger API: The Danger runtime only processes `import` statements, not
+ *   `require()`. These imports get compiled to global references by Danger.js
+ * - CAN use `require()` for local files: Works for things like package.json
+ *
+ * Why: We want Danger to run as fast as possible in CI without installing dependencies or running
+ * build processes.
+ */
+import { danger, fail } from 'danger';
+
+/**
+ * Returns the intersection of two arrays
+ *
+ * @template T
+ * @param {ReadonlyArray<T>} a - First array
+ * @param {ReadonlyArray<T>} b - Second array
+ * @returns {T[]} Array containing elements present in both arrays
+ */
+function intersection(a, b) {
+  return a.filter((v) => b.includes(v));
+}
+
+const pkg = require('../code/package.json');
+
+const Versions = {
+  PATCH: 'PATCH',
+  MINOR: 'MINOR',
+  MAJOR: 'MAJOR',
+};
+
+const ciLabels = ['ci:normal', 'ci:merged', 'ci:daily', 'ci:docs'];
+
+const { labels } = danger.github.issue;
+
+const prLogConfig = pkg['pr-log'];
+
+const branchVersion = Versions.MINOR;
+
+/** @param {string[]} labels */
+const checkRequiredLabels = (labels) => {
+  const forbiddenLabels = [
+    'ci: do not merge',
+    'in progress',
+    ...(branchVersion !== Versions.MAJOR ? ['BREAKING CHANGE'] : []),
+    ...(branchVersion === Versions.PATCH ? ['feature request'] : []),
+  ];
+
+  const requiredLabels = [
+    ...(prLogConfig?.skipLabels ?? []),
+    ...(prLogConfig?.validLabels ?? []).map(([label]) => label),
+  ];
+
+  const blockingLabels = intersection(forbiddenLabels, labels);
+  if (blockingLabels.length > 0) {
+    fail(
+      `PR is marked with ${blockingLabels.map((label) => `"${label}"`).join(', ')} label${
+        blockingLabels.length > 1 ? 's' : ''
+      }.`
+    );
+  }
+
+  const foundRequiredLabels = intersection(requiredLabels, labels);
+  if (foundRequiredLabels.length === 0) {
+    fail(`PR is not labeled with one of: ${JSON.stringify(requiredLabels)}`);
+  } else if (foundRequiredLabels.length > 1) {
+    fail(`Please choose only one of these labels: ${JSON.stringify(foundRequiredLabels)}`);
+  }
+
+  const foundCILabels = intersection(ciLabels, labels);
+  if (foundCILabels.length === 0) {
+    fail(`PR is not labeled with one of: ${JSON.stringify(ciLabels)}`);
+  } else if (foundCILabels.length > 1) {
+    fail(`Please choose only one of these labels: ${JSON.stringify(foundCILabels)}`);
+  }
+};
+
+/** @param {string} title */
+const checkPrTitle = (title) => {
+  const match = title.match(/^[A-Z].+:\s[A-Z].+$/);
+  if (!match) {
+    fail(
+      `PR title must be in the format of "Area: Summary", With both Area and Summary starting with a capital letter
+Good examples:
+- "Docs: Describe Canvas Doc Block"
+- "Svelte: Support Svelte v4"
+Bad examples:
+- "add new api docs"
+- "fix: Svelte 4 support"
+- "Vue: improve docs"`
+    );
+  }
+};
+
+if (prLogConfig) {
+  checkRequiredLabels(labels.map((l) => l.name));
+  checkPrTitle(danger.github.pr.title);
+}</doc><doc title="Event Log Checker" desc="docs page.">import assert from 'assert';
+import picocolors from 'picocolors';
+
+// import versions from '../code/core/src/common/versions';
+import { oneWayHash } from '../code/core/src/telemetry/one-way-hash';
+import { allTemplates } from '../code/lib/cli-storybook/src/sandbox-templates';
+import { esMain } from './utils/esmain';
+
+const PORT = process.env.PORT || 6007;
+
+type EventType = 'build' | 'test-run';
+type EventDefinition = {
+  noBoot?: boolean;
+};
+
+const eventTypeDefinitions: Record<EventType, EventDefinition> = {
+  build: {},
+  'test-run': { noBoot: true },
+};
+
+async function run() {
+  const [eventType, templateName] = process.argv.slice(2);
+  let testMessage = '';
+
+  // very simple jest-like test fn for better error readability
+  const test = (message: string, fn: () => void) => {
+    testMessage = message;
+    fn();
+  };
+
+  try {
+    if (!eventType || !templateName) {
+      throw new Error(
+        `Need eventType and templateName; call with ./event-log-checker <eventType> <templateName>`
+      );
+    }
+
+    const definition = eventTypeDefinitions[eventType as EventType];
+
+    if (!definition) {
+      throw new Error(`Unexpected eventType '${eventType}'`);
+    }
+
+    const template = allTemplates[templateName as keyof typeof allTemplates];
+
+    if (!template) {
+      throw new Error(`Unexpected template '${templateName}'`);
+    }
+
+    const events: any = await (await fetch(`http://localhost:${PORT}/event-log`)).json();
+    const eventsWithoutMocks = events.filter((e: any) => e.eventType !== 'mocking');
+
+    if (definition.noBoot) {
+      test('Should log 1 event', () => {
+        assert.equal(
+          eventsWithoutMocks.length,
+          1,
+          `Expected 1 event but received ${
+            eventsWithoutMocks.length
+          } instead. The following events were logged: ${JSON.stringify(events)}`
+        );
+      });
+    } else {
+      // two or three events are logged, depending on whether the template has a `vitest-integration` task
+      test('Should log 2 or 3 events', () => {
+        assert.ok(
+          eventsWithoutMocks.length === 2 || eventsWithoutMocks.length === 3,
+          `Expected 2 or 3 events but received ${
+            eventsWithoutMocks.length
+          } instead. The following events were logged: ${JSON.stringify(eventsWithoutMocks)}`
+        );
+      });
+    }
+
+    if (eventsWithoutMocks.length === 0) {
+      throw new Error('No events were logged');
+    }
+
+    const [bootEvent, mainEvent] = definition.noBoot
+      ? [null, eventsWithoutMocks[0]]
+      : eventsWithoutMocks;
+
+    // const storybookVersion = versions.storybook;
+    // if (bootEvent) {
+    //   test('boot event should have cliVersion and storybookVersion in context', () => {
+    //     assert.equal(bootEvent.context.cliVersion, storybookVersion);
+    //     assert.equal(bootEvent.context.storybookVersion, storybookVersion);
+    //   });
+    // }
+
+    // test(`main event should have storybookVersion in context`, () => {
+    //   assert.equal(mainEvent.context.storybookVersion, storybookVersion);
+    // });
+
+    // test(`main event should have storybookVersion in metadata`, () => {
+    //   assert.equal(mainEvent.metadata.storybookVersion, storybookVersion);
+    // });
+
+    if (bootEvent) {
+      test(`Should log a boot event with a payload of type ${eventType}`, () => {
+        assert.equal(bootEvent.eventType, 'boot');
+        assert.equal(bootEvent.payload?.eventType, eventType);
+      });
+    }
+
+    test(`main event should be ${eventType} and contain correct id and session id`, () => {
+      assert.equal(mainEvent.eventType, eventType);
+      assert.ok(typeof mainEvent.eventId === 'string');
+      assert.ok(typeof mainEvent.sessionId === 'string');
+      if (bootEvent) {
+        assert.notEqual(mainEvent.eventId, bootEvent.eventId);
+        assert.equal(mainEvent.sessionId, bootEvent.sessionId);
+      }
+    });
+
+    test(`main event should contain anonymousId properly hashed`, () => {
+      const templateDir = `sandbox/${templateName.replace('/', '-')}`;
+      const unhashedId = `github.com/storybookjs/storybook.git${templateDir}`;
+      assert.equal(mainEvent.context.anonymousId, oneWayHash(unhashedId));
+    });
+
+    // Not sure if it's worth testing this as we are not providing this value in CI.
+    // For now the code is commented out so we can discuss later.
+    // test(`main event should contain a userSince value`, () => {
+    //   assert.ok(typeof mainEvent.metadata.userSince === 'number');
+    // });
+
+    const {
+      expected: { renderer, builder, framework },
+    } = template;
+
+    test(`main event should contain correct packages from template's "expected" field`, () => {
+      assert.equal(mainEvent.metadata.renderer, renderer);
+      assert.equal(mainEvent.metadata.builder, builder);
+      assert.equal(mainEvent.metadata.framework.name, framework);
+    });
+  } catch (err) {
+    if (err instanceof assert.AssertionError) {
+      console.log(`Assertions failed for ${picocolors.bold(templateName)}\n`);
+      console.log(picocolors.bold(picocolors.red(`✕ ${testMessage}:`)));
+      console.log(err);
+      process.exit(1);
+    }
+    throw err;
+  }
+}
+
+export {};
+
+if (esMain(import.meta.url)) {
+  run()
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.log(err);
+      process.exit(1);
+    });
+}</doc><doc title="Event Log Collector" desc="docs page.">import { json } from '@polka/parse';
+import polka from 'polka';
+
+const PORT = process.env.PORT || 6007;
+
+const server = polka();
+server.use(json());
+
+const events: Record<string, unknown>[] = [];
+server.post('/event-log', (req, res) => {
+  console.log(`Received event ${req.body.eventType}`);
+  events.push(req.body);
+  res.end('OK');
+});
+
+server.get('/event-log', (_req, res) => {
+  console.log(`Sending ${events.length} events`);
+  res.end(JSON.stringify(events));
+});
+
+server.listen(PORT, () => {
+  console.log(`Event log listening on ${PORT}`);
+});</doc><doc title="Get Report Message" desc="docs page.">import { readFile } from 'node:fs/promises';
+
+// eslint-disable-next-line depend/ban-dependencies
+import { execaCommand } from 'execa';
+import { join } from 'path';
+
+import { CODE_DIRECTORY } from './utils/constants';
+import { esMain } from './utils/esmain';
+
+type Branch = 'main' | 'next' | 'alpha' | 'next-release' | 'latest-release';
+type Workflow = 'merged' | 'daily';
+
+const getFooter = async (branch: Branch, workflow: Workflow, job: string) => {
+  if (job === 'chromatic-sandboxes') {
+    return `\n\nThis might not necessarily be a bug, it could be a visual diff that you have to review and approve. Please check it!`;
+  }
+
+  // The CI workflows can run on release branches and we should display the version number
+  if (branch === 'next-release' || branch === 'latest-release') {
+    const content = await readFile(join(CODE_DIRECTORY, 'package.json'), 'utf8');
+    const packageJson = JSON.parse(content);
+
+    // running in alpha branch we should just show the version which failed
+    return `\n**Version: ${packageJson.version}**`;
+  }
+
+  const mergeCommits =
+    workflow === 'merged'
+      ? // show single merge for merged workflow
+        `git log -1 --pretty=format:"\`%h\` %<(12)%ar %s [%an]"`
+      : // show last 24h merges for daily workflow
+        `git log --merges --since="24 hours ago" --pretty=format:"\`%h\` %<(12)%ar %s [%an]"`;
+
+  const result = await execaCommand(mergeCommits, { shell: true, cleanup: true });
+  const formattedResult = result.stdout
+    // discord needs escaped line breaks
+    .replace(/\n/g, '\\n')
+    // make links out of pull request ids
+    .replace(/Merge pull request #/g, 'https://github.com/storybookjs/storybook/pull/');
+
+  return `\n\n**Relevant PRs:**\n${formattedResult}`;
+};
+
+// This command is run in Circle CI on failures, to get a rich message to report to Discord
+// Usage: yarn get-report-message type workflow branch
+async function run() {
+  const [, , workflow = '', template = 'none'] = process.argv;
+
+  if (!workflow) {
+    throw new Error('[get-report-message] Missing workflow argument.');
+  }
+
+  const { CIRCLE_BRANCH: currentBranch = '', CIRCLE_JOB: currentJob = '' } = process.env;
+
+  if (!currentBranch || !currentJob) {
+    throw new Error(
+      '[get-report-message] Missing CIRCLE_BRANCH or CIRCLE_JOB environment variables.'
+    );
+  }
+
+  const title = `Oh no! The **${currentJob}** job has failed${
+    template !== 'none' ? ` for **${template}**.` : '.'
+  }`;
+  const body = `\n\n**Branch**: \`${currentBranch}\`\n**Workflow:** ${workflow}`;
+  const footer = await getFooter(currentBranch as Branch, workflow as Workflow, currentJob);
+
+  console.log(`${title}${body}${footer}`.replace(/\n/g, '\\n'));
+}
+
+if (esMain(import.meta.url)) {
+  run().catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
+}</doc></scripts><test storybooks><doc title="README" desc="install &amp; quickstart."># Storybook Demo
+
+This is a demo app to test Ember integration with Storybook. Run `yarn install` to sync Storybook module with the source code and run `yarn storybook` to start the Storybook.</doc><doc title="README" desc="install &amp; quickstart."># Server Kitchen Sink
+
+This is a demo app to test a standalone server using integration with Storybook using `@storybook/server`.
+
+Run `yarn install` to sync Storybook module with the source.
+
+Run `yarn start` to start.
+
+This starts an ExpressJS server on port `1337` and Storybook on port `9006`.</doc><doc title="README" desc="install &amp; quickstart."># Standalone Preview
+
+This project demonstrates a preview running in standalone mode using `parcel`.
+
+To run the standalone preview:
+
+```
+yarn storybook-preview
+```
+
+This starts a `parcel` dev server on port `1337`.
+
+To view the stories in the storybook UI:
+
+```
+yarn storybook
+```
+
+This runs the Storybook dev server (Found in ../official-storybook), but instead of showing `official-storybook`'s stories, it attaches to the `parcel` dev server, lists its stories in the navigation, and shows its stories in the preview iframe.
+
+> NOTE: This can be run from any working storybook, not just `official-storybook`!</doc><doc title="Yarn Pnp" desc="docs page."><!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>vue3-vite</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
+</html></doc><doc title="App" desc="docs page."><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>ember-example</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    {{content-for "head"}}
+
+    <link integrity="" rel="stylesheet" href="{{rootURL}}assets/vendor.css" />
+    <link integrity="" rel="stylesheet" href="{{rootURL}}assets/ember-example.css" />
+
+    {{content-for "head-footer"}}
+  </head>
+  <body>
+    {{content-for "body"}}
+
+    <script src="{{rootURL}}assets/vendor.js"></script>
+    <script src="{{rootURL}}assets/ember-example.js"></script>
+
+    {{content-for "body-footer"}}
+  </body>
+</html></doc><doc title="Ember Output" desc="docs page."><!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>ember-example</title>
+    <meta name="description" content="" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    
+<meta name="ember-example/config/environment" content="%7B%22modulePrefix%22%3A%22ember-example%22%2C%22environment%22%3A%22development%22%2C%22rootURL%22%3A%22%2F%22%2C%22locationType%22%3A%22auto%22%2C%22EmberENV%22%3A%7B%22FEATURES%22%3A%7B%7D%2C%22EXTEND_PROTOTYPES%22%3A%7B%22Date%22%3Afalse%7D%2C%22_APPLICATION_TEMPLATE_WRAPPER%22%3Afalse%2C%22_JQUERY_INTEGRATION%22%3Afalse%2C%22_TEMPLATE_ONLY_GLIMMER_COMPONENTS%22%3Atrue%7D%2C%22APP%22%3A%7B%22name%22%3A%22ember-example%22%2C%22version%22%3A%227.0.0-alpha.42%2Bf020a9b6%22%7D%7D" />
+
+    <link integrity="" rel="stylesheet" href="/assets/vendor.css" />
+    <link integrity="" rel="stylesheet" href="/assets/ember-example.css" />
+
+    
+  </head>
+  <body>
+    
+
+    <script src="/assets/vendor.js"></script>
+    <script src="/assets/ember-example.js"></script>
+
+    
+  </body>
+</html></doc><doc title="Svelte" desc="docs page."><!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vite + Svelte + TS</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html></doc><doc title="Playwright" desc="docs page."><!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing Page</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="./index.ts"></script>
+</body>
+
+</html></doc><doc title="Playwright" desc="docs page."><!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Testing Page</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="./index.ts"></script>
+  </body>
+</html></doc><doc title="Playwright" desc="docs page."><!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testing Page</title>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="./index.ts"></script>
+</body>
+
+</html></doc></test storybooks></project>

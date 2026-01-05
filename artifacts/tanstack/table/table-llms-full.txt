@@ -1,0 +1,3240 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/installation.md ---
+---
+title: Installation
+---
+
+Before we dig in to the API, let's get you set up!
+
+Install your table adapter as a dependency using your favorite npm package manager.
+
+_Only install ONE of the following packages:_
+
+## React Table
+
+```bash
+npm install @tanstack/react-table
+```
+
+The `@tanstack/react-table` package works with React 16.8, React 17, React 18, and React 19.
+
+> NOTE: Even though the react adapter works with React 19, it may not work with the new React Compiler that's coming out along-side React 19. This may be fixed in future TanStack Table updates.
+
+## Vue Table
+
+```bash
+npm install @tanstack/vue-table
+```
+
+The `@tanstack/vue-table` package works with Vue 3.
+
+## Solid Table
+
+```bash
+npm install @tanstack/solid-table
+```
+
+The `@tanstack/solid-table` package works with Solid-JS 1
+
+## Svelte Table
+
+```bash
+npm install @tanstack/svelte-table
+```
+
+The `@tanstack/svelte-table` package works with Svelte 3 and Svelte 4.
+
+> NOTE: There is not a built-in Svelte 5 adapter yet, but you can still use TanStack Table with Svelte 5 by installing the `@tanstack/table-core` package and using a custom adapter from the community. See this [PR](https://github.com/TanStack/table/pull/5403) for inspiration.
+
+## Qwik Table
+
+```bash
+npm install @tanstack/qwik-table
+```
+
+The `@tanstack/qwik-table` package works with Qwik 1.
+
+> NOTE: There will be a "breaking change" release in the near future to support Qwik 2. This will be released as a minor version bump, but will be documented. Qwik 2 itself will have no breaking changes, but its name on the npm registry will change, and require different peer dependencies.
+
+> NOTE: The current qwik adapter only works with CSR. More improvements may not be available until a future table version.
+
+## Angular Table
+
+```bash
+npm install @tanstack/angular-table
+```
+
+The `@tanstack/angular-table` package works with Angular 17. The Angular adapter uses a new Angular Signal implementation.
+
+## Lit Table
+
+```bash
+npm install @tanstack/lit-table
+```
+
+The `@tanstack/lit-table` package works with Lit 3.
+
+## Table Core (no framework)
+
+```bash
+npm install @tanstack/table-core
+```
+
+Don't see your favorite framework (or favorite version of your framework) listed? You can always just use the `@tanstack/table-core` package and build your own adapter in your own codebase. Usually, only a thin wrapper is needed to manage state and rendering for your specific framework. Browse the [source code](https://github.com/TanStack/table/tree/main/packages) of all of the other adapters to see how they work.
+
+
+## Links discovered
+- [PR](https://github.com/TanStack/table/pull/5403)
+- [source code](https://github.com/TanStack/table/tree/main/packages)
+
+--- docs/overview.md ---
+---
+title: Overview
+---
+
+TanStack Table's core is **framework agnostic**, which means its API is the same regardless of the framework you're using. Adapters are provided to make working with the table core easier depending on your framework. See the Adapters menu for available adapters.
+
+## Typescript
+
+While TanStack Table is written in [TypeScript](https://www.typescriptlang.org/), using TypeScript in your application is optional (but recommended as it comes with outstanding benefits to both you and your codebase)
+
+## Headless
+
+As it was mentioned extensively in the [Intro](./introduction.md) section, TanStack Table is **headless**. This means that it doesn't render any DOM elements, and instead relies on you, the UI/UX developer to provide the table's markup and styles. This is a great way to build a table that can be used in any UI framework, including React, Vue, Solid, Svelte, Qwik, and even JS-to-native platforms like React Native!
+
+## Core Objects and Types
+
+The table core uses the following abstractions, commonly exposed by adapters:
+
+- Column Defs
+  - Objects used to configure a column and its data model, display templates, and more
+- Table
+  - The core table object containing both state and API
+- Table Data
+  - The core data array you provide the table
+- Columns
+  - Each column mirrors its respective column def and also provides column-specific APIs
+- Rows
+  - Each row mirrors its respective row data and provides row-specific APIs
+- Header Groups
+  - Header groups are computed slices of nested header levels, each containing a group of headers
+- Headers
+  - Each header is either directly associated with or derived from its column def and provides header-specific APIs
+- Cells
+  - Each cell mirrors its respective row-column intersection and provides cell-specific APIs
+
+There are even more structures that pertain to specific features like filtering, sorting, grouping, etc, which you can find in the [features](./guide/features.md) section.
+
+
+## Links discovered
+- [TypeScript](https://www.typescriptlang.org/)
+- [Intro](https://github.com/tanstack/table/blob/main/docs/introduction.md)
+- [features](https://github.com/tanstack/table/blob/main/docs/guide/features.md)
+
+--- docs/faq.md ---
+---
+title: FAQ
+---
+
+## How do I stop infinite rendering loops?
+
+If you are using React, there is a very common pitfall that can cause infinite rendering. If you fail to give your `columns`, `data`, or `state` a stable reference, React will enter an infinite loop of re-rendering upon any change to the table state.
+
+Why does this happen? Is this a bug in TanStack Table? **No**, it is not. *This is fundamentally how React works*, and properly managing your columns, data, and state will prevent this from happening.
+
+TanStack Table is designed to trigger a re-render whenever either the `data` or `columns` that are passed into the table change, or whenever any of the table's state changes.
+
+> Failing to give `columns` or `data` stable references can cause an infinite loop of re-renders.
+
+### Pitfall 1: Creating new columns or data on every render
+
+```js
+export default function MyComponent() {
+  //😵 BAD: This will cause an infinite loop of re-renders because `columns` is redefined as a new array on every render!
+  const columns = [
+    // ...
+  ];
+
+  //😵 BAD: This will cause an infinite loop of re-renders because `data` is redefined as a new array on every render!
+  const data = [
+    // ...
+  ];
+
+  //❌ Columns and data are defined in the same scope as `useReactTable` without a stable reference, will cause infinite loop!
+  const table = useReactTable({
+    columns,
+    data,
+  });
+
+  return <table>...</table>;
+}
+```
+
+### Solution 1: Stable references with useMemo or useState
+
+In React, you can give a "stable" reference to variables by defining them outside/above the component, or by using `useMemo` or `useState`, or by using a 3rd party state management library (like Redux or React Query 😉)
+
+```js
+//✅ OK: Define columns outside of the component
+const columns = [
+  // ...
+];
+
+//✅ OK: Define data outside of the component
+const data = [
+  // ...
+];
+
+// Usually it's more practical to define columns and data inside the component, so use `useMemo` or `useState` to give them stable references
+export default function MyComponent() {
+  //✅ GOOD: This will not cause an infinite loop of re-renders because `columns` is a stable reference
+  const columns = useMemo(() => [
+    // ...
+  ], []);
+
+  //✅ GOOD: This will not cause an infinite loop of re-renders because `data` is a stable reference
+  const [data, setData] = useState(() => [
+    // ...
+  ]);
+
+  // Columns and data are defined in a stable reference, will not cause infinite loop!
+  const table = useReactTable({
+    columns,
+    data,
+  });
+
+  return <table>...</table>;
+}
+```
+
+### Pitfall 2: Mutating columns or data in place
+
+Even if you give your initial `columns` and `data` stable references, you can still run into infinite loops if you mutate them in place. This is a common pitfall that you may not notice that you are doing at first. Something as simple as an inline `data.filter()` can cause an infinite loop if you are not careful.
+
+```js
+export default function MyComponent() {
+  //✅ GOOD
+  const columns = useMemo(() => [
+    // ...
+  ], []);
+
+  //✅ GOOD (React Query provides stable references to data automatically)
+  const { data, isLoading } = useQuery({
+    //...
+  });
+
+  const table = useReactTable({
+    columns,
+    //❌ BAD: This will cause an infinite loop of re-renders because `data` is mutated in place (destroys stable reference)
+    data: data?.filter(d => d.isActive) ?? [],
+  });
+
+  return <table>...</table>;
+}
+```
+
+### Solution 2: Memoize your data transformations
+
+To prevent infinite loops, you should always memoize your data transformations. This can be done with `useMemo` or similar.
+
+```js
+export default function MyComponent() {
+  //✅ GOOD
+  const columns = useMemo(() => [
+    // ...
+  ], []);
+
+  //✅ GOOD
+  const { data, isLoading } = useQuery({
+    //...
+  });
+
+  //✅ GOOD: This will not cause an infinite loop of re-renders because `filteredData` is memoized
+  const filteredData = useMemo(() => data?.filter(d => d.isActive) ?? [], [data]);
+
+  const table = useReactTable({
+    columns,
+    data: filteredData, // stable reference!
+  });
+
+  return <table>...</table>;
+}
+```
+
+### React Forget
+
+When React Forget is released, these problems might be a thing of the past. Or just use Solid.js... 🤓
+
+## How do I stop my table state from automatically resetting when my data changes?
+
+Most plugins use state that _should_ normally reset when the data sources changes, but sometimes you need to suppress that from happening if you are filtering your data externally, or immutably editing your data while looking at it, or simply doing anything external with your data that you don't want to trigger a piece of table state to reset automatically.
+
+For those situations, each plugin provides a way to disable the state from automatically resetting internally when data or other dependencies for a piece of state change. By setting any of them to `false`, you can stop the automatic resets from being triggered.
+
+Here is a React-based example of stopping basically every piece of state from changing as they normally do while we edit the `data` source for a table:
+
+```js
+const [data, setData] = React.useState([])
+const skipPageResetRef = React.useRef()
+
+const updateData = newData => {
+  // When data gets updated with this function, set a flag
+  // to disable all of the auto resetting
+  skipPageResetRef.current = true
+
+  setData(newData)
+}
+
+React.useEffect(() => {
+  // After the table has updated, always remove the flag
+  skipPageResetRef.current = false
+})
+
+useReactTable({
+  ...
+  autoResetPageIndex: !skipPageResetRef.current,
+  autoResetExpanded: !skipPageResetRef.current,
+})
+```
+
+Now, when we update our data, the above table states will not automatically reset!
+
+
+--- docs/introduction.md ---
+---
+title: Introduction
+---
+
+TanStack Table is a **Headless UI** library for building powerful tables & datagrids for TS/JS, React, Vue, Solid, Qwik, and Svelte.
+
+## What is "headless" UI?
+
+**Headless UI** is a term for libraries and utilities that provide the logic, state, processing and API for UI elements and interactions, but **do not provide markup, styles, or pre-built implementations**. Scratching your head yet? 😉 Headless UI has a few main goals:
+
+The hardest parts of building complex UIs usually revolve around state, events, side-effects, data computation/management. By removing these concerns from the markup, styles and implementation details, our logic and components can be more modular and reusable.
+
+Building UI is a very branded and custom experience, even if that means choosing a design system or adhering to a design spec. To support this custom experience, component-based UI libraries need to support a massive (and seemingly endless) API surface around markup and style customization. Headless UI libraries decouple your logic from your UI
+
+When you use a headless UI library, the complex task of **data-processing, state-management, and business logic** are handled for you, leaving you to worry about higher-cardinality decisions that differ across implementations and use cases.
+
+> Want to dive deeper? [Read more about Headless UI](https://www.merrickchristensen.com/articles/headless-user-interface-components/).
+
+## Component-based libraries vs Headless libraries
+
+In the ecosystem of table/datagrid libraries, there are two main categories:
+
+- Component-based table libraries
+- Headless table libraries
+
+### Which kind of table library should I use?
+
+Each approach has subtle tradeoffs. Understanding these subtleties will help you make the right decision for your application and team.
+
+### Component-based Table Libraries
+
+Component-based table libraries will typically supply you with a feature-rich drop-in solution and ready-to-use components/markup complete with styles/theming. [AG Grid](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable) is a great example of this type of table library.
+
+**Pros:**
+
+- Ship with ready-to-use markup/styles
+- Little setup required
+- Turn-key experience
+
+**Cons:**
+
+- Less control over markup
+- Custom styles are typically theme-based
+- Larger bundle-sizes
+- Highly coupled to framework adapters and platforms
+
+**If you want a ready-to-use table and design/bundle-size are not hard requirements**, then you should consider using a component-based table library.
+
+There are a lot of component-based table libraries out there, but we believe [AG Grid](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable) is the gold standard and is by far our favorite grid-sibling (don't tell the others 🤫).
+
+### Headless Table Libraries
+
+Headless table libraries will typically supply you with functions, state, utilities and event listeners to build your own table markup or attach to existing table markups.
+
+**Pros:**
+
+- Full control over markup and styles
+- Supports all styling patterns (CSS, CSS-in-JS, UI libraries, etc)
+- Smaller bundle-sizes
+- Portable. Run anywhere JS runs!
+
+**Cons:**
+
+- More setup required
+- No markup, styles or themes provided
+
+**If you want a lighter-weight table or full control over the design**, then you should consider using a headless table library.
+
+There are very few headless table libraries out there and obviously, **TanStack Table** is our favorite!
+
+
+## Links discovered
+- [Read more about Headless UI](https://www.merrickchristensen.com/articles/headless-user-interface-components/)
+- [AG Grid](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable)
+
+--- docs/vanilla.md ---
+---
+title: Vanilla TS/JS
+---
+
+The `@tanstack/table-core` library contains the core logic for TanStack Table. If you are using a non-standard framework or don't have access to a framework, you can use the core library directly via TypeScript or JavaScript.
+
+## `createTable`
+
+Takes an `options` object and returns a table.
+
+```tsx
+import { createTable } from '@tanstack/table-core'
+
+const table = createTable(options)
+```
+
+
+--- docs/enterprise/ag-grid.md ---
+---
+title: AG Grid - An alternative enterprise data-grid solution
+---
+
+<p>
+  <a href="https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable">
+    <img src="https://blog.ag-grid.com/content/images/2021/02/new-logo-1.png" style={{ width:400 }} />
+  </a>
+</p>
+
+While we clearly love TanStack Table, we acknowledge that it is not a "batteries" included product packed with customer support and enterprise polish. We realize that some of our users may need this though! To help out here, we want to introduce you to AG Grid, an enterprise-grade data grid solution that can supercharge your applications with its extensive feature set and robust performance. While TanStack Table is also a powerful option for implementing data grids, we believe in providing our users with a diverse range of choices that best fit their specific requirements. AG Grid is one such choice, and we're excited to highlight its capabilities for you.
+
+## Why Choose [AG Grid](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable)?
+
+Here are some good reasons to consider AG Grid for your next project:
+
+### Comprehensive Feature Set
+
+AG Grid offers an extensive set of features, making it a versatile and powerful data grid solution. With AG Grid, you get access to a wide range of functionalities that cater to the needs of complex enterprise applications. From advanced sorting, filtering, and grouping capabilities to column pinning, multi-level headers, and tree data structure support, AG Grid provides you with the tools to create dynamic and interactive data grids that meet your application's unique demands.
+
+### High Performance
+
+When it comes to handling large datasets and achieving exceptional performance, AG Grid delivers outstanding results. It employs highly optimized rendering techniques, efficient data updates, and virtualization to ensure smooth scrolling and fast response times, even when dealing with thousands or millions of rows of data. AG Grid's performance optimizations make it an excellent choice for applications that require high-speed data manipulation and visualization.
+
+### Customization and Extensibility
+
+AG Grid is designed to be highly customizable and extensible, allowing you to tailor the grid to your specific needs. It provides a rich set of APIs and events that enable you to integrate custom functionality seamlessly. You can define custom cell renderers, editors, filters, and aggregators to enhance the grid's behavior and appearance. AG Grid also supports a variety of themes, allowing you to match the grid's visual style to your application's design.
+
+### Support for Enterprise Needs
+
+As an enterprise-focused solution, AG Grid caters to the requirements of complex business applications. It offers enterprise-specific features such as row grouping, column pinning, server-side row model, master/detail grids, and rich editing capabilities. AG Grid also integrates well with other enterprise frameworks and libraries, making it a reliable choice for large-scale projects.
+
+### Active Development and Community Support
+
+AG Grid benefits from active development and a thriving community of developers. The team behind AG Grid consistently introduces new features and enhancements, ensuring that the product evolves to meet the changing needs of the industry. The community support is robust, with forums, documentation, and examples readily available to assist you in utilizing the full potential of AG Grid.
+
+## Conclusion
+
+While TanStack Table remains a powerful and flexible option for implementing data grids, we understand that different projects have different requirements. AG Grid offers a compelling enterprise-grade solution that may be particularly suited to your needs. Its comprehensive feature set, high performance, customization options, and focus on enterprise requirements make AG Grid an excellent choice for projects that demand a robust and scalable data grid solution.
+
+We encourage you to explore AG Grid further by visiting their website and trying out their demo. Remember that both TanStack Table and AG Grid have their unique strengths and considerations. We believe in providing options to our users, empowering you to make informed decisions and choose the best fit for your specific use case.
+
+Visit the [AG Grid website](https://www.ag-grid.com).
+
+
+## Links discovered
+- [AG Grid](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable)
+- [AG Grid website](https://www.ag-grid.com)
+- [<img src="https://blog.ag-grid.com/content/images/2021/02/new-logo-1.png" style={{ width:400 }} />](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable)
+
+--- docs/guide/cells.md ---
+---
+title: Cells Guide
+---
+
+## API
+
+[Cell API](../api/core/cell)
+
+## Cells Guide
+
+This quick guide will discuss the different ways you can retrieve and interact with `cell` objects in TanStack Table.
+
+### Where to Get Cells From
+
+Cells come from [Rows](../guide/rows). Enough said, right?
+
+There are multiple `row` instance APIs you can use to retrieve the appropriate cells from a row depending on which features you are using. Most commonly, you will use the `row.getAllCells` or `row.getVisibleCells` APIs (if you are using column visibility features), but there are a handful of other similar APIs that you can use.
+
+### Cell Objects
+
+Every cell object can be associated with a `<td>` or similar cell element in your UI. There are a few properties and methods on `cell` objects that you can use to interact with the table state and extract cell values from the table based on the state of the table.
+
+#### Cell IDs
+
+Every cell object has an `id` property that makes it unique within the table instance. Each `cell.id` is constructed simply as a union of its parent row and column IDs separated by an underscore.
+
+```js
+{ id: `${row.id}_${column.id}` }
+```
+
+During grouping or aggregation features, the `cell.id` will have additional string appended to it.
+
+#### Cell Parent Objects
+
+Every cell stores a reference to its parent [row](../guide/rows) and [column](../guide/columns) objects.
+
+#### Access Cell Values
+
+The recommended way to access data values from a cell is to use either the `cell.getValue` or `cell.renderValue` APIs. Using either of these APIs will cache the results of the accessor functions and keep rendering efficient. The only difference between the two is that `cell.renderValue` will return either the value or the `renderFallbackValue` if the value is undefined, whereas `cell.getValue` will return the value or `undefined` if the value is undefined.
+
+> Note: The `cell.getValue` and `cell.renderValue` APIs are shortcuts `row.getValue` and `row.renderValue` APIs, respectively.
+
+```js
+// Access data from any of the columns
+const firstName = cell.getValue('firstName') // read the cell value from the firstName column
+const renderedLastName = cell.renderValue('lastName') // render the value from the lastName column
+```
+
+#### Access Other Row Data from Any Cell
+
+Since every cell object is associated with its parent row, you can access any data from the original row that you are using in your table using `cell.row.original`.
+
+```js
+// Even if we are in the scope of a different cell, we can still access the original row data
+const firstName = cell.row.original.firstName // { firstName: 'John', lastName: 'Doe' }
+```
+
+### More Cell APIs
+
+Depending on the features that you are using for your table, there are dozens more useful APIs for interacting with cells. See each features' respective API docs or guide for more information.
+
+### Cell Rendering
+
+You can just use the `cell.renderValue` or `cell.getValue` APIs to render the cells of your table. However, these APIs will only spit out the raw cell values (from accessor functions). If you are using the `cell: () => JSX` column definition options, you will want to use the `flexRender` API utility from your adapter.
+
+Using the `flexRender` API will allow the cell to be rendered correctly with any extra markup or JSX and it will call the callback function with the correct parameters.
+
+```jsx
+import { flexRender } from '@tanstack/react-table'
+
+const columns = [
+  {
+    accessorKey: 'fullName',
+    cell: ({ cell, row }) => {
+      return <div><strong>{row.original.firstName}</strong> {row.original.lastName}</div>
+    }
+    //...
+  }
+]
+//...
+<tr>
+  {row.getVisibleCells().map(cell => {
+    return <td key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+  })}
+</tr>
+
+
+## Links discovered
+- [Cell API](https://github.com/tanstack/table/blob/main/docs/api/core/cell.md)
+- [Rows](https://github.com/tanstack/table/blob/main/docs/guide/rows.md)
+- [row](https://github.com/tanstack/table/blob/main/docs/guide/rows.md)
+- [column](https://github.com/tanstack/table/blob/main/docs/guide/columns.md)
+
+--- docs/guide/column-defs.md ---
+---
+title: Columns Guide
+---
+
+## API
+
+[Table API](../api/core/table.md)
+
+## Column Definitions Guide
+
+Column defs are the single most important part of building a table. They are responsible for:
+
+- Building the underlying data model that will be used for everything including sorting, filtering, grouping, etc.
+- Formatting the data model into what will be displayed in the table
+- Creating [header groups](../api/core/header-group.md), [headers](../api/core/header.md) and [footers](../api/core/column-def.md#footer)
+- Creating columns for display-only purposes, eg. action buttons, checkboxes, expanders, sparklines, etc.
+
+## Column Def Types
+
+The following "types" of column defs aren't actually TypeScript types, but more so a way to talk about and describe overall categories of column defs:
+
+- `Accessor Columns`
+  - Accessor columns have an underlying data model which means they can be sorted, filtered, grouped, etc.
+- `Display Columns`
+  - Display columns do **not** have a data model which means they cannot be sorted, filtered, etc, but they can be used to display arbitrary content in the table, eg. a row actions button, checkbox, expander, etc.
+- `Grouping Columns`
+  - Group columns do **not** have a data model so they too cannot be sorted, filtered, etc, and are used to group other columns together. It's common to define a header or footer for a column group.
+
+## Column Helpers
+
+While column defs are just plain objects at the end of the day, a `createColumnHelper` function is exposed from the table core which, when called with a row type, returns a utility for creating different column definition types with the highest type-safety possible.
+
+Here's an example of creating and using a column helper:
+
+```tsx
+// Define your row shape
+type Person = {
+  firstName: string
+  lastName: string
+  age: number
+  visits: number
+  status: string
+  progress: number
+}
+
+const columnHelper = createColumnHelper<Person>()
+
+// Make some columns!
+const defaultColumns = [
+  // Display Column
+  columnHelper.display({
+    id: 'actions',
+    cell: props => <RowActions row={props.row} />,
+  }),
+  // Grouping Column
+  columnHelper.group({
+    header: 'Name',
+    footer: props => props.column.id,
+    columns: [
+      // Accessor Column
+      columnHelper.accessor('firstName', {
+        cell: info => info.getValue(),
+        footer: props => props.column.id,
+      }),
+      // Accessor Column
+      columnHelper.accessor(row => row.lastName, {
+        id: 'lastName',
+        cell: info => info.getValue(),
+        header: () => <span>Last Name</span>,
+        footer: props => props.column.id,
+      }),
+    ],
+  }),
+  // Grouping Column
+  columnHelper.group({
+    header: 'Info',
+    footer: props => props.column.id,
+    columns: [
+      // Accessor Column
+      columnHelper.accessor('age', {
+        header: () => 'Age',
+        footer: props => props.column.id,
+      }),
+      // Grouping Column
+      columnHelper.group({
+        header: 'More Info',
+        columns: [
+          // Accessor Column
+          columnHelper.accessor('visits', {
+            header: () => <span>Visits</span>,
+            footer: props => props.column.id,
+          }),
+          // Accessor Column
+          columnHelper.accessor('status', {
+            header: 'Status',
+            footer: props => props.column.id,
+          }),
+          // Accessor Column
+          columnHelper.accessor('progress', {
+            header: 'Profile Progress',
+            footer: props => props.column.id,
+          }),
+        ],
+      }),
+    ],
+  }),
+]
+```
+
+## Creating Accessor Columns
+
+Data columns are unique in that they must be configured to extract primitive values for each item in your `data` array.
+
+There are 3 ways to do this:
+
+- If your items are `objects`, use an object-key that corresponds to the value you want to extract.
+- If your items are nested `arrays`, use an array index that corresponds to the value you want to extract.
+- Use an accessor function that returns the value you want to extract.
+
+## Object Keys
+
+If each of your items is an object with the following shape:
+
+```tsx
+type Person = {
+  firstName: string
+  lastName: string
+  age: number
+  visits: number
+  status: string
+  progress: number
+}
+```
+
+You could extract the `firstName` value like so:
+
+```tsx
+
+columnHelper.accessor('firstName')
+
+// OR
+
+{
+  accessorKey: 'firstName',
+}
+```
+
+## Array Indices
+
+If each of your items is an array with the following shape:
+
+```tsx
+type Sales = [Date, number]
+```
+
+You could extract the `number` value like so:
+
+```tsx
+columnHelper.accessor(1)
+
+// OR
+
+{
+  accessorKey: 1,
+}
+```
+
+## Accessor Functions
+
+If each of your items is an object with the following shape:
+
+```tsx
+type Person = {
+  firstName: string
+  lastName: string
+  age: number
+  visits: number
+  status: string
+  progress: number
+}
+```
+
+You could extract a computed full-name value like so:
+
+```tsx
+columnHelper.accessor(row => `${row.firstName} ${row.lastName}`, {
+  id: 'fullName',
+})
+
+// OR
+
+{
+  id: 'fullName',
+  accessorFn: row => `${row.firstName} ${row.lastName}`,
+}
+```
+
+> 🧠 Remember, the accessed value is what is used to sort, filter, etc. so you'll want to make sure your accessor function returns a primitive value that can be manipulated in a meaningful way. If you return a non-primitive value like an object or array, you will need the appropriate filter/sort/grouping functions to manipulate them, or even supply your own! 😬
+
+## Unique Column IDs
+
+Columns are uniquely identified with 3 strategies:
+
+- If defining an accessor column with an object key or array index, the same will be used to uniquely identify the column.
+  - Any periods (`.`) in an object key will be replaced by underscores (`_`).
+- If defining an accessor column with an accessor function
+  - The columns `id` property will be used to uniquely identify the column OR
+  - If a primitive `string` header is supplied, that header string will be used to uniquely identify the column
+
+> 🧠 An easy way to remember: If you define a column with an accessor function, either provide a string header or provide a unique `id` property.
+
+## Column Formatting & Rendering
+
+By default, columns cells will display their data model value as a string. You can override this behavior by providing custom rendering implementations. Each implementation is provided relevant information about the cell, header or footer and returns something your framework adapter can render eg. JSX/Components/strings/etc. This will depend on which adapter you are using.
+
+There are a couple of formatters available to you:
+
+- `cell`: Used for formatting cells.
+- `aggregatedCell`: Used for formatting cells when aggregated.
+- `header`: Used for formatting headers.
+- `footer`: Used for formatting footers.
+
+## Cell Formatting
+
+You can provide a custom cell formatter by passing a function to the `cell` property and using the `props.getValue()` function to access your cell's value:
+
+```tsx
+columnHelper.accessor('firstName', {
+  cell: props => <span>{props.getValue().toUpperCase()}</span>,
+})
+```
+
+Cell formatters are also provided the `row` and `table` objects, allowing you to customize the cell formatting beyond just the cell value. The example below provides `firstName` as the accessor, but also displays a prefixed user ID located on the original row object:
+
+```tsx
+columnHelper.accessor('firstName', {
+  cell: props => (
+    <span>{`${props.row.original.id} - ${props.getValue()}`}</span>
+  ),
+})
+```
+
+## Aggregated Cell Formatting
+
+For more info on aggregated cells, see [grouping](./grouping.md).
+
+## Header & Footer Formatting
+
+Headers and footers do not have access to row data, but still use the same concepts for displaying custom content.
+
+
+## Links discovered
+- [Table API](https://github.com/tanstack/table/blob/main/docs/api/core/table.md)
+- [header groups](https://github.com/tanstack/table/blob/main/docs/api/core/header-group.md)
+- [headers](https://github.com/tanstack/table/blob/main/docs/api/core/header.md)
+- [footers](https://github.com/tanstack/table/blob/main/docs/api/core/column-def.md#footer)
+- [grouping](https://github.com/tanstack/table/blob/main/docs/guide/grouping.md)
+
+--- docs/guide/column-faceting.md ---
+---
+title: Column Faceting Guide
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [filters-faceted](../framework/react/examples/filters-faceted)
+
+## API
+
+[Column Faceting API](../api/features/column-faceting)
+
+## Column Faceting Guide
+
+Column Faceting is a feature that allows you to generate lists of values for a given column from that column's data. For example, a list of unique values in a column can be generated from all rows in that column to be used as search suggestions in an autocomplete filter component. Or, a tuple of minimum and maximum values can be generated from a column of numbers to be used as a range for a range slider filter component.
+
+### Column Faceting Row Models
+
+In order to use any of the column faceting features, you must include the appropriate row models in your table options.
+
+```ts
+//only import the row models you need
+import {
+  getCoreRowModel,
+  getFacetedRowModel,
+  getFacetedMinMaxValues, //depends on getFacetedRowModel
+  getFacetedUniqueValues, //depends on getFacetedRowModel
+}
+//...
+const table = useReactTable({
+  columns,
+  data,
+  getCoreRowModel: getCoreRowModel(),
+  getFacetedRowModel: getFacetedRowModel(), //if you need a list of values for a column (other faceted row models depend on this one)
+  getFacetedMinMaxValues: getFacetedMinMaxValues(), //if you need min/max values
+  getFacetedUniqueValues: getFacetedUniqueValues(), //if you need a list of unique values
+  //...
+})
+```
+
+First, you must include the `getFacetedRowModel` row model. This row model will generate a list of values for a given column. If you need a list of unique values, include the `getFacetedUniqueValues` row model. If you need a tuple of minimum and maximum values, include the `getFacetedMinMaxValues` row model.
+
+### Use Faceted Row Models
+
+Once you have included the appropriate row models in your table options, you will be able to use the faceting column instance APIs to access the lists of values generated by the faceted row models.
+
+```ts
+// list of unique values for autocomplete filter
+const autoCompleteSuggestions = 
+ Array.from(column.getFacetedUniqueValues().keys())
+  .sort()
+  .slice(0, 5000);
+```
+
+```ts
+// tuple of min and max values for range filter
+const [min, max] = column.getFacetedMinMaxValues() ?? [0, 1];
+```
+
+### Custom (Server-Side) Faceting
+
+If instead of using the built-in client-side faceting features, you can implement your own faceting logic on the server-side and pass the faceted values to the client-side. You can use the `getFacetedUniqueValues` and `getFacetedMinMaxValues` table options to resolve the faceted values from the server-side.
+
+```ts
+const facetingQuery = useQuery(
+  //...
+)
+
+const table = useReactTable({
+  columns,
+  data,
+  getCoreRowModel: getCoreRowModel(),
+  getFacetedRowModel: getFacetedRowModel(),
+  getFacetedUniqueValues: (table, columnId) => {
+    const uniqueValueMap = new Map<string, number>();
+    //...
+    return uniqueValueMap;
+  },
+  getFacetedMinMaxValues: (table, columnId) => {
+    //...
+    return [min, max];
+  },
+  //...
+})
+```
+
+Alternatively, you don't have to put any of your faceting logic through the TanStack Table APIs at all. Just fetch your lists and pass them to your filter components directly.
+
+
+## Links discovered
+- [filters-faceted](https://github.com/tanstack/table/blob/main/docs/framework/react/examples/filters-faceted.md)
+- [Column Faceting API](https://github.com/tanstack/table/blob/main/docs/api/features/column-faceting.md)
+
+--- docs/guide/column-filtering.md ---
+---
+title: Column Filtering Guide
+---
+
+## Examples
+
+Want to skip to the implementation? Check out these examples:
+
+- [filters](https://github.com/TanStack/table/tree/main/examples/react/filters) (includes faceting)
+- [editable-data](https://github.com/TanStack/table/tree/main/examples/react/editable-data)
+- [expanding](https://github.com/TanStack/table/tree/main/examples/react/expanding)
+- [grouping](https://github.com/TanStack/table/tree/main/examples/react/grouping)
+- [pagination](https://github.com/TanStack/table/tree/main/examples/react/pagination)
+- [row-selection](https://github.com/TanStack/table/tree/main/examples/react/row-selection)
+
+## API
+
+[Column Filtering API](../api/features/column-filtering.md)
+
+## Column Filtering Guide
+
+Filtering comes in 2 flavors: Column Filtering and Global Filtering.
+
+This guide will focus on column filtering, which is a filter that is applied to a single column's accessor value.
+
+TanStack table supports both both client-side and manual server-side filtering. This guide will go over how to implement and customize both, and help you decide which one is best for your use-case.
+
+### Client-Side vs Server-Side Filtering
+
+If you have a large dataset, you may not want to load all of that data into the client's browser in order to filter it. In this case, you will most likely want to implement server-side filtering, sorting, pagination, etc. 
+
+However, as also discussed in the [Pagination Guide](./pagination.md#should-you-use-client-side-pagination), a lot of developers underestimate how many rows can be loaded client-side without a performance hit. The TanStack table examples are often tested to handle up to 100,000 rows or more with decent performance for client-side filtering, sorting, pagination, and grouping. This doesn't necessarily that your app will be able to handle that many rows, but if your table is only going to have a few thousand rows at most, you might be able to take advantage of the client-side filtering, sorting, pagination, and grouping that TanStack table provides.
+
+> TanStack Table can handle thousands of client-side rows with good performance. Don't rule out client-side filtering, pagination, sorting, etc. without some thought first.
+
+Every use-case is different and will depend on the complexity of the table, how many columns you have, how large every piece of data is, etc. The main bottlenecks to pay attention to are:
+
+1. Can your server query all of the data in a reasonable amount of time (and cost)?
+2. What is the total size of the fetch? (This might not scale as badly as you think if you don't have many columns.)
+3. Is the client's browser using too much memory if all of the data is loaded at once?
+
+If you're not sure, you can always start with client-side filtering and pagination and then switch to server-side strategies in the future as your data grows.
+
+### Manual Server-Side Filtering
+
+If you have decided that you need to implement server-side filtering instead of using the built-in client-side filtering, here's how you do that.
+
+No `getFilteredRowModel` table option is needed for manual server-side filtering. Instead, the `data` that you pass to the table should already be filtered. However, if you have passed a `getFilteredRowModel` table option, you can tell the table to skip it by setting the `manualFiltering` option to `true`.
+
+```jsx
+const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+  // getFilteredRowModel: getFilteredRowModel(), // not needed for manual server-side filtering
+  manualFiltering: true,
+})
+```
+
+> **Note:** When using manual filtering, many of the options that are discussed in the rest of this guide will have no effect. When is `manualFiltering` is set to `true`, the table instance will not apply any filtering logic to the rows that are passed to it. Instead, it will assume that the rows are already filtered and will use the `data` that you pass to it as-is.
+
+### Client-Side Filtering
+
+If you are using the built-in client-side filtering features, first you need to pass in a `getFilteredRowModel` function to the table options. This function will be called whenever the table needs to filter the data. You can either import the default `getFilteredRowModel` function from TanStack Table or create your own.
+
+```jsx
+import { useReactTable, getFilteredRowModel } from '@tanstack/react-table'
+//...
+const table = useReactTable({
+  data,
+  columns,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(), // needed for client-side filtering
+})
+```
+
+### Column Filter State
+
+Whether or not you use client-side or server-side filtering, you can take advantage of the built-in column filter state management that TanStack Table provides. There are many table and column APIs to mutate and interact with the filter state and retrieving the column filter state.
+
+The column filtering state is defined as an array of objects with the following shape:
+
+```ts
+interface ColumnFilter {
+  id: string
+  value: unknown
+}
+type ColumnFiltersState = ColumnFilter[]
+```
+
+Since the column filter state is an array of objects, you can have multiple column filters applied at once.
+
+#### Accessing Column Filter State
+
+You can access the column filter state from the table instance just like any other table state using the `table.getState()` API.
+
+```jsx
+const table = useReactTable({
+  columns,
+  data,
+  //...
+})
+
+console.log(table.getState().columnFilters) // access the column filters state from the table instance
+```
+
+However, if you need to access the column filter state before the table is initialized, you can "control" the column filter state like down below.
+
+### Controlled Column Filter State
+
+If you need easy access to the column filter state, you can control/manage the column filter state in your own state management with the `state.columnFilters` and `onColumnFiltersChange` table options.
+
+```tsx
+const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]) // can set initial column filter state here
+//...
+const table = useReactTable({
+  columns,
+  data,
+  //...
+  state: {
+    columnFilters,
+  },
+  onColumnFiltersChange: setColumnFilters,
+})
+```
+
+#### Initial Column Filter State
+
+If you do not need to control the column filter state in your own state management or scope, but you still want to set an initial column filter state, you can use the `initialState` table option instead of `state`.
+
+```jsx
+const table = useReactTable({
+  columns,
+  data,
+  //...
+  initialState: {
+    columnFilters: [
+      {
+        id: 'name',
+        value: 'John', // filter the name column by 'John' by default
+      },
+    ],
+  },
+})
+```
+
+> **NOTE**: Do not use both `initialState.columnFilters` and `state.columnFilters` at the same time, as the initialized state in the `state.columnFilters` will override the `initialState.columnFilters`.
+
+### FilterFns
+
+Each column can have its own unique filtering logic. Choose from any of the filter functions that are provided by TanStack Table, or create your own.
+
+By default there are 10 built-in filter functions to choose from:
+
+- `includesString` - Case-insensitive string inclusion
+- `includesStringSensitive` - Case-sensitive string inclusion
+- `equalsString` - Case-insensitive string equality
+- `equalsStringSensitive` - Case-sensitive string equality
+- `arrIncludes` - Item inclusion within an array
+- `arrIncludesAll` - All items included in an array
+- `arrIncludesSome` - Some items included in an array
+- `equals` - Object/referential equality `Object.is`/`===`
+- `weakEquals` - Weak object/referential equality `==`
+- `inNumberRange` - Number range inclusion
+
+You can also define your own custom filter functions either as the `filterFn` column option, or as a global filter function using the `filterFns` table option.
+
+#### Custom Filter Functions
+
+> **Note:** These filter functions only run during client-side filtering.
+
+When defining a custom filter function in either the `filterFn` column option or the `filterFns` table option, it should have the following signature:
+
+```ts
+const myCustomFilterFn: FilterFn = (row: Row, columnId: string, filterValue: any, addMeta: (meta: any) => void) => boolean
+```
+
+Every filter function receives:
+
+- The row to filter
+- The columnId to use to retrieve the row's value
+- The filter value
+
+and should return `true` if the row should be included in the filtered rows, and `false` if it should be removed.
+
+```jsx
+const columns = [
+  {
+    header: () => 'Name',
+    accessorKey: 'name',
+    filterFn: 'includesString', // use built-in filter function
+  },
+  {
+    header: () => 'Age',
+    accessorKey: 'age',
+    filterFn: 'inNumberRange',
+  },
+  {
+    header: () => 'Birthday',
+    accessorKey: 'birthday',
+    filterFn: 'myCustomFilterFn', // use custom global filter function
+  },
+  {
+    header: () => 'Profile',
+    accessorKey: 'profile',
+    // use custom filter function directly
+    filterFn: (row, columnId, filterValue) => {
+      return // true or false based on your custom logic
+    },
+  }
+]
+//...
+const table = useReactTable({
+  columns,
+  data,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  filterFns: { //add a custom sorting function
+    myCustomFilterFn: (row, columnId, filterValue) => { //defined inline here
+      return // true or false based on your custom logic
+    },
+    startsWith: startsWithFilterFn, // defined elsewhere
+  },
+})
+```
+
+##### Customize Filter Function Behavior
+
+You can attach a few other properties to filter functions to customize their behavior:
+
+- `filterFn.resolveFilterValue` - This optional "hanging" method on any given `filterFn` allows the filter function to transform/sanitize/format the filter value before it is passed to the filter function.
+
+- `filterFn.autoRemove` - This optional "hanging" method on any given `filterFn` is passed a filter value and expected to return `true` if the filter value should be removed from the filter state. eg. Some boolean-style filters may want to remove the filter value from the table state if the filter value is set to `false`.
+
+```tsx
+const startsWithFilterFn = <TData extends MRT_RowData>(
+  row: Row<TData>,
+  columnId: string,
+  filterValue: number | string, //resolveFilterValue will transform this to a string
+) =>
+  row
+    .getValue<number | string>(columnId)
+    .toString()
+    .toLowerCase()
+    .trim()
+    .startsWith(filterValue); // toString, toLowerCase, and trim the filter value in `resolveFilterValue`
+
+// remove the filter value from filter state if it is falsy (empty string in this case)
+startsWithFilterFn.autoRemove = (val: any) => !val; 
+
+// transform/sanitize/format the filter value before it is passed to the filter function
+startsWithFilterFn.resolveFilterValue = (val: any) => val.toString().toLowerCase().trim(); 
+```
+
+### Customize Column Filtering
+
+There are a lot of table and column options that you can use to further customize the column filtering behavior.
+
+#### Disable Column Filtering
+
+By default, column filtering is enabled for all columns. You can disable the column filtering for all columns or for specific columns by using the `enableColumnFilters` table option or the `enableColumnFilter` column option. You can also turn off both column and global filtering by setting the `enableFilters` table option to `false`.
+
+Disabling column filtering for a column will cause the `column.getCanFilter` API to return `false` for that column.
+
+```jsx
+const columns = [
+  {
+    header: () => 'Id',
+    accessorKey: 'id',
+    enableColumnFilter: false, // disable column filtering for this column
+  },
+  //...
+]
+//...
+const table = useReactTable({
+  columns,
+  data,
+  enableColumnFilters: false, // disable column filtering for all columns
+})
+```
+
+#### Filtering Sub-Rows (Expanding)
+
+There are a few additional table options to customize the behavior of column filtering when using features like expanding, grouping, and aggregation.
+
+##### Filter From Leaf Rows
+
+By default, filtering is done from parent rows down, so if a parent row is filtered out, all of its child sub-rows will be filtered out as well. Depending on your use-case, this may be the desired behavior if you only want the user to be searching through the top-level rows, and not the sub-rows. This is also the most performant option.
+
+However, if you want to allow sub-rows to be filtered and searched through, regardless of whether the parent row is filtered out, you can set the `filterFromLeafRows` table option to `true`. Setting this option to `true` will cause filtering to be done from leaf rows up, which means parent rows will be included so long as one of their child or grand-child rows is also included.
+
+```jsx
+const table = useReactTable({
+  columns,
+  data,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getExpandedRowModel: getExpandedRowModel(),
+  filterFromLeafRows: true, // filter and search through sub-rows
+})
+```
+
+##### Max Leaf Row Filter Depth
+
+By default, filtering is done for all rows in a tree, no matter if they are root level parent rows or the child leaf rows of a parent row. Setting the `maxLeafRowFilterDepth` table option to `0` will cause filtering to only be applied to the root level parent rows, with all sub-rows remaining unfiltered. Similarly, setting this option to `1` will cause filtering to only be applied to child leaf rows 1 level deep, and so on.
+
+Use `maxLeafRowFilterDepth: 0` if you want to preserve a parent row's sub-rows from being filtered out while the parent row is passing the filter.
+
+```jsx
+const table = useReactTable({
+  columns,
+  data,
+  getCoreRowModel: getCoreRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
+  getExpandedRowModel: getExpandedRowModel(),
+  maxLeafRowFilterDepth: 0, // only filter root level parent rows out
+})
+```
+
+### Column Filter APIs
+
+There are a lot of Column and Table APIs that you can use to interact with the column filter state and hook up to your UI components. Here is a list of the available APIs and their most common use-cases:
+
+- `table.setColumnFilters` - Overwrite the entire column filter state with a new state
+- `table.resetColumnFilters` - Useful for a "clear all/reset filters" button
+
+- **`column.getFilterValue`** - Useful for getting the default initial filter value for an input, or even directly providing the filter value to a filter input
+- **`column.setFilterValue`** - Useful for connecting filter inputs to their `onChange` or `onBlur` handlers
+
+- `column.getCanFilter` - Useful for disabling/enabling filter inputs
+- `column.getIsFiltered` - Useful for displaying a visual indicator that a column is currently being filtered
+- `column.getFilterIndex` - Useful for displaying in what order the current filter is being applied
+
+- `column.getAutoFilterFn` - 
+- `column.getFilterFn` - Useful for displaying which filter mode or function is currently being used
+
+## Links discovered
+- [filters](https://github.com/TanStack/table/tree/main/examples/react/filters)
+- [editable-data](https://github.com/TanStack/table/tree/main/examples/react/editable-data)
+- [expanding](https://github.com/TanStack/table/tree/main/examples/react/expanding)
+- [grouping](https://github.com/TanStack/table/tree/main/examples/react/grouping)
+- [pagination](https://github.com/TanStack/table/tree/main/examples/react/pagination)
+- [row-selection](https://github.com/TanStack/table/tree/main/examples/react/row-selection)
+- [Column Filtering API](https://github.com/tanstack/table/blob/main/docs/api/features/column-filtering.md)
+- [Pagination Guide](https://github.com/tanstack/table/blob/main/docs/guide/pagination.md#should-you-use-client-side-pagination)
+
+--- examples/angular/basic/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/column-ordering/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/column-pinning-sticky/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/column-pinning/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/column-resizing-performant/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/column-visibility/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/editable/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/expanding/README.md ---
+# Basic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/filters/README.md ---
+# Selection
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/grouping/README.md ---
+# Grouping
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.1.2.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- CONTRIBUTING.md ---
+---
+title: Contributing
+id: contributing
+---
+
+# Contributing
+
+## Questions
+
+If you have questions about implementation details, help or support, then please use our dedicated community forum at [Github Discussions](https://github.com/tanstack/table/discussions) **PLEASE NOTE:** If you choose to instead open an issue for your question, your issue will be immediately closed and redirected to the forum.
+
+## Reporting Issues
+
+If you have found what you think is a bug, please [file an issue](https://github.com/tanstack/table/issues/new). **PLEASE NOTE:** Issues that are identified as implementation questions or non-issues will be immediately closed and redirected to [Github Discussions](https://github.com/tanstack/table/discussions)
+
+## Suggesting new features
+
+If you are here to suggest a feature, first create an issue if it does not already exist. From there, we will discuss use-cases for the feature and then finally discuss how it could be implemented.
+
+## Development
+
+Before proceeding with development, ensure you match one of the following criteria:
+
+- Fixing a small bug
+- Fixing a larger issue that has been previously discussed and agreed-upon by maintainers
+- Adding a new feature that has been previously discussed and agreed-upon by maintainers
+
+## Development Workflow
+
+- Fork this repository, we prefer the `feat-*` branch name style
+- Ensure you have `pnpm` installed
+- Install projects dependencies and linkages by running `pnpm install`
+- Auto-build and auto-test files as you edit by running `pnpm dev`
+- Implement your changes and tests
+- To run examples, follow their individual directions. Usually this includes:
+  - Installing dependencies with `pnpm install` (from the root directory of the workspace)
+  - Starting the dev server with `pnpm start` (from the example directory)
+- To test in your own projects:
+  - Build/watch for changes with `pnpm build`/`pnpm dev`
+- Document your changes in the appropriate documentation website markdown pages
+- Commit your work and open a pull request
+- Submit PR for review
+
+## Adding a new example
+
+- Clone an existing example into the appropriate `examples` directory
+- Name it the example name in kebab-case
+- Update the new example's package.json to match the new example name and any other details
+- Check dependencies for unused packages
+- Install any additional packages to the example that you may need
+- Update the docs/config.json file to include the new example in the navigation sidebar
+- Commit the example eg. `docs: Add example-name`
+
+
+## Links discovered
+- [Github Discussions](https://github.com/tanstack/table/discussions)
+- [file an issue](https://github.com/tanstack/table/issues/new)
+
+--- .github/pull_request_template.md ---
+## 🎯 Changes
+
+<!-- What changes are made in this PR? Describe the change and its motivation. -->
+
+## ✅ Checklist
+
+- [ ] I have followed the steps in the [Contributing guide](https://github.com/TanStack/table/blob/main/CONTRIBUTING.md).
+- [ ] I have tested this code locally with `pnpm test:pr`.
+
+## 🚀 Release Impact
+
+- [ ] This change affects published code, and I have generated a [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md).
+- [ ] This change is docs/CI/dev-only (no release).
+
+
+## Links discovered
+- [Contributing guide](https://github.com/TanStack/table/blob/main/CONTRIBUTING.md)
+- [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
+
+--- CODE_OF_CONDUCT.md ---
+---
+title: Code of Conduct
+id: code-of-conduct
+---
+
+# Contributor Covenant Code of Conduct
+
+## Our Pledge
+
+In the interest of fostering an open and welcoming environment, we as
+contributors and maintainers pledge to making participation in our project and
+our community a harassment-free experience for everyone, regardless of age, body
+size, disability, ethnicity, sex characteristics, gender identity and expression,
+level of experience, education, socio-economic status, nationality, personal
+appearance, race, religion, or sexual identity and orientation.
+
+## Our Standards
+
+Examples of behavior that contributes to creating a positive environment
+include:
+
+- Using welcoming and inclusive language
+- Being respectful of differing viewpoints and experiences
+- Gracefully accepting constructive criticism
+- Focusing on what is best for the community
+- Showing empathy towards other community members
+
+Examples of unacceptable behavior by participants include:
+
+- The use of sexualized language or imagery and unwelcome sexual attention or
+  advances
+- Trolling, insulting/derogatory comments, and personal or political attacks
+- Public or private harassment
+- Publishing others' private information, such as a physical or electronic
+  address, without explicit permission
+- Other conduct which could reasonably be considered inappropriate in a
+  professional setting
+
+## Our Responsibilities
+
+Project maintainers are responsible for clarifying the standards of acceptable
+behavior and are expected to take appropriate and fair corrective action in
+response to any instances of unacceptable behavior.
+
+Project maintainers have the right and responsibility to remove, edit, or
+reject comments, commits, code, wiki edits, issues, and other contributions
+that are not aligned to this Code of Conduct, or to ban temporarily or
+permanently any contributor for other behaviors that they deem inappropriate,
+threatening, offensive, or harmful.
+
+## Scope
+
+This Code of Conduct applies both within project spaces and in public spaces
+when an individual is representing the project or its community. Examples of
+representing a project or community include using an official project e-mail
+address, posting via an official social media account, or acting as an appointed
+representative at an online or offline event. Representation of a project may be
+further defined and clarified by project maintainers.
+
+## Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be
+reported by contacting the project team at TANNERLINSLEY@GMAIL.COM. All
+complaints will be reviewed and investigated and will result in a response that
+is deemed necessary and appropriate to the circumstances. The project team is
+obligated to maintain confidentiality with regard to the reporter of an incident.
+Further details of specific enforcement policies may be posted separately.
+
+Project maintainers who do not follow or enforce the Code of Conduct in good
+faith may face temporary or permanent repercussions as determined by other
+members of the project's leadership.
+
+## Attribution
+
+This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
+available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+
+[homepage]: https://www.contributor-covenant.org
+
+For answers to common questions about this code of conduct, see
+https://www.contributor-covenant.org/faq
+
+
+--- README.md ---
+<div align="center">
+  <img src="./media/header_table.png" alt="TanStack Table">
+</div>
+
+<br />
+
+<div align="center">
+<a href="https://npmjs.com/package/@tanstack/react-table" target="\_parent">
+  <img alt="npm downloads" src="https://img.shields.io/npm/dm/@tanstack/react-table.svg" />
+</a>
+<a href="https://github.com/tanstack/table" target="\_parent">
+  <img alt="github stars" src="https://img.shields.io/github/stars/tanstack/react-table.svg?style=social&label=Star" />
+</a>
+<a href="https://bundlephobia.com/result?p=@tanstack/react-table@latest" target="\_parent">
+  <img alt="bundle size" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-table@latest" />
+</a>
+</div>
+
+<div align="center">
+<a href="#badge">
+  <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+</a>
+<a href="https://bestofjs.org/projects/tanstack-table"><img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Ftable%26since=daily" /></a>
+  <a href="https://twitter.com/tan_stack"><img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/></a>
+</div>
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+</div>
+
+# TanStack Table
+
+> [!NOTE]
+> You may know TanStack Table by the adapter names:
+>
+> - [Angular Table](https://tanstack.com/table/v8/docs/framework/angular/angular-table)
+> - [Lit Table](https://tanstack.com/table/v8/docs/framework/lit/lit-table)
+> - [Qwik Table](https://tanstack.com/table/v8/docs/framework/qwik/qwik-table)
+> - [React Table](https://tanstack.com/table/v8/docs/framework/react/react-table)
+> - [Solid Table](https://tanstack.com/table/v8/docs/framework/solid/solid-table)
+> - [Svelte Table](https://tanstack.com/table/v8/docs/framework/svelte/svelte-table)
+> - [Vue Table](https://tanstack.com/table/v8/docs/framework/vue/vue-table)
+
+A headless table library for building powerful datagrids with full control over markup, styles, and behavior.
+
+- Framework‑agnostic core with bindings for React, Vue & Solid
+- 100% customizable — bring your own UI, components, and styles
+- Sorting, filtering, grouping, aggregation & row selection
+- Lightweight, virtualizable & server‑side friendly
+
+### <a href="https://tanstack.com/table">Read the Docs →</a>
+
+## Get Involved
+
+- We welcome issues and pull requests!
+- Participate in [GitHub discussions](https://github.com/TanStack/table/discussions)
+- Chat with the community on [Discord](https://discord.com/invite/WrRKjPJ)
+- See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions
+
+## Partners
+
+<table align="center">
+  <tr>
+    <td>
+        <a href="https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS">
+			<picture>
+			  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" />
+			  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" />
+			  <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" />
+			</picture>        
+		</a>
+    </td>
+    <td padding="20">
+      <a href="https://www.cloudflare.com?utm_source=tanstack">
+         <picture>
+		  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" />
+		  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" />
+		  <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" />
+		</picture>
+      </a>
+    </td>
+    <td>
+     <a href="https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable" style="display: flex; align-items: center; border: none;">
+       <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="./media/ag-grid-dark.svg" height="40" />
+        <source media="(prefers-color-scheme: light)" srcset="./media/ag-grid-light.svg" height="40" />
+        <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/ag-grid.svg" height="60" alt="AG Grid" />
+      </picture>
+      </a>
+    </td>
+  </tr>
+</table>
+
+<div align="center">
+<img src="./media/partner_logo.svg" alt="Table & you?" height="65">
+<p>
+We're looking for TanStack Table Partners to join our mission! Partner with us to push the boundaries of TanStack Table and build amazing things together.
+</p>
+<a href="mailto:partners@tanstack.com?subject=TanStack Table Partnership"><b>LET'S CHAT</b></a>
+</div>
+
+## Explore the TanStack Ecosystem
+
+- <a href="https://github.com/tanstack/config"><b>TanStack Config</b></a> – Tooling for JS/TS packages
+- <a href="https://github.com/tanstack/db"><b>TanStack DB</b></a> – Reactive sync client store
+- <a href="https://github.com/tanstack/devtools"><b>TanStack DevTools</b></a> – Unified devtools panel
+- <a href="https://github.com/tanstack/form"><b>TanStack Form</b></a> – Type‑safe form state
+- <a href="https://github.com/tanstack/pacer"><b>TanStack Pacer</b></a> – Debouncing, throttling, batching <br/>
+- <a href="https://github.com/tanstack/query"><b>TanStack Query</b></a> – Async state & caching
+- <a href="https://github.com/tanstack/ranger"><b>TanStack Ranger</b></a> – Range & slider primitives
+- <a href="https://github.com/tanstack/router"><b>TanStack Router</b></a> – Type‑safe routing, caching & URL state
+- <a href="https://github.com/tanstack/router"><b>TanStack Start</b></a> – Full‑stack SSR & streaming
+- <a href="https://github.com/tanstack/store"><b>TanStack Store</b></a> – Reactive data store
+- <a href="https://github.com/tanstack/virtual"><b>TanStack Virtual</b></a> – Virtualized rendering
+
+… and more at <a href="https://tanstack.com"><b>TanStack.com »</b></a>
+
+<!-- USE THE FORCE LUKE -->
+
+
+## Links discovered
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [Angular Table](https://tanstack.com/table/v8/docs/framework/angular/angular-table)
+- [Lit Table](https://tanstack.com/table/v8/docs/framework/lit/lit-table)
+- [Qwik Table](https://tanstack.com/table/v8/docs/framework/qwik/qwik-table)
+- [React Table](https://tanstack.com/table/v8/docs/framework/react/react-table)
+- [Solid Table](https://tanstack.com/table/v8/docs/framework/solid/solid-table)
+- [Svelte Table](https://tanstack.com/table/v8/docs/framework/svelte/svelte-table)
+- [Vue Table](https://tanstack.com/table/v8/docs/framework/vue/vue-table)
+- [GitHub discussions](https://github.com/TanStack/table/discussions)
+- [Discord](https://discord.com/invite/WrRKjPJ)
+- [CONTRIBUTING.md](https://github.com/tanstack/table/blob/main/CONTRIBUTING.md)
+- [<img alt="npm downloads" src="https://img.shields.io/npm/dm/@tanstack/react-table.svg" />](https://npmjs.com/package/@tanstack/react-table)
+- [<img alt="github stars" src="https://img.shields.io/github/stars/tanstack/react-table.svg?style=social&label=Star" />](https://github.com/tanstack/table)
+- [<img alt="bundle size" src="https://badgen.net/bundlephobia/minzip/@tanstack/react-table@latest" />](https://bundlephobia.com/result?p=@tanstack/react-table@latest)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Ftable%26since=daily" />](https://bestofjs.org/projects/tanstack-table)
+- [<img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/>](https://twitter.com/tan_stack)
+- [Read the Docs →](https://tanstack.com/table)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" /> <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" /> </picture>](https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" /> <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" /> </picture>](https://www.cloudflare.com?utm_source=tanstack)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="./media/ag-grid-dark.svg" height="40" /> <source media="(prefers-color-scheme: light)" srcset="./media/ag-grid-light.svg" height="40" /> <img src="https://raw.githubusercontent.com/tannerlinsley/files/master/partners/ag-grid.svg" height="60" alt="AG Grid" /> </picture>](https://ag-grid.com/react-data-grid/?utm_source=reacttable&utm_campaign=githubreacttable)
+- [<b>TanStack Config</b>](https://github.com/tanstack/config)
+- [<b>TanStack DB</b>](https://github.com/tanstack/db)
+- [<b>TanStack DevTools</b>](https://github.com/tanstack/devtools)
+- [<b>TanStack Form</b>](https://github.com/tanstack/form)
+- [<b>TanStack Pacer</b>](https://github.com/tanstack/pacer)
+- [<b>TanStack Query</b>](https://github.com/tanstack/query)
+- [<b>TanStack Ranger</b>](https://github.com/tanstack/ranger)
+- [<b>TanStack Router</b>](https://github.com/tanstack/router)
+- [<b>TanStack Start</b>](https://github.com/tanstack/router)
+- [<b>TanStack Store</b>](https://github.com/tanstack/store)
+- [<b>TanStack Virtual</b>](https://github.com/tanstack/virtual)
+- [<b>TanStack.com »</b>](https://tanstack.com)
+
+--- prettier.config.js ---
+// @ts-check
+
+/** @type {import('prettier').Config} */
+const config = {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  plugins: ['prettier-plugin-svelte'],
+  overrides: [{ files: '*.svelte', options: { parser: 'svelte' } }],
+}
+
+export default config
+
+
+--- packages/angular-table/vitest.config.ts ---
+import { defineConfig } from 'vitest/config'
+import packageJson from './package.json'
+import angular from '@analogjs/vite-plugin-angular'
+import path from 'node:path'
+
+const angularPlugin = angular({ tsconfig: 'tsconfig.test.json', jit: true })
+
+export default defineConfig({
+  plugins: [
+    // @ts-expect-error Fix types
+    angularPlugin,
+  ],
+  test: {
+    name: packageJson.name,
+    watch: false,
+    pool: 'threads',
+    environment: 'jsdom',
+    setupFiles: ['./tests/test-setup.ts'],
+    globals: true,
+    reporters: 'default',
+    disableConsoleIntercept: true,
+  },
+})
+
+
+--- packages/match-sorter-utils/vitest.config.ts ---
+import { defineConfig } from 'vitest/config'
+import packageJson from './package.json'
+
+export default defineConfig({
+  test: {
+    name: packageJson.name,
+    dir: './tests',
+    watch: false,
+    environment: 'jsdom',
+    setupFiles: ['./tests/test-setup.ts'],
+  },
+})
+
+
+--- packages/react-table/vitest.config.ts ---
+import { defineConfig } from 'vitest/config'
+import packageJson from './package.json'
+
+export default defineConfig({
+  test: {
+    name: packageJson.name,
+    dir: './tests',
+    watch: false,
+    environment: 'jsdom',
+    setupFiles: ['./tests/test-setup.ts'],
+    globals: true,
+  },
+})
+
+
+--- packages/table-core/vitest.config.ts ---
+import { defineConfig } from 'vitest/config'
+import packageJson from './package.json'
+
+export default defineConfig({
+  test: {
+    name: packageJson.name,
+    dir: './tests',
+    watch: false,
+    environment: 'node',
+    globals: true,
+  },
+})
+
+
+--- packages/table-core/src/aggregationFns.ts ---
+import { AggregationFn } from './features/ColumnGrouping'
+import { isNumberArray } from './utils'
+
+const sum: AggregationFn<any> = (columnId, _leafRows, childRows) => {
+  // It's faster to just add the aggregations together instead of
+  // process leaf nodes individually
+  return childRows.reduce((sum, next) => {
+    const nextValue = next.getValue(columnId)
+    return sum + (typeof nextValue === 'number' ? nextValue : 0)
+  }, 0)
+}
+
+const min: AggregationFn<any> = (columnId, _leafRows, childRows) => {
+  let min: number | undefined
+
+  childRows.forEach((row) => {
+    const value = row.getValue<number>(columnId)
+
+    if (
+      value != null &&
+      (min! > value || (min === undefined && value >= value))
+    ) {
+      min = value
+    }
+  })
+
+  return min
+}
+
+const max: AggregationFn<any> = (columnId, _leafRows, childRows) => {
+  let max: number | undefined
+
+  childRows.forEach((row) => {
+    const value = row.getValue<number>(columnId)
+    if (
+      value != null &&
+      (max! < value || (max === undefined && value >= value))
+    ) {
+      max = value
+    }
+  })
+
+  return max
+}
+
+const extent: AggregationFn<any> = (columnId, _leafRows, childRows) => {
+  let min: number | undefined
+  let max: number | undefined
+
+  childRows.forEach((row) => {
+    const value = row.getValue<number>(columnId)
+    if (value != null) {
+      if (min === undefined) {
+        if (value >= value) min = max = value
+      } else {
+        if (min > value) min = value
+        if (max! < value) max = value
+      }
+    }
+  })
+
+  return [min, max]
+}
+
+const mean: AggregationFn<any> = (columnId, leafRows) => {
+  let count = 0
+  let sum = 0
+
+  leafRows.forEach((row) => {
+    let value = row.getValue<number>(columnId)
+    if (value != null && (value = +value) >= value) {
+      ++count
+      sum += value
+    }
+  })
+
+  if (count) return sum / count
+
+  return
+}
+
+const median: AggregationFn<any> = (columnId, leafRows) => {
+  if (!leafRows.length) {
+    return
+  }
+
+  const values = leafRows.map((row) => row.getValue(columnId))
+  if (!isNumberArray(values)) {
+    return
+  }
+  if (values.length === 1) {
+    return values[0]
+  }
+
+  const mid = Math.floor(values.length / 2)
+  const nums = values.sort((a, b) => a - b)
+  return values.length % 2 !== 0 ? nums[mid] : (nums[mid - 1]! + nums[mid]!) / 2
+}
+
+const unique: AggregationFn<any> = (columnId, leafRows) => {
+  return Array.from(new Set(leafRows.map((d) => d.getValue(columnId))).values())
+}
+
+const uniqueCount: AggregationFn<any> = (columnId, leafRows) => {
+  return new Set(leafRows.map((d) => d.getValue(columnId))).size
+}
+
+const count: AggregationFn<any> = (_columnId, leafRows) => {
+  return leafRows.length
+}
+
+export const aggregationFns = {
+  sum,
+  min,
+  max,
+  extent,
+  mean,
+  median,
+  unique,
+  uniqueCount,
+  count,
+}
+
+export type BuiltInAggregationFn = keyof typeof aggregationFns
+
+
+--- packages/table-core/src/columnHelper.ts ---
+import {
+  AccessorFn,
+  AccessorFnColumnDef,
+  AccessorKeyColumnDef,
+  DisplayColumnDef,
+  GroupColumnDef,
+  IdentifiedColumnDef,
+  RowData,
+} from './types'
+import { DeepKeys, DeepValue } from './utils'
+
+// type Person = {
+//   firstName: string
+//   lastName: string
+//   age: number
+//   visits: number
+//   status: string
+//   progress: number
+//   createdAt: Date
+//   nested: {
+//     foo: [
+//       {
+//         bar: 'bar'
+//       }
+//     ]
+//     bar: { subBar: boolean }[]
+//     baz: {
+//       foo: 'foo'
+//       bar: {
+//         baz: 'baz'
+//       }
+//     }
+//   }
+// }
+
+// const test: DeepKeys<Person> = 'nested.foo.0.bar'
+// const test2: DeepKeys<Person> = 'nested.bar'
+
+// const helper = createColumnHelper<Person>()
+
+// helper.accessor('nested.foo', {
+//   cell: info => info.getValue(),
+// })
+
+// helper.accessor('nested.foo.0.bar', {
+//   cell: info => info.getValue(),
+// })
+
+// helper.accessor('nested.bar', {
+//   cell: info => info.getValue(),
+// })
+
+export type ColumnHelper<TData extends RowData> = {
+  accessor: <
+    TAccessor extends AccessorFn<TData> | DeepKeys<TData>,
+    TValue extends TAccessor extends AccessorFn<TData, infer TReturn>
+      ? TReturn
+      : TAccessor extends DeepKeys<TData>
+        ? DeepValue<TData, TAccessor>
+        : never,
+  >(
+    accessor: TAccessor,
+    column: TAccessor extends AccessorFn<TData>
+      ? DisplayColumnDef<TData, TValue>
+      : IdentifiedColumnDef<TData, TValue>,
+  ) => TAccessor extends AccessorFn<TData>
+    ? AccessorFnColumnDef<TData, TValue>
+    : AccessorKeyColumnDef<TData, TValue>
+  display: (column: DisplayColumnDef<TData>) => DisplayColumnDef<TData, unknown>
+  group: (column: GroupColumnDef<TData>) => GroupColumnDef<TData, unknown>
+}
+
+export function createColumnHelper<
+  TData extends RowData,
+>(): ColumnHelper<TData> {
+  return {
+    accessor: (accessor, column) => {
+      return typeof accessor === 'function'
+        ? ({
+            ...column,
+            accessorFn: accessor,
+          } as any)
+        : {
+            ...column,
+            accessorKey: accessor,
+          }
+    },
+    display: (column) => column,
+    group: (column) => column,
+  }
+}
+
+
+--- packages/angular-table/tests/createAngularTable.test.ts ---
+import { describe, expect, test, vi } from 'vitest'
+import {
+  type ColumnDef,
+  createAngularTable,
+  getCoreRowModel,
+  type RowSelectionState,
+  type Table,
+  RowModel,
+  type PaginationState,
+  getPaginationRowModel,
+} from '../src/index'
+import {
+  Component,
+  effect,
+  input,
+  isSignal,
+  signal,
+  untracked,
+} from '@angular/core'
+import { TestBed } from '@angular/core/testing'
+import { setFixtureSignalInputs } from './test-utils'
+
+describe('createAngularTable', () => {
+  test('should render with required signal inputs', () => {
+    @Component({
+      selector: 'app-fake',
+      template: ``,
+      standalone: true,
+    })
+    class FakeComponent {
+      data = input.required<any[]>()
+
+      table = createAngularTable(() => ({
+        data: this.data(),
+        columns: [],
+        getCoreRowModel: getCoreRowModel(),
+      }))
+    }
+
+    const fixture = TestBed.createComponent(FakeComponent)
+    setFixtureSignalInputs(fixture, {
+      data: [],
+    })
+
+    fixture.detectChanges()
+  })
+
+  describe('Proxy table', () => {
+    type Data = { id: string; title: string }
+    const data = signal<Data[]>([{ id: '1', title: 'Title' }])
+    const columns: ColumnDef<Data>[] = [
+      { id: 'id', header: 'Id', cell: (context) => context.getValue() },
+      { id: 'title', header: 'Title', cell: (context) => context.getValue() },
+    ]
+    const table = createAngularTable(() => ({
+      data: data(),
+      columns: columns,
+      getCoreRowModel: getCoreRowModel(),
+      getRowId: (row) => row.id,
+    }))
+    const tablePropertyKeys = Object.keys(table())
+
+    test('table must be a signal', () => {
+      expect(isSignal(table)).toEqual(true)
+    })
+
+    test('supports "in" operator', () => {
+      expect('getCoreRowModel' in table).toBe(true)
+      expect('options' in table).toBe(true)
+      expect('notFound' in table).toBe(false)
+    })
+
+    test('supports "Object.keys"', () => {
+      const keys = Object.keys(table())
+      expect(Object.keys(table)).toEqual(keys)
+    })
+
+    test.each(
+      tablePropertyKeys.map((property) => [
+        property,
+        testShouldBeComputedProperty(untracked(table), property),
+      ]),
+    )('property (%s) is computed -> (%s)', (name, expected) => {
+      const tableProperty = table[name as keyof typeof table]
+      expect(isSignal(tableProperty)).toEqual(expected)
+    })
+
+    test('Row model is reactive', () => {
+      const coreRowModelFn = vi.fn<[RowModel<Data>]>()
+      const rowModelFn = vi.fn<[RowModel<Data>]>()
+      const pagination = signal<PaginationState>({
+        pageSize: 5,
+        pageIndex: 0,
+      })
+      const data = Array.from({ length: 10 }, (_, i) => ({
+        id: String(i),
+        title: `Title ${i}`,
+      }))
+
+      TestBed.runInInjectionContext(() => {
+        const table = createAngularTable(() => ({
+          data,
+          columns: columns,
+          getCoreRowModel: getCoreRowModel(),
+          getPaginationRowModel: getPaginationRowModel(),
+          getRowId: (row) => row.id,
+          state: {
+            pagination: pagination(),
+          },
+          onPaginationChange: (updater) => {
+            typeof updater === 'function'
+              ? pagination.update(updater)
+              : pagination.set(updater)
+          },
+        }))
+
+        effect(() => coreRowModelFn(table.getCoreRowModel()))
+        effect(() => rowModelFn(table.getRowModel()))
+
+        TestBed.flushEffects()
+
+        pagination.set({ pageIndex: 0, pageSize: 3 })
+
+        TestBed.flushEffects()
+      })
+
+      expect(coreRowModelFn).toHaveBeenCalledOnce()
+      expect(coreRowModelFn.mock.calls[0]![0].rows.length).toEqual(10)
+
+      expect(rowModelFn).toHaveBeenCalledTimes(2)
+      expect(rowModelFn.mock.calls[0]![0].rows.length).toEqual(5)
+      expect(rowModelFn.mock.calls[1]![0].rows.length).toEqual(3)
+    })
+  })
+})
+
+const testShouldBeComputedProperty = (
+  table: Table<any>,
+  propertyName: string,
+) => {
+  if (propertyName.endsWith('Handler')) {
+    // || propertyName.endsWith('Model')) {
+    return false
+  }
+
+  if (propertyName.startsWith('get')) {
+    // Only properties with no arguments are computed
+    const fn = table[propertyName as keyof Table<any>]
+    // Cannot test if is lazy computed since we return the unwrapped value
+    return fn instanceof Function && fn.length === 0
+  }
+
+  return false
+}
+
+
+--- packages/table-core/src/filterFns.ts ---
+import { FilterFn } from './features/ColumnFiltering'
+
+const includesString: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: string,
+) => {
+  const search = filterValue?.toString()?.toLowerCase()
+  return Boolean(
+    row
+      .getValue<string | null>(columnId)
+      ?.toString()
+      ?.toLowerCase()
+      ?.includes(search),
+  )
+}
+
+includesString.autoRemove = (val: any) => testFalsey(val)
+
+const includesStringSensitive: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: string,
+) => {
+  return Boolean(
+    row.getValue<string | null>(columnId)?.toString()?.includes(filterValue),
+  )
+}
+
+includesStringSensitive.autoRemove = (val: any) => testFalsey(val)
+
+const equalsString: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: string,
+) => {
+  return (
+    row.getValue<string | null>(columnId)?.toString()?.toLowerCase() ===
+    filterValue?.toLowerCase()
+  )
+}
+
+equalsString.autoRemove = (val: any) => testFalsey(val)
+
+const arrIncludes: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown,
+) => {
+  return row.getValue<unknown[]>(columnId)?.includes(filterValue)
+}
+
+arrIncludes.autoRemove = (val: any) => testFalsey(val)
+
+const arrIncludesAll: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown[],
+) => {
+  return !filterValue.some(
+    (val) => !row.getValue<unknown[]>(columnId)?.includes(val),
+  )
+}
+
+arrIncludesAll.autoRemove = (val: any) => testFalsey(val) || !val?.length
+
+const arrIncludesSome: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown[],
+) => {
+  return filterValue.some((val) =>
+    row.getValue<unknown[]>(columnId)?.includes(val),
+  )
+}
+
+arrIncludesSome.autoRemove = (val: any) => testFalsey(val) || !val?.length
+
+const equals: FilterFn<any> = (row, columnId: string, filterValue: unknown) => {
+  return row.getValue(columnId) === filterValue
+}
+
+equals.autoRemove = (val: any) => testFalsey(val)
+
+const weakEquals: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: unknown,
+) => {
+  return row.getValue(columnId) == filterValue
+}
+
+weakEquals.autoRemove = (val: any) => testFalsey(val)
+
+const inNumberRange: FilterFn<any> = (
+  row,
+  columnId: string,
+  filterValue: [number, number],
+) => {
+  let [min, max] = filterValue
+
+  const rowValue = row.getValue<number>(columnId)
+  return rowValue >= min && rowValue <= max
+}
+
+inNumberRange.resolveFilterValue = (val: [any, any]) => {
+  let [unsafeMin, unsafeMax] = val
+
+  let parsedMin =
+    typeof unsafeMin !== 'number' ? parseFloat(unsafeMin as string) : unsafeMin
+  let parsedMax =
+    typeof unsafeMax !== 'number' ? parseFloat(unsafeMax as string) : unsafeMax
+
+  let min =
+    unsafeMin === null || Number.isNaN(parsedMin) ? -Infinity : parsedMin
+  let max = unsafeMax === null || Number.isNaN(parsedMax) ? Infinity : parsedMax
+
+  if (min > max) {
+    const temp = min
+    min = max
+    max = temp
+  }
+
+  return [min, max] as const
+}
+
+inNumberRange.autoRemove = (val: any) =>
+  testFalsey(val) || (testFalsey(val[0]) && testFalsey(val[1]))
+
+// Export
+
+export const filterFns = {
+  includesString,
+  includesStringSensitive,
+  equalsString,
+  arrIncludes,
+  arrIncludesAll,
+  arrIncludesSome,
+  equals,
+  weakEquals,
+  inNumberRange,
+}
+
+export type BuiltInFilterFn = keyof typeof filterFns
+
+// Utils
+
+function testFalsey(val: any) {
+  return val === undefined || val === null || val === ''
+}
+
+
+--- packages/angular-table/src/flex-render.ts ---
+import {
+  ChangeDetectorRef,
+  Directive,
+  DoCheck,
+  effect,
+  type EffectRef,
+  Inject,
+  inject,
+  Injector,
+  Input,
+  OnChanges,
+  runInInjectionContext,
+  SimpleChanges,
+  TemplateRef,
+  Type,
+  ViewContainerRef,
+} from '@angular/core'
+import { FlexRenderComponentProps } from './flex-render/context'
+import { FlexRenderFlags } from './flex-render/flags'
+import {
+  flexRenderComponent,
+  FlexRenderComponent,
+} from './flex-render/flex-render-component'
+import { FlexRenderComponentFactory } from './flex-render/flex-render-component-ref'
+import {
+  FlexRenderComponentView,
+  FlexRenderTemplateView,
+  type FlexRenderTypedContent,
+  FlexRenderView,
+  mapToFlexRenderTypedContent,
+} from './flex-render/view'
+import { memo } from '@tanstack/table-core'
+
+export {
+  injectFlexRenderContext,
+  type FlexRenderComponentProps,
+} from './flex-render/context'
+
+export type FlexRenderContent<TProps extends NonNullable<unknown>> =
+  | string
+  | number
+  | Type<TProps>
+  | FlexRenderComponent<TProps>
+  | TemplateRef<{ $implicit: TProps }>
+  | null
+  | Record<any, any>
+  | undefined
+
+@Directive({
+  selector: '[flexRender]',
+  standalone: true,
+  providers: [FlexRenderComponentFactory],
+})
+export class FlexRenderDirective<TProps extends NonNullable<unknown>>
+  implements OnChanges, DoCheck
+{
+  readonly #flexRenderComponentFactory = inject(FlexRenderComponentFactory)
+  readonly #changeDetectorRef = inject(ChangeDetectorRef)
+
+  @Input({ required: true, alias: 'flexRender' })
+  content:
+    | number
+    | string
+    | ((props: TProps) => FlexRenderContent<TProps>)
+    | null
+    | undefined = undefined
+
+  @Input({ required: true, alias: 'flexRenderProps' })
+  props: TProps = {} as TProps
+
+  @Input({ required: false, alias: 'flexRenderInjector' })
+  injector: Injector = inject(Injector)
+
+  renderFlags = FlexRenderFlags.ViewFirstRender
+  renderView: FlexRenderView<any> | null = null
+
+  readonly #latestContent = () => {
+    const { content, props } = this
+    return typeof content !== 'function'
+      ? content
+      : runInInjectionContext(this.injector, () => content(props))
+  }
+
+  #getContentValue = memo(
+    () => [this.#latestContent(), this.props, this.content],
+    (latestContent) => {
+      return mapToFlexRenderTypedContent(latestContent)
+    },
+    { key: 'flexRenderContentValue', debug: () => false },
+  )
+
+  constructor(
+    @Inject(ViewContainerRef)
+    private readonly viewContainerRef: ViewContainerRef,
+    @Inject(TemplateRef)
+    private readonly templateRef: TemplateRef<any>,
+  ) {}
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['props']) {
+      this.renderFlags |= FlexRenderFlags.PropsReferenceChanged
+    }
+    if (changes['content']) {
+      this.renderFlags |=
+        FlexRenderFlags.ContentChanged | FlexRenderFlags.ViewFirstRender
+      this.update()
+    }
+  }
+
+  ngDoCheck(): void {
+    if (this.renderFlags & FlexRenderFlags.ViewFirstRender) {
+      // On the initial render, the view is created during the `ngOnChanges` hook.
+      // Since `ngDoCheck` is called immediately afterward, there's no need to check for changes in this phase.
+      this.renderFlags &= ~FlexRenderFlags.ViewFirstRender
+      return
+    }
+
+    this.renderFlags |= FlexRenderFlags.DirtyCheck
+
+    const latestContent = this.#getContentValue()
+    if (latestContent.kind === 'null' || !this.renderView) {
+      this.renderFlags |= FlexRenderFlags.ContentChanged
+    } else {
+      this.renderView.content = latestContent
+      const { kind: previousKind } = this.renderView.previousContent
+      if (latestContent.kind !== previousKind) {
+        this.renderFlags |= FlexRenderFlags.ContentChanged
+      }
+    }
+    this.update()
+  }
+
+  update() {
+    if (
+      this.renderFlags &
+      (FlexRenderFlags.ContentChanged | FlexRenderFlags.ViewFirstRender)
+    ) {
+      this.render()
+      return
+    }
+    if (this.renderFlags & FlexRenderFlags.PropsReferenceChanged) {
+      if (this.renderView) this.renderView.updateProps(this.props)
+      this.renderFlags &= ~FlexRenderFlags.PropsReferenceChanged
+    }
+    if (
+      this.renderFlags &
+      (FlexRenderFlags.DirtyCheck | FlexRenderFlags.DirtySignal)
+    ) {
+      if (this.renderView) this.renderView.dirtyCheck()
+      this.renderFlags &= ~(
+        FlexRenderFlags.DirtyCheck | FlexRenderFlags.DirtySignal
+      )
+    }
+  }
+
+  #currentEffectRef: EffectRef | null = null
+
+  render() {
+    if (this.#shouldRecreateEntireView() && this.#currentEffectRef) {
+      this.#currentEffectRef.destroy()
+      this.#currentEffectRef = null
+      this.renderFlags &= ~FlexRenderFlags.RenderEffectChecked
+    }
+
+    this.viewContainerRef.clear()
+    this.renderFlags =
+      FlexRenderFlags.Pristine |
+      (this.renderFlags & FlexRenderFlags.ViewFirstRender) |
+      (this.renderFlags & FlexRenderFlags.RenderEffectChecked)
+
+    const resolvedContent = this.#getContentValue()
+    if (resolvedContent.kind === 'null') {
+      this.renderView = null
+    } else {
+      this.renderView = this.#renderViewByContent(resolvedContent)
+    }
+
+    // If the content is a function `content(props)`, we initialize an effect
+    // in order to react to changes if the given definition use signals.
+    if (!this.#currentEffectRef && typeof this.content === 'function') {
+      this.#currentEffectRef = effect(
+        () => {
+          this.#latestContent()
+          if (!(this.renderFlags & FlexRenderFlags.RenderEffectChecked)) {
+            this.renderFlags |= FlexRenderFlags.RenderEffectChecked
+            return
+          }
+          this.renderFlags |= FlexRenderFlags.DirtySignal
+          // This will mark the view as changed,
+          // so we'll try to check for updates into ngDoCheck
+          this.#changeDetectorRef.markForCheck()
+        },
+        { injector: this.viewContainerRef.injector },
+      )
+    }
+  }
+
+  #shouldRecreateEntireView() {
+    return (
+      this.renderFlags &
+      FlexRenderFlags.ContentChanged &
+      FlexRenderFlags.ViewFirstRender
+    )
+  }
+
+  #renderViewByContent(
+    content: FlexRenderTypedContent,
+  ): FlexRenderView<any> | null {
+    if (content.kind === 'primitive') {
+      return this.#renderStringContent(content)
+    } else if (content.kind === 'templateRef') {
+      return this.#renderTemplateRefContent(content)
+    } else if (content.kind === 'flexRenderComponent') {
+      return this.#renderComponent(content)
+    } else if (content.kind === 'component') {
+      return this.#renderCustomComponent(content)
+    } else {
+      return null
+    }
+  }
+
+  #renderStringContent(
+    template: Extract<FlexRenderTypedContent, { kind: 'primitive' }>,
+  ): FlexRenderTemplateView {
+    const context = () => {
+      return typeof this.content === 'string' ||
+        typeof this.content === 'number'
+        ? this.content
+        : this.content?.(this.props)
+    }
+    const ref = this.viewContainerRef.createEmbeddedView(this.templateRef, {
+      get $implicit() {
+        return context()
+      },
+    })
+    return new FlexRenderTemplateView(template, ref)
+  }
+
+  #renderTemplateRefContent(
+    template: Extract<FlexRenderTypedContent, { kind: 'templateRef' }>,
+  ): FlexRenderTemplateView {
+    const latestContext = () => this.props
+    const view = this.viewContainerRef.createEmbeddedView(template.content, {
+      get $implicit() {
+        return latestContext()
+      },
+    })
+    return new FlexRenderTemplateView(template, view)
+  }
+
+  #renderComponent(
+    flexRenderComponent: Extract<
+      FlexRenderTypedContent,
+      { kind: 'flexRenderComponent' }
+    >,
+  ): FlexRenderComponentView {
+    const { inputs, outputs, injector } = flexRenderComponent.content
+
+    const getContext = () => this.props
+    const proxy = new Proxy(this.props, {
+      get: (_, key) => getContext()[key as keyof typeof _],
+    })
+    const componentInjector = Injector.create({
+      parent: injector ?? this.injector,
+      providers: [{ provide: FlexRenderComponentProps, useValue: proxy }],
+    })
+    const view = this.#flexRenderComponentFactory.createComponent(
+      flexRenderComponent.content,
+      componentInjector,
+    )
+    return new FlexRenderComponentView(flexRenderComponent, view)
+  }
+
+  #renderCustomComponent(
+    component: Extract<FlexRenderTypedContent, { kind: 'component' }>,
+  ): FlexRenderComponentView {
+    const view = this.#flexRenderComponentFactory.createComponent(
+      flexRenderComponent(component.content, {
+        inputs: this.props,
+        injector: this.injector,
+      }),
+      this.injector,
+    )
+    return new FlexRenderComponentView(component, view)
+  }
+}
+
+
+--- packages/angular-table/tests/flex-render-component.test-d.ts ---
+import { input } from '@angular/core'
+import { test } from 'vitest'
+import { flexRenderComponent } from '../src'
+
+test('Infer component inputs', () => {
+  class Test {
+    readonly input1 = input<string>()
+  }
+
+  // @ts-expect-error Must pass right type as a value
+  flexRenderComponent(Test, { inputs: { input1: 1 } })
+
+  // Input is optional so we can skip passing the property
+  flexRenderComponent(Test, { inputs: {} })
+})
+
+test('Options are mandatory when given component has required inputs', () => {
+  class Test {
+    readonly input1 = input<string>()
+    readonly requiredInput1 = input.required<string>()
+  }
+
+  // @ts-expect-error Required input
+  flexRenderComponent(Test)
+
+  flexRenderComponent(Test, { inputs: { requiredInput1: 'My value' } })
+})
+
+
+--- scripts/getRollupConfig.js ---
+// @ts-check
+
+import { resolve } from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { babel } from '@rollup/plugin-babel'
+import commonJS from '@rollup/plugin-commonjs'
+import { visualizer } from 'rollup-plugin-visualizer'
+import terser from '@rollup/plugin-terser'
+// @ts-expect-error
+import size from 'rollup-plugin-size'
+import replace from '@rollup/plugin-replace'
+import { nodeResolve } from '@rollup/plugin-node-resolve'
+import svelte from 'rollup-plugin-svelte'
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url))
+const rootDir = resolve(__dirname, '..')
+
+/** @param {'development' | 'production'} type */
+const forceEnvPlugin = (type) =>
+  replace({
+    'process.env.NODE_ENV': `"${type}"`,
+    delimiters: ['', ''],
+    preventAssignment: true,
+  })
+
+const babelPlugin = babel({
+  configFile: resolve(rootDir, 'babel.config.cjs'),
+  babelHelpers: 'bundled',
+  exclude: /node_modules/,
+  extensions: ['.ts', '.tsx'],
+})
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.name - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {string} opts.entryFile - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @param {string[]} opts.external
+ * @returns {import('rollup').RollupOptions[]}
+ */
+export function buildConfigs(opts) {
+  const input = resolve(opts.entryFile)
+
+  /** @param {string} moduleName */
+  const external = (moduleName) => opts.external.includes(moduleName)
+  const umdExternal = Object.keys(opts.globals)
+  const banner = createBanner(opts.name)
+
+  const options = {
+    input,
+    jsName: opts.jsName,
+    outputFile: opts.outputFile,
+    external,
+    banner,
+    globals: opts.globals,
+  }
+
+  return [
+    mjs(options),
+    esm(options),
+    cjs(options),
+    umdDev({ ...options, external: umdExternal }),
+    umdProd({ ...options, external: umdExternal }),
+  ]
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.input - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {any} opts.external
+ * @param {string} opts.banner - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @returns {import('rollup').RollupOptions}
+ */
+function mjs({ input, external, banner, outputFile }) {
+  return {
+    // ESM
+    external,
+    input,
+    output: {
+      format: 'esm',
+      sourcemap: true,
+      file: `./build/lib/${outputFile}.mjs`,
+      banner,
+    },
+    plugins: [
+      svelte({
+        compilerOptions: {
+          hydratable: true,
+        },
+      }),
+      commonJS(),
+      babelPlugin,
+      nodeResolve({ extensions: ['.ts', '.tsx'] }),
+    ],
+  }
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.input - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {any} opts.external
+ * @param {string} opts.banner - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @returns {import('rollup').RollupOptions}
+ */
+function esm({ input, external, banner, outputFile }) {
+  return {
+    // ESM
+    external,
+    input,
+    output: {
+      format: 'esm',
+      sourcemap: true,
+      file: `./build/lib/${outputFile}.esm.js`,
+      banner,
+    },
+    plugins: [
+      svelte({
+        compilerOptions: {
+          hydratable: true,
+        },
+      }),
+      commonJS(),
+      babelPlugin,
+      nodeResolve({ extensions: ['.ts', '.tsx'] }),
+    ],
+  }
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.input - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {any} opts.external
+ * @param {string} opts.banner - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @returns {import('rollup').RollupOptions}
+ */
+function cjs({ input, external, banner }) {
+  return {
+    // CJS
+    external,
+    input,
+    output: {
+      format: 'cjs',
+      sourcemap: true,
+      dir: `./build/lib`,
+      preserveModules: true,
+      exports: 'named',
+      banner,
+    },
+    plugins: [
+      svelte(),
+      commonJS(),
+      babelPlugin,
+      nodeResolve({ extensions: ['.ts', '.tsx'] }),
+    ],
+  }
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.input - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {any} opts.external
+ * @param {string} opts.banner - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @returns {import('rollup').RollupOptions}
+ */
+function umdDev({ input, external, globals, banner, jsName }) {
+  return {
+    // UMD (Dev)
+    external,
+    input,
+    output: {
+      format: 'umd',
+      sourcemap: true,
+      file: `./build/umd/index.development.js`,
+      name: jsName,
+      globals,
+      banner,
+    },
+    plugins: [
+      svelte(),
+      commonJS(),
+      babelPlugin,
+      nodeResolve({ extensions: ['.ts', '.tsx'] }),
+      forceEnvPlugin('development'),
+    ],
+  }
+}
+
+/**
+ * @param {Object} opts - Options for building configurations.
+ * @param {string} opts.input - The name.
+ * @param {string} opts.jsName - The UMD name.
+ * @param {string} opts.outputFile - The output file.
+ * @param {any} opts.external
+ * @param {string} opts.banner - The entry file.
+ * @param {Record<string, string>} opts.globals
+ * @returns {import('rollup').RollupOptions}
+ */
+function umdProd({ input, external, globals, banner, jsName }) {
+  return {
+    // UMD (Prod)
+    external,
+    input,
+    output: {
+      format: 'umd',
+      sourcemap: true,
+      file: `./build/umd/index.production.js`,
+      name: jsName,
+      globals,
+      banner,
+    },
+    plugins: [
+      svelte(),
+      commonJS(),
+      babelPlugin,
+      nodeResolve({ extensions: ['.ts', '.tsx'] }),
+      forceEnvPlugin('production'),
+      terser({
+        mangle: true,
+        compress: true,
+      }),
+      size({}),
+      visualizer({
+        filename: `./build/stats-html.html`,
+        gzipSize: true,
+      }),
+      visualizer({
+        filename: `./build/stats-react.json`,
+        json: true,
+        gzipSize: true,
+      }),
+    ],
+  }
+}
+
+/** @param {string} libraryName */
+function createBanner(libraryName) {
+  return `/**
+   * ${libraryName}
+   *
+   * Copyright (c) TanStack
+   *
+   * This source code is licensed under the MIT license found in the
+   * LICENSE.md file in the root directory of this source tree.
+   *
+   * @license MIT
+   */`
+}
+
+
+--- scripts/verify-links.ts ---
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
+import { glob } from 'tinyglobby'
+// @ts-ignore Could not find a declaration file for module 'markdown-link-extractor'.
+import markdownLinkExtractor from 'markdown-link-extractor'
+
+const errors: Array<{
+  file: string
+  link: string
+  resolvedPath: string
+  reason: string
+}> = []
+
+function isRelativeLink(link: string) {
+  return (
+    !link.startsWith('/') &&
+    !link.startsWith('http://') &&
+    !link.startsWith('https://') &&
+    !link.startsWith('//') &&
+    !link.startsWith('#') &&
+    !link.startsWith('mailto:')
+  )
+}
+
+/** Remove any trailing .md */
+function stripExtension(p: string): string {
+  return p.replace(`${extname(p)}`, '')
+}
+
+function relativeLinkExists(link: string, file: string): boolean {
+  // Remove hash if present
+  const linkWithoutHash = link.split('#')[0]
+  // If the link is empty after removing hash, it's not a file
+  if (!linkWithoutHash) return false
+
+  // Strip the file/link extensions
+  const filePath = stripExtension(file)
+  const linkPath = stripExtension(linkWithoutHash)
+
+  // Resolve the path relative to the markdown file's directory
+  // Nav up a level to simulate how links are resolved on the web
+  let absPath = resolve(filePath, '..', linkPath)
+
+  // Ensure the resolved path is within /docs
+  const docsRoot = resolve('docs')
+  if (!absPath.startsWith(docsRoot)) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Path outside /docs',
+    })
+    return false
+  }
+
+  // Check if this is an example path
+  const isExample = absPath.includes('/examples/')
+
+  let exists = false
+
+  if (isExample) {
+    // Transform /docs/framework/{framework}/examples/ to /examples/{framework}/
+    absPath = absPath.replace(
+      /\/docs\/framework\/([^/]+)\/examples\//,
+      '/examples/$1/',
+    )
+    // For examples, we want to check if the directory exists
+    exists = existsSync(absPath) && statSync(absPath).isDirectory()
+  } else {
+    // For non-examples, we want to check if the .md file exists
+    if (!absPath.endsWith('.md')) {
+      absPath = `${absPath}.md`
+    }
+    exists = existsSync(absPath)
+  }
+
+  if (!exists) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Not found',
+    })
+  }
+  return exists
+}
+
+async function verifyMarkdownLinks() {
+  // Find all markdown files in docs directory
+  const markdownFiles = await glob('docs/**/*.md', {
+    ignore: ['**/node_modules/**'],
+  })
+
+  console.log(`Found ${markdownFiles.length} markdown files\n`)
+
+  // Process each file
+  for (const file of markdownFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const links: Array<string> = markdownLinkExtractor(content)
+
+    const relativeLinks = links.filter((link: string) => {
+      return isRelativeLink(link)
+    })
+
+    if (relativeLinks.length > 0) {
+      relativeLinks.forEach((link) => {
+        relativeLinkExists(link, file)
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`\n❌ Found ${errors.length} broken links:`)
+    errors.forEach((err) => {
+      console.log(
+        `${err.file}\n  link:      ${err.link}\n  resolved:  ${err.resolvedPath}\n  why:       ${err.reason}\n`,
+      )
+    })
+    process.exit(1)
+  } else {
+    console.log('\n✅ No broken links found!')
+  }
+}
+
+verifyMarkdownLinks().catch(console.error)

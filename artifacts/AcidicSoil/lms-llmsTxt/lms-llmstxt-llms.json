@@ -1,0 +1,209 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Lms Llmstxt",
+    "summary": "--- title: \"LM Studio llms.txt Generator\" description: \"Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio.\" ---"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Spec Handoff Next Steps",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/docs/Spec handoff next steps.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Agents",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/.ruler/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Link Discovery Structure",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/Link discovery structure.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Repos",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/repos.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Queue Run",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/scripts/queue_run.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "Analyzer",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/analyzer.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Cli",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/cli.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Config",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/config.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Fallback",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/fallback.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Full Builder",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/full_builder.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Github",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/github.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Lmstudio",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/lmstudio.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Models",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/models.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Pipeline",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/src/lmstudiotxt_generator/pipeline.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "Test Analyzer",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/tests/test_analyzer.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Full Builder",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/tests/test_full_builder.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Lmstudio",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/tests/test_lmstudio.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Agents.Session Coach",
+          "url": "https://github.com/AcidicSoil/lms-llmsTxt/blob/main/tests/fixtures/agents/AGENTS.session-coach.md",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,429 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Ai",
+    "summary": "<div align=\"center\"> <img src=\"./media/header_ai.png\" > </div> <br /> <div align=\"center\"> <a href=\"https://npmjs.com/package/@tanstack/ai\" target=\"\\_parent\"> <img alt=\"\" src=\"https://img.shields.io/npm/dm/@tanstack/ai.svg\" /> </a> <a href=\"https://github.com/TanStack/ai\" target=\"\\_parent\">"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Devtools",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/getting-started/devtools.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/getting-started/overview.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quick Start",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/getting-started/quick-start.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Reference",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/reference/index.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Generate Docs",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/scripts/generate-docs.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Agentic Cycle",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/guides/agentic-cycle.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Ai",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/api/ai.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Ai Client",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/api/ai-client.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Ai React",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/api/ai-react.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Ai Solid",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/docs/api/ai-solid.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/php-slim/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/python-fastapi/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/ts-group-chat/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/ts-react-chat/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/ts-solid-chat/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/vanilla-chat/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Vanilla Chat",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/vanilla-chat/index.html",
+          "note": "worked example"
+        },
+        {
+          "title": "Anthropic Server",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/python-fastapi/anthropic-server.py",
+          "note": "worked example"
+        },
+        {
+          "title": "Api Verification",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/examples/ts-react-chat/api-verification.ts",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Api.Chat",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/routes/api.chat.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Api.List Traces",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/routes/api.list-traces.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Api.Load Trace",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/routes/api.load-trace.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Api.Tanchat",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/smoke-tests/e2e/src/routes/api.tanchat.ts",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-anthropic/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-client/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-devtools/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-gemini/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-ollama/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-openai/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-react-ui/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-react/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-solid-ui/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Shaggy States Warn",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/.changeset/shaggy-states-warn.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Of Conduct",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/CODE_OF_CONDUCT.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Eslint.Config",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/eslint.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Prettier.Config",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/prettier.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Verify Links",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/scripts/verify-links.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Workspace",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/vitest.workspace.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Copilot Instructions",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/.github/instructions/copilot-instructions.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/php/tanstack-ai/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/python/tanstack-ai/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-client/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-devtools/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-gemini/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-ollama/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-openai/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-react-ui/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-react/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/packages/typescript/ai-solid-ui/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Testing",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "App.Config",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/app.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vite.Config",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/vite.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Routetree.Gen",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/routeTree.gen.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Guitar Tools",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/lib/guitar-tools.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/traces/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Model Selection",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/lib/model-selection.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Recording",
+          "url": "https://raw.githubusercontent.com/TanStack/ai/main/testing/panel/src/lib/recording.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+# Oplink Mcp
+
+> Oplink’s main purpose is to simplify the orchestration of multiple MCP servers into cohesive, reusable workflows without requiring custom code. It allows developers and users to define workflows in YAML, wire in external tools (e.g., Chrome DevTools, shadcn, Linear), and expose them as single, discoverable tools to any MCP client. The project aims to reduce friction in debugging, automation, and agent-based development by caching tool schemas, supporting dynamic discovery via `describe_tools`, and enabling both simple prompts and multi-step scripted executions.
+
+**Remember:**
+- MCP servers
+- Workflow orchestration
+- mcporter
+- External tool registry (.mcp-workflows/servers.json)
+- Scripted workflow steps
+- Prompt-only workflows
+
+## Docs
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/README.md): install & quickstart.
+- [0 Architecture Overview](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/6.contributing/0-architecture-overview.md): install & quickstart.
+- [1 Overview](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/3.workflows/1-overview.md): install & quickstart.
+- [1.Index](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/1.getting-started/1.index.md): install & quickstart.
+- [2.Installation](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/1.getting-started/2.installation.md): install & quickstart.
+- [3.Cli](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/1.getting-started/3.cli.md): install & quickstart.
+- [1 Linear Discord](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/4.examples/1-linear-discord.md): worked example.
+- [2 Deepwiki](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/4.examples/2-deepwiki.md): worked example.
+- [3 Context7](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/4.examples/3-context7.md): worked example.
+- [4 Frontend Mcp](https://github.com/regenrek/oplink-mcp/blob/main/docs/oplink-docs/content/4.examples/4-frontend-mcp.md): worked example.
+
+## Tutorials
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/examples/atlassian-demo/README.md): install & quickstart.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/examples/context7-demo/README.md): install & quickstart.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/examples/deepwiki-demo/README.md): install & quickstart.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/examples/linear-discord-demo/README.md): install & quickstart.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/examples/universal-proxy-demo/README.md): install & quickstart.
+- [Frontend Mcp Demo](https://github.com/regenrek/oplink-mcp/blob/main/examples/frontend-mcp-demo/index.html): worked example.
+- [How To Release](https://github.com/regenrek/oplink-mcp/blob/main/HOW-TO-RELEASE.md): worked example.
+- [Tailwind.Config](https://github.com/regenrek/oplink-mcp/blob/main/examples/frontend-mcp-demo/tailwind.config.ts): worked example.
+- [Vite.Config](https://github.com/regenrek/oplink-mcp/blob/main/examples/frontend-mcp-demo/vite.config.ts): worked example.
+- [Tool Integration.Examples.Test](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/test/tool-integration.examples.test.ts): worked example.
+
+## Optional
+- [Release](https://github.com/regenrek/oplink-mcp/blob/main/scripts/release.ts): version history.
+- [Agents](https://github.com/regenrek/oplink-mcp/blob/main/AGENTS.md): docs page.
+- [Contribute](https://github.com/regenrek/oplink-mcp/blob/main/CONTRIBUTE.md): docs page.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/README.md): docs page.
+- [Stderr](https://github.com/regenrek/oplink-mcp/blob/main/stderr.txt): docs page.
+- [Stdout](https://github.com/regenrek/oplink-mcp/blob/main/stdout.txt): docs page.
+- [Time](https://github.com/regenrek/oplink-mcp/blob/main/time.txt): docs page.
+
+## .Cursor
+- [Code Review](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/code-review.md): docs page.
+- [Code Review Low](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/code-review-low.md): docs page.
+- [Create Finding](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/create-finding.md): docs page.
+- [Create Finding Linear](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/create-finding-linear.md): docs page.
+- [Create Pr](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/create-pr.md): docs page.
+- [Create Story](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/create-story.md): docs page.
+- [Get Logs From Grafana](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/get-logs-from-grafana.md): docs page.
+- [Kill Port 3000](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/kill-port-3000.md): docs page.
+- [Problem Analyzer](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/problem-analyzer.md): docs page.
+- [Pull Tickets](https://github.com/regenrek/oplink-mcp/blob/main/.cursor/commands/pull-tickets.md): docs page.
+
+## Packages
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/README.md): install & quickstart.
+- [README](https://github.com/regenrek/oplink-mcp/blob/main/packages/oplink/README.md): install & quickstart.
+- [Mcp Config](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/mcp-config.js): docs page.
+- [Mcp Config](https://github.com/regenrek/oplink-mcp/blob/main/packages/oplink/mcp-config.js): docs page.
+- [Rolldown.Config](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/rolldown.config.ts): docs page.
+- [Rolldown.Config](https://github.com/regenrek/oplink-mcp/blob/main/packages/oplink/rolldown.config.ts): docs page.
+- [Rolldown.Config](https://github.com/regenrek/oplink-mcp/blob/main/packages/test-utils/rolldown.config.ts): docs page.
+- [Types.D](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/types.d.ts): docs page.
+- [Advanced Parameters Integration.Test](https://github.com/regenrek/oplink-mcp/blob/main/packages/cli/test/advanced-parameters-integration.test.ts): docs page.
+- [Advanced Parameters.Test](https://github.com/regenrek/oplink-mcp/blob/main/packages/oplink/test/advanced-parameters.test.ts): docs page.
+
+## Scripts
+- [Bootstrap Linear](https://github.com/regenrek/oplink-mcp/blob/main/scripts/bootstrap-linear.ts): docs page.
+- [Verify Atlassian Catalog](https://github.com/regenrek/oplink-mcp/blob/main/scripts/verify-atlassian-catalog.ts): docs page.

@@ -1,0 +1,317 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- src/design-tools.ts ---
+/**
+ * NOTE for contributors:
+ * This is a curated list. Here's what qualifies:
+ * - It should be the company’s main tool (one tool per company)
+ * - Must be production-ready and have users (no alpha/beta products)
+ * - Constrain the logo to 32px height and use a 180x180 canvas
+ */
+export const designTools = [{
+  image: '/logos/logo-sketch.svg',
+  link: 'https://www.sketch.com',
+  title: 'Sketch',
+}, {
+  image: '/logos/logo-figma.svg',
+  link: 'https://www.figma.com',
+  title: 'Figma',
+}, {
+  image: '/logos/logo-adobe-xd.svg',
+  link: 'https://www.adobe.com/ca/products/xd.html',
+  title: 'Adobe XD',
+}, {
+  image: '/logos/logo-invision.svg',
+  link: 'https://www.invisionapp.com',
+  title: 'InVision',
+}, {
+  image: '/logos/logo-framer.svg',
+  link: 'https://www.framer.com',
+  title: 'Framer',
+}, {
+  image: '/logos/logo-uxpin.svg',
+  link: 'https://www.uxpin.com',
+  title: 'UX Pin',
+}, {
+  image: '/logos/logo-zeplin.svg',
+  link: 'https://zeplin.io',
+  title: 'Zeplin',
+}, {
+  image: '/logos/logo-abstract.svg',
+  link: 'https://www.abstract.com',
+  title: 'Abstract',
+}, {
+  image: '/logos/logo-zeroheight.svg',
+  link: 'https://zeroheight.com',
+  title: 'Zero Height',
+}, {
+  image: '/logos/logo-modulz.svg',
+  link: 'https://www.modulz.app',
+  title: 'Modulz',
+}, {
+  image: '/logos/logo-draftbit.svg',
+  link: 'https://draftbit.com',
+  title: 'Draftbit',
+}, {
+  image: '/logos/logo-interplay.svg',
+  link: 'https://interplayapp.com',
+  title: 'Interplay',
+}, {
+  image: '/logos/logo-relate.svg',
+  link: 'https://relate.app',
+  title: 'Relate',
+}, {
+    image: '/logos/logo-penpot.svg',
+    link: 'https://penpot.app',
+    title: 'Penpot',
+}]
+/**
+ * NOTE for contributors:
+ * This is a curated list. Here's what qualifies:
+ * - It should be the company’s main tool (one tool per company)
+ * - Must be production-ready and have users (no alpha/beta products)
+ */
+
+
+--- README.md ---
+![](https://raw.githubusercontent.com/ComponentDriven/componentdriven.org/master/public/favicon.svg)
+
+# Component Driven
+
+[![Netlify Status](https://api.netlify.com/api/v1/badges/1d7bee5d-9fc5-4583-9bc6-383166fa8c3f/deploy-status)](https://app.netlify.com/sites/lucid-clarke-d8746f/deploys)
+
+
+## Contribute
+
+Contributions to Component Driven are encouraged! If it’s something small like grammar, punctuation or even a code snippet, first check the [open pull requests](https://github.com/ComponentDriven/componentdriven.org/pulls) to see if it's already being addressed, if it's not, then open up a pull request. If it’s a bigger change like editing content or adding a new tool, [add an issue](https://github.com/ComponentDriven/componentdriven.org/issues) for discussion before getting started.
+
+
+## Who made ComponentDriven.org?
+
+The text, code, and production were contributed by [Chromatic](https://www.chromatic.com/).
+
+
+## Develop
+
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+
+Install packages and run with `yarn dev`.
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+
+You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+
+### Storybook
+
+`yarn storybook` should start Storybook and launch the browser. You can also view the published version at [chromatic.com/library?appId=5f23114b880798002203433](https://www.chromatic.com/library?appId=5f23114b880798002203433a&branch=master).
+
+
+## Links discovered
+- [![Netlify Status](https://api.netlify.com/api/v1/badges/1d7bee5d-9fc5-4583-9bc6-383166fa8c3f/deploy-status)
+- [open pull requests](https://github.com/ComponentDriven/componentdriven.org/pulls)
+- [add an issue](https://github.com/ComponentDriven/componentdriven.org/issues)
+- [Chromatic](https://www.chromatic.com/)
+- [Next.js](https://nextjs.org/)
+- [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app)
+- [http://localhost:3000](http://localhost:3000)
+- [chromatic.com/library?appId=5f23114b880798002203433](https://www.chromatic.com/library?appId=5f23114b880798002203433a&branch=master)
+
+--- next-env.d.ts ---
+/// <reference types="next" />
+/// <reference types="next/types/global" />
+declare module '*.svg';
+
+--- next.config.js ---
+module.exports = {
+  target: 'serverless',
+};
+
+
+--- .storybook/main.js ---
+module.exports = {
+  stories: ['../src/**/*.stories.tsx'],
+  addons: [
+    '@next/plugin-storybook/preset',
+    '@storybook/addon-actions',
+    '@storybook/addon-links',
+    '@storybook/addon-viewport/register',
+  ],
+};
+
+
+--- .storybook/preview.js ---
+import React from 'react';
+import { addDecorator, addParameters } from '@storybook/react';
+import {
+  global as designSystemGlobal,
+  loadFontsForStorybook,
+} from '@storybook/design-system';
+import '!style-loader!css-loader!react-github-button/assets/style.css';
+import { GlobalStyle } from '../src/styles';
+
+const { GlobalStyle: StorybookDSGlobalStyle } = designSystemGlobal;
+
+const withGlobalStyle = (storyFn) => (
+  <>
+    <StorybookDSGlobalStyle />
+    <GlobalStyle />
+    {storyFn()}
+  </>
+);
+
+addDecorator(withGlobalStyle);
+
+loadFontsForStorybook();
+
+addParameters({
+  options: {
+    showRoots: true,
+  },
+});
+
+
+--- src/development-tools.ts ---
+/**
+ * NOTE for contributors:
+ * This is a curated list. Here's what qualifies:
+ * - It should be the company’s main tool (one tool per company)
+ * - Must be production-ready and have users (no alpha/beta products)
+ */
+export const developmentTools = [
+  {
+    image: '/logos/logo-react.svg',
+    link: 'https://reactjs.org',
+    title: 'React',
+  },
+  {
+    image: '/logos/logo-vue.svg',
+    link: 'https://vuejs.org',
+    title: 'Vue.js',
+  },
+  {
+    image: '/logos/logo-angular.svg',
+    link: 'https://angular.io',
+    title: 'Angular',
+  },
+  {
+    image: '/logos/logo-ember.svg',
+    link: 'https://emberjs.com',
+    title: 'Ember',
+  },
+  {
+    image: '/logos/logo-svelte.svg',
+    link: 'https://svelte.dev',
+    title: 'Svelte',
+  },
+  {
+    image: '/logos/logo-riot.svg',
+    link: 'https://riot.js.org',
+    title: 'Riot.js',
+  },
+  {
+    image: '/logos/logo-storybook.svg',
+    link: 'https://storybook.js.org',
+    title: 'Storybook',
+  },
+  {
+    image: '/logos/logo-chromatic.svg',
+    link: 'https://www.chromatic.com',
+    title: 'Chromatic',
+  },
+  {
+    image: '/logos/logo-docz.svg',
+    link: 'https://www.docz.site',
+    title: 'docz',
+  },
+  {
+    image: '/logos/logo-webcomponents.svg',
+    link: 'https://www.webcomponents.org',
+    title: 'Web Components',
+  },
+  {
+    image: '/logos/logo-jest.svg',
+    link: 'https://jestjs.io',
+    title: 'Jest',
+  },
+  {
+    image: '/logos/logo-react-styleguidist.svg',
+    link: 'https://react-styleguidist.js.org',
+    title: 'React Styleguidist',
+  },
+  {
+    image: '/logos/logo-cosmos.svg',
+    link: 'https://reactcosmos.org',
+    title: 'React Cosmos',
+  },
+  {
+    image: '/logos/logo-pattern-lab.svg',
+    link: 'https://patternlab.io',
+    title: 'Pattern Lab',
+  },
+  {
+    image: '/logos/logo-bit.svg',
+    link: 'https://bit.dev',
+    title: 'Bit',
+  },
+  {
+    image: '/logos/logo-backlight.svg',
+    link: 'https://backlight.dev',
+    title: 'Backlight',
+  },
+  {
+    image: '/logos/logo-stencil.svg',
+    link: 'https://stenciljs.com/',
+    title: 'Stencil.js',
+  },
+  {
+    image: '/logos/logo-anima.svg',
+    link: 'https://www.animaapp.com/',
+    title: 'Anima',
+  },
+];
+/**
+ * NOTE for contributors:
+ * This is a curated list. Here's what qualifies:
+ * - It should be the company’s main tool (one tool per company)
+ * - Must be production-ready and have users (no alpha/beta products)
+ */
+
+
+--- src/styles.ts ---
+import { createGlobalStyle, css } from 'styled-components';
+import { styles } from '@storybook/design-system';
+const { breakpoint } = styles;
+
+export const measure = { regular: 600, wide: 760, xwide: 980 };
+
+export const margin = {
+  xxsmall: 10,
+  xsmall: 20,
+  small: 40,
+  medium: 64,
+  large: 80,
+  xlarge: 120,
+};
+
+export const GlobalStyle = createGlobalStyle`
+  html {
+    scroll-behavior: smooth;
+  }
+`;
+
+export const sectionPadding = css`
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+
+  @media (min-width: ${breakpoint}px) {
+    padding-top: ${margin.large}px;
+    padding-bottom: ${margin.large}px;
+  }
+`
+
+--- src/sections/Benefits/index.ts ---
+export { Benefits } from './Benefits';
+
+--- src/sections/How/index.ts ---
+export { How } from './How';

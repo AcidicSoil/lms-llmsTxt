@@ -1,0 +1,2715 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/installation.md ---
+---
+title: Installation
+---
+
+Before we dig in to the API, let's get you set up!
+
+Install your TanStack Virtual adapter as a dependency using your favorite npm package manager
+
+## React Virtual
+
+```bash
+npm install @tanstack/react-virtual
+```
+
+## Solid Virtual
+
+```bash
+npm install @tanstack/solid-virtual
+```
+
+## Svelte Virtual
+
+```bash
+npm install @tanstack/svelte-virtual
+```
+
+## Vue Virtual
+
+```bash
+npm install @tanstack/vue-virtual
+```
+
+## Lit Virtual
+
+```bash
+npm install @tanstack/lit-virtual
+```
+
+## Angular Virtual
+
+```bash
+npm install @tanstack/angular-virtual
+```
+
+## Virtual Core (no framework)
+
+```bash
+npm install @tanstack/virtual-core
+```
+
+
+--- docs/introduction.md ---
+---
+title: Introduction
+---
+
+TanStack Virtual is a headless UI utility for virtualizing long lists of elements in JS/TS, React, Vue, Svelte, Solid, Lit, and Angular. It is not a component therefore does not ship with or render any markup or styles for you. While this requires a bit of markup and styles from you, you will retain 100% control over your styles, design and implementation.
+
+## The Virtualizer
+
+At the heart of TanStack Virtual is the `Virtualizer`. Virtualizers can be oriented on either the vertical (default) or horizontal axes which makes it possible to achieve vertical, horizontal and even grid-like virtualization by combining the two axis configurations together.
+
+Here is just a quick example of what it looks like to virtualize a long list within a div using TanStack Virtual in React:
+
+```tsx
+import { useVirtualizer } from '@tanstack/react-virtual';
+
+function App() {
+  // The scrollable element for your list
+  const parentRef = React.useRef(null)
+
+  // The virtualizer
+  const rowVirtualizer = useVirtualizer({
+    count: 10000,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 35,
+  })
+
+  return (
+    <>
+      {/* The scrollable element for your list */}
+      <div
+        ref={parentRef}
+        style={{
+          height: `400px`,
+          overflow: 'auto', // Make it scroll!
+        }}
+      >
+        {/* The large inner element to hold all of the items */}
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: '100%',
+            position: 'relative',
+          }}
+        >
+          {/* Only the visible items in the virtualizer, manually positioned to be in view */}
+          {rowVirtualizer.getVirtualItems().map((virtualItem) => (
+            <div
+              key={virtualItem.key}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                height: `${virtualItem.size}px`,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              Row {virtualItem.index}
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  )
+}
+```
+
+Let's dig into some more examples!
+
+
+--- docs/api/virtual-item.md ---
+---
+title: VirtualItem
+---
+
+The `VirtualItem` object represents a single item returned by the virtualizer. It contains information you need to render the item in the coordinate space within your virtualizer's scrollElement and other helpful properties/functions.
+
+```tsx
+export interface VirtualItem {
+  key: string | number | bigint
+  index: number
+  start: number
+  end: number
+  size: number
+}
+```
+
+The following properties and methods are available on each VirtualItem object:
+
+### `key`
+
+```tsx
+key: string | number | bigint
+```
+
+The unique key for the item. By default this is the item index, but should be configured via the `getItemKey` Virtualizer option.
+
+### `index`
+
+```tsx
+index: number
+```
+
+The index of the item.
+
+### `start`
+
+```tsx
+start: number
+```
+
+The starting pixel offset for the item. This is usually mapped to a css property or transform like `top/left` or `translateX/translateY`.
+
+### `end`
+
+```tsx
+end: number
+```
+
+The ending pixel offset for the item. This value is not necessary for most layouts, but can be helpful so we've provided it anyway.
+
+### `size`
+
+```tsx
+size: number
+```
+
+The size of the item. This is usually mapped to a css property like `width/height`. Before an item is measured with the `VirtualItem.measureElement` method, this will be the estimated size returned from your `estimateSize` virtualizer option. After an item is measured (if you choose to measure it at all), this value will be the number returned by your `measureElement` virtualizer option (which by default is configured to measure elements with `getBoundingClientRect()`).
+
+### `lane`
+
+```tsx
+lane: number
+```
+
+The lane index of the item. In regular lists it will always be set to `0` but becomes useful for masonry layouts (see variable examples for more details).
+
+
+--- docs/api/virtualizer.md ---
+---
+title: Virtualizer
+---
+
+The `Virtualizer` class is the core of TanStack Virtual. Virtualizer instances are usually created for you by your framework adapter, but you do receive the virtualizer directly.
+
+```tsx
+export class Virtualizer<TScrollElement = unknown, TItemElement = unknown> {
+  constructor(options: VirtualizerOptions<TScrollElement, TItemElement>)
+}
+```
+
+## Required Options
+
+### `count`
+
+```tsx
+count: number
+```
+
+The total number of items to virtualize.
+
+### `getScrollElement`
+
+```tsx
+getScrollElement: () => TScrollElement
+```
+
+A function that returns the scrollable element for the virtualizer. It may return null if the element is not available yet.
+
+### `estimateSize`
+
+```tsx
+estimateSize: (index: number) => number
+```
+
+> 🧠 If you are dynamically measuring your elements, it's recommended to estimate the largest possible size (width/height, within comfort) of your items. This will ensure features like smooth-scrolling will have a better chance at working correctly.
+
+This function is passed the index of each item and should return the actual size (or estimated size if you will be dynamically measuring items with `virtualItem.measureElement`) for each item. This measurement should return either the width or height depending on the orientation of your virtualizer.
+
+## Optional Options
+
+### `enabled`
+
+```tsx
+enabled?: boolean
+```
+
+Set to `false` to disable scrollElement observers and reset the virtualizer's state
+
+### `debug`
+
+```tsx
+debug?: boolean
+```
+
+Set to `true` to enable debug logs
+
+### `initialRect`
+
+```tsx
+initialRect?: Rect
+```
+
+The initial `Rect` of the scrollElement. This is mostly useful if you need to run the virtualizer in an SSR environment, otherwise the initialRect will be calculated on mount by the `observeElementRect` implementation.
+
+### `onChange`
+
+```tsx
+onChange?: (instance: Virtualizer<TScrollElement, TItemElement>, sync: boolean) => void
+```
+
+A callback function that fires when the virtualizer's internal state changes. It's passed the virtualizer instance and the sync parameter.
+
+The sync parameter indicates whether scrolling is currently in progress. It is `true` when scrolling is ongoing, and `false` when scrolling has stopped or other actions (such as resizing) are being performed.
+
+### `overscan`
+
+```tsx
+overscan?: number
+```
+
+The number of items to render above and below the visible area. Increasing this number will increase the amount of time it takes to render the virtualizer, but might decrease the likelihood of seeing slow-rendering blank items at the top and bottom of the virtualizer when scrolling. The default value is `1`.
+
+### `horizontal`
+
+```tsx
+horizontal?: boolean
+```
+
+Set this to `true` if your virtualizer is oriented horizontally.
+
+### `paddingStart`
+
+```tsx
+paddingStart?: number
+```
+
+The padding to apply to the start of the virtualizer in pixels.
+
+### `paddingEnd`
+
+```tsx
+paddingEnd?: number
+```
+
+The padding to apply to the end of the virtualizer in pixels.
+
+### `scrollPaddingStart`
+
+```tsx
+scrollPaddingStart?: number
+```
+
+The padding to apply to the start of the virtualizer in pixels when scrolling to an element.
+
+### `scrollPaddingEnd`
+
+```tsx
+scrollPaddingEnd?: number
+```
+
+The padding to apply to the end of the virtualizer in pixels when scrolling to an element.
+
+### `initialOffset`
+
+```tsx
+initialOffset?: number | (() => number)
+```
+
+The position where the list is scrolled to on render. This is useful if you are rendering the virtualizer in a SSR environment or are conditionally rendering the virtualizer.
+
+### `getItemKey`
+
+```tsx
+getItemKey?: (index: number) => Key
+```
+
+This function is passed the index of each item and should return a unique key for that item. The default functionality of this function is to return the index of the item, but you should override this when possible to return a unique identifier for each item across the entire set. This function should be memoized to prevent unnecessary re-renders.
+
+### `rangeExtractor`
+
+```tsx
+rangeExtractor?: (range: Range) => number[]
+```
+
+This function receives visible range indexes and should return array of indexes to render. This is useful if you need to add or remove items from the virtualizer manually regardless of the visible range, eg. rendering sticky items, headers, footers, etc. The default range extractor implementation will return the visible range indexes and is exported as `defaultRangeExtractor`.
+
+### `scrollToFn`
+
+```tsx
+scrollToFn?: (
+  offset: number,
+  options: { adjustments?: number; behavior?: 'auto' | 'smooth' },
+  instance: Virtualizer<TScrollElement, TItemElement>,
+) => void
+```
+
+An optional function that (if provided) should implement the scrolling behavior for your scrollElement. It will be called with the following arguments: 
+
+- An `offset` (in pixels) to scroll towards.
+- An object indicating whether there was a difference between the estimated size and actual size (`adjustments`) and/or whether scrolling was called with a smooth animation (`behaviour`).
+- The virtualizer instance itself. 
+
+Note that built-in scroll implementations are exported as `elementScroll` and `windowScroll`, which are automatically configured by the framework adapter functions like `useVirtualizer` or `useWindowVirtualizer`.
+
+> ⚠️ Attempting to use smoothScroll with dynamically measured elements will not work.
+
+### `observeElementRect`
+
+```tsx
+observeElementRect: (
+  instance: Virtualizer<TScrollElement, TItemElement>,
+  cb: (rect: Rect) => void,
+) => void | (() => void)
+```
+
+An optional function that if provided is called when the scrollElement changes and should implement the initial measurement and continuous monitoring of the scrollElement's `Rect` (an object with `width` and `height`). It's called with the instance (which also gives you access to the scrollElement via `instance.scrollElement`. Built-in implementations are exported as `observeElementRect` and `observeWindowRect` which are automatically configured for you by your framework adapter's exported functions like `useVirtualizer` or `useWindowVirtualizer`.
+
+### `observeElementOffset`
+
+```tsx
+observeElementOffset: (
+    instance: Virtualizer<TScrollElement, TItemElement>,
+    cb: (offset: number) => void,
+  ) => void | (() => void)
+```
+
+An optional function that if provided is called when the scrollElement changes and should implement the initial measurement and continuous monitoring of the scrollElement's scroll offset (a number). It's called with the instance (which also gives you access to the scrollElement via `instance.scrollElement`. Built-in implementations are exported as `observeElementOffset` and `observeWindowOffset` which are automatically configured for you by your framework adapter's exported functions like `useVirtualizer` or `useWindowVirtualizer`.
+
+### `measureElement`
+
+```tsx
+measureElement?: (
+  element: TItemElement,
+  entry: ResizeObserverEntry | undefined,
+  instance: Virtualizer<TScrollElement, TItemElement>,
+) => number
+```
+
+This optional function is called when the virtualizer needs to dynamically measure the size (width or height) of an item.
+
+> 🧠 You can use `instance.options.horizontal` to determine if the width or height of the item should be measured.
+
+### `scrollMargin`
+
+```tsx
+scrollMargin?: number
+```
+
+With this option, you can specify where the scroll offset should originate. Typically, this value represents the space between the beginning of the scrolling element and the start of the list. This is especially useful in common scenarios such as when you have a header preceding a window virtualizer or when multiple virtualizers are utilized within a single scrolling element. If you are using absolute positioning of elements, you should take into account the `scrollMargin` in your CSS transform:
+```tsx
+transform: `translateY(${
+   virtualRow.start - rowVirtualizer.options.scrollMargin
+}px)` 
+``` 
+To dynamically measure value for `scrollMargin` you can use `getBoundingClientRect()` or ResizeObserver. This is helpful in scenarios when items above your virtual list might change their height.   
+
+### `gap`
+
+```tsx
+gap?: number
+```
+
+This option allows you to set the spacing between items in the virtualized list. It's particularly useful for maintaining a consistent visual separation between items without having to manually adjust each item's margin or padding. The value is specified in pixels.
+
+### `lanes`
+
+```tsx
+lanes: number
+```
+
+The number of lanes the list is divided into (aka columns for vertical lists and rows for horizontal lists).
+
+### `isScrollingResetDelay`
+
+```tsx
+isScrollingResetDelay: number
+```
+
+This option allows you to specify the duration to wait after the last scroll event before resetting the isScrolling instance property. The default value is 150 milliseconds. 
+
+The implementation of this option is driven by the need for a reliable mechanism to handle scrolling behavior across different browsers. Until all browsers uniformly support the scrollEnd event.
+
+### `useScrollendEvent`
+
+```tsx
+useScrollendEvent: boolean
+```
+
+Determines whether to use the native scrollend event to detect when scrolling has stopped. If set to false, a debounced fallback is used to reset the isScrolling instance property after isScrollingResetDelay milliseconds. The default value is `false`. 
+
+The implementation of this option is driven by the need for a reliable mechanism to handle scrolling behavior across different browsers. Until all browsers uniformly support the scrollEnd event.
+
+### `isRtl`
+
+```tsx
+isRtl: boolean
+```
+
+Whether to invert horizontal scrolling to support right-to-left language locales.
+
+### `useAnimationFrameWithResizeObserver`
+
+```tsx
+useAnimationFrameWithResizeObserver: boolean
+```
+
+This option enables wrapping ResizeObserver measurements in requestAnimationFrame for smoother updates and reduced layout thrashing. The default value is `false`. 
+
+It helps prevent the "ResizeObserver loop completed with undelivered notifications" error by ensuring that measurements align with the rendering cycle. This can improve performance and reduce UI jitter, especially when resizing elements dynamically. However, since ResizeObserver already runs asynchronously, adding requestAnimationFrame may introduce a slight delay in measurements, which could be noticeable in some cases. If resizing operations are lightweight and do not cause reflows, enabling this option may not provide significant benefits.
+
+## Virtualizer Instance
+
+The following properties and methods are available on the virtualizer instance:
+
+### `options`
+
+```tsx
+options: readonly Required<VirtualizerOptions<TScrollElement, TItemElement>>
+```
+
+The current options for the virtualizer. This property is updated via your framework adapter and is read-only.
+
+### `scrollElement`
+
+```tsx
+scrollElement: readonly TScrollElement | null
+```
+
+The current scrollElement for the virtualizer. This property is updated via your framework adapter and is read-only.
+
+### `getVirtualItems`
+
+```tsx
+type getVirtualItems = () => VirtualItem[]
+```
+
+Returns the virtual items for the current state of the virtualizer.
+
+### `getVirtualIndexes`
+
+```tsx
+type getVirtualIndexes = () => number[]
+```
+
+Returns the virtual row indexes for the current state of the virtualizer.
+
+### `scrollToOffset`
+
+```tsx
+scrollToOffset: (
+  toOffset: number,
+  options?: {
+    align?: 'start' | 'center' | 'end' | 'auto',
+    behavior?: 'auto' | 'smooth'
+  }
+) => void
+```
+
+Scrolls the virtualizer to the pixel offset provided. You can optionally pass an alignment mode to anchor the scroll to a specific part of the scrollElement.
+
+### `scrollToIndex`
+
+```tsx
+scrollToIndex: (
+  index: number,
+  options?: {
+    align?: 'start' | 'center' | 'end' | 'auto',
+    behavior?: 'auto' | 'smooth'
+  }
+) => void
+```
+
+Scrolls the virtualizer to the items of the index provided. You can optionally pass an alignment mode to anchor the scroll to a specific part of the scrollElement.
+
+### `getTotalSize`
+
+```tsx
+getTotalSize: () => number
+```
+
+Returns the total size in pixels for the virtualized items. This measurement will incrementally change if you choose to dynamically measure your elements as they are rendered.
+
+### `measure`
+
+```tsx
+measure: () => void
+```
+
+Resets any prev item measurements.
+
+### `measureElement`
+
+```tsx
+measureElement: (el: TItemElement | null) => void
+```
+
+Measures the element using your configured `measureElement` virtualizer option. You are responsible for calling this in your virtualizer markup when the component is rendered (eg. using something like React's ref callback prop) also adding `data-index`
+
+```tsx
+ <div
+  key={virtualRow.key}
+  data-index={virtualRow.index}
+  ref={virtualizer.measureElement}
+  style={...}
+>...</div>
+```
+
+By default the `measureElement` virtualizer option is configured to measure elements with `getBoundingClientRect()`.
+
+### `resizeItem`
+
+```tsx
+resizeItem: (index: number, size: number) => void
+```
+
+Change the virtualized item's size manually. Use this function to manually set the size calculated for this index. Useful in occations when using some custom morphing transition and you know the morphed item's size beforehand.
+
+You can also use this method with a throttled ResizeObserver instead of `Virtualizer.measureElement` to reduce re-rendering.
+
+> ⚠️ Please be aware that manually changing the size of an item when using `Virtualizer.measureElement` to monitor that item, will result in unpredictable behaviour as the `Virtualizer.measureElement` is also changing the size. However you can use one of resizeItem or measureElement in the same virtualizer instance but on different item indexes.
+
+### `scrollRect`
+
+```tsx
+scrollRect: Rect
+```
+
+Current `Rect` of the scroll element.
+
+### `shouldAdjustScrollPositionOnItemSizeChange`
+
+```tsx
+shouldAdjustScrollPositionOnItemSizeChange: undefined | ((item: VirtualItem, delta: number, instance: Virtualizer<TScrollElement, TItemElement>) => boolean)
+```
+
+The shouldAdjustScrollPositionOnItemSizeChange method enables fine-grained control over the adjustment of scroll position when the size of dynamically rendered items differs from the estimated size. When jumping in the middle of the list and scrolling backward new elements may have a different size than the initially estimated size. This discrepancy can cause subsequent items to shift, potentially disrupting the user's scrolling experience, particularly when navigating backward through the list. 
+
+### `isScrolling`
+
+```tsx
+isScrolling: boolean
+```
+
+Boolean flag indicating if list is currently being scrolled.
+
+### `scrollDirection`
+
+```tsx
+scrollDirection: 'forward' | 'backward' | null
+```
+
+This option indicates the direction of scrolling, with possible values being 'forward' for scrolling downwards and 'backward' for scrolling upwards. The value is set to null when there is no active scrolling.
+
+### `scrollOffset`
+
+```tsx
+scrollOffset: number
+```
+
+This option represents the current scroll position along the scrolling axis. It is measured in pixels from the starting point of the scrollable area.
+
+
+--- docs/framework/angular/angular-virtual.md ---
+---
+title: Angular Virtual
+---
+
+The `@tanstack/angular-virtual` adapter is a wrapper around the core virtual logic.
+
+## `injectVirtualizer`
+
+```ts
+function injectVirtualizer<TScrollElement, TItemElement = unknown>(
+  options: PartialKeys<
+    Omit<VirtualizerOptions<TScrollElement, TItemElement>, 'getScrollElement'>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+  > & { scrollElement: ElementRef<TScrollElement> | TScrollElement | undefined },
+): AngularVirtualizer<TScrollElement, TItemElement>
+```
+
+This function returns an `AngularVirtualizer` instance configured to work with an HTML element as the scrollElement.
+
+## `injectWindowVirtualizer`
+
+```ts
+function injectWindowVirtualizer<TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<Window, TItemElement>,
+    | 'getScrollElement'
+    | 'observeElementRect'
+    | 'observeElementOffset'
+    | 'scrollToFn'
+  >,
+): AngularVirtualizer<Window, TItemElement>
+```
+
+This function returns a window-based `AngularVirtualizer` instance configured to work with the window as the scrollElement.
+
+
+--- docs/framework/lit/lit-virtual.md ---
+---
+title: Lit Virtual
+---
+
+The `@tanstack/lit-virtual` adapter is a wrapper around the core virtual logic.
+
+## `createVirtualizer`
+
+```tsx
+
+private virtualizerController = new VirtualizerController<TScrollElement, TItemElement = unknown>(
+    options: PartialKeys< VirtualizerOptions<TScrollElement, TItemElement>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+)
+```
+
+This class stands for a standard `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+This will create a Lit Controller which can be accessed in the element render method.
+
+```tsx
+render() {
+    const virtualizer = this.virtualizerController.getVirtualizer();
+    const virtualItems = virtualizer.getVirtualItems();
+} 
+)
+```
+
+## `createWindowVirtualizer`
+
+```tsx
+private windowVirtualizerController = new WindowVirtualizerController<TItemElement = unknown>(
+    options: PartialKeys< VirtualizerOptions<TItemElement>,
+    'getScrollElement' | 'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+```
+
+This class stands of window-based `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+
+
+--- docs/framework/react/react-virtual.md ---
+---
+title: React Virtual
+---
+
+The `@tanstack/react-virtual` adapter is a wrapper around the core virtual logic.
+
+## `useVirtualizer`
+
+```tsx
+function useVirtualizer<TScrollElement, TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<TScrollElement, TItemElement>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+  >,
+): Virtualizer<TScrollElement, TItemElement>
+```
+
+This function returns a standard `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+
+## `useWindowVirtualizer`
+
+```tsx
+function useWindowVirtualizer<TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<Window, TItemElement>,
+    | 'getScrollElement'
+    | 'observeElementRect'
+    | 'observeElementOffset'
+    | 'scrollToFn'
+  >,
+): Virtualizer<Window, TItemElement>
+```
+
+This function returns a window-based `Virtualizer` instance configured to work with the window as the scrollElement.
+
+
+--- docs/framework/solid/solid-virtual.md ---
+---
+title: Solid Virtual
+---
+
+The `@tanstack/solid-virtual` adapter is a wrapper around the core virtual logic.
+
+## `createVirtualizer`
+
+```tsx
+function createVirtualizer<TScrollElement, TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<TScrollElement, TItemElement>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+  >,
+): Virtualizer<TScrollElement, TItemElement>
+```
+
+This function returns a standard `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+
+## `createWindowVirtualizer`
+
+```tsx
+function createWindowVirtualizer<TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<Window, TItemElement>,
+    | 'getScrollElement'
+    | 'observeElementRect'
+    | 'observeElementOffset'
+    | 'scrollToFn'
+  >,
+): Virtualizer<Window, TItemElement>
+```
+
+This function returns a window-based `Virtualizer` instance configured to work with the window as the scrollElement.
+
+
+--- docs/framework/svelte/svelte-virtual.md ---
+---
+title: Svelte Virtual
+---
+
+The `@tanstack/svelte-virtual` adapter is a wrapper around the core virtual logic.
+
+## `createVirtualizer`
+
+```tsx
+function createVirtualizer<TScrollElement, TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<TScrollElement, TItemElement>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+  >,
+): Virtualizer<TScrollElement, TItemElement>
+```
+
+This function returns a standard `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+
+## `createWindowVirtualizer`
+
+```tsx
+function createWindowVirtualizer<TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<Window, TItemElement>,
+    | 'getScrollElement'
+    | 'observeElementRect'
+    | 'observeElementOffset'
+    | 'scrollToFn'
+  >,
+): Virtualizer<Window, TItemElement>
+```
+
+This function returns a window-based `Virtualizer` instance configured to work with the window as the scrollElement.
+
+
+--- docs/framework/vue/vue-virtual.md ---
+---
+title: Vue Virtual
+---
+
+The `@tanstack/vue-virtual` adapter is a wrapper around the core virtual logic.
+
+## `useVirtualizer`
+
+```tsx
+function useVirtualizer<TScrollElement, TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<TScrollElement, TItemElement>,
+    'observeElementRect' | 'observeElementOffset' | 'scrollToFn'
+  >,
+): Virtualizer<TScrollElement, TItemElement>
+```
+
+This function returns a standard `Virtualizer` instance configured to work with an HTML element as the scrollElement.
+
+## `useWindowVirtualizer`
+
+```tsx
+function useWindowVirtualizer<TItemElement = unknown>(
+  options: PartialKeys<
+    VirtualizerOptions<Window, TItemElement>,
+    | 'getScrollElement'
+    | 'observeElementRect'
+    | 'observeElementOffset'
+    | 'scrollToFn'
+  >,
+): Virtualizer<Window, TItemElement>
+```
+
+This function returns a window-based `Virtualizer` instance configured to work with the window as the scrollElement.
+
+
+--- examples/angular/dynamic/README.md ---
+# @tanstack/virtualExampleAngularDynamic
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/fixed/README.md ---
+# @tanstack/virtualExampleAngularFixed
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/infinite-scroll/README.md ---
+# @tanstack/virtualExampleAngularInfiniteScroll
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/padding/README.md ---
+# @tanstack/virtualExampleAngularPadding
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/smooth-scroll/README.md ---
+# @tanstack/virtualExampleAngularSmoothScroll
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/sticky/README.md ---
+# @tanstack/virtualExampleAngularSticky
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/table/README.md ---
+# @tanstack/virtualExampleAngularTable
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/variable/README.md ---
+# @tanstack/virtualExampleAngularVariable
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/angular/window/README.md ---
+# @tanstack/virtualExampleAngularWindow
+
+This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 17.3.0.
+
+## Development server
+
+Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+
+## Code scaffolding
+
+Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+
+## Build
+
+Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+
+## Running unit tests
+
+Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+
+## Running end-to-end tests
+
+Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+
+## Further help
+
+To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.io/cli) page.
+
+
+## Links discovered
+- [Angular CLI](https://github.com/angular/angular-cli)
+- [Karma](https://karma-runner.github.io)
+- [Angular CLI Overview and Command Reference](https://angular.io/cli)
+
+--- examples/lit/dynamic/README.md ---
+# Example
+
+To run this example:
+
+- `npm install` or `npm`
+- `npm run start` or `npm run start`
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+## Questions
+
+If you have questions about implementation details, help or support, then please use our dedicated community forum at [GitHub Discussions](https://github.com/TanStack/virtual/discussions) **PLEASE NOTE:** If you choose to instead open an issue for your question, your issue will be immediately closed and redirected to the forum.
+
+## Reporting Issues
+
+If you have found what you think is a bug, please [file an issue](https://github.com/TanStack/virtual/issues/new/choose). **PLEASE NOTE:** Issues that are identified as implementation questions or non-issues will be immediately closed and redirected to [GitHub Discussions](https://github.com/TanStack/virtual/discussions)
+
+## Suggesting new features
+
+If you are here to suggest a feature, first create an issue if it does not already exist. From there, we will discuss use-cases for the feature and then finally discuss how it could be implemented.
+
+## Development
+
+If you have been assigned to fix an issue or develop a new feature, please follow these steps to get started:
+
+- Fork this repository.
+- Install dependencies
+
+  ```bash
+  pnpm install
+  ```
+
+  - We use [pnpm](https://pnpm.io/) v9 for package management (run in case of pnpm-related issues).
+
+    ```bash
+    corepack enable && corepack prepare
+    ```
+
+  - We use [nvm](https://github.com/nvm-sh/nvm) to manage node versions - please make sure to use the version mentioned in `.nvmrc`
+
+    ```bash
+    nvm use
+    ```
+
+- Build all packages.
+
+  ```bash
+  pnpm build:all
+  ```
+
+- Run development server.
+
+  ```bash
+  pnpm run watch
+  ```
+
+- Implement your changes and tests to files in the `src/` directory and corresponding test files.
+- Document your changes in the appropriate doc page.
+- Git stage your required changes and commit (see below commit guidelines).
+- Submit PR for review.
+
+### Editing the docs locally and previewing the changes
+
+The documentations for all the TanStack projects are hosted on [tanstack.com](https://tanstack.com), which is a TanStack Start application (https://github.com/TanStack/tanstack.com). You need to run this app locally to preview your changes in the `TanStack/virtual` docs.
+
+> [!NOTE]
+> The website fetches the doc pages from GitHub in production, and searches for them at `../virtual/docs` in development. Your local clone of `TanStack/virtual` needs to be in the same directory as the local clone of `TanStack/tanstack.com`.
+
+You can follow these steps to set up the docs for local development:
+
+1. Make a new directory called `tanstack`.
+
+```sh
+mkdir tanstack
+```
+
+2. Enter that directory and clone the [`TanStack/virtual`](https://github.com/TanStack/virtual) and [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com) repos.
+
+```sh
+cd tanstack
+git clone git@github.com:TanStack/virtual.git
+# We probably don't need all the branches and commit history
+# from the `tanstack.com` repo, so let's just create a shallow
+# clone of the latest version of the `main` branch.
+# Read more about shallow clones here:
+# https://github.blog/2020-12-21-get-up-to-speed-with-partial-clone-and-shallow-clone/#user-content-shallow-clones
+git clone git@github.com:TanStack/tanstack.com.git --depth=1 --single-branch --branch=main
+```
+
+> [!NOTE]
+> Your `tanstack` directory should look like this:
+>
+> ```
+> tanstack/
+>    |
+>    +-- virtual/ (<-- this directory cannot be called anything else!)
+>    |
+>    +-- tanstack.com/
+> ```
+
+3. Enter the `tanstack/tanstack.com` directory, install the dependencies and run the app in dev mode:
+
+```sh
+cd tanstack.com
+pnpm i
+# The app will run on https://localhost:3000 by default
+pnpm dev
+```
+
+4. Now you can visit http://localhost:3000/virtual/latest/docs/overview in the browser and see the changes you make in `TanStack/virtual/docs` there.
+
+> [!WARNING]
+> You will need to update the `docs/config.json` file (in `TanStack/virtual`) if you add a new documentation page!
+
+You can see the whole process in the screen capture below:
+
+https://github.com/fulopkovacs/form/assets/43729152/9d35a3c3-8153-4e74-9cb2-af275f7a269b
+
+### Running examples
+
+- Make sure you've installed the dependencies in the repo's root directory.
+
+  ```bash
+  pnpm install
+  ```
+
+- If you want to run the example against your local changes, run below in the repo's root directory. Otherwise, it will be run against the latest TanStack Virtual release.
+
+  ```bash
+  pnpm run watch
+  ```
+
+- Run below in the selected examples' directory.
+
+  ```bash
+  pnpm run dev
+  ```
+
+#### Note on standalone execution
+
+If you want to run an example without installing dependencies for the whole repo, just follow instructions from the example's README.md file. It will be then run against the latest TanStack Virtual release.
+
+## Online one-click setup
+
+You can use Gitpod (An Online Open Source VS Code like IDE which is free for Open Source) for developing online. With a single click it will start a workspace and automatically:
+
+- clone the `TanStack/virtual` repo.
+- install all the dependencies in `/` and `/docs`.
+- run below in the root(`/`) to Auto-build files.
+
+  ```bash
+  npm start
+  ```
+
+- run below in `/docs`.
+
+  ```bash
+  npm run dev
+  ```
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/TanStack/virtual)
+
+## Changesets
+
+This repo uses [Changesets](https://github.com/changesets/changesets) to automate releases. If your PR should release a new package version (patch, minor, or major), please run run `pnpm changeset` and commit the file. If needed, changeset descriptions can be more descriptive, and will be included in the changelog. If your PR affects docs, examples, styles, etc., you probably don't need to generate a changeset.
+
+## Pull requests
+
+Maintainers merge pull requests by squashing all commits and editing the commit message if necessary using the GitHub user interface.
+
+Use an appropriate commit type. Be especially careful with breaking changes.
+
+## Releases
+
+For each new commit added to `main`, a GitHub Workflow is triggered which runs the [Changesets Action](https://github.com/changesets/action). This generates a preview PR showing the impact of all changesets. When this PR is merged, the package will be published to NPM.
+
+
+## Links discovered
+- [GitHub Discussions](https://github.com/TanStack/virtual/discussions)
+- [file an issue](https://github.com/TanStack/virtual/issues/new/choose)
+- [pnpm](https://pnpm.io/)
+- [nvm](https://github.com/nvm-sh/nvm)
+- [tanstack.com](https://tanstack.com)
+- [`TanStack/virtual`](https://github.com/TanStack/virtual)
+- [`TanStack/tanstack.com`](https://github.com/TanStack/tanstack.com)
+- [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)
+- [Changesets](https://github.com/changesets/changesets)
+- [Changesets Action](https://github.com/changesets/action)
+
+--- packages/angular-virtual/CHANGELOG.md ---
+# @tanstack/angular-virtual
+
+## 4.0.1
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 4.0.0
+
+### Major Changes
+
+- feat(angular-virtual): add support for angular 20 ([#1040](https://github.com/TanStack/virtual/pull/1040))
+
+  BREAKING CHANGE: minimum Angular version is now 18.1.0
+
+## 3.13.12
+
+### Patch Changes
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [#1040](https://github.com/TanStack/virtual/pull/1040)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- packages/lit-virtual/CHANGELOG.md ---
+# @tanstack/lit-virtual
+
+## 3.13.14
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 3.13.13
+
+### Patch Changes
+
+- fix(lit-virtual): create Virtualizer instance before hostConnected ([#1061](https://github.com/TanStack/virtual/pull/1061))
+
+  When creating an instance of the reactive controller in `connectedCallback`, calling `addController` will synchronously call `hostConnected` on the controller. This means that `this.virtualizer` will still be `undefined`.
+
+## 3.13.12
+
+### Patch Changes
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [#1061](https://github.com/TanStack/virtual/pull/1061)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- packages/react-virtual/CHANGELOG.md ---
+# @tanstack/react-virtual
+
+## 3.13.13
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 3.13.12
+
+### Patch Changes
+
+- chore(react-virtual): fix vite e2e build ([#1030](https://github.com/TanStack/virtual/pull/1030))
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [#1030](https://github.com/TanStack/virtual/pull/1030)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- packages/solid-virtual/CHANGELOG.md ---
+# @tanstack/solid-virtual
+
+## 3.13.13
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 3.13.12
+
+### Patch Changes
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- packages/svelte-virtual/CHANGELOG.md ---
+# @tanstack/svelte-virtual
+
+## 3.13.13
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 3.13.12
+
+### Patch Changes
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- packages/virtual-core/CHANGELOG.md ---
+# @tanstack/virtual-core
+
+## 3.13.13
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- fix: stabilize lane assignments in masonry layout ([#1080](https://github.com/TanStack/virtual/pull/1080))
+
+  Added lane assignment caching to prevent items from jumping between lanes when viewport is resized. Previously, items could shift to different lanes during resize due to recalculating "shortest lane" with slightly different heights.
+
+  Changes:
+  - Added `laneAssignments` cache (Map<index, lane>) to persist lane assignments
+  - Lane cache is cleared when `lanes` option changes or `measure()` is called
+  - Lane cache is cleaned up when `count` decreases (removes stale entries)
+  - Lane cache is cleared when virtualizer is disabled
+
+## 3.13.12
+
+### Patch Changes
+
+- fix(virtual-core): scroll to index doesn't scroll to bottom correctly ([#1029](https://github.com/TanStack/virtual/pull/1029))
+
+## 3.13.11
+
+### Patch Changes
+
+- Revert "Adapt default logic to adjust scroll position only on backward scrolling (#1002)" ([#1026](https://github.com/TanStack/virtual/pull/1026))
+
+## 3.13.10
+
+### Patch Changes
+
+- fix(virtual-core): Adapt default logic to adjust scroll position only on backward scrolling ([#1002](https://github.com/TanStack/virtual/pull/1002))
+
+## 3.13.9
+
+### Patch Changes
+
+- fix(virtual-core): fix `Error: Unexpected undefined` ([#1004](https://github.com/TanStack/virtual/pull/1004))
+
+## 3.13.8
+
+### Patch Changes
+
+- fix(virtual-core): loosen approxEqual to allow 1px difference ([#995](https://github.com/TanStack/virtual/pull/995))
+
+## 3.13.7
+
+### Patch Changes
+
+- fix(virtual-core): prevent measurement jitter when scale is applied ([#986](https://github.com/TanStack/virtual/pull/986))
+
+## 3.13.6
+
+### Patch Changes
+
+- fix(virtual-core): fix total size calculation for single item in multi-lane ([`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f))
+
+## 3.13.5
+
+### Patch Changes
+
+- fix(core): handle case when item count is less than or equal to lanes ([#964](https://github.com/TanStack/virtual/pull/964))
+
+## 3.13.4
+
+### Patch Changes
+
+- fix(virtual-core): update maybeNotify cache when deps change ([#957](https://github.com/TanStack/virtual/pull/957))
+
+- fix(virtual-core): set `useScrollendEvent` default to false for bette… ([#951](https://github.com/TanStack/virtual/pull/951))
+
+## 3.13.3
+
+### Patch Changes
+
+- fix(virtual-core): expand range in masonry layouts to catch items from all lanes ([#937](https://github.com/TanStack/virtual/pull/937))
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [#1080](https://github.com/TanStack/virtual/pull/1080)
+- [#1029](https://github.com/TanStack/virtual/pull/1029)
+- [#1026](https://github.com/TanStack/virtual/pull/1026)
+- [#1002](https://github.com/TanStack/virtual/pull/1002)
+- [#1004](https://github.com/TanStack/virtual/pull/1004)
+- [#995](https://github.com/TanStack/virtual/pull/995)
+- [#986](https://github.com/TanStack/virtual/pull/986)
+- [`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [#964](https://github.com/TanStack/virtual/pull/964)
+- [#957](https://github.com/TanStack/virtual/pull/957)
+- [#951](https://github.com/TanStack/virtual/pull/951)
+- [#937](https://github.com/TanStack/virtual/pull/937)
+
+--- packages/vue-virtual/CHANGELOG.md ---
+# @tanstack/vue-virtual
+
+## 3.13.13
+
+### Patch Changes
+
+- Fix: Notify framework when count changes to update getTotalSize() ([#1085](https://github.com/TanStack/virtual/pull/1085))
+
+  Fixed an issue where `getTotalSize()` would return stale values when the `count` option changed (e.g., during filtering or search operations). The virtualizer now automatically notifies the framework when measurement-affecting options change, ensuring the UI updates correctly without requiring manual `useMemo` workarounds.
+
+  **Before**: When filtering items, the list container would maintain its previous height, causing excessive blank space (when count decreased) or inaccessible items (when count increased).
+
+  **After**: Height updates automatically when count changes, providing the correct user experience.
+
+  This fix applies to all framework adapters and has minimal performance impact (< 0.1ms per change).
+
+- Updated dependencies [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68), [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)]:
+  - @tanstack/virtual-core@3.13.13
+
+## 3.13.12
+
+### Patch Changes
+
+- Updated dependencies [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)]:
+  - @tanstack/virtual-core@3.13.12
+
+## 3.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)]:
+  - @tanstack/virtual-core@3.13.11
+
+## 3.13.10
+
+### Patch Changes
+
+- Updated dependencies [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)]:
+  - @tanstack/virtual-core@3.13.10
+
+## 3.13.9
+
+### Patch Changes
+
+- Updated dependencies [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)]:
+  - @tanstack/virtual-core@3.13.9
+
+## 3.13.8
+
+### Patch Changes
+
+- Updated dependencies [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)]:
+  - @tanstack/virtual-core@3.13.8
+
+## 3.13.7
+
+### Patch Changes
+
+- Updated dependencies [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)]:
+  - @tanstack/virtual-core@3.13.7
+
+## 3.13.6
+
+### Patch Changes
+
+- Updated dependencies [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)]:
+  - @tanstack/virtual-core@3.13.6
+
+## 3.13.5
+
+### Patch Changes
+
+- Updated dependencies [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)]:
+  - @tanstack/virtual-core@3.13.5
+
+## 3.13.4
+
+### Patch Changes
+
+- Updated dependencies [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2), [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)]:
+  - @tanstack/virtual-core@3.13.4
+
+## 3.13.3
+
+### Patch Changes
+
+- Updated dependencies [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)]:
+  - @tanstack/virtual-core@3.13.3
+
+
+## Links discovered
+- [#1085](https://github.com/TanStack/virtual/pull/1085)
+- [[`2542c5a`](https://github.com/TanStack/virtual/commit/2542c5a3d6820cea956fa3b4f94c42e3526a8d68)
+- [`96e32a6`](https://github.com/TanStack/virtual/commit/96e32a6ffc125743a0172ea4e0fe37ac29c4187b)
+- [[`d21ed98`](https://github.com/TanStack/virtual/commit/d21ed98da3470b9986c9a028ed70fdf0d6189ab4)
+- [[`73fa867`](https://github.com/TanStack/virtual/commit/73fa86752599a4bffba51ec8e4ff2f8cb8283010)
+- [[`b3b7e7d`](https://github.com/TanStack/virtual/commit/b3b7e7dc8b25daeebbd2da61b3b7ae3448babbdb)
+- [[`9e33cdb`](https://github.com/TanStack/virtual/commit/9e33cdb1c8780c2f455aafc11a0aeea58b71fc69)
+- [[`60719f6`](https://github.com/TanStack/virtual/commit/60719f61b589d6f9d886e4f7c093217f6d693faf)
+- [[`e2d93c2`](https://github.com/TanStack/virtual/commit/e2d93c2dcde9ccf60f658e56edccd8d05aefeee6)
+- [[`042616f`](https://github.com/TanStack/virtual/commit/042616f39ced842470db0b4b40fca77f22454b7f)
+- [[`51656d9`](https://github.com/TanStack/virtual/commit/51656d94a2469a065e631f25ffc8ec0288d9f5ec)
+- [[`514b62d`](https://github.com/TanStack/virtual/commit/514b62d04974c2fd59fc8a68ed40f4c1a1547dd2)
+- [`f03d814`](https://github.com/TanStack/virtual/commit/f03d8142c03ea0f5816161a4dad38ca35469841c)
+- [[`02ef309`](https://github.com/TanStack/virtual/commit/02ef3097de4a14ed4077ace2ca901dc411bf81c1)
+
+--- .github/pull_request_template.md ---
+## 🎯 Changes
+
+<!-- What changes are made in this PR? Describe the change and its motivation. -->
+
+## ✅ Checklist
+
+- [ ] I have followed the steps in the [Contributing guide](https://github.com/TanStack/virtual/blob/main/CONTRIBUTING.md).
+- [ ] I have tested this code locally with `pnpm run test:pr`.
+
+## 🚀 Release Impact
+
+- [ ] This change affects published code, and I have generated a [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md).
+- [ ] This change is docs/CI/dev-only (no release).
+
+
+## Links discovered
+- [Contributing guide](https://github.com/TanStack/virtual/blob/main/CONTRIBUTING.md)
+- [changeset](https://github.com/changesets/changesets/blob/main/docs/adding-a-changeset.md)
+
+--- README.md ---
+<div align="center">
+  <img src="./media/header_virtual.png" alt="Tanstack Virtual">
+</div>
+
+<br />
+
+<div align="center">
+	<a href="https://npmjs.com/package/@tanstack/virtual-core" target="\_parent">
+  <img alt="npm downloads" src="https://img.shields.io/npm/dm/@tanstack/virtual-core.svg" />
+</a>
+	<a href="https://github.com/tanstack/virtual" target="\_parent">
+  <img alt="github stars" src="https://img.shields.io/github/stars/tanstack/virtual.svg?style=social&label=Star" />
+</a>
+<a href="https://bundlephobia.com/result?p=@tanstack/virtual-core@latest" target="\_parent">
+  <img alt="bundle size" src="https://badgen.net/bundlephobia/minzip/@tanstack/virtual-core@latest" />
+</a>
+</div>
+
+<div align="center">
+	<a href="#badge">
+    <img alt="semantic-release" src="https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg">
+  </a>
+	<a href="https://bestofjs.org/projects/tanstack-virtual">
+		<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fvirtual%26since=daily" alt="Best of JS"/>
+	</a>
+	<a href="https://twitter.com/tan_stack">
+		<img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/>
+	</a>
+</div>
+
+<div align="center">
+
+### [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+
+</div>
+
+# TanStack Virtual
+
+A headless, framework‑agnostic virtualization library for rendering massive lists, grids, and tables at 60FPS while giving you full control over markup and styles.
+
+- Framework‑agnostic & headless
+- Virtualizes vertical, horizontal & grid layouts with a single hook/function
+- Lightweight (10–15kb) yet powerful, with dynamic & measured sizing support
+- Smooth 60FPS scrolling with sticky items and window‑scrolling utilities
+
+### <a href="https://tanstack.com/virtual" >Read the docs →</a>
+
+## Get Involved
+
+- We welcome issues and pull requests!
+- Participate in [GitHub discussions](https://github.com/TanStack/virtual/discussions)
+- Chat with the community on [Discord](https://discord.com/invite/WrRKjPJ)
+- See [CONTRIBUTING.md](./CONTRIBUTING.md) for setup instructions
+
+## Partners
+
+<table align="center">
+  <tr>
+    <td>
+        <a href="https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS">
+			<picture>
+			  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" />
+			  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" />
+			  <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" />
+			</picture>        
+		</a>
+    </td>
+    <td padding="20">
+      <a href="https://www.cloudflare.com?utm_source=tanstack">
+         <picture>
+		  <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" />
+		  <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" />
+		  <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" />
+		</picture>
+      </a>
+    </td>
+  </tr>
+</table>
+  
+ 
+<div align="center">
+<img src="./media/partner_logo.svg" alt="Virtual & you?" height="65">
+<p>
+We're looking for TanStack Virtual Partners to join our mission! Partner with us to push the boundaries of TanStack Virtual and build amazing things together.
+</p>
+<a href="mailto:partners@tanstack.com?subject=TanStack Virtual Partnership"><b>LET'S CHAT</b></a>
+</div>
+  
+## Explore the TanStack Ecosystem
+
+- <a href="https://github.com/tanstack/config"><b>TanStack Config</b></a> – Tooling for JS/TS packages
+- <a href="https://github.com/tanstack/db"><b>TanStack DB</b></a> – Reactive sync client store
+- <a href="https://github.com/tanstack/devtools"><b>TanStack DevTools</b></a> – Unified devtools panel
+- <a href="https://github.com/tanstack/form"><b>TanStack Form</b></a> – Type‑safe form state
+- <a href="https://github.com/tanstack/pacer"><b>TanStack Pacer</b></a> – Debouncing, throttling, batching <br/>
+- <a href="https://github.com/tanstack/query"><b>TanStack Query</b></a> – Async state & caching
+- <a href="https://github.com/tanstack/ranger"><b>TanStack Ranger</b></a> – Range & slider primitives
+- <a href="https://github.com/tanstack/router"><b>TanStack Router</b></a> – Type‑safe routing, caching & URL state
+- <a href="https://github.com/tanstack/router"><b>TanStack Start</b></a> – Full‑stack SSR & streaming
+- <a href="https://github.com/tanstack/store"><b>TanStack Store</b></a> – Reactive data store
+- <a href="https://github.com/tanstack/table"><b>TanStack Table</b></a> – Headless datagrids
+
+… and more at <a href="https://tanstack.com"><b>TanStack.com »</b></a>
+
+<!-- Use the force, Luke -->
+
+
+## Links discovered
+- [Become a Sponsor!](https://github.com/sponsors/tannerlinsley/)
+- [GitHub discussions](https://github.com/TanStack/virtual/discussions)
+- [Discord](https://discord.com/invite/WrRKjPJ)
+- [CONTRIBUTING.md](https://github.com/tanstack/virtual/blob/main/CONTRIBUTING.md)
+- [<img alt="npm downloads" src="https://img.shields.io/npm/dm/@tanstack/virtual-core.svg" />](https://npmjs.com/package/@tanstack/virtual-core)
+- [<img alt="github stars" src="https://img.shields.io/github/stars/tanstack/virtual.svg?style=social&label=Star" />](https://github.com/tanstack/virtual)
+- [<img alt="bundle size" src="https://badgen.net/bundlephobia/minzip/@tanstack/virtual-core@latest" />](https://bundlephobia.com/result?p=@tanstack/virtual-core@latest)
+- [<img alt="Best of JS" src="https://img.shields.io/endpoint?url=https://bestofjs-serverless.now.sh/api/project-badge?fullName=TanStack%2Fvirtual%26since=daily" alt="Best of JS"/>](https://bestofjs.org/projects/tanstack-virtual)
+- [<img src="https://img.shields.io/twitter/follow/tan_stack.svg?style=social" alt="Follow @TanStack"/>](https://twitter.com/tan_stack)
+- [Read the docs →](https://tanstack.com/virtual)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/coderabbit-dark-CMcuvjEy.svg" height="40" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" /> <img src="https://tanstack.com/assets/coderabbit-light-DVMJ2jHi.svg" height="40" alt="CodeRabbit" /> </picture>](https://www.coderabbit.ai/?via=tanstack&dub_id=aCcEEdAOqqutX6OS)
+- [<picture> <source media="(prefers-color-scheme: dark)" srcset="https://tanstack.com/assets/cloudflare-white-DQDB7UaL.svg" height="60" /> <source media="(prefers-color-scheme: light)" srcset="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" /> <img src="https://tanstack.com/assets/cloudflare-black-CPufaW0B.svg" height="60" alt="Cloudflare" /> </picture>](https://www.cloudflare.com?utm_source=tanstack)
+- [<b>TanStack Config</b>](https://github.com/tanstack/config)
+- [<b>TanStack DB</b>](https://github.com/tanstack/db)
+- [<b>TanStack DevTools</b>](https://github.com/tanstack/devtools)
+- [<b>TanStack Form</b>](https://github.com/tanstack/form)
+- [<b>TanStack Pacer</b>](https://github.com/tanstack/pacer)
+- [<b>TanStack Query</b>](https://github.com/tanstack/query)
+- [<b>TanStack Ranger</b>](https://github.com/tanstack/ranger)
+- [<b>TanStack Router</b>](https://github.com/tanstack/router)
+- [<b>TanStack Start</b>](https://github.com/tanstack/router)
+- [<b>TanStack Store</b>](https://github.com/tanstack/store)
+- [<b>TanStack Table</b>](https://github.com/tanstack/table)
+- [<b>TanStack.com »</b>](https://tanstack.com)
+
+--- eslint.config.js ---
+// @ts-check
+
+import { tanstackConfig } from '@tanstack/eslint-config'
+
+export default [
+  ...tanstackConfig,
+  {
+    name: 'tanstack/temp',
+    rules: {
+      '@typescript-eslint/naming-convention': 'off',
+      '@typescript-eslint/no-unnecessary-condition': 'off',
+      '@typescript-eslint/no-unsafe-function-type': 'off',
+      'no-self-assign': 'off',
+    },
+  },
+]
+
+
+--- prettier.config.js ---
+// @ts-check
+
+/** @type {import('prettier').Config} */
+const config = {
+  semi: false,
+  singleQuote: true,
+  trailingComma: 'all',
+  plugins: ['prettier-plugin-svelte'],
+  overrides: [{ files: '*.svelte', options: { parser: 'svelte' } }],
+}
+
+export default config
+
+
+--- scripts/verify-links.ts ---
+import { existsSync, readFileSync, statSync } from 'node:fs'
+import { extname, resolve } from 'node:path'
+import { glob } from 'tinyglobby'
+// @ts-ignore Could not find a declaration file for module 'markdown-link-extractor'.
+import markdownLinkExtractor from 'markdown-link-extractor'
+
+const errors: Array<{
+  file: string
+  link: string
+  resolvedPath: string
+  reason: string
+}> = []
+
+function isRelativeLink(link: string) {
+  return (
+    !link.startsWith('/') &&
+    !link.startsWith('http://') &&
+    !link.startsWith('https://') &&
+    !link.startsWith('//') &&
+    !link.startsWith('#') &&
+    !link.startsWith('mailto:')
+  )
+}
+
+/** Remove any trailing .md */
+function stripExtension(p: string): string {
+  return p.replace(`${extname(p)}`, '')
+}
+
+function relativeLinkExists(link: string, file: string): boolean {
+  // Remove hash if present
+  const linkWithoutHash = link.split('#')[0]
+  // If the link is empty after removing hash, it's not a file
+  if (!linkWithoutHash) return false
+
+  // Strip the file/link extensions
+  const filePath = stripExtension(file)
+  const linkPath = stripExtension(linkWithoutHash)
+
+  // Resolve the path relative to the markdown file's directory
+  // Nav up a level to simulate how links are resolved on the web
+  let absPath = resolve(filePath, '..', linkPath)
+
+  // Ensure the resolved path is within /docs
+  const docsRoot = resolve('docs')
+  if (!absPath.startsWith(docsRoot)) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Path outside /docs',
+    })
+    return false
+  }
+
+  // Check if this is an example path
+  const isExample = absPath.includes('/examples/')
+
+  let exists = false
+
+  if (isExample) {
+    // Transform /docs/framework/{framework}/examples/ to /examples/{framework}/
+    absPath = absPath.replace(
+      /\/docs\/framework\/([^/]+)\/examples\//,
+      '/examples/$1/',
+    )
+    // For examples, we want to check if the directory exists
+    exists = existsSync(absPath) && statSync(absPath).isDirectory()
+  } else {
+    // For non-examples, we want to check if the .md file exists
+    if (!absPath.endsWith('.md')) {
+      absPath = `${absPath}.md`
+    }
+    exists = existsSync(absPath)
+  }
+
+  if (!exists) {
+    errors.push({
+      link,
+      file,
+      resolvedPath: absPath,
+      reason: 'Not found',
+    })
+  }
+  return exists
+}
+
+async function verifyMarkdownLinks() {
+  // Find all markdown files in docs directory
+  const markdownFiles = await glob('docs/**/*.md', {
+    ignore: ['**/node_modules/**'],
+  })
+
+  console.log(`Found ${markdownFiles.length} markdown files\n`)
+
+  // Process each file
+  for (const file of markdownFiles) {
+    const content = readFileSync(file, 'utf-8')
+    const links: Array<string> = markdownLinkExtractor(content)
+
+    const relativeLinks = links.filter((link: string) => {
+      return isRelativeLink(link)
+    })
+
+    if (relativeLinks.length > 0) {
+      relativeLinks.forEach((link) => {
+        relativeLinkExists(link, file)
+      })
+    }
+  }
+
+  if (errors.length > 0) {
+    console.log(`\n❌ Found ${errors.length} broken links:`)
+    errors.forEach((err) => {
+      console.log(
+        `${err.file}\n  link:      ${err.link}\n  resolved:  ${err.resolvedPath}\n  why:       ${err.reason}\n`,
+      )
+    })
+    process.exit(1)
+  } else {
+    console.log('\n✅ No broken links found!')
+  }
+}
+
+verifyMarkdownLinks().catch(console.error)
+
+
+--- packages/angular-virtual/README.md ---
+# Angular Virtual
+
+Efficiently virtualize only the visible DOM nodes within massive scrollable elements using Angular, while maintaining complete control over markup and styles.
+
+# Quick Start
+
+> NOTE: Angular Virtual requires Angular 17.
+
+1. Install `@tanstack/angular-virtual`
+
+   ```bash
+   $ npm i @tanstack/angular-virtual
+   ```
+
+   or
+
+   ```bash
+   $ pnpm add @tanstack/angular-virtual
+   ```
+
+   or
+
+   ```bash
+   $ yarn add @tanstack/angular-virtual
+   ```
+
+   or
+
+   ```bash
+   $ bun add @tanstack/angular-virtual
+   ```
+
+2. Inject a virtualizer
+
+   `@tanstack/angular-virtual` utilizes a helper function `injectVirtualizer` to create the virtualizer and integrate it with the component lifecycle:
+
+   ```ts
+   import { Component, ElementRef, viewChild } from '@angular/core'
+   import { injectVirtualizer } from '@tanstack/angular-virtual'
+
+   @Component({
+     selector: 'my-virtualized-list',
+     template: `
+       <div
+         #scrollElement
+         style="height: 400px; border: 1px solid gray; overflow: auto;"
+       >
+         <div
+           style="position: relative; width: 100%;"
+           [style.height.px]="virtualizer.getTotalSize()"
+         >
+           @for (row of virtualizer.getVirtualItems(); track row.index) {
+             <div
+               style="position: absolute; top: 0; left: 0; width: 100%; height: 35px"
+               [style.transform]="'translateY(' + row.start + 'px)'"
+             >
+               Row {{ row.index }}
+             </div>
+           }
+         </div>
+       </div>
+     `,
+   })
+   export class MyVirtualizedList {
+     scrollElement = viewChild<ElementRef<HTMLDivElement>>('scrollElement')
+
+     virtualizer = injectVirtualizer(() => ({
+       scrollElement: this.scrollElement(),
+       count: 1000,
+       estimateSize: () => 35,
+       overscan: 5,
+     }))
+   }
+   ```
+
+   Note that a [ViewChild](https://angular.dev/api/core/viewChild) is used to get a reference to the scrolling container to allow the virtualizer to interact with it. The adapter will automatically unwrap the [ElementRef](https://angular.dev/api/core/ElementRef) for you.
+
+   You can also create a virtualizer that attaches to the Window with `injectWindowVirtualizer`:
+
+   ```ts
+   import { Component } from '@angular/core'
+   import { injectWindowVirtualizer } from '@tanstack/angular-virtual'
+
+   @Component({
+     selector: 'my-window-virtualized-list',
+     template: `
+       <div
+         style="position: relative; width: 100%;"
+         [style.height.px]="virtualizer.getTotalSize()"
+       >
+         @for (row of virtualizer.getVirtualItems(); track row.index) {
+           <div
+             style="position: absolute; top: 0; left: 0; width: 100%; height: 35px"
+             [style.transform]="'translateY(' + row.start + 'px)'"
+           >
+             Row {{ row.index }}
+           </div>
+         }
+       </div>
+     `,
+   })
+   export class MyWindowVirtualizedList {
+     virtualizer = injectWindowVirtualizer(() => ({
+       count: 1000,
+       estimateSize: () => 35,
+       overscan: 5,
+     }))
+   }
+   ```
+
+3. If you need to update options on your virtualizer dynamically, make sure to use signals.
+
+   ```ts
+   import { Component, input } from '@angular/core'
+   import { injectVirtualizer } from '@tanstack/angular-virtual'
+
+   @Component({...})
+   export class MyVirtualizedList {
+     items = input<Array<string>>()
+
+     virtualizer = injectVirtualizer(() => ({
+       scrollElement: this.scrollElement(),
+       count: this.items().length,
+       estimateSize: () => 35,
+       overscan: 5,
+     }))
+   }
+   ```
+
+For more examples and detailed usage, visit the [official documentation](https://tanstack.com/virtual/latest).
+
+
+## Links discovered
+- [ViewChild](https://angular.dev/api/core/viewChild)
+- [ElementRef](https://angular.dev/api/core/ElementRef)
+- [official documentation](https://tanstack.com/virtual/latest)
+
+--- packages/lit-virtual/README.md ---
+# @tanstack/lit-virtual
+
+Efficiently virtualize only the visible DOM nodes within massive scrollable elements using Lit, while maintaining complete control over markup and styles.
+
+## `VirtualizerController`
+
+`@tanstack/lit-virtual` utilizes [Reactive Controllers](https://lit.dev/docs/composition/controllers/) to create the virtualizer and integrate it with the element lifecycle:
+
+```ts
+import { LitElement } from 'lit'
+import { VirtualizerController } from '@tanstack/lit-virtual'
+import { Ref, createRef } from 'lit/directives/ref.js'
+
+class MyVirtualElement extends LitElement {
+  private virtualizerController: VirtualizerController<HTMLDivElement, Element>
+  private scrollElementRef: Ref<HTMLDivElement> = createRef()
+
+  constructor() {
+    super()
+    this.virtualizerController = new VirtualizerController(this, {
+      getScrollElement: () => this.scrollElementRef.value,
+      count: 10000,
+      estimateSize: () => 35,
+      overscan: 5,
+    })
+  }
+
+  render() {
+    const virtualizer = this.virtualizerController.getVirtualizer()
+    const virtualItems = virtualizer.getVirtualItems()
+
+    return html`
+      <div class="list scroll-container" ${ref(this.scrollElementRef)}>
+        ${virtualItems.map(
+          (item) => html`<div class="item">${item.index}</div>`,
+        )}
+      </div>
+    `
+  }
+}
+```
+
+Note that a [Ref](https://lit.dev/docs/templates/directives/#ref) is attached to the scrolling container to allow the virtualizer to interact with it.
+
+## `WindowVirtualizerController`
+
+You can also create a virtualizer controller that attaches to the Window:
+
+```ts
+import { WindowVirtualizerController } from '@tanstack/lit-virtual'
+
+class MyWindowVirtualElement extends LitElement {
+  private windowVirtualizerController: WindowVirtualizerController
+
+  constructor() {
+    super()
+    this.windowVirtualizerController = new WindowVirtualizerController(this, {
+      count: this.data.length,
+      estimateSize: () => 350,
+      overscan: 5,
+    })
+  }
+
+  // Implement render and other lifecycle methods as needed
+}
+```
+
+For more examples and detailed usage, visit the [official documentation](https://tanstack.com/virtual/latest).
+
+
+## Links discovered
+- [Reactive Controllers](https://lit.dev/docs/composition/controllers/)
+- [Ref](https://lit.dev/docs/templates/directives/#ref)
+- [official documentation](https://tanstack.com/virtual/latest)
+
+--- packages/react-virtual/e2e/app/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/main.tsx"></script>
+  </body>
+</html>
+
+
+--- packages/angular-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/lit-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/react-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/solid-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/svelte-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/virtual-core/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]
+
+
+--- packages/vue-virtual/eslint.config.js ---
+// @ts-check
+
+import rootConfig from '../../eslint.config.js'
+
+export default [...rootConfig]

@@ -1,0 +1,2161 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/README.md ---
+# A2A Docs
+
+<https://a2a-protocol.org>
+
+## Developing A2A docs
+
+1. Clone this repository and `cd` into the repository directory
+2. Run `pip install -r requirements-docs.txt`
+3. Run `mkdocs serve`, edit `.md` files, and live preview
+4. Contribute docs changes as usual
+
+## How it works
+
+- The A2A docs use [mkdocs](https://www.mkdocs.org/) and the
+  [mkdocs-material theme](https://squidfunk.github.io/mkdocs-material/)
+- All of the source documentation / Markdown files related to the A2A docs are
+  in the `docs/` directory in the A2A repository
+- `mkdocs.yml` in the repository root contains all of the docs config, including
+  the site navigation and organization
+- There is a GitHub Action in `.github/workflows/docs.yml` that builds and
+  publishes the docs and pushes the built assets to the `gh-pages` branch in
+  this repository using `mkdocs gh-deploy --force`. This happens automatically for all
+  commits / merges to `main`.
+- The A2A documentation is hosted in GitHub pages, and the settings for this are
+  in the A2A repository settings in GitHub.
+
+## Building the Python SDK Documentation
+
+The Python SDK documentation is built using [Sphinx](https://www.sphinx-doc.org/).
+
+### Prerequisites
+
+Ensure you have installed the documentation dependencies:
+
+```bash
+pip install -r ../../requirements-docs.txt
+```
+
+### Building the Docs
+
+1. Run the following command to build the HTML documentation:
+
+   ```bash
+   sphinx-build -b html docs/sdk/python docs/sdk/python/api
+   ```
+
+2. The generated HTML files will be in the `sdk/python/api` directory. You can open `sdk/python/api/index.html` in your browser to view the documentation.
+
+
+## Links discovered
+- [mkdocs](https://www.mkdocs.org/)
+- [mkdocs-material theme](https://squidfunk.github.io/mkdocs-material/)
+- [Sphinx](https://www.sphinx-doc.org/)
+
+--- docs/tutorials/index.md ---
+# Tutorials
+
+## Python
+
+Tutorial | Description | Difficulty
+:--------|:------------|:-----------
+[A2A and Python Quickstart](./python/1-introduction.md) | Learn to build a simple Python-based "echo" A2A server and client. | Easy
+[ADK facts](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/adk_facts) | Build and test a simple Personal Assistant agent using the Agent Development Kit (ADK) that can provide interesting facts. | Easy
+[ADK agent on Cloud Run](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/adk_cloud_run) | Deploy, manage, and observe an ADK-based agent as a scalable, serverless service on Google Cloud Run.| Easy
+[Multi-agent collaboration using A2A](https://github.com/a2aproject/a2a-samples/tree/main/demo) | Learn how to set up an orchestrator (host agent) that routes and manages requests among several specialized A2A-compatible agents. | Easy
+[Airbnb and weather multi-agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/airbnb_planner_multiagent) | Build a complex multi-agent system where agents collaborate using A2A to plan a trip, finding both Airbnb accommodations and weather information. | Medium
+[A2A Client-Server example using remote ADK agent](https://goo.gle/adk-a2a) | Learn how a local A2A client agent discovers and consumes the capabilities of a separate, remote ADK-based agent (for example, a prime number checker). | Easy
+[Colab Notebook](https://github.com/a2aproject/a2a-samples/blob/main/notebooks/multi_agents_eval_with_cloud_run_deployment.ipynb) | Use Colab Notebook to deploy A2A agents to Cloud Run from your browser, and then evaluate their performance with Vertex AI. | Easy
+
+## Java
+
+Tutorial | Description | Difficulty
+:--------|:------------|:-----------
+[Weather Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/weather_mcp) | Build a weather information agent using an MCP server.<br><br>**To make use of this agent in a multi-language, multi-agent system, check out the [weather_and_airbnb_planner sample](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/weather_and_airbnb_planner).** | Easy
+[Content Writer Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/content_writer) | Build a content writer agent that generates engaging pieces of content from outlines.<br><br>**To make use of this agent in a content creation multi-language, multi-agent system, check out the [content_creation sample](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/content_creation).** | Easy
+[Content Editor Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/content_editor) | Build a content editor agent that proof-reads and polishes content.<br><br>**To make use of this agent in a content creation multi-language, multi-agent system, check out the [content_creation sample](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/content_creation).** | Easy
+[Dice Agent (Multi-Transport)](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/dice_agent_multi_transport) | Build a multi-transport agent that rolls dice and checks for prime numbers. | Medium
+[Magic 8 Ball Agent (Security)](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/magic_8_ball_security) | Build a Magic 8 Ball agent to learn how to secure A2A servers with Keycloak using bearer token authentication and configure an A2A client to obtain and pass the required token. | Medium
+
+## JavaScript
+
+Tutorial | Description
+:--------|:------------
+[Movie research agent using JavaScript](https://github.com/a2aproject/a2a-samples/tree/main/samples/js) | Build an A2A agent with Node.js that uses the TMDB (The Movie Database) API to handle movie searches and queries.
+
+## C#/.NET
+
+Tutorial | Description
+:--------|:------------
+[All .NET samples](https://github.com/a2aproject/a2a-dotnet/tree/main/samples) | Repository of foundational samples showing how to build A2A clients and servers, including an Echo Agent, using the C#/.NET SDK.
+
+
+## Links discovered
+- [A2A and Python Quickstart](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/1-introduction.md)
+- [ADK facts](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/adk_facts)
+- [ADK agent on Cloud Run](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/adk_cloud_run)
+- [Multi-agent collaboration using A2A](https://github.com/a2aproject/a2a-samples/tree/main/demo)
+- [Airbnb and weather multi-agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/airbnb_planner_multiagent)
+- [A2A Client-Server example using remote ADK agent](https://goo.gle/adk-a2a)
+- [Colab Notebook](https://github.com/a2aproject/a2a-samples/blob/main/notebooks/multi_agents_eval_with_cloud_run_deployment.ipynb)
+- [Weather Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/weather_mcp)
+- [weather_and_airbnb_planner sample](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/weather_and_airbnb_planner)
+- [Content Writer Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/content_writer)
+- [content_creation sample](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/hosts/content_creation)
+- [Content Editor Agent](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/content_editor)
+- [Dice Agent (Multi-Transport)](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/dice_agent_multi_transport)
+- [Magic 8 Ball Agent (Security)](https://github.com/a2aproject/a2a-samples/tree/main/samples/java/agents/magic_8_ball_security)
+- [Movie research agent using JavaScript](https://github.com/a2aproject/a2a-samples/tree/main/samples/js)
+- [All .NET samples](https://github.com/a2aproject/a2a-dotnet/tree/main/samples)
+
+--- docs/tutorials/python/1-introduction.md ---
+# Python Quickstart Tutorial: Building an A2A Agent
+
+Welcome to the Agent2Agent (A2A) Python Quickstart Tutorial!
+
+In this tutorial, you will explore a simple "echo" A2A server using the Python SDK. This will introduce you to the fundamental concepts and components of an A2A server. You will then look at a more advanced example that integrates a Large Language Model (LLM).
+
+This hands-on guide will help you understand:
+
+- The basic concepts behind the A2A protocol.
+- How to set up a Python environment for A2A development using the SDK.
+- How Agent Skills and Agent Cards describe an agent.
+- How an A2A server handles tasks.
+- How to interact with an A2A server using a client.
+- How streaming capabilities and multi-turn interactions work.
+- How an LLM can be integrated into an A2A agent.
+
+By the end of this tutorial, you will have a functional understanding of A2A agents and a solid foundation for building or integrating A2A-compliant applications.
+
+## Tutorial Sections
+
+The tutorial is broken down into the following steps:
+
+1. **[Introduction (This Page)](./1-introduction.md)**
+2. **[Setup](./2-setup.md)**: Prepare your Python environment and the A2A SDK.
+3. **[Agent Skills & Agent Card](./3-agent-skills-and-card.md)**: Define what your agent can do and how it describes itself.
+4. **[The Agent Executor](./4-agent-executor.md)**: Understand how the agent logic is implemented.
+5. **[Starting the Server](./5-start-server.md)**: Run the Helloworld A2A server.
+6. **[Interacting with the Server](./6-interact-with-server.md)**: Send requests to your agent.
+7. **[Streaming & Multi-Turn Interactions](./7-streaming-and-multiturn.md)**: Explore advanced capabilities with the LangGraph example.
+8. **[Next Steps](./8-next-steps.md)**: Explore further possibilities with A2A.
+
+Let's get started!
+
+
+## Links discovered
+- [Introduction (This Page)](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/1-introduction.md)
+- [Setup](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/2-setup.md)
+- [Agent Skills & Agent Card](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/3-agent-skills-and-card.md)
+- [The Agent Executor](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/4-agent-executor.md)
+- [Starting the Server](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/5-start-server.md)
+- [Interacting with the Server](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/6-interact-with-server.md)
+- [Streaming & Multi-Turn Interactions](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/7-streaming-and-multiturn.md)
+- [Next Steps](https://github.com/a2aproject/A2A/blob/main/docs/tutorials/python/8-next-steps.md)
+
+--- docs/tutorials/python/2-setup.md ---
+# 2. Setup Your Environment
+
+## Prerequisites
+
+- Python 3.10 or higher.
+- Access to a terminal or command prompt.
+- Git, for cloning the repository.
+- A code editor (e.g., Visual Studio Code) is recommended.
+
+## Clone the Repository
+
+If you haven't already, clone the A2A Samples repository:
+
+```bash
+git clone https://github.com/a2aproject/a2a-samples.git -b main --depth 1
+cd a2a-samples
+```
+
+## Python Environment & SDK Installation
+
+We recommend using a virtual environment for Python projects. The A2A Python SDK uses `uv` for dependency management, but you can use `pip` with `venv` as well.
+
+1. **Create and activate a virtual environment:**
+
+    Using `venv` (standard library):
+
+    === "Mac/Linux"
+
+        ```sh
+        python -m venv .venv
+        source .venv/bin/activate
+        ```
+
+    === "Windows"
+
+        ```powershell
+        python -m venv .venv
+        .venv\Scripts\activate
+        ```
+
+2. **Install needed Python dependencies along with the A2A SDK and its dependencies:**
+
+    ```bash
+    pip install -r samples/python/requirements.txt
+    ```
+
+## Verify Installation
+
+After installation, you should be able to import the `a2a` package in a Python interpreter:
+
+```bash
+python -c "import a2a; print('A2A SDK imported successfully')"
+```
+
+If this command runs without error and prints the success message, your environment is set up correctly.
+
+
+--- docs/tutorials/python/3-agent-skills-and-card.md ---
+# 3. Agent Skills & Agent Card
+
+Before an A2A agent can do anything, it needs to define what it _can_ do (its skills) and how other agents or clients can find out about these capabilities (its Agent Card).
+
+We'll use the `helloworld` example located in [`a2a-samples/samples/python/agents/helloworld/`](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/helloworld).
+
+## Agent Skills
+
+An **Agent Skill** describes a specific capability or function the agent can perform. It's a building block that tells clients what kinds of tasks the agent is good for.
+
+Key attributes of an `AgentSkill` (defined in `a2a.types`):
+
+- `id`: A unique identifier for the skill.
+- `name`: A human-readable name.
+- `description`: A more detailed explanation of what the skill does.
+- `tags`: Keywords for categorization and discovery.
+- `examples`: Sample prompts or use cases.
+- `inputModes` / `outputModes`: Supported Media Types for input and output (e.g., "text/plain", "application/json").
+
+In `__main__.py`, you can see how a skill for the Helloworld agent is defined:
+
+```python { .no-copy }
+--8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/__main__.py:AgentSkill"
+```
+
+This skill is very simple: it's named "Returns hello world" and primarily deals with text.
+
+## Agent Card
+
+The **Agent Card** is a JSON document that an A2A Server makes available, typically at a `.well-known/agent-card.json` endpoint. It's like a digital business card for the agent.
+
+Key attributes of an `AgentCard` (defined in `a2a.types`):
+
+- `name`, `description`, `version`: Basic identity information.
+- `url`: The endpoint where the A2A service can be reached.
+- `capabilities`: Specifies supported A2A features like `streaming` or `pushNotifications`.
+- `defaultInputModes` / `defaultOutputModes`: Default Media Types for the agent.
+- `skills`: A list of `AgentSkill` objects that the agent offers.
+
+The `helloworld` example defines its Agent Card like this:
+
+```python { .no-copy }
+--8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/__main__.py:AgentCard"
+```
+
+This card tells us the agent is named "Hello World Agent", runs at `http://localhost:9999/`, supports text interactions, and has the `hello_world` skill. It also indicates public authentication, meaning no specific credentials are required.
+
+Understanding the Agent Card is crucial because it's how a client discovers an agent and learns how to interact with it.
+
+
+## Links discovered
+- [`a2a-samples/samples/python/agents/helloworld/`](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/helloworld)
+
+--- docs/tutorials/python/4-agent-executor.md ---
+# 4. The Agent Executor
+
+The core logic of how an A2A agent processes requests and generates responses/events is handled by an **Agent Executor**. The A2A Python SDK provides an abstract base class `a2a.server.agent_execution.AgentExecutor` that you implement.
+
+## `AgentExecutor` Interface
+
+The `AgentExecutor` class defines two primary methods:
+
+- `async def execute(self, context: RequestContext, event_queue: EventQueue)`: Handles incoming requests that expect a response or a stream of events. It processes the user's input (available via `context`) and uses the `event_queue` to send back `Message`, `Task`, `TaskStatusUpdateEvent`, or `TaskArtifactUpdateEvent` objects.
+- `async def cancel(self, context: RequestContext, event_queue: EventQueue)`: Handles requests to cancel an ongoing task.
+
+The `RequestContext` provides information about the incoming request, such as the user's message and any existing task details. The `EventQueue` is used by the executor to send events back to the client.
+
+## Helloworld Agent Executor
+
+Let's look at `agent_executor.py`. It defines `HelloWorldAgentExecutor`.
+
+1. **The Agent (`HelloWorldAgent`)**:
+    This is a simple helper class that encapsulates the actual "business logic".
+
+    ```python { .no-copy }
+    --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/agent_executor.py:HelloWorldAgent"
+    ```
+
+    It has a simple `invoke` method that returns the string "Hello World".
+
+2. **The Executor (`HelloWorldAgentExecutor`)**:
+    This class implements the `AgentExecutor` interface.
+
+    - **`__init__`**:
+
+        ```python { .no-copy }
+        --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/agent_executor.py:HelloWorldAgentExecutor_init"
+        ```
+
+        It instantiates the `HelloWorldAgent`.
+
+    - **`execute`**:
+
+        ```python { .no-copy }
+        --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/agent_executor.py:HelloWorldAgentExecutor_execute"
+        ```
+
+        When a `message/send` or `message/stream` request comes in (both are handled by `execute` in this simplified executor):
+
+        1. It calls `self.agent.invoke()` to get the "Hello World" string.
+        2. It creates an A2A `Message` object using the `new_agent_text_message` utility function.
+        3. It enqueues this message onto the `event_queue`. The underlying `DefaultRequestHandler` will then process this queue to send the response(s) to the client. For a single message like this, it will result in a single response for `message/send` or a single event for `message/stream` before the stream closes.
+
+    - **`cancel`**:
+        The Hello World example's `cancel` method simply raises an exception, indicating that cancellation is not supported for this basic agent.
+
+        ```python { .no-copy }
+        --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/agent_executor.py:HelloWorldAgentExecutor_cancel"
+        ```
+
+The `AgentExecutor` acts as the bridge between the A2A protocol (managed by the request handler and server application) and your agent's specific logic. It receives context about the request and uses an event queue to communicate results or updates back.
+
+
+--- docs/tutorials/python/5-start-server.md ---
+# 5. Starting the Server
+
+Now that we have an Agent Card and an Agent Executor, we can set up and start the A2A server.
+
+The A2A Python SDK provides an `A2AStarletteApplication` class that simplifies running an A2A-compliant HTTP server. It uses [Starlette](https://www.starlette.io/) for the web framework and is typically run with an ASGI server like [Uvicorn](https://www.uvicorn.org/).
+
+## Server Setup in Helloworld
+
+Let's look at `__main__.py` again to see how the server is initialized and started.
+
+```python { .no-copy }
+--8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/__main__.py"
+```
+
+Let's break this down:
+
+1. **`DefaultRequestHandler`**:
+
+    - The SDK provides `DefaultRequestHandler`. This handler takes your `AgentExecutor` implementation (here, `HelloWorldAgentExecutor`) and a `TaskStore` (here, `InMemoryTaskStore`).
+    - It routes incoming A2A RPC calls to the appropriate methods on your executor (like `execute` or `cancel`).
+    - The `TaskStore` is used by the `DefaultRequestHandler` to manage the lifecycle of tasks, especially for stateful interactions, streaming, and resubscription. Even if your agent executor is simple, the handler needs a task store.
+
+2. **`A2AStarletteApplication`**:
+
+    - The `A2AStarletteApplication` class is instantiated with the `agent_card` and the `request_handler` (referred to as `http_handler` in its constructor).
+    - The `agent_card` is crucial because the server will expose it at the `/.well-known/agent-card.json` endpoint (by default).
+    - The `request_handler` is responsible for processing all incoming A2A method calls by interacting with your `AgentExecutor`.
+
+3. **`uvicorn.run(server_app_builder.build(), ...)`**:
+    - The `A2AStarletteApplication` has a `build()` method that constructs the actual Starlette application.
+    - This application is then run using `uvicorn.run()`, making your agent accessible over HTTP.
+    - `host='0.0.0.0'` makes the server accessible on all network interfaces on your machine.
+    - `port=9999` specifies the port to listen on. This matches the `url` in the `AgentCard`.
+
+## Running the Helloworld Server
+
+Navigate to the `a2a-samples` directory in your terminal (if you're not already there) and ensure your virtual environment is activated.
+
+To run the Helloworld server:
+
+```bash
+# from the a2a-samples directory
+python samples/python/agents/helloworld/__main__.py
+```
+
+You should see output similar to this, indicating the server is running:
+
+```console { .no-copy }
+INFO:     Started server process [xxxxx]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:9999 (Press CTRL+C to quit)
+```
+
+Your A2A Helloworld agent is now live and listening for requests! In the next step, we'll interact with it.
+
+
+## Links discovered
+- [Starlette](https://www.starlette.io/)
+- [Uvicorn](https://www.uvicorn.org/)
+
+--- docs/tutorials/python/6-interact-with-server.md ---
+# 6. Interacting with the Server
+
+With the Helloworld A2A server running, let's send some requests to it. The SDK includes a client (`A2AClient`) that simplifies these interactions.
+
+## The Helloworld Test Client
+
+The `test_client.py` script demonstrates how to:
+
+1. Fetch the Agent Card from the server.
+2. Create an `A2AClient` instance.
+3. Send both non-streaming (`message/send`) and streaming (`message/stream`) requests.
+
+Open a **new terminal window**, activate your virtual environment, and navigate to the `a2a-samples` directory.
+
+Activate virtual environment (Be sure to do this in the same directory where you created the virtual environment):
+
+=== "Mac/Linux"
+
+    ```sh
+    source .venv/bin/activate
+    ```
+
+=== "Windows"
+
+    ```powershell
+    .venv\Scripts\activate
+    ```
+
+Run the test client:
+
+```bash
+# from the a2a-samples directory
+python samples/python/agents/helloworld/test_client.py
+```
+
+## Understanding the Client Code
+
+Let's look at key parts of `test_client.py`:
+
+1. **Fetching the Agent Card & Initializing the Client**:
+
+    ```python { .no-copy }
+    --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/test_client.py:A2ACardResolver"
+    ```
+
+    The `A2ACardResolver` class is a convenience. It first fetches the `AgentCard` from the server's `/.well-known/agent-card.json` endpoint (based on the provided base URL) and then initializes the client with it.
+
+2. **Sending a Non-Streaming Message (`send_message`)**:
+
+    ```python { .no-copy }
+    --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/test_client.py:send_message"
+    ```
+
+    - The `send_message_payload` constructs the data for `MessageSendParams`.
+    - This is wrapped in a `SendMessageRequest`.
+    - It includes a `message` object with the `role` set to "user" and the content in `parts`.
+    - The Helloworld agent's `execute` method will enqueue a single "Hello World" message. The `DefaultRequestHandler` will retrieve this and send it as the response.
+    - The `response` will be a `SendMessageResponse` object, which contains either a `SendMessageSuccessResponse` (with the agent's `Message` as the result) or a `JSONRPCErrorResponse`.
+
+3. **Handling Task IDs (Illustrative Note for Helloworld)**:
+
+    The Helloworld client (`test_client.py`) doesn't attempt `get_task` or `cancel_task` directly because the simple Helloworld agent's `execute` method, when called via `message/send`, results in the `DefaultRequestHandler` returning a direct `Message` response rather than a `Task` object. More complex agents that explicitly manage tasks (like the LangGraph example) would return a `Task` object from `message/send`, and its `id` could then be used for `get_task` or `cancel_task`.
+
+4. **Sending a Streaming Message (`send_message_streaming`)**:
+
+    ```python { .no-copy }
+    --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/helloworld/test_client.py:send_message_streaming"
+    ```
+
+    - This method calls the agent's `message/stream` endpoint. The `DefaultRequestHandler` will invoke the `HelloWorldAgentExecutor.execute` method.
+    - The `execute` method enqueues one "Hello World" message, and then the event queue is closed.
+    - The client will receive this single message as one `SendStreamingMessageResponse` event, and then the stream will terminate.
+    - The `stream_response` is an `AsyncGenerator`.
+
+## Expected Output
+
+When you run `test_client.py`, you'll see JSON outputs for:
+
+- The non-streaming response (a single "Hello World" message).
+- The streaming response (a single "Hello World" message as one chunk, after which the stream ends).
+
+The `id` fields in the output will vary with each run.
+
+```console { .no-copy }
+// Non-streaming response
+{"jsonrpc":"2.0","id":"xxxxxxxx","result":{"type":"message","role":"agent","parts":[{"type":"text","text":"Hello World"}],"messageId":"yyyyyyyy"}}
+// Streaming response (one chunk)
+{"jsonrpc":"2.0","id":"zzzzzzzz","result":{"type":"message","role":"agent","parts":[{"type":"text","text":"Hello World"}],"messageId":"wwwwwwww","final":true}}
+```
+
+_(Actual IDs like `xxxxxxxx`, `yyyyyyyy`, `zzzzzzzz`, `wwwwwwww` will be different UUIDs/request IDs)_
+
+This confirms your server is correctly handling basic A2A interactions with the updated SDK structure!
+
+Now you can shut down the server by typing Ctrl+C in the terminal window where `__main__.py` is running.
+
+
+--- docs/tutorials/python/7-streaming-and-multiturn.md ---
+# 7. Streaming & Multi-Turn Interactions (LangGraph Example)
+
+The Hello World example demonstrates the basic mechanics of A2A. For more advanced features like robust streaming, task state management, and multi-turn conversations powered by an LLM, we'll turn to the LangGraph example located in [`a2a-samples/samples/python/agents/langgraph/`](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/langgraph).
+
+This example features a "Currency Agent" that uses the Gemini model via LangChain and LangGraph to answer currency conversion questions.
+
+## Setting up the LangGraph Example
+
+1. Create a [Gemini API Key](https://ai.google.dev/gemini-api/docs/api-key), if you don't already have one.
+
+2. **Environment Variable:**
+
+    Create a `.env` file in the `a2a-samples/samples/python/agents/langgraph/` directory:
+
+    ```bash
+    echo "GOOGLE_API_KEY=YOUR_API_KEY_HERE" > .env
+    ```
+
+    Replace `YOUR_API_KEY_HERE` with your actual Gemini API key.
+
+3. **Install Dependencies (if not already covered):**
+
+    The `langgraph` example has its own `pyproject.toml` which includes dependencies like `langchain-google-genai` and `langgraph`. When you installed the SDK from the `a2a-samples` root using `pip install -e .[dev]`, this should have also installed the dependencies for the workspace examples, including `langgraph-example`. If you encounter import errors, ensure your primary SDK installation from the root directory was successful.
+
+## Running the LangGraph Server
+
+Navigate to the `a2a-samples/samples/python/agents/langgraph/app` directory in your terminal and ensure your virtual environment (from the SDK root) is activated.
+
+Start the LangGraph agent server:
+
+```bash
+python __main__.py
+```
+
+This will start the server, usually on `http://localhost:10000`.
+
+## Interacting with the LangGraph Agent
+
+Open a **new terminal window**, activate your virtual environment, and navigate to `a2a-samples/samples/python/agents/langgraph/app`.
+
+Run its test client:
+
+```bash
+python test_client.py
+```
+
+Now, you can shut down the server by typing Ctrl+C in the terminal window where `__main__.py` is running.
+
+## Key Features Demonstrated
+
+The `langgraph` example showcases several important A2A concepts:
+
+1. **LLM Integration**:
+
+    - `agent.py` defines `CurrencyAgent`. It uses `ChatGoogleGenerativeAI` and LangGraph's `create_react_agent` to process user queries.
+    - This demonstrates how a real LLM can power the agent's logic.
+
+2. **Task State Management**:
+
+    - `samples/langgraph/__main__.py` initializes a `DefaultRequestHandler` with an `InMemoryTaskStore`.
+
+        ```python { .no-copy }
+        --8<-- "https://raw.githubusercontent.com/a2aproject/a2a-samples/refs/heads/main/samples/python/agents/langgraph/app/__main__.py:DefaultRequestHandler"
+        ```
+
+    - The `CurrencyAgentExecutor` (in `samples/langgraph/agent_executor.py`), when its `execute` method is called by the `DefaultRequestHandler`, interacts with the `RequestContext` which contains the current task (if any).
+    - For `message/send`, the `DefaultRequestHandler` uses the `TaskStore` to persist and retrieve task state across interactions. The response to `message/send` will be a full `Task` object if the agent's execution flow involves multiple steps or results in a persistent task.
+    - The `test_client.py`'s `run_single_turn_test` demonstrates getting a `Task` object back and then querying it using `get_task`.
+
+3. **Streaming with `TaskStatusUpdateEvent` and `TaskArtifactUpdateEvent`**:
+
+    - The `execute` method in `CurrencyAgentExecutor` is responsible for handling both non-streaming and streaming requests, orchestrated by the `DefaultRequestHandler`.
+    - As the LangGraph agent processes the request (which might involve calling tools like `get_exchange_rate`), the `CurrencyAgentExecutor` enqueues different types of events onto the `EventQueue`:
+        - `TaskStatusUpdateEvent`: For intermediate updates (e.g., "Looking up exchange rates...", "Processing the exchange rates.."). The `final` flag on these events is `False`.
+        - `TaskArtifactUpdateEvent`: When the final answer is ready, it's enqueued as an artifact. The `lastChunk` flag is `True`.
+        - A final `TaskStatusUpdateEvent` with `state=TaskState.completed` and `final=True` is sent to signify the end of the task for streaming.
+    - The `test_client.py`'s `run_streaming_test` function will print these individual event chunks as they are received from the server.
+
+4. **Multi-Turn Conversation (`TaskState.input_required`)**:
+
+    - The `CurrencyAgent` can ask for clarification if a query is ambiguous (e.g., user asks "how much is 100 USD?").
+    - When this happens, the `CurrencyAgentExecutor` will enqueue a `TaskStatusUpdateEvent` where `status.state` is `TaskState.input_required` and `status.message` contains the agent's question (e.g., "To which currency would you like to convert?"). This event will have `final=True` for the current interaction stream.
+    - The `test_client.py`'s `run_multi_turn_test` function demonstrates this:
+        - It sends an initial ambiguous query.
+        - The agent responds (via the `DefaultRequestHandler` processing the enqueued events) with a `Task` whose status is `input_required`.
+        - The client then sends a second message, including the `taskId` and `contextId` from the first turn's `Task` response, to provide the missing information ("in GBP"). This continues the same task.
+
+## Exploring the Code
+
+Take some time to look through these files:
+
+- `__main__.py`: Server setup using `A2AStarletteApplication` and `DefaultRequestHandler`. Note the `AgentCard` definition includes `capabilities.streaming=True`.
+- `agent.py`: The `CurrencyAgent` with LangGraph, LLM model, and tool definitions.
+- `agent_executor.py`: The `CurrencyAgentExecutor` implementing the `execute` (and `cancel`) method. It uses the `RequestContext` to understand the ongoing task and the `EventQueue` to send back various events (`TaskStatusUpdateEvent`, `TaskArtifactUpdateEvent`, new `Task` object implicitly via the first event if no task exists).
+- `test_client.py`: Demonstrates various interaction patterns, including retrieving task IDs and using them for multi-turn conversations.
+
+This example provides a much richer illustration of how A2A facilitates complex, stateful, and asynchronous interactions between agents.
+
+
+## Links discovered
+- [`a2a-samples/samples/python/agents/langgraph/`](https://github.com/a2aproject/a2a-samples/tree/main/samples/python/agents/langgraph)
+- [Gemini API Key](https://ai.google.dev/gemini-api/docs/api-key)
+
+--- docs/tutorials/python/8-next-steps.md ---
+# Next Steps
+
+Congratulations on completing the A2A Python SDK Tutorial! You've learned how to:
+
+- Set up your environment for A2A development.
+- Define Agent Skills and Agent Cards using the SDK's types.
+- Implement a basic HelloWorld A2A server and client.
+- Understand and implement streaming capabilities.
+- Integrate a more complex agent using LangGraph, demonstrating task state management and tool use.
+
+You now have a solid foundation for building and integrating your own A2A-compliant agents.
+
+## Where to Go From Here?
+
+Here are some ideas and resources to continue your A2A journey:
+
+- **Explore Other Examples:**
+    - Check out the other examples in the [a2a-samples GitHub repository](https://github.com/a2aproject/a2a-samples/tree/main/samples) for more complex agent integrations and features.
+- **Deepen Your Protocol Understanding:**
+    - 📚 Read the complete [A2A Protocol Documentation site](https://a2a-protocol.org) for a comprehensive overview.
+    - 📝 Review the detailed [A2A Protocol Specification](../../specification.md) to understand the nuances of all data structures and RPC methods.
+- **Review Key A2A Topics:**
+    - [A2A and MCP](../../topics/a2a-and-mcp.md): Understand how A2A complements the Model Context Protocol for tool usage.
+    - [Enterprise-Ready Features](../../topics/enterprise-ready.md): Learn about security, observability, and other enterprise considerations.
+    - [Streaming & Asynchronous Operations](../../topics/streaming-and-async.md): Get more details on SSE and push notifications.
+    - [Agent Discovery](../../topics/agent-discovery.md): Explore different ways agents can find each other.
+- **Build Your Own Agent:**
+    - Try creating a new A2A agent using your favorite Python agent framework (like LangChain, CrewAI, AutoGen, Semantic Kernel, or a custom solution).
+    - Implement the `a2a.server.AgentExecutor` interface to bridge your agent's logic with the A2A protocol.
+    - Think about what unique skills your agent could offer and how its Agent Card would represent them.
+- **Experiment with Advanced Features:**
+    - Implement robust task management with a persistent `TaskStore` if your agent handles long-running or multi-session tasks.
+    - Explore implementing push notifications if your agent's tasks are very long-lived.
+    - Consider more complex input and output modalities (e.g., handling file uploads/downloads, or structured data via `DataPart`).
+- **Contribute to the A2A Community:**
+    - Join the discussions on the [A2A GitHub Discussions page](https://github.com/a2aproject/A2A/discussions).
+    - Report issues or suggest improvements via [GitHub Issues](https://github.com/a2aproject/A2A/issues).
+    - Consider contributing code, examples, or documentation. See the [CONTRIBUTING.md](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md) guide.
+
+The A2A protocol aims to foster an ecosystem of interoperable AI agents. By building and sharing A2A-compliant agents, you can be a part of this exciting development!
+
+
+## Links discovered
+- [a2a-samples GitHub repository](https://github.com/a2aproject/a2a-samples/tree/main/samples)
+- [A2A Protocol Documentation site](https://a2a-protocol.org)
+- [A2A Protocol Specification](https://github.com/a2aproject/A2A/blob/main/docs/specification.md)
+- [A2A and MCP](https://github.com/a2aproject/A2A/blob/main/docs/topics/a2a-and-mcp.md)
+- [Enterprise-Ready Features](https://github.com/a2aproject/A2A/blob/main/docs/topics/enterprise-ready.md)
+- [Streaming & Asynchronous Operations](https://github.com/a2aproject/A2A/blob/main/docs/topics/streaming-and-async.md)
+- [Agent Discovery](https://github.com/a2aproject/A2A/blob/main/docs/topics/agent-discovery.md)
+- [A2A GitHub Discussions page](https://github.com/a2aproject/A2A/discussions)
+- [GitHub Issues](https://github.com/a2aproject/A2A/issues)
+- [CONTRIBUTING.md](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+
+--- CHANGELOG.md ---
+# Changelog
+
+## [0.4.0](https://github.com/a2aproject/A2A/compare/v0.3.0...v0.4.0) (2025-09-15)
+
+### Features
+
+* **spec:** Add `tasks/list` method for retrieving and filtering tasks with pagination
+
+## [0.3.0](https://github.com/a2aproject/A2A/compare/v0.2.6...v0.3.0) (2025-07-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* Add mTLS to SecuritySchemes, add oauth2 metadata url field, allow Skills to specify Security ([#901](https://github.com/a2aproject/A2A/issues/901))
+* Change Well-Known URI for Agent Card hosting from `agent.json` to `agent-card.json` ([#841](https://github.com/a2aproject/A2A/issues/841))
+* Add method for fetching extended card ([#929](https://github.com/a2aproject/A2A/issues/929))
+
+### Features
+
+* Add `signatures` to the `AgentCard` ([#917](https://github.com/a2aproject/A2A/issues/917)) ([ef4a305](https://github.com/a2aproject/A2A/commit/ef4a30505381e99b20103724cabef024389bacef))
+* Add method for fetching extended card ([#929](https://github.com/a2aproject/A2A/issues/929)) ([2cd7d98](https://github.com/a2aproject/A2A/commit/2cd7d98bc8566601b9a18ca8afe92a0b4d203248))
+* Add mTLS to SecuritySchemes, add oauth2 metadata url field, allow Skills to specify Security ([#901](https://github.com/a2aproject/A2A/issues/901)) ([e162c0c](https://github.com/a2aproject/A2A/commit/e162c0c6c4f609d2f4eef9042466d176ec75ebda))
+
+
+### Bug Fixes
+
+* **spec:** Add `SendMessageRequest.request` `json_name` mapping to `message` ([#904](https://github.com/a2aproject/A2A/issues/904)) ([2eef3f6](https://github.com/a2aproject/A2A/commit/2eef3f6113851e690cee70a1b1643e1ffd6d2a60))
+* **spec:** Add Transport enum to specification ([#909](https://github.com/a2aproject/A2A/issues/909)) ([e834347](https://github.com/a2aproject/A2A/commit/e834347c279186d9d7873b352298e8b19737dd5a))
+
+
+### Code Refactoring
+
+* Change Well-Known URI for Agent Card hosting from `agent.json` to `agent-card.json` ([#841](https://github.com/a2aproject/A2A/issues/841)) ([0858ddb](https://github.com/a2aproject/A2A/commit/0858ddb884dc4671681fd819648dfd697176abb3))
+
+## [0.2.6](https://github.com/a2aproject/A2A/compare/v0.2.5...v0.2.6) (2025-07-17)
+
+
+### Bug Fixes
+
+* Type fix and doc clarification ([#877](https://github.com/a2aproject/A2A/issues/877)) ([6f1d17b](https://github.com/a2aproject/A2A/commit/6f1d17ba806c32f2b6fbe465be93ec13bfe7d83c))
+* Update json names of gRPC objects for proper transcoding  ([#847](https://github.com/a2aproject/A2A/issues/847)) ([6ba72f0](https://github.com/a2aproject/A2A/commit/6ba72f0d51c2e3d0728f84e9743b6d0e88730b51))
+
+## [0.2.5](https://github.com/a2aproject/A2A/compare/v0.2.4...v0.2.5) (2025-06-30)
+
+
+### ⚠ BREAKING CHANGES
+
+* **spec:** Add a required protocol version to the agent card. ([#802](https://github.com/a2aproject/A2A/issues/802))
+* Support for multiple pushNotification config per task ([#738](https://github.com/a2aproject/A2A/issues/738)) ([f355d3e](https://github.com/a2aproject/A2A/commit/f355d3e922de61ba97873fe2989a8987fc89eec2))
+
+
+### Features
+
+* **spec:** Add a required protocol version to the agent card. ([#802](https://github.com/a2aproject/A2A/issues/802)) ([90fa642](https://github.com/a2aproject/A2A/commit/90fa64209498948b329a7b2ac6ec38942369157a))
+* **spec:** Support for multiple pushNotification config per task ([#738](https://github.com/a2aproject/A2A/issues/738)) ([f355d3e](https://github.com/a2aproject/A2A/commit/f355d3e922de61ba97873fe2989a8987fc89eec2))
+
+
+### Documentation
+
+* update spec & doc topic with non-restartable tasks ([#770](https://github.com/a2aproject/A2A/issues/770)) ([ebc4157](https://github.com/a2aproject/A2A/commit/ebc4157ca87ae08d1c55e38e522a1a17201f2854))
+
+## [0.2.4](https://github.com/a2aproject/A2A/compare/v0.2.3...v0.2.4) (2025-06-30)
+
+
+### Features
+
+* feat: Add support for multiple transport announcement in AgentCard ([#749](https://github.com/a2aproject/A2A/issues/749)) ([b35485e](https://github.com/a2aproject/A2A/commit/b35485e02e796d15232dec01acfab93fc858c3ec))
+
+## [0.2.3](https://github.com/a2aproject/A2A/compare/v0.2.2...v0.2.3) (2025-06-12)
+
+
+### Bug Fixes
+
+* Address some typos in gRPC annotations ([#747](https://github.com/a2aproject/A2A/issues/747)) ([f506881](https://github.com/a2aproject/A2A/commit/f506881c9b8ff0632d7c7107d5c426646ae31592))
+
+## [0.2.2](https://github.com/a2aproject/A2A/compare/v0.2.1...v0.2.2) (2025-06-09)
+
+
+### ⚠ BREAKING CHANGES
+
+* Resolve spec inconsistencies with JSON-RPC 2.0
+
+### Features
+
+* Add gRPC and REST definitions to A2A protocol specifications ([#695](https://github.com/a2aproject/A2A/issues/695)) ([89bb5b8](https://github.com/a2aproject/A2A/commit/89bb5b82438b74ff7bb0fafbe335db7100a0ac57))
+* Add protocol support for extensions ([#716](https://github.com/a2aproject/A2A/issues/716)) ([70f1e2b](https://github.com/a2aproject/A2A/commit/70f1e2b0c68a3631888091ce9460a9f7fbfbdff2))
+* **spec:** Add an optional iconUrl field to the AgentCard ([#687](https://github.com/a2aproject/A2A/issues/687)) ([9f3bb51](https://github.com/a2aproject/A2A/commit/9f3bb51257f008bd878d85e00ec5e88357016039))
+
+
+### Bug Fixes
+
+* Protocol should released as 0.2.2 ([22e7541](https://github.com/a2aproject/A2A/commit/22e7541be082c4f0845ff7fa044992cda05b437e))
+* Resolve spec inconsistencies with JSON-RPC 2.0 ([628380e](https://github.com/a2aproject/A2A/commit/628380e7e392bc8f1778ae991d4719bd787c17a9))
+
+## [0.2.1](https://github.com/a2aproject/A2A/compare/v0.2.0...v0.2.1) (2025-05-27)
+
+### Features
+
+* Add a new boolean for supporting authenticated extended cards ([#618](https://github.com/a2aproject/A2A/issues/618)) ([e0a3070](https://github.com/a2aproject/A2A/commit/e0a3070fc289110d43faf2e91b4ffe3c29ef81da))
+* Add optional referenceTaskIds for task followups ([#608](https://github.com/a2aproject/A2A/issues/608)) ([5368e77](https://github.com/a2aproject/A2A/commit/5368e7728cb523caf1a9218fda0b1646325f524b))
+
+
+## Links discovered
+- [0.4.0](https://github.com/a2aproject/A2A/compare/v0.3.0...v0.4.0)
+- [0.3.0](https://github.com/a2aproject/A2A/compare/v0.2.6...v0.3.0)
+- [#901](https://github.com/a2aproject/A2A/issues/901)
+- [#841](https://github.com/a2aproject/A2A/issues/841)
+- [#929](https://github.com/a2aproject/A2A/issues/929)
+- [#917](https://github.com/a2aproject/A2A/issues/917)
+- [ef4a305](https://github.com/a2aproject/A2A/commit/ef4a30505381e99b20103724cabef024389bacef)
+- [2cd7d98](https://github.com/a2aproject/A2A/commit/2cd7d98bc8566601b9a18ca8afe92a0b4d203248)
+- [e162c0c](https://github.com/a2aproject/A2A/commit/e162c0c6c4f609d2f4eef9042466d176ec75ebda)
+- [#904](https://github.com/a2aproject/A2A/issues/904)
+- [2eef3f6](https://github.com/a2aproject/A2A/commit/2eef3f6113851e690cee70a1b1643e1ffd6d2a60)
+- [#909](https://github.com/a2aproject/A2A/issues/909)
+- [e834347](https://github.com/a2aproject/A2A/commit/e834347c279186d9d7873b352298e8b19737dd5a)
+- [0858ddb](https://github.com/a2aproject/A2A/commit/0858ddb884dc4671681fd819648dfd697176abb3)
+- [0.2.6](https://github.com/a2aproject/A2A/compare/v0.2.5...v0.2.6)
+- [#877](https://github.com/a2aproject/A2A/issues/877)
+- [6f1d17b](https://github.com/a2aproject/A2A/commit/6f1d17ba806c32f2b6fbe465be93ec13bfe7d83c)
+- [#847](https://github.com/a2aproject/A2A/issues/847)
+- [6ba72f0](https://github.com/a2aproject/A2A/commit/6ba72f0d51c2e3d0728f84e9743b6d0e88730b51)
+- [0.2.5](https://github.com/a2aproject/A2A/compare/v0.2.4...v0.2.5)
+- [#802](https://github.com/a2aproject/A2A/issues/802)
+- [#738](https://github.com/a2aproject/A2A/issues/738)
+- [f355d3e](https://github.com/a2aproject/A2A/commit/f355d3e922de61ba97873fe2989a8987fc89eec2)
+- [90fa642](https://github.com/a2aproject/A2A/commit/90fa64209498948b329a7b2ac6ec38942369157a)
+- [#770](https://github.com/a2aproject/A2A/issues/770)
+- [ebc4157](https://github.com/a2aproject/A2A/commit/ebc4157ca87ae08d1c55e38e522a1a17201f2854)
+- [0.2.4](https://github.com/a2aproject/A2A/compare/v0.2.3...v0.2.4)
+- [#749](https://github.com/a2aproject/A2A/issues/749)
+- [b35485e](https://github.com/a2aproject/A2A/commit/b35485e02e796d15232dec01acfab93fc858c3ec)
+- [0.2.3](https://github.com/a2aproject/A2A/compare/v0.2.2...v0.2.3)
+- [#747](https://github.com/a2aproject/A2A/issues/747)
+- [f506881](https://github.com/a2aproject/A2A/commit/f506881c9b8ff0632d7c7107d5c426646ae31592)
+- [0.2.2](https://github.com/a2aproject/A2A/compare/v0.2.1...v0.2.2)
+- [#695](https://github.com/a2aproject/A2A/issues/695)
+- [89bb5b8](https://github.com/a2aproject/A2A/commit/89bb5b82438b74ff7bb0fafbe335db7100a0ac57)
+- [#716](https://github.com/a2aproject/A2A/issues/716)
+- [70f1e2b](https://github.com/a2aproject/A2A/commit/70f1e2b0c68a3631888091ce9460a9f7fbfbdff2)
+- [#687](https://github.com/a2aproject/A2A/issues/687)
+- [9f3bb51](https://github.com/a2aproject/A2A/commit/9f3bb51257f008bd878d85e00ec5e88357016039)
+- [22e7541](https://github.com/a2aproject/A2A/commit/22e7541be082c4f0845ff7fa044992cda05b437e)
+- [628380e](https://github.com/a2aproject/A2A/commit/628380e7e392bc8f1778ae991d4719bd787c17a9)
+- [0.2.1](https://github.com/a2aproject/A2A/compare/v0.2.0...v0.2.1)
+- [#618](https://github.com/a2aproject/A2A/issues/618)
+- [e0a3070](https://github.com/a2aproject/A2A/commit/e0a3070fc289110d43faf2e91b4ffe3c29ef81da)
+- [#608](https://github.com/a2aproject/A2A/issues/608)
+- [5368e77](https://github.com/a2aproject/A2A/commit/5368e7728cb523caf1a9218fda0b1646325f524b)
+
+--- CONTRIBUTING.md ---
+# How to contribute
+
+We'd love to accept your patches and contributions to this project.
+
+## Contribution process
+
+### Code reviews
+
+All submissions, including submissions by project members, require review. We
+use GitHub pull requests for this purpose. Consult
+[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
+information on using pull requests.
+
+### Contributor Guide
+
+You may follow these steps to contribute:
+
+1. **Fork the official repository.** This will create a copy of the official repository in your own account.
+2. **Sync the branches.** This will ensure that your copy of the repository is up-to-date with the latest changes from the official repository.
+3. **Work on your forked repository's feature branch.** This is where you will make your changes to the code.
+4. **Commit your updates on your forked repository's feature branch.** This will save your changes to your copy of the repository.
+5. **Submit a pull request to the official repository's main branch.** This will request that your changes be merged into the official repository.
+6. **Resolve any linting errors.** This will ensure that your changes are formatted correctly.
+
+Here are some additional things to keep in mind during the process:
+
+- **Test your changes.** Before you submit a pull request, make sure that your changes work as expected.
+- **Be patient.** It may take some time for your pull request to be reviewed and merged.
+
+
+## Links discovered
+- [GitHub Help](https://help.github.com/articles/about-pull-requests/)
+
+--- SECURITY.md ---
+# Security Policy
+
+To report a security issue, please use email <security@lists.a2aproject.org>.
+
+We use a mailing list for our intake, and do coordination and disclosure here using GitHub Security Advisory to privately discuss and fix the issue.
+
+
+--- .devcontainer/README.md ---
+# A2A Development Container
+
+This devcontainer provides a fully configured development environment for the A2A project with all required dependencies pre-installed.
+
+## What's Included
+
+### Build Tools
+
+- **protoc** (v28.3) - Protocol Buffers compiler
+- **protoc-gen-jsonschema** (bufbuild) - JSON Schema generator for protobuf
+- **jq** (latest) - JSON processor
+- **googleapis** - Google API proto definitions
+
+### Development Tools
+
+- **Python 3.12** with all documentation dependencies
+- **Go** (latest) - for protoc plugin compilation
+
+### VS Code Extensions
+
+- Python language support with Pylance
+- Buf for Protocol Buffers
+- Code Spell Checker
+
+## Usage
+
+### Opening in VS Code
+
+1. Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+2. Open this repository in VS Code
+3. When prompted, click "Reopen in Container" (or use Command Palette: "Dev Containers: Reopen in Container")
+4. Wait for the container to build and dependencies to install
+
+### Building Documentation
+
+Once inside the container:
+
+```bash
+# Build all documentation
+./scripts/build_docs.sh
+
+# Convert proto to JSON Schema only
+./scripts/proto_to_json_schema.sh specification/json/a2a.json
+```
+
+### GitHub Codespaces
+
+This devcontainer configuration also works with GitHub Codespaces:
+
+1. Go to the repository on GitHub
+2. Click "Code" → "Codespaces" → "Create codespace on [branch]"
+3. Wait for the environment to be provisioned
+
+## Benefits
+
+- **Reproducible builds**: Everyone uses the same tool versions
+- **No local setup**: No need to install protoc, jq, etc. on your host machine
+- **Quick onboarding**: New contributors can start developing immediately
+- **CI/CD alignment**: Same environment as CI can use similar container
+
+## Customization
+
+To modify the environment:
+
+- **Add tools**: Edit `.devcontainer/setup.sh`
+- **Change Python/Go versions**: Edit `features` in `devcontainer.json`
+- **Add VS Code extensions**: Edit `customizations.vscode.extensions` in `devcontainer.json`
+
+## Troubleshooting
+
+### Container build fails
+
+```bash
+# Rebuild without cache
+Dev Containers: Rebuild Container (without cache)
+```
+
+### Tools not found after setup
+
+```bash
+# Re-run setup script manually
+bash .devcontainer/setup.sh
+```
+
+
+## Links discovered
+- [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+--- CODE_OF_CONDUCT.md ---
+# Code of Conduct
+
+## Our Pledge
+
+In the interest of fostering an open and welcoming environment, we as
+contributors and maintainers pledge to making participation in our project and
+our community a harassment-free experience for everyone, regardless of age, body
+size, disability, ethnicity, gender identity and expression, level of
+experience, education, socio-economic status, nationality, personal appearance,
+race, religion, or sexual identity and orientation.
+
+## Our Standards
+
+Examples of behavior that contributes to creating a positive environment
+include:
+
+*   Using welcoming and inclusive language
+*   Being respectful of differing viewpoints and experiences
+*   Gracefully accepting constructive criticism
+*   Focusing on what is best for the community
+*   Showing empathy towards other community members
+
+Examples of unacceptable behavior by participants include:
+
+*   The use of sexualized language or imagery and unwelcome sexual attention or
+    advances
+*   Trolling, insulting/derogatory comments, and personal or political attacks
+*   Public or private harassment
+*   Publishing others' private information, such as a physical or electronic
+    address, without explicit permission
+*   Other conduct which could reasonably be considered inappropriate in a
+    professional setting
+
+## Our Responsibilities
+
+Project maintainers are responsible for clarifying the standards of acceptable
+behavior and are expected to take appropriate and fair corrective action in
+response to any instances of unacceptable behavior.
+
+Project maintainers have the right and responsibility to remove, edit, or reject
+comments, commits, code, wiki edits, issues, and other contributions that are
+not aligned to this Code of Conduct, or to ban temporarily or permanently any
+contributor for other behaviors that they deem inappropriate, threatening,
+offensive, or harmful.
+
+## Scope
+
+This Code of Conduct applies both within project spaces and in public spaces
+when an individual is representing the project or its community. Examples of
+representing a project or community include using an official project e-mail
+address, posting via an official social media account, or acting as an appointed
+representative at an online or offline event. Representation of a project may be
+further defined and clarified by project maintainers.
+
+This Code of Conduct also applies outside the project spaces when the Project
+Steward has a reasonable belief that an individual's behavior may have a
+negative impact on the project or its community.
+
+## Conflict Resolution
+
+We do not believe that all conflict is bad; healthy debate and disagreement
+often yield positive results. However, it is never okay to be disrespectful or
+to engage in behavior that violates the project’s code of conduct.
+
+If you see someone violating the code of conduct, you are encouraged to address
+the behavior directly with those involved. Many issues can be resolved quickly
+and easily, and this gives people more control over the outcome of their
+dispute. If you are unable to resolve the matter for any reason, or if the
+behavior is threatening or harassing, report it. We are dedicated to providing
+an environment where participants feel welcome and safe.
+
+Reports should be directed to [a2a-coc@googlegroups.com](mailto:a2a-coc@googlegroups.com), the
+Project Steward(s) for A2A. It is the Project Steward’s duty to
+receive and address reported violations of the code of conduct. They will then
+work with a committee consisting of representatives from the A2A project and leadership. 
+
+We will investigate every complaint, but you may not receive a direct response.
+We will use our discretion in determining when and how to follow up on reported
+incidents, which may range from not taking action to permanent expulsion from
+the project and project-sponsored spaces. We will notify the accused of the
+report and provide them an opportunity to discuss it before any action is taken.
+The identity of the reporter will be omitted from the details of the report
+supplied to the accused. In potentially harmful situations, such as ongoing
+harassment or threats to anyone's safety, we may take action without notice.
+
+## Attribution
+
+This Code of Conduct is adapted from the Contributor Covenant, version 1.4,
+available at
+https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
+
+
+--- GOVERNANCE.md ---
+# Agent2Agent (A2A) Governance
+
+The Agent2Agent project is governed by the Technical Steering Committee. The Committee has eight seats, each held by the following companies:
+
+| Company | Representative | Title | Contact |
+| :--- | :--- | :--- | :--- |
+| **Google** | Todd Segal | Principal Engineer | [@ToddSegal](https://github.com/ToddSegal) |
+| **Microsoft** | Darrel Miller | Partner API Architect | [@darrelmiller](https://github.com/darrelmiller) |
+| **Cisco** | Luca Muscariello | Principal Engineer | [@muscariello](https://github.com/muscariello) |
+| **Amazon Web Services** | Nicholas Aldridge | Principal Engineer | [@000-000-000-000-000](https://github.com/000-000-000-000-000) |
+| **Salesforce** | Gary Lerhaupt | VP, Product Architecture | [@lerhaupt](https://github.com/lerhaupt) |
+| **ServiceNow** | Sean Hughes | Director of Open Science | [@hughesthe1st](https://github.com/hughesthe1st) |
+| **SAP** | Sivakumar N. | Vice President | [@SivaNSAP](https://github.com/SivaNSAP) |
+| **IBM Research** | Kate Blair | Director of Incubation | [@geneknit](https://github.com/geneknit) |
+
+## Mission and Scope of the Project
+
+1. The mission of the Project is to help AI agents across different ecosystems communicate with each other. The Project includes collaborative development of the following components:
+
+   1. the Agent2Agent Protocol (the "Protocol");
+
+   2. a SDK for designing implementations of the Protocol and related software components; and
+
+   3. documentation and other artifacts related to the Project.
+
+2. The scope of the Project includes collaborative development under the Project License (as defined herein) supporting the mission, including documentation, testing, integration and the creation of other artifacts that aid the development, deployment, operation or adoption of the open source project.
+
+## Technical Steering Committee
+
+1. The Technical Steering Committee (the "TSC") will be responsible for all technical oversight of the open source Project.
+2. **TSC Composition**
+
+    a. **"Startup Phase."** At the inception of the Project, each organization listed in the [`GOVERNANCE`](GOVERNANCE.md) file in the governance repository of the Project will have the right to appoint (and remove and replace) one employee to serve as a voting member of the TSC.
+
+    b. **"Steady State."** The TSC will decide upon a "steady state" composition of the TSC (whether by election, sub-project technical leads, or other method as determined by the TSC) for composition of the TSC from the date that is 18 months following the inception of the Project, or at such other point as determined by the TSC.
+
+    c. The TSC may choose an alternative approach for determining the voting members of the TSC, and any such alternative approach will be documented in the GOVERNANCE file. Any meetings of the Technical Steering Committee are intended to be open to the public, and can be conducted electronically, via teleconference, or in person.
+
+3. TSC projects generally will involve Contributors and Maintainers. The TSC may adopt or modify roles so long as the roles are documented in the CONTRIBUTING file. Unless otherwise documented:
+
+    a. **Contributors** include anyone in the technical community that contributes code, documentation, or other technical artifacts to the Project;
+
+    b. **Maintainers** are Contributors who have earned the ability to modify ("commit") source code, documentation or other technical artifacts in a project's repository; and
+
+    c. A Contributor may become a Maintainer by a vote of the TSC. A Maintainer may be removed by a vote of the TSC.
+
+    d. Participation in the Project through becoming a Contributor and Maintainer is open to anyone so long as they abide by the terms of this Charter.
+4. The TSC may:
+    1. establish work flow procedures for the submission, approval, and closure/archiving of projects,
+    2. set requirements for the promotion of Contributors to Maintainer status, as applicable, and
+    3. amend, adjust, refine and/or eliminate the roles of Contributors, and Maintainer, and create new roles, and publicly document any TSC roles, as it sees fit.
+5. The TSC may elect a TSC Chair, who will preside over meetings of the TSC and will serve until their resignation or replacement by the TSC.
+6. **Responsibilities:** The TSC will be responsible for all aspects of oversight relating to the Project, which may include:
+    1. coordinating the technical direction of the Project;
+    2. approving project or system proposals (including, but not limited to, incubation, deprecation, and changes to a sub-project's scope);
+    3. organizing sub-projects and removing sub-projects;
+    4. creating sub-committees or working groups to focus on cross-project technical issues and requirements;
+    5. appointing representatives to work with other open source or open standards communities;
+    6. establishing community norms, workflows, issuing releases, and security issue reporting policies;
+    7. approving and implementing policies and processes for contributing (to be published in the [`CONTRIBUTING`](CONTRIBUTING.md) file) and coordinating with the series manager of the Project (as provided for in the Series Agreement, the "Series Manager") to resolve matters or concerns that may arise as set forth in Section 7 of this Charter;
+    8. discussions, seeking consensus, and where necessary, voting on technical matters relating to the code base that affect multiple projects; and
+    9. coordinating any marketing, events, or communications regarding the Project.
+
+### TSC Voting
+
+While the Project aims to operate as a consensus-based community, if any TSC decision requires a vote to move the Project forward, the voting members of the TSC will vote on a one vote per voting member basis.
+
+Quorum for TSC meetings requires at least fifty percent of all voting members of the TSC to be present. The TSC may continue to meet if quorum is not met but will be prevented from making any decisions at the meeting. Except as provided in Section 7.c. and 8.a, decisions by vote at a meeting require a majority vote of those in attendance, provided quorum is met. Decisions made by electronic vote without a meeting require a majority vote of all voting members of the TSC.
+
+### TSC Meetings
+
+Our hope is that the first TSC meeting will be held in August 2025. Once the TSC representatives are finalized, scheduling will begin. In the interim we have drafted a [working doc for TSC Meeting Agendas](https://docs.google.com/document/d/1Dx6qYfCjSChHKRMwLJcvtDjq6igYTAKFW9Vg1IMPCUk/view).
+
+## Project Communications
+
+The A2A project utilizes Discord for chat conversations about the project. All are welcome and encouraged to join the [A2A Discord](http://discord.gg/a2aprotocol). Discussion is encouraged however we do remind the community that chat is ephemeral, and not all members of the project are active in chat at the same time.
+
+Therefore, any discussions about feature proposals, significant changes to the project architecture or governance, etc. should be held in GitHub with adequate notice and time for comment. Look for specifics on that timing coming soon as the TSC ramps up. Just keep in mind - our goal is that GitHub is the source of truth for significant project decisions.
+
+Additional communication avenues will likely be added - stay tuned.
+
+
+## Links discovered
+- [@ToddSegal](https://github.com/ToddSegal)
+- [@darrelmiller](https://github.com/darrelmiller)
+- [@muscariello](https://github.com/muscariello)
+- [@000-000-000-000-000](https://github.com/000-000-000-000-000)
+- [@lerhaupt](https://github.com/lerhaupt)
+- [@hughesthe1st](https://github.com/hughesthe1st)
+- [@SivaNSAP](https://github.com/SivaNSAP)
+- [@geneknit](https://github.com/geneknit)
+- [`GOVERNANCE`](https://github.com/a2aproject/A2A/blob/main/GOVERNANCE.md)
+- [`CONTRIBUTING`](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [working doc for TSC Meeting Agendas](https://docs.google.com/document/d/1Dx6qYfCjSChHKRMwLJcvtDjq6igYTAKFW9Vg1IMPCUk/view)
+- [A2A Discord](http://discord.gg/a2aprotocol)
+
+--- MAINTAINERS.md ---
+# Maintainers
+
+This document lists the maintainers of various repositories within the project.
+
+## Repository Maintainers
+
+### a2a-dotnet
+
+- role:maintain
+  - @aalina23
+  - @adamsitnik
+  - @Blackhex
+  - @iremyux
+  - @karelz
+  - @rokonec
+
+- role:admin
+  - @brandonh-msft
+  - @darrelmiller
+  - @markwallace-microsoft
+  - @SergeyMenshykh
+  - @stephentoub
+
+### a2a-go
+
+- role:maintain
+  - @yarolegovich
+
+- role:admin
+  - @hyangah
+  - @mazas-google
+
+### a2a-java
+
+- role:maintain
+  - @Doris26
+  - @ehsavoie
+  - @kabir
+  - @maeste
+
+- role:admin
+  - @ddobrin
+  - @fjuma
+  - @holtskinner
+
+### a2a-js
+
+- role:admin
+  - @swapydapy
+
+### a2a-python
+
+- role:maintain
+  - @aneeshgarg
+  - @chitra-venkatesh
+  - @dmandar
+  - @holtskinner
+  - @kthota-g
+  - @lkawka
+  - @mikeas1
+  - @mindpower
+  - @mvakoc
+  - @pstephengoogle
+  - @pwwpche
+  - @rajeshvelicheti
+  - @swapydapy
+  - @ToddSegal
+
+- role:admin
+  - @DJ-os
+  - @holtskinner
+  - @koverholt
+  - @kthota-g
+  - @ToddSegal
+  - @zeroasterisk
+
+### a2a-samples
+
+- role:admin
+  - @zeroasterisk
+  - @holtskinner
+  - @kthota-g
+
+
+
+
+--- README.md ---
+# Agent2Agent (A2A) Protocol
+
+[![PyPI - Version](https://img.shields.io/pypi/v/a2a-sdk)](https://pypi.org/project/a2a-sdk)
+[![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+<a href="https://codewiki.google/github.com/a2aproject/a2a">
+  <img src="https://www.gstatic.com/_/boq-sdlc-agents-ui/_/r/Mvosg4klCA4.svg" alt="Ask Code Wiki" height="20">
+</a>
+
+<!-- markdownlint-disable MD041 -->
+<div style="text-align: center;">
+  <div class="centered-logo-text-group">
+    <img src="docs/assets/a2a-logo-black.svg" alt="Agent2Agent Protocol Logo" width="100">
+    <h1>Agent2Agent (A2A) Protocol</h1>
+  </div>
+</div>
+
+**An open protocol enabling communication and interoperability between opaque agentic applications.**
+
+The Agent2Agent (A2A) protocol addresses a critical challenge in the AI landscape: enabling gen AI agents, built on diverse frameworks by different companies running on separate servers, to communicate and collaborate effectively - as agents, not just as tools. A2A aims to provide a common language for agents, fostering a more interconnected, powerful, and innovative AI ecosystem.
+
+With A2A, agents can:
+
+- Discover each other's capabilities.
+- Negotiate interaction modalities (text, forms, media).
+- Securely collaborate on long running tasks.
+- Operate without exposing their internal state, memory, or tools.
+
+## Intro to A2A Video
+
+[![A2A Intro Video](https://img.youtube.com/vi/Fbr_Solax1w/hqdefault.jpg)](https://goo.gle/a2a-video)
+
+## Why A2A?
+
+As AI agents become more prevalent, their ability to interoperate is crucial for building complex, multi-functional applications. A2A aims to:
+
+- **Break Down Silos:** Connect agents across different ecosystems.
+- **Enable Complex Collaboration:** Allow specialized agents to work together on tasks that a single agent cannot handle alone.
+- **Promote Open Standards:** Foster a community-driven approach to agent communication, encouraging innovation and broad adoption.
+- **Preserve Opacity:** Allow agents to collaborate without needing to share internal memory, proprietary logic, or specific tool implementations, enhancing security and protecting intellectual property.
+
+### Key Features
+
+- **Standardized Communication:** JSON-RPC 2.0 over HTTP(S).
+- **Agent Discovery:** Via "Agent Cards" detailing capabilities and connection info.
+- **Flexible Interaction:** Supports synchronous request/response, streaming (SSE), and asynchronous push notifications.
+- **Rich Data Exchange:** Handles text, files, and structured JSON data.
+- **Enterprise-Ready:** Designed with security, authentication, and observability in mind.
+
+## Getting Started
+
+- 📚 **Explore the Documentation:** Visit the [Agent2Agent Protocol Documentation Site](https://a2a-protocol.org) for a complete overview, the full protocol specification, tutorials, and guides.
+- 📝 **View the Specification:** [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/)
+- Use the SDKs:
+    - [🐍 A2A Python SDK](https://github.com/a2aproject/a2a-python) `pip install a2a-sdk`
+    - [🐿️ A2A Go SDK](https://github.com/a2aproject/a2a-go) `go get github.com/a2aproject/a2a-go`
+    - [🧑‍💻 A2A JS SDK](https://github.com/a2aproject/a2a-js) `npm install @a2a-js/sdk`
+    - [☕️ A2A Java SDK](https://github.com/a2aproject/a2a-java) using maven
+    - [🔷 A2A .NET SDK](https://github.com/a2aproject/a2a-dotnet) using [NuGet](https://www.nuget.org/packages/A2A) `dotnet add package A2A`
+- 🎬 Use our [samples](https://github.com/a2aproject/a2a-samples) to see A2A in action
+
+## Contributing
+
+We welcome community contributions to enhance and evolve the A2A protocol!
+
+- **Questions & Discussions:** Join our [GitHub Discussions](https://github.com/a2aproject/A2A/discussions).
+- **Issues & Feedback:** Report issues or suggest improvements via [GitHub Issues](https://github.com/a2aproject/A2A/issues).
+- **Contribution Guide:** See our [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute.
+- **Private Feedback:** Use this [Google Form](https://goo.gle/a2a-feedback).
+- **Partner Program:** Google Cloud customers can join our partner program via this [form](https://goo.gle/a2a-partner).
+
+## What's next
+
+### Protocol Enhancements
+
+- **Agent Discovery:**
+    - Formalize inclusion of authorization schemes and optional credentials directly within the `AgentCard`.
+- **Agent Collaboration:**
+    - Investigate a `QuerySkill()` method for dynamically checking unsupported or unanticipated skills.
+- **Task Lifecycle & UX:**
+    - Support for dynamic UX negotiation _within_ a task (e.g., agent adding audio/video mid-conversation).
+- **Client Methods & Transport:**
+    - Explore extending support to client-initiated methods (beyond task management).
+    - Improvements to streaming reliability and push notification mechanisms.
+
+## About
+
+The A2A Protocol is an open source project under the Linux Foundation, contributed by Google. It is licensed under the [Apache License 2.0](LICENSE) and is open to contributions from the community.
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/a2a-sdk)
+- [![Apache License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+- [![A2A Intro Video](https://img.youtube.com/vi/Fbr_Solax1w/hqdefault.jpg)
+- [Agent2Agent Protocol Documentation Site](https://a2a-protocol.org)
+- [A2A Protocol Specification](https://a2a-protocol.org/latest/specification/)
+- [🐍 A2A Python SDK](https://github.com/a2aproject/a2a-python)
+- [🐿️ A2A Go SDK](https://github.com/a2aproject/a2a-go)
+- [🧑‍💻 A2A JS SDK](https://github.com/a2aproject/a2a-js)
+- [☕️ A2A Java SDK](https://github.com/a2aproject/a2a-java)
+- [🔷 A2A .NET SDK](https://github.com/a2aproject/a2a-dotnet)
+- [NuGet](https://www.nuget.org/packages/A2A)
+- [samples](https://github.com/a2aproject/a2a-samples)
+- [GitHub Discussions](https://github.com/a2aproject/A2A/discussions)
+- [GitHub Issues](https://github.com/a2aproject/A2A/issues)
+- [CONTRIBUTING.md](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [Google Form](https://goo.gle/a2a-feedback)
+- [form](https://goo.gle/a2a-partner)
+- [Apache License 2.0](https://github.com/a2aproject/A2A/blob/main/LICENSE.md)
+- [<img src="https://www.gstatic.com/_/boq-sdlc-agents-ui/_/r/Mvosg4klCA4.svg" alt="Ask Code Wiki" height="20">](https://codewiki.google/github.com/a2aproject/a2a)
+
+--- .github/linters/.eslintrc.js ---
+/** @type {import('eslint').Linter.Config} */
+module.exports = {
+    root: true,
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint', 'n'],
+    extends: [
+      'eslint:recommended',
+      'plugin:@typescript-eslint/recommended',
+      'plugin:n/recommended',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'n/no-unsupported-features/es-syntax': 'off',
+    },
+    overrides: [
+      {
+        files: ['*.ts', '*.tsx'],
+        parserOptions: {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+        },
+      },
+    ],
+  };
+
+
+--- .github/PULL_REQUEST_TEMPLATE/become_a_repo_maintainer.md ---
+---
+name: Become a repo maintainer
+about: Request maintainer status for the A2A repo
+title: Maintainer Request
+assignees: amye
+
+---
+
+If you'd like to become a maintainer of the Agent2Agent repo on GitHub, please submit this template with your PR to add yourself to a maintainers group in [MAINTAINERS.md](../../MAINTAINERS.md).
+
+TSC voting majority will be required to approve maintainers.
+
+Once accepted you'll be able to commit to this repo!
+
+### GitHub user id
+
+- List your GitHub user id
+
+### Company affiliation
+
+- List your company name, or indicate Individual if you're not affiliated with a company
+
+### Requirements
+
+- [ ] I have at least one merged Pull Request
+- [ ] I have reviewed the [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [ ] I have enabled [2FA on my GitHub account](https://github.com/settings/security)
+- [ ] I have joined the A2A discord
+
+
+## Links discovered
+- [MAINTAINERS.md](https://github.com/a2aproject/A2A/blob/main/MAINTAINERS.md)
+- [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [2FA on my GitHub account](https://github.com/settings/security)
+
+--- .github/PULL_REQUEST_TEMPLATE/PULL_REQUEST_TEMPLATE.md ---
+# Description
+
+Thank you for opening a Pull Request!
+Before submitting your PR, there are a few things you can do to make sure it goes smoothly:
+
+- [ ] Follow the [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md).
+- [ ] Make your Pull Request title in the <https://www.conventionalcommits.org/> specification.
+- [ ] Ensure the tests and linter pass (Run `nox -s format` from the repository root to format)
+- [ ] Appropriate docs were updated (if necessary)
+
+Fixes #<issue_number_goes_here> 🦕
+
+
+## Links discovered
+- [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+
+--- .github/actions/spelling/advice.md ---
+<!-- See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples%3A-advice --> <!-- markdownlint-disable MD033 MD041 -->
+<details><summary>If the flagged items are :exploding_head: false positives</summary>
+
+If items relate to a ...
+
+- binary file (or some other file you wouldn't want to check at all).
+
+  Please add a file path to the `excludes.txt` file matching the containing file.
+
+  File paths are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your files.
+
+  `^` refers to the file's path from the root of the repository, so `^README\.md$` would exclude `README.md` (on whichever branch you're using).
+
+- well-formed pattern.
+
+  If you can write a [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns) that would match it,
+  try adding it to the `patterns.txt` file.
+
+  Patterns are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your lines.
+
+  Note that patterns can't match multiline strings.
+
+</details>
+
+<!-- adoption information-->
+
+:steam_locomotive: If you're seeing this message and your PR is from a branch that doesn't have check-spelling,
+please merge to your PR's base branch to get the version configured for your repository.
+
+
+## Links discovered
+- [test](https://www.regexplanet.com/advanced/perl/)
+- [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns)
+
+--- .github/actions/spelling/allow.txt ---
+AAAANSUh
+AAAAUA
+AAAGHMHc
+ACMRTUXB
+ACard
+AClient
+ACo
+ADK
+AError
+AExecutor
+AGP
+AIP
+ARequest
+ASED
+ASGI
+AServer
+AService
+ASq
+AStarlette
+AUTOCOMMIT
+Agentspace
+Agno
+Autogen
+Blogs
+CAs
+CLIs
+Camry
+Cjava
+Cpzuhi
+DDo
+DGT
+DHDe
+Debian
+Djq
+Dotnet
+EBFF
+EUR
+EUg
+FBT
+FHIR
+Fbr
+GAPI
+GAPIC
+GBP
+GVsb
+Gapic
+Gci
+Genkit
+Ghw
+GitVote
+HBz
+HKRMw
+HRA
+HSTS
+HXo
+Hackathon
+IFdvcmxk
+IMPCUk
+INR
+Ikp
+Imh
+Imprd
+JFUz
+JHv
+JIUz
+JPY
+JWKS
+JWS
+JWTs
+Jhb
+Jra
+KGgo
+KRW
+LHR
+LJcvt
+LLM
+LLMs
+Lix
+MSIs
+MWpm
+Mapr
+Nszl
+OIDC
+OOa
+Ollama
+PLE
+PLW
+PMEEi
+PTH
+QFdk
+Qvandrcy
+RPCs
+RUF
+SLAs
+SLF
+SSLv
+Solax
+TJS
+TMDB
+Tful
+URLTo
+Upserting
+Urke
+VBORw
+Vsb
+WHB
+WQi
+WVw
+Witteveen
+XBs
+XVCJ
+Xca
+YQGt
+YTAKFW
+YTT
+YWFh
+YWdlbn
+ZDS
+ZKHv
+ZXhhb
+ZXkt
+Zipkin
+Zms
+aab
+aacacac
+aboutasha
+achat
+aconnect
+adk
+afet
+affef
+agentcard
+agentic
+agentskill
+agno
+agntcy
+agp
+ainvoke
+aip
+airbnb
+aldridge
+alloydb
+amannn
+aparse
+aproject
+aprotocol
+argjson
+arxiv
+askmarvin
+asyncclick
+autogen
+automodule
+autouse
+backstory
+backticks
+bbb
+beeai
+bufbuild
+bzr
+cae
+canceltask
+ccc
+cdn
+ceee
+cfe
+cls
+coc
+codegen
+codeowner
+codespace
+crewai
+datamodel
+datapart
+dbc
+dcda
+dcfa
+dde
+deepwiki
+direnv
+docstrings
+documentai
+dotnet
+eaf
+ebedef
+efaab
+efbd
+embeddings
+endblock
+endmacro
+envoyproxy
+euo
+evt
+excinfo
+faa
+faf
+fafd
+fdebd
+ffbb
+fff
+firewalls
+flightbook
+forbes
+fsv
+fyi
+gapic
+gcp
+genai
+geneknit
+genkit
+genproto
+georoute
+gettask
+gettickets
+gitvote
+gle
+googleai
+googleapi
+googleapis
+googleblog
+gpt
+gstatic
+gweb
+hackathon
+hackathons
+hqdefault
+hughesthe
+iat
+ietf
+inbox
+inmemory
+ipynb
+iss
+jherr
+jku
+jqlang
+jti
+jwks
+kadirpekel
+konami
+kty
+langgraph
+linenums
+linkedin
+linting
+listtasks
+litellm
+llm
+llms
+lng
+logtostderr
+marvin
+mcp
+mcr
+mesop
+mikefarah
+mindsdb
+mintlify
+motherlode
+mozilla
+msword
+multiagent
+multipage
+mydb
+myorg
+nearform
+nlp
+notif
+npush
+objc
+octicons
+oidc
+ollama
+oneof
+openapis
+openapiv
+openapiv2
+oreilly
+postgres
+postgresql
+pqr
+prefecthq
+protoc
+protolint
+pyguide
+pylance
+pymdownx
+pypa
+pypackages
+pytype
+pyupgrade
+qwq
+rcm
+regen
+repomapr
+reportgen
+reposted
+rst
+rvelicheti
+scm
+sllm
+sourced
+sourcing
+squidfunk
+srcs
+sse
+sss
+stateclass
+stephenh
+styleguide
+svn
+systemctl
+tagwords
+tasksget
+taskslist
+taskssend
+taskstate
+taskstatus
+textpart
+threadsafe
+toctree
+tok
+toolkits
+tracestate
+ugc
+undoc
+utm
+venv-docs
+versioned
+vnd
+voa
+vscode
+weavehacks
+webform
+webpage
+whatwg
+wikipedia
+winget
+wsgi
+wwwwwwww
+xxxxx
+xxxxxxxx
+youtube
+yyyyyyyy
+zzzzzzzz
+
+
+--- .github/actions/spelling/excludes.txt ---
+# See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-excludes
+(?:^|/)(?i)COPYRIGHT
+(?:^|/)(?i)LICEN[CS]E
+(?:^|/)(?i)CODE_OF_CONDUCT.md\E$
+(?:^|/)(?i).gitignore\E$
+(?:^|/)3rdparty/
+(?:^|/)go\.sum$
+(?:^|/)package(?:-lock|)\.json$
+(?:^|/)Pipfile$
+(?:^|/)pyproject.toml
+(?:^|/)requirements(?:-dev|-doc|-test|)\.txt$
+(?:^|/)vendor/
+/CODEOWNERS$
+\.a$
+\.ai$
+\.all-contributorsrc$
+\.avi$
+\.bmp$
+\.bz2$
+\.cer$
+\.class$
+\.coveragerc$
+\.crl$
+\.crt$
+\.csr$
+\.dll$
+\.docx?$
+\.drawio$
+\.DS_Store$
+\.eot$
+\.eps$
+\.exe$
+\.gif$
+\.git-blame-ignore-revs$
+\.gitattributes$
+\.gitkeep$
+\.graffle$
+\.gz$
+\.icns$
+\.ico$
+\.jar$
+\.jks$
+\.jpe?g$
+\.key$
+\.lib$
+\.lock$
+\.map$
+\.min\..
+\.mo$
+\.mod$
+\.mp[34]$
+\.o$
+\.ocf$
+\.otf$
+\.p12$
+\.parquet$
+\.pdf$
+\.pem$
+\.pfx$
+\.png$
+\.psd$
+\.pyc$
+\.pylintrc$
+\.qm$
+\.s$
+\.sig$
+\.so$
+\.svgz?$
+\.sys$
+\.tar$
+\.tgz$
+\.tiff?$
+\.ttf$
+\.wav$
+\.webm$
+\.webp$
+\.woff2?$
+\.xcf$
+\.xlsx?$
+\.xpm$
+\.xz$
+\.zip$
+^\.github/actions/spelling/
+^\Q.github/workflows/spelling.yaml\E$
+^\Q.github/workflows/linter.yaml\E$
+^\Qlychee.toml\E$
+\.vscode/
+^\Qdocs/partners.md\E$
+^\Qspecification/json/a2a.json\E$
+CHANGELOG.md
+\.gitignore
+^\Qdocs/robots.txt\E$
+CODE_OF_CONDUCT.md
+
+
+--- specification/grpc/README.md ---
+# Protocol Buffer Definitions
+
+This folder contains the A2A specification in Protocol Buffer (protobuf) format
+
+## Prerequisites
+
+Before you can validate or generate code from these protobuf definitions, you need to install `buf`.
+
+Follow the installation instructions on the official `buf` GitHub repository:
+<https://github.com/bufbuild/buf/>
+
+## Validation
+
+To validate your protobuf definitions and ensure they adhere to linting rules, run the following command from the root of this folder:
+
+```sh
+buf lint
+```
+
+## Code Generation
+
+`buf.gen.yaml` is configured to generate code for the following languages:
+
+- Go
+- Java
+- Python
+- TypeScript
+
+To generate code for all configured languages, run the following command from the root of this folder:
+
+```sh
+buf generate
+```
+
+`buf.gen.yaml` uses remote plugins for generation, if you wish to use local plugins change remote to local
+
+```yaml
+plugins:
+  - local: protoc-gen-java
+    out: src/java
+  - local: protoc-gen-grpc-java
+    out: src/java
+```
+
+Alternatively use `protoc` commandline for code generation
+
+```bash
+protoc --java_out=./src/java --grpc-java_out=./src/java -I. a2a.proto
+```
+
+### Generating for Specific Languages
+
+If you do not need to generate code for all the languages listed above, you can comment out the unwanted language sections in your `buf.gen.yaml` file.
+
+For example, if you only want to generate Java exclude the rest, your `buf.gen.yaml` might look something like this (ensure you adapt this to your actual `buf.gen.yaml` structure):
+
+```yaml
+# buf.gen.yaml
+version: v2
+plugins:
+#  - plugin: buf.build/protocolbuffers/go
+#    out: src/go
+#  - plugin: buf.build/protocolbuffers/python
+#    out: src/python
+  - plugin: buf.build/protocolbuffers/java
+    out: src/java
+#  - plugin: buf.build/grpc/typescript
+#    out: src/ts
+```
+
+
+--- specification/json/README.md ---
+# A2A JSON Artifact
+
+`a2a.json` is a **non-normative build artifact** derived from the canonical proto definition at `specification/grpc/a2a.proto`. It is generated during builds and intentionally **not** committed to source control.
+
+Generation pipeline:
+
+1. `scripts/proto_to_json_schema.sh` converts proto directly to JSON Schema using bufbuild's `protoc-gen-jsonschema` plugin.
+2. The resulting `a2a.json` (JSON Schema 2020-12 bundle) is copied to `docs/spec-json/a2a.json` for site publishing.
+
+The build uses `protoc` with `protoc-gen-jsonschema` plugin and `jq` for bundling. Only source (`a2a.proto`) and scripts remain under version control.
+
+The artifact is generated automatically in:
+
+- Local docs builds (`scripts/build_docs.sh`)
+- CI workflow (`.github/workflows/generate-a2a-json.yml`) on proto changes
+
+## Do Not Edit
+
+Do **NOT** edit `a2a.json` manually. Update the proto instead. The file is transient and will be regenerated.
+
+## Building the A2A JSON Artifact Locally
+
+To build the `a2a.json` artifact locally, you'll need several dependencies depending on your operating system. This is useful for contributors who want to preview changes before submitting pull requests.
+
+<details>
+<summary>macOS/Linux</summary>
+
+### Prerequisites for macOS/Linux
+
+1. **Homebrew (macOS) or apt-get (Debian/Ubuntu)**
+   - **macOS**: Install from [brew.sh](https://brew.sh/)
+   - **Debian/Ubuntu**: `apt-get` is pre-installed.
+
+2. **Python with pip**
+
+   ```bash
+   # Verify installation:
+   python3 --version
+   pip3 --version
+   ```
+
+3. **Core build tools (`protoc`, `go`, `jq`)**
+   - **macOS**:
+
+     ```bash
+     brew install protobuf go jq
+     ```
+
+   - **Debian/Ubuntu**:
+
+     ```bash
+     sudo apt-get update && sudo apt-get install -y protobuf-compiler golang jq
+     ```
+
+4. **protoc-gen-jsonschema plugin**
+
+   ```bash
+   # Install via Go (requires Go to be installed first):
+   go install github.com/bufbuild/protoschema-plugins/cmd/protoc-gen-jsonschema@latest
+   ```
+
+5. **Clone googleapis repository**
+
+   ```bash
+   # Clone to a location like $HOME/googleapis
+   git clone https://github.com/googleapis/googleapis.git $HOME/googleapis
+   export GOOGLEAPIS_DIR=$HOME/googleapis
+
+   # To persist this, add the export command to your shell profile (e.g., ~/.zshrc or ~/.bashrc)
+   echo 'export GOOGLEAPIS_DIR=$HOME/googleapis' >> ~/.bashrc
+   ```
+
+6. **Python documentation dependencies**
+
+   ```bash
+   # Create and activate virtual environment:
+   python3 -m venv .venv-docs
+   source .venv-docs/bin/activate
+
+   # Install requirements:
+   pip install -r requirements-docs.txt
+   ```
+
+#### Building the A2A JSON Artifact on macOS/Linux
+
+Once all prerequisites are installed:
+
+```bash
+# Run the build script:
+./scripts/build_docs.sh
+```
+
+This script handles all necessary steps to generate the `a2a.json` artifact and build the documentation site.
+</details>
+
+<details>
+<summary>Windows</summary>
+
+#### Windows Prerequisites
+
+1. **Python with pip** (for MkDocs)
+
+   ```powershell
+   # Install Python from python.org or via Microsoft Store
+   # Verify installation:
+   python --version
+   pip --version
+   ```
+
+2. **Protocol Buffers compiler (protoc)**
+
+   ```powershell
+   # Install via WinGet (recommended):
+   winget install Google.Protobuf
+
+   # Verify installation:
+   protoc --version
+   ```
+
+3. **Go programming language** (for protoc-gen-jsonschema plugin)
+
+   ```powershell
+   # Install via WinGet:
+   winget install GoLang.Go
+
+   # Or download from https://golang.org/dl/
+   # Verify installation:
+   go version
+   ```
+
+4. **protoc-gen-jsonschema plugin**
+
+   ```powershell
+   # Install via Go (requires Go to be installed first):
+   go install github.com/bufbuild/protoschema-plugins/cmd/protoc-gen-jsonschema@latest
+
+   # Verify installation (should be in your Go bin directory):
+   protoc-gen-jsonschema --version
+   ```
+
+5. **jq (JSON processor)**
+
+   ```powershell
+   # Install via WinGet:
+   winget install jqlang.jq
+
+   # Verify installation:
+   jq --version
+   ```
+
+6. **Clone googleapis repository**
+
+   ```powershell
+   # Clone to any location and set environment variable:
+   git clone https://github.com/googleapis/googleapis.git C:\path\to\googleapis
+   $env:GOOGLEAPIS_DIR = "C:\path\to\googleapis"
+
+   # To persist this setting, add the following line to your PowerShell profile.
+   # You can open your profile for editing by running: notepad $PROFILE
+   $env:GOOGLEAPIS_DIR = "C:\path\to\googleapis"
+   ```
+
+7. **Python documentation dependencies**
+
+   ```powershell
+   # Create and activate virtual environment:
+   python -m venv .venv-docs
+   .\.venv-docs\Scripts\Activate.ps1
+
+   # Install requirements:
+   pip install -r requirements-docs.txt
+   ```
+
+#### Building the A2A JSON Artifact on Windows
+
+Once all prerequisites are installed:
+
+```powershell
+# Run the build script:
+.\scripts\build_docs.ps1
+
+# The documentation will be generated in the ./site directory
+# Open site/index.html in your browser to view locally
+```
+
+The build script will:
+
+- Generate JSON Schema from Protocol Buffer definitions
+- Build the MkDocs site with all content
+
+</details>
+
+#### Troubleshooting
+
+- **protoc errors**: Ensure both `protoc` and the googleapis directory are properly configured
+- **jq not found**: Ensure jq is installed and in your `PATH`
+- **Python import errors**: Activate the virtual environment and ensure all requirements are installed
+- **Missing schemas**: Check that `protoc-gen-jsonschema` is in your `PATH` (run `go env GOPATH` to find Go bin directory)
+
+## Future Work
+
+Planned improvements include:
+
+- Optional OpenAPI v3 conversion and publishing a draft 2020-12 `components.schemas` bundle.
+- Automatic alias injection for deprecated names (anyOf wrapper) to ease migrations.
+- Validation step ensuring no generated artifacts are reintroduced into git.
+
+
+## Links discovered
+- [brew.sh](https://brew.sh/)
