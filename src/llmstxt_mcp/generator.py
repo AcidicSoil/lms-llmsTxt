@@ -120,7 +120,7 @@ def safe_generate_llms_txt(
     run_store: RunStore,
     run_id: Optional[str],
     url: str,
-    output_dir: str = "./output",
+    output_dir: str = "./artifacts",
     cache_lm: bool = True,
 ) -> RunRecord:
     """
@@ -193,7 +193,7 @@ def safe_generate_llms_txt(
             raise LMStudioUnavailableError(f"LM Studio is unavailable: {e}") from e
 
         except Exception as e:
-            logger.exception("Unexpected error during generation")
+            logger.error("Unexpected error during generation")
             run_store.update_run(
                 run_id,
                 status="failed",
@@ -206,7 +206,7 @@ def safe_generate_llms_full(
     run_store: RunStore,
     run_id: Optional[str],
     repo_url: Optional[str],
-    output_dir: str = "./output",
+    output_dir: str = "./artifacts",
 ) -> RunRecord:
     """
     Build llms-full.txt from an existing llms.txt artifact referenced by run_id,
@@ -304,7 +304,7 @@ def safe_generate_llms_ctx(
     run_store: RunStore,
     run_id: Optional[str],
     repo_url: Optional[str] = None,
-    output_dir: str = "./output",
+    output_dir: str = "./artifacts",
 ) -> RunRecord:
     """
     Build llms-ctx.txt from an existing llms.txt artifact referenced by run_id,

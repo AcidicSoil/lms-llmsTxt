@@ -11,7 +11,7 @@ def test_config_defaults():
         del os.environ["LLMSTXT_MCP_RESOURCE_MAX_CHARS"]
         
     settings = Settings()
-    assert settings.LLMSTXT_MCP_ALLOWED_ROOT == Path("./output")
+    assert settings.LLMSTXT_MCP_ALLOWED_ROOT == Path("./artifacts")
     assert settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS == 100000
     
     if old_val:

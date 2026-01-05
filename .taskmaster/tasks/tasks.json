@@ -1834,13 +1834,95 @@
         "recommendedSubtasks": 5,
         "expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'llmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
         "updatedAt": "2026-01-05T06:32:30.951Z"
+      },
+      {
+        "id": "13",
+        "title": "Migrate Artifact Directory Path from 'output' to 'artifacts'",
+        "description": "Update the default storage and retrieval path for MCP artifacts from './output' to './artifacts' in configuration and tool implementations.",
+        "details": "This task involves standardizing the naming convention for the artifact storage directory. 1) In 'src/llmstxt_mcp/config.py', locate the default configuration variable (likely 'DEFAULT_OUTPUT_DIR' or 'OUTPUT_PATH') and update its value to 'artifacts'. 2) In 'src/llmstxt_mcp/server.py', verify that the 'list_all' and 'read_artifacts' tools utilize the updated configuration rather than hardcoded paths. 3) Update any tool descriptions or help text in the MCP server metadata that reference the directory name to ensure they reflect the change. 4) Verify that the logic in 'artifacts.py' (implemented in Task 5 and 12) correctly inherits this change via the config module, ensuring that path resolution via 'pathlib' correctly points to the new directory. 5) Ensure that the generator integration from Task 6 now writes files to the 'artifacts' directory.",
+        "testStrategy": "1) Delete any existing './output' directory. 2) Run the MCP server and trigger an artifact generation; verify that the './artifacts' directory is created and contains the new file. 3) Use an MCP client to call 'list_all' and verify it lists files within 'artifacts/'. 4) Call 'read_artifacts' with a filename in the new directory and verify successful content retrieval. 5) Confirm no new files are being written to './output'.",
+        "status": "done",
+        "dependencies": [
+          "5",
+          "6",
+          "12"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Update Default Directory in Configuration",
+            "description": "Modify 'src/llmstxt_mcp/config.py' to change the default artifact directory path from 'output' to 'artifacts'.",
+            "dependencies": [],
+            "details": "Locate the constant or Pydantic field defining the output path (e.g., 'DEFAULT_OUTPUT_DIR' or 'OUTPUT_PATH') and update its default value to 'artifacts'. Ensure any environment variable mapping is preserved.",
+            "status": "done",
+            "testStrategy": "Unit test 'config.py' to ensure that the settings object returns 'artifacts' as the default directory path when no environment variable is set.",
+            "updatedAt": "2026-01-05T07:16:07.944Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Update MCP Server Tool Metadata",
+            "description": "Update tool descriptions and help text in 'src/llmstxt_mcp/server.py' to reference the new directory name.",
+            "dependencies": [
+              1
+            ],
+            "details": "Search for string literals or docstrings in 'server.py' that mention the 'output' directory. Update these to 'artifacts' so that MCP client UI reflects the correct path in help text for tools like 'list_all' and 'llmstxt_generate'.",
+            "status": "done",
+            "testStrategy": "Examine the MCP server metadata (via 'mcp list-tools') to verify that descriptions for artifact-related tools correctly mention 'artifacts'.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T07:16:07.950Z"
+          },
+          {
+            "id": 3,
+            "title": "Align Artifact Discovery and Resource Logic",
+            "description": "Ensure 'src/llmstxt_mcp/artifacts.py' correctly uses the updated config for file scanning and URI generation.",
+            "dependencies": [
+              1
+            ],
+            "details": "Verify 'scan_artifacts' uses 'config.output_path' instead of hardcoded strings. Update the resource URI logic (e.g., 'llmstxt://artifacts/{filename}') to ensure internal path resolution points to the new directory on disk.",
+            "status": "done",
+            "testStrategy": "Verify that 'scan_artifacts' successfully finds files placed manually in './artifacts/' and that 'list_resources' returns URIs correctly mapped to that location.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T07:16:07.953Z"
+          },
+          {
+            "id": 4,
+            "title": "Update Generator Execution Integration",
+            "description": "Update the 'llmstxt_generate' tool implementation to write generated files to the 'artifacts' directory.",
+            "dependencies": [
+              1
+            ],
+            "details": "In 'src/llmstxt_mcp/server.py', ensure the call to 'run_generation' (or the internal generator wrapper) uses the path defined in the configuration. Confirm that file write operations target the updated directory.",
+            "status": "done",
+            "testStrategy": "Run a generation task through the MCP server and check that the resulting .txt files appear in './artifacts/' and NOT in './output/'.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T07:16:07.955Z"
+          },
+          {
+            "id": 5,
+            "title": "Validate Migration and Cleanup",
+            "description": "Perform a full system check of the migration and remove legacy directory references.",
+            "dependencies": [
+              2,
+              3,
+              4
+            ],
+            "details": "Delete the old './output' directory. Run the server and confirm all artifact-related operations (generate, list, read) function correctly using the new path. Update any README or documentation that mentions the folder structure.",
+            "status": "done",
+            "testStrategy": "End-to-end verification: 1) Generation creates './artifacts'. 2) 'list_resources' identifies the file. 3) 'read_resource' retrieves the file content successfully from the new path.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T07:16:07.958Z"
+          }
+        ],
+        "updatedAt": "2026-01-05T07:16:07.958Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-05T06:32:30.953Z",
-      "taskCount": 12,
-      "completedCount": 12,
+      "lastModified": "2026-01-05T07:16:07.959Z",
+      "taskCount": 13,
+      "completedCount": 13,
       "tags": [
         "feat-mcp"
       ]

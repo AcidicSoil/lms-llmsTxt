@@ -103,7 +103,7 @@ def _read_file_chunk(path: Path, offset: int, limit: int) -> str:
 )
 def generate_llms_txt(
     url: str = Field(..., description="The URL of the repository to process (e.g., https://github.com/owner/repo)"),
-    output_dir: str = Field("./output", description="Local directory to store artifacts"),
+    output_dir: str = Field("./artifacts", description="Local directory to store artifacts"),
     cache_lm: bool = Field(True, description="Enable LM caching")
 ) -> str:
     """
@@ -139,7 +139,7 @@ def generate_llms_txt(
 def generate_llms_full(
     repo_url: str = Field(..., description="Repository URL for resolving default branch and access"),
     run_id: str | None = Field(None, description="Run ID containing llms.txt (optional)"),
-    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
+    output_dir: str = Field("./artifacts", description="Output directory root (used when run_id is omitted)"),
 ) -> str:
     """
     Generates llms-full.txt from an existing llms.txt artifact.
@@ -174,7 +174,7 @@ def generate_llms_full(
 def generate_llms_ctx(
     run_id: str | None = Field(None, description="Run ID containing llms.txt (optional)"),
     repo_url: str | None = Field(None, description="Repository URL (required when run_id is omitted)"),
-    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
+    output_dir: str = Field("./artifacts", description="Output directory root (used when run_id is omitted)"),
 ) -> str:
     """
     Generates llms-ctx.txt from an existing llms.txt artifact.
@@ -227,7 +227,7 @@ def list_runs(
 )
 def list_all_artifacts() -> str:
     """
-    Returns a list of all .txt artifact files found in the persistent output directory.
+    Returns a list of all .txt artifact files found in the persistent artifacts directory.
     This includes files from previous server sessions.
     """
     paths = scan_artifacts()
@@ -255,7 +255,7 @@ def list_all_artifacts() -> str:
 def read_artifact(
     run_id: str | None = Field(None, description="The UUID of the run (optional)"),
     repo_url: str | None = Field(None, description="Repository URL (required when run_id is omitted)"),
-    output_dir: str = Field("./output", description="Output directory root (used when run_id is omitted)"),
+    output_dir: str = Field("./artifacts", description="Output directory root (used when run_id is omitted)"),
     artifact_name: ArtifactName = Field(..., description="Name of the artifact (e.g., 'llms.txt', 'llms-full.txt')"),
     offset: int = Field(0, description="Byte offset to start reading from", ge=0),
     limit: int = Field(10000, description="Maximum number of characters to read", ge=1, le=100000)

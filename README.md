@@ -1,13 +1,9 @@
----
+--- 
 title: "LM Studio llms.txt Generator"
 description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
 ---
 
-[![PyPI](https://img.shields.io/pypi/v/lms-llmsTxt.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/lms-llmsTxt/)
-[![Downloads](https://img.shields.io/pypi/dm/lms-llmsTxt.svg?cacheSeconds=300)](https://pypi.org/project/lms-llmsTxt/)
-[![TestPyPI](https://img.shields.io/badge/TestPyPI-lms-llmsTxt-informational?cacheSeconds=300)](https://test.pypi.org/project/lms-llmsTxt/)
-[![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml)
-[![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms-llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
+[![PyPI](https://img.shields.io/pypi/v/lms-llmsTxt.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/lms-llmsTxt/) [![Downloads](https://img.shields.io/pypi/dm/lms-llmsTxt.svg?cacheSeconds=300)](https://pypi.org/project/lms-llmsTxt/) [![TestPyPI](https://img.shields.io/badge/TestPyPI-lms-llmsTxt-informational?cacheSeconds=300)](https://test.pypi.org/project/lms-llmsTxt/) [![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml) [![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms-llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
 
 ## Overview
 
@@ -41,7 +37,7 @@ Install dependencies inside a virtual environment to avoid PEP 668 “externall
     ```bash
     pip install -e .[dev]
     ```
-    Installing the editable package exposes the `lmstudio-llmstxt` CLI and brings in the `lmstudio` Python SDK plus pytest.
+    Installing the editable package exposes the `lmstxt` CLI and the `llmstxt-mcp` server.
   </Step>
 </Steps>
 
@@ -69,7 +65,7 @@ Keep the virtual environment active while running the CLI or tests so the SDK-ba
 Run the CLI against any GitHub repository:
 
 ```bash
-lmstudio-llmstxt https://github.com/owner/repo \
+lmstxt https://github.com/owner/repo \
   --model qwen/qwen3-4b-2507 \
   --api-base http://localhost:1234/v1 \
   --stamp
@@ -102,60 +98,48 @@ The pipeline always writes `llms.txt` and `llms-full.txt`, even when the languag
 
 ## Model Context Protocol (MCP) Server
 
-This package includes a FastMCP server that exposes the generator as an MCP tool.
+This package includes a FastMCP server that exposes the generator as an MCP tool and provides access to generated artifacts as resources.
 
 ### Features
+- **Asynchronous Processing**: Tool calls return a `run_id` immediately while generation happens in the background.
 - **Tools**:
-  - `llmstxt_generate_llms_txt`: Generate `llms.txt` (and `llms.json` on fallback).
-  - `llmstxt_generate_llms_full`: Generate `llms-full.txt` from an existing `llms.txt` run.
-  - `llmstxt_generate_llms_ctx`: Generate `llms-ctx.txt` from an existing `llms.txt` run (requires `llms_txt`).
-  - `llmstxt_list_runs`: View recent generation history.
-  - `llmstxt_read_artifact`: Read generated files (chunked access supported).
+  - `llmstxt_generate_llms_txt`: Trigger `llms.txt` generation.
+  - `llmstxt_generate_llms_full`: Generate `llms-full.txt` from an existing run.
+  - `llmstxt_generate_llms_ctx`: Generate `llms-ctx.txt` (requires `llms_txt`).
+  - `llmstxt_list_runs`: View recent generation history and status.
+  - `llmstxt_read_artifact`: Read generated files with pagination support.
+  - `llmstxt_list_all_artifacts`: List all persistent `.txt` artifacts on disk.
 - **Resources**:
-  - Access generated files via `llmstxt://runs/{run_id}/{artifact_name}`.
+  - **Run-specific**: `llmstxt://runs/{run_id}/{artifact_name}`
+  - **Persistent Directory**: `llmstxt://artifacts/{filename}` (e.g., `llmstxt://artifacts/owner/repo/repo-llms.txt`)
 
 ### Running the Server
 
 ```bash
 # Default stdio transport
 llmstxt-mcp
-
-# Or use with Claude Desktop / Cursor by adding to your config:
-# {
-#   "mcpServers": {
-#     "llmstxt": {
-#       "command": "llmstxt-mcp",
-#       "env": {
-#         "GITHUB_ACCESS_TOKEN": "$GITHUB_ACCESS_TOKEN",
-#         "LMSTUDIO_BASE_URL": "${LMSTUDIO_BASE_URL}"
-#       }
-#     }
-#   }
-# }
 ```
 
-### local usage configs
+### Client Configuration
 
+Add to your MCP client config (e.g., `claude_desktop_config.json` or `config.toml`):
+
+#### Claude Desktop / Cursor
 ```json
-"llmstxt": {
-      "command": "uv",
-      "args": ["run", "llmstxt-mcp"],
-      "timeout": 30000,
-      "trust": true
+{
+  "mcpServers": {
+    "llmstxt": {
+      "command": "llmstxt-mcp",
+      "env": {
+        "GITHUB_ACCESS_TOKEN": "your_token",
+        "LMSTUDIO_BASE_URL": "http://localhost:1234/v1"
+      }
     }
+  }
+}
 ```
 
-```toml
-[mcp_servers.llmstxt]
-command = "uv"
-args = ["run", "llmstxt-mcp"]
-startup_timeout_sec = 30
-tool_timeout_sec = 30
-```
-
-
-### codex config in your config.toml
-
+#### Codex / CLI (toml)
 ```toml
 [mcp_servers.llmstxt]
 command = "llmstxt-mcp"
@@ -164,10 +148,8 @@ startup_timeout_sec = 30
 tool_timeout_sec = 30
 
 [mcp_servers.llmstxt.env]
-GITHUB_ACCESS_TOKEN = "$GITHUB_ACCESS_TOKEN"
-LMSTUDIO_BASE_URL = "${LMSTUDIO_BASE_URL}"
-# LMSTUDIO_MODEL = "qwen/qwen3-4b-2507" # optional
-
+GITHUB_ACCESS_TOKEN = "your_token"
+LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 ```
 
 ## How it works
@@ -180,10 +162,10 @@ LMSTUDIO_BASE_URL = "${LMSTUDIO_BASE_URL}"
 
 ## Project layout
 
-- `src/lmstudiotxt_generator/` – configuration, GitHub utilities, DSPy analyzers, LM Studio helpers, fallback renderer, and artifact writers
-- `src/llmstxt_mcp/` – MCP server implementation, tools, and resource handlers
-- `tests/` – pytest coverage for analyzer buckets, LM Studio handshake/unload logic, pipeline fallbacks, and MCP server functionality
-- `artifacts/` – sample outputs generated from previous runs
+- `src/lmstudiotxt_generator/` – core generation library, DSPy analyzers, and LM Studio helpers.
+- `src/llmstxt_mcp/` – MCP server implementation, asynchronous worker, and resource providers.
+- `tests/` – pytest coverage for the generator pipeline and MCP server.
+- `artifacts/` – sample outputs from previous runs.
 
 ## Verify your setup
 
@@ -191,61 +173,22 @@ LMSTUDIO_BASE_URL = "${LMSTUDIO_BASE_URL}"
 source .venv/bin/activate
 python -m pytest
 ```
-### Windows
 
-```bash
-source .venv/Scripts/activate
-python -m pytest
-```
-
-
-All tests should pass, confirming URL validation, fallback handling, and SDK-first unload behaviour.
+All tests should pass, confirming URL validation, fallback handling, and MCP resource exposure.
 
 ## Troubleshooting
 
 <Warning>
-If `pip install -e .[dev]` fails with build tool errors (`cmake` or `pyarrow`), install the missing system packages and retry the installation before running tests.
+If `pip install -e .[dev]` fails with build tool errors, ensure `cmake` and necessary compilers are installed.
 </Warning>
 
 <Tip>
-When `llms-full` surfaces `[fetch-error]`, verify the curated link uses the repository’s actual default branch (`master` vs `main`). The analyzer keeps only live URLs, but custom additions may need manual tweaks.
+If the MCP server times out during generation, check `llmstxt_list_runs` to see if the background task is still processing. The `llmstxt_generate_*` tools return immediately to avoid client timeouts.
 </Tip>
 
-<Info>
-Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid repeating flags during iterative runs.
-</Info>
-
-### Testing The MCP Via Inspector Config
-
-```bash
-npx @modelcontextprotocol/inspector --config ./inspector.config.json
-```
+### MCP Inspector
 
 ```bash
 npx @modelcontextprotocol/inspector --config ./inspector.config.json --server llmstxt
-
 ```
-
-### MCP Inspector Payloads
-
-Use the ready-to-run payloads in `docs/mcp-inspector-payloads.md` to verify the MCP tools:
-
-1) Start the inspector with the config above.
-2) Paste each payload from `docs/mcp-inspector-payloads.md` into the inspector input, in order.
-3) Replace `https://github.com/owner/repo` with a real repo URL.
-
-Note: tool responses are returned as text content that contains JSON. Parse `result.content[0].text` to get structured data.
-Note: `llmstxt_generate_llms_ctx` requires the optional `llms_txt` package.
-
-#### Run ID vs Deterministic Paths
-
-The MCP tools accept either:
-- `run_id` (preferred when you want to track a specific run), or
-- `repo_url` + `output_dir` (deterministic, easier for manual testing).
-
-When `run_id` is omitted, the tools resolve artifacts from:
-`<output_dir>/<owner>/<repo>/<repo>-llms*.txt`.
-
-If `llmstxt_generate_llms_full` or `llmstxt_generate_llms_ctx` is called without
-`run_id` and `llms.txt` is missing, the server will auto-generate `llms.txt`
-first (using the same `repo_url` + `output_dir`).
+Use the payloads in `docs/mcp-inspector-payloads.md` to verify specific tool behaviors.
