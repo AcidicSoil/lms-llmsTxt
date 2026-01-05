@@ -1416,6 +1416,112 @@ This documentation is divided into the following sections:
 ## Links discovered
 - [link](https://lmstudio.ai)
 
+--- _assets/README.md ---
+---
+title: Unlisted Assets
+description: Container for docs assets that should not appear in navigation
+---
+
+Use this folder for any unlisted documentation assets (scripts, examples, downloads) that you want to link directly via raw GitHub URLs without exposing them in the docs sidebar.
+
+- Add asset-type subfolders (e.g., `nvidia-spark-playbook/`, `samples/`, `configs/`) to keep files organized.
+- Reference files using their raw URLs, for example: `https://raw.githubusercontent.com/<org>/<repo>/main/_assets/nvidia-spark-playbook/bash/run.sh`.
+- Keep usage instructions in the public docs pages; keep this area tidy and purpose-built for downloads.
+
+
+--- _assets/nvidia-spark-playbook/README.md ---
+# Running the scripts
+
+## Javascript
+
+Pre-reqs: User has installed `npm` and `node`
+
+```bash
+cd js
+npm install @lmstudio/sdk
+node run.js
+```
+
+## Python
+
+Pre-reqs: User has installed `uv`
+
+```bash
+=
+uv run --script run.py
+```
+
+## Bash
+
+Pre-reqs: User has installed `jq` and `curl`
+
+```bash
+bash run.sh
+```
+
+
+--- _assets/nvidia-spark-playbook/js/run.js ---
+const { LMStudioClient } = require('@lmstudio/sdk');
+
+async function main() {
+ // Connect to Remote LM Studio on port 1234, replace {SPARK_LOCAL_IP} with the IP address of your DGX Spark on your local network
+ const client = new LMStudioClient({ baseUrl: 'ws://{SPARK_LOCAL_IP}:1234' });
+
+ // Get model reference (uses already loaded model if available)
+ const model = await client.llm.model('openai/gpt-oss-120b');
+
+ const prompt = "List three cool project ideas that I can run with a local LLM";
+
+ console.log("Sending prompt:", prompt);
+ console.log("\nResponse:");
+
+ // Send the prompt and stream the response
+ const prediction = model.respond(prompt);
+
+ for await (const fragment of prediction) {
+   process.stdout.write(fragment.content);
+ }
+
+ console.log("\nDone!");
+}
+
+main().catch(console.error);
+
+
+--- _assets/nvidia-spark-playbook/py/run.py ---
+# /// script
+# dependencies = [
+#   "lmstudio",
+# ]
+# ///
+
+import lmstudio as lms
+
+
+def main():
+    # Connect to Remote LM Studio on port 1234, replace <SPARK_LOCAL_IP> with the IP address of your DGX Spark on your local network
+    lms.configure_default_client("<SPARK_LOCAL_IP>:1234")
+
+    # Get model reference (uses already loaded model if available)
+    model = lms.llm("openai/gpt-oss-120b")
+
+    # Hard-coded prompt
+    prompt = "List three cool project ideas that I can run with a local LLM"
+
+    print("Sending prompt:", prompt)
+    print("\nResponse:")
+
+    # Send the prompt and stream the response
+    for fragment in model.respond_stream(prompt):
+        print(fragment.content, end="", flush=True)
+
+    print("\n\nDone!")
+
+
+if __name__ == "__main__":
+    main()
+
+
 --- _configuration/inference.md ---
 ---
 title: Inference parameters

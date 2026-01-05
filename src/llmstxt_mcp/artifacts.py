@@ -14,6 +14,10 @@ def resource_uri(run_id: str, artifact_name: str) -> str:
     """Generates a standardized URI for a run artifact."""
     return f"llmstxt://runs/{run_id}/{artifact_name}"
 
+def artifact_resource_uri(relative_path: str) -> str:
+    """Generates a standardized URI for a persistent artifact on disk."""
+    return f"llmstxt://artifacts/{relative_path}"
+
 def read_resource_text(run_store: RunStore, run_id: str, artifact_name: str) -> str:
     """
     Reads text content from an artifact, truncated if necessary.
@@ -65,3 +69,20 @@ def read_artifact_chunk(run_store: RunStore, run_id: str, artifact_name: str, of
             return f.read(limit)
     except UnicodeDecodeError:
         return "<Binary or non-UTF-8 content>"
+
+def scan_artifacts() -> list[Path]:
+    """
+    Scans the allowed root directory for all .txt artifact files.
+    Returns a list of Path objects relative to the allowed root.
+    """
+    root = settings.LLMSTXT_MCP_ALLOWED_ROOT
+    if not root.exists():
+        return []
+    
+    # Return relative paths so the API consumer gets "org/repo/llms.txt"
+    # rglob finds all .txt files recursively
+    return sorted([
+        p.relative_to(root) 
+        for p in root.rglob("*.txt") 
+        if p.is_file()
+    ])

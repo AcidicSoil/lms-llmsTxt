@@ -29,3 +29,9 @@ class ReadArtifactResult(BaseModel):
     content: str
     truncated: bool
     total_chars: int
+
+class ArtifactMetadata(BaseModel):
+    filename: str
+    size_bytes: int
+    last_modified: datetime
+    uri: str

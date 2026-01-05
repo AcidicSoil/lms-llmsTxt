@@ -3,20 +3,27 @@ import logging
 import sys
 import threading
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
 from .config import settings
-from .models import ReadArtifactResult, ArtifactName, RunRecord
+from .models import ReadArtifactResult, ArtifactName, RunRecord, ArtifactMetadata
 from .runs import RunStore
 from .generator import (
     safe_generate_llms_txt,
     safe_generate_llms_full,
     safe_generate_llms_ctx,
 )
-from .artifacts import read_resource_text, read_artifact_chunk
+from .artifacts import (
+    read_resource_text, 
+    read_artifact_chunk, 
+    scan_artifacts, 
+    artifact_resource_uri
+)
 from .security import validate_output_dir
+from .hashing import read_text_preview
 from lmstudiotxt_generator.github import owner_repo_from_url
 
 # Configure logging to stderr to avoid interfering with JSON-RPC on stdout
@@ -38,8 +45,8 @@ run_store = RunStore(
 )
 run_store.start_cleanup_worker()
 
-def _spawn_background(target, *args, **kwargs) -> None:
-    def _runner() -> None:
+def _spawn_background(target, *args, **kwargs) -> None: 
+    def _runner() -> None: 
         try:
             target(*args, **kwargs)
         except Exception:
@@ -211,6 +218,33 @@ def list_runs(
     return json.dumps([r.model_dump(mode="json") for r in runs], indent=2)
 
 @mcp.tool(
+    name="llmstxt_list_all_artifacts",
+    annotations={
+        "title": "List All Persistent Artifacts",
+        "readOnlyHint": True,
+        "idempotentHint": True
+    }
+)
+def list_all_artifacts() -> str:
+    """
+    Returns a list of all .txt artifact files found in the persistent output directory.
+    This includes files from previous server sessions.
+    """
+    paths = scan_artifacts()
+    root = settings.LLMSTXT_MCP_ALLOWED_ROOT
+    results = []
+    for p in paths:
+        full_path = root / p
+        stats = full_path.stat()
+        results.append(ArtifactMetadata(
+            filename=str(p),
+            size_bytes=stats.st_size,
+            last_modified=datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc),
+            uri=artifact_resource_uri(str(p))
+        ))
+    return json.dumps([r.model_dump(mode="json") for r in results], indent=2)
+
+@mcp.tool(
     name="llmstxt_read_artifact",
     annotations={
         "title": "Read Artifact Content",
@@ -279,6 +313,33 @@ def get_run_artifact(run_id: str, artifact_name: str) -> str:
     except Exception as e:
         logger.error(f"Resource access failed: {e}")
         raise ValueError(f"Failed to read resource: {e}")
+
+@mcp.resource("llmstxt://artifacts/{filename}")
+def get_persistent_artifact(filename: str) -> str:
+    """
+    Access a persistent artifact on disk as a resource.
+    
+    Note: Large files will be truncated according to the server's 
+    LLMSTXT_MCP_RESOURCE_MAX_CHARS configuration.
+    """
+    root = settings.LLMSTXT_MCP_ALLOWED_ROOT
+    path = root / filename
+    
+    # Security: ensure path is within root
+    validate_output_dir(path.parent)
+    
+    if not path.exists():
+        raise FileNotFoundError(f"Artifact {filename} not found")
+        
+    content, truncated = read_text_preview(
+        path, 
+        settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS
+    )
+    
+    if truncated:
+        content += "\n... (content truncated)"
+        
+    return content
 
 def main():
     """Entry point for the MCP server."""

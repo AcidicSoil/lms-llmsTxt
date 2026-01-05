@@ -1295,7 +1295,7 @@
   "feat-mcp": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Project Foundation & Configuration Module",
         "description": "Establish the project structure, dependency management, and configuration loading logic.",
         "details": "Initialize the project following the `src/llmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-llmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.\n\nLibraries: `pydantic`, `pydantic-settings`, `mcp`.\nfiles: `src/llmstxt_mcp/config.py`, `src/llmstxt_mcp/errors.py`, `pyproject.toml`.",
@@ -1310,7 +1310,7 @@
         "updatedAt": "2026-01-03T19:17:10.418Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Data Models & Type Definitions",
         "description": "Define Pydantic models for MCP tool inputs/outputs and internal data structures.",
         "details": "Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.\n\nLibraries: `pydantic`.\nfiles: `src/llmstxt_mcp/models.py`.",
@@ -1327,7 +1327,7 @@
         "updatedAt": "2026-01-03T19:17:54.333Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Security & File Hashing Utilities",
         "description": "Implement path validation security controls and file hashing utilities.",
         "details": "Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.\n\nLibraries: `pathlib`, `hashlib`.\nfiles: `src/llmstxt_mcp/security.py`, `src/llmstxt_mcp/hashing.py`.",
@@ -1344,7 +1344,7 @@
         "updatedAt": "2026-01-03T19:18:55.104Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "In-Memory Run Registry",
         "description": "Implement the storage mechanism to track generation runs and their artifacts.",
         "details": "Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.\n\nfiles: `src/llmstxt_mcp/runs.py`.",
@@ -1361,7 +1361,7 @@
         "updatedAt": "2026-01-03T19:19:47.633Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Artifact Access Logic",
         "description": "Implement the core logic for resolving, reading, and chunking artifact content.",
         "details": "Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.\n\nfiles: `src/llmstxt_mcp/artifacts.py`.",
@@ -1417,7 +1417,7 @@
         "updatedAt": "2026-01-03T19:25:09.120Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Generator Integration & Serialized Execution",
         "description": "Wrap the external `lmstudiotxt_generator` library with thread-safe execution logic.",
         "details": "In `server.py` (or a dedicated integration module), implement the `llmstxt_generate` tool logic. Import `run_generation` from the external library. Use a `threading.Lock` to ensure only one generation runs at a time (avoiding global config races). Capture exceptions (specifically connectivity errors) and map them to `LMStudioUnavailableError`. Calculate hashes for outputs and register the run in `RunStore`.\n\nLibraries: `lmstudiotxt_generator`.\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1473,7 +1473,7 @@
         "updatedAt": "2026-01-03T19:55:09.862Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "MCP Server Tool & Resource Wiring",
         "description": "Configure the FastMCP server instance and register tools and resources.",
         "details": "In `server.py`, initialize `FastMCP`. Register the `llmstxt_generate` and `llmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `llmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `llmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.\n\nLibraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1542,7 +1542,7 @@
         "updatedAt": "2026-01-03T20:22:31.099Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Stdio-Safe Logging Implementation",
         "description": "Configure logging to ensure no interference with the stdio transport. [Updated: 1/3/2026]",
         "details": "Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.\n\nfiles: `src/llmstxt_mcp/server.py`.",
@@ -1559,7 +1559,7 @@
         "updatedAt": "2026-01-03T20:26:24.207Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Request Limits & Error Normalization",
         "description": "Harden the server by enforcing limits and ensuring clean error reporting.",
         "details": "Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.\n\nfiles: `src/llmstxt_mcp/errors.py`, `src/llmstxt_mcp/server.py`.",
@@ -1576,7 +1576,7 @@
         "updatedAt": "2026-01-03T20:26:56.522Z"
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "Packaging & Entry Point Verification",
         "description": "Finalize packaging and verify the CLI entry point works for both transports.",
         "details": "Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `llmstxt-mcp = llmstxt_mcp.server:main`). Verify that running `llmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.\n\nfiles: `pyproject.toml`, `README.md`.",
@@ -1594,7 +1594,7 @@
         "updatedAt": "2026-01-03T22:34:55.275Z"
       },
       {
-        "id": 11,
+        "id": "11",
         "title": "Fix: Refactor for Asynchronous Processing",
         "description": "To truly remove the timeout in a way that works for tools, the server should not do heavy lifting inside the tool call. It should accept the request, launch a background thread to do the work, and return a \"Processing...\" status immediately.",
         "details": "Requirements:\n- Accept the request\n- Launch a background thread to do the work\n- Return a \"Processing...\" status immediately",
@@ -1748,19 +1748,102 @@
         "recommendedSubtasks": 6,
         "expansionPrompt": "Identify and break down the necessary changes for Task 11 into granular steps. Ensure you cover the following areas: 1) Updating the RunRecord model to track state, 2) Creating a thread-safe RunStore update mechanism, 3) Implementing a background execution wrapper (e.g., using anyio or threading), 4) Refactoring the FastMCP tool to handle immediate returns and background task spawning, 5) Updating resource resolvers to provide status-aware responses, and 6) Implementing a safe cleanup/pruning routine for in-memory records.",
         "updatedAt": "2026-01-04T07:56:23.989Z"
+      },
+      {
+        "id": "12",
+        "title": "Artifact Directory Discovery and Resource Exposure",
+        "description": "Extend the MCP server to discover and retrieve artifact files from local storage, exposing them as structured resources and tools for client context.",
+        "details": "This task transforms the server into a persistent context source by enabling access to the 'artifacts/' directory on disk. 1) Update 'artifacts.py' to include a 'scan_artifacts' function using 'pathlib' to list all '.txt' files in the configured output directory. 2) In 'server.py', implement the 'list_resources' MCP handler to dynamically expose these files as resources with the URI scheme 'llmstxt://artifacts/{filename}'. 3) Implement the 'read_resource' handler to fetch file content, utilizing 'hashing.read_text_preview' for safety and 'security.validate_output_dir' to prevent path traversal. 4) Add a new MCP tool 'llmstxt_list_all_artifacts' that returns metadata (filename, size, last modified) for all existing artifacts, including those from previous server sessions not present in the volatile 'RunStore'. 5) Integrate the 'MAX_CHARS' limit from Task 9 into the directory-based resource reads.",
+        "testStrategy": "1) Manually populate the artifacts directory with several .txt files. 2) Use an MCP inspector or test client to call 'list_resources' and verify the 'llmstxt://artifacts/' URIs are correctly generated. 3) Verify that 'read_resource' successfully returns content for valid files and fails for files outside the allowed directory. 4) Verify the 'llmstxt_list_all_artifacts' tool returns files that were created before the current server process started. 5) Confirm that large files are appropriately truncated according to defined limits.",
+        "status": "done",
+        "dependencies": [
+          "3",
+          "5",
+          "7",
+          "9"
+        ],
+        "priority": "high",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Artifact Directory Scanning Logic",
+            "description": "Add a function to discover existing artifact files in the configured output directory.",
+            "dependencies": [],
+            "details": "Update 'src/llmstxt_mcp/artifacts.py' to include 'scan_artifacts'. Use 'pathlib.Path.glob' to identify all '.txt' files. Ensure the path is resolved relative to the configured artifact directory.",
+            "status": "done",
+            "testStrategy": "Unit test using a temporary directory populated with several .txt and non-.txt files to ensure only artifacts are listed.",
+            "updatedAt": "2026-01-05T06:27:05.271Z",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Define Artifact Metadata Schemas",
+            "description": "Create structured data models for artifact metadata to be used by tools and resources.",
+            "dependencies": [
+              1
+            ],
+            "details": "Update 'src/llmstxt_mcp/models.py' to include an 'ArtifactMetadata' model with fields: 'filename', 'size_bytes', 'last_modified', and 'uri'. This ensures consistent formatting between the scanner and the API.",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T06:31:45.456Z"
+          },
+          {
+            "id": 3,
+            "title": "Implement 'llmstxt_list_all_artifacts' MCP Tool",
+            "description": "Expose the discovered artifacts via a specialized MCP tool for client discovery.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In 'src/llmstxt_mcp/server.py', register a new tool using the FastMCP decorator. The tool should call 'scan_artifacts', map results to 'ArtifactMetadata', and return a list of all persistent files including those from previous sessions.",
+            "status": "done",
+            "testStrategy": "Manual verification via MCP Inspector by calling the tool and checking if it lists files manually added to the artifacts folder.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T06:32:30.942Z"
+          },
+          {
+            "id": 4,
+            "title": "Implement MCP Resource Handlers",
+            "description": "Register dynamic resource listing and reading handlers for the artifact URI scheme.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "Implement '@mcp.list_resources()' and '@mcp.read_resource()' in 'server.py'. Define the URI scheme as 'llmstxt://artifacts/{filename}'. Ensure 'list_resources' populates the list based on current disk state.",
+            "status": "done",
+            "testStrategy": "Use an MCP client to list resources and verify the URIs match the expected scheme. Attempt to read a specific resource by URI.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T06:32:30.948Z"
+          },
+          {
+            "id": 5,
+            "title": "Integrate Security and Content Truncation",
+            "description": "Apply path validation and length limits to artifact resource retrieval.",
+            "dependencies": [
+              4
+            ],
+            "details": "In the 'read_resource' handler, wrap file access with 'security.validate_output_dir'. Use 'hashing.read_text_preview' to read content, passing the 'MAX_CHARS' limit from the application configuration to prevent memory issues.",
+            "status": "done",
+            "testStrategy": "Attempt to access a file outside the artifacts directory via the resource URI to verify rejection. Verify that files exceeding MAX_CHARS are correctly truncated with a preview banner.",
+            "parentId": "undefined",
+            "updatedAt": "2026-01-05T06:32:30.951Z"
+          }
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 5,
+        "expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'llmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
+        "updatedAt": "2026-01-05T06:32:30.951Z"
       }
     ],
     "metadata": {
       "version": "1.0.0",
-      "lastModified": "2026-01-04T07:56:23.990Z",
-      "taskCount": 11,
-      "completedCount": 11,
+      "lastModified": "2026-01-05T06:32:30.953Z",
+      "taskCount": 12,
+      "completedCount": 12,
       "tags": [
         "feat-mcp"
-      ],
-      "created": "2026-01-05T01:16:11.230Z",
-      "description": "Tasks for feat-mcp context",
-      "updated": "2026-01-05T01:16:11.230Z"
+      ]
     }
   }
 }
