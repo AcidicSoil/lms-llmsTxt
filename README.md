@@ -220,8 +220,9 @@ Set `LMSTUDIO_MODEL` and `GITHUB_ACCESS_TOKEN` in your shell profile to avoid re
 ```bash
 npx @modelcontextprotocol/inspector --config ./inspector.config.json
 ```
+
 ```bash
-npx @modelcontextprotocol/inspector --config ./inspector.config.json --server llmstxt-mcp
+npx @modelcontextprotocol/inspector --config ./inspector.config.json --server llmstxt
 
 ```
 
@@ -248,13 +249,3 @@ When `run_id` is omitted, the tools resolve artifacts from:
 If `llmstxt_generate_llms_full` or `llmstxt_generate_llms_ctx` is called without
 `run_id` and `llms.txt` is missing, the server will auto-generate `llms.txt`
 first (using the same `repo_url` + `output_dir`).
-
-### Task Master MCP Inspector Payloads
-
-Use `docs/task-master-inspector-payloads.md` to smoke-test the Task Master MCP server:
-
-1) Start your MCP inspector for Task Master.
-2) Paste each payload from `docs/task-master-inspector-payloads.md` in order.
-3) If your Task Master server exposes tool names with a prefix, run `tools/list` first and adjust the `name` fields accordingly.
-
-Note: The payloads assume the Task Master server exposes tool names like `add_task` and `get_tasks`.
