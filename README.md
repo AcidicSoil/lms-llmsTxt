@@ -3,7 +3,11 @@ title: "LM Studio llms.txt Generator"
 description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
 ---
 
-[![PyPI](https://img.shields.io/pypi/v/lms-llmsTxt.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/lms-llmsTxt/) [![Downloads](https://img.shields.io/pypi/dm/lms-llmsTxt.svg?cacheSeconds=300)](https://pypi.org/project/lms-llmsTxt/) [![TestPyPI](https://img.shields.io/badge/TestPyPI-lms-llmsTxt-informational?cacheSeconds=300)](https://test.pypi.org/project/lms-llmsTxt/) [![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml) [![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms-llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
+[![PyPI](https://img.shields.io/pypi/v/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/)
+[![Downloads](https://img.shields.io/pypi/dm/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/)
+[![TestPyPI](https://img.shields.io/badge/TestPyPI-lms--llmsTxt-informational)](https://test.pypi.org/project/lms-llmsTxt/)
+[![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml)
+[![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms--llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
 
 ## Overview
 
@@ -101,6 +105,7 @@ The pipeline always writes `llms.txt` and `llms-full.txt`, even when the languag
 This package includes a FastMCP server that exposes the generator as an MCP tool and provides access to generated artifacts as resources.
 
 ### Features
+
 - **Asynchronous Processing**: Tool calls return a `run_id` immediately while generation happens in the background.
 - **Tools**:
   - `lmstxt_generate_llms_txt`: Trigger `llms.txt` generation.
@@ -125,6 +130,7 @@ lmstxt-mcp
 Add to your MCP client config (e.g., `claude_desktop_config.json` or `config.toml`):
 
 #### Claude Desktop / Cursor
+
 ```json
 {
   "mcpServers": {
@@ -140,10 +146,10 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `config.tom
 ```
 
 #### Codex / CLI (toml)
+
 ```toml
 [mcp_servers.lmstxt]
 command = "lmstxt-mcp"
-args = ["stdio"]
 startup_timeout_sec = 30
 tool_timeout_sec = 30
 
@@ -191,4 +197,5 @@ If the MCP server times out during generation, check `lmstxt_list_runs` to see i
 ```bash
 npx @modelcontextprotocol/inspector --config ./inspector.config.json --server lmstxt
 ```
+
 Use the payloads in `docs/mcp-inspector-payloads.md` to verify specific tool behaviors.
