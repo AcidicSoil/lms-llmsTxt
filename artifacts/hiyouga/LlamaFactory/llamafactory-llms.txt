@@ -1,0 +1,103 @@
+# Llamafactory
+
+> The primary purpose of LLaMA Factory is to simplify the process of fine-tuning large language models for specific tasks or domains while maintaining efficiency and scalability. It enables users to quickly adapt pre-trained models (e.g., Llama, Qwen, Baichuan) to new applications through low-rank adaptation (LoRA), instruction tuning, reinforcement learning from human feedback (RLHF), and other methods. The framework also supports deployment via APIs and integrates with modern tools like vLLM for high-performance inference. Additionally, it serves as a platform for research projects that leverage LLMs in specialized domains such as healthcare, education, legal reasoning, code generation, and more.
+
+**Remember:**
+- LoRA (Low-Rank Adaptation)
+- SFT (Supervised Fine-Tuning)
+- DPO (Direct Preference Optimization)
+- RLHF (Reinforcement Learning from Human Feedback)
+- vLLM for Inference
+- W&B and SwanLab Logging
+
+## Tutorials
+- [README](https://github.com/hiyouga/LlamaFactory/blob/main/examples/README.md): install & quickstart.
+- [Readme Zh](https://github.com/hiyouga/LlamaFactory/blob/main/examples/README_zh.md): install & quickstart.
+- [Wiki Demo](https://github.com/hiyouga/LlamaFactory/blob/main/data/wiki_demo.txt): worked example.
+- [Test Image](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/api_example/test_image.py): API reference.
+- [Test Toolcall](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/api_example/test_toolcall.py): API reference.
+
+## API
+- [Api](https://github.com/hiyouga/LlamaFactory/blob/main/src/api.py): API reference.
+- [App](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/api/app.py): API reference.
+- [Chat](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/api/chat.py): API reference.
+- [Common](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/api/common.py): API reference.
+- [Init](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/api/__init__.py): API reference.
+- [Protocol](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/api/protocol.py): API reference.
+
+## Optional
+- [Check License](https://github.com/hiyouga/LlamaFactory/blob/main/tests/check_license.py): usage terms.
+- [Contributing](https://github.com/hiyouga/LlamaFactory/blob/main/.github/CONTRIBUTING.md): docs page.
+- [Security](https://github.com/hiyouga/LlamaFactory/blob/main/.github/SECURITY.md): security policy.
+- [README](https://github.com/hiyouga/LlamaFactory/blob/main/README.md): docs page.
+- [Readme Zh](https://github.com/hiyouga/LlamaFactory/blob/main/README_zh.md): docs page.
+- [README](https://github.com/hiyouga/LlamaFactory/blob/main/docker/docker-cuda/README.md): install & quickstart.
+
+## .Github
+- [Code Of Conduct](https://github.com/hiyouga/LlamaFactory/blob/main/.github/CODE_OF_CONDUCT.md): docs page.
+- [Copilot Instructions](https://github.com/hiyouga/LlamaFactory/blob/main/.github/copilot-instructions.md): docs page.
+- [Pull Request Template](https://github.com/hiyouga/LlamaFactory/blob/main/.github/PULL_REQUEST_TEMPLATE.md): docs page.
+
+## Data
+- [README](https://github.com/hiyouga/LlamaFactory/blob/main/data/README.md): install & quickstart.
+- [Readme Zh](https://github.com/hiyouga/LlamaFactory/blob/main/data/README_zh.md): install & quickstart.
+
+## Requirements
+- [Adam Mini](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/adam-mini.txt): docs page.
+- [Apollo](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/apollo.txt): docs page.
+- [Aqlm](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/aqlm.txt): docs page.
+- [Badam](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/badam.txt): docs page.
+- [Bitsandbytes](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/bitsandbytes.txt): docs page.
+- [Deepspeed](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/deepspeed.txt): docs page.
+- [Dev](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/dev.txt): docs page.
+- [Eetq](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/eetq.txt): docs page.
+- [Fp8](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/fp8.txt): docs page.
+- [Fp8 Te](https://github.com/hiyouga/LlamaFactory/blob/main/requirements/fp8-te.txt): docs page.
+
+## Scripts
+- [Bench Qwen](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/bench_qwen.py): docs page.
+- [Eval Bleu Rouge](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/eval_bleu_rouge.py): docs page.
+- [Llama Pro](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/llama_pro.py): docs page.
+- [Loftq Init](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/loftq_init.py): docs page.
+- [Megatron Merge](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/megatron_merge.py): docs page.
+- [Pissa Init](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/pissa_init.py): docs page.
+- [Qwen Omni Merge](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/qwen_omni_merge.py): docs page.
+- [Vllm Infer](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/vllm_infer.py): docs page.
+- [Cal Flops](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/stat_utils/cal_flops.py): docs page.
+- [Cal Lr](https://github.com/hiyouga/LlamaFactory/blob/main/scripts/stat_utils/cal_lr.py): docs page.
+
+## Src
+- [Train](https://github.com/hiyouga/LlamaFactory/blob/main/src/train.py): docs page.
+- [Webui](https://github.com/hiyouga/LlamaFactory/blob/main/src/webui.py): docs page.
+- [Cli](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/cli.py): docs page.
+- [Init](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/__init__.py): docs page.
+- [Launcher](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/launcher.py): docs page.
+- [Adapter](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/model/adapter.py): docs page.
+- [Base Engine](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/chat/base_engine.py): docs page.
+- [Callbacks](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/train/callbacks.py): docs page.
+- [Chat Model](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/chat/chat_model.py): docs page.
+- [Chatter](https://github.com/hiyouga/LlamaFactory/blob/main/src/llamafactory/webui/chatter.py): docs page.
+
+## Tests
+- [Conftest](https://github.com/hiyouga/LlamaFactory/blob/main/tests/conftest.py): docs page.
+- [Version](https://github.com/hiyouga/LlamaFactory/blob/main/tests/version.txt): docs page.
+- [Test Base](https://github.com/hiyouga/LlamaFactory/blob/main/tests/model/test_base.py): docs page.
+- [Test Chat](https://github.com/hiyouga/LlamaFactory/blob/main/tests/e2e/test_chat.py): docs page.
+- [Test Collator](https://github.com/hiyouga/LlamaFactory/blob/main/tests/data/test_collator.py): docs page.
+- [Test Converter](https://github.com/hiyouga/LlamaFactory/blob/main/tests/data/test_converter.py): docs page.
+- [Test Eval Template](https://github.com/hiyouga/LlamaFactory/blob/main/tests/eval/test_eval_template.py): docs page.
+- [Test Formatter](https://github.com/hiyouga/LlamaFactory/blob/main/tests/data/test_formatter.py): docs page.
+- [Test Freeze](https://github.com/hiyouga/LlamaFactory/blob/main/tests/model/test_freeze.py): docs page.
+- [Test Full](https://github.com/hiyouga/LlamaFactory/blob/main/tests/model/test_full.py): docs page.
+
+## Tests V1
+- [Conftest](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/conftest.py): docs page.
+- [Test Args Parser](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/config/test_args_parser.py): docs page.
+- [Test Batching Queue](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/utils/test_batching_queue.py): docs page.
+- [Test Cli Sampler](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/sampler/test_cli_sampler.py): docs page.
+- [Test Data Engine](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/core/test_data_engine.py): docs page.
+- [Test Interface](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/accelerator/test_interface.py): docs page.
+- [Test Model Loader](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/core/test_model_loader.py): docs page.
+- [Test Converter](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/plugins/data_plugins/test_converter.py): docs page.
+- [Test Data Loader](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/core/utils/test_data_loader.py): docs page.
+- [Test Init Plugin](https://github.com/hiyouga/LlamaFactory/blob/main/tests_v1/plugins/model_plugins/test_init_plugin.py): docs page.
