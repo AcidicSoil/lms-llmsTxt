@@ -1,14 +1,14 @@
 # Gemini Cli
 
-> Gemini CLI aims to bring powerful AI capabilities — including multimodal understanding, large context windows, and tool integration — directly into the terminal for developers. It empowers users to analyze codebases, automate workflows, generate content, and collaborate with AI in a lightweight, extensible, and secure environment. The project supports both personal and enterprise use cases, with options for free tier access, API key management, or Vertex AI integration, while maintaining an open-source Apache 2.0 license.
+> To provide developers with a terminal-based interface to interact with Gemini AI models, enabling tasks like code generation, debugging, automation, and integration with tools and custom MCP servers — all within a lightweight, extensible, and secure environment.
 
 **Remember:**
-- Gemini CLI: Terminal-based AI agent for Google's Gemini models
-- MCP (Model Context Protocol): Framework for extending Gemini with custom tools and integrations
-- Built-in Tools: File operations, shell commands, web search, and more
-- Checkpointing: Save and resume long-running AI conversations
-- Custom Commands & Extensions: User-defined commands via TOML files
-- Trusted Folders: Secure execution policies by folder
+- Gemini CLI: Terminal-based AI agent using Google's Gemini models
+- MCP (Model Context Protocol): Extensibility for custom tools and integrations
+- Built-in Tools: File operations, shell commands, web fetching, search grounding
+- Checkpointing: Save and resume long-running conversations
+- Context Files (GEMINI.md): Persistent context for tailored behavior
+- Token Caching: Optimization of token usage
 
 ## Docs
 - [Extensions Install.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/extensions-install.test.ts): install & quickstart.
@@ -59,8 +59,8 @@
 - [Flicker.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/flicker.test.ts): docs page.
 - [Globalsetup](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/globalSetup.ts): docs page.
 - [Google Web Search.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/google_web_search.test.ts): docs page.
+- [Hooks Agent Flow.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/hooks-agent-flow.test.ts): docs page.
 - [Hooks System.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/hooks-system.test.ts): docs page.
-- [Json Output.Test](https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/json-output.test.ts): docs page.
 
 ## Packages
 - [README](https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/README.md): install & quickstart.

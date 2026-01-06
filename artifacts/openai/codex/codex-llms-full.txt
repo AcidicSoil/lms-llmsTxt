@@ -2,136 +2,16 @@
 > Built from GitHub files and website pages. Large files may be truncated.
 
 --- docs/getting-started.md ---
-## Getting started
+# Getting started with Codex CLI
 
-Looking for something specific? Jump ahead:
-
-- [Tips & shortcuts](#tips--shortcuts) – hotkeys, resume flow, prompts
-- [Non-interactive runs](./exec.md) – automate with `codex exec`
-- Ready for deeper customization? Head to [`advanced.md`](./advanced.md)
-
-### CLI usage
-
-| Command            | Purpose                            | Example                         |
-| ------------------ | ---------------------------------- | ------------------------------- |
-| `codex`            | Interactive TUI                    | `codex`                         |
-| `codex "..."`      | Initial prompt for interactive TUI | `codex "fix lint errors"`       |
-| `codex exec "..."` | Non-interactive "automation mode"  | `codex exec "explain utils.ts"` |
-
-Key flags: `--model/-m`, `--ask-for-approval/-a`.
-
-### Resuming interactive sessions
-
-- Run `codex resume` to display the session picker UI
-- Resume most recent: `codex resume --last`
-- Resume by id: `codex resume <SESSION_ID>` (You can get session ids from /status or `~/.codex/sessions/`)
-- The picker shows the session's recorded Git branch when available.
-- To show the session's original working directory (CWD), run `codex resume --all` (this also disables cwd filtering and adds a `CWD` column).
-
-Examples:
-
-```shell
-# Open a picker of recent sessions
-codex resume
-
-# Resume the most recent session
-codex resume --last
-
-# Resume a specific session by id
-codex resume 7f9f9a2e-1b3c-4c7a-9b0e-123456789abc
-```
-
-### Running with a prompt as input
-
-You can also run Codex CLI with a prompt as input:
-
-```shell
-codex "explain this codebase to me"
-```
-
-### Example prompts
-
-Below are a few bite-size examples you can copy-paste. Replace the text in quotes with your own task.
-
-| ✨  | What you type                                                                   | What happens                                                               |
-| --- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| 1   | `codex "Refactor the Dashboard component to React Hooks"`                       | Codex rewrites the class component, runs `npm test`, and shows the diff.   |
-| 2   | `codex "Generate SQL migrations for adding a users table"`                      | Infers your ORM, creates migration files, and runs them in a sandboxed DB. |
-| 3   | `codex "Write unit tests for utils/date.ts"`                                    | Generates tests, executes them, and iterates until they pass.              |
-| 4   | `codex "Bulk-rename *.jpeg -> *.jpg with git mv"`                               | Safely renames files and updates imports/usages.                           |
-| 5   | `codex "Explain what this regex does: ^(?=.*[A-Z]).{8,}$"`                      | Outputs a step-by-step human explanation.                                  |
-| 6   | `codex "Carefully review this repo, and propose 3 high impact well-scoped PRs"` | Suggests impactful PRs in the current codebase.                            |
-| 7   | `codex "Look for vulnerabilities and create a security review report"`          | Finds and explains security bugs.                                          |
-
-Looking to reuse your own instructions? Create slash commands with [custom prompts](./prompts.md).
-
-### Memory with AGENTS.md
-
-You can give Codex extra instructions and guidance using `AGENTS.md` files. Codex looks for them in the following places, and merges them top-down:
-
-1. `~/.codex/AGENTS.md` - personal global guidance
-2. Every directory from the repository root down to your current working directory (inclusive). In each directory, Codex first looks for `AGENTS.override.md` and uses it if present; otherwise it falls back to `AGENTS.md`. Use the override form when you want to replace inherited instructions for that directory.
-
-For more information on how to use AGENTS.md, see the [official AGENTS.md documentation](https://agents.md/).
-
-### Tips & shortcuts
-
-#### Use `@` for file search
-
-Typing `@` triggers a fuzzy-filename search over the workspace root. Use up/down to select among the results and Tab or Enter to replace the `@` with the selected path. You can use Esc to cancel the search.
-
-#### Esc–Esc to edit a previous message
-
-When the chat composer is empty, press Esc to prime “backtrack” mode. Press Esc again to open a transcript preview highlighting the last user message; press Esc repeatedly to step to older user messages. Press Enter to confirm and Codex will fork the conversation from that point, trim the visible transcript accordingly, and pre‑fill the composer with the selected user message so you can edit and resubmit it.
-
-In the transcript preview, the footer shows an `Esc edit prev` hint while editing is active.
-
-#### `--cd`/`-C` flag
-
-Sometimes it is not convenient to `cd` to the directory you want Codex to use as the "working root" before running Codex. Fortunately, `codex` supports a `--cd` option so you can specify whatever folder you want. You can confirm that Codex is honoring `--cd` by double-checking the **workdir** it reports in the TUI at the start of a new session.
-
-#### `--add-dir` flag
-
-Need to work across multiple projects in one run? Pass `--add-dir` one or more times to expose extra directories as writable roots for the current session while keeping the main working directory unchanged. For example:
-
-```shell
-codex --cd apps/frontend --add-dir ../backend --add-dir ../shared
-```
-
-Codex can then inspect and edit files in each listed directory without leaving the primary workspace.
-
-#### Shell completions
-
-Generate shell completion scripts via:
-
-```shell
-codex completion bash
-codex completion zsh
-codex completion fish
-```
-
-#### Image input
-
-Paste images directly into the composer (Ctrl+V / Cmd+V) to attach them to your prompt. You can also attach files via the CLI using `-i/--image` (comma‑separated):
-
-```bash
-codex -i screenshot.png "Explain this error"
-codex --image img1.png,img2.jpg "Summarize these diagrams"
-```
-
-#### Environment variables and executables
-
-Make sure your environment is already set up before launching Codex so it does not spend tokens probing what to activate. For example, source your Python virtualenv (or other language runtimes), start any required daemons, and export the env vars you expect to use ahead of time.
+For an overview of Codex CLI features, see [this documentation](https://developers.openai.com/codex/cli/features#running-in-interactive-mode).
 
 
 ## Links discovered
-- [Non-interactive runs](https://github.com/openai/codex/blob/main/docs/exec.md)
-- [`advanced.md`](https://github.com/openai/codex/blob/main/docs/advanced.md)
-- [custom prompts](https://github.com/openai/codex/blob/main/docs/prompts.md)
-- [official AGENTS.md documentation](https://agents.md/)
+- [this documentation](https://developers.openai.com/codex/cli/features#running-in-interactive-mode)
 
 --- docs/install.md ---
-## Install & build
+## Installing & building
 
 ### System requirements
 
@@ -159,7 +39,7 @@ rustup component add rustfmt
 rustup component add clippy
 # Install helper tools used by the workspace justfile:
 cargo install just
-# Optional: install nextest for the `just test` helper (or use `cargo test --all-features` as a fallback)
+# Optional: install nextest for the `just test` helper
 cargo install cargo-nextest
 
 # Build Codex.
@@ -174,15 +54,30 @@ just fix -p <crate-you-touched>
 
 # Run the relevant tests (project-specific is fastest), for example:
 cargo test -p codex-tui
-# If you have cargo-nextest installed, `just test` runs the full suite:
+# If you have cargo-nextest installed, `just test` runs the test suite via nextest:
 just test
-# Otherwise, fall back to:
+# If you specifically want the full `--all-features` matrix, use:
 cargo test --all-features
 ```
+
+## Tracing / verbose logging
+
+Codex is written in Rust, so it honors the `RUST_LOG` environment variable to configure its logging behavior.
+
+The TUI defaults to `RUST_LOG=codex_core=info,codex_tui=info,codex_rmcp_client=info` and log messages are written to `~/.codex/log/codex-tui.log`, so you can leave the following running in a separate terminal to monitor log messages as they are written:
+
+```bash
+tail -F ~/.codex/log/codex-tui.log
+```
+
+By comparison, the non-interactive mode (`codex exec`) defaults to `RUST_LOG=error`, but messages are printed inline, so there is no need to monitor a separate file.
+
+See the Rust documentation on [`RUST_LOG`](https://docs.rs/env_logger/latest/env_logger/#enabling-logging) for more information on the configuration options.
 
 
 ## Links discovered
 - [DotSlash](https://dotslash-cli.com/)
+- [`RUST_LOG`](https://docs.rs/env_logger/latest/env_logger/#enabling-logging)
 
 --- codex-cli/scripts/install_native_deps.py ---
 #!/usr/bin/env python3
@@ -1368,459 +1263,22 @@ if __name__ == "__main__":
 
 
 --- docs/example-config.md ---
-# Example config.toml
+# Sample configuration
 
-Use this example configuration as a starting point. For an explanation of each field and additional context, see [Configuration](./config.md). Copy the snippet below to `~/.codex/config.toml` and adjust values as needed.
-
-```toml
-# Codex example configuration (config.toml)
-#
-# This file lists all keys Codex reads from config.toml, their default values,
-# and concise explanations. Values here mirror the effective defaults compiled
-# into the CLI. Adjust as needed.
-#
-# Notes
-# - Root keys must appear before tables in TOML.
-# - Optional keys that default to "unset" are shown commented out with notes.
-# - MCP servers, profiles, and model providers are examples; remove or edit.
-
-################################################################################
-# Core Model Selection
-################################################################################
-
-# Primary model used by Codex. Default: "gpt-5.1-codex-max" on all platforms.
-model = "gpt-5.1-codex-max"
-
-# Model used by the /review feature (code reviews). Default: "gpt-5.1-codex-max".
-review_model = "gpt-5.1-codex-max"
-
-# Provider id selected from [model_providers]. Default: "openai".
-model_provider = "openai"
-
-# Optional manual model metadata. When unset, Codex auto-detects from model.
-# Uncomment to force values.
-# model_context_window = 128000       # tokens; default: auto for model
-# model_auto_compact_token_limit = 0  # disable/override auto; default: model family specific
-# tool_output_token_limit = 10000  # tokens stored per tool output; default: 10000 for gpt-5.1-codex-max
-
-################################################################################
-# Reasoning & Verbosity (Responses API capable models)
-################################################################################
-
-# Reasoning effort: minimal | low | medium | high | xhigh (default: medium; xhigh on gpt-5.1-codex-max and gpt-5.2)
-model_reasoning_effort = "medium"
-
-# Reasoning summary: auto | concise | detailed | none (default: auto)
-model_reasoning_summary = "auto"
-
-# Text verbosity for GPT-5 family (Responses API): low | medium | high (default: medium)
-model_verbosity = "medium"
-
-# Force-enable reasoning summaries for current model (default: false)
-model_supports_reasoning_summaries = false
-
-################################################################################
-# Instruction Overrides
-################################################################################
-
-# Additional user instructions inject before AGENTS.md. Default: unset.
-# developer_instructions = ""
-
-# (Ignored) Optional legacy base instructions override (prefer AGENTS.md). Default: unset.
-# instructions = ""
-
-# Inline override for the history compaction prompt. Default: unset.
-# compact_prompt = ""
-
-# Override built-in base instructions with a file path. Default: unset.
-# experimental_instructions_file = "/absolute/or/relative/path/to/instructions.txt"
-
-# Load the compact prompt override from a file. Default: unset.
-# experimental_compact_prompt_file = "/absolute/or/relative/path/to/compact_prompt.txt"
-
-################################################################################
-# Approval & Sandbox
-################################################################################
-
-# When to ask for command approval:
-# - untrusted: only known-safe read-only commands auto-run; others prompt
-# - on-failure: auto-run in sandbox; prompt only on failure for escalation
-# - on-request: model decides when to ask (default)
-# - never: never prompt (risky)
-approval_policy = "on-request"
-
-# Filesystem/network sandbox policy for tool calls:
-# - read-only (default)
-# - workspace-write
-# - danger-full-access (no sandbox; extremely risky)
-sandbox_mode = "read-only"
-
-# Extra settings used only when sandbox_mode = "workspace-write".
-[sandbox_workspace_write]
-# Additional writable roots beyond the workspace (cwd). Default: []
-writable_roots = []
-# Allow outbound network access inside the sandbox. Default: false
-network_access = false
-# Exclude $TMPDIR from writable roots. Default: false
-exclude_tmpdir_env_var = false
-# Exclude /tmp from writable roots. Default: false
-exclude_slash_tmp = false
-
-################################################################################
-# Shell Environment Policy for spawned processes
-################################################################################
-
-[shell_environment_policy]
-# inherit: all (default) | core | none
-inherit = "all"
-# Skip default excludes for names containing KEY/SECRET/TOKEN (case-insensitive). Default: true
-ignore_default_excludes = true
-# Case-insensitive glob patterns to remove (e.g., "AWS_*", "AZURE_*"). Default: []
-exclude = []
-# Explicit key/value overrides (always win). Default: {}
-set = {}
-# Whitelist; if non-empty, keep only matching vars. Default: []
-include_only = []
-# Experimental: run via user shell profile. Default: false
-experimental_use_profile = false
-
-################################################################################
-# History & File Opener
-################################################################################
-
-[history]
-# save-all (default) | none
-persistence = "save-all"
-# Maximum bytes for history file; oldest entries are trimmed when exceeded. Example: 5242880
-# max_bytes = 0
-
-# URI scheme for clickable citations: vscode (default) | vscode-insiders | windsurf | cursor | none
-file_opener = "vscode"
-
-################################################################################
-# UI, Notifications, and Misc
-################################################################################
-
-[tui]
-# Desktop notifications from the TUI: boolean or filtered list. Default: true
-# Examples: false | ["agent-turn-complete", "approval-requested"]
-notifications = false
-
-# Enables welcome/status/spinner animations. Default: true
-animations = true
-
-# Suppress internal reasoning events from output. Default: false
-hide_agent_reasoning = false
-
-# Show raw reasoning content when available. Default: false
-show_raw_agent_reasoning = false
-
-# Disable burst-paste detection in the TUI. Default: false
-disable_paste_burst = false
-
-# Track Windows onboarding acknowledgement (Windows only). Default: false
-windows_wsl_setup_acknowledged = false
-
-# External notifier program (argv array). When unset: disabled.
-# Example: notify = ["notify-send", "Codex"]
-# notify = [ ]
-
-# In-product notices (mostly set automatically by Codex).
-[notice]
-# hide_full_access_warning = true
-# hide_rate_limit_model_nudge = true
-
-################################################################################
-# Authentication & Login
-################################################################################
-
-# Where to persist CLI login credentials: file (default) | keyring | auto
-cli_auth_credentials_store = "file"
-
-# Base URL for ChatGPT auth flow (not OpenAI API). Default:
-chatgpt_base_url = "https://chatgpt.com/backend-api/"
-
-# Restrict ChatGPT login to a specific workspace id. Default: unset.
-# forced_chatgpt_workspace_id = ""
-
-# Force login mechanism when Codex would normally auto-select. Default: unset.
-# Allowed values: chatgpt | api
-# forced_login_method = "chatgpt"
-
-# Preferred store for MCP OAuth credentials: auto (default) | file | keyring
-mcp_oauth_credentials_store = "auto"
-
-################################################################################
-# Project Documentation Controls
-################################################################################
-
-# Max bytes from AGENTS.md to embed into first-turn instructions. Default: 32768
-project_doc_max_bytes = 32768
-
-# Ordered fallbacks when AGENTS.md is missing at a directory level. Default: []
-project_doc_fallback_filenames = []
-
-################################################################################
-# Tools (legacy toggles kept for compatibility)
-################################################################################
-
-[tools]
-# Enable web search tool (alias: web_search_request). Default: false
-web_search = false
-
-# Enable the view_image tool so the agent can attach local images. Default: true
-view_image = true
-
-# (Alias accepted) You can also write:
-# web_search_request = false
-
-################################################################################
-# Centralized Feature Flags (preferred)
-################################################################################
-
-[features]
-# Leave this table empty to accept defaults. Set explicit booleans to opt in/out.
-unified_exec = false
-apply_patch_freeform = false
-view_image_tool = true
-web_search_request = false
-enable_experimental_windows_sandbox = false
-skills = false
-
-################################################################################
-# Experimental toggles (legacy; prefer [features])
-################################################################################
-
-# Include apply_patch via freeform editing path (affects default tool set). Default: false
-experimental_use_freeform_apply_patch = false
-
-# Define MCP servers under this table. Leave empty to disable.
-[mcp_servers]
-
-# --- Example: STDIO transport ---
-# [mcp_servers.docs]
-# command = "docs-server"                 # required
-# args = ["--port", "4000"]               # optional
-# env = { "API_KEY" = "value" }           # optional key/value pairs copied as-is
-# env_vars = ["ANOTHER_SECRET"]            # optional: forward these from the parent env
-# cwd = "/path/to/server"                 # optional working directory override
-# startup_timeout_sec = 10.0               # optional; default 10.0 seconds
-# # startup_timeout_ms = 10000              # optional alias for startup timeout (milliseconds)
-# tool_timeout_sec = 60.0                  # optional; default 60.0 seconds
-# enabled_tools = ["search", "summarize"]  # optional allow-list
-# disabled_tools = ["slow-tool"]           # optional deny-list (applied after allow-list)
-
-# --- Example: Streamable HTTP transport ---
-# [mcp_servers.github]
-# url = "https://github-mcp.example.com/mcp"  # required
-# bearer_token_env_var = "GITHUB_TOKEN"        # optional; Authorization: Bearer <token>
-# http_headers = { "X-Example" = "value" }    # optional static headers
-# env_http_headers = { "X-Auth" = "AUTH_ENV" } # optional headers populated from env vars
-# startup_timeout_sec = 10.0                   # optional
-# tool_timeout_sec = 60.0                      # optional
-# enabled_tools = ["list_issues"]             # optional allow-list
-
-################################################################################
-# Model Providers (extend/override built-ins)
-################################################################################
-
-# Built-ins include:
-# - openai (Responses API; requires login or OPENAI_API_KEY via auth flow)
-# - oss (Chat Completions API; defaults to http://localhost:11434/v1)
-
-[model_providers]
-
-# --- Example: override OpenAI with explicit base URL or headers ---
-# [model_providers.openai]
-# name = "OpenAI"
-# base_url = "https://api.openai.com/v1"         # default if unset
-# wire_api = "responses"                         # "responses" | "chat" (default varies)
-# # requires_openai_auth = true                    # built-in OpenAI defaults to true
-# # request_max_retries = 4                        # default 4; max 100
-# # stream_max_retries = 5                         # default 5;  max 100
-# # stream_idle_timeout_ms = 300000                # default 300_000 (5m)
-# # experimental_bearer_token = "sk-example"      # optional dev-only direct bearer token
-# # http_headers = { "X-Example" = "value" }
-# # env_http_headers = { "OpenAI-Organization" = "OPENAI_ORGANIZATION", "OpenAI-Project" = "OPENAI_PROJECT" }
-
-# --- Example: Azure (Chat/Responses depending on endpoint) ---
-# [model_providers.azure]
-# name = "Azure"
-# base_url = "https://YOUR_PROJECT_NAME.openai.azure.com/openai"
-# wire_api = "responses"                          # or "chat" per endpoint
-# query_params = { api-version = "2025-04-01-preview" }
-# env_key = "AZURE_OPENAI_API_KEY"
-# # env_key_instructions = "Set AZURE_OPENAI_API_KEY in your environment"
-
-# --- Example: Local OSS (e.g., Ollama-compatible) ---
-# [model_providers.ollama]
-# name = "Ollama"
-# base_url = "http://localhost:11434/v1"
-# wire_api = "chat"
-
-################################################################################
-# Profiles (named presets)
-################################################################################
-
-# Active profile name. When unset, no profile is applied.
-# profile = "default"
-
-[profiles]
-
-# [profiles.default]
-# model = "gpt-5.1-codex-max"
-# model_provider = "openai"
-# approval_policy = "on-request"
-# sandbox_mode = "read-only"
-# model_reasoning_effort = "medium"
-# model_reasoning_summary = "auto"
-# model_verbosity = "medium"
-# chatgpt_base_url = "https://chatgpt.com/backend-api/"
-# experimental_compact_prompt_file = "./compact_prompt.txt"
-# include_apply_patch_tool = false
-# experimental_use_freeform_apply_patch = false
-# tools_web_search = false
-# tools_view_image = true
-# features = { unified_exec = false }
-
-################################################################################
-# Projects (trust levels)
-################################################################################
-
-# Mark specific worktrees as trusted. Only "trusted" is recognized.
-[projects]
-# [projects."/absolute/path/to/project"]
-# trust_level = "trusted"
-
-################################################################################
-# OpenTelemetry (OTEL) – disabled by default
-################################################################################
-
-[otel]
-# Include user prompt text in logs. Default: false
-log_user_prompt = false
-# Environment label applied to telemetry. Default: "dev"
-environment = "dev"
-# Exporter: none (default) | otlp-http | otlp-grpc
-exporter = "none"
-
-# Example OTLP/HTTP exporter configuration
-# [otel.exporter."otlp-http"]
-# endpoint = "https://otel.example.com/v1/logs"
-# protocol = "binary"                         # "binary" | "json"
-
-# [otel.exporter."otlp-http".headers]
-# "x-otlp-api-key" = "${OTLP_TOKEN}"
-
-# Example OTLP/gRPC exporter configuration
-# [otel.exporter."otlp-grpc"]
-# endpoint = "https://otel.example.com:4317",
-# headers = { "x-otlp-meta" = "abc123" }
-
-# Example OTLP exporter with mutual TLS
-# [otel.exporter."otlp-http"]
-# endpoint = "https://otel.example.com/v1/logs"
-# protocol = "binary"
-
-# [otel.exporter."otlp-http".headers]
-# "x-otlp-api-key" = "${OTLP_TOKEN}"
-
-# [otel.exporter."otlp-http".tls]
-# ca-certificate = "certs/otel-ca.pem"
-# client-certificate = "/etc/codex/certs/client.pem"
-# client-private-key = "/etc/codex/certs/client-key.pem"
-```
+For a sample configuration file, see [this documentation](https://developers.openai.com/codex/config-sample).
 
 
 ## Links discovered
-- [Configuration](https://github.com/openai/codex/blob/main/docs/config.md)
+- [this documentation](https://developers.openai.com/codex/config-sample)
 
---- docs/advanced.md ---
-## Advanced
+--- docs/agents_md.md ---
+# AGENTS.md
 
-If you already lean on Codex every day and just need a little more control, this page collects the knobs you are most likely to reach for: tweak defaults in [Config](./config.md), add extra tools through [Model Context Protocol support](#model-context-protocol), and script full runs with [`codex exec`](./exec.md). Jump to the section you need and keep building.
-
-## Config quickstart
-
-Most day-to-day tuning lives in `config.toml`: set approval + sandbox presets, pin model defaults, and add MCP server launchers. The [Config guide](./config.md) walks through every option and provides copy-paste examples for common setups.
-
-## Tracing / verbose logging
-
-Because Codex is written in Rust, it honors the `RUST_LOG` environment variable to configure its logging behavior.
-
-The TUI defaults to `RUST_LOG=codex_core=info,codex_tui=info,codex_rmcp_client=info` and log messages are written to `~/.codex/log/codex-tui.log`, so you can leave the following running in a separate terminal to monitor log messages as they are written:
-
-```bash
-tail -F ~/.codex/log/codex-tui.log
-```
-
-By comparison, the non-interactive mode (`codex exec`) defaults to `RUST_LOG=error`, but messages are printed inline, so there is no need to monitor a separate file.
-
-See the Rust documentation on [`RUST_LOG`](https://docs.rs/env_logger/latest/env_logger/#enabling-logging) for more information on the configuration options.
-
-## Model Context Protocol (MCP)
-
-The Codex CLI and IDE extension is a MCP client which means that it can be configured to connect to MCP servers. For more information, refer to the [`config docs`](./config.md#mcp-integration).
-
-## Using Codex as an MCP Server
-
-The Codex CLI can also be run as an MCP _server_ via `codex mcp-server`. For example, you can use `codex mcp-server` to make Codex available as a tool inside of a multi-agent framework like the OpenAI [Agents SDK](https://platform.openai.com/docs/guides/agents). Use `codex mcp` separately to add/list/get/remove MCP server launchers in your configuration.
-
-### Codex MCP Server Quickstart
-
-You can launch a Codex MCP server with the [Model Context Protocol Inspector](https://modelcontextprotocol.io/legacy/tools/inspector):
-
-```bash
-npx @modelcontextprotocol/inspector codex mcp-server
-```
-
-Send a `tools/list` request and you will see that there are two tools available:
-
-**`codex`** - Run a Codex session. Accepts configuration parameters matching the Codex Config struct. The `codex` tool takes the following properties:
-
-| Property                | Type   | Description                                                                                                                                            |
-| ----------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **`prompt`** (required) | string | The initial user prompt to start the Codex conversation.                                                                                               |
-| `approval-policy`       | string | Approval policy for shell commands generated by the model: `untrusted`, `on-failure`, `on-request`, `never`.                                           |
-| `base-instructions`     | string | The set of instructions to use instead of the default ones.                                                                                            |
-| `config`                | object | Individual [config settings](https://github.com/openai/codex/blob/main/docs/config.md#config) that will override what is in `$CODEX_HOME/config.toml`. |
-| `cwd`                   | string | Working directory for the session. If relative, resolved against the server process's current directory.                                               |
-| `model`                 | string | Optional override for the model name (e.g. `o3`, `o4-mini`).                                                                                           |
-| `profile`               | string | Configuration profile from `config.toml` to specify default options.                                                                                   |
-| `sandbox`               | string | Sandbox mode: `read-only`, `workspace-write`, or `danger-full-access`.                                                                                 |
-
-**`codex-reply`** - Continue a Codex session by providing the conversation id and prompt. The `codex-reply` tool takes the following properties:
-
-| Property                        | Type   | Description                                              |
-| ------------------------------- | ------ | -------------------------------------------------------- |
-| **`prompt`** (required)         | string | The next user prompt to continue the Codex conversation. |
-| **`conversationId`** (required) | string | The id of the conversation to continue.                  |
-
-### Trying it Out
-
-> [!TIP]
-> Codex often takes a few minutes to run. To accommodate this, adjust the MCP inspector's Request and Total timeouts to 600000ms (10 minutes) under ⛭ Configuration.
-
-Use the MCP inspector and `codex mcp-server` to build a simple tic-tac-toe game with the following settings:
-
-**approval-policy:** never
-
-**prompt:** Implement a simple tic-tac-toe game with HTML, JavaScript, and CSS. Write the game in a single file called index.html.
-
-**sandbox:** workspace-write
-
-Click "Run Tool" and you should see a list of events emitted from the Codex MCP server as it builds the game.
+For information about AGENTS.md, see [this documentation](https://developers.openai.com/codex/guides/agents-md).
 
 
 ## Links discovered
-- [Config](https://github.com/openai/codex/blob/main/docs/config.md)
-- [`codex exec`](https://github.com/openai/codex/blob/main/docs/exec.md)
-- [Config guide](https://github.com/openai/codex/blob/main/docs/config.md)
-- [`RUST_LOG`](https://docs.rs/env_logger/latest/env_logger/#enabling-logging)
-- [`config docs`](https://github.com/openai/codex/blob/main/docs/config.md#mcp-integration)
-- [Agents SDK](https://platform.openai.com/docs/guides/agents)
-- [Model Context Protocol Inspector](https://modelcontextprotocol.io/legacy/tools/inspector)
-- [config settings](https://github.com/openai/codex/blob/main/docs/config.md#config)
+- [this documentation](https://developers.openai.com/codex/guides/agents-md)
 
 --- codex-rs/codex-api/README.md ---
 # codex-api
@@ -2988,15 +2446,13 @@ If you encounter issues with pnpm, try the following solutions:
 
 --- README.md ---
 <p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask codex</code></p>
-
 <p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
-</br>
-</br>If you want Codex in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE</a>
-</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, go to <a href="https://chatgpt.com/codex">chatgpt.com/codex</a></p>
-
 <p align="center">
   <img src="./.github/codex-cli-splash.png" alt="Codex CLI splash" width="80%" />
-  </p>
+</p>
+</br>
+If you want Codex in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE.</a>
+</br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, go to <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
 
 ---
 
@@ -3004,25 +2460,19 @@ If you encounter issues with pnpm, try the following solutions:
 
 ### Installing and running Codex CLI
 
-Install globally with your preferred package manager. If you use npm:
+Install globally with your preferred package manager:
 
 ```shell
+# Install using npm
 npm install -g @openai/codex
 ```
 
-Alternatively, if you use Homebrew:
-
 ```shell
+# Install using Homebrew
 brew install --cask codex
 ```
 
-Then simply run `codex` to get started:
-
-```shell
-codex
-```
-
-If you're running into upgrade issues with Homebrew, see the [FAQ entry on brew upgrade codex](./docs/faq.md#brew-upgrade-codex-isnt-upgrading-me).
+Then simply run `codex` to get started.
 
 <details>
 <summary>You can also go to the <a href="https://github.com/openai/codex/releases/latest">latest GitHub Release</a> and download the appropriate binary for your platform.</summary>
@@ -3042,104 +2492,29 @@ Each archive contains a single entry with the platform baked into the name (e.g.
 
 ### Using Codex with your ChatGPT plan
 
-<p align="center">
-  <img src="./.github/codex-cli-login.png" alt="Codex CLI login" width="80%" />
-  </p>
-
 Run `codex` and select **Sign in with ChatGPT**. We recommend signing into your ChatGPT account to use Codex as part of your Plus, Pro, Team, Edu, or Enterprise plan. [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-codex-in-chatgpt).
 
-You can also use Codex with an API key, but this requires [additional setup](./docs/authentication.md#usage-based-billing-alternative-use-an-openai-api-key). If you previously used an API key for usage-based billing, see the [migration steps](./docs/authentication.md#migrating-from-usage-based-billing-api-key). If you're having trouble with login, please comment on [this issue](https://github.com/openai/codex/issues/1243).
+You can also use Codex with an API key, but this requires [additional setup](https://developers.openai.com/codex/auth#sign-in-with-an-api-key).
 
-### Model Context Protocol (MCP)
+## Docs
 
-Codex can access MCP servers. To configure them, refer to the [config docs](./docs/config.md#mcp_servers).
-
-### Configuration
-
-Codex CLI supports a rich set of configuration options, with preferences stored in `~/.codex/config.toml`. For full configuration options, see [Configuration](./docs/config.md).
-
-### Execpolicy
-
-See the [Execpolicy quickstart](./docs/execpolicy.md) to set up rules that govern what commands Codex can execute.
-
-### Docs & FAQ
-
-- [**Getting started**](./docs/getting-started.md)
-  - [CLI usage](./docs/getting-started.md#cli-usage)
-  - [Slash Commands](./docs/slash_commands.md)
-  - [Running with a prompt as input](./docs/getting-started.md#running-with-a-prompt-as-input)
-  - [Example prompts](./docs/getting-started.md#example-prompts)
-  - [Custom prompts](./docs/prompts.md)
-  - [Memory with AGENTS.md](./docs/getting-started.md#memory-with-agentsmd)
-- [**Configuration**](./docs/config.md)
-  - [Example config](./docs/example-config.md)
-- [**Sandbox & approvals**](./docs/sandbox.md)
-- [**Execpolicy quickstart**](./docs/execpolicy.md)
-- [**Authentication**](./docs/authentication.md)
-  - [Auth methods](./docs/authentication.md#forcing-a-specific-auth-method-advanced)
-  - [Login on a "Headless" machine](./docs/authentication.md#connecting-on-a-headless-machine)
-- **Automating Codex**
-  - [GitHub Action](https://github.com/openai/codex-action)
-  - [TypeScript SDK](./sdk/typescript/README.md)
-  - [Non-interactive mode (`codex exec`)](./docs/exec.md)
-- [**Advanced**](./docs/advanced.md)
-  - [Tracing / verbose logging](./docs/advanced.md#tracing--verbose-logging)
-  - [Model Context Protocol (MCP)](./docs/advanced.md#model-context-protocol-mcp)
-- [**Zero data retention (ZDR)**](./docs/zdr.md)
+- [**Codex Documentation**](https://developers.openai.com/codex)
 - [**Contributing**](./docs/contributing.md)
-- [**Install & build**](./docs/install.md)
-  - [System Requirements](./docs/install.md#system-requirements)
-  - [DotSlash](./docs/install.md#dotslash)
-  - [Build from source](./docs/install.md#build-from-source)
-- [**FAQ**](./docs/faq.md)
+- [**Installing & building**](./docs/install.md)
 - [**Open source fund**](./docs/open-source-fund.md)
-
----
-
-## License
 
 This repository is licensed under the [Apache-2.0 License](LICENSE).
 
 
 ## Links discovered
-- [FAQ entry on brew upgrade codex](https://github.com/openai/codex/blob/main/docs/faq.md#brew-upgrade-codex-isnt-upgrading-me)
 - [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-codex-in-chatgpt)
-- [additional setup](https://github.com/openai/codex/blob/main/docs/authentication.md#usage-based-billing-alternative-use-an-openai-api-key)
-- [migration steps](https://github.com/openai/codex/blob/main/docs/authentication.md#migrating-from-usage-based-billing-api-key)
-- [this issue](https://github.com/openai/codex/issues/1243)
-- [config docs](https://github.com/openai/codex/blob/main/docs/config.md#mcp_servers)
-- [Configuration](https://github.com/openai/codex/blob/main/docs/config.md)
-- [Execpolicy quickstart](https://github.com/openai/codex/blob/main/docs/execpolicy.md)
-- [**Getting started**](https://github.com/openai/codex/blob/main/docs/getting-started.md)
-- [CLI usage](https://github.com/openai/codex/blob/main/docs/getting-started.md#cli-usage)
-- [Slash Commands](https://github.com/openai/codex/blob/main/docs/slash_commands.md)
-- [Running with a prompt as input](https://github.com/openai/codex/blob/main/docs/getting-started.md#running-with-a-prompt-as-input)
-- [Example prompts](https://github.com/openai/codex/blob/main/docs/getting-started.md#example-prompts)
-- [Custom prompts](https://github.com/openai/codex/blob/main/docs/prompts.md)
-- [Memory with AGENTS.md](https://github.com/openai/codex/blob/main/docs/getting-started.md#memory-with-agentsmd)
-- [**Configuration**](https://github.com/openai/codex/blob/main/docs/config.md)
-- [Example config](https://github.com/openai/codex/blob/main/docs/example-config.md)
-- [**Sandbox & approvals**](https://github.com/openai/codex/blob/main/docs/sandbox.md)
-- [**Execpolicy quickstart**](https://github.com/openai/codex/blob/main/docs/execpolicy.md)
-- [**Authentication**](https://github.com/openai/codex/blob/main/docs/authentication.md)
-- [Auth methods](https://github.com/openai/codex/blob/main/docs/authentication.md#forcing-a-specific-auth-method-advanced)
-- [Login on a "Headless" machine](https://github.com/openai/codex/blob/main/docs/authentication.md#connecting-on-a-headless-machine)
-- [GitHub Action](https://github.com/openai/codex-action)
-- [TypeScript SDK](https://github.com/openai/codex/blob/main/sdk/typescript/README.md)
-- [Non-interactive mode (`codex exec`)](https://github.com/openai/codex/blob/main/docs/exec.md)
-- [**Advanced**](https://github.com/openai/codex/blob/main/docs/advanced.md)
-- [Tracing / verbose logging](https://github.com/openai/codex/blob/main/docs/advanced.md#tracing--verbose-logging)
-- [Model Context Protocol (MCP)](https://github.com/openai/codex/blob/main/docs/advanced.md#model-context-protocol-mcp)
-- [**Zero data retention (ZDR)**](https://github.com/openai/codex/blob/main/docs/zdr.md)
-- [**Contributing**](https://github.com/openai/codex/blob/main/docs/contributing.md)
-- [**Install & build**](https://github.com/openai/codex/blob/main/docs/install.md)
-- [System Requirements](https://github.com/openai/codex/blob/main/docs/install.md#system-requirements)
-- [DotSlash](https://github.com/openai/codex/blob/main/docs/install.md#dotslash)
-- [Build from source](https://github.com/openai/codex/blob/main/docs/install.md#build-from-source)
-- [**FAQ**](https://github.com/openai/codex/blob/main/docs/faq.md)
-- [**Open source fund**](https://github.com/openai/codex/blob/main/docs/open-source-fund.md)
-- [Apache-2.0 License](https://github.com/openai/codex/blob/main/LICENSE.md)
-- [install in your IDE](https://developers.openai.com/codex/ide)
+- [additional setup](https://developers.openai.com/codex/auth#sign-in-with-an-api-key)
+- [**Codex Documentation**](https://developers.openai.com/codex)
+- [**Contributing**](https://raw.githubusercontent.com/openai/codex/main/docs/contributing.md)
+- [**Installing & building**](https://raw.githubusercontent.com/openai/codex/main/docs/install.md)
+- [**Open source fund**](https://raw.githubusercontent.com/openai/codex/main/docs/open-source-fund.md)
+- [Apache-2.0 License](https://raw.githubusercontent.com/openai/codex/main/LICENSE.md)
+- [install in your IDE.](https://developers.openai.com/codex/ide)
 - [chatgpt.com/codex](https://chatgpt.com/codex)
 - [latest GitHub Release](https://github.com/openai/codex/releases/latest)
 
@@ -4119,8 +3494,8 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 
 ## Links discovered
 - [README in the root of the Codex repository](https://github.com/openai/codex/blob/main/README.md)
-- [Codex demo GIF using: codex "explain this codebase to me"](https://github.com/openai/codex/blob/main/.github/demo.gif)
-- [`run_in_container.sh`](https://github.com/openai/codex/blob/main/codex-cli/scripts/run_in_container.sh)
+- [Codex demo GIF using: codex "explain this codebase to me"](https://raw.githubusercontent.com/openai/codex/main/.github/demo.gif)
+- [`run_in_container.sh`](https://raw.githubusercontent.com/openai/codex/main/codex-cli/scripts/run_in_container.sh)
 - [prompting guide](https://github.com/openai/codex/blob/main/codex-cli/examples/prompting_guide.md)
 - [Responses API](https://platform.openai.com/docs/api-reference/responses)
 - [API account needs to be verified](https://help.openai.com/en/articles/10910291-api-organization-verification)
@@ -4128,9 +3503,9 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 - [Zero Data Retention (ZDR)](https://platform.openai.com/docs/guides/your-data#zero-data-retention)
 - [Apply here](https://openai.com/form/codex-open-source-fund/)
 - [Husky](https://typicode.github.io/husky/)
-- [HUSKY.md](https://github.com/openai/codex/blob/main/codex-cli/HUSKY.md)
+- [HUSKY.md](https://raw.githubusercontent.com/openai/codex/main/codex-cli/HUSKY.md)
 - [Contributor Covenant](https://www.contributor-covenant.org/)
-- [Apache-2.0 License](https://github.com/openai/codex/blob/main/codex-cli/LICENSE.md)
+- [Apache-2.0 License](https://raw.githubusercontent.com/openai/codex/main/codex-cli/LICENSE.md)
 
 --- codex-cli/scripts/README.md ---
 # npm releases
@@ -4676,8 +4051,8 @@ You can also install via Homebrew (`brew install --cask codex`) or download a pl
 
 ## Documentation quickstart
 
-- First run with Codex? Follow the walkthrough in [`docs/getting-started.md`](../docs/getting-started.md) for prompts, keyboard shortcuts, and session management.
-- Already shipping with Codex and want deeper control? Jump to [`docs/advanced.md`](../docs/advanced.md) and the configuration reference at [`docs/config.md`](../docs/config.md).
+- First run with Codex? Start with [`docs/getting-started.md`](../docs/getting-started.md) (links to the walkthrough for prompts, keyboard shortcuts, and session management).
+- Want deeper control? See [`docs/config.md`](../docs/config.md) and [`docs/install.md`](../docs/install.md).
 
 ## What's new in the Rust CLI
 
@@ -4691,7 +4066,7 @@ Codex supports a rich set of configuration options. Note that the Rust CLI uses 
 
 #### MCP client
 
-Codex CLI functions as an MCP client that allows the Codex CLI and IDE extension to connect to MCP servers on startup. See the [`configuration documentation`](../docs/config.md#mcp_servers) for details.
+Codex CLI functions as an MCP client that allows the Codex CLI and IDE extension to connect to MCP servers on startup. See the [`configuration documentation`](../docs/config.md#connecting-to-mcp-servers) for details.
 
 #### MCP server (experimental)
 
@@ -4761,18 +4136,18 @@ This folder is the root of a Cargo workspace. It contains quite a bit of experim
 
 ## Links discovered
 - [GitHub Releases](https://github.com/openai/codex/releases)
-- [`docs/getting-started.md`](https://github.com/openai/codex/blob/main/docs/getting-started.md)
-- [`docs/advanced.md`](https://github.com/openai/codex/blob/main/docs/advanced.md)
-- [`docs/config.md`](https://github.com/openai/codex/blob/main/docs/config.md)
-- [`configuration documentation`](https://github.com/openai/codex/blob/main/docs/config.md#mcp_servers)
+- [`docs/getting-started.md`](https://raw.githubusercontent.com/openai/codex/main/docs/getting-started.md)
+- [`docs/config.md`](https://raw.githubusercontent.com/openai/codex/main/docs/config.md)
+- [`docs/install.md`](https://raw.githubusercontent.com/openai/codex/main/docs/install.md)
+- [`configuration documentation`](https://raw.githubusercontent.com/openai/codex/main/docs/config.md#connecting-to-mcp-servers)
 - [`@modelcontextprotocol/inspector`](https://github.com/modelcontextprotocol/inspector)
-- [notify documentation](https://github.com/openai/codex/blob/main/docs/config.md#notify)
+- [notify documentation](https://raw.githubusercontent.com/openai/codex/main/docs/config.md#notify)
 - [terminal-notifier](https://github.com/julienXX/terminal-notifier)
-- [`core/`](https://github.com/openai/codex/blob/main/codex-rs/core.md)
-- [`exec/`](https://github.com/openai/codex/blob/main/codex-rs/exec.md)
-- [`tui/`](https://github.com/openai/codex/blob/main/codex-rs/tui.md)
+- [`core/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/core.md)
+- [`exec/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/exec.md)
+- [`tui/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/tui.md)
 - [Ratatui](https://ratatui.rs/)
-- [`cli/`](https://github.com/openai/codex/blob/main/codex-rs/cli.md)
+- [`cli/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/cli.md)
 
 --- codex-rs/ansi-escape/README.md ---
 # oai-codex-ansi-escape
@@ -4962,7 +4337,7 @@ Turns attach user input (text or images) to a thread and trigger Codex generatio
 - `{"type":"image","url":"https://…png"}`
 - `{"type":"localImage","path":"/tmp/screenshot.png"}`
 
-You can optionally specify config overrides on the new turn. If specified, these settings become the default for subsequent turns on the same thread.
+You can optionally specify config overrides on the new turn. If specified, these settings become the default for subsequent turns on the same thread. `outputSchema` applies only to the current turn.
 
 ```json
 { "method": "turn/start", "id": 30, "params": {
@@ -4978,7 +4353,14 @@ You can optionally specify config overrides on the new turn. If specified, these
     },
     "model": "gpt-5.1-codex",
     "effort": "medium",
-    "summary": "concise"
+    "summary": "concise",
+    // Optional JSON Schema to constrain the final assistant message for this turn.
+    "outputSchema": {
+        "type": "object",
+        "properties": { "answer": { "type": "string" } },
+        "required": ["answer"],
+        "additionalProperties": false
+    }
 } }
 { "id": 30, "result": { "turn": {
     "id": "turn_456",
@@ -5571,10 +4953,10 @@ cargo run -p codex-execpolicy-legacy -- check applied deploy | jq
 
 ## Links discovered
 - [`execv(3)`](https://linux.die.net/man/3/execv)
-- [`default.policy`](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/src/default.policy)
+- [`default.policy`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/execpolicy-legacy/src/default.policy)
 - [Starlark](https://bazel.build/rules/language)
 - [`starlark-rust`](https://github.com/facebook/starlark-rust)
-- [via unit tests](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/tests.md)
+- [via unit tests](https://raw.githubusercontent.com/openai/codex/main/codex-rs/execpolicy-legacy/tests.md)
 
 --- scripts/readme_toc.py ---
 #!/usr/bin/env python3

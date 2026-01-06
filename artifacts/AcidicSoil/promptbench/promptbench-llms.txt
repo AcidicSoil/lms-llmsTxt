@@ -1,0 +1,95 @@
+# Promptbench
+
+> The primary purpose of prompt-bench is to provide a standardized, repeatable framework for evaluating and comparing the performance of different prompt compositions across multiple AI model providers. It supports recursive prompt fusion, configurable composition modes (engine, marker, append), multi-provider execution, and detailed artifact capture for debugging and analysis. The project also includes a TUI for interactive exploration and configuration, making it accessible for both developers and researchers evaluating prompt engineering strategies.
+
+**Remember:**
+- Triple-Layer Recursive Fusion
+- System Template (House)
+- Influence Skill (Primary)
+- Target Payload (Secondary)
+- Composition Modes: engine, marker, append
+- Multi-Provider Support: LM Studio, Codex CLI, Gemini CLI
+
+## Docs
+- [Oracle Pack 2026 01 05](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-pack-2026-01-05.md): docs page.
+- [Oracle Pack 2026 01 04](https://github.com/AcidicSoil/promptbench/blob/main/docs/oraclepacks/oracle-pack-2026-01-04.md): docs page.
+- [Prompt Bench Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/prompt-bench_PRD.md): docs page.
+- [Promptbench Tui.Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/promptbench-tui.prd.md): docs page.
+
+## Tutorials
+- [Expected Output](https://github.com/AcidicSoil/promptbench/blob/main/examples/expected-output.md): worked example.
+- [User Input](https://github.com/AcidicSoil/promptbench/blob/main/examples/user-input.md): worked example.
+- [Example Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/templates/example_prd.txt): worked example.
+- [Example Prd Rpg](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/templates/example_prd_rpg.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/composed_system.txt): worked example.
+- [Output](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/output.txt): worked example.
+
+## Optional
+- [README](https://github.com/AcidicSoil/promptbench/blob/main/README.md): docs page.
+- [Skill Context Router](https://github.com/AcidicSoil/promptbench/blob/main/scripts/skill_context_router.py): docs page.
+
+## .Taskmaster
+- [Agents](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/AGENTS.md): docs page.
+- [Tm Command Pipelines](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/artifacts/tm-command-pipelines.md): docs page.
+
+## Oracle Out
+- [01 Contracts Load Config](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/01-contracts-load-config.md): docs page.
+- [01 Invariants Compose Engine Style](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/01-invariants-compose-engine-style.md): docs page.
+- [02 Contracts Provider Adapter Run](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/02-contracts-provider-adapter-run.md): docs page.
+- [02 Observability Summary Json](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/02-observability-summary-json.md): docs page.
+- [03 Failure Modes Lmstudio Run](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/03-failure-modes-lmstudio-run.md): docs page.
+- [03 Ux Flows Cli Feedback](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/03-ux-flows-cli-feedback.md): docs page.
+- [04 Contracts Provider Adapter](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/04-contracts-provider-adapter.md): docs page.
+- [04 Invariants Build Jobs](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/04-invariants-build-jobs.md): docs page.
+- [05 Caching State Artifacts](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/05-caching-state-artifacts.md): docs page.
+- [05 Invariants Compose Engine](https://github.com/AcidicSoil/promptbench/blob/main/oracle-out/05-invariants-compose-engine.md): docs page.
+
+## Payloads
+- [Haiku](https://github.com/AcidicSoil/promptbench/blob/main/payloads/haiku.md): docs page.
+- [Transcript Cleaner V2](https://github.com/AcidicSoil/promptbench/blob/main/payloads/transcript-cleaner_v2.md): docs page.
+
+## Promptbench
+- [Cli](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/cli.py): docs page.
+- [Init](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/__init__.py): docs page.
+- [Main](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/__main__.py): docs page.
+- [Base](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/providers/base.py): docs page.
+- [Codex Cli](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/providers/codex_cli.py): docs page.
+- [Compose](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/compose.py): docs page.
+- [Config](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/config.py): docs page.
+- [Constants](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/constants.py): docs page.
+- [Contract](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/contract.py): docs page.
+- [Discovery](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/discovery.py): docs page.
+
+## Skills
+- [Context Artifact Generator](https://github.com/AcidicSoil/promptbench/blob/main/skills/context-artifact-generator.md): docs page.
+- [Gemini Cli Command Template Generator](https://github.com/AcidicSoil/promptbench/blob/main/skills/gemini-cli-command-template-generator.md): docs page.
+- [Oracle Pack Rpg Infused](https://github.com/AcidicSoil/promptbench/blob/main/skills/oracle-pack-RPG-infused.md): docs page.
+- [Prompt Optimization Specialist](https://github.com/AcidicSoil/promptbench/blob/main/skills/prompt-optimization-specialist.md): docs page.
+- [Skill Creator](https://github.com/AcidicSoil/promptbench/blob/main/skills/skill-creator.md): docs page.
+- [Token Shorterner](https://github.com/AcidicSoil/promptbench/blob/main/skills/token-shorterner.md): docs page.
+- [When To Use This Skill](https://github.com/AcidicSoil/promptbench/blob/main/skills/when-to-use-this-skill.md): docs page.
+
+## Templates
+- [Creative Writer](https://github.com/AcidicSoil/promptbench/blob/main/templates/creative_writer.md): docs page.
+- [Prompt Composition Engine](https://github.com/AcidicSoil/promptbench/blob/main/templates/prompt-composition-engine.md): docs page.
+- [Prompt Composition Engine V3](https://github.com/AcidicSoil/promptbench/blob/main/templates/prompt-composition-engine_v3.md): docs page.
+
+## Tests
+- [Test Artifacts](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_artifacts.py): docs page.
+- [Test Artifacts Concurrency](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_artifacts_concurrency.py): docs page.
+- [Test Cli](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_cli.py): docs page.
+- [Test Cli Providers](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_cli_providers.py): docs page.
+- [Test Compose](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_compose.py): docs page.
+- [Test Config](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_config.py): docs page.
+- [Test Contract](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_contract.py): docs page.
+- [Test Core](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_core.py): docs page.
+- [Test Engine Composition](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_engine_composition.py): docs page.
+- [Test Eventing Executor](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_eventing_executor.py): docs page.
+
+## Tickets
+- [Lm Studio Model Selection](https://github.com/AcidicSoil/promptbench/blob/main/tickets/LM-Studio-Model-Selection.md): docs page.
+- [Lm Studio Sampling Params](https://github.com/AcidicSoil/promptbench/blob/main/tickets/LM Studio Sampling Params.md): docs page.
+- [Lmstudioadapter Enhancement](https://github.com/AcidicSoil/promptbench/blob/main/tickets/LMStudioAdapter Enhancement.md): docs page.
+- [Opt In Multi Stage Pipeline Abstraction](https://github.com/AcidicSoil/promptbench/blob/main/tickets/opt-in-multi-stage-pipeline-abstraction.md): docs page.
+- [Prompt Bench Pipeline Enhancement](https://github.com/AcidicSoil/promptbench/blob/main/tickets/Prompt-Bench Pipeline Enhancement.md): docs page.
+- [Web Search For Promptbench Skills](https://github.com/AcidicSoil/promptbench/blob/main/tickets/Web-search for promptbench skills.md): docs page.
