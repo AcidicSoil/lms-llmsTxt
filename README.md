@@ -3,19 +3,14 @@ title: "LM Studio llms.txt Generator"
 description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
 ---
 
-[![PyPI](https://img.shields.io/pypi/v/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/)
-[![Downloads](https://img.shields.io/pypi/dm/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/)
-[![TestPyPI](https://img.shields.io/badge/TestPyPI-lms--llmsTxt-informational)](https://test.pypi.org/project/lms-llmsTxt/)
-[![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml)
-[![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms--llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
+[![PyPI](https://img.shields.io/pypi/v/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/) [![Downloads](https://img.shields.io/pypi/dm/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/) [![TestPyPI](https://img.shields.io/badge/TestPyPI-lms--llmsTxt-informational)](https://test.pypi.org/project/lms-llmsTxt/) [![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml) [![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms--llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
 
 ## Overview
 
 Use this CLI-first toolkit to produce LLM-friendly documentation bundles (`llms.txt`, `llms-full.txt`, optional `llms-ctx.txt`, and fallback JSON) for any GitHub repository. The generator wraps DSPy analyzers, manages LM Studio model lifecycle with the official Python SDK, and guarantees output even when the primary language model cannot respond.
 
-<Info>
-The pipeline validates curated links, detects default branches automatically, and writes artifacts to `artifacts/<owner>/<repo>/`.
-</Info>
+> [!NOTE]
+> The pipeline validates curated links, detects default branches automatically, and writes artifacts to `artifacts/<owner>/<repo>/`.
 
 ## Prerequisites
 
@@ -24,45 +19,43 @@ The pipeline validates curated links, detects default branches automatically, an
 - GitHub API token in `GITHUB_ACCESS_TOKEN` or `GH_TOKEN`
 - Optional: [`llms_txt`](https://pypi.org/project/llms-txt/) when you want to produce `llms-ctx.txt`
 
-<Warning>
-Install dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
-</Warning>
+> [!WARNING]
+> Install dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
 
 ## Install
 
-<Steps>
-  <Step title="Create a virtual environment">
-    ```bash
-    python3 -m venv .venv
-    source .venv/bin/activate
-    ```
-  </Step>
-  <Step title="Install the package with developer extras">
-    ```bash
-    pip install -e .[dev]
-    ```
-    Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` server.
-  </Step>
-</Steps>
+### Create a virtual environment
 
-<Tip>
-Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
-</Tip>
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+### Install the package with developer extras
+
+```bash
+pip install -e '.[dev]'
+```
+
+Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` server.
+
+> [!TIP]
+> Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
 
 ## Configure LM Studio
 
-<Steps>
-  <Step title="Load the CLI">
-    ```bash
-    npx lmstudio install-cli
-    lms server start --port 1234
-    ```
-    The server must expose an OpenAI-compatible endpoint, commonly `http://localhost:1234/v1`.
-  </Step>
-  <Step title="Ensure the target model is downloaded">
-    Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
-  </Step>
-</Steps>
+### Load the CLI and start the server
+
+```bash
+npx lmstudio install-cli
+lms server start --port 1234
+```
+
+The server must expose an OpenAI-compatible endpoint, commonly `http://localhost:1234/v1`.
+
+### Ensure the target model is downloaded
+
+Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
 
 ## Quick start
 
@@ -96,9 +89,8 @@ The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to o
 | `*-llms.json` | Fallback JSON following `LLMS_JSON_SCHEMA` (only when LM fallback triggers) |
 | `*-llms-ctx.txt` | Optional context file created when `ENABLE_CTX=1` and `llms_txt` is installed |
 
-<Check>
-The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
-</Check>
+> [!IMPORTANT]
+> The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
 
 ## Model Context Protocol (MCP) Server
 
@@ -184,13 +176,11 @@ All tests should pass, confirming URL validation, fallback handling, and MCP res
 
 ## Troubleshooting
 
-<Warning>
-If `pip install -e .[dev]` fails with build tool errors, ensure `cmake` and necessary compilers are installed.
-</Warning>
+> [!WARNING]
+> If `pip install -e .[dev]` fails with build tool errors, ensure `cmake` and necessary compilers are installed.
 
-<Tip>
-If the MCP server times out during generation, check `lmstxt_list_runs` to see if the background task is still processing. The `lmstxt_generate_*` tools return immediately to avoid client timeouts.
-</Tip>
+> [!TIP]
+> If the MCP server times out during generation, check `lmstxt_list_runs` to see if the background task is still processing. The `lmstxt_generate_*` tools return immediately to avoid client timeouts.
 
 ### MCP Inspector
 
