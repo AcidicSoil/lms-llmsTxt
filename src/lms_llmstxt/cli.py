@@ -10,7 +10,7 @@ from .pipeline import run_generation
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="lmstudio-llmstxt",
+        prog="llmstxt",
         description="Generate llms.txt artifacts for a GitHub repository using LM Studio.",
     )
     parser.add_argument("repo", help="GitHub repository URL (https://github.com/<owner>/<repo>)")

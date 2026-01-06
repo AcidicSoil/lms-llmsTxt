@@ -1,9 +1,9 @@
 import pytest
 from pathlib import Path
-from llmstxt_mcp.security import validate_output_dir
-from llmstxt_mcp.hashing import sha256_file, read_text_preview
-from llmstxt_mcp.errors import OutputDirNotAllowedError
-from llmstxt_mcp.config import settings
+from lms_llmstxt_mcp.security import validate_output_dir
+from lms_llmstxt_mcp.hashing import sha256_file, read_text_preview
+from lms_llmstxt_mcp.errors import OutputDirNotAllowedError
+from lms_llmstxt_mcp.config import settings
 
 def test_validate_output_dir(tmp_path):
     # Override settings to use tmp_path as the allowed root

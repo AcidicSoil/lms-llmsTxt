@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 _URL_VALIDATION_TIMEOUT = 5
 _URL_SESSION = requests.Session()
-_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
+_URL_HEADERS = {"User-Agent": "lms-llmstxt"}
 
 
 def _nicify_title(path: str) -> str:

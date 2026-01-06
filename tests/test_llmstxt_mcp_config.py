@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 import pytest
-from llmstxt_mcp.config import Settings
-from llmstxt_mcp.errors import OutputDirNotAllowedError, LMStudioUnavailableError
+from lms_llmstxt_mcp.config import Settings
+from lms_llmstxt_mcp.errors import OutputDirNotAllowedError, LMStudioUnavailableError
 
 def test_config_defaults():
     # Ensure env vars don't interfere if they happen to be set

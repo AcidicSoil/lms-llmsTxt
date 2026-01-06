@@ -37,8 +37,8 @@
         "id": 2,
         "title": "Configure Setuptools for src Layout Discovery",
         "description": "Explicitly configure package discovery in pyproject.toml to ensure code under `src/` is correctly included in the built wheel.",
-        "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `lmstxt = \"lmstudiotxt_generator.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
-        "testStrategy": "Run `uv build`. Inspect the generated wheel content (using `unzip -l dist/*.whl`) to verify `lmstudiotxt_generator` directory exists in the root of the wheel.",
+        "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `llmstxt = \"lms_lllmstxt.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
+        "testStrategy": "Run `uv build`. Inspect the generated wheel content (using `unzip -l dist/*.whl`) to verify `lms_lllmstxt` directory exists in the root of the wheel.",
         "priority": "high",
         "dependencies": [
           1
@@ -50,7 +50,7 @@
             "title": "Analyze Project Structure and Current Configuration",
             "description": "Inspect the file system to verify the 'src' directory existence and read the current 'pyproject.toml' to assess existing build settings.",
             "dependencies": [],
-            "details": "Use glob/ls to confirm `src/lmstudiotxt_generator` (or similar) exists. Read `pyproject.toml` to identify the current `[build-system]` and any existing `[tool.setuptools]` configuration to determine the necessary changes.",
+            "details": "Use glob/ls to confirm `src/lms_lllmstxt` (or similar) exists. Read `pyproject.toml` to identify the current `[build-system]` and any existing `[tool.setuptools]` configuration to determine the necessary changes.",
             "status": "pending",
             "testStrategy": null
           },
@@ -83,9 +83,9 @@
             "dependencies": [
               3
             ],
-            "details": "Check `[project.scripts]`. Ensure the command (e.g., `lmstxt`) maps to the correct module path, likely `lmstudiotxt_generator.cli:main` or similar. If the package name changed or moved to src, ensure the import path is valid.",
+            "details": "Check `[project.scripts]`. Ensure the command (e.g., `llmstxt`) maps to the correct module path, likely `lms_lllmstxt.cli:main` or similar. If the package name changed or moved to src, ensure the import path is valid.",
             "status": "pending",
-            "testStrategy": "Run `pip install -e .` and check if the `lmstxt` command is available and executable."
+            "testStrategy": "Run `pip install -e .` and check if the `llmstxt` command is available and executable."
           },
           {
             "id": 5,
@@ -94,7 +94,7 @@
             "dependencies": [
               4
             ],
-            "details": "Run `uv build`. Use `unzip -l dist/*.whl` to list the files. Confirm that the top-level directory in the wheel is the package folder (e.g., `lmstudiotxt_generator/`), NOT `src/lmstudiotxt_generator/` and NOT containing extraneous root files.",
+            "details": "Run `uv build`. Use `unzip -l dist/*.whl` to list the files. Confirm that the top-level directory in the wheel is the package folder (e.g., `lms_lllmstxt/`), NOT `src/lms_lllmstxt/` and NOT containing extraneous root files.",
             "status": "pending",
             "testStrategy": "Automated script or manual check using unzip/tar to validate file hierarchy inside the artifact."
           }
@@ -172,7 +172,7 @@
         "id": 4,
         "title": "Create Smoke Test Suite for Artifacts",
         "description": "Develop a smoke test script that installs built artifacts (wheel/sdist) and verifies the CLI runs.",
-        "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `lmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `lmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
+        "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `llmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `llmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
         "testStrategy": "Run `pytest tests/smoke_test.py` (or execute directly `python tests/smoke_test.py`) after running `uv build`. It should pass only if artifacts are valid.",
         "priority": "high",
         "dependencies": [
@@ -196,7 +196,7 @@
             "dependencies": [
               1
             ],
-            "details": "In `tests/smoke_test.py`, implement `test_wheel_install()` and `test_sdist_install()`. The logic must: 1. Locate the `.whl` and `.tar.gz` files in `dist/`. 2. Invoke the venv helper. 3. Install the artifact into the venv. 4. Execute `lmstxt --help` and assert exit code 0. Add a `if __name__ == '__main__':` block to run these tests.",
+            "details": "In `tests/smoke_test.py`, implement `test_wheel_install()` and `test_sdist_install()`. The logic must: 1. Locate the `.whl` and `.tar.gz` files in `dist/`. 2. Invoke the venv helper. 3. Install the artifact into the venv. 4. Execute `llmstxt --help` and assert exit code 0. Add a `if __name__ == '__main__':` block to run these tests.",
             "status": "pending",
             "testStrategy": "Run `uv build` to generate artifacts, then execute `python tests/smoke_test.py`. Expect success output for both installation types."
           }
@@ -241,7 +241,7 @@
             "dependencies": [
               2
             ],
-            "details": "Add a step after the build process but before publishing. This step should create a fresh virtual environment using `uv venv`, install the built wheel from `dist/` (e.g., `uv pip install dist/*.whl`), and run the basic CLI command or import test defined in Task 4 (e.g., `lmstxt --help` or a specific script).",
+            "details": "Add a step after the build process but before publishing. This step should create a fresh virtual environment using `uv venv`, install the built wheel from `dist/` (e.g., `uv pip install dist/*.whl`), and run the basic CLI command or import test defined in Task 4 (e.g., `llmstxt --help` or a specific script).",
             "status": "pending",
             "testStrategy": "Workflow fails if the smoke test command returns a non-zero exit code."
           },
@@ -273,7 +273,7 @@
         "id": 6,
         "title": "Configure PyPI Trusted Publishing Workflow",
         "description": "Update the release workflow to use OIDC for Trusted Publishing to PyPI on tag push.",
-        "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-llmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
+        "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-lllmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
         "testStrategy": "Review workflow syntax using a linter. Actual verification requires pushing a tag (or testing in a fork with TestPyPI configured as the trusted target).",
         "priority": "high",
         "dependencies": [
@@ -319,7 +319,7 @@
             "dependencies": [
               3
             ],
-            "details": "Add a 'publish' job that 'needs: smoke-test'. Define 'environment' with name 'pypi' and url 'https://pypi.org/p/lmstudio-llmstxt-generator'. Use 'pypa/gh-action-pypi-publish@release/v1' (recommended for Trusted Publishing) or 'uv publish --trusted-publishing' if supported. Do NOT use username/password secrets.",
+            "details": "Add a 'publish' job that 'needs: smoke-test'. Define 'environment' with name 'pypi' and url 'https://pypi.org/p/lmstudio-lllmstxt-generator'. Use 'pypa/gh-action-pypi-publish@release/v1' (recommended for Trusted Publishing) or 'uv publish --trusted-publishing' if supported. Do NOT use username/password secrets.",
             "status": "pending",
             "testStrategy": null
           },
@@ -512,7 +512,7 @@
             "dependencies": [
               2
             ],
-            "details": "Modify `src/lmstudiotxt_generator/__init__.py` (or equivalent top-level init) to use `importlib.metadata.version` to retrieve the installed package version dynamically, handling the `PackageNotFoundError` gracefully.",
+            "details": "Modify `src/lms_lllmstxt/__init__.py` (or equivalent top-level init) to use `importlib.metadata.version` to retrieve the installed package version dynamically, handling the `PackageNotFoundError` gracefully.",
             "status": "pending",
             "testStrategy": "Run a python script importing the package and printing `__version__`. It should match the installed version."
           },
@@ -544,7 +544,7 @@
         "id": 10,
         "title": "End-to-End Release Simulation",
         "description": "Perform a final validation of the entire pipeline using TestPyPI.",
-        "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-llmstxt-generator`.\n5. Verify `lmstxt --help` works.",
+        "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-lllmstxt-generator`.\n5. Verify `llmstxt --help` works.",
         "testStrategy": "Successful installation and execution from TestPyPI.",
         "priority": "medium",
         "dependencies": [
@@ -580,7 +580,7 @@
             "dependencies": [
               2
             ],
-            "details": "Visit the project URL on TestPyPI (e.g., `https://test.pypi.org/project/lmstudio-llmstxt-generator/`). Verify that the new version `0.0.1.dev1` is listed, the Release Date is current, and the `Description` (README) renders correctly.",
+            "details": "Visit the project URL on TestPyPI (e.g., `https://test.pypi.org/project/lmstudio-lllmstxt-generator/`). Verify that the new version `0.0.1.dev1` is listed, the Release Date is current, and the `Description` (README) renders correctly.",
             "status": "pending",
             "testStrategy": "Manual verification on the TestPyPI website."
           },
@@ -591,7 +591,7 @@
             "dependencies": [
               3
             ],
-            "details": "Create a new virtualenv: `python -m venv venv_test`. Activate it. Run `pip install --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ lmstudio-llmstxt-generator==0.0.1.dev1`. Note: `--extra-index-url` is often needed for dependencies that don't exist on TestPyPI.",
+            "details": "Create a new virtualenv: `python -m venv venv_test`. Activate it. Run `pip install --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ lmstudio-lllmstxt-generator==0.0.1.dev1`. Note: `--extra-index-url` is often needed for dependencies that don't exist on TestPyPI.",
             "status": "pending",
             "testStrategy": "Ensure pip completes successfully without errors regarding missing dependencies or hash mismatches."
           },
@@ -602,7 +602,7 @@
             "dependencies": [
               4
             ],
-            "details": "Inside the `venv_test`, run the command `lmstxt --help`. Verify that the help text is displayed, indicating that the entry point scripts were correctly generated and the internal imports are working.",
+            "details": "Inside the `venv_test`, run the command `llmstxt --help`. Verify that the help text is displayed, indicating that the entry point scripts were correctly generated and the internal imports are working.",
             "status": "pending",
             "testStrategy": "The command should exit with code 0 and display the standard help message, not an ImportError or ModuleNotFoundError."
           }
@@ -656,8 +656,8 @@
         "id": 2,
         "title": "Configure Setuptools for src Layout Discovery",
         "description": "Explicitly configure package discovery in pyproject.toml to ensure code under `src/` is correctly included in the built wheel.",
-        "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `lmstxt = \"lmstudiotxt_generator.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
-        "testStrategy": "Run `uv build`. Inspect the generated wheel content (using `unzip -l dist/*.whl`) to verify `lmstudiotxt_generator` directory exists in the root of the wheel.",
+        "details": "1. Edit `pyproject.toml`.\n2. Ensure `[tool.setuptools.packages.find]` is present.\n3. Set `where = [\"src\"]`.\n4. Verify `[project.scripts]` points to the correct module path (e.g., `llmstxt = \"lms_lllmstxt.cli:main\"`).\n5. Ensure `[build-system]` is correctly defined (usually `setuptools` and `wheel` or `hatchling` etc., stick to existing but ensure config matches layout).",
+        "testStrategy": "Run `uv build`. Inspect the generated wheel content (using `unzip -l dist/*.whl`) to verify `lms_lllmstxt` directory exists in the root of the wheel.",
         "priority": "high",
         "dependencies": [
           "1"
@@ -669,7 +669,7 @@
             "title": "Analyze Project Structure and Current Configuration",
             "description": "Inspect the file system to verify the 'src' directory existence and read the current 'pyproject.toml' to assess existing build settings.",
             "dependencies": [],
-            "details": "Use glob/ls to confirm `src/lmstudiotxt_generator` (or similar) exists. Read `pyproject.toml` to identify the current `[build-system]` and any existing `[tool.setuptools]` configuration to determine the necessary changes.",
+            "details": "Use glob/ls to confirm `src/lms_lllmstxt` (or similar) exists. Read `pyproject.toml` to identify the current `[build-system]` and any existing `[tool.setuptools]` configuration to determine the necessary changes.",
             "status": "pending",
             "testStrategy": null,
             "parentId": "undefined"
@@ -705,9 +705,9 @@
             "dependencies": [
               3
             ],
-            "details": "Check `[project.scripts]`. Ensure the command (e.g., `lmstxt`) maps to the correct module path, likely `lmstudiotxt_generator.cli:main` or similar. If the package name changed or moved to src, ensure the import path is valid.",
+            "details": "Check `[project.scripts]`. Ensure the command (e.g., `llmstxt`) maps to the correct module path, likely `lms_lllmstxt.cli:main` or similar. If the package name changed or moved to src, ensure the import path is valid.",
             "status": "pending",
-            "testStrategy": "Run `pip install -e .` and check if the `lmstxt` command is available and executable.",
+            "testStrategy": "Run `pip install -e .` and check if the `llmstxt` command is available and executable.",
             "parentId": "undefined"
           },
           {
@@ -717,7 +717,7 @@
             "dependencies": [
               4
             ],
-            "details": "Run `uv build`. Use `unzip -l dist/*.whl` to list the files. Confirm that the top-level directory in the wheel is the package folder (e.g., `lmstudiotxt_generator/`), NOT `src/lmstudiotxt_generator/` and NOT containing extraneous root files.",
+            "details": "Run `uv build`. Use `unzip -l dist/*.whl` to list the files. Confirm that the top-level directory in the wheel is the package folder (e.g., `lms_lllmstxt/`), NOT `src/lms_lllmstxt/` and NOT containing extraneous root files.",
             "status": "pending",
             "testStrategy": "Automated script or manual check using unzip/tar to validate file hierarchy inside the artifact.",
             "parentId": "undefined"
@@ -803,7 +803,7 @@
         "id": 4,
         "title": "Create Smoke Test Suite for Artifacts",
         "description": "Develop a smoke test script that installs built artifacts (wheel/sdist) and verifies the CLI runs.",
-        "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `lmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `lmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
+        "details": "1. Create `tests/smoke_test.py`.\n2. Implement `test_wheel_install()`: Creates a venv, installs the `.whl` from `dist/`, and runs `llmstxt --help`.\n3. Implement `test_sdist_install()`: Creates a venv, installs the `.tar.gz` from `dist/`, and runs `llmstxt --help`.\n4. Use `subprocess` to manage venv creation and command execution to ensure total isolation.",
         "testStrategy": "Run `pytest tests/smoke_test.py` (or execute directly `python tests/smoke_test.py`) after running `uv build`. It should pass only if artifacts are valid.",
         "priority": "high",
         "dependencies": [
@@ -828,7 +828,7 @@
             "dependencies": [
               1
             ],
-            "details": "In `tests/smoke_test.py`, implement `test_wheel_install()` and `test_sdist_install()`. The logic must: 1. Locate the `.whl` and `.tar.gz` files in `dist/`. 2. Invoke the venv helper. 3. Install the artifact into the venv. 4. Execute `lmstxt --help` and assert exit code 0. Add a `if __name__ == '__main__':` block to run these tests.",
+            "details": "In `tests/smoke_test.py`, implement `test_wheel_install()` and `test_sdist_install()`. The logic must: 1. Locate the `.whl` and `.tar.gz` files in `dist/`. 2. Invoke the venv helper. 3. Install the artifact into the venv. 4. Execute `llmstxt --help` and assert exit code 0. Add a `if __name__ == '__main__':` block to run these tests.",
             "status": "pending",
             "testStrategy": "Run `uv build` to generate artifacts, then execute `python tests/smoke_test.py`. Expect success output for both installation types.",
             "parentId": "undefined"
@@ -877,7 +877,7 @@
             "dependencies": [
               2
             ],
-            "details": "Add a step after the build process but before publishing. This step should create a fresh virtual environment using `uv venv`, install the built wheel from `dist/` (e.g., `uv pip install dist/*.whl`), and run the basic CLI command or import test defined in Task 4 (e.g., `lmstxt --help` or a specific script).",
+            "details": "Add a step after the build process but before publishing. This step should create a fresh virtual environment using `uv venv`, install the built wheel from `dist/` (e.g., `uv pip install dist/*.whl`), and run the basic CLI command or import test defined in Task 4 (e.g., `llmstxt --help` or a specific script).",
             "status": "pending",
             "testStrategy": "Workflow fails if the smoke test command returns a non-zero exit code.",
             "parentId": "undefined"
@@ -913,7 +913,7 @@
         "id": 6,
         "title": "Configure PyPI Trusted Publishing Workflow",
         "description": "Update the release workflow to use OIDC for Trusted Publishing to PyPI on tag push.",
-        "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-llmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
+        "details": "1. Edit `.github/workflows/release.yml`.\n2. Set permission `id-token: write`.\n3. Configure environment `name: pypi` and `url: https://pypi.org/p/lmstudio-lllmstxt-generator`.\n4. Update the publish step to use `uv publish --trusted-publishing` (or `gh-action-pypi-publish`).\n5. Ensure it triggers on `push: tags: [ 'v*' ]`.\n6. Integrate the smoke test step before the publish job.",
         "testStrategy": "Review workflow syntax using a linter. Actual verification requires pushing a tag (or testing in a fork with TestPyPI configured as the trusted target).",
         "priority": "high",
         "dependencies": [
@@ -962,7 +962,7 @@
             "dependencies": [
               3
             ],
-            "details": "Add a 'publish' job that 'needs: smoke-test'. Define 'environment' with name 'pypi' and url 'https://pypi.org/p/lmstudio-llmstxt-generator'. Use 'pypa/gh-action-pypi-publish@release/v1' (recommended for Trusted Publishing) or 'uv publish --trusted-publishing' if supported. Do NOT use username/password secrets.",
+            "details": "Add a 'publish' job that 'needs: smoke-test'. Define 'environment' with name 'pypi' and url 'https://pypi.org/p/lmstudio-lllmstxt-generator'. Use 'pypa/gh-action-pypi-publish@release/v1' (recommended for Trusted Publishing) or 'uv publish --trusted-publishing' if supported. Do NOT use username/password secrets.",
             "status": "pending",
             "testStrategy": null,
             "parentId": "undefined"
@@ -1172,7 +1172,7 @@
             "dependencies": [
               2
             ],
-            "details": "Modify `src/lmstudiotxt_generator/__init__.py` (or equivalent top-level init) to use `importlib.metadata.version` to retrieve the installed package version dynamically, handling the `PackageNotFoundError` gracefully.",
+            "details": "Modify `src/lms_lllmstxt/__init__.py` (or equivalent top-level init) to use `importlib.metadata.version` to retrieve the installed package version dynamically, handling the `PackageNotFoundError` gracefully.",
             "status": "pending",
             "testStrategy": "Run a python script importing the package and printing `__version__`. It should match the installed version.",
             "parentId": "undefined"
@@ -1208,7 +1208,7 @@
         "id": 10,
         "title": "End-to-End Release Simulation",
         "description": "Perform a final validation of the entire pipeline using TestPyPI.",
-        "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-llmstxt-generator`.\n5. Verify `lmstxt --help` works.",
+        "details": "1. Bump version to a dev version (e.g., `0.0.1.dev1`).\n2. Trigger the TestPyPI workflow.\n3. Verify upload.\n4. locally run `pip install -i https://test.pypi.org/simple/ lmstudio-lllmstxt-generator`.\n5. Verify `llmstxt --help` works.",
         "testStrategy": "Successful installation and execution from TestPyPI.",
         "priority": "medium",
         "dependencies": [
@@ -1246,7 +1246,7 @@
             "dependencies": [
               2
             ],
-            "details": "Visit the project URL on TestPyPI (e.g., `https://test.pypi.org/project/lmstudio-llmstxt-generator/`). Verify that the new version `0.0.1.dev1` is listed, the Release Date is current, and the `Description` (README) renders correctly.",
+            "details": "Visit the project URL on TestPyPI (e.g., `https://test.pypi.org/project/lmstudio-lllmstxt-generator/`). Verify that the new version `0.0.1.dev1` is listed, the Release Date is current, and the `Description` (README) renders correctly.",
             "status": "pending",
             "testStrategy": "Manual verification on the TestPyPI website.",
             "parentId": "undefined"
@@ -1258,7 +1258,7 @@
             "dependencies": [
               3
             ],
-            "details": "Create a new virtualenv: `python -m venv venv_test`. Activate it. Run `pip install --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ lmstudio-llmstxt-generator==0.0.1.dev1`. Note: `--extra-index-url` is often needed for dependencies that don't exist on TestPyPI.",
+            "details": "Create a new virtualenv: `python -m venv venv_test`. Activate it. Run `pip install --no-cache-dir --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ lmstudio-lllmstxt-generator==0.0.1.dev1`. Note: `--extra-index-url` is often needed for dependencies that don't exist on TestPyPI.",
             "status": "pending",
             "testStrategy": "Ensure pip completes successfully without errors regarding missing dependencies or hash mismatches.",
             "parentId": "undefined"
@@ -1270,7 +1270,7 @@
             "dependencies": [
               4
             ],
-            "details": "Inside the `venv_test`, run the command `lmstxt --help`. Verify that the help text is displayed, indicating that the entry point scripts were correctly generated and the internal imports are working.",
+            "details": "Inside the `venv_test`, run the command `llmstxt --help`. Verify that the help text is displayed, indicating that the entry point scripts were correctly generated and the internal imports are working.",
             "status": "pending",
             "testStrategy": "The command should exit with code 0 and display the standard help message, not an ImportError or ModuleNotFoundError.",
             "parentId": "undefined"
@@ -1295,10 +1295,10 @@
   "feat-mcp": {
     "tasks": [
       {
-        "id": "1",
+        "id": 1,
         "title": "Project Foundation & Configuration Module",
         "description": "Establish the project structure, dependency management, and configuration loading logic.",
-        "details": "Initialize the project following the `src/llmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-llmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.\n\nLibraries: `pydantic`, `pydantic-settings`, `mcp`.\nfiles: `src/llmstxt_mcp/config.py`, `src/llmstxt_mcp/errors.py`, `pyproject.toml`.",
+        "details": "Initialize the project following the `src/lms_lllmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-lllmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.\n\nLibraries: `pydantic`, `pydantic-settings`, `mcp`.\nfiles: `src/lms_lllmstxt_mcp/config.py`, `src/lms_lllmstxt_mcp/errors.py`, `pyproject.toml`.",
         "testStrategy": "Unit tests verifying that environment variables are correctly parsed into the config object and that defaults are applied. Test custom error instantiation.",
         "priority": "high",
         "dependencies": [],
@@ -1306,14 +1306,14 @@
         "subtasks": [],
         "complexity": 3,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Create a `pyproject.toml` configuration defining the build system and dependencies including `mcp` and `pydantic`. Implement `src/llmstxt_mcp/config.py` using `pydantic-settings` to parse environment variables like `LLMSTXT_MCP_ALLOWED_ROOT` with safe defaults. Define the custom exception hierarchy in `src/llmstxt_mcp/errors.py`.",
+        "expansionPrompt": "Create a `pyproject.toml` configuration defining the build system and dependencies including `mcp` and `pydantic`. Implement `src/lms_lllmstxt_mcp/config.py` using `pydantic-settings` to parse environment variables like `LLMSTXT_MCP_ALLOWED_ROOT` with safe defaults. Define the custom exception hierarchy in `src/lms_lllmstxt_mcp/errors.py`.",
         "updatedAt": "2026-01-03T19:17:10.418Z"
       },
       {
-        "id": "2",
+        "id": 2,
         "title": "Data Models & Type Definitions",
         "description": "Define Pydantic models for MCP tool inputs/outputs and internal data structures.",
-        "details": "Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.\n\nLibraries: `pydantic`.\nfiles: `src/llmstxt_mcp/models.py`.",
+        "details": "Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.\n\nLibraries: `pydantic`.\nfiles: `src/lms_lllmstxt_mcp/models.py`.",
         "testStrategy": "Unit tests ensuring valid data passes validation and invalid data raises ValidationError. Verify JSON serialization formats.",
         "priority": "high",
         "dependencies": [
@@ -1327,10 +1327,10 @@
         "updatedAt": "2026-01-03T19:17:54.333Z"
       },
       {
-        "id": "3",
+        "id": 3,
         "title": "Security & File Hashing Utilities",
         "description": "Implement path validation security controls and file hashing utilities.",
-        "details": "Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.\n\nLibraries: `pathlib`, `hashlib`.\nfiles: `src/llmstxt_mcp/security.py`, `src/llmstxt_mcp/hashing.py`.",
+        "details": "Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.\n\nLibraries: `pathlib`, `hashlib`.\nfiles: `src/lms_lllmstxt_mcp/security.py`, `src/lms_lllmstxt_mcp/hashing.py`.",
         "testStrategy": "Unit tests: 1) Attempt to access paths outside the allowed root (e.g., `../etc/passwd`) and assert `OutputDirNotAllowedError`. 2) Verify SHA256 matches known values for test files. 3) Verify preview returns correct truncation boolean.",
         "priority": "high",
         "dependencies": [
@@ -1344,10 +1344,10 @@
         "updatedAt": "2026-01-03T19:18:55.104Z"
       },
       {
-        "id": "4",
+        "id": 4,
         "title": "In-Memory Run Registry",
         "description": "Implement the storage mechanism to track generation runs and their artifacts.",
-        "details": "Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.\n\nfiles: `src/llmstxt_mcp/runs.py`.",
+        "details": "Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.\n\nfiles: `src/lms_lllmstxt_mcp/runs.py`.",
         "testStrategy": "Unit tests: Add runs, retrieve them by ID, and list them with sorting/limiting. Verify `UnknownRunError` when accessing non-existent IDs.",
         "priority": "medium",
         "dependencies": [
@@ -1361,10 +1361,10 @@
         "updatedAt": "2026-01-03T19:19:47.633Z"
       },
       {
-        "id": "5",
+        "id": 5,
         "title": "Artifact Access Logic",
         "description": "Implement the core logic for resolving, reading, and chunking artifact content.",
-        "details": "Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.\n\nfiles: `src/llmstxt_mcp/artifacts.py`.",
+        "details": "Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.\n\nfiles: `src/lms_lllmstxt_mcp/artifacts.py`.",
         "testStrategy": "Unit tests: Create dummy files, perform chunked reads at various offsets (start, middle, end, past end). Verify truncation banners are prepended when reading as a resource.",
         "priority": "high",
         "dependencies": [
@@ -1378,7 +1378,7 @@
             "title": "Initialize Artifacts Module and URI Logic",
             "description": "Create the artifacts module structure and implement the URI generation helper function. [Updated: 1/3/2026]",
             "dependencies": [],
-            "details": "Create `src/llmstxt_mcp/artifacts.py`. Import necessary dependencies including the `RunStore` from `runs.py`. Implement the `resource_uri(run_id: str, artifact_name: str) -> str` function to generate standardized URIs (e.g., `llmstxt://{run_id}/{artifact}`) used by the MCP server to identify resources.",
+            "details": "Create `src/lms_lllmstxt_mcp/artifacts.py`. Import necessary dependencies including the `RunStore` from `runs.py`. Implement the `resource_uri(run_id: str, artifact_name: str) -> str` function to generate standardized URIs (e.g., `lllmstxt://{run_id}/{artifact}`) used by the MCP server to identify resources.",
             "status": "done",
             "testStrategy": "Unit test verifying that `resource_uri` returns the expected string format for given inputs.",
             "parentId": "undefined",
@@ -1417,10 +1417,10 @@
         "updatedAt": "2026-01-03T19:25:09.120Z"
       },
       {
-        "id": "6",
+        "id": 6,
         "title": "Generator Integration & Serialized Execution",
-        "description": "Wrap the external `lmstudiotxt_generator` library with thread-safe execution logic.",
-        "details": "In `server.py` (or a dedicated integration module), implement the `llmstxt_generate` tool logic. Import `run_generation` from the external library. Use a `threading.Lock` to ensure only one generation runs at a time (avoiding global config races). Capture exceptions (specifically connectivity errors) and map them to `LMStudioUnavailableError`. Calculate hashes for outputs and register the run in `RunStore`.\n\nLibraries: `lmstudiotxt_generator`.\nfiles: `src/llmstxt_mcp/server.py`.",
+        "description": "Wrap the external `lms_lllmstxt` library with thread-safe execution logic.",
+        "details": "In `server.py` (or a dedicated integration module), implement the `lllmstxt_generate` tool logic. Import `run_generation` from the external library. Use a `threading.Lock` to ensure only one generation runs at a time (avoiding global config races). Capture exceptions (specifically connectivity errors) and map them to `LMStudioUnavailableError`. Calculate hashes for outputs and register the run in `RunStore`.\n\nLibraries: `lms_lllmstxt`.\nfiles: `src/lms_lllmstxt_mcp/server.py`.",
         "testStrategy": "Integration test: Mock the external `run_generation` to write temporary files. Verify that the MCP tool wrapper correctly calls the mock, computes metadata, and updates the RunStore.",
         "priority": "high",
         "dependencies": [
@@ -1433,7 +1433,7 @@
             "title": "Implement Thread-Safe Generator Wrapper",
             "description": "Create the integration module and implement the locking mechanism to ensure serial execution of the generator.",
             "dependencies": [],
-            "details": "Create `src/llmstxt_mcp/generator.py` (or integrate into `server.py`). Import `run_generation` from `lmstudiotxt_generator`. Instantiate a module-level `threading.Lock`. Define a function `safe_generate` that uses the lock as a context manager to wrap the call to `run_generation`. This ensures that concurrent requests to the MCP server do not trigger race conditions in the external library's global configuration.",
+            "details": "Create `src/lms_lllmstxt_mcp/generator.py` (or integrate into `server.py`). Import `run_generation` from `lms_lllmstxt`. Instantiate a module-level `threading.Lock`. Define a function `safe_generate` that uses the lock as a context manager to wrap the call to `run_generation`. This ensures that concurrent requests to the MCP server do not trigger race conditions in the external library's global configuration.",
             "status": "done",
             "testStrategy": "Unit test: call the wrapper from multiple threads simultaneously and assert that the critical section is entered serially.",
             "parentId": "undefined",
@@ -1460,7 +1460,7 @@
               1,
               2
             ],
-            "details": "Upon successful generation, use the hashing utilities from `src/llmstxt_mcp/hashing.py` to calculate SHA256 checksums for the output files. Construct a `Run` object with the status, timestamp, and artifact metadata. Call the `RunStore` instance to save the run. Return the final result object expected by the MCP tool interface.",
+            "details": "Upon successful generation, use the hashing utilities from `src/lms_lllmstxt_mcp/hashing.py` to calculate SHA256 checksums for the output files. Construct a `Run` object with the status, timestamp, and artifact metadata. Call the `RunStore` instance to save the run. Return the final result object expected by the MCP tool interface.",
             "status": "done",
             "testStrategy": "Integration test: Verify that a successful generation results in a new entry in `RunStore` with correct file hashes.",
             "parentId": "undefined",
@@ -1469,14 +1469,14 @@
         ],
         "complexity": 6,
         "recommendedSubtasks": 3,
-        "expansionPrompt": "Create the integration module wrapping `lmstudiotxt_generator`. Implement a locking mechanism to enforce serial execution. Add error handling to translate external library exceptions into internal domain errors and update the `RunStore` upon completion.",
+        "expansionPrompt": "Create the integration module wrapping `lms_lllmstxt`. Implement a locking mechanism to enforce serial execution. Add error handling to translate external library exceptions into internal domain errors and update the `RunStore` upon completion.",
         "updatedAt": "2026-01-03T19:55:09.862Z"
       },
       {
-        "id": "7",
+        "id": 7,
         "title": "MCP Server Tool & Resource Wiring",
         "description": "Configure the FastMCP server instance and register tools and resources.",
-        "details": "In `server.py`, initialize `FastMCP`. Register the `llmstxt_generate` and `llmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `llmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `llmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.\n\nLibraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).\nfiles: `src/llmstxt_mcp/server.py`.",
+        "details": "In `server.py`, initialize `FastMCP`. Register the `lllmstxt_generate` and `lllmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `lllmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `lllmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.\n\nLibraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).\nfiles: `src/lms_lllmstxt_mcp/server.py`.",
         "testStrategy": "Functional test: Instantiate the server in a test harness. Call `list_tools` and `list_resources` to verify registration. Simulate a tool call and resource read request.",
         "priority": "high",
         "dependencies": [
@@ -1489,7 +1489,7 @@
             "title": "Initialize FastMCP Server Instance",
             "description": "Set up the basic FastMCP server application shell and entry point. [Updated: 1/3/2026]",
             "dependencies": [],
-            "details": "In `src/llmstxt_mcp/server.py`, import `FastMCP` and instantiate the server object with the name 'llmstxt-mcp'. Define the standard `if __name__ == \"__main__\":` block to invoke `mcp.run()`, ensuring it defaults to the stdio transport mechanism for standard MCP communication.",
+            "details": "In `src/lms_lllmstxt_mcp/server.py`, import `FastMCP` and instantiate the server object with the name 'lllmstxt-mcp'. Define the standard `if __name__ == \"__main__\":` block to invoke `mcp.run()`, ensuring it defaults to the stdio transport mechanism for standard MCP communication.",
             "status": "done",
             "testStrategy": "Run the python file directly and verify it enters the wait loop for stdin input (or prints help if arguments are required).",
             "parentId": "undefined",
@@ -1502,7 +1502,7 @@
             "dependencies": [
               1
             ],
-            "details": "Import the logic from core modules. Use the `@mcp.tool()` decorator to register `llmstxt_generate`, `llmstxt_read_artifact`, and `llmstxt_list_runs`. Ensure type hints use the Pydantic models defined in `models.py` so that FastMCP generates the correct JSON schemas for the tool definitions.",
+            "details": "Import the logic from core modules. Use the `@mcp.tool()` decorator to register `lllmstxt_generate`, `lllmstxt_read_artifact`, and `lllmstxt_list_runs`. Ensure type hints use the Pydantic models defined in `models.py` so that FastMCP generates the correct JSON schemas for the tool definitions.",
             "status": "done",
             "testStrategy": "Unit test that inspects the `mcp.tools` registry to confirm all three tools are present and possess the correct arguments/descriptions.",
             "parentId": "undefined",
@@ -1515,7 +1515,7 @@
             "dependencies": [
               1
             ],
-            "details": "Use the `@mcp.resource(\"llmstxt://runs/{run_id}/{artifact}\")` decorator to register the resource handler. Implement the underlying function to parse the `run_id` and `artifact` name, retrieve the content from `RunStore`, and return it as a string resource.",
+            "details": "Use the `@mcp.resource(\"lllmstxt://runs/{run_id}/{artifact}\")` decorator to register the resource handler. Implement the underlying function to parse the `run_id` and `artifact` name, retrieve the content from `RunStore`, and return it as a string resource.",
             "status": "done",
             "testStrategy": "Unit test mocking the `RunStore` with a dummy artifact, calling the resource handler with a valid URI, and asserting the content is returned.",
             "parentId": "undefined",
@@ -1538,14 +1538,14 @@
         ],
         "complexity": 5,
         "recommendedSubtasks": 4,
-        "expansionPrompt": "Initialize the `FastMCP` server instance. Register the generation and reading tools with their Pydantic schemas. Define the resource URI pattern `llmstxt://runs/{run_id}/{artifact}` and link it to the artifact reader. Configure the entry point to run the server.",
+        "expansionPrompt": "Initialize the `FastMCP` server instance. Register the generation and reading tools with their Pydantic schemas. Define the resource URI pattern `lllmstxt://runs/{run_id}/{artifact}` and link it to the artifact reader. Configure the entry point to run the server.",
         "updatedAt": "2026-01-03T20:22:31.099Z"
       },
       {
-        "id": "8",
+        "id": 8,
         "title": "Stdio-Safe Logging Implementation",
         "description": "Configure logging to ensure no interference with the stdio transport. [Updated: 1/3/2026]",
-        "details": "Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.\n\nfiles: `src/llmstxt_mcp/server.py`.",
+        "details": "Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.\n\nfiles: `src/lms_lllmstxt_mcp/server.py`.",
         "testStrategy": "Manual/Scripted test: Run the server in stdio mode, emit logs, and verify they appear on stderr while the JSON-RPC communication on stdout remains valid JSON.",
         "priority": "medium",
         "dependencies": [
@@ -1559,10 +1559,10 @@
         "updatedAt": "2026-01-03T20:26:24.207Z"
       },
       {
-        "id": "9",
+        "id": 9,
         "title": "Request Limits & Error Normalization",
         "description": "Harden the server by enforcing limits and ensuring clean error reporting.",
-        "details": "Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.\n\nfiles: `src/llmstxt_mcp/errors.py`, `src/llmstxt_mcp/server.py`.",
+        "details": "Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.\n\nfiles: `src/lms_lllmstxt_mcp/errors.py`, `src/lms_lllmstxt_mcp/server.py`.",
         "testStrategy": "Unit tests: Trigger exceptions and verify the returned error message format. Test boundary conditions for chunk sizes to ensure limits are respected.",
         "priority": "medium",
         "dependencies": [
@@ -1576,10 +1576,10 @@
         "updatedAt": "2026-01-03T20:26:56.522Z"
       },
       {
-        "id": "10",
+        "id": 10,
         "title": "Packaging & Entry Point Verification",
         "description": "Finalize packaging and verify the CLI entry point works for both transports.",
-        "details": "Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `llmstxt-mcp = llmstxt_mcp.server:main`). Verify that running `llmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.\n\nfiles: `pyproject.toml`, `README.md`.",
+        "details": "Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `lllmstxt-mcp = lms_lllmstxt_mcp.server:main`). Verify that running `lllmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.\n\nfiles: `pyproject.toml`, `README.md`.",
         "testStrategy": "Smoke test: Install the package locally (`pip install -e .`) and run the CLI command. Verify it starts up without crashing and prints expected startup logs to stderr.",
         "priority": "low",
         "dependencies": [
@@ -1594,7 +1594,7 @@
         "updatedAt": "2026-01-03T22:34:55.275Z"
       },
       {
-        "id": "11",
+        "id": 11,
         "title": "Fix: Refactor for Asynchronous Processing",
         "description": "To truly remove the timeout in a way that works for tools, the server should not do heavy lifting inside the tool call. It should accept the request, launch a background thread to do the work, and return a \"Processing...\" status immediately.",
         "details": "Requirements:\n- Accept the request\n- Launch a background thread to do the work\n- Return a \"Processing...\" status immediately",
@@ -1608,7 +1608,7 @@
             "title": "Update RunRecord to Include Job Status and Results",
             "description": "Enhance the RunRecord data model to track the state of the background job (e.g., 'pending', 'processing', 'completed', 'failed') and capture any errors or outputs.",
             "dependencies": [],
-            "details": "Modify the `RunRecord` class in `src/llmstxt_mcp/runs.py`. Add fields for `status` (Enum), `error_message` (Optional[str]), and ensure it can store results once the background task finishes. Update `RunStore.put_run` or create a `update_run` method to allow updating status during the lifecycle.",
+            "details": "Modify the `RunRecord` class in `src/lms_lllmstxt_mcp/runs.py`. Add fields for `status` (Enum), `error_message` (Optional[str]), and ensure it can store results once the background task finishes. Update `RunStore.put_run` or create a `update_run` method to allow updating status during the lifecycle.",
             "status": "done",
             "testStrategy": "Unit test for RunStore and RunRecord to ensure status transitions and metadata updates are correctly persisted in memory.",
             "parentId": "undefined",
@@ -1621,7 +1621,7 @@
             "dependencies": [
               1
             ],
-            "details": "In `src/llmstxt_mcp/server.py` or a new `worker.py`, implement an async-friendly wrapper (using `anyio.to_thread.run_sync` or standard `threading`) that calls the actual generation code. It must catch exceptions, update the run status in `RunStore` to 'completed' or 'failed', and store the resulting artifact paths.",
+            "details": "In `src/lms_lllmstxt_mcp/server.py` or a new `worker.py`, implement an async-friendly wrapper (using `anyio.to_thread.run_sync` or standard `threading`) that calls the actual generation code. It must catch exceptions, update the run status in `RunStore` to 'completed' or 'failed', and store the resulting artifact paths.",
             "status": "done",
             "testStrategy": "Integration test: Call the worker function directly and verify that the RunStore reflects the correct status and artifact list after completion.",
             "parentId": "undefined",
@@ -1629,12 +1629,12 @@
           },
           {
             "id": 3,
-            "title": "Refactor llmstxt_generate Tool to Use Background Tasks",
+            "title": "Refactor lllmstxt_generate Tool to Use Background Tasks",
             "description": "Modify the main generation tool to initialize a run and immediately return the run ID.",
             "dependencies": [
               2
             ],
-            "details": "Update the `llmstxt_generate` tool in `server.py`. Instead of awaiting the full generation, it should: 1. Generate a unique `run_id`. 2. Create a 'pending' record in `RunStore`. 3. Schedule the worker logic in the background (using `asyncio.create_task` or a background thread). 4. Return a JSON response containing the `run_id` and a message like 'Generation started'.",
+            "details": "Update the `lllmstxt_generate` tool in `server.py`. Instead of awaiting the full generation, it should: 1. Generate a unique `run_id`. 2. Create a 'pending' record in `RunStore`. 3. Schedule the worker logic in the background (using `asyncio.create_task` or a background thread). 4. Return a JSON response containing the `run_id` and a message like 'Generation started'.",
             "status": "done",
             "testStrategy": "Functional test using an MCP client: verify that the tool call returns immediately with a success message while the work happens in the background.",
             "parentId": "undefined",
@@ -1648,7 +1648,7 @@
               1,
               3
             ],
-            "details": "Modify the resource resolver for `llmstxt://runs/{run_id}/...` in `server.py`. If the user requests the status or the job is still processing, the resource content should reflect the current status (e.g., 'Processing...') instead of failing or blocking. If the job failed, it should return the captured error message.",
+            "details": "Modify the resource resolver for `lllmstxt://runs/{run_id}/...` in `server.py`. If the user requests the status or the job is still processing, the resource content should reflect the current status (e.g., 'Processing...') instead of failing or blocking. If the job failed, it should return the captured error message.",
             "status": "done",
             "testStrategy": "Resource read test: Attempt to read a resource for a 'processing' run and verify the returned text indicates the current state.",
             "parentId": "undefined",
@@ -1707,7 +1707,7 @@
           {
             "id": 9,
             "title": "Refactor Generate Tool for Immediate Response",
-            "description": "Update the llmstxt_generate tool in server.py to initiate background work and return immediately.",
+            "description": "Update the lllmstxt_generate tool in server.py to initiate background work and return immediately.",
             "dependencies": [
               8
             ],
@@ -1720,7 +1720,7 @@
           {
             "id": 10,
             "title": "Implement Status-Aware Resource Resolvers",
-            "description": "Update llmstxt_read_artifact and resource providers to handle runs that are still in progress.",
+            "description": "Update lllmstxt_read_artifact and resource providers to handle runs that are still in progress.",
             "dependencies": [
               9
             ],
@@ -1750,11 +1750,11 @@
         "updatedAt": "2026-01-04T07:56:23.989Z"
       },
       {
-        "id": "12",
+        "id": 12,
         "title": "Artifact Directory Discovery and Resource Exposure",
         "description": "Extend the MCP server to discover and retrieve artifact files from local storage, exposing them as structured resources and tools for client context.",
-        "details": "This task transforms the server into a persistent context source by enabling access to the 'artifacts/' directory on disk. 1) Update 'artifacts.py' to include a 'scan_artifacts' function using 'pathlib' to list all '.txt' files in the configured output directory. 2) In 'server.py', implement the 'list_resources' MCP handler to dynamically expose these files as resources with the URI scheme 'llmstxt://artifacts/{filename}'. 3) Implement the 'read_resource' handler to fetch file content, utilizing 'hashing.read_text_preview' for safety and 'security.validate_output_dir' to prevent path traversal. 4) Add a new MCP tool 'llmstxt_list_all_artifacts' that returns metadata (filename, size, last modified) for all existing artifacts, including those from previous server sessions not present in the volatile 'RunStore'. 5) Integrate the 'MAX_CHARS' limit from Task 9 into the directory-based resource reads.",
-        "testStrategy": "1) Manually populate the artifacts directory with several .txt files. 2) Use an MCP inspector or test client to call 'list_resources' and verify the 'llmstxt://artifacts/' URIs are correctly generated. 3) Verify that 'read_resource' successfully returns content for valid files and fails for files outside the allowed directory. 4) Verify the 'llmstxt_list_all_artifacts' tool returns files that were created before the current server process started. 5) Confirm that large files are appropriately truncated according to defined limits.",
+        "details": "This task transforms the server into a persistent context source by enabling access to the 'artifacts/' directory on disk. 1) Update 'artifacts.py' to include a 'scan_artifacts' function using 'pathlib' to list all '.txt' files in the configured output directory. 2) In 'server.py', implement the 'list_resources' MCP handler to dynamically expose these files as resources with the URI scheme 'lllmstxt://artifacts/{filename}'. 3) Implement the 'read_resource' handler to fetch file content, utilizing 'hashing.read_text_preview' for safety and 'security.validate_output_dir' to prevent path traversal. 4) Add a new MCP tool 'lllmstxt_list_all_artifacts' that returns metadata (filename, size, last modified) for all existing artifacts, including those from previous server sessions not present in the volatile 'RunStore'. 5) Integrate the 'MAX_CHARS' limit from Task 9 into the directory-based resource reads.",
+        "testStrategy": "1) Manually populate the artifacts directory with several .txt files. 2) Use an MCP inspector or test client to call 'list_resources' and verify the 'lllmstxt://artifacts/' URIs are correctly generated. 3) Verify that 'read_resource' successfully returns content for valid files and fails for files outside the allowed directory. 4) Verify the 'lllmstxt_list_all_artifacts' tool returns files that were created before the current server process started. 5) Confirm that large files are appropriately truncated according to defined limits.",
         "status": "done",
         "dependencies": [
           "3",
@@ -1769,7 +1769,7 @@
             "title": "Implement Artifact Directory Scanning Logic",
             "description": "Add a function to discover existing artifact files in the configured output directory.",
             "dependencies": [],
-            "details": "Update 'src/llmstxt_mcp/artifacts.py' to include 'scan_artifacts'. Use 'pathlib.Path.glob' to identify all '.txt' files. Ensure the path is resolved relative to the configured artifact directory.",
+            "details": "Update 'src/lms_lllmstxt_mcp/artifacts.py' to include 'scan_artifacts'. Use 'pathlib.Path.glob' to identify all '.txt' files. Ensure the path is resolved relative to the configured artifact directory.",
             "status": "done",
             "testStrategy": "Unit test using a temporary directory populated with several .txt and non-.txt files to ensure only artifacts are listed.",
             "updatedAt": "2026-01-05T06:27:05.271Z",
@@ -1782,7 +1782,7 @@
             "dependencies": [
               1
             ],
-            "details": "Update 'src/llmstxt_mcp/models.py' to include an 'ArtifactMetadata' model with fields: 'filename', 'size_bytes', 'last_modified', and 'uri'. This ensures consistent formatting between the scanner and the API.",
+            "details": "Update 'src/lms_lllmstxt_mcp/models.py' to include an 'ArtifactMetadata' model with fields: 'filename', 'size_bytes', 'last_modified', and 'uri'. This ensures consistent formatting between the scanner and the API.",
             "status": "done",
             "testStrategy": null,
             "parentId": "undefined",
@@ -1790,13 +1790,13 @@
           },
           {
             "id": 3,
-            "title": "Implement 'llmstxt_list_all_artifacts' MCP Tool",
+            "title": "Implement 'lllmstxt_list_all_artifacts' MCP Tool",
             "description": "Expose the discovered artifacts via a specialized MCP tool for client discovery.",
             "dependencies": [
               1,
               2
             ],
-            "details": "In 'src/llmstxt_mcp/server.py', register a new tool using the FastMCP decorator. The tool should call 'scan_artifacts', map results to 'ArtifactMetadata', and return a list of all persistent files including those from previous sessions.",
+            "details": "In 'src/lms_lllmstxt_mcp/server.py', register a new tool using the FastMCP decorator. The tool should call 'scan_artifacts', map results to 'ArtifactMetadata', and return a list of all persistent files including those from previous sessions.",
             "status": "done",
             "testStrategy": "Manual verification via MCP Inspector by calling the tool and checking if it lists files manually added to the artifacts folder.",
             "parentId": "undefined",
@@ -1810,7 +1810,7 @@
               1,
               2
             ],
-            "details": "Implement '@mcp.list_resources()' and '@mcp.read_resource()' in 'server.py'. Define the URI scheme as 'llmstxt://artifacts/{filename}'. Ensure 'list_resources' populates the list based on current disk state.",
+            "details": "Implement '@mcp.list_resources()' and '@mcp.read_resource()' in 'server.py'. Define the URI scheme as 'lllmstxt://artifacts/{filename}'. Ensure 'list_resources' populates the list based on current disk state.",
             "status": "done",
             "testStrategy": "Use an MCP client to list resources and verify the URIs match the expected scheme. Attempt to read a specific resource by URI.",
             "parentId": "undefined",
@@ -1832,14 +1832,14 @@
         ],
         "complexity": 4,
         "recommendedSubtasks": 5,
-        "expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'llmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
+        "expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'lllmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
         "updatedAt": "2026-01-05T06:32:30.951Z"
       },
       {
-        "id": "13",
+        "id": 13,
         "title": "Migrate Artifact Directory Path from 'output' to 'artifacts'",
         "description": "Update the default storage and retrieval path for MCP artifacts from './output' to './artifacts' in configuration and tool implementations.",
-        "details": "This task involves standardizing the naming convention for the artifact storage directory. 1) In 'src/llmstxt_mcp/config.py', locate the default configuration variable (likely 'DEFAULT_OUTPUT_DIR' or 'OUTPUT_PATH') and update its value to 'artifacts'. 2) In 'src/llmstxt_mcp/server.py', verify that the 'list_all' and 'read_artifacts' tools utilize the updated configuration rather than hardcoded paths. 3) Update any tool descriptions or help text in the MCP server metadata that reference the directory name to ensure they reflect the change. 4) Verify that the logic in 'artifacts.py' (implemented in Task 5 and 12) correctly inherits this change via the config module, ensuring that path resolution via 'pathlib' correctly points to the new directory. 5) Ensure that the generator integration from Task 6 now writes files to the 'artifacts' directory.",
+        "details": "This task involves standardizing the naming convention for the artifact storage directory. 1) In 'src/lms_lllmstxt_mcp/config.py', locate the default configuration variable (likely 'DEFAULT_OUTPUT_DIR' or 'OUTPUT_PATH') and update its value to 'artifacts'. 2) In 'src/lms_lllmstxt_mcp/server.py', verify that the 'list_all' and 'read_artifacts' tools utilize the updated configuration rather than hardcoded paths. 3) Update any tool descriptions or help text in the MCP server metadata that reference the directory name to ensure they reflect the change. 4) Verify that the logic in 'artifacts.py' (implemented in Task 5 and 12) correctly inherits this change via the config module, ensuring that path resolution via 'pathlib' correctly points to the new directory. 5) Ensure that the generator integration from Task 6 now writes files to the 'artifacts' directory.",
         "testStrategy": "1) Delete any existing './output' directory. 2) Run the MCP server and trigger an artifact generation; verify that the './artifacts' directory is created and contains the new file. 3) Use an MCP client to call 'list_all' and verify it lists files within 'artifacts/'. 4) Call 'read_artifacts' with a filename in the new directory and verify successful content retrieval. 5) Confirm no new files are being written to './output'.",
         "status": "done",
         "dependencies": [
@@ -1852,7 +1852,7 @@
           {
             "id": 1,
             "title": "Update Default Directory in Configuration",
-            "description": "Modify 'src/llmstxt_mcp/config.py' to change the default artifact directory path from 'output' to 'artifacts'.",
+            "description": "Modify 'src/lms_lllmstxt_mcp/config.py' to change the default artifact directory path from 'output' to 'artifacts'.",
             "dependencies": [],
             "details": "Locate the constant or Pydantic field defining the output path (e.g., 'DEFAULT_OUTPUT_DIR' or 'OUTPUT_PATH') and update its default value to 'artifacts'. Ensure any environment variable mapping is preserved.",
             "status": "done",
@@ -1863,11 +1863,11 @@
           {
             "id": 2,
             "title": "Update MCP Server Tool Metadata",
-            "description": "Update tool descriptions and help text in 'src/llmstxt_mcp/server.py' to reference the new directory name.",
+            "description": "Update tool descriptions and help text in 'src/lms_lllmstxt_mcp/server.py' to reference the new directory name.",
             "dependencies": [
               1
             ],
-            "details": "Search for string literals or docstrings in 'server.py' that mention the 'output' directory. Update these to 'artifacts' so that MCP client UI reflects the correct path in help text for tools like 'list_all' and 'llmstxt_generate'.",
+            "details": "Search for string literals or docstrings in 'server.py' that mention the 'output' directory. Update these to 'artifacts' so that MCP client UI reflects the correct path in help text for tools like 'list_all' and 'lllmstxt_generate'.",
             "status": "done",
             "testStrategy": "Examine the MCP server metadata (via 'mcp list-tools') to verify that descriptions for artifact-related tools correctly mention 'artifacts'.",
             "parentId": "undefined",
@@ -1876,11 +1876,11 @@
           {
             "id": 3,
             "title": "Align Artifact Discovery and Resource Logic",
-            "description": "Ensure 'src/llmstxt_mcp/artifacts.py' correctly uses the updated config for file scanning and URI generation.",
+            "description": "Ensure 'src/lms_lllmstxt_mcp/artifacts.py' correctly uses the updated config for file scanning and URI generation.",
             "dependencies": [
               1
             ],
-            "details": "Verify 'scan_artifacts' uses 'config.output_path' instead of hardcoded strings. Update the resource URI logic (e.g., 'llmstxt://artifacts/{filename}') to ensure internal path resolution points to the new directory on disk.",
+            "details": "Verify 'scan_artifacts' uses 'config.output_path' instead of hardcoded strings. Update the resource URI logic (e.g., 'lllmstxt://artifacts/{filename}') to ensure internal path resolution points to the new directory on disk.",
             "status": "done",
             "testStrategy": "Verify that 'scan_artifacts' successfully finds files placed manually in './artifacts/' and that 'list_resources' returns URIs correctly mapped to that location.",
             "parentId": "undefined",
@@ -1889,11 +1889,11 @@
           {
             "id": 4,
             "title": "Update Generator Execution Integration",
-            "description": "Update the 'llmstxt_generate' tool implementation to write generated files to the 'artifacts' directory.",
+            "description": "Update the 'lllmstxt_generate' tool implementation to write generated files to the 'artifacts' directory.",
             "dependencies": [
               1
             ],
-            "details": "In 'src/llmstxt_mcp/server.py', ensure the call to 'run_generation' (or the internal generator wrapper) uses the path defined in the configuration. Confirm that file write operations target the updated directory.",
+            "details": "In 'src/lms_lllmstxt_mcp/server.py', ensure the call to 'run_generation' (or the internal generator wrapper) uses the path defined in the configuration. Confirm that file write operations target the updated directory.",
             "status": "done",
             "testStrategy": "Run a generation task through the MCP server and check that the resulting .txt files appear in './artifacts/' and NOT in './output/'.",
             "parentId": "undefined",
@@ -1925,6 +1925,178 @@
       "completedCount": 13,
       "tags": [
         "feat-mcp"
+      ],
+      "created": "2026-01-06T16:42:55.011Z",
+      "description": "Tasks for feat-mcp context",
+      "updated": "2026-01-06T16:42:55.011Z"
+    }
+  },
+  "chore-dist-name": {
+    "tasks": [
+      {
+        "id": "12",
+        "title": "Research and Select New Distribution Name",
+        "description": "Research and selection process for the Python package name. 'lms-lllmstxt' has been selected as the new distribution name to align with the repository name and maintain consistency across the project.",
+        "status": "done",
+        "dependencies": [],
+        "priority": "high",
+        "details": null,
+        "testStrategy": "Availability was tested by running 'pip index versions lms-lllmstxt' and confirming that no packages were returned. Compliance was verified against the PyPA specifications (PEP 508) for naming conventions, ensuring underscores are used for imports while hyphens are used for the distribution name (e.g., 'lms-lllmstxt' as distribution vs 'import lms_lllmstxt' as package). Success is also contingent on the name matching the GitHub repository name 'lms-lllmstxt'. \n\nChecked using:\n$ pip index versions lms-lllmstxt\nERROR: No matching distributions found for lms-lllmstxt\n\nVerified PEP 508 normalization rules where '-' is canonical for distributions and '_' is canonical for importable packages/modules in Python source code (src/lms_lllmstxt).\",\n  \"details\": \"The research phase originally considered 'lllmstxt' but has been finalized with 'lms-lllmstxt' to match the repository name. This choice provides better context for users regarding the origin of the tool while remaining concise. Availability has been confirmed via PyPI index lookups.\n\nKey Selection Criteria Met:\n- Availability: 'lms-lllmstxt' is not registered on PyPI.\n- PEP 508: Follows normalization rules (lowercase, alphanumeric with hyphens allowed).\n- Consistency: Matches the repository name 'lms-lllmstxt'.\",\n  \"subtasks\": [\n    {\n      \"id\": 1,\n      \"title\": \"Brainstorm potential distribution names\",\n      \"description\": \"Evaluate candidates like 'lllmstxt', 'llmstxt', and 'lms-lllmstxt' for brevity and clarity.\",\n      \"dependencies\": [],\n      \"details\": \"Comparison was made between 'lmstudio-lllmstxt-generator' (current) and shorter alternatives. 'lllmstxt' was selected for its direct association with the LLM-readable text format.\",\n      \"status\": \"done\",\n      \"testStrategy\": null\n    },\n    {\n      \"id\": 2,\n      \"title\": \"Verify 'lllmstxt' availability on PyPI\",\n      \"description\": \"Ensure the chosen name is available for registration and does not conflict with existing packages.\",\n      \"dependencies\": [],\n      \"details\": \"Verified via 'pip index versions lllmstxt' and manual PyPI search. No matching distributions were found, making it safe for adoption.\",\n      \"status\": \"done\",\n      \"testStrategy\": null\n    },\n    {\n      \"id\": 3,\n      \"title\": \"Confirm PEP 508 normalization compliance\",\n      \"description\": \"Validate that the name follows the standard for Python distribution names.\",\n      \"dependencies\": [],\n      \"details\": \"The name 'lllmstxt' consists only of lowercase alphanumeric characters, which is the canonical form recommended by PEP 508 and PEP 621.\",\n      \"status\": \"done\",\n      \"testStrategy\": null\n    },\n    {\n      \"id\": 4,\n      \"title\": \"Update final selection to 'lms-lllmstxt'\",\n      \"description\": \"Adjust the selection from 'lllmstxt' to 'lms-lllmstxt' to maintain consistency with the repository name.\",\n      \"dependencies\": [\n        1,\n        2,\n        3\n      ],\n      \"details\": \"While 'lllmstxt' was the initial choice, 'lms-lllmstxt' was finalized to ensure the PyPI package name matches the GitHub repository exactly.\",\n      \"status\": \"done\",\n      \"testStrategy\": \"Manual verification that the repository name and intended package name are identical.\"\n    },\n    {\n      \"id\": 5,\n      \"title\": \"Verify 'lms-lllmstxt' availability on PyPI\",\n      \"description\": \"Check the PyPI index for the final selected name 'lms-lllmstxt'.\",\n      \"dependencies\": [\n        4\n      ],\n      \"details\": \"Run 'pip index versions lms-lllmstxt' to ensure no existing package uses this name.\",\n      \"status\": \"done\",\n      \"testStrategy\": \"Execution of 'pip index versions lms-lllmstxt' returned no results.\"\n    },\n    {\n      \"id\": 6,\n      \"title\": \"Confirm PEP 508 compliance for 'lms-lllmstxt'\",\n      \"description\": \"Ensure the hyphenated name follows Python packaging standards and establish the import name.\",\n      \"dependencies\": [\n        4\n      ],\n      \"details\": \"Confirmed that 'lms-lllmstxt' is a valid distribution name. The corresponding Python import package will be 'lms_lllmstxt' (normalized with underscores).\",\n      \"status\": \"done\",\n      \"testStrategy\": \"Cross-referenced with PEP 508 and PEP 621 naming specifications.\"\n    }\n  ]\n}\n}",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Brainstorm potential distribution names",
+            "description": "Evaluate candidates like 'lllmstxt', 'llmstxt', and 'lms-lllmstxt' for brevity and clarity.",
+            "dependencies": [],
+            "details": "Comparison was made between 'lmstudio-lllmstxt-generator' (current) and shorter alternatives. 'lllmstxt' was selected for its direct association with the LLM-readable text format.",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Verify 'lllmstxt' availability on PyPI",
+            "description": "Ensure the chosen name is available for registration and does not conflict with existing packages.",
+            "dependencies": [],
+            "details": "Verified via 'pip index versions lllmstxt' and manual PyPI search. No matching distributions were found, making it safe for adoption.",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Confirm PEP 508 normalization compliance",
+            "description": "Validate that the name follows the standard for Python distribution names.",
+            "dependencies": [],
+            "details": "The name 'lllmstxt' consists only of lowercase alphanumeric characters, which is the canonical form recommended by PEP 508 and PEP 621.",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined"
+          }
+        ],
+        "updatedAt": "2026-01-06T16:53:50.485Z"
+      },
+      {
+        "id": "13",
+        "title": "Update [project].name in pyproject.toml",
+        "description": "Formally change the distribution name in the project configuration file.",
+        "details": "1. Open 'pyproject.toml'.\n2. Locate the '[project]' section.\n3. Update the 'name' field to the selected new distribution name.\n4. Ensure it remains a static string as per PEP 621.",
+        "testStrategy": "Run 'python -m build' and check the generated .whl and .tar.gz filenames in the 'dist/' directory to ensure they reflect the new name.",
+        "priority": "high",
+        "dependencies": [
+          "12"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.032Z"
+      },
+      {
+        "id": "14",
+        "title": "Rename CLI Entry Points in pyproject.toml",
+        "description": "Decide and implement changes to the command names users type in the terminal.",
+        "details": "1. Locate '[project.scripts]' in 'pyproject.toml'.\n2. Review 'llmstxt' and 'lllmstxt-mcp'.\n3. If aligning with the new distribution name, update the keys (the command names).\n4. Update the values (module:function mapping) if the module structure is planned to change.",
+        "testStrategy": "After local installation, verify that the new command names work (e.g., 'new-command --help') and the old ones (if removed) are no longer available.",
+        "priority": "medium",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.035Z"
+      },
+      {
+        "id": "15",
+        "title": "Rename Internal Source Package and Modules",
+        "description": "Rename the directories under 'src/' to match the new distribution name for internal consistency.",
+        "details": "1. Identify the current package directory (likely 'src/lmstudio_lllmstxt_generator').\n2. Rename this directory to the new normalized name (e.g., 'src/lllmstxt').\n3. Use underscores for the directory name if the distribution name has hyphens (Python import convention).",
+        "testStrategy": "Confirm the directory structure has changed and ensure no 'pyc' files remain from the old structure.",
+        "priority": "medium",
+        "dependencies": [
+          "14"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.038Z"
+      },
+      {
+        "id": "16",
+        "title": "Update Internal Code Imports",
+        "description": "Search and replace all instances of the old package name in import statements and code references.",
+        "details": "1. Search for 'from lmstudio_lllmstxt_generator ...' and 'import lmstudio_lllmstxt_generator'.\n2. Update them to the new package name.\n3. Check '__init__.py' files for any relative import or metadata exports that might be affected.",
+        "testStrategy": "Run existing unit tests to ensure imports are correctly resolved and the application logic is intact.",
+        "priority": "high",
+        "dependencies": [
+          "15"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.041Z"
+      },
+      {
+        "id": "17",
+        "title": "Update Documentation and Installation Snippets",
+        "description": "Refresh the README and any other documentation with the new distribution name and installation instructions.",
+        "details": "1. Update 'pip install' commands in README.md.\n2. Update 'pipx' or 'uv' usage examples.\n3. Update any mentions of the project name in the description or header sections.\n4. Update repository badges if they contain the old name (e.g., PyPI version badges).",
+        "testStrategy": "Manual review of documentation to ensure all references to the old name are gone.",
+        "priority": "medium",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.043Z"
+      },
+      {
+        "id": "18",
+        "title": "Update Release Automation and CI/CD Config",
+        "description": "Ensure the GitHub Actions or other CI/CD pipelines correctly handle the new package name for publishing.",
+        "details": "1. Check '.github/workflows/' for any environment variables referencing the old name.\n2. Update Trusted Publisher settings on PyPI if applicable to authorize the new project name.\n3. Update any release scripts that specifically target the old distribution.",
+        "testStrategy": "Trigger a dry-run of the CI/CD pipeline if possible, or verify YAML configuration values.",
+        "priority": "high",
+        "dependencies": [
+          "13"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.046Z"
+      },
+      {
+        "id": "19",
+        "title": "Create Migration Strategy for PyPI (If Applicable)",
+        "description": "Plan the deprecation of the old package name on PyPI by creating a transition package.",
+        "details": "1. Prepare a final release for 'lmstudio-lllmstxt-generator'.\n2. Set the new distribution as a dependency in the old package's 'pyproject.toml'.\n3. Add a post-install message or a deprecation warning in the old package to notify users.",
+        "testStrategy": "Verify 'install_requires' in the old package points to the new package name in a local environment.",
+        "priority": "low",
+        "dependencies": [
+          "13"
+        ],
+        "status": "deferred",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:18.341Z"
+      },
+      {
+        "id": "20",
+        "title": "Local Build and Install Verification",
+        "description": "Perform a final end-to-end local installation check in a clean environment.",
+        "details": "1. Clear 'dist/' and 'build/' folders.\n2. Run 'python -m build'.\n3. Create a fresh virtual environment ('python -m venv venv_test').\n4. Install the wheel: 'pip install dist/*.whl'.\n5. Verify commands: 'lllmstxt --help' (or new command names).",
+        "testStrategy": "The installation should complete without errors and the CLI tool should execute successfully in the clean environment.",
+        "priority": "high",
+        "dependencies": [
+          "16",
+          "18"
+        ],
+        "status": "done",
+        "subtasks": [],
+        "updatedAt": "2026-01-06T17:05:12.049Z"
+      }
+    ],
+    "metadata": {
+      "version": "1.0.0",
+      "lastModified": "2026-01-06T17:05:18.342Z",
+      "taskCount": 9,
+      "completedCount": 8,
+      "tags": [
+        "chore-dist-name"
       ]
     }
   }

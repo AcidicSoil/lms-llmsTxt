@@ -24,7 +24,7 @@ from .artifacts import (
 )
 from .security import validate_output_dir
 from .hashing import read_text_preview
-from lmstudiotxt_generator.github import owner_repo_from_url
+from lms_llmstxt.github import owner_repo_from_url
 
 # Configure logging to stderr to avoid interfering with JSON-RPC on stdout
 logging.basicConfig(
@@ -35,7 +35,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize FastMCP server
-mcp = FastMCP("llmstxt_mcp")
+mcp = FastMCP("lms-llmstxt")
 
 # Initialize RunStore (singleton for the server instance)
 run_store = RunStore(

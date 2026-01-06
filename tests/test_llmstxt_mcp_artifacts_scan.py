@@ -3,8 +3,8 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 import pytest
-from llmstxt_mcp import artifacts
-from llmstxt_mcp.config import Settings
+from lms_llmstxt_mcp import artifacts
+from lms_llmstxt_mcp.config import Settings
 
 @pytest.fixture
 def temp_output_dir():
@@ -33,7 +33,7 @@ def test_scan_artifacts(temp_output_dir):
     (temp_output_dir / "org2" / "repo2" / "llms-full.txt").write_text("full content")
     
     # Override settings to point to temp_output_dir
-    with patch("llmstxt_mcp.artifacts.settings", Settings(LLMSTXT_MCP_ALLOWED_ROOT=temp_output_dir)):
+    with patch("lms_llmstxt_mcp.artifacts.settings", Settings(LLMSTXT_MCP_ALLOWED_ROOT=temp_output_dir)):
         files = artifacts.scan_artifacts()
         
         # Verify
@@ -45,5 +45,5 @@ def test_scan_artifacts(temp_output_dir):
 
 def test_scan_artifacts_non_existent_root():
     # If root doesn't exist, should return empty list
-    with patch("llmstxt_mcp.artifacts.settings", Settings(LLMSTXT_MCP_ALLOWED_ROOT=Path("/non/existent/path"))):
+    with patch("lms_llmstxt_mcp.artifacts.settings", Settings(LLMSTXT_MCP_ALLOWED_ROOT=Path("/non/existent/path"))):
         assert artifacts.scan_artifacts() == []

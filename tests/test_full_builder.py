@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import requests
 
-from lmstudiotxt_generator import full_builder
+from lms_llmstxt import full_builder
 
 
 def _curated_link(ref: str = "main") -> str:

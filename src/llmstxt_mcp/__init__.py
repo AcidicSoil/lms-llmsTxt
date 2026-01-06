@@ -1,1 +1,0 @@
-# llmstxt_mcp package

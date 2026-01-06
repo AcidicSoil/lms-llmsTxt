@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 import pytest
-from lmstudiotxt_generator.config import AppConfig
-from lmstudiotxt_generator.pipeline import run_generation
+from lms_llmstxt.config import AppConfig
+from lms_llmstxt.pipeline import run_generation
 
 @pytest.mark.integration
 def test_real_generation(tmp_path):
@@ -24,7 +24,7 @@ def test_real_generation(tmp_path):
     if not os.environ.get("GITHUB_ACCESS_TOKEN") and not os.environ.get("GH_TOKEN"):
         pytest.skip("Skipping integration test: GITHUB_ACCESS_TOKEN not set")
 
-    artifacts = run_generation(repo_url, config)
+    artifacts = run_generation(repo_url, config, build_ctx=False)
     
     assert artifacts.used_fallback is False
     assert Path(artifacts.llms_txt_path).exists()

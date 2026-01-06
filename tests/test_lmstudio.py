@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 import requests
 
-from lmstudiotxt_generator.config import AppConfig
-from lmstudiotxt_generator import pipeline
-import lmstudiotxt_generator.lmstudio as lmstudio
-from lmstudiotxt_generator.lmstudio import LMStudioConnectivityError
+from lms_llmstxt.config import AppConfig
+from lms_llmstxt import pipeline
+import lms_llmstxt.lmstudio as lmstudio
+from lms_llmstxt.lmstudio import LMStudioConnectivityError
 
 
 class _FakeResponse:
@@ -136,7 +136,7 @@ def test_pipeline_fallback(tmp_path, monkeypatch):
         output_dir=repo_root,
     )
 
-    artifacts = pipeline.run_generation(repo_url, config)
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
 
     assert artifacts.used_fallback is True
     assert Path(artifacts.llms_txt_path).exists()
@@ -185,7 +185,7 @@ def test_pipeline_unloads_model(tmp_path, monkeypatch):
         lm_auto_unload=True,
     )
 
-    artifacts = pipeline.run_generation(repo_url, config)
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
 
     assert unload_called.get("done") is True
     assert Path(artifacts.llms_txt_path).exists()

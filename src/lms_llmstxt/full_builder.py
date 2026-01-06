@@ -45,7 +45,7 @@ def gh_get_file(
     params = {"ref": ref} if ref else {}
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "llmstxt-generator",
+        "User-Agent": "lms-llmstxt",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -71,7 +71,7 @@ def fetch_raw_file(
     url = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
     response = requests.get(
         url,
-        headers={"User-Agent": "llmstxt-generator"},
+        headers={"User-Agent": "lms-llmstxt"},
         timeout=30,
     )
     if response.status_code == 404:
@@ -211,7 +211,7 @@ def _html_to_text(html: str) -> str:
     return cleaned.strip()
 
 
-def _fetch_website(url: str, user_agent: str = "llmstxt-generator", timeout: int = 30) -> str:
+def _fetch_website(url: str, user_agent: str = "lms-llmstxt", timeout: int = 30) -> str:
     resp = requests.get(url, headers={"User-Agent": user_agent}, timeout=timeout)
     resp.raise_for_status()
     # prefer text; if bytes fallback, requests gives .text with encoding guess

@@ -10,7 +10,7 @@ def test_mcp_stdio_server():
     Launches the installed llmstxt-mcp CLI and verifies JSON-RPC communication.
     """
     # Verify the command exists in the path/venv
-    cmd = ["llmstxt-mcp"]
+    cmd = ["venv_test/bin/llmstxt-mcp"]
     
     # We need to run this in the context where the package is installed
     # subprocess.Popen will use the current environment variables
@@ -52,8 +52,8 @@ def test_mcp_stdio_server():
         resp = json.loads(response_line)
         assert resp.get("id") == 1
         assert "result" in resp
-        # Matches FastMCP("llmstxt_mcp")
-        assert resp["result"]["serverInfo"]["name"] == "llmstxt_mcp"
+        # Matches FastMCP("lms-llmstxt")
+        assert resp["result"]["serverInfo"]["name"] == "lms-llmstxt"
 
         # 2. Initialized Notification
         notify_req = {

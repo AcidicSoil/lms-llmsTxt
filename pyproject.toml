@@ -1,5 +1,5 @@
 [project]
-name = "lmstudio-llmstxt-generator"
+name = "lms-llmsTxt"
 dynamic = ["version"]
 description = "LM Studio-powered llms.txt generator based on DSPy tutorials."
 readme = "README.md"
@@ -25,8 +25,8 @@ test = [
 ]
 
 [project.scripts]
-lmstxt = "lmstudiotxt_generator.cli:main"
-llmstxt-mcp = "llmstxt_mcp.server:main"
+llmstxt = "lms_llmstxt.cli:main"
+llmstxt-mcp = "lms_llmstxt_mcp.server:main"
 
 [build-system]
 requires = ["setuptools>=67", "wheel", "setuptools_scm>=8"]

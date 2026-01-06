@@ -9,7 +9,7 @@ def test_mcp_stdio_server_tool_execution():
     """
     Launches the installed llmstxt-mcp CLI and verifies actual tool execution via JSON-RPC.
     """
-    cmd = ["llmstxt-mcp"]
+    cmd = ["venv_test/bin/llmstxt-mcp"]
     
     process = subprocess.Popen(
         cmd,

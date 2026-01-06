@@ -51,7 +51,7 @@ def owner_repo_from_url(repo_url: str) -> tuple[str, str]:
 def _auth_headers(token: str | None) -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "lmstudio-llmstxt-generator",
+        "User-Agent": "lms-llmstxt",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"

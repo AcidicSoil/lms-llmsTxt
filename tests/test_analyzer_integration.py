@@ -2,10 +2,10 @@ import os
 from pathlib import Path
 import pytest
 import dspy
-from lmstudiotxt_generator.analyzer import RepositoryAnalyzer
-from lmstudiotxt_generator.lmstudio import configure_lmstudio_lm
-from lmstudiotxt_generator.config import AppConfig
-from lmstudiotxt_generator.models import RepositoryMaterial
+from lms_llmstxt.analyzer import RepositoryAnalyzer
+from lms_llmstxt.lmstudio import configure_lmstudio_lm
+from lms_llmstxt.config import AppConfig
+from lms_llmstxt.models import RepositoryMaterial
 
 def test_analyzer_integration():
     """
@@ -23,7 +23,7 @@ def test_analyzer_integration():
     
     material = RepositoryMaterial(
         repo_url="https://github.com/AcidicSoil/lms-llmsTxt",
-        file_tree="README.md\npyproject.toml\nsrc/lmstudiotxt_generator/pipeline.py",
+        file_tree="README.md\npyproject.toml\nsrc/lms_llmstxt/pipeline.py",
         readme_content="# LMS LLMSTXT\n\nA generator for llms.txt files.",
         package_files="pyproject.toml content",
         default_branch="main",

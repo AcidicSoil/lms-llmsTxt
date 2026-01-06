@@ -4,11 +4,11 @@ import uuid
 from pathlib import Path
 from typing import Optional, Tuple
 
-from lmstudiotxt_generator.pipeline import run_generation
-from lmstudiotxt_generator.full_builder import build_llms_full_from_repo, iter_llms_links
-from lmstudiotxt_generator.github import gather_repository_material, owner_repo_from_url
-from lmstudiotxt_generator import LMStudioConnectivityError, AppConfig
-from lmstudiotxt_generator.models import GenerationArtifacts
+from lms_llmstxt.pipeline import run_generation
+from lms_llmstxt.full_builder import build_llms_full_from_repo, iter_llms_links
+from lms_llmstxt.github import gather_repository_material, owner_repo_from_url
+from lms_llmstxt import LMStudioConnectivityError, AppConfig
+from lms_llmstxt.models import GenerationArtifacts
 
 from .errors import LMStudioUnavailableError, OutputDirNotAllowedError
 from .models import RunRecord, ArtifactRef

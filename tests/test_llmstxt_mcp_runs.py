@@ -1,7 +1,7 @@
 import pytest
-from llmstxt_mcp.runs import RunStore
-from llmstxt_mcp.models import GenerateResult
-from llmstxt_mcp.errors import UnknownRunError
+from lms_llmstxt_mcp.runs import RunStore
+from lms_llmstxt_mcp.models import GenerateResult
+from lms_llmstxt_mcp.errors import UnknownRunError
 
 def test_run_store():
     store = RunStore()
@@ -11,7 +11,7 @@ def test_run_store():
         store.get_run("missing")
         
     # Put
-    run1 = GenerateResult(run_id="run1", status="success")
+    run1 = GenerateResult(run_id="run1", status="completed")
     store.put_run(run1)
     
     # Get
