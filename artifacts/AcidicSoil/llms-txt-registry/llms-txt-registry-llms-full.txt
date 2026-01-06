@@ -153,12 +153,12 @@ Summary:
 
 * The current setup uses multiple MCP servers (`mcpdoc` and `mcp-remote`) per doc set, with redundant access methods and large configuration surface area.
 * Implement a single “llms-txt registry” repository that stores all generated `*-llms*.txt` artifacts and expose it through one MCP server entry (via `mcp-remote` → `gitmcp.io`).
-* Add an automated refresh pipeline that runs the Python `llmstxt <url>` generator (venv-aware) and publishes updated artifacts deterministically.
+* Add an automated refresh pipeline that runs the Python `lmstxt <url>` generator (venv-aware) and publishes updated artifacts deterministically.
 
 Background / Context:
 
 * User goal: “host these in one place and just call one tool instead of having multiple” MCP servers.
-* Current generation workflow is Python-based: (1) activate venv, (2) run `llmstxt <repo-url>`, (3) output goes to `artifacts/`.
+* Current generation workflow is Python-based: (1) activate venv, (2) run `lmstxt <repo-url>`, (3) output goes to `artifacts/`.
 * Proposed direction accepted by user: “Pattern A sounds good” (registry repo + gitmcp + one MCP server).
 
 Current Behavior (Actual):
@@ -206,12 +206,12 @@ Environment:
 
 * OS: Unknown
 * Clients: Gemini CLI (`settings.json`) and Codex (`config.toml`) (per conversation).
-* Generator: Python CLI invoked as `llmstxt <url>`; outputs to `artifacts/`.
+* Generator: Python CLI invoked as `lmstxt <url>`; outputs to `artifacts/`.
 * MCP tooling: `npx mcp-remote`, `uvx mcpdoc` (current), gitmcp endpoint.
 
 Evidence:
 
-* User workflow: “source activate the venv … `llmstxt <repo-url>` … `artifacts/` is the output directory.”
+* User workflow: “source activate the venv … `lmstxt <repo-url>` … `artifacts/` is the output directory.”
 * Target architecture: “Expose that one place via one MCP server… Pattern A — ‘Registry repo + gitmcp’.”
 * Config snippets for one-server approach (Gemini + Codex).
 * Proposed refresh automation (GitHub Actions).
@@ -223,7 +223,7 @@ Decisions / Agreements:
 Open Items / Unknowns:
 
 * Registry visibility/hosting: public via gitmcp vs private/self-hosted endpoint.
-* Exact installation method for the Python `llmstxt` generator in CI (`requirements.txt` contents / packaging source).
+* Exact installation method for the Python `lmstxt` generator in CI (`requirements.txt` contents / packaging source).
 * Whether registry should store both `llms.txt` and `llms-full.txt` for all sources (implied but not strictly specified).
 
 Risks / Dependencies:
@@ -21025,7 +21025,7 @@ We use a local-first workflow to generate artifacts using your own LM Studio ins
 
 - Python 3.10+
 - [LM Studio](https://lmstudio.ai/) (with a model loaded and Server started)
-- [lmstudio-llmstxt-generator](https://pypi.org/project/lmstudio-llmstxt-generator/) CLI tool (installed via `pip install lmstudio-llmstxt-generator` or similar)
+- [lmstudio-lmstxt-generator](https://pypi.org/project/lmstudio-lmstxt-generator/) CLI tool (installed via `pip install lmstudio-lmstxt-generator` or similar)
 
 ### Setup
 
@@ -21071,7 +21071,7 @@ python scripts/refresh.py
 
 ## Links discovered
 - [LM Studio](https://lmstudio.ai/)
-- [lmstudio-llmstxt-generator](https://pypi.org/project/lmstudio-llmstxt-generator/)
+- [lmstudio-lmstxt-generator](https://pypi.org/project/lmstudio-lmstxt-generator/)
 
 --- codefetch/src.md ---
 <filetree>
@@ -21440,7 +21440,7 @@ def test_runner_success(mock_run, tmp_path):
     # Verify command structure
     args, kwargs = mock_run.call_args
     cmd = args[0]
-    assert cmd[0] == "lmstudio-llmstxt"
+    assert cmd[0] == "lmstudio-lmstxt"
     assert cmd[1] == "https://github.com/test/repo"
     assert "--output-dir" in cmd
     assert "--stamp" in cmd
@@ -21612,14 +21612,14 @@ class GeneratorRunner:
         self.api_base = api_base
 
     def run_source(self, source: Source, profile: Optional[GeneratorProfile] = None) -> Dict[str, any]:
-        """Execute the lmstudio-llmstxt CLI for a single source."""
+        """Execute the lmstudio-lmstxt CLI for a single source."""
         start_time = time.time()
         
         # Determine model
         model = source.last_model_used or (profile.model if profile else None)
         
         # Prepare command
-        cmd = ["lmstudio-llmstxt", str(source.url)]
+        cmd = ["lmstudio-lmstxt", str(source.url)]
         
         # We target a temporary output directory inside the root for isolation
         temp_out = self.output_root / "temp_work" / source.id
@@ -24298,7 +24298,7 @@ def test_runner_success(mock_run, tmp_path):
     # Verify command structure
     args, kwargs = mock_run.call_args
     cmd = args[0]
-    assert cmd[0] == "lmstudio-llmstxt"
+    assert cmd[0] == "lmstudio-lmstxt"
     assert cmd[1] == "https://github.com/test/repo"
     assert "--output-dir" in cmd
     assert "--stamp" in cmd

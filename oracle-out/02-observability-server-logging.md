@@ -22,14 +22,14 @@ Potentially sensitive URL leakage at INFO level (repo URLs are logged). Dependin
 
 Run the server under a stdio harness that captures streams separately and verify no log-like output appears on stdout while invoking at least one tool:
 
-Start the MCP server with stdout/stderr redirected to separate files (or pipes), invoke llmstxt_generate_llms_txt once via your MCP client/inspector, then grep stdout for your log format prefix (timestamp / - llmstxt_mcp.server -). Any matches indicate JSON-RPC interference risk.
+Start the MCP server with stdout/stderr redirected to separate files (or pipes), invoke lmstxt_generate_llms_txt once via your MCP client/inspector, then grep stdout for your log format prefix (timestamp / - lmstxt_mcp.server -). Any matches indicate JSON-RPC interference risk.
 
 4) If evidence is insufficient, missing file/path pattern(s) to attach next
 
 Attach these exact files so we can confirm end-to-end “no stdout + run_id tracing” behavior:
 
-src/llmstxt_mcp/generator.py (definitions of safe_generate_llms_txt, safe_generate_llms_full, safe_generate_llms_ctx): check for print(), logging handler changes, and whether run_id is logged inside workers.
+src/lmstxt_mcp/generator.py (definitions of safe_generate_llms_txt, safe_generate_llms_full, safe_generate_llms_ctx): check for print(), logging handler changes, and whether run_id is logged inside workers.
 
-src/llmstxt_mcp/runs.py (RunStore logging/diagnostics, if any).
+src/lmstxt_mcp/runs.py (RunStore logging/diagnostics, if any).
 
 Any entrypoint/wrapper used to launch the MCP server (e.g., __main__.py, CLI module, or deployment script) that might configure logging before server.py is imported.

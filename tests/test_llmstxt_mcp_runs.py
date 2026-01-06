@@ -1,7 +1,7 @@
 import pytest
-from lms_llmstxt_mcp.runs import RunStore
-from lms_llmstxt_mcp.models import GenerateResult
-from lms_llmstxt_mcp.errors import UnknownRunError
+from lms_llmsTxt_mcp.runs import RunStore
+from lms_llmsTxt_mcp.models import GenerateResult
+from lms_llmsTxt_mcp.errors import UnknownRunError
 
 def test_run_store():
     store = RunStore()

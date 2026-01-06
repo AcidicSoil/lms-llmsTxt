@@ -14,7 +14,7 @@
 
 Refine `artifacts.py` and `server.py` to enforce `MAX_CHARS` limits on resource reads and chunk sizes. Implement a global error handler or try/except blocks in tool entry points to catch internal exceptions (e.g., `LMStudioUnavailableError`, `OutputDirNotAllowedError`) and return user-friendly error strings instead of stack traces to the MCP client.
 
-files: `src/llmstxt_mcp/errors.py`, `src/llmstxt_mcp/server.py`.
+files: `src/lmstxt_mcp/errors.py`, `src/lmstxt_mcp/server.py`.
 
 **Test Strategy:**
 

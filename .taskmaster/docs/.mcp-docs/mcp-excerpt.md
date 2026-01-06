@@ -3,7 +3,7 @@
 ## user message
 
 ```md
-We want to build a MCP from the following code base `lms-llmstxt`.
+We want to build a MCP from the following code base `lms-lmstxt`.
 
 Currently, it is just a python program that generates llm.txt using lm-studio sdk and dspy.
 
@@ -20,17 +20,17 @@ Implementation approach (MCP wrapper around your existing generator):
 * Use the **official MCP Python SDK / FastMCP** so you get schema generation, structured outputs, and transports (stdio + streamable-http) without writing protocol plumbing.
 * Add a **chunked read tool** for `llms-full.txt` so clients don’t accidentally pull multi-MB files in one shot (resources are capped/truncated by default in the scaffold).
 
-The code scaffold (new package + minimal deps + CLI entrypoint) is in the canvas: **“llmstxt MCP server scaffold”**.
+The code scaffold (new package + minimal deps + CLI entrypoint) is in the canvas: **“lmstxt MCP server scaffold”**.
 
 ### What the MCP server exposes
 
-* `llmstxt_generate(...)` (Tool): generates artifacts on disk, returns:
+* `lmstxt_generate(...)` (Tool): generates artifacts on disk, returns:
 
   * `run_id`
   * artifact metadata (size, sha256)
-  * `llmstxt://runs/{run_id}/{artifact}` URIs you can `resources/read`
-* `llmstxt_read_artifact(run_id, artifact, offset, limit)` (Tool): chunked reads for large outputs
-* `llmstxt://runs/{run_id}/{artifact}` (Resource): reads an artifact (truncates beyond `LLMSTXT_MCP_RESOURCE_MAX_CHARS`)
+  * `lmstxt://runs/{run_id}/{artifact}` URIs you can `resources/read`
+* `lmstxt_read_artifact(run_id, artifact, offset, limit)` (Tool): chunked reads for large outputs
+* `lmstxt://runs/{run_id}/{artifact}` (Resource): reads an artifact (truncates beyond `LLMSTXT_MCP_RESOURCE_MAX_CHARS`)
 
 This aligns with how MCP servers typically separate “do work” (tools) from “provide content” (resources).
 
@@ -44,9 +44,9 @@ This aligns with how MCP servers typically separate “do work” (tools) from �
 1. Start the server
 
 * stdio (best for local/desktop hosts):
-  `python -m llmstxt_mcp.server --transport stdio`
+  `python -m lmstxt_mcp.server --transport stdio`
 * streamable HTTP (recommended for production deployments in MCP docs):
-  `python -m llmstxt_mcp.server --transport streamable-http`
+  `python -m lmstxt_mcp.server --transport streamable-http`
 
 1. Test with MCP Inspector
 
@@ -57,4 +57,4 @@ This aligns with how MCP servers typically separate “do work” (tools) from �
 * Your generator configures DSPy / LM Studio globally; the scaffold serializes generation calls with an `asyncio.Lock` to avoid cross-request reconfiguration races.
 * StdIO MCP servers must not write to stdout (protocol channel). The scaffold routes logs to stderr.
 
-If you want this converted into a distributable “single-command” server (Dockerfile, Claude Desktop config, CI smoke test with MCP Inspector), the scaffold is already structured to support that via `llmstxt-mcp` console script and `mcp.run(...)`.
+If you want this converted into a distributable “single-command” server (Dockerfile, Claude Desktop config, CI smoke test with MCP Inspector), the scaffold is already structured to support that via `lmstxt-mcp` console script and `mcp.run(...)`.

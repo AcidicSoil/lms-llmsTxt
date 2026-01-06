@@ -30,4 +30,4 @@ src/lmstudiotxt_generator/full_builder.py (error handling + how GitHub/raw fetch
 
 src/lmstudiotxt_generator/lmstudio.py (exception types and whether it exposes latency / model-load timings)
 
-Optional if you want end-to-end correlation: src/llmstxt_mcp/server.py (how run_id is generated/passed into generation)
+Optional if you want end-to-end correlation: src/lmstxt_mcp/server.py (how run_id is generated/passed into generation)

@@ -24,8 +24,8 @@ Add a minimal concurrency + bounding test: spawn two threads that call start_cle
 
 If evidence is insufficient, name the exact missing file/path pattern(s) to attach next.
 
-src/llmstxt_mcp/models.py (definition of RunRecord, especially status enum/allowed values and updated_at semantics).
+src/lmstxt_mcp/models.py (definition of RunRecord, especially status enum/allowed values and updated_at semantics).
 
-src/llmstxt_mcp/server.py (or wherever RunStore.start_cleanup_worker() is invoked) to confirm call frequency/concurrency and whether shutdown hooks exist.
+src/lmstxt_mcp/server.py (or wherever RunStore.start_cleanup_worker() is invoked) to confirm call frequency/concurrency and whether shutdown hooks exist.
 
-src/llmstxt_mcp/config.py (defaults for ttl_seconds and cleanup_interval_seconds, and whether they can be reloaded dynamically).
+src/lmstxt_mcp/config.py (defaults for ttl_seconds and cleanup_interval_seconds, and whether they can be reloaded dynamically).

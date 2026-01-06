@@ -32,8 +32,8 @@ asserts truncated == False, and that sha256(returned_bytes) equals ArtifactRef.h
 
 If evidence is insufficient, name the exact missing file/path pattern(s) to attach next.
 
-src/llmstxt_mcp/runs.py (where RunRecord is mutated, updated_at is set, and artifacts/hashes are attached)
+src/lmstxt_mcp/runs.py (where RunRecord is mutated, updated_at is set, and artifacts/hashes are attached)
 
-src/llmstxt_mcp/server.py (tool handlers that construct ReadArtifactResult / return RunRecord)
+src/lmstxt_mcp/server.py (tool handlers that construct ReadArtifactResult / return RunRecord)
 
-Any artifact write/hash utility used by the MCP server (e.g., src/llmstxt_mcp/**/artifacts*.py, src/llmstxt_mcp/**/hash*.py, or the exact function that computes hash_sha256)
+Any artifact write/hash utility used by the MCP server (e.g., src/lmstxt_mcp/**/artifacts*.py, src/lmstxt_mcp/**/hash*.py, or the exact function that computes hash_sha256)

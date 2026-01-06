@@ -17,7 +17,7 @@
 
 4. If evidence is insufficient, exact missing file/path pattern(s) to attach next
 
-* `src/llmstxt_mcp/generator.py` (the `safe_generate_llms_txt/safe_generate_llms_full/safe_generate_llms_ctx` implementations and how they update `RunStore`, handle exceptions, and handle slow/hung I/O)
-* `src/llmstxt_mcp/models.py` (current `RunRecord` fields—whether there’s already `started_at/finished_at/updated_at`, error fields, etc.)
-* `src/llmstxt_mcp/runs.py` (thread-safety/locking in `RunStore.update_run`, TTL semantics, and whether “processing too long” can be detected cleanly)
+* `src/lmstxt_mcp/generator.py` (the `safe_generate_llms_txt/safe_generate_llms_full/safe_generate_llms_ctx` implementations and how they update `RunStore`, handle exceptions, and handle slow/hung I/O)
+* `src/lmstxt_mcp/models.py` (current `RunRecord` fields—whether there’s already `started_at/finished_at/updated_at`, error fields, etc.)
+* `src/lmstxt_mcp/runs.py` (thread-safety/locking in `RunStore.update_run`, TTL semantics, and whether “processing too long” can be detected cleanly)
 * Any network/LM timeout configuration points used by generation: `src/lmstudiotxt_generator/*` where GitHub fetch / LM calls occur (to see whether timeouts already exist but aren’t reflected in job state)

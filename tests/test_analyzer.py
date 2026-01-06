@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from lms_llmstxt import analyzer
+from lms_llmsTxt import analyzer
 
 
 def test_build_dynamic_buckets_uses_default_branch_and_filters_dead_links(monkeypatch):

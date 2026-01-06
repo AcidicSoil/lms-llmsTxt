@@ -30,14 +30,14 @@ and verifies TTL removes only completed/failed (not running) after cutoff.
 
 If evidence is insufficient, name the exact missing file/path pattern(s) to attach next.
 
-src/llmstxt_mcp/models.py (definition of RunRecord, especially valid status values and timestamps used)
+src/lmstxt_mcp/models.py (definition of RunRecord, especially valid status values and timestamps used)
 
 The file(s) where RunStore is constructed and shared (likely one of):
 
-src/llmstxt_mcp/server.py
+src/lmstxt_mcp/server.py
 
-src/llmstxt_mcp/app.py / src/llmstxt_mcp/__init__.py
+src/lmstxt_mcp/app.py / src/lmstxt_mcp/__init__.py
 
 Any configuration source for max_runs, ttl_seconds, and cleanup_interval_seconds:
 
-src/llmstxt_mcp/config.py (or equivalent settings module)
+src/lmstxt_mcp/config.py (or equivalent settings module)

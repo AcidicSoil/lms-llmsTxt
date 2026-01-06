@@ -3,7 +3,7 @@ tree
 ├── pyproject.toml
 ├── requirements.txt
 └── src
-    └── llmstxt_mcp
+    └── lmstxt_mcp
         ├── __init__.py
         ├── models.py
         └── server.py
@@ -12,7 +12,7 @@ tree
 # path: pyproject.toml
 ```toml
 [project]
-name = "llmstxt-mcp"
+name = "lmstxt-mcp"
 version = "0.1.0"
 description = "MCP server wrapper around lmstudiotxt_generator (llms.txt / llms-full.txt / llms-ctx.txt generator)"
 readme = "README.md"  # TODO: create if you want publishing metadata
@@ -33,7 +33,7 @@ dependencies = [
 ]
 
 [project.scripts]
-llmstxt-mcp = "llmstxt_mcp.server:main"
+lmstxt-mcp = "lmstxt_mcp.server:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
@@ -63,7 +63,7 @@ llms-txt>=0.0.4
 ```
 
 
-# path: src/llmstxt_mcp/__init__.py
+# path: src/lmstxt_mcp/__init__.py
 ```python
 """MCP server wrapper around lmstudiotxt_generator.
 
@@ -78,7 +78,7 @@ __all__ = ["mcp"]
 ```
 
 
-# path: src/llmstxt_mcp/models.py
+# path: src/lmstxt_mcp/models.py
 ```python
 from __future__ import annotations
 
@@ -103,7 +103,7 @@ class ArtifactRef(BaseModel):
         default=None,
         description=(
             "Optional preview text included inline (typically truncated). "
-            "Use llmstxt_read_artifact or the resource URI for full content."
+            "Use lmstxt_read_artifact or the resource URI for full content."
         ),
     )
     truncated: bool = Field(
@@ -113,7 +113,7 @@ class ArtifactRef(BaseModel):
 
 
 class GenerateResult(BaseModel):
-    """Structured output for llmstxt_generate."""
+    """Structured output for lmstxt_generate."""
 
     run_id: str = Field(description="Opaque ID referencing this generation run")
     repo_url: str = Field(description="Input GitHub repo URL")
@@ -137,7 +137,7 @@ class ReadArtifactResult(BaseModel):
 ```
 
 
-# path: src/llmstxt_mcp/server.py
+# path: src/lmstxt_mcp/server.py
 ```python
 from __future__ import annotations
 
@@ -156,7 +156,7 @@ from typing import Annotated, Literal, Optional
 from mcp.server.fastmcp import FastMCP
 from pydantic import Field
 
-from llmstxt_mcp.models import ArtifactName, ArtifactRef, GenerateResult, ReadArtifactResult
+from lmstxt_mcp.models import ArtifactName, ArtifactRef, GenerateResult, ReadArtifactResult
 
 # The generator code from src.md (your existing library)
 from lmstudiotxt_generator import AppConfig, LMStudioConnectivityError
@@ -171,11 +171,11 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     handlers=[logging.StreamHandler(sys.stderr)],
 )
-logger = logging.getLogger("llmstxt_mcp")
+logger = logging.getLogger("lmstxt_mcp")
 
 
 # Recommended for production Streamable HTTP: stateless_http + json_response
-mcp = FastMCP(name="llmstxt", stateless_http=True, json_response=True)
+mcp = FastMCP(name="lmstxt", stateless_http=True, json_response=True)
 
 
 @dataclass(frozen=True)
@@ -229,11 +229,11 @@ def _validate_output_dir(output_dir: Optional[str]) -> Optional[Path]:
 
 
 def _resource_uri(run_id: str, artifact: ArtifactName) -> str:
-    return f"llmstxt://runs/{run_id}/{artifact}"
+    return f"lmstxt://runs/{run_id}/{artifact}"
 
 
 @mcp.tool()
-async def llmstxt_generate(
+async def lmstxt_generate(
     repo_url: Annotated[
         str,
         Field(description="GitHub repo URL (https://github.com/<owner>/<repo> or git@github.com:<owner>/<repo>.git)"),
@@ -293,7 +293,7 @@ async def llmstxt_generate(
 
     Notes:
     - This tool writes files to disk on the MCP server host.
-    - Use llmstxt_read_artifact (chunked) or the provided resource URIs to fetch full contents.
+    - Use lmstxt_read_artifact (chunked) or the provided resource URIs to fetch full contents.
     """
 
     # validate repo URL early
@@ -387,7 +387,7 @@ async def llmstxt_generate(
 
 
 @mcp.tool()
-def llmstxt_list_runs(
+def lmstxt_list_runs(
     limit: Annotated[int, Field(description="Maximum number of runs to return.")] = 20,
 ) -> dict[str, object]:
     """List recent runs currently held in memory by this MCP server."""
@@ -408,8 +408,8 @@ def llmstxt_list_runs(
 
 
 @mcp.tool()
-def llmstxt_read_artifact(
-    run_id: Annotated[str, Field(description="Run ID returned by llmstxt_generate")],
+def lmstxt_read_artifact(
+    run_id: Annotated[str, Field(description="Run ID returned by lmstxt_generate")],
     artifact: Annotated[ArtifactName, Field(description="Artifact filename")],
     offset: Annotated[int, Field(description="Character offset (0-based)")] = 0,
     limit: Annotated[int, Field(description="Maximum characters to return")] = 20000,
@@ -442,12 +442,12 @@ def llmstxt_read_artifact(
     )
 
 
-@mcp.resource("llmstxt://runs/{run_id}/{artifact}")
-def llmstxt_resource(run_id: str, artifact: str) -> str:
+@mcp.resource("lmstxt://runs/{run_id}/{artifact}")
+def lmstxt_resource(run_id: str, artifact: str) -> str:
     """Read a generated artifact via an MCP Resource URI.
 
     The server caps resource reads to avoid accidentally dumping multi-megabyte llms-full.txt files
-    into a single context load. Use llmstxt_read_artifact for chunked reads.
+    into a single context load. Use lmstxt_read_artifact for chunked reads.
     """
 
     rec = _RUNS.get(run_id)
@@ -463,7 +463,7 @@ def llmstxt_resource(run_id: str, artifact: str) -> str:
     if max_chars > 0 and len(text) > max_chars:
         return (
             "[TRUNCATED RESOURCE]\n"
-            f"Full length: {len(text)} chars. Use llmstxt_read_artifact(run_id, artifact, offset, limit) for chunked reads.\n\n"
+            f"Full length: {len(text)} chars. Use lmstxt_read_artifact(run_id, artifact, offset, limit) for chunked reads.\n\n"
             + text[:max_chars]
         )
 
@@ -471,7 +471,7 @@ def llmstxt_resource(run_id: str, artifact: str) -> str:
 
 
 def build_arg_parser() -> argparse.ArgumentParser:
-    p = argparse.ArgumentParser(description="Run the llmstxt MCP server")
+    p = argparse.ArgumentParser(description="Run the lmstxt MCP server")
     p.add_argument(
         "--transport",
         default=os.getenv("MCP_TRANSPORT", "stdio"),

@@ -15,7 +15,7 @@
 Create `security.py` to implement `validate_output_dir`. This function must resolve paths and ensure they are contained within `LLMSTXT_MCP_ALLOWED_ROOT` to prevent path traversal. Create `hashing.py` to implement `sha256_file` (streaming read) and `read_text_preview` (reads first N chars). These utilities are critical for the generation and artifact access layers.
 
 Libraries: `pathlib`, `hashlib`.
-files: `src/llmstxt_mcp/security.py`, `src/llmstxt_mcp/hashing.py`.
+files: `src/lmstxt_mcp/security.py`, `src/lmstxt_mcp/hashing.py`.
 
 **Test Strategy:**
 

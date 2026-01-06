@@ -26,4 +26,4 @@ src/lmstudiotxt_generator/pipeline.py (for run_generation internal shared-state/
 
 src/lmstudiotxt_generator/lmstudio.py (for model load/unload, client/session reuse, and any global caches)
 
-src/llmstxt_mcp/runs.py (for RunStore thread-safety assumptions under concurrent put_run/update_run/get_run)
+src/lmstxt_mcp/runs.py (for RunStore thread-safety assumptions under concurrent put_run/update_run/get_run)

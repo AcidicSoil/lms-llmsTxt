@@ -12,10 +12,10 @@
 
 **Details:**
 
-In `server.py`, initialize `FastMCP`. Register the `llmstxt_generate` and `llmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `llmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `llmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.
+In `server.py`, initialize `FastMCP`. Register the `lmstxt_generate` and `lmstxt_read_artifact` functions as tools with appropriate descriptions. Register the `lmstxt://runs/{run_id}/{artifact}` pattern as a resource. Ensure the `lmstxt_list_runs` tool is also registered. Wire up the `stdio` and `http` transport capabilities provided by FastMCP/MCP SDK.
 
 Libraries: `fastmcp` (or standard `mcp` SDK depending on preference/availability).
-files: `src/llmstxt_mcp/server.py`.
+files: `src/lmstxt_mcp/server.py`.
 
 **Test Strategy:**
 
@@ -32,7 +32,7 @@ Set up the basic FastMCP server application shell and entry point. [Updated: 1/3
 
 **Details:**
 
-In `src/llmstxt_mcp/server.py`, import `FastMCP` and instantiate the server object with the name 'llmstxt-mcp'. Define the standard `if __name__ == "__main__":` block to invoke `mcp.run()`, ensuring it defaults to the stdio transport mechanism for standard MCP communication.
+In `src/lmstxt_mcp/server.py`, import `FastMCP` and instantiate the server object with the name 'lmstxt-mcp'. Define the standard `if __name__ == "__main__":` block to invoke `mcp.run()`, ensuring it defaults to the stdio transport mechanism for standard MCP communication.
 
 ### 7.2. Register MCP Tools
 
@@ -43,7 +43,7 @@ Expose the core generation and retrieval functions as MCP tools.
 
 **Details:**
 
-Import the logic from core modules. Use the `@mcp.tool()` decorator to register `llmstxt_generate`, `llmstxt_read_artifact`, and `llmstxt_list_runs`. Ensure type hints use the Pydantic models defined in `models.py` so that FastMCP generates the correct JSON schemas for the tool definitions.
+Import the logic from core modules. Use the `@mcp.tool()` decorator to register `lmstxt_generate`, `lmstxt_read_artifact`, and `lmstxt_list_runs`. Ensure type hints use the Pydantic models defined in `models.py` so that FastMCP generates the correct JSON schemas for the tool definitions.
 
 ### 7.3. Register Dynamic Resources
 
@@ -54,7 +54,7 @@ Implement the URI pattern for accessing generated artifacts as resources. [Updat
 
 **Details:**
 
-Use the `@mcp.resource("llmstxt://runs/{run_id}/{artifact}")` decorator to register the resource handler. Implement the underlying function to parse the `run_id` and `artifact` name, retrieve the content from `RunStore`, and return it as a string resource.
+Use the `@mcp.resource("lmstxt://runs/{run_id}/{artifact}")` decorator to register the resource handler. Implement the underlying function to parse the `run_id` and `artifact` name, retrieve the content from `RunStore`, and return it as a string resource.
 
 ### 7.4. Server Capability Verification
 

@@ -1,11 +1,11 @@
 from pathlib import Path
-from lms_llmstxt_mcp.artifacts import resource_uri, read_resource_text, read_artifact_chunk
-from lms_llmstxt_mcp.runs import RunStore
-from lms_llmstxt_mcp.models import GenerateResult, ArtifactRef
-from lms_llmstxt_mcp.config import settings
+from lms_llmsTxt_mcp.artifacts import resource_uri, read_resource_text, read_artifact_chunk
+from lms_llmsTxt_mcp.runs import RunStore
+from lms_llmsTxt_mcp.models import GenerateResult, ArtifactRef
+from lms_llmsTxt_mcp.config import settings
 
 def test_resource_uri():
-    assert resource_uri("123", "llms.txt") == "llmstxt://runs/123/llms.txt"
+    assert resource_uri("123", "llms.txt") == "lmstxt://runs/123/llms.txt"
 
 def test_read_resource_text(tmp_path, monkeypatch):
     monkeypatch.setattr(settings, "LLMSTXT_MCP_RESOURCE_MAX_CHARS", 10)

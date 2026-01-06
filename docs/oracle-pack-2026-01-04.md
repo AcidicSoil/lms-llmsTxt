@@ -19,18 +19,18 @@
 ## commands (exactly 20; sorted by ROI desc; ties by lower effort)
 
 ```bash
-# 01 — ROI=2.13 impact=0.8 confidence=0.8 effort=0.3 horizon=Immediate category=permissions reference=src/llmstxt_mcp/security.py:validate_output_dir
+# 01 — ROI=2.13 impact=0.8 confidence=0.8 effort=0.3 horizon=Immediate category=permissions reference=src/lmstxt_mcp/security.py:validate_output_dir
 oracle \
   --files-report \
   --write-output "oracle-out/01-permissions-validate-output-dir.md" \
   -p "Strategist question #01
-Reference: src/llmstxt_mcp/security.py:validate_output_dir
+Reference: src/lmstxt_mcp/security.py:validate_output_dir
 Category: permissions
 Horizon: Immediate
 ROI: 2.13 (impact=0.8, confidence=0.8, effort=0.3)
 Question: Does validate_output_dir fully prevent path traversal or symlink escapes when output_dir comes from MCP tool inputs?
 Rationale: The MCP server writes files on behalf of users and must enforce a strict filesystem boundary.
-Smallest experiment today: Run `ck --regex 'validate_output_dir' -n src/llmstxt_mcp/security.py`.
+Smallest experiment today: Run `ck --regex 'validate_output_dir' -n src/lmstxt_mcp/security.py`.
 Constraints: None
 Non-goals: None
 
@@ -39,21 +39,21 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/security.py" \
-  -f "src/llmstxt_mcp/config.py"
+  -f "src/lmstxt_mcp/security.py" \
+  -f "src/lmstxt_mcp/config.py"
 
-# 02 — ROI=2.10 impact=0.6 confidence=0.7 effort=0.2 horizon=Immediate category=observability reference=src/llmstxt_mcp/server.py:logging.basicConfig
+# 02 — ROI=2.10 impact=0.6 confidence=0.7 effort=0.2 horizon=Immediate category=observability reference=src/lmstxt_mcp/server.py:logging.basicConfig
 oracle \
   --files-report \
   --write-output "oracle-out/02-observability-server-logging.md" \
   -p "Strategist question #02
-Reference: src/llmstxt_mcp/server.py:logging.basicConfig
+Reference: src/lmstxt_mcp/server.py:logging.basicConfig
 Category: observability
 Horizon: Immediate
 ROI: 2.10 (impact=0.6, confidence=0.7, effort=0.2)
 Question: Are logging levels and stderr routing sufficient to avoid JSON-RPC interference while still capturing run_id-level diagnostics?
 Rationale: The MCP server must not write to stdout and still needs actionable error traces.
-Smallest experiment today: Run `ck --regex 'basicConfig|logger' -n src/llmstxt_mcp/server.py`.
+Smallest experiment today: Run `ck --regex 'basicConfig|logger' -n src/lmstxt_mcp/server.py`.
 Constraints: None
 Non-goals: None
 
@@ -62,7 +62,7 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/server.py"
+  -f "src/lmstxt_mcp/server.py"
 
 # 03 — ROI=2.10 impact=0.9 confidence=0.7 effort=0.3 horizon=Immediate category=failure modes reference=src/lmstudiotxt_generator/pipeline.py:run_generation
 oracle \
@@ -152,18 +152,18 @@ Answer format:
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
   -f "src/lmstudiotxt_generator/cli.py"
 
-# 07 — ROI=1.23 impact=0.7 confidence=0.7 effort=0.4 horizon=Immediate category=caching/state reference=src/llmstxt_mcp/runs.py:RunStore
+# 07 — ROI=1.23 impact=0.7 confidence=0.7 effort=0.4 horizon=Immediate category=caching/state reference=src/lmstxt_mcp/runs.py:RunStore
 oracle \
   --files-report \
   --write-output "oracle-out/07-caching-state-runstore.md" \
   -p "Strategist question #07
-Reference: src/llmstxt_mcp/runs.py:RunStore
+Reference: src/lmstxt_mcp/runs.py:RunStore
 Category: caching/state
 Horizon: Immediate
 ROI: 1.23 (impact=0.7, confidence=0.7, effort=0.4)
 Question: Is the in-memory RunStore durable enough for expected usage, or do we risk losing run history or exceeding max_runs under load?
 Rationale: RunStore is the sole state layer for MCP run tracking.
-Smallest experiment today: Run `ck --regex 'class RunStore|_runs' -n src/llmstxt_mcp/runs.py`.
+Smallest experiment today: Run `ck --regex 'class RunStore|_runs' -n src/lmstxt_mcp/runs.py`.
 Constraints: None
 Non-goals: None
 
@@ -172,7 +172,7 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/runs.py"
+  -f "src/lmstxt_mcp/runs.py"
 
 # 08 — ROI=1.17 impact=0.7 confidence=0.5 effort=0.3 horizon=Immediate category=invariants reference=src/lmstudiotxt_generator/github.py:owner_repo_from_url
 oracle \
@@ -218,18 +218,18 @@ Answer format:
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
   -f "src/lmstudiotxt_generator/full_builder.py"
 
-# 10 — ROI=1.00 impact=0.5 confidence=0.6 effort=0.3 horizon=Immediate category=background jobs reference=src/llmstxt_mcp/runs.py:start_cleanup_worker
+# 10 — ROI=1.00 impact=0.5 confidence=0.6 effort=0.3 horizon=Immediate category=background jobs reference=src/lmstxt_mcp/runs.py:start_cleanup_worker
 oracle \
   --files-report \
   --write-output "oracle-out/10-background-jobs-cleanup-worker.md" \
   -p "Strategist question #10
-Reference: src/llmstxt_mcp/runs.py:start_cleanup_worker
+Reference: src/lmstxt_mcp/runs.py:start_cleanup_worker
 Category: background jobs
 Horizon: Immediate
 ROI: 1.00 (impact=0.5, confidence=0.6, effort=0.3)
 Question: Does the cleanup worker prune runs safely and avoid thread leaks or unbounded log spam?
 Rationale: Background cleanup keeps state bounded but can destabilize the server if misconfigured.
-Smallest experiment today: Run `ck --regex 'start_cleanup_worker|prune_expired' -n src/llmstxt_mcp/runs.py`.
+Smallest experiment today: Run `ck --regex 'start_cleanup_worker|prune_expired' -n src/lmstxt_mcp/runs.py`.
 Constraints: None
 Non-goals: None
 
@@ -238,20 +238,20 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/runs.py"
+  -f "src/lmstxt_mcp/runs.py"
 
-# 11 — ROI=1.00 impact=0.6 confidence=0.5 effort=0.3 horizon=Immediate category=contracts/interfaces reference=src/llmstxt_mcp/models.py:RunRecord
+# 11 — ROI=1.00 impact=0.6 confidence=0.5 effort=0.3 horizon=Immediate category=contracts/interfaces reference=src/lmstxt_mcp/models.py:RunRecord
 oracle \
   --files-report \
   --write-output "oracle-out/11-contracts-runrecord.md" \
   -p "Strategist question #11
-Reference: src/llmstxt_mcp/models.py:RunRecord
+Reference: src/lmstxt_mcp/models.py:RunRecord
 Category: contracts/interfaces
 Horizon: Immediate
 ROI: 1.00 (impact=0.6, confidence=0.5, effort=0.3)
 Question: Do RunRecord and ArtifactRef provide enough metadata for clients to verify artifact integrity and status across tool calls?
 Rationale: MCP clients rely on these models as a stable interface contract.
-Smallest experiment today: Run `ck --regex 'class RunRecord|ArtifactRef' -n src/llmstxt_mcp/models.py`.
+Smallest experiment today: Run `ck --regex 'class RunRecord|ArtifactRef' -n src/lmstxt_mcp/models.py`.
 Constraints: None
 Non-goals: None
 
@@ -260,20 +260,20 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/models.py"
+  -f "src/lmstxt_mcp/models.py"
 
-# 12 — ROI=0.75 impact=0.6 confidence=0.5 effort=0.4 horizon=Immediate category=caching/state reference=src/llmstxt_mcp/generator.py:_lock
+# 12 — ROI=0.75 impact=0.6 confidence=0.5 effort=0.4 horizon=Immediate category=caching/state reference=src/lmstxt_mcp/generator.py:_lock
 oracle \
   --files-report \
   --write-output "oracle-out/12-caching-state-global-lock.md" \
   -p "Strategist question #12
-Reference: src/llmstxt_mcp/generator.py:_lock
+Reference: src/lmstxt_mcp/generator.py:_lock
 Category: caching/state
 Horizon: Immediate
 ROI: 0.75 (impact=0.6, confidence=0.5, effort=0.4)
 Question: Is the global generation lock overly restrictive, preventing safe parallel runs for different repositories?
 Rationale: Lock scope directly impacts throughput for MCP clients.
-Smallest experiment today: Run `ck --regex '_lock|safe_generate_llms_txt' -n src/llmstxt_mcp/generator.py`.
+Smallest experiment today: Run `ck --regex '_lock|safe_generate_llms_txt' -n src/lmstxt_mcp/generator.py`.
 Constraints: None
 Non-goals: None
 
@@ -282,7 +282,7 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/generator.py"
+  -f "src/lmstxt_mcp/generator.py"
 
 # 13 — ROI=0.70 impact=0.7 confidence=0.5 effort=0.5 horizon=Strategic category=contracts/interfaces reference=src/lmstudiotxt_generator/schema.py:LLMS_JSON_SCHEMA
 oracle \
@@ -306,18 +306,18 @@ Answer format:
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
   -f "src/lmstudiotxt_generator/schema.py"
 
-# 14 — ROI=0.60 impact=0.6 confidence=0.4 effort=0.4 horizon=Strategic category=permissions reference=src/llmstxt_mcp/config.py:LLMSTXT_MCP_ALLOWED_ROOT
+# 14 — ROI=0.60 impact=0.6 confidence=0.4 effort=0.4 horizon=Strategic category=permissions reference=src/lmstxt_mcp/config.py:LLMSTXT_MCP_ALLOWED_ROOT
 oracle \
   --files-report \
   --write-output "oracle-out/14-permissions-allowed-root.md" \
   -p "Strategist question #14
-Reference: src/llmstxt_mcp/config.py:LLMSTXT_MCP_ALLOWED_ROOT
+Reference: src/lmstxt_mcp/config.py:LLMSTXT_MCP_ALLOWED_ROOT
 Category: permissions
 Horizon: Strategic
 ROI: 0.60 (impact=0.6, confidence=0.4, effort=0.4)
 Question: Is a single allowed root sufficient for future multi-tenant deployments, or should we support per-request roots?
 Rationale: Filesystem boundaries are a key security control for shared deployments.
-Smallest experiment today: Run `ck --regex 'LLMSTXT_MCP_ALLOWED_ROOT' -n src/llmstxt_mcp/config.py`.
+Smallest experiment today: Run `ck --regex 'LLMSTXT_MCP_ALLOWED_ROOT' -n src/lmstxt_mcp/config.py`.
 Constraints: None
 Non-goals: None
 
@@ -326,20 +326,20 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/config.py"
+  -f "src/lmstxt_mcp/config.py"
 
-# 15 — ROI=0.60 impact=0.6 confidence=0.5 effort=0.5 horizon=Strategic category=background jobs reference=src/llmstxt_mcp/server.py:_spawn_background
+# 15 — ROI=0.60 impact=0.6 confidence=0.5 effort=0.5 horizon=Strategic category=background jobs reference=src/lmstxt_mcp/server.py:_spawn_background
 oracle \
   --files-report \
   --write-output "oracle-out/15-background-jobs-spawn-background.md" \
   -p "Strategist question #15
-Reference: src/llmstxt_mcp/server.py:_spawn_background
+Reference: src/lmstxt_mcp/server.py:_spawn_background
 Category: background jobs
 Horizon: Strategic
 ROI: 0.60 (impact=0.6, confidence=0.5, effort=0.5)
 Question: Should background task execution include cancellation/timeout or job state tracking beyond RunStore status?
 Rationale: Long-running or stuck background jobs can degrade server reliability.
-Smallest experiment today: Run `ck --regex '_spawn_background' -n src/llmstxt_mcp/server.py`.
+Smallest experiment today: Run `ck --regex '_spawn_background' -n src/lmstxt_mcp/server.py`.
 Constraints: None
 Non-goals: None
 
@@ -348,7 +348,7 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/server.py"
+  -f "src/lmstxt_mcp/server.py"
 
 # 16 — ROI=0.58 impact=0.7 confidence=0.5 effort=0.6 horizon=Strategic category=caching/state reference=src/lmstudiotxt_generator/config.py:lm_auto_unload
 oracle \
@@ -416,18 +416,18 @@ Answer format:
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
   -f "src/lmstudiotxt_generator/pipeline.py"
 
-# 19 — ROI=0.40 impact=0.5 confidence=0.4 effort=0.5 horizon=Strategic category=UX flows reference=src/llmstxt_mcp/artifacts.py:read_resource_text
+# 19 — ROI=0.40 impact=0.5 confidence=0.4 effort=0.5 horizon=Strategic category=UX flows reference=src/lmstxt_mcp/artifacts.py:read_resource_text
 oracle \
   --files-report \
   --write-output "oracle-out/19-ux-flows-artifact-reading.md" \
   -p "Strategist question #19
-Reference: src/llmstxt_mcp/artifacts.py:read_resource_text
+Reference: src/lmstxt_mcp/artifacts.py:read_resource_text
 Category: UX flows
 Horizon: Strategic
 ROI: 0.40 (impact=0.5, confidence=0.4, effort=0.5)
 Question: Should MCP artifact reading include pagination metadata or chunk cursors to improve client UX for large outputs?
 Rationale: Large artifacts are a common UX bottleneck for downstream clients.
-Smallest experiment today: Run `ck --regex 'read_resource_text|read_artifact_chunk' -n src/llmstxt_mcp/artifacts.py`.
+Smallest experiment today: Run `ck --regex 'read_resource_text|read_artifact_chunk' -n src/lmstxt_mcp/artifacts.py`.
 Constraints: None
 Non-goals: None
 
@@ -436,7 +436,7 @@ Answer format:
 2) Risks/unknowns (bullets)
 3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
 4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "src/llmstxt_mcp/artifacts.py"
+  -f "src/lmstxt_mcp/artifacts.py"
 
 # 20 — ROI=0.30 impact=0.6 confidence=0.3 effort=0.6 horizon=Strategic category=migrations reference=Unknown
 oracle \

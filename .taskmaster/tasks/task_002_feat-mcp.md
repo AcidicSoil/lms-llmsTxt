@@ -15,7 +15,7 @@
 Implement `models.py` to define schemas for `GenerateResult`, `ArtifactRef`, and `ReadArtifactResult`. Use Pydantic to enforce types and constraints. Define `ArtifactName` literals (e.g., `llms.txt`, `llms-full.txt`). Ensure strict typing for tool arguments to leverage MCP's automatic schema generation capabilities.
 
 Libraries: `pydantic`.
-files: `src/llmstxt_mcp/models.py`.
+files: `src/lmstxt_mcp/models.py`.
 
 **Test Strategy:**
 

@@ -1,8 +1,8 @@
 Direct answer (1–4 bullets, evidence-cited)
 
-Yes—add pagination metadata / cursors, because the current “preview” path can truncate without telling the client how to continue: read_resource_text() calls read_text_preview(..., settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS) and, when truncated, only appends "... (content truncated)" with no offset/next cursor information. (See read_resource_text() in src/llmstxt_mcp/artifacts.py.)
+Yes—add pagination metadata / cursors, because the current “preview” path can truncate without telling the client how to continue: read_resource_text() calls read_text_preview(..., settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS) and, when truncated, only appends "... (content truncated)" with no offset/next cursor information. (See read_resource_text() in src/lmstxt_mcp/artifacts.py.)
 
-Chunk reads exist but are UX-hostile because they return only a raw string: read_artifact_chunk(..., offset, limit) -> str provides no next_offset, total_size, or eof indicator, so clients must guess pagination state and re-stat the file externally. (See read_artifact_chunk() signature/body in src/llmstxt_mcp/artifacts.py.)
+Chunk reads exist but are UX-hostile because they return only a raw string: read_artifact_chunk(..., offset, limit) -> str provides no next_offset, total_size, or eof indicator, so clients must guess pagination state and re-stat the file externally. (See read_artifact_chunk() signature/body in src/lmstxt_mcp/artifacts.py.)
 
 If you do cursors, define them explicitly as byte offsets and return total_bytes (and ideally content_type/encoding) because the current implementation mixes text mode reading with seek(offset) while using path.stat().st_size (bytes) as the bounds check—this is a recipe for incorrect paging on non-ASCII text or newline translation. (See file_size = path.stat().st_size and open(..., "r", encoding="utf-8"); f.seek(offset) in read_artifact_chunk().)
 
@@ -22,8 +22,8 @@ Add a new backwards-compatible API (and MCP tool) that returns a structured page
 
 If evidence is insufficient, exact missing file/path pattern(s) to attach next
 
-src/llmstxt_mcp/hashing.py (especially read_text_preview() semantics: chars vs bytes, truncation behavior)
+src/lmstxt_mcp/hashing.py (especially read_text_preview() semantics: chars vs bytes, truncation behavior)
 
-src/llmstxt_mcp/config.py (definition of LLMSTXT_MCP_RESOURCE_MAX_CHARS and any related paging limits)
+src/lmstxt_mcp/config.py (definition of LLMSTXT_MCP_RESOURCE_MAX_CHARS and any related paging limits)
 
-The MCP wiring that exposes these functions (likely src/llmstxt_mcp/server.py and/or any tool/resource registration code paths that call read_resource_text() / read_artifact_chunk()).
+The MCP wiring that exposes these functions (likely src/lmstxt_mcp/server.py and/or any tool/resource registration code paths that call read_resource_text() / read_artifact_chunk()).

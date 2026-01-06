@@ -14,7 +14,7 @@
 
 Update `server.py` or `config.py` to configure the Python `logging` module. Ensure the root logger writes to `sys.stderr` and NOT `sys.stdout`, as stdout is reserved for the JSON-RPC protocol in stdio mode. Set log levels based on the configuration.
 
-files: `src/llmstxt_mcp/server.py`.
+files: `src/lmstxt_mcp/server.py`.
 
 **Test Strategy:**
 

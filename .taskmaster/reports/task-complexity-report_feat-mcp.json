@@ -14,7 +14,7 @@
 			"taskTitle": "Artifact Directory Discovery and Resource Exposure",
 			"complexityScore": 4,
 			"recommendedSubtasks": 5,
-			"expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'llmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
+			"expansionPrompt": "Please break Task 12 into subtasks covering: 1) Implementation of 'scan_artifacts' in 'artifacts.py' using pathlib. 2) Updating 'models.py' to include schemas for artifact metadata. 3) Implementing the 'lmstxt_list_all_artifacts' tool in 'server.py'. 4) Implementing MCP resource handlers ('list_resources' and 'read_resource') for the artifact URI scheme. 5) Integration of 'security.validate_output_dir' and 'hashing.read_text_preview' within the resource read flow.",
 			"reasoning": "This task is a logical extension of existing functionality. Since the security utilities (Task 3), file reading logic (Task 5), and server infrastructure (Task 7) are already implemented and marked as 'done', the complexity lies primarily in 'wiring' these components to expose the filesystem. The use of FastMCP (as implied by Task 7) simplifies the registration of dynamic resources and tools."
 		}
 	]

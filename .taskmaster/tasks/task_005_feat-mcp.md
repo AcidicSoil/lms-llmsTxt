@@ -14,7 +14,7 @@
 
 Create `artifacts.py`. Implement `resource_uri(run_id, artifact)` to generate standard URIs. Implement `read_resource_text` which uses `hashing.read_text_preview` for truncated reads suitable for MCP Resources. Implement `read_artifact_chunk` for the chunking tool, handling `offset` and `limit` to slice file content safely. Ensure dependencies on `runs.py` to resolve `run_id` to file paths.
 
-files: `src/llmstxt_mcp/artifacts.py`.
+files: `src/lmstxt_mcp/artifacts.py`.
 
 **Test Strategy:**
 
@@ -31,7 +31,7 @@ Create the artifacts module structure and implement the URI generation helper fu
 
 **Details:**
 
-Create `src/llmstxt_mcp/artifacts.py`. Import necessary dependencies including the `RunStore` from `runs.py`. Implement the `resource_uri(run_id: str, artifact_name: str) -> str` function to generate standardized URIs (e.g., `llmstxt://{run_id}/{artifact}`) used by the MCP server to identify resources.
+Create `src/lmstxt_mcp/artifacts.py`. Import necessary dependencies including the `RunStore` from `runs.py`. Implement the `resource_uri(run_id: str, artifact_name: str) -> str` function to generate standardized URIs (e.g., `lmstxt://{run_id}/{artifact}`) used by the MCP server to identify resources.
 
 ### 5.2. Implement Truncated Resource Reading
 

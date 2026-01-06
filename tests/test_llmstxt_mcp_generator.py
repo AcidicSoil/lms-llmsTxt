@@ -1,12 +1,12 @@
 import pytest
 from unittest.mock import patch
 from pathlib import Path
-from lms_llmstxt_mcp.generator import safe_generate_llms_txt
-from lms_llmstxt_mcp.errors import OutputDirNotAllowedError
-from lms_llmstxt_mcp.runs import RunStore
-from lms_llmstxt_mcp.models import RunRecord
-from lms_llmstxt_mcp.config import settings
-from lms_llmstxt.models import GenerationArtifacts
+from lms_llmsTxt_mcp.generator import safe_generate_llms_txt
+from lms_llmsTxt_mcp.errors import OutputDirNotAllowedError
+from lms_llmsTxt_mcp.runs import RunStore
+from lms_llmsTxt_mcp.models import RunRecord
+from lms_llmsTxt_mcp.config import settings
+from lms_llmsTxt.models import GenerationArtifacts
 
 @pytest.fixture
 def run_store():
@@ -28,7 +28,7 @@ def test_safe_generate_llms_txt_success(run_store, tmp_path):
         used_fallback=False
     )
 
-    with patch("lms_llmstxt_mcp.generator.run_generation", return_value=mock_artifacts):
+    with patch("lms_llmsTxt_mcp.generator.run_generation", return_value=mock_artifacts):
         # Pass run_id=None to generate a new one
         result = safe_generate_llms_txt(
             run_store=run_store,
@@ -58,7 +58,7 @@ def test_safe_generate_llms_txt_failure(run_store, tmp_path):
     # Configure allowed root
     settings.LLMSTXT_MCP_ALLOWED_ROOT = tmp_path
 
-    with patch("lms_llmstxt_mcp.generator.run_generation") as mock_run:
+    with patch("lms_llmsTxt_mcp.generator.run_generation") as mock_run:
         mock_run.side_effect = ValueError("Boom")
 
         with pytest.raises(RuntimeError):

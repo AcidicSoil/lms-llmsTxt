@@ -23,7 +23,7 @@ def run_in_venv(venv_path, cmd, cwd=None):
         final_cmd = [python_exe] + cmd[1:]
     elif cmd[0] == 'pip':
         final_cmd = [python_exe, '-m', 'pip'] + cmd[1:]
-    elif cmd[0] in ['llmstxt', 'lllmstxt-mcp']:
+    elif cmd[0] in ['lmstxt', 'lmstxt-mcp']:
         # Binaries are in bin/ or Scripts/
         if sys.platform == 'win32':
             bin_path = os.path.join(bin_dir, f'{cmd[0]}.exe')
@@ -36,7 +36,7 @@ def run_in_venv(venv_path, cmd, cwd=None):
         
     print(f"Executing: {' '.join(final_cmd)}")
     # Use subprocess.run with timeout for MCP command as it might block if it starts the server loop
-    if cmd[0] == 'lllmstxt-mcp':
+    if cmd[0] == 'lmstxt-mcp':
         try:
             # We just want to see if it's there and can run. --help should return immediately.
             subprocess.run(final_cmd, cwd=cwd, check=True, timeout=10, capture_output=True)
@@ -60,8 +60,8 @@ def test_wheel_install(temp_venv):
     
     print(f"Testing wheel: {wheel}")
     run_in_venv(temp_venv, ['pip', 'install', wheel])
-    run_in_venv(temp_venv, ['llmstxt', '--help'])
-    run_in_venv(temp_venv, ['lllmstxt-mcp', '--help'])
+    run_in_venv(temp_venv, ['lmstxt', '--help'])
+    run_in_venv(temp_venv, ['lmstxt-mcp', '--help'])
 
 def test_sdist_install(temp_venv):
     sdists = glob.glob(os.path.join(DIST_DIR, '*.tar.gz'))
@@ -71,8 +71,8 @@ def test_sdist_install(temp_venv):
     
     print(f"Testing sdist: {sdist}")
     run_in_venv(temp_venv, ['pip', 'install', sdist])
-    run_in_venv(temp_venv, ['llmstxt', '--help'])
-    run_in_venv(temp_venv, ['lllmstxt-mcp', '--help'])
+    run_in_venv(temp_venv, ['lmstxt', '--help'])
+    run_in_venv(temp_venv, ['lmstxt-mcp', '--help'])
 
 if __name__ == '__main__':
     # Manual execution block for CI

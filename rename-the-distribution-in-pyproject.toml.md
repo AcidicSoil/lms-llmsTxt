@@ -1,10 +1,10 @@
 ## Checklist: rename the distribution in `pyproject.toml`
 
-Current state: your distribution name is `lmstudio-llmstxt-generator`, and you expose two CLI commands via `[project.scripts]`: `lmstxt` and `llmstxt-mcp`.
+Current state: your distribution name is `lmstudio-lmstxt-generator`, and you expose two CLI commands via `[project.scripts]`: `lmstxt` and `lmstxt-mcp`.
 
 * [ ] **Pick the new distribution name** (the thing users `pip install ...`, and what shows up on PyPI). This is `[project].name` per PEP 621. ([Python Enhancement Proposals (PEPs)][1])
 
-  * [ ] Prefer something short and aligned with how users run it (e.g., aligned with `llmstxt-mcp` or `lmstxt`) to reduce “package name vs command name” confusion.
+  * [ ] Prefer something short and aligned with how users run it (e.g., aligned with `lmstxt-mcp` or `lmstxt`) to reduce “package name vs command name” confusion.
 
 * [ ] **Validate name rules + normalization behavior before you commit**
 
@@ -50,7 +50,7 @@ Current state: your distribution name is `lmstudio-llmstxt-generator`, and you e
   * [ ] Install the wheel in a clean venv and run:
 
     * `lmstxt --help`
-    * `llmstxt-mcp`
+    * `lmstxt-mcp`
       (ensures metadata + entry points are correct). ([Python Packaging][4])
 
 [1]: https://peps.python.org/pep-0621/?utm_source=chatgpt.com "PEP 621 – Storing project metadata in pyproject.toml"

@@ -3,7 +3,7 @@
 ## Prerequisites
 
 1. **PyPI Account**: You must have an account on [PyPI](https://pypi.org) and [TestPyPI](https://test.pypi.org).
-2. **Permissions**: Ensure you are a maintainer on the PyPI project `lmstudio-llmstxt-generator`.
+2. **Permissions**: Ensure you are a maintainer on the PyPI project `lmstudio-lmstxt-generator`.
 3. **Trusted Publishing**: The project uses GitHub Actions OIDC. Ensure the GitHub Environment `pypi` is configured in repository settings.
 
 ## Versioning

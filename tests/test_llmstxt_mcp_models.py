@@ -1,6 +1,6 @@
 import pytest
 from pydantic import ValidationError
-from lms_llmstxt_mcp.models import GenerateResult, ArtifactRef, ReadArtifactResult
+from lms_llmsTxt_mcp.models import GenerateResult, ArtifactRef, ReadArtifactResult
 
 def test_artifact_ref_validation():
     ref = ArtifactRef(name="llms.txt", path="/tmp/foo", size_bytes=100, hash_sha256="abc")

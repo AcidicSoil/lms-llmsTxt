@@ -14,7 +14,7 @@
 
 Create `runs.py` containing a `RunStore` class. This should maintain an in-memory dictionary mapping `run_id` to `RunRecord` objects. Implement methods `put_run(run_record)`, `get_run(run_id)`, and `list_runs(limit)`. Use a thread-safe approach if necessary, though simple dicts are atomic in Python for single operations. This store bridges the generation and reading steps.
 
-files: `src/llmstxt_mcp/runs.py`.
+files: `src/lmstxt_mcp/runs.py`.
 
 **Test Strategy:**
 

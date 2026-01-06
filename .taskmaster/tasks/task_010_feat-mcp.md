@@ -12,7 +12,7 @@
 
 **Details:**
 
-Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `llmstxt-mcp = llmstxt_mcp.server:main`). Verify that running `llmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.
+Ensure `pyproject.toml` defines the correct `project.scripts` entry point (e.g., `lmstxt-mcp = lmstxt_mcp.server:main`). Verify that running `lmstxt-mcp` defaults to stdio mode and accepts flags for HTTP mode if implemented. Create a basic README documenting installation and usage.
 
 files: `pyproject.toml`, `README.md`.
 

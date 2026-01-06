@@ -42,7 +42,7 @@ Install dependencies inside a virtual environment to avoid PEP 668 “externall
     ```bash
     pip install -e .[dev]
     ```
-    Installing the editable package exposes the `lmstudio-llmstxt` CLI and brings in the `lmstudio` Python SDK plus pytest.
+    Installing the editable package exposes the `lmstudio-lmstxt` CLI and brings in the `lmstudio` Python SDK plus pytest.
   </Step>
 </Steps>
 
@@ -70,7 +70,7 @@ Keep the virtual environment active while running the CLI or tests so the SDK-ba
 Run the CLI against any GitHub repository:
 
 ```bash
-lmstudio-llmstxt https://github.com/owner/repo \
+lmstudio-lmstxt https://github.com/owner/repo \
   --model qwen/qwen3-4b-2507 \
   --api-base http://localhost:1234/v1 \
   --stamp
@@ -176,7 +176,7 @@ pathlib.Path("logs").mkdir(exist_ok=True)
 for u in urls:
     owner_repo = "-".join(u.rstrip(")").split("/")[-2:])
     log = pathlib.Path("logs") / f"{owner_repo}.log"
-    # swap "lmstxt" with "lmstudio-llmstxt" if that's your installed CLI
+    # swap "lmstxt" with "lmstudio-lmstxt" if that's your installed CLI
     cmd = ["lmstxt", u]
     print(">>", " ".join(cmd))
     with log.open("w", encoding="utf-8") as fh:
@@ -215,7 +215,7 @@ logger = logging.getLogger(__name__)
 
 _URL_VALIDATION_TIMEOUT = 5
 _URL_SESSION = requests.Session()
-_URL_HEADERS = {"User-Agent": "lmstudio-llmstxt-generator"}
+_URL_HEADERS = {"User-Agent": "lmstudio-lmstxt-generator"}
 
 
 def _nicify_title(path: str) -> str:
@@ -499,7 +499,7 @@ from .pipeline import run_generation
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="lmstudio-llmstxt",
+        prog="lmstudio-lmstxt",
         description="Generate llms.txt artifacts for a GitHub repository using LM Studio.",
     )
     parser.add_argument("repo", help="GitHub repository URL (https://github.com/<owner>/<repo>)")
@@ -834,7 +834,7 @@ def gh_get_file(
     params = {"ref": ref} if ref else {}
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "llmstxt-generator",
+        "User-Agent": "lmstxt-generator",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"
@@ -860,7 +860,7 @@ def fetch_raw_file(
     url = f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{path}"
     response = requests.get(
         url,
-        headers={"User-Agent": "llmstxt-generator"},
+        headers={"User-Agent": "lmstxt-generator"},
         timeout=30,
     )
     if response.status_code == 404:
@@ -1000,7 +1000,7 @@ def _html_to_text(html: str) -> str:
     return cleaned.strip()
 
 
-def _fetch_website(url: str, user_agent: str = "llmstxt-generator", timeout: int = 30) -> str:
+def _fetch_website(url: str, user_agent: str = "lmstxt-generator", timeout: int = 30) -> str:
     resp = requests.get(url, headers={"User-Agent": user_agent}, timeout=timeout)
     resp.raise_for_status()
     # prefer text; if bytes fallback, requests gives .text with encoding guess
@@ -1209,7 +1209,7 @@ def owner_repo_from_url(repo_url: str) -> tuple[str, str]:
 def _auth_headers(token: str | None) -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
-        "User-Agent": "lmstudio-llmstxt-generator",
+        "User-Agent": "lmstudio-lmstxt-generator",
     }
     if token:
         headers["Authorization"] = f"Bearer {token}"

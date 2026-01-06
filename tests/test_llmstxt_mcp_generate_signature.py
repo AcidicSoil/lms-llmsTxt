@@ -1,8 +1,8 @@
 from unittest.mock import patch
 import pytest
-from lms_llmstxt_mcp.generator import safe_generate_llms_txt
-from lms_llmstxt_mcp.runs import RunStore
-from lms_llmstxt.pipeline import run_generation
+from lms_llmsTxt_mcp.generator import safe_generate_llms_txt
+from lms_llmsTxt_mcp.runs import RunStore
+from lms_llmsTxt.pipeline import run_generation
 
 def test_safe_generate_llms_txt_calls_run_generation_with_correct_signature():
     """
@@ -12,9 +12,9 @@ def test_safe_generate_llms_txt_calls_run_generation_with_correct_signature():
     run_store = RunStore()
     
     # autospec=True is the key here: it will raise TypeError if called with wrong args
-    with patch("lms_llmstxt_mcp.generator.run_generation", autospec=True) as mock_run:
+    with patch("lms_llmsTxt_mcp.generator.run_generation", autospec=True) as mock_run:
         # We don't need it to actually do anything, just not crash on call
-        mock_run.return_value = pytest.importorskip("lms_llmstxt.models").GenerationArtifacts(
+        mock_run.return_value = pytest.importorskip("lms_llmsTxt.models").GenerationArtifacts(
             llms_txt_path="foo",
             llms_full_path="bar",
             used_fallback=False

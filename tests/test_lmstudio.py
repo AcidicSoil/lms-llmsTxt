@@ -5,10 +5,10 @@ from pathlib import Path
 import pytest
 import requests
 
-from lms_llmstxt.config import AppConfig
-from lms_llmstxt import pipeline
-import lms_llmstxt.lmstudio as lmstudio
-from lms_llmstxt.lmstudio import LMStudioConnectivityError
+from lms_llmsTxt.config import AppConfig
+from lms_llmsTxt import pipeline
+import lms_llmsTxt.lmstudio as lmstudio
+from lms_llmsTxt.lmstudio import LMStudioConnectivityError
 
 
 class _FakeResponse:

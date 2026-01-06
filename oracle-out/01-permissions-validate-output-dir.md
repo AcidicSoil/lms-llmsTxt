@@ -32,10 +32,10 @@ If evidence is insufficient, name the exact missing file/path pattern(s) to atta
 
 The write call sites that consume the returned Path:
 
-src/llmstxt_mcp/server.py (tool handlers that accept output_dir and invoke generation)
+src/lmstxt_mcp/server.py (tool handlers that accept output_dir and invoke generation)
 
-Any module that actually writes artifacts on disk (likely src/llmstxt_mcp/generator.py, plus any file I/O helpers)
+Any module that actually writes artifacts on disk (likely src/lmstxt_mcp/generator.py, plus any file I/O helpers)
 
 Any path-join / artifact path construction code (e.g., where filenames are derived from user input)
 
-If present: tests folder for existing security/path tests, e.g. tests/** or src/llmstxt_mcp/**test**.
+If present: tests folder for existing security/path tests, e.g. tests/** or src/lmstxt_mcp/**test**.

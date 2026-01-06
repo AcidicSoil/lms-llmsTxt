@@ -1,4 +1,4 @@
---- 
+---
 title: "LM Studio llms.txt Generator"
 description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub repositories using DSPy with LM Studio."
 ---
@@ -37,7 +37,7 @@ Install dependencies inside a virtual environment to avoid PEP 668 “externall
     ```bash
     pip install -e .[dev]
     ```
-    Installing the editable package exposes the `llmstxt` CLI and the `lllmstxt-mcp` server.
+    Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` server.
   </Step>
 </Steps>
 
@@ -65,7 +65,7 @@ Keep the virtual environment active while running the CLI or tests so the SDK-ba
 Run the CLI against any GitHub repository:
 
 ```bash
-llmstxt https://github.com/owner/repo \
+lmstxt https://github.com/owner/repo \
   --model qwen/qwen3-4b-2507 \
   --api-base http://localhost:1234/v1 \
   --stamp
@@ -103,21 +103,21 @@ This package includes a FastMCP server that exposes the generator as an MCP tool
 ### Features
 - **Asynchronous Processing**: Tool calls return a `run_id` immediately while generation happens in the background.
 - **Tools**:
-  - `lllmstxt_generate_llms_txt`: Trigger `llms.txt` generation.
-  - `lllmstxt_generate_llms_full`: Generate `llms-full.txt` from an existing run.
-  - `lllmstxt_generate_llms_ctx`: Generate `llms-ctx.txt` (requires `llms_txt`).
-  - `lllmstxt_list_runs`: View recent generation history and status.
-  - `lllmstxt_read_artifact`: Read generated files with pagination support.
-  - `lllmstxt_list_all_artifacts`: List all persistent `.txt` artifacts on disk.
+  - `lmstxt_generate_llms_txt`: Trigger `llms.txt` generation.
+  - `lmstxt_generate_llms_full`: Generate `llms-full.txt` from an existing run.
+  - `lmstxt_generate_llms_ctx`: Generate `llms-ctx.txt` (requires `llms_txt`).
+  - `lmstxt_list_runs`: View recent generation history and status.
+  - `lmstxt_read_artifact`: Read generated files with pagination support.
+  - `lmstxt_list_all_artifacts`: List all persistent `.txt` artifacts on disk.
 - **Resources**:
-  - **Run-specific**: `lllmstxt://runs/{run_id}/{artifact_name}`
-  - **Persistent Directory**: `lllmstxt://artifacts/{filename}` (e.g., `lllmstxt://artifacts/owner/repo/repo-llms.txt`)
+  - **Run-specific**: `lmstxt://runs/{run_id}/{artifact_name}`
+  - **Persistent Directory**: `lmstxt://artifacts/{filename}` (e.g., `lmstxt://artifacts/owner/repo/repo-llms.txt`)
 
 ### Running the Server
 
 ```bash
 # Default stdio transport
-lllmstxt-mcp
+lmstxt-mcp
 ```
 
 ### Client Configuration
@@ -128,8 +128,8 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `config.tom
 ```json
 {
   "mcpServers": {
-    "lllmstxt": {
-      "command": "lllmstxt-mcp",
+    "lmstxt": {
+      "command": "lmstxt-mcp",
       "env": {
         "GITHUB_ACCESS_TOKEN": "your_token",
         "LMSTUDIO_BASE_URL": "http://localhost:1234/v1"
@@ -141,13 +141,13 @@ Add to your MCP client config (e.g., `claude_desktop_config.json` or `config.tom
 
 #### Codex / CLI (toml)
 ```toml
-[mcp_servers.lllmstxt]
-command = "lllmstxt-mcp"
+[mcp_servers.lmstxt]
+command = "lmstxt-mcp"
 args = ["stdio"]
 startup_timeout_sec = 30
 tool_timeout_sec = 30
 
-[mcp_servers.lllmstxt.env]
+[mcp_servers.lmstxt.env]
 GITHUB_ACCESS_TOKEN = "your_token"
 LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 ```
@@ -162,8 +162,8 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 
 ## Project layout
 
-- `src/lms_llmstxt/` – core generation library, DSPy analyzers, and LM Studio helpers.
-- `src/llms_llmstxt_mcp/` – MCP server implementation, asynchronous worker, and resource providers.
+- `src/lms_llmsTxt/` – core generation library, DSPy analyzers, and LM Studio helpers.
+- `src/lms_llmsTxt_mcp/` – MCP server implementation, asynchronous worker, and resource providers.
 - `tests/` – pytest coverage for the generator pipeline and MCP server.
 - `artifacts/` – sample outputs from previous runs.
 
@@ -183,12 +183,12 @@ If `pip install -e .[dev]` fails with build tool errors, ensure `cmake` and nece
 </Warning>
 
 <Tip>
-If the MCP server times out during generation, check `lllmstxt_list_runs` to see if the background task is still processing. The `lllmstxt_generate_*` tools return immediately to avoid client timeouts.
+If the MCP server times out during generation, check `lmstxt_list_runs` to see if the background task is still processing. The `lmstxt_generate_*` tools return immediately to avoid client timeouts.
 </Tip>
 
 ### MCP Inspector
 
 ```bash
-npx @modelcontextprotocol/inspector --config ./inspector.config.json --server lllmstxt
+npx @modelcontextprotocol/inspector --config ./inspector.config.json --server lmstxt
 ```
 Use the payloads in `docs/mcp-inspector-payloads.md` to verify specific tool behaviors.

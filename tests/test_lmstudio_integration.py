@@ -1,8 +1,8 @@
 import os
 from pathlib import Path
 import pytest
-from lms_llmstxt.config import AppConfig
-from lms_llmstxt.pipeline import run_generation
+from lms_llmsTxt.config import AppConfig
+from lms_llmsTxt.pipeline import run_generation
 
 @pytest.mark.integration
 def test_real_generation(tmp_path):

@@ -7,10 +7,10 @@ import pytest
 @pytest.mark.integration
 def test_mcp_stdio_server():
     """
-    Launches the installed llmstxt-mcp CLI and verifies JSON-RPC communication.
+    Launches the installed lmstxt-mcp CLI and verifies JSON-RPC communication.
     """
     # Verify the command exists in the path/venv
-    cmd = ["venv_test/bin/llmstxt-mcp"]
+    cmd = ["venv_test/bin/lmstxt-mcp"]
     
     # We need to run this in the context where the package is installed
     # subprocess.Popen will use the current environment variables
@@ -52,8 +52,8 @@ def test_mcp_stdio_server():
         resp = json.loads(response_line)
         assert resp.get("id") == 1
         assert "result" in resp
-        # Matches FastMCP("lms-llmstxt")
-        assert resp["result"]["serverInfo"]["name"] == "lms-llmstxt"
+        # Matches FastMCP("lms-lmstxt")
+        assert resp["result"]["serverInfo"]["name"] == "lms-lmstxt"
 
         # 2. Initialized Notification
         notify_req = {
@@ -81,11 +81,11 @@ def test_mcp_stdio_server():
         tools = resp["result"]["tools"]
         tool_names = [t["name"] for t in tools]
         
-        assert "llmstxt_generate_llms_txt" in tool_names
-        assert "llmstxt_generate_llms_full" in tool_names
-        assert "llmstxt_generate_llms_ctx" in tool_names
-        assert "llmstxt_list_runs" in tool_names
-        assert "llmstxt_read_artifact" in tool_names
+        assert "lmstxt_generate_llms_txt" in tool_names
+        assert "lmstxt_generate_llms_full" in tool_names
+        assert "lmstxt_generate_llms_ctx" in tool_names
+        assert "lmstxt_list_runs" in tool_names
+        assert "lmstxt_read_artifact" in tool_names
 
     finally:
         process.kill()

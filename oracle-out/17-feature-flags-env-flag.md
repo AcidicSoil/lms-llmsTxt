@@ -22,6 +22,6 @@ If evidence is insufficient, exact missing file/path pattern(s) to attach next
 
 src/lmstudiotxt_generator/cli.py (to see how/where warnings or debug summaries are surfaced to users)
 
-src/llmstxt_mcp/server.py (to confirm logging/stderr routing and whether config is constructed in request paths)
+src/lmstxt_mcp/server.py (to confirm logging/stderr routing and whether config is constructed in request paths)
 
 tests/**/test_config*.py (or any existing test layout) to match project testing conventions for the new validation test

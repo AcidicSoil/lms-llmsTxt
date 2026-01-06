@@ -1,6 +1,6 @@
 import json
-from lms_llmstxt_mcp.server import run_store
-from lms_llmstxt_mcp.models import GenerateResult, ArtifactRef
+from lms_llmsTxt_mcp.server import run_store
+from lms_llmsTxt_mcp.models import GenerateResult, ArtifactRef
 import pytest
 
 def test_list_runs_tool():
@@ -12,7 +12,7 @@ def test_list_runs_tool():
     )
     run_store.put_run(run)
     
-    from lms_llmstxt_mcp.server import list_runs
+    from lms_llmsTxt_mcp.server import list_runs
     
     # Returns JSON string now
     json_res = list_runs(limit=10)
@@ -32,7 +32,7 @@ def test_read_artifact_tool(tmp_path):
     )
     run_store.put_run(run)
     
-    from lms_llmstxt_mcp.server import read_artifact
+    from lms_llmsTxt_mcp.server import read_artifact
     
     # Returns JSON string
     json_res = read_artifact(run_id="read-test", artifact_name="llms.txt", offset=0, limit=100)
@@ -53,7 +53,7 @@ def test_resource_access(tmp_path):
     )
     run_store.put_run(run)
     
-    from lms_llmstxt_mcp.server import get_run_artifact
+    from lms_llmsTxt_mcp.server import get_run_artifact
     
     content = get_run_artifact(run_id="res-test", artifact_name="llms.txt")
     assert content == "resource content"

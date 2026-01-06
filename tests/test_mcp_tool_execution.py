@@ -7,9 +7,9 @@ import pytest
 @pytest.mark.integration
 def test_mcp_stdio_server_tool_execution():
     """
-    Launches the installed llmstxt-mcp CLI and verifies actual tool execution via JSON-RPC.
+    Launches the installed lmstxt-mcp CLI and verifies actual tool execution via JSON-RPC.
     """
-    cmd = ["venv_test/bin/llmstxt-mcp"]
+    cmd = ["venv_test/bin/lmstxt-mcp"]
     
     process = subprocess.Popen(
         cmd,
@@ -44,14 +44,14 @@ def test_mcp_stdio_server_tool_execution():
         }) + "\n")
         process.stdin.flush()
 
-        # 3. Execute Tool: llmstxt_list_runs
+        # 3. Execute Tool: lmstxt_list_runs
         # This tests that arguments (limit) are correctly parsed and the result marshaled back.
         call_req = {
             "jsonrpc": "2.0",
             "id": 2,
             "method": "tools/call",
             "params": {
-                "name": "llmstxt_list_runs",
+                "name": "lmstxt_list_runs",
                 "arguments": {
                     "limit": 5
                 }
@@ -78,14 +78,14 @@ def test_mcp_stdio_server_tool_execution():
         assert isinstance(runs, list)
         assert len(runs) == 0 # RunStore is empty on fresh start
 
-        # 4. Execute Tool: llmstxt_read_artifact (Error case)
+        # 4. Execute Tool: lmstxt_read_artifact (Error case)
         # This tests error handling for missing arguments or logical errors
         call_req_error = {
             "jsonrpc": "2.0",
             "id": 3,
             "method": "tools/call",
             "params": {
-                "name": "llmstxt_read_artifact",
+                "name": "lmstxt_read_artifact",
                 "arguments": {
                     "run_id": "missing-id",
                     "artifact_name": "llms.txt",

@@ -8,7 +8,7 @@ pathlib.Path("logs").mkdir(exist_ok=True)
 for u in urls:
     owner_repo = "-".join(u.rstrip(")").split("/")[-2:])
     log = pathlib.Path("logs") / f"{owner_repo}.log"
-    # swap "lmstxt" with "lmstudio-llmstxt" if that's your installed CLI
+    # swap "lmstxt" with "lmstudio-lmstxt" if that's your installed CLI
     cmd = ["lmstxt", u]
     print(">>", " ".join(cmd))
     with log.open("w", encoding="utf-8") as fh:

@@ -12,10 +12,10 @@
 
 **Details:**
 
-Initialize the project following the `src/llmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-llmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.
+Initialize the project following the `src/lmstxt_mcp/` structure. Create `config.py` using Pydantic Settings or `python-dotenv` to manage environment variables (e.g., `LLMSTXT_MCP_ALLOWED_ROOT`, `LLMSTXT_MCP_RESOURCE_MAX_CHARS`). Ensure `pyproject.toml` includes dependencies for `mcp` (using `fastmcp` if available/compatible or standard `mcp` SDK) and the local `lmstudio-lmstxt-generator` package. Set up `errors.py` to define custom exception classes like `OutputDirNotAllowedError` and `LMStudioUnavailableError`.
 
 Libraries: `pydantic`, `pydantic-settings`, `mcp`.
-files: `src/llmstxt_mcp/config.py`, `src/llmstxt_mcp/errors.py`, `pyproject.toml`.
+files: `src/lmstxt_mcp/config.py`, `src/lmstxt_mcp/errors.py`, `pyproject.toml`.
 
 **Test Strategy:**
 

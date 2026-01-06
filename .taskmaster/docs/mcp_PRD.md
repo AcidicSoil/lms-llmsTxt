@@ -2,7 +2,7 @@
 
 ## Problem
 
-`lmstudio-llmstxt-generator` is currently a CLI/library that generates `llms.txt`, `llms-full.txt`, and optionally `llms-ctx.txt` for a given GitHub repo URL.
+`lmstudio-lmstxt-generator` is currently a CLI/library that generates `llms.txt`, `llms-full.txt`, and optionally `llms-ctx.txt` for a given GitHub repo URL.
 
 Goal: wrap this generator as an **MCP server** so MCP clients (IDE agents, chat apps, automation runners) can (a) trigger generation and (b) read the produced artifacts as MCP resources/tools, without re-implementing the pipeline logic.
 
@@ -74,7 +74,7 @@ Expose generated artifacts through MCP Resources plus chunked reads.
 
 * **Description**: Provide MCP resource URIs for each produced artifact.
 * **Inputs**: `run_id`, `artifact_name`.
-* **Outputs**: resource URI string (e.g., `llmstxt://runs/{run_id}/{artifact}`).
+* **Outputs**: resource URI string (e.g., `lmstxt://runs/{run_id}/{artifact}`).
 * **Behavior**: Deterministically format URIs and resolve to on-disk paths via the run registry.
 
 #### Feature: Resource read truncation (MVP)
@@ -165,11 +165,11 @@ Support typical MCP deployment modes.
 ## Repository structure (proposed)
 
 ```
-llmstxt-mcp/
+lmstxt-mcp/
 ├── pyproject.toml
 ├── README.md
 ├── src/
-│  └── llmstxt_mcp/
+│  └── lmstxt_mcp/
 │     ├── __init__.py
 │     ├── models.py
 │     ├── errors.py
@@ -191,7 +191,7 @@ llmstxt-mcp/
 
 ## Module definitions
 
-### Module: `llmstxt_mcp.models`
+### Module: `lmstxt_mcp.models`
 
 * **Maps to capability**: Artifact Access, Run Management
 * **Responsibility**: Typed request/response models and shared type literals.
@@ -202,7 +202,7 @@ llmstxt-mcp/
   * `GenerateResult`
   * `ReadArtifactResult`
 
-### Module: `llmstxt_mcp.errors`
+### Module: `lmstxt_mcp.errors`
 
 * **Maps to capability**: Generation Orchestration, Security & Isolation
 * **Responsibility**: Define server-local exception types and error normalization helpers.
@@ -214,7 +214,7 @@ llmstxt-mcp/
   * `ArtifactNotFoundError`
   * `LMStudioUnavailableError`
 
-### Module: `llmstxt_mcp.config`
+### Module: `lmstxt_mcp.config`
 
 * **Maps to capability**: Security & Isolation, Transport & Compatibility
 * **Responsibility**: Read and validate server-level configuration (env + defaults).
@@ -223,7 +223,7 @@ llmstxt-mcp/
   * `ServerConfig` (allowed root, resource cap, preview cap, log level)
   * `load_server_config()`
 
-### Module: `llmstxt_mcp.security`
+### Module: `lmstxt_mcp.security`
 
 * **Maps to capability**: Security & Isolation
 * **Responsibility**: Path validation and allowlist enforcement.
@@ -231,7 +231,7 @@ llmstxt-mcp/
 
   * `validate_output_dir(output_dir: str | None) -> Path | None`
 
-### Module: `llmstxt_mcp.hashing`
+### Module: `lmstxt_mcp.hashing`
 
 * **Maps to capability**: Generation Orchestration
 * **Responsibility**: File hashing and text preview extraction.
@@ -240,7 +240,7 @@ llmstxt-mcp/
   * `sha256_file(path: Path) -> str`
   * `read_text_preview(path: Path, max_chars: int) -> (str, bool)`
 
-### Module: `llmstxt_mcp.runs`
+### Module: `lmstxt_mcp.runs`
 
 * **Maps to capability**: Run Management
 * **Responsibility**: Store and query run registry (in-memory for MVP).
@@ -249,7 +249,7 @@ llmstxt-mcp/
   * `RunRecord`
   * `RunStore` (`put_run`, `get_run`, `list_runs`)
 
-### Module: `llmstxt_mcp.artifacts`
+### Module: `lmstxt_mcp.artifacts`
 
 * **Maps to capability**: Artifact Access
 * **Responsibility**: Resolve artifact names to paths, build URIs, read/truncate/chunk content.
@@ -259,15 +259,15 @@ llmstxt-mcp/
   * `read_resource_text(run_id, artifact, max_chars) -> str`
   * `read_artifact_chunk(run_id, artifact, offset, limit) -> ReadArtifactResult`
 
-### Module: `llmstxt_mcp.server`
+### Module: `lmstxt_mcp.server`
 
 * **Maps to capability**: Transport & Compatibility, Generation Orchestration
 * **Responsibility**: Define MCP tools/resources and wire them to the generator + internal modules.
 * **Exports**:
 
   * `mcp` (FastMCP instance)
-  * Tool fns: `llmstxt_generate`, `llmstxt_list_runs`, `llmstxt_read_artifact`
-  * Resource handler: `llmstxt://runs/{run_id}/{artifact}`
+  * Tool fns: `lmstxt_generate`, `lmstxt_list_runs`, `lmstxt_read_artifact`
+  * Resource handler: `lmstxt://runs/{run_id}/{artifact}`
 
 ### External dependency: `lmstudiotxt_generator` (existing)
 
@@ -284,23 +284,23 @@ llmstxt-mcp/
 
 ### Foundation layer
 
-* **`llmstxt_mcp.models`**: No dependencies
-* **`llmstxt_mcp.errors`**: Depends on: [`llmstxt_mcp.models`] (for consistent naming/types)
-* **`llmstxt_mcp.config`**: Depends on: [`llmstxt_mcp.errors`]
-* **`llmstxt_mcp.security`**: Depends on: [`llmstxt_mcp.config`, `llmstxt_mcp.errors`]
-* **`llmstxt_mcp.hashing`**: Depends on: [`llmstxt_mcp.errors`]
+* **`lmstxt_mcp.models`**: No dependencies
+* **`lmstxt_mcp.errors`**: Depends on: [`lmstxt_mcp.models`] (for consistent naming/types)
+* **`lmstxt_mcp.config`**: Depends on: [`lmstxt_mcp.errors`]
+* **`lmstxt_mcp.security`**: Depends on: [`lmstxt_mcp.config`, `lmstxt_mcp.errors`]
+* **`lmstxt_mcp.hashing`**: Depends on: [`lmstxt_mcp.errors`]
 
 ### Run management layer
 
-* **`llmstxt_mcp.runs`**: Depends on: [`llmstxt_mcp.models`, `llmstxt_mcp.errors`]
+* **`lmstxt_mcp.runs`**: Depends on: [`lmstxt_mcp.models`, `lmstxt_mcp.errors`]
 
 ### Artifact access layer
 
-* **`llmstxt_mcp.artifacts`**: Depends on: [`llmstxt_mcp.models`, `llmstxt_mcp.errors`, `llmstxt_mcp.hashing`, `llmstxt_mcp.runs`, `llmstxt_mcp.config`]
+* **`lmstxt_mcp.artifacts`**: Depends on: [`lmstxt_mcp.models`, `lmstxt_mcp.errors`, `lmstxt_mcp.hashing`, `lmstxt_mcp.runs`, `lmstxt_mcp.config`]
 
 ### Integration/orchestration layer
 
-* **`llmstxt_mcp.server`**: Depends on: [`llmstxt_mcp.config`, `llmstxt_mcp.security`, `llmstxt_mcp.hashing`, `llmstxt_mcp.runs`, `llmstxt_mcp.artifacts`, external `lmstudiotxt_generator`]
+* **`lmstxt_mcp.server`**: Depends on: [`lmstxt_mcp.config`, `lmstxt_mcp.security`, `lmstxt_mcp.hashing`, `lmstxt_mcp.runs`, `lmstxt_mcp.artifacts`, external `lmstudiotxt_generator`]
 
 Acyclic by construction: all arrows point from higher layers to lower layers.
 
@@ -357,9 +357,9 @@ Acyclic by construction: all arrows point from higher layers to lower layers.
 
   * Acceptance:
 
-    * Tool `llmstxt_generate` calls generator and returns metadata + URIs.
-    * Resource `llmstxt://runs/{run_id}/{artifact}` reads and truncates.
-    * Tool `llmstxt_read_artifact` returns chunked content.
+    * Tool `lmstxt_generate` calls generator and returns metadata + URIs.
+    * Resource `lmstxt://runs/{run_id}/{artifact}` reads and truncates.
+    * Tool `lmstxt_read_artifact` returns chunked content.
     * Logs go to stderr (stdio-safe).
   * Tests:
 
@@ -403,7 +403,7 @@ Acyclic by construction: all arrows point from higher layers to lower layers.
 
 * [ ] Packaging + console script verification (depends on: `server`)
 
-  * Acceptance: `llmstxt-mcp` entrypoint works; both transports runnable.
+  * Acceptance: `lmstxt-mcp` entrypoint works; both transports runnable.
   * Tests: smoke test invoking module main under a subprocess harness.
 * [ ] Documentation for configuration + examples (depends on: `config`, `server`)
 
@@ -417,24 +417,24 @@ Acyclic by construction: all arrows point from higher layers to lower layers.
 
 ## Personas
 
-* **IDE Agent**: Calls `llmstxt_generate(repo_url)` then loads `llms.txt` resource to decide what to read next; uses chunk tool for `llms-full.txt`.
+* **IDE Agent**: Calls `lmstxt_generate(repo_url)` then loads `llms.txt` resource to decide what to read next; uses chunk tool for `llms-full.txt`.
 * **Ops/Automation**: Runs HTTP transport in a service; calls generate for multiple repos; records hashes for change detection.
 
 ## Key flows
 
 1. **Generate**
 
-   * User/agent calls `llmstxt_generate` with a GitHub repo URL and optional flags.
+   * User/agent calls `lmstxt_generate` with a GitHub repo URL and optional flags.
    * Receives `run_id` + artifact list (URI + metadata + preview).
 2. **Read small artifacts**
 
-   * Client reads `llmstxt://runs/{run_id}/llms.txt` as a resource.
+   * Client reads `lmstxt://runs/{run_id}/llms.txt` as a resource.
 3. **Read large artifacts**
 
-   * Client uses `llmstxt_read_artifact(run_id="...", artifact="llms-full.txt", offset=..., limit=...)` iteratively.
+   * Client uses `lmstxt_read_artifact(run_id="...", artifact="llms-full.txt", offset=..., limit=...)` iteratively.
 4. **List runs**
 
-   * Client calls `llmstxt_list_runs(limit=...)` to rediscover previous outputs.
+   * Client calls `lmstxt_list_runs(limit=...)` to rediscover previous outputs.
 
 ## UI/UX notes (protocol-facing)
 
@@ -467,12 +467,12 @@ Acyclic by construction: all arrows point from higher layers to lower layers.
 
 * **Tools**
 
-  * `llmstxt_generate(...) -> GenerateResult`
-  * `llmstxt_read_artifact(run_id, artifact, offset, limit) -> ReadArtifactResult`
-  * `llmstxt_list_runs(limit) -> {count, runs[]}`
+  * `lmstxt_generate(...) -> GenerateResult`
+  * `lmstxt_read_artifact(run_id, artifact, offset, limit) -> ReadArtifactResult`
+  * `lmstxt_list_runs(limit) -> {count, runs[]}`
 * **Resources**
 
-  * `llmstxt://runs/{run_id}/{artifact}` → capped text read
+  * `lmstxt://runs/{run_id}/{artifact}` → capped text read
 
 ## Key decisions (with rationale)
 
@@ -580,6 +580,6 @@ Acyclic by construction: all arrows point from higher layers to lower layers.
 ## References (provided context)
 
 * MCP wrapper concept and exposed tools/resources.
-* Current MCP scaffold (`llmstxt_generate`, chunked reads, resource truncation, stderr logging).
+* Current MCP scaffold (`lmstxt_generate`, chunked reads, resource truncation, stderr logging).
 * Existing generator pipeline, artifact outputs, fallback behavior, and GitHub integration.
 * Project README for generator usage and prerequisites.
