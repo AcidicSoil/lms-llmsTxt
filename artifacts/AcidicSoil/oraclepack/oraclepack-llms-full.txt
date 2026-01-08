@@ -323,6 +323,51 @@ Once installed, you can use all the Task Master commands!
 
 Quick test: Run `/taskmaster:help` to see all available commands.
 
+--- .config/mcp/oraclepack-taskify/references/workflow-overview.md ---
+# Stage 3 (oraclepack-taskify) — Workflow overview
+
+## What this stage solves
+
+Stage 1 produces a 20-question oracle pack.
+Stage 2 runs oraclepack and produces 20 answer files.
+
+Stage 2 outputs are answers, not work. Stage 3 creates the deterministic bridge from answers to executable planning artifacts and (by default) starts a guarded autopilot to begin implementation.
+
+## Inputs
+
+- A completed oraclepack output directory containing exactly:
+  - `01-*.md` … `20-*.md` (one file per prefix)
+- Optional additional files to improve synthesis fidelity (extra attachments)
+
+## Primary output (this skill generates)
+
+- An “Action Pack” markdown file at:
+  - default: `docs/oracle-actions-pack-YYYY-MM-DD.md`
+  - override: `pack_path=...`
+
+The Action Pack is designed to be executed as a deterministic pipeline.
+
+## Artifacts the Action Pack produces when executed
+
+- Canonical actions:
+  - `<out_dir>/_actions.json` (machine-consumable)
+  - `<out_dir>/_actions.md` (human summary)
+- PRD/spec suitable for Task Master:
+  - `.taskmaster/docs/oracle-actions-prd.md`
+- Task Master outputs:
+  - tasks created/expanded by `task-master`
+  - complexity report: `<out_dir>/tm-complexity.json`
+- Optional:
+  - pipelines doc: `docs/oracle-actions-pipelines.md` (pipelines mode)
+  - autopilot entrypoint + state file (autopilot mode, default)
+
+## Execution modes
+
+- backlog: actions → PRD → tasks
+- pipelines: backlog + pipelines generation
+- autopilot (default): backlog + guarded autopilot entrypoint
+
+
 --- docs/strategist-questions-oracle-pack-2026-01-02.md ---
 Output file: docs/strategist-questions-oracle-pack-2026-01-02.md
 <!-- generated_at: 2026-01-02T00:00:00Z -->
@@ -11158,7 +11203,128 @@ RPG-structured PRDs provide:
 </task-master-integration>
 
 
---- .config/skill/strategist-questions-oracle-pack/references/attachment-minimization.md ---
+--- .config/mcp/oraclepack-gold-pack/references/attachment-minimization.md ---
+# Attachment minimization rules (Stage 1 packs)
+
+Objective: keep oracle calls fast, portable, and deterministic by attaching the minimum evidence per step.
+
+## Hard limits
+
+- Default: **0–2 attachments per step** (`-f/--file`).
+- If you need more than 2, the step is not scoped tightly enough: split or reduce.
+- Any `extra_files` the user provides must be appended **literally** (do not reinterpret), but you should still keep the step’s own attachments ≤2.
+
+## What to attach (rule of thumb)
+
+For a given step, prefer:
+1) One file that *defines* the concept (contract/schema/config/type)
+2) One file that *enforces/uses* the concept (handler/service/policy)
+
+If you can’t find both confidently, attach only the “definition” file.
+
+## Common attachment choices by category (patterns, not requirements)
+
+Use these as **patterns** to recognize likely candidates in a repo; do not assume these paths exist.
+
+- contracts/interfaces:
+  - route registration, API schema/spec, public type definitions, CLI command registry
+
+- invariants:
+  - domain model definitions, validation layer, schema types, critical service functions that enforce rules
+
+- caching/state:
+  - cache client config, state container/store, session manager, any TTL/invalidation logic
+
+- background jobs:
+  - worker entrypoint, job registry, scheduler configuration, queue client config
+
+- observability:
+  - logger initialization/config, metrics/tracing setup, middleware that injects correlation ids
+
+- permissions:
+  - authn/authz middleware, policy definitions, role/scope mapping, guard functions
+
+- migrations:
+  - migrations folder index, migration runner config, schema definition file (if present)
+
+- UX flows:
+  - key UI/router flow code, top-level workflow orchestrator, controller/handler representing the flow
+
+- failure modes:
+  - error handling utilities, retry/backoff config, boundary middleware, circuit breaker wrappers (if any)
+
+- feature flags:
+  - flag config/registry, evaluation hook, rollout/targeting logic
+
+## If you cannot find good attachments
+
+- Attach nothing or only 1 file.
+- Set `reference=Unknown`.
+- Make the prompt request “exact missing file/path pattern(s) to attach next.”
+
+## Avoid these attachment anti-patterns
+
+- Attaching entire directories when one file is enough.
+- Attaching multiple duplicates (e.g., the same config in three copies).
+- Attaching generated/lock files unless the question is explicitly about them.
+- Attaching secrets.
+
+
+--- .config/skills/oracle-pack/references/attachment-minimization.md ---
+<!-- path: ~/.codex/skills/oracle-pack/references/attachment-minimization.md -->
+# Attachment minimization rules (evidence-driven)
+
+Objective: keep Oracle inputs small and high-signal. Attach only what Oracle needs to answer the single question.
+
+## Always exclude
+
+- Secrets (`.env`, key files, tokens)
+- Large generated dirs unless explicitly needed (`node_modules`, `dist`, `build`, `coverage`, etc.)
+- Broad globs like `src/**` unless the question has `Unknown` reference and no better anchor exists
+
+## Core mapping: reference → files to attach
+
+### Reference = `{path}:{symbol}`
+
+Attach:
+1) `path` (the file containing the symbol)
+
+Optionally attach **one** more file (only if it materially affects correctness):
+- nearest router/entrypoint that calls into `path`
+- config file that wires the subsystem (`config/*`, `settings.*`, `env` loader)
+- interface/schema referenced by the symbol (e.g., `openapi.*`, `schema.*`)
+
+Avoid attaching more than 2 files unless the repo uses very small modules and it’s clearly required.
+
+### Reference = `{endpoint}`
+
+Attach:
+1) the route map / router file where the endpoint is declared
+2) the handler file (if different)
+
+Prefer literal files over globs.
+
+### Reference = `{event}`
+
+Attach:
+1) the job/worker registration file where the event is scheduled/declared
+2) the worker implementation file (if different)
+
+### Reference = `Unknown`
+
+Attach only “index” evidence:
+- README (or closest equivalent)
+- primary manifest (`package.json`, `pyproject.toml`, etc.)
+- one best-guess entrypoint file (if you found one)
+
+In the prompt, explicitly request the missing artifact pattern to attach next (e.g., “attach `**/migrations/**`”).
+
+## Optional global extras (`extra_files`)
+
+If the user provided `extra_files`, append those attachments to every command *after* the minimal evidence attachments. Use this sparingly.
+
+
+--- .config/skills/strategist-questions-oracle-pack/references/attachment-minimization.md ---
 <!-- path: ~/.codex/skills/strategist-questions-oracle-pack/references/attachment-minimization.md -->
 # Attachment minimization rules (evidence-driven)
 
@@ -11212,7 +11378,832 @@ In the prompt, explicitly request the missing artifact pattern to attach next (e
 If the user provided `extra_files`, append those attachments to every command *after* the minimal evidence attachments. Use this sparingly.
 
 
---- .config/skill/strategist-questions-oracle-pack/references/inference-first-discovery.md ---
+--- .config/mcp/oraclepack-taskify/references/determinism-and-safety.md ---
+# Determinism and safety guardrails
+
+## Determinism rules
+
+- Always select inputs by prefix ordering:
+  - exactly one match for each: `01-*.md` … `20-*.md`
+- If any prefix is missing or has multiple matches, exit non-zero with a precise error.
+- Keep generated JSON normalized:
+  - items sorted by id ascending (01..20)
+  - stable ordering for arrays
+- Keep output paths explicit and stable:
+  - do not rely on shared environment variables across steps
+  - each step re-declares its constants
+
+## Safety rules
+
+- No interactive prompts in the Action Pack.
+- Fail fast when prerequisites are missing:
+  - `task-master` (or override)
+  - `oracle` (or override)
+  - `tm` only in autopilot mode (default)
+- Always `mkdir -p` parent directories before writing files.
+- Avoid destructive operations:
+  - do not delete
+  - do not force push
+  - do not commit to main/master in autopilot mode
+- Autopilot mode:
+  - require a clean working tree
+  - if on main/master, create a new work branch before starting autopilot
+  - write a state file to support resumption
+
+## Failure behavior
+
+- Prefer explicit, early errors over partial or ambiguous outputs.
+- If Task Master output paths differ from defaults, print warnings but keep the pack deterministic.
+
+
+--- .config/mcp/mcp-builder/reference/evaluation.md ---
+# MCP Server Evaluation Guide
+
+## Overview
+
+This document provides guidance on creating comprehensive evaluations for MCP servers. Evaluations test whether LLMs can effectively use your MCP server to answer realistic, complex questions using only the tools provided.
+
+---
+
+## Quick Reference
+
+### Evaluation Requirements
+
+- Create 10 human-readable questions
+- Questions must be READ-ONLY, INDEPENDENT, NON-DESTRUCTIVE
+- Each question requires multiple tool calls (potentially dozens)
+- Answers must be single, verifiable values
+- Answers must be STABLE (won't change over time)
+
+### Output Format
+
+```xml
+<evaluation>
+   <qa_pair>
+      <question>Your question here</question>
+      <answer>Single verifiable answer</answer>
+   </qa_pair>
+</evaluation>
+```
+
+---
+
+## Purpose of Evaluations
+
+The measure of quality of an MCP server is NOT how well or comprehensively the server implements tools, but how well these implementations (input/output schemas, docstrings/descriptions, functionality) enable LLMs with no other context and access ONLY to the MCP servers to answer realistic and difficult questions.
+
+## Evaluation Overview
+
+Create 10 human-readable questions requiring ONLY READ-ONLY, INDEPENDENT, NON-DESTRUCTIVE, and IDEMPOTENT operations to answer. Each question should be:
+
+- Realistic
+- Clear and concise
+- Unambiguous
+- Complex, requiring potentially dozens of tool calls or steps
+- Answerable with a single, verifiable value that you identify in advance
+
+## Question Guidelines
+
+### Core Requirements
+
+1. **Questions MUST be independent**
+   - Each question should NOT depend on the answer to any other question
+   - Should not assume prior write operations from processing another question
+
+2. **Questions MUST require ONLY NON-DESTRUCTIVE AND IDEMPOTENT tool use**
+   - Should not instruct or require modifying state to arrive at the correct answer
+
+3. **Questions must be REALISTIC, CLEAR, CONCISE, and COMPLEX**
+   - Must require another LLM to use multiple (potentially dozens of) tools or steps to answer
+
+### Complexity and Depth
+
+4. **Questions must require deep exploration**
+   - Consider multi-hop questions requiring multiple sub-questions and sequential tool calls
+   - Each step should benefit from information found in previous questions
+
+5. **Questions may require extensive paging**
+   - May need paging through multiple pages of results
+   - May require querying old data (1-2 years out-of-date) to find niche information
+   - The questions must be DIFFICULT
+
+6. **Questions must require deep understanding**
+   - Rather than surface-level knowledge
+   - May pose complex ideas as True/False questions requiring evidence
+   - May use multiple-choice format where LLM must search different hypotheses
+
+7. **Questions must not be solvable with straightforward keyword search**
+   - Do not include specific keywords from the target content
+   - Use synonyms, related concepts, or paraphrases
+   - Require multiple searches, analyzing multiple related items, extracting context, then deriving the answer
+
+### Tool Testing
+
+8. **Questions should stress-test tool return values**
+   - May elicit tools returning large JSON objects or lists, overwhelming the LLM
+   - Should require understanding multiple modalities of data:
+     - IDs and names
+     - Timestamps and datetimes (months, days, years, seconds)
+     - File IDs, names, extensions, and mimetypes
+     - URLs, GIDs, etc.
+   - Should probe the tool's ability to return all useful forms of data
+
+9. **Questions should MOSTLY reflect real human use cases**
+   - The kinds of information retrieval tasks that HUMANS assisted by an LLM would care about
+
+10. **Questions may require dozens of tool calls**
+    - This challenges LLMs with limited context
+    - Encourages MCP server tools to reduce information returned
+
+11. **Include ambiguous questions**
+    - May be ambiguous OR require difficult decisions on which tools to call
+    - Force the LLM to potentially make mistakes or misinterpret
+    - Ensure that despite AMBIGUITY, there is STILL A SINGLE VERIFIABLE ANSWER
+
+### Stability
+
+12. **Questions must be designed so the answer DOES NOT CHANGE**
+    - Do not ask questions that rely on "current state" which is dynamic
+    - For example, do not count:
+      - Number of reactions to a post
+      - Number of replies to a thread
+      - Number of members in a channel
+
+13. **DO NOT let the MCP server RESTRICT the kinds of questions you create**
+    - Create challenging and complex questions
+    - Some may not be solvable with the available MCP server tools
+    - Questions may require specific output formats (datetime vs. epoch time, JSON vs. MARKDOWN)
+    - Questions may require dozens of tool calls to complete
+
+## Answer Guidelines
+
+### Verification
+
+1. **Answers must be VERIFIABLE via direct string comparison**
+   - If the answer can be re-written in many formats, clearly specify the output format in the QUESTION
+   - Examples: "Use YYYY/MM/DD.", "Respond True or False.", "Answer A, B, C, or D and nothing else."
+   - Answer should be a single VERIFIABLE value such as:
+     - User ID, user name, display name, first name, last name
+     - Channel ID, channel name
+     - Message ID, string
+     - URL, title
+     - Numerical quantity
+     - Timestamp, datetime
+     - Boolean (for True/False questions)
+     - Email address, phone number
+     - File ID, file name, file extension
+     - Multiple choice answer
+   - Answers must not require special formatting or complex, structured output
+   - Answer will be verified using DIRECT STRING COMPARISON
+
+### Readability
+
+2. **Answers should generally prefer HUMAN-READABLE formats**
+   - Examples: names, first name, last name, datetime, file name, message string, URL, yes/no, true/false, a/b/c/d
+   - Rather than opaque IDs (though IDs are acceptable)
+   - The VAST MAJORITY of answers should be human-readable
+
+### Stability
+
+3. **Answers must be STABLE/STATIONARY**
+   - Look at old content (e.g., conversations that have ended, projects that have launched, questions answered)
+   - Create QUESTIONS based on "closed" concepts that will always return the same answer
+   - Questions may ask to consider a fixed time window to insulate from non-stationary answers
+   - Rely on context UNLIKELY to change
+   - Example: if finding a paper name, be SPECIFIC enough so answer is not confused with papers published later
+
+4. **Answers must be CLEAR and UNAMBIGUOUS**
+   - Questions must be designed so there is a single, clear answer
+   - Answer can be derived from using the MCP server tools
+
+### Diversity
+
+5. **Answers must be DIVERSE**
+   - Answer should be a single VERIFIABLE value in diverse modalities and formats
+   - User concept: user ID, user name, display name, first name, last name, email address, phone number
+   - Channel concept: channel ID, channel name, channel topic
+   - Message concept: message ID, message string, timestamp, month, day, year
+
+6. **Answers must NOT be complex structures**
+   - Not a list of values
+   - Not a complex object
+   - Not a list of IDs or strings
+   - Not natural language text
+   - UNLESS the answer can be straightforwardly verified using DIRECT STRING COMPARISON
+   - And can be realistically reproduced
+   - It should be unlikely that an LLM would return the same list in any other order or format
+
+## Evaluation Process
+
+### Step 1: Documentation Inspection
+
+Read the documentation of the target API to understand:
+
+- Available endpoints and functionality
+- If ambiguity exists, fetch additional information from the web
+- Parallelize this step AS MUCH AS POSSIBLE
+- Ensure each subagent is ONLY examining documentation from the file system or on the web
+
+### Step 2: Tool Inspection
+
+List the tools available in the MCP server:
+
+- Inspect the MCP server directly
+- Understand input/output schemas, docstrings, and descriptions
+- WITHOUT calling the tools themselves at this stage
+
+### Step 3: Developing Understanding
+
+Repeat steps 1 & 2 until you have a good understanding:
+
+- Iterate multiple times
+- Think about the kinds of tasks you want to create
+- Refine your understanding
+- At NO stage should you READ the code of the MCP server implementation itself
+- Use your intuition and understanding to create reasonable, realistic, but VERY challenging tasks
+
+### Step 4: Read-Only Content Inspection
+
+After understanding the API and tools, USE the MCP server tools:
+
+- Inspect content using READ-ONLY and NON-DESTRUCTIVE operations ONLY
+- Goal: identify specific content (e.g., users, channels, messages, projects, tasks) for creating realistic questions
+- Should NOT call any tools that modify state
+- Will NOT read the code of the MCP server implementation itself
+- Parallelize this step with individual sub-agents pursuing independent explorations
+- Ensure each subagent is only performing READ-ONLY, NON-DESTRUCTIVE, and IDEMPOTENT operations
+- BE CAREFUL: SOME TOOLS may return LOTS OF DATA which would cause you to run out of CONTEXT
+- Make INCREMENTAL, SMALL, AND TARGETED tool calls for exploration
+- In all tool call requests, use the `limit` parameter to limit results (<10)
+- Use pagination
+
+### Step 5: Task Generation
+
+After inspecting the content, create 10 human-readable questions:
+
+- An LLM should be able to answer these with the MCP server
+- Follow all question and answer guidelines above
+
+## Output Format
+
+Each QA pair consists of a question and an answer. The output should be an XML file with this structure:
+
+```xml
+<evaluation>
+   <qa_pair>
+      <question>Find the project created in Q2 2024 with the highest number of completed tasks. What is the project name?</question>
+      <answer>Website Redesign</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Search for issues labeled as "bug" that were closed in March 2024. Which user closed the most issues? Provide their username.</question>
+      <answer>sarah_dev</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Look for pull requests that modified files in the /api directory and were merged between January 1 and January 31, 2024. How many different contributors worked on these PRs?</question>
+      <answer>7</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Find the repository with the most stars that was created before 2023. What is the repository name?</question>
+      <answer>data-pipeline</answer>
+   </qa_pair>
+</evaluation>
+```
+
+## Evaluation Examples
+
+### Good Questions
+
+**Example 1: Multi-hop question requiring deep exploration (GitHub MCP)**
+
+```xml
+<qa_pair>
+   <question>Find the repository that was archived in Q3 2023 and had previously been the most forked project in the organization. What was the primary programming language used in that repository?</question>
+   <answer>Python</answer>
+</qa_pair>
+```
+
+This question is good because:
+
+- Requires multiple searches to find archived repositories
+- Needs to identify which had the most forks before archival
+- Requires examining repository details for the language
+- Answer is a simple, verifiable value
+- Based on historical (closed) data that won't change
+
+**Example 2: Requires understanding context without keyword matching (Project Management MCP)**
+
+```xml
+<qa_pair>
+   <question>Locate the initiative focused on improving customer onboarding that was completed in late 2023. The project lead created a retrospective document after completion. What was the lead's role title at that time?</question>
+   <answer>Product Manager</answer>
+</qa_pair>
+```
+
+This question is good because:
+
+- Doesn't use specific project name ("initiative focused on improving customer onboarding")
+- Requires finding completed projects from specific timeframe
+- Needs to identify the project lead and their role
+- Requires understanding context from retrospective documents
+- Answer is human-readable and stable
+- Based on completed work (won't change)
+
+**Example 3: Complex aggregation requiring multiple steps (Issue Tracker MCP)**
+
+```xml
+<qa_pair>
+   <question>Among all bugs reported in January 2024 that were marked as critical priority, which assignee resolved the highest percentage of their assigned bugs within 48 hours? Provide the assignee's username.</question>
+   <answer>alex_eng</answer>
+</qa_pair>
+```
+
+This question is good because:
+
+- Requires filtering bugs by date, priority, and status
+- Needs to group by assignee and calculate resolution rates
+- Requires understanding timestamps to determine 48-hour windows
+- Tests pagination (potentially many bugs to process)
+- Answer is a single username
+- Based on historical data from specific time period
+
+**Example 4: Requires synthesis across multiple data types (CRM MCP)**
+
+```xml
+<qa_pair>
+   <question>Find the account that upgraded from the Starter to Enterprise plan in Q4 2023 and had the highest annual contract value. What industry does this account operate in?</question>
+   <answer>Healthcare</answer>
+</qa_pair>
+```
+
+This question is good because:
+
+- Requires understanding subscription tier changes
+- Needs to identify upgrade events in specific timeframe
+- Requires comparing contract values
+- Must access account industry information
+- Answer is simple and verifiable
+- Based on completed historical transactions
+
+### Poor Questions
+
+**Example 1: Answer changes over time**
+
+```xml
+<qa_pair>
+   <question>How many open issues are currently assigned to the engineering team?</question>
+   <answer>47</answer>
+</qa_pair>
+```
+
+This question is poor because:
+
+- The answer will change as issues are created, closed, or reassigned
+- Not based on stable/stationary data
+- Relies on "current state" which is dynamic
+
+**Example 2: Too easy with keyword search**
+
+```xml
+<qa_pair>
+   <question>Find the pull request with title "Add authentication feature" and tell me who created it.</question>
+   <answer>developer123</answer>
+</qa_pair>
+```
+
+This question is poor because:
+
+- Can be solved with a straightforward keyword search for exact title
+- Doesn't require deep exploration or understanding
+- No synthesis or analysis needed
+
+**Example 3: Ambiguous answer format**
+
+```xml
+<qa_pair>
+   <question>List all the repositories that have Python as their primary language.</question>
+   <answer>repo1, repo2, repo3, data-pipeline, ml-tools</answer>
+</qa_pair>
+```
+
+This question is poor because:
+
+- Answer is a list that could be returned in any order
+- Difficult to verify with direct string comparison
+- LLM might format differently (JSON array, comma-separated, newline-separated)
+- Better to ask for a specific aggregate (count) or superlative (most stars)
+
+## Verification Process
+
+After creating evaluations:
+
+1. **Examine the XML file** to understand the schema
+2. **Load each task instruction** and in parallel using the MCP server and tools, identify the correct answer by attempting to solve the task YOURSELF
+3. **Flag any operations** that require WRITE or DESTRUCTIVE operations
+4. **Accumulate all CORRECT answers** and replace any incorrect answers in the document
+5. **Remove any `<qa_pair>`** that require WRITE or DESTRUCTIVE operations
+
+Remember to parallelize solving tasks to avoid running out of context, then accumulate all answers and make changes to the file at the end.
+
+## Tips for Creating Quality Evaluations
+
+1. **Think Hard and Plan Ahead** before generating tasks
+2. **Parallelize Where Opportunity Arises** to speed up the process and manage context
+3. **Focus on Realistic Use Cases** that humans would actually want to accomplish
+4. **Create Challenging Questions** that test the limits of the MCP server's capabilities
+5. **Ensure Stability** by using historical data and closed concepts
+6. **Verify Answers** by solving the questions yourself using the MCP server tools
+7. **Iterate and Refine** based on what you learn during the process
+
+---
+
+# Running Evaluations
+
+After creating your evaluation file, you can use the provided evaluation harness to test your MCP server.
+
+## Setup
+
+1. **Install Dependencies**
+
+   ```bash
+   pip install -r scripts/requirements.txt
+   ```
+
+   Or install manually:
+
+   ```bash
+   pip install anthropic mcp
+   ```
+
+2. **Set API Key**
+
+   ```bash
+   export ANTHROPIC_API_KEY=your_api_key_here
+   ```
+
+## Evaluation File Format
+
+Evaluation files use XML format with `<qa_pair>` elements:
+
+```xml
+<evaluation>
+   <qa_pair>
+      <question>Find the project created in Q2 2024 with the highest number of completed tasks. What is the project name?</question>
+      <answer>Website Redesign</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Search for issues labeled as "bug" that were closed in March 2024. Which user closed the most issues? Provide their username.</question>
+      <answer>sarah_dev</answer>
+   </qa_pair>
+</evaluation>
+```
+
+## Running Evaluations
+
+The evaluation script (`scripts/evaluation.py`) supports three transport types:
+
+**Important:**
+
+- **stdio transport**: The evaluation script automatically launches and manages the MCP server process for you. Do not run the server manually.
+- **sse/http transports**: You must start the MCP server separately before running the evaluation. The script connects to the already-running server at the specified URL.
+
+### 1. Local STDIO Server
+
+For locally-run MCP servers (script launches the server automatically):
+
+```bash
+python scripts/evaluation.py \
+  -t stdio \
+  -c python \
+  -a my_mcp_server.py \
+  evaluation.xml
+```
+
+With environment variables:
+
+```bash
+python scripts/evaluation.py \
+  -t stdio \
+  -c python \
+  -a my_mcp_server.py \
+  -e API_KEY=abc123 \
+  -e DEBUG=true \
+  evaluation.xml
+```
+
+### 2. Server-Sent Events (SSE)
+
+For SSE-based MCP servers (you must start the server first):
+
+```bash
+python scripts/evaluation.py \
+  -t sse \
+  -u https://example.com/mcp \
+  -H "Authorization: Bearer token123" \
+  -H "X-Custom-Header: value" \
+  evaluation.xml
+```
+
+### 3. HTTP (Streamable HTTP)
+
+For HTTP-based MCP servers (you must start the server first):
+
+```bash
+python scripts/evaluation.py \
+  -t http \
+  -u https://example.com/mcp \
+  -H "Authorization: Bearer token123" \
+  evaluation.xml
+```
+
+## Command-Line Options
+
+```
+usage: evaluation.py [-h] [-t {stdio,sse,http}] [-m MODEL] [-c COMMAND]
+                     [-a ARGS [ARGS ...]] [-e ENV [ENV ...]] [-u URL]
+                     [-H HEADERS [HEADERS ...]] [-o OUTPUT]
+                     eval_file
+
+positional arguments:
+  eval_file             Path to evaluation XML file
+
+optional arguments:
+  -h, --help            Show help message
+  -t, --transport       Transport type: stdio, sse, or http (default: stdio)
+  -m, --model           codex model to use (default: codex-3-7-sonnet-20250219)
+  -o, --output          Output file for report (default: print to stdout)
+
+stdio options:
+  -c, --command         Command to run MCP server (e.g., python, node)
+  -a, --args            Arguments for the command (e.g., server.py)
+  -e, --env             Environment variables in KEY=VALUE format
+
+sse/http options:
+  -u, --url             MCP server URL
+  -H, --header          HTTP headers in 'Key: Value' format
+```
+
+## Output
+
+The evaluation script generates a detailed report including:
+
+- **Summary Statistics**:
+  - Accuracy (correct/total)
+  - Average task duration
+  - Average tool calls per task
+  - Total tool calls
+
+- **Per-Task Results**:
+  - Prompt and expected response
+  - Actual response from the agent
+  - Whether the answer was correct (✅/❌)
+  - Duration and tool call details
+  - Agent's summary of its approach
+  - Agent's feedback on the tools
+
+### Save Report to File
+
+```bash
+python scripts/evaluation.py \
+  -t stdio \
+  -c python \
+  -a my_server.py \
+  -o evaluation_report.md \
+  evaluation.xml
+```
+
+## Complete Example Workflow
+
+Here's a complete example of creating and running an evaluation:
+
+1. **Create your evaluation file** (`my_evaluation.xml`):
+
+```xml
+<evaluation>
+   <qa_pair>
+      <question>Find the user who created the most issues in January 2024. What is their username?</question>
+      <answer>alice_developer</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Among all pull requests merged in Q1 2024, which repository had the highest number? Provide the repository name.</question>
+      <answer>backend-api</answer>
+   </qa_pair>
+   <qa_pair>
+      <question>Find the project that was completed in December 2023 and had the longest duration from start to finish. How many days did it take?</question>
+      <answer>127</answer>
+   </qa_pair>
+</evaluation>
+```
+
+2. **Install dependencies**:
+
+```bash
+pip install -r scripts/requirements.txt
+export ANTHROPIC_API_KEY=your_api_key
+```
+
+3. **Run evaluation**:
+
+```bash
+python scripts/evaluation.py \
+  -t stdio \
+  -c python \
+  -a github_mcp_server.py \
+  -e GITHUB_TOKEN=ghp_xxx \
+  -o github_eval_report.md \
+  my_evaluation.xml
+```
+
+4. **Review the report** in `github_eval_report.md` to:
+   - See which questions passed/failed
+   - Read the agent's feedback on your tools
+   - Identify areas for improvement
+   - Iterate on your MCP server design
+
+## Troubleshooting
+
+### Connection Errors
+
+If you get connection errors:
+
+- **STDIO**: Verify the command and arguments are correct
+- **SSE/HTTP**: Check the URL is accessible and headers are correct
+- Ensure any required API keys are set in environment variables or headers
+
+### Low Accuracy
+
+If many evaluations fail:
+
+- Review the agent's feedback for each task
+- Check if tool descriptions are clear and comprehensive
+- Verify input parameters are well-documented
+- Consider whether tools return too much or too little data
+- Ensure error messages are actionable
+
+### Timeout Issues
+
+If tasks are timing out:
+
+- Use a more capable model (e.g., `codex-3-7-sonnet-20250219`)
+- Check if tools are returning too much data
+- Verify pagination is working correctly
+- Consider simplifying complex questions
+
+
+--- .config/mcp/oraclepack-gold-pack/references/inference-first-discovery.md ---
+# Inference-first discovery (Stage 1 packs)
+
+Goal: pick the *right* 1–2 attachments per step without over-attaching, by inferring repo shape from a small set of anchors.
+
+## Principles
+
+- Prefer **evidence** (actual files) over assumptions.
+- Start broad with **cheap, high-signal** files; only then zoom in.
+- If a file/path doesn’t exist: record `Unknown` and continue.
+- Keep steps self-contained: each step should succeed without relying on shared shell setup.
+
+## Deterministic discovery order
+
+1) **Repo identity + entrypoints**
+- `README*` (first ~200 lines)
+- top-level manifests (language/framework/package)
+- main entrypoints (server start, CLI main, app bootstrap) if obvious from tree
+
+2) **Configuration + environment**
+- example config files
+- `.env.example` or equivalent (if present)
+- CI config files (to infer build/test and deploy steps)
+
+3) **Public surface**
+- routing tables / controllers / handlers
+- schema/contract definitions (API specs, message schemas, type definitions)
+- CLI command registration (if applicable)
+
+4) **Data + jobs + operations**
+- data models and storage adapters
+- migrations directory (if present)
+- background job definitions and worker entrypoints (if present)
+- logging/metrics/tracing configuration (if present)
+
+## Turning discovery into step-specific attachments
+
+For each planned step:
+- Choose 1 “definition” file (where the thing is declared).
+- Optionally choose 1 “use-site” file (where the thing is used/enforced).
+- If you can’t confidently pick: attach fewer files and use `reference=Unknown`.
+
+Then write the prompt so the oracle can request missing artifact patterns when needed.
+
+## What to do when evidence is insufficient
+
+- Set `reference=Unknown` in the step header.
+- In the prompt, explicitly ask for:
+  - “the exact missing file/path pattern(s) to attach next”
+- Keep attachments minimal; do not guess file paths.
+
+
+--- .config/skills/oracle-pack/references/inference-first-discovery.md ---
+<!-- path: ~/.codex/skills/oracle-pack/references/inference-first-discovery.md -->
+# Inference-first discovery (adaptive search ladder, ck-first)
+
+Goal: avoid wasting time on hard-targeted globs/greps that may not exist by deriving the search plan from repo evidence,
+using the codebase-search rules (ck → ast-grep when structure matters → deterministic output shaping).
+
+## Step 0 — Discover the search interface (required)
+
+- Always run: `ck --help`
+- Use only flags confirmed by `ck --help`.
+- If `ck` indicates indexing/setup is needed, follow its printed instructions.
+
+## Step 1 — Read “index” artifacts first (cheap, high-signal)
+
+Use `fd` to locate these quickly:
+
+- Repo docs/index:
+  - `fd -p README.md`
+  - `fd -e md . docs | head`
+- Manifests/config (choose the ones that exist):
+  - `fd -p package.json`
+  - `fd -p pyproject.toml`
+  - `fd -p go.mod`
+  - `fd -p Cargo.toml`
+  - `fd -p pom.xml`
+  - `fd -p build.gradle`
+
+Read the smallest set of files that explain structure and entrypoints.
+
+## Step 2 — Infer subsystem locations from what you actually saw
+
+Build a short “signals” list from evidence:
+- Router/framework name (from dependencies and scripts)
+- Job system
+- Migration tool
+- Feature flag system
+- Observability stack
+- Cache layer
+
+Then: follow imports/registration code rather than searching the whole repo.
+
+## Step 3 — Derive targeted `ck` queries (conceptual-first)
+
+Start conceptual (meaning-based), scoped to inferred roots:
+
+- Conceptual: `ck --sem "<intent phrase>"`
+  - Examples of intent phrases (adapt to the repo’s vocabulary):
+    - “route registration” / “router setup”
+    - “auth middleware” / “permission check”
+    - “queue worker registration”
+    - “migration runner” / “schema change”
+    - “feature flag evaluation”
+    - “telemetry initialization” / “logger setup”
+
+When unsure, use hybrid:
+- `ck --hybrid "<intent phrase>"`
+
+For literal hits (exact tokens you already saw), use regex:
+- `ck --regex "<literal-or-regex>"`
+
+### Deterministic narrowing
+
+If results are broad/noisy, narrow deterministically:
+
+- Use `ck --jsonl` (if available) and cap results:
+  - `ck --jsonl ... | jq ... | sort | head -n 20`
+- Otherwise cap with `head` and re-run `ck` constrained to the top-hit directories/files.
+
+## Step 4 — Structural search with `ast-grep` (when structure matters)
+
+Use `ast-grep` when you need syntax-aware matching (AST-level), such as:
+- finding a specific call pattern (e.g., permission checks around handlers)
+- finding registration shapes (e.g., route definitions)
+- reducing false positives vs text search
+
+Examples:
+
+- Find code structure:
+  - `ast-grep --lang <language> -p '<pattern>'`
+- List matching files (cap output):
+  - `ast-grep -l --lang <language> -p '<pattern>' | head -n 10`
+
+Use `ck` first to locate candidate files/modules, then `ast-grep` to enforce structure inside those.
+
+## Step 5 — Progressive widening (fallback ladder)
+
+If inference cannot locate a subsystem:
+
+1) Run a small set of conceptual `ck --sem` / `ck --hybrid` queries using generic intent phrases.
+2) If still nothing, broaden to repo-wide `ck --hybrid` for that intent.
+3) If still nothing, mark evidence for that category as missing and record the most likely missing artifact pattern.
+
+## Step 6 — Early stopping (don’t over-search)
+
+Stop harvesting once:
+- you have >= 20 candidate anchors total, and
+- every required category has at least one candidate (or a clearly documented “missing artifact pattern”)
+
+Then generate questions; do not keep scanning “just in case”.
+
+
+--- .config/skills/strategist-questions-oracle-pack/references/inference-first-discovery.md ---
 <!-- path: ~/.codex/skills/strategist-questions-oracle-pack/references/inference-first-discovery.md -->
 # Inference-first discovery (adaptive search ladder, ck-first)
 
@@ -11314,86 +12305,1229 @@ Stop harvesting once:
 Then generate questions; do not keep scanning “just in case”.
 
 
---- .config/skill/strategist-questions-oracle-pack/references/oracle-scratch-format.md ---
-<!-- path: ~/.codex/skills/strategist-questions-oracle-pack/references/oracle-scratch-format.md -->
-# oracle usage examples
+--- .config/mcp/mcp-builder/reference/mcp_best_practices.md ---
+# MCP Server Best Practices
+
+## Quick Reference
+
+### Server Naming
+- **Python**: `{service}_mcp` (e.g., `slack_mcp`)
+- **Node/TypeScript**: `{service}-mcp-server` (e.g., `slack-mcp-server`)
+
+### Tool Naming
+- Use snake_case with service prefix
+- Format: `{service}_{action}_{resource}`
+- Example: `slack_send_message`, `github_create_issue`
+
+### Response Formats
+- Support both JSON and Markdown formats
+- JSON for programmatic processing
+- Markdown for human readability
+
+### Pagination
+- Always respect `limit` parameter
+- Return `has_more`, `next_offset`, `total_count`
+- Default to 20-50 items
+
+### Transport
+- **Streamable HTTP**: For remote servers, multi-client scenarios
+- **stdio**: For local integrations, command-line tools
+- Avoid SSE (deprecated in favor of streamable HTTP)
 
 ---
 
-## add attachments
+## Server Naming Conventions
 
-```bash
-oracle \
-  --browser-attachments always \
-  --browser-input-timeout 5s \
-  -p "Run the UI smoke test." \
-  -f "packages/"
-```
+Follow these standardized naming patterns:
 
-## copy to clipboard
+**Python**: Use format `{service}_mcp` (lowercase with underscores)
+- Examples: `slack_mcp`, `github_mcp`, `jira_mcp`
 
-```bash
-oracle --render --copy \
-  -p "Explain the CLI architecture and control flow: index.ts -> registry init -> list/run commands. Identify error-handling gaps, async pitfalls, and how you'd improve UX (help text, exit codes, structured output). Provide proposed code changes." \
-  -f "codefetch/packages.md" \
-  -f "packages/cli/src/index.ts" \
-  -f "packages/cli/src/commands/list.ts" \
-  -f "packages/cli/src/commands/run.ts"
+**Node/TypeScript**: Use format `{service}-mcp-server` (lowercase with hyphens)
+- Examples: `slack-mcp-server`, `github-mcp-server`, `jira-mcp-server`
+
+The name should be general, descriptive of the service being integrated, easy to infer from the task description, and without version numbers.
+
+---
+
+## Tool Naming and Design
+
+### Tool Naming
+
+1. **Use snake_case**: `search_users`, `create_project`, `get_channel_info`
+2. **Include service prefix**: Anticipate that your MCP server may be used alongside other MCP servers
+   - Use `slack_send_message` instead of just `send_message`
+   - Use `github_create_issue` instead of just `create_issue`
+3. **Be action-oriented**: Start with verbs (get, list, search, create, etc.)
+4. **Be specific**: Avoid generic names that could conflict with other servers
+
+### Tool Design
+
+- Tool descriptions must narrowly and unambiguously describe functionality
+- Descriptions must precisely match actual functionality
+- Provide tool annotations (readOnlyHint, destructiveHint, idempotentHint, openWorldHint)
+- Keep tool operations focused and atomic
+
+---
+
+## Response Formats
+
+All tools that return data should support multiple formats:
+
+### JSON Format (`response_format="json"`)
+- Machine-readable structured data
+- Include all available fields and metadata
+- Consistent field names and types
+- Use for programmatic processing
+
+### Markdown Format (`response_format="markdown"`, typically default)
+- Human-readable formatted text
+- Use headers, lists, and formatting for clarity
+- Convert timestamps to human-readable format
+- Show display names with IDs in parentheses
+- Omit verbose metadata
+
+---
+
+## Pagination
+
+For tools that list resources:
+
+- **Always respect the `limit` parameter**
+- **Implement pagination**: Use `offset` or cursor-based pagination
+- **Return pagination metadata**: Include `has_more`, `next_offset`/`next_cursor`, `total_count`
+- **Never load all results into memory**: Especially important for large datasets
+- **Default to reasonable limits**: 20-50 items is typical
+
+Example pagination response:
+```json
+{
+  "total": 150,
+  "count": 20,
+  "offset": 0,
+  "items": [...],
+  "has_more": true,
+  "next_offset": 20
+}
 ```
 
 ---
 
-## oracle/codefetch
+## Transport Options
 
-```bash
-oracle \
-  --browser-attachments always \
-  -p "Using packages.md + attached files, give me a dependency graph and a build order. Then propose 5 repo hygiene improvements." \
-  -f "codefetch/packages.md" \
-  -f "packages/**/package.json" \
-  -f "packages/**/tsconfig.json"
+### Streamable HTTP
+
+**Best for**: Remote servers, web services, multi-client scenarios
+
+**Characteristics**:
+- Bidirectional communication over HTTP
+- Supports multiple simultaneous clients
+- Can be deployed as a web service
+- Enables server-to-client notifications
+
+**Use when**:
+- Serving multiple clients simultaneously
+- Deploying as a cloud service
+- Integration with web applications
+
+### stdio
+
+**Best for**: Local integrations, command-line tools
+
+**Characteristics**:
+- Standard input/output stream communication
+- Simple setup, no network configuration needed
+- Runs as a subprocess of the client
+
+**Use when**:
+- Building tools for local development environments
+- Integrating with desktop applications
+- Single-user, single-session scenarios
+
+**Note**: stdio servers should NOT log to stdout (use stderr for logging)
+
+### Transport Selection
+
+| Criterion | stdio | Streamable HTTP |
+|-----------|-------|-----------------|
+| **Deployment** | Local | Remote |
+| **Clients** | Single | Multiple |
+| **Complexity** | Low | Medium |
+| **Real-time** | No | Yes |
+
+---
+
+## Security Best Practices
+
+### Authentication and Authorization
+
+**OAuth 2.1**:
+- Use secure OAuth 2.1 with certificates from recognized authorities
+- Validate access tokens before processing requests
+- Only accept tokens specifically intended for your server
+
+**API Keys**:
+- Store API keys in environment variables, never in code
+- Validate keys on server startup
+- Provide clear error messages when authentication fails
+
+### Input Validation
+
+- Sanitize file paths to prevent directory traversal
+- Validate URLs and external identifiers
+- Check parameter sizes and ranges
+- Prevent command injection in system calls
+- Use schema validation (Pydantic/Zod) for all inputs
+
+### Error Handling
+
+- Don't expose internal errors to clients
+- Log security-relevant errors server-side
+- Provide helpful but not revealing error messages
+- Clean up resources after errors
+
+### DNS Rebinding Protection
+
+For streamable HTTP servers running locally:
+- Enable DNS rebinding protection
+- Validate the `Origin` header on all incoming connections
+- Bind to `127.0.0.1` rather than `0.0.0.0`
+
+---
+
+## Tool Annotations
+
+Provide annotations to help clients understand tool behavior:
+
+| Annotation | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `readOnlyHint` | boolean | false | Tool does not modify its environment |
+| `destructiveHint` | boolean | true | Tool may perform destructive updates |
+| `idempotentHint` | boolean | false | Repeated calls with same args have no additional effect |
+| `openWorldHint` | boolean | true | Tool interacts with external entities |
+
+**Important**: Annotations are hints, not security guarantees. Clients should not make security-critical decisions based solely on annotations.
+
+---
+
+## Error Handling
+
+- Use standard JSON-RPC error codes
+- Report tool errors within result objects (not protocol-level errors)
+- Provide helpful, specific error messages with suggested next steps
+- Don't expose internal implementation details
+- Clean up resources properly on errors
+
+Example error handling:
+```typescript
+try {
+  const result = performOperation();
+  return { content: [{ type: "text", text: result }] };
+} catch (error) {
+  return {
+    isError: true,
+    content: [{
+      type: "text",
+      text: `Error: ${error.message}. Try using filter='active_only' to reduce results.`
+    }]
+  };
+}
 ```
 
 ---
 
-## other scratch examples
+## Testing Requirements
 
-```bash
-oracle \
-  -p "Walk through the UI smoke test" \
-  --file "src/**/*.ts"
+Comprehensive testing should cover:
+
+- **Functional testing**: Verify correct execution with valid/invalid inputs
+- **Integration testing**: Test interaction with external systems
+- **Security testing**: Validate auth, input sanitization, rate limiting
+- **Performance testing**: Check behavior under load, timeouts
+- **Error handling**: Ensure proper error reporting and cleanup
+
+---
+
+## Documentation Requirements
+
+- Provide clear documentation of all tools and capabilities
+- Include working examples (at least 3 per major feature)
+- Document security considerations
+- Specify required permissions and access levels
+- Document rate limits and performance characteristics
+
+
+--- .config/mcp/mcp-builder/reference/node_mcp_server.md ---
+# Node/TypeScript MCP Server Implementation Guide
+
+## Overview
+
+This document provides Node/TypeScript-specific best practices and examples for implementing MCP servers using the MCP TypeScript SDK. It covers project structure, server setup, tool registration patterns, input validation with Zod, error handling, and complete working examples.
+
+---
+
+## Quick Reference
+
+### Key Imports
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import express from "express";
+import { z } from "zod";
 ```
 
-```bash
-oracle \
-  -p "Review these changes and propose fixes" \
-  -f "src/**/*.ts,!**/*.test.ts"
+### Server Initialization
+```typescript
+const server = new McpServer({
+  name: "service-mcp-server",
+  version: "1.0.0"
+});
 ```
 
-```bash
-oracle \
-  -p "Using packages.md + attached files, give me a dependency graph and a build order. Then propose 5 repo hygiene improvements." \
-  -f "codefetch/packages.md" \
-  -f "packages/**/package.json" \
-  -f "packages/**/tsconfig.json"
+### Tool Registration Pattern
+```typescript
+server.registerTool(
+  "tool_name",
+  {
+    title: "Tool Display Name",
+    description: "What the tool does",
+    inputSchema: { param: z.string() },
+    outputSchema: { result: z.string() }
+  },
+  async ({ param }) => {
+    const output = { result: `Processed: ${param}` };
+    return {
+      content: [{ type: "text", text: JSON.stringify(output) }],
+      structuredContent: output // Modern pattern for structured data
+    };
+  }
+);
 ```
 
-```bash
-oracle --render --copy \
-  -p "Explain the CLI architecture and control flow: index.ts -> registry init -> list/run commands. Identify error-handling gaps, async pitfalls, and how you'd improve UX (help text, exit codes, structured output). Provide proposed code changes." \
-  -f "codefetch/packages.md" \
-  -f "packages/cli/src/index.ts" \
-  -f "packages/cli/src/commands/list.ts" \
-  -f "packages/cli/src/commands/run.ts"
+---
+
+## MCP TypeScript SDK
+
+The official MCP TypeScript SDK provides:
+- `McpServer` class for server initialization
+- `registerTool` method for tool registration
+- Zod schema integration for runtime input validation
+- Type-safe tool handler implementations
+
+**IMPORTANT - Use Modern APIs Only:**
+- **DO use**: `server.registerTool()`, `server.registerResource()`, `server.registerPrompt()`
+- **DO NOT use**: Old deprecated APIs such as `server.tool()`, `server.setRequestHandler(ListToolsRequestSchema, ...)`, or manual handler registration
+- The `register*` methods provide better type safety, automatic schema handling, and are the recommended approach
+
+See the MCP SDK documentation in the references for complete details.
+
+## Server Naming Convention
+
+Node/TypeScript MCP servers must follow this naming pattern:
+- **Format**: `{service}-mcp-server` (lowercase with hyphens)
+- **Examples**: `github-mcp-server`, `jira-mcp-server`, `stripe-mcp-server`
+
+The name should be:
+- General (not tied to specific features)
+- Descriptive of the service/API being integrated
+- Easy to infer from the task description
+- Without version numbers or dates
+
+## Project Structure
+
+Create the following structure for Node/TypeScript MCP servers:
+
+```
+{service}-mcp-server/
+├── package.json
+├── tsconfig.json
+├── README.md
+├── src/
+│   ├── index.ts          # Main entry point with McpServer initialization
+│   ├── types.ts          # TypeScript type definitions and interfaces
+│   ├── tools/            # Tool implementations (one file per domain)
+│   ├── services/         # API clients and shared utilities
+│   ├── schemas/          # Zod validation schemas
+│   └── constants.ts      # Shared constants (API_URL, CHARACTER_LIMIT, etc.)
+└── dist/                 # Built JavaScript files (entry point: dist/index.js)
 ```
 
-```bash
-oracle  \
-  --prompt "Read packages.md and explain: (1) what each package does, (2) how workflows are executed end-to-end, (3) where to add a new workflow, and (4) the top 5 refactors to reduce coupling." \
-  --file "codefetch/packages.md"
+## Tool Implementation
+
+### Tool Naming
+
+Use snake_case for tool names (e.g., "search_users", "create_project", "get_channel_info") with clear, action-oriented names.
+
+**Avoid Naming Conflicts**: Include the service context to prevent overlaps:
+- Use "slack_send_message" instead of just "send_message"
+- Use "github_create_issue" instead of just "create_issue"
+- Use "asana_list_tasks" instead of just "list_tasks"
+
+### Tool Structure
+
+Tools are registered using the `registerTool` method with the following requirements:
+- Use Zod schemas for runtime input validation and type safety
+- The `description` field must be explicitly provided - JSDoc comments are NOT automatically extracted
+- Explicitly provide `title`, `description`, `inputSchema`, and `annotations`
+- The `inputSchema` must be a Zod schema object (not a JSON schema)
+- Type all parameters and return values explicitly
+
+```typescript
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { z } from "zod";
+
+const server = new McpServer({
+  name: "example-mcp",
+  version: "1.0.0"
+});
+
+// Zod schema for input validation
+const UserSearchInputSchema = z.object({
+  query: z.string()
+    .min(2, "Query must be at least 2 characters")
+    .max(200, "Query must not exceed 200 characters")
+    .describe("Search string to match against names/emails"),
+  limit: z.number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe("Maximum results to return"),
+  offset: z.number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe("Number of results to skip for pagination"),
+  response_format: z.nativeEnum(ResponseFormat)
+    .default(ResponseFormat.MARKDOWN)
+    .describe("Output format: 'markdown' for human-readable or 'json' for machine-readable")
+}).strict();
+
+// Type definition from Zod schema
+type UserSearchInput = z.infer<typeof UserSearchInputSchema>;
+
+server.registerTool(
+  "example_search_users",
+  {
+    title: "Search Example Users",
+    description: `Search for users in the Example system by name, email, or team.
+
+This tool searches across all user profiles in the Example platform, supporting partial matches and various search filters. It does NOT create or modify users, only searches existing ones.
+
+Args:
+  - query (string): Search string to match against names/emails
+  - limit (number): Maximum results to return, between 1-100 (default: 20)
+  - offset (number): Number of results to skip for pagination (default: 0)
+  - response_format ('markdown' | 'json'): Output format (default: 'markdown')
+
+Returns:
+  For JSON format: Structured data with schema:
+  {
+    "total": number,           // Total number of matches found
+    "count": number,           // Number of results in this response
+    "offset": number,          // Current pagination offset
+    "users": [
+      {
+        "id": string,          // User ID (e.g., "U123456789")
+        "name": string,        // Full name (e.g., "John Doe")
+        "email": string,       // Email address
+        "team": string,        // Team name (optional)
+        "active": boolean      // Whether user is active
+      }
+    ],
+    "has_more": boolean,       // Whether more results are available
+    "next_offset": number      // Offset for next page (if has_more is true)
+  }
+
+Examples:
+  - Use when: "Find all marketing team members" -> params with query="team:marketing"
+  - Use when: "Search for John's account" -> params with query="john"
+  - Don't use when: You need to create a user (use example_create_user instead)
+
+Error Handling:
+  - Returns "Error: Rate limit exceeded" if too many requests (429 status)
+  - Returns "No users found matching '<query>'" if search returns empty`,
+    inputSchema: UserSearchInputSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true
+    }
+  },
+  async (params: UserSearchInput) => {
+    try {
+      // Input validation is handled by Zod schema
+      // Make API request using validated parameters
+      const data = await makeApiRequest<any>(
+        "users/search",
+        "GET",
+        undefined,
+        {
+          q: params.query,
+          limit: params.limit,
+          offset: params.offset
+        }
+      );
+
+      const users = data.users || [];
+      const total = data.total || 0;
+
+      if (!users.length) {
+        return {
+          content: [{
+            type: "text",
+            text: `No users found matching '${params.query}'`
+          }]
+        };
+      }
+
+      // Prepare structured output
+      const output = {
+        total,
+        count: users.length,
+        offset: params.offset,
+        users: users.map((user: any) => ({
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          ...(user.team ? { team: user.team } : {}),
+          active: user.active ?? true
+        })),
+        has_more: total > params.offset + users.length,
+        ...(total > params.offset + users.length ? {
+          next_offset: params.offset + users.length
+        } : {})
+      };
+
+      // Format text representation based on requested format
+      let textContent: string;
+      if (params.response_format === ResponseFormat.MARKDOWN) {
+        const lines = [`# User Search Results: '${params.query}'`, "",
+          `Found ${total} users (showing ${users.length})`, ""];
+        for (const user of users) {
+          lines.push(`## ${user.name} (${user.id})`);
+          lines.push(`- **Email**: ${user.email}`);
+          if (user.team) lines.push(`- **Team**: ${user.team}`);
+          lines.push("");
+        }
+        textContent = lines.join("\n");
+      } else {
+        textContent = JSON.stringify(output, null, 2);
+      }
+
+      return {
+        content: [{ type: "text", text: textContent }],
+        structuredContent: output // Modern pattern for structured data
+      };
+    } catch (error) {
+      return {
+        content: [{
+          type: "text",
+          text: handleApiError(error)
+        }]
+      };
+    }
+  }
+);
 ```
 
+## Zod Schemas for Input Validation
 
+Zod provides runtime type validation:
+
+```typescript
+import { z } from "zod";
+
+// Basic schema with validation
+const CreateUserSchema = z.object({
+  name: z.string()
+    .min(1, "Name is required")
+    .max(100, "Name must not exceed 100 characters"),
+  email: z.string()
+    .email("Invalid email format"),
+  age: z.number()
+    .int("Age must be a whole number")
+    .min(0, "Age cannot be negative")
+    .max(150, "Age cannot be greater than 150")
+}).strict();  // Use .strict() to forbid extra fields
+
+// Enums
+enum ResponseFormat {
+  MARKDOWN = "markdown",
+  JSON = "json"
+}
+
+const SearchSchema = z.object({
+  response_format: z.nativeEnum(ResponseFormat)
+    .default(ResponseFormat.MARKDOWN)
+    .describe("Output format")
+});
+
+// Optional fields with defaults
+const PaginationSchema = z.object({
+  limit: z.number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe("Maximum results to return"),
+  offset: z.number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe("Number of results to skip")
+});
+```
+
+## Response Format Options
+
+Support multiple output formats for flexibility:
+
+```typescript
+enum ResponseFormat {
+  MARKDOWN = "markdown",
+  JSON = "json"
+}
+
+const inputSchema = z.object({
+  query: z.string(),
+  response_format: z.nativeEnum(ResponseFormat)
+    .default(ResponseFormat.MARKDOWN)
+    .describe("Output format: 'markdown' for human-readable or 'json' for machine-readable")
+});
+```
+
+**Markdown format**:
+- Use headers, lists, and formatting for clarity
+- Convert timestamps to human-readable format
+- Show display names with IDs in parentheses
+- Omit verbose metadata
+- Group related information logically
+
+**JSON format**:
+- Return complete, structured data suitable for programmatic processing
+- Include all available fields and metadata
+- Use consistent field names and types
+
+## Pagination Implementation
+
+For tools that list resources:
+
+```typescript
+const ListSchema = z.object({
+  limit: z.number().int().min(1).max(100).default(20),
+  offset: z.number().int().min(0).default(0)
+});
+
+async function listItems(params: z.infer<typeof ListSchema>) {
+  const data = await apiRequest(params.limit, params.offset);
+
+  const response = {
+    total: data.total,
+    count: data.items.length,
+    offset: params.offset,
+    items: data.items,
+    has_more: data.total > params.offset + data.items.length,
+    next_offset: data.total > params.offset + data.items.length
+      ? params.offset + data.items.length
+      : undefined
+  };
+
+  return JSON.stringify(response, null, 2);
+}
+```
+
+## Character Limits and Truncation
+
+Add a CHARACTER_LIMIT constant to prevent overwhelming responses:
+
+```typescript
+// At module level in constants.ts
+export const CHARACTER_LIMIT = 25000;  // Maximum response size in characters
+
+async function searchTool(params: SearchInput) {
+  let result = generateResponse(data);
+
+  // Check character limit and truncate if needed
+  if (result.length > CHARACTER_LIMIT) {
+    const truncatedData = data.slice(0, Math.max(1, data.length / 2));
+    response.data = truncatedData;
+    response.truncated = true;
+    response.truncation_message =
+      `Response truncated from ${data.length} to ${truncatedData.length} items. ` +
+      `Use 'offset' parameter or add filters to see more results.`;
+    result = JSON.stringify(response, null, 2);
+  }
+
+  return result;
+}
+```
+
+## Error Handling
+
+Provide clear, actionable error messages:
+
+```typescript
+import axios, { AxiosError } from "axios";
+
+function handleApiError(error: unknown): string {
+  if (error instanceof AxiosError) {
+    if (error.response) {
+      switch (error.response.status) {
+        case 404:
+          return "Error: Resource not found. Please check the ID is correct.";
+        case 403:
+          return "Error: Permission denied. You don't have access to this resource.";
+        case 429:
+          return "Error: Rate limit exceeded. Please wait before making more requests.";
+        default:
+          return `Error: API request failed with status ${error.response.status}`;
+      }
+    } else if (error.code === "ECONNABORTED") {
+      return "Error: Request timed out. Please try again.";
+    }
+  }
+  return `Error: Unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`;
+}
+```
+
+## Shared Utilities
+
+Extract common functionality into reusable functions:
+
+```typescript
+// Shared API request function
+async function makeApiRequest<T>(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
+  data?: any,
+  params?: any
+): Promise<T> {
+  try {
+    const response = await axios({
+      method,
+      url: `${API_BASE_URL}/${endpoint}`,
+      data,
+      params,
+      timeout: 30000,
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+```
+
+## Async/Await Best Practices
+
+Always use async/await for network requests and I/O operations:
+
+```typescript
+// Good: Async network request
+async function fetchData(resourceId: string): Promise<ResourceData> {
+  const response = await axios.get(`${API_URL}/resource/${resourceId}`);
+  return response.data;
+}
+
+// Bad: Promise chains
+function fetchData(resourceId: string): Promise<ResourceData> {
+  return axios.get(`${API_URL}/resource/${resourceId}`)
+    .then(response => response.data);  // Harder to read and maintain
+}
+```
+
+## TypeScript Best Practices
+
+1. **Use Strict TypeScript**: Enable strict mode in tsconfig.json
+2. **Define Interfaces**: Create clear interface definitions for all data structures
+3. **Avoid `any`**: Use proper types or `unknown` instead of `any`
+4. **Zod for Runtime Validation**: Use Zod schemas to validate external data
+5. **Type Guards**: Create type guard functions for complex type checking
+6. **Error Handling**: Always use try-catch with proper error type checking
+7. **Null Safety**: Use optional chaining (`?.`) and nullish coalescing (`??`)
+
+```typescript
+// Good: Type-safe with Zod and interfaces
+interface UserResponse {
+  id: string;
+  name: string;
+  email: string;
+  team?: string;
+  active: boolean;
+}
+
+const UserSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  email: z.string().email(),
+  team: z.string().optional(),
+  active: z.boolean()
+});
+
+type User = z.infer<typeof UserSchema>;
+
+async function getUser(id: string): Promise<User> {
+  const data = await apiCall(`/users/${id}`);
+  return UserSchema.parse(data);  // Runtime validation
+}
+
+// Bad: Using any
+async function getUser(id: string): Promise<any> {
+  return await apiCall(`/users/${id}`);  // No type safety
+}
+```
+
+## Package Configuration
+
+### package.json
+
+```json
+{
+  "name": "{service}-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for {Service} API integration",
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "node dist/index.js",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.6.1",
+    "axios": "^1.7.9",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
+```
+
+### tsconfig.json
+
+```json
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "lib": ["ES2022"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "allowSyntheticDefaultImports": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
+```
+
+## Complete Example
+
+```typescript
+#!/usr/bin/env node
+/**
+ * MCP Server for Example Service.
+ *
+ * This server provides tools to interact with Example API, including user search,
+ * project management, and data export capabilities.
+ */
+
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { z } from "zod";
+import axios, { AxiosError } from "axios";
+
+// Constants
+const API_BASE_URL = "https://api.example.com/v1";
+const CHARACTER_LIMIT = 25000;
+
+// Enums
+enum ResponseFormat {
+  MARKDOWN = "markdown",
+  JSON = "json"
+}
+
+// Zod schemas
+const UserSearchInputSchema = z.object({
+  query: z.string()
+    .min(2, "Query must be at least 2 characters")
+    .max(200, "Query must not exceed 200 characters")
+    .describe("Search string to match against names/emails"),
+  limit: z.number()
+    .int()
+    .min(1)
+    .max(100)
+    .default(20)
+    .describe("Maximum results to return"),
+  offset: z.number()
+    .int()
+    .min(0)
+    .default(0)
+    .describe("Number of results to skip for pagination"),
+  response_format: z.nativeEnum(ResponseFormat)
+    .default(ResponseFormat.MARKDOWN)
+    .describe("Output format: 'markdown' for human-readable or 'json' for machine-readable")
+}).strict();
+
+type UserSearchInput = z.infer<typeof UserSearchInputSchema>;
+
+// Shared utility functions
+async function makeApiRequest<T>(
+  endpoint: string,
+  method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
+  data?: any,
+  params?: any
+): Promise<T> {
+  try {
+    const response = await axios({
+      method,
+      url: `${API_BASE_URL}/${endpoint}`,
+      data,
+      params,
+      timeout: 30000,
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      }
+    });
+    return response.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+function handleApiError(error: unknown): string {
+  if (error instanceof AxiosError) {
+    if (error.response) {
+      switch (error.response.status) {
+        case 404:
+          return "Error: Resource not found. Please check the ID is correct.";
+        case 403:
+          return "Error: Permission denied. You don't have access to this resource.";
+        case 429:
+          return "Error: Rate limit exceeded. Please wait before making more requests.";
+        default:
+          return `Error: API request failed with status ${error.response.status}`;
+      }
+    } else if (error.code === "ECONNABORTED") {
+      return "Error: Request timed out. Please try again.";
+    }
+  }
+  return `Error: Unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`;
+}
+
+// Create MCP server instance
+const server = new McpServer({
+  name: "example-mcp",
+  version: "1.0.0"
+});
+
+// Register tools
+server.registerTool(
+  "example_search_users",
+  {
+    title: "Search Example Users",
+    description: `[Full description as shown above]`,
+    inputSchema: UserSearchInputSchema,
+    annotations: {
+      readOnlyHint: true,
+      destructiveHint: false,
+      idempotentHint: true,
+      openWorldHint: true
+    }
+  },
+  async (params: UserSearchInput) => {
+    // Implementation as shown above
+  }
+);
+
+// Main function
+// For stdio (local):
+async function runStdio() {
+  if (!process.env.EXAMPLE_API_KEY) {
+    console.error("ERROR: EXAMPLE_API_KEY environment variable is required");
+    process.exit(1);
+  }
+
+  const transport = new StdioServerTransport();
+  await server.connect(transport);
+  console.error("MCP server running via stdio");
+}
+
+// For streamable HTTP (remote):
+async function runHTTP() {
+  if (!process.env.EXAMPLE_API_KEY) {
+    console.error("ERROR: EXAMPLE_API_KEY environment variable is required");
+    process.exit(1);
+  }
+
+  const app = express();
+  app.use(express.json());
+
+  app.post('/mcp', async (req, res) => {
+    const transport = new StreamableHTTPServerTransport({
+      sessionIdGenerator: undefined,
+      enableJsonResponse: true
+    });
+    res.on('close', () => transport.close());
+    await server.connect(transport);
+    await transport.handleRequest(req, res, req.body);
+  });
+
+  const port = parseInt(process.env.PORT || '3000');
+  app.listen(port, () => {
+    console.error(`MCP server running on http://localhost:${port}/mcp`);
+  });
+}
+
+// Choose transport based on environment
+const transport = process.env.TRANSPORT || 'stdio';
+if (transport === 'http') {
+  runHTTP().catch(error => {
+    console.error("Server error:", error);
+    process.exit(1);
+  });
+} else {
+  runStdio().catch(error => {
+    console.error("Server error:", error);
+    process.exit(1);
+  });
+}
+```
+
+---
+
+## Advanced MCP Features
+
+### Resource Registration
+
+Expose data as resources for efficient, URI-based access:
+
+```typescript
+import { ResourceTemplate } from "@modelcontextprotocol/sdk/types.js";
+
+// Register a resource with URI template
+server.registerResource(
+  {
+    uri: "file://documents/{name}",
+    name: "Document Resource",
+    description: "Access documents by name",
+    mimeType: "text/plain"
+  },
+  async (uri: string) => {
+    // Extract parameter from URI
+    const match = uri.match(/^file:\/\/documents\/(.+)$/);
+    if (!match) {
+      throw new Error("Invalid URI format");
+    }
+
+    const documentName = match[1];
+    const content = await loadDocument(documentName);
+
+    return {
+      contents: [{
+        uri,
+        mimeType: "text/plain",
+        text: content
+      }]
+    };
+  }
+);
+
+// List available resources dynamically
+server.registerResourceList(async () => {
+  const documents = await getAvailableDocuments();
+  return {
+    resources: documents.map(doc => ({
+      uri: `file://documents/${doc.name}`,
+      name: doc.name,
+      mimeType: "text/plain",
+      description: doc.description
+    }))
+  };
+});
+```
+
+**When to use Resources vs Tools:**
+- **Resources**: For data access with simple URI-based parameters
+- **Tools**: For complex operations requiring validation and business logic
+- **Resources**: When data is relatively static or template-based
+- **Tools**: When operations have side effects or complex workflows
+
+### Transport Options
+
+The TypeScript SDK supports two main transport mechanisms:
+
+#### Streamable HTTP (Recommended for Remote Servers)
+
+```typescript
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express from "express";
+
+const app = express();
+app.use(express.json());
+
+app.post('/mcp', async (req, res) => {
+  // Create new transport for each request (stateless, prevents request ID collisions)
+  const transport = new StreamableHTTPServerTransport({
+    sessionIdGenerator: undefined,
+    enableJsonResponse: true
+  });
+
+  res.on('close', () => transport.close());
+
+  await server.connect(transport);
+  await transport.handleRequest(req, res, req.body);
+});
+
+app.listen(3000);
+```
+
+#### stdio (For Local Integrations)
+
+```typescript
+import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
+```
+
+**Transport selection:**
+- **Streamable HTTP**: Web services, remote access, multiple clients
+- **stdio**: Command-line tools, local development, subprocess integration
+
+### Notification Support
+
+Notify clients when server state changes:
+
+```typescript
+// Notify when tools list changes
+server.notification({
+  method: "notifications/tools/list_changed"
+});
+
+// Notify when resources change
+server.notification({
+  method: "notifications/resources/list_changed"
+});
+```
+
+Use notifications sparingly - only when server capabilities genuinely change.
+
+---
+
+## Code Best Practices
+
+### Code Composability and Reusability
+
+Your implementation MUST prioritize composability and code reuse:
+
+1. **Extract Common Functionality**:
+   - Create reusable helper functions for operations used across multiple tools
+   - Build shared API clients for HTTP requests instead of duplicating code
+   - Centralize error handling logic in utility functions
+   - Extract business logic into dedicated functions that can be composed
+   - Extract shared markdown or JSON field selection & formatting functionality
+
+2. **Avoid Duplication**:
+   - NEVER copy-paste similar code between tools
+   - If you find yourself writing similar logic twice, extract it into a function
+   - Common operations like pagination, filtering, field selection, and formatting should be shared
+   - Authentication/authorization logic should be centralized
+
+## Building and Running
+
+Always build your TypeScript code before running:
+
+```bash
+# Build the project
+npm run build
+
+# Run the server
+npm start
+
+# Development with auto-reload
+npm run dev
+```
+
+Always ensure `npm run build` completes successfully before considering the implementation complete.
+
+## Quality Checklist
+
+Before finalizing your Node/TypeScript MCP server implementation, ensure:
+
+### Strategic Design
+- [ ] Tools enable complete workflows, not just API endpoint wrappers
+- [ ] Tool names reflect natural task subdivisions
+- [ ] Response formats optimize for agent context efficiency
+- [ ] Human-readable identifiers used where appropriate
+- [ ] Error messages guide agents toward correct usage
+
+### Implementation Quality
+- [ ] FOCUSED IMPLEMENTATION: Most important and valuable tools implemented
+- [ ] All tools registered using `registerTool` with complete configuration
+- [ ] All tools include `title`, `description`, `inputSchema`, and `annotations`
+- [ ] Annotations correctly set (readOnlyHint, destructiveHint, idempotentHint, openWorldHint)
+- [ ] All tools use Zod schemas for runtime input validation with `.strict()` enforcement
+- [ ] All Zod schemas have proper constraints and descriptive error messages
+- [ ] All tools have comprehensive descriptions with explicit input/output types
+- [ ] Descriptions include return value examples and complete schema documentation
+- [ ] Error messages are clear, actionable, and educational
+
+### TypeScript Quality
+- [ ] TypeScript interfaces are defined for all data structures
+- [ ] Strict TypeScript is enabled in tsconfig.json
+- [ ] No use of `any` type - use `unknown` or proper types instead
+- [ ] All async functions have explicit Promise<T> return types
+- [ ] Error handling uses proper type guards (e.g., `axios.isAxiosError`, `z.ZodError`)
+
+### Advanced Features (where applicable)
+- [ ] Resources registered for appropriate data endpoints
+- [ ] Appropriate transport configured (stdio or streamable HTTP)
+- [ ] Notifications implemented for dynamic server capabilities
+- [ ] Type-safe with SDK interfaces
+
+### Project Configuration
+- [ ] Package.json includes all necessary dependencies
+- [ ] Build script produces working JavaScript in dist/ directory
+- [ ] Main entry point is properly configured as dist/index.js
+- [ ] Server name follows format: `{service}-mcp-server`
+- [ ] tsconfig.json properly configured with strict mode
+
+### Code Quality
+- [ ] Pagination is properly implemented where applicable
+- [ ] Large responses check CHARACTER_LIMIT constant and truncate with clear messages
+- [ ] Filtering options are provided for potentially large result sets
+- [ ] All network operations handle timeouts and connection errors gracefully
+- [ ] Common functionality is extracted into reusable functions
+- [ ] Return types are consistent across similar operations
+
+### Testing and Build
+- [ ] `npm run build` completes successfully without errors
+- [ ] dist/index.js created and executable
+- [ ] Server runs: `node dist/index.js --help`
+- [ ] All imports resolve correctly
+- [ ] Sample tool calls work as expected
 
 --- README.md ---
 # oraclepack
@@ -11672,7 +13806,1291 @@ Distributed under the MIT License. See `LICENSE` for more information.
 - [<img alt="License" src="https://img.shields.io/github/license/acidicsoil/oraclepack" />](https://github.com/acidicsoil/oraclepack/blob/main/LICENSE)
 - [<img alt="Go Version" src="https://img.shields.io/github/go-mod/go-version/acidicsoil/oraclepack" />](https://github.com/acidicsoil/oraclepack/blob/main/go.mod)
 
---- .config/skill/strategist-questions-oracle-pack/SKILL.md ---
+--- .config/mcp/mcp-builder/SKILL.md ---
+---
+name: mcp-builder
+description: Guide for creating high-quality MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. Use when building MCP servers to integrate external APIs or services, whether in Python (FastMCP) or Node/TypeScript (MCP SDK).
+license: Complete terms in LICENSE.txt
+---
+
+# MCP Server Development Guide
+
+## Overview
+
+Create MCP (Model Context Protocol) servers that enable LLMs to interact with external services through well-designed tools. The quality of an MCP server is measured by how well it enables LLMs to accomplish real-world tasks.
+
+---
+
+# Process
+
+## 🚀 High-Level Workflow
+
+Creating a high-quality MCP server involves four main phases:
+
+### Phase 1: Deep Research and Planning
+
+#### 1.1 Understand Modern MCP Design
+
+**API Coverage vs. Workflow Tools:**
+Balance comprehensive API endpoint coverage with specialized workflow tools. Workflow tools can be more convenient for specific tasks, while comprehensive coverage gives agents flexibility to compose operations. Performance varies by client—some clients benefit from code execution that combines basic tools, while others work better with higher-level workflows. When uncertain, prioritize comprehensive API coverage.
+
+**Tool Naming and Discoverability:**
+Clear, descriptive tool names help agents find the right tools quickly. Use consistent prefixes (e.g., `github_create_issue`, `github_list_repos`) and action-oriented naming.
+
+**Context Management:**
+Agents benefit from concise tool descriptions and the ability to filter/paginate results. Design tools that return focused, relevant data. Some clients support code execution which can help agents filter and process data efficiently.
+
+**Actionable Error Messages:**
+Error messages should guide agents toward solutions with specific suggestions and next steps.
+
+#### 1.2 Study MCP Protocol Documentation
+
+**Navigate the MCP specification:**
+
+Start with the sitemap to find relevant pages: `https://modelcontextprotocol.io/sitemap.xml`
+
+Then fetch specific pages with `.md` suffix for markdown format (e.g., `https://modelcontextprotocol.io/specification/draft.md`).
+
+Key pages to review:
+- Specification overview and architecture
+- Transport mechanisms (streamable HTTP, stdio)
+- Tool, resource, and prompt definitions
+
+#### 1.3 Study Framework Documentation
+
+**Recommended stack:**
+- **Language**: TypeScript (high-quality SDK support and good compatibility in many execution environments e.g. MCPB. Plus AI models are good at generating TypeScript code, benefiting from its broad usage, static typing and good linting tools)
+- **Transport**: Streamable HTTP for remote servers, using stateless JSON (simpler to scale and maintain, as opposed to stateful sessions and streaming responses). stdio for local servers.
+
+**Load framework documentation:**
+
+- **MCP Best Practices**: [📋 View Best Practices](./reference/mcp_best_practices.md) - Core guidelines
+
+**For TypeScript (recommended):**
+- **TypeScript SDK**: Use WebFetch to load `https://raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/main/README.md`
+- [⚡ TypeScript Guide](./reference/node_mcp_server.md) - TypeScript patterns and examples
+
+**For Python:**
+- **Python SDK**: Use WebFetch to load `https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/main/README.md`
+- [🐍 Python Guide](./reference/python_mcp_server.md) - Python patterns and examples
+
+#### 1.4 Plan Your Implementation
+
+**Understand the API:**
+Review the service's API documentation to identify key endpoints, authentication requirements, and data models. Use web search and WebFetch as needed.
+
+**Tool Selection:**
+Prioritize comprehensive API coverage. List endpoints to implement, starting with the most common operations.
+
+---
+
+### Phase 2: Implementation
+
+#### 2.1 Set Up Project Structure
+
+See language-specific guides for project setup:
+- [⚡ TypeScript Guide](./reference/node_mcp_server.md) - Project structure, package.json, tsconfig.json
+- [🐍 Python Guide](./reference/python_mcp_server.md) - Module organization, dependencies
+
+#### 2.2 Implement Core Infrastructure
+
+Create shared utilities:
+- API client with authentication
+- Error handling helpers
+- Response formatting (JSON/Markdown)
+- Pagination support
+
+#### 2.3 Implement Tools
+
+For each tool:
+
+**Input Schema:**
+- Use Zod (TypeScript) or Pydantic (Python)
+- Include constraints and clear descriptions
+- Add examples in field descriptions
+
+**Output Schema:**
+- Define `outputSchema` where possible for structured data
+- Use `structuredContent` in tool responses (TypeScript SDK feature)
+- Helps clients understand and process tool outputs
+
+**Tool Description:**
+- Concise summary of functionality
+- Parameter descriptions
+- Return type schema
+
+**Implementation:**
+- Async/await for I/O operations
+- Proper error handling with actionable messages
+- Support pagination where applicable
+- Return both text content and structured data when using modern SDKs
+
+**Annotations:**
+- `readOnlyHint`: true/false
+- `destructiveHint`: true/false
+- `idempotentHint`: true/false
+- `openWorldHint`: true/false
+
+---
+
+### Phase 3: Review and Test
+
+#### 3.1 Code Quality
+
+Review for:
+- No duplicated code (DRY principle)
+- Consistent error handling
+- Full type coverage
+- Clear tool descriptions
+
+#### 3.2 Build and Test
+
+**TypeScript:**
+- Run `npm run build` to verify compilation
+- Test with MCP Inspector: `npx @modelcontextprotocol/inspector`
+
+**Python:**
+- Verify syntax: `python -m py_compile your_server.py`
+- Test with MCP Inspector
+
+See language-specific guides for detailed testing approaches and quality checklists.
+
+---
+
+### Phase 4: Create Evaluations
+
+After implementing your MCP server, create comprehensive evaluations to test its effectiveness.
+
+**Load [✅ Evaluation Guide](./reference/evaluation.md) for complete evaluation guidelines.**
+
+#### 4.1 Understand Evaluation Purpose
+
+Use evaluations to test whether LLMs can effectively use your MCP server to answer realistic, complex questions.
+
+#### 4.2 Create 10 Evaluation Questions
+
+To create effective evaluations, follow the process outlined in the evaluation guide:
+
+1. **Tool Inspection**: List available tools and understand their capabilities
+2. **Content Exploration**: Use READ-ONLY operations to explore available data
+3. **Question Generation**: Create 10 complex, realistic questions
+4. **Answer Verification**: Solve each question yourself to verify answers
+
+#### 4.3 Evaluation Requirements
+
+Ensure each question is:
+- **Independent**: Not dependent on other questions
+- **Read-only**: Only non-destructive operations required
+- **Complex**: Requiring multiple tool calls and deep exploration
+- **Realistic**: Based on real use cases humans would care about
+- **Verifiable**: Single, clear answer that can be verified by string comparison
+- **Stable**: Answer won't change over time
+
+#### 4.4 Output Format
+
+Create an XML file with this structure:
+
+```xml
+<evaluation>
+  <qa_pair>
+    <question>Find discussions about AI model launches with animal codenames. One model needed a specific safety designation that uses the format ASL-X. What number X was being determined for the model named after a spotted wild cat?</question>
+    <answer>3</answer>
+  </qa_pair>
+<!-- More qa_pairs... -->
+</evaluation>
+```
+
+---
+
+# Reference Files
+
+## 📚 Documentation Library
+
+Load these resources as needed during development:
+
+### Core MCP Documentation (Load First)
+- **MCP Protocol**: Start with sitemap at `https://modelcontextprotocol.io/sitemap.xml`, then fetch specific pages with `.md` suffix
+- [📋 MCP Best Practices](./reference/mcp_best_practices.md) - Universal MCP guidelines including:
+  - Server and tool naming conventions
+  - Response format guidelines (JSON vs Markdown)
+  - Pagination best practices
+  - Transport selection (streamable HTTP vs stdio)
+  - Security and error handling standards
+
+### SDK Documentation (Load During Phase 1/2)
+- **Python SDK**: Fetch from `https://raw.githubusercontent.com/modelcontextprotocol/python-sdk/main/README.md`
+- **TypeScript SDK**: Fetch from `https://raw.githubusercontent.com/modelcontextprotocol/typescript-sdk/main/README.md`
+
+### Language-Specific Implementation Guides (Load During Phase 2)
+- [🐍 Python Implementation Guide](./reference/python_mcp_server.md) - Complete Python/FastMCP guide with:
+  - Server initialization patterns
+  - Pydantic model examples
+  - Tool registration with `@mcp.tool`
+  - Complete working examples
+  - Quality checklist
+
+- [⚡ TypeScript Implementation Guide](./reference/node_mcp_server.md) - Complete TypeScript guide with:
+  - Project structure
+  - Zod schema patterns
+  - Tool registration with `server.registerTool`
+  - Complete working examples
+  - Quality checklist
+
+### Evaluation Guide (Load During Phase 4)
+- [✅ Evaluation Guide](./reference/evaluation.md) - Complete evaluation creation guide with:
+  - Question creation guidelines
+  - Answer verification strategies
+  - XML format specifications
+  - Example questions and answers
+  - Running an evaluation with the provided scripts
+
+
+## Links discovered
+- [📋 View Best Practices](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/mcp_best_practices.md)
+- [⚡ TypeScript Guide](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/node_mcp_server.md)
+- [🐍 Python Guide](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/python_mcp_server.md)
+- [✅ Evaluation Guide](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/evaluation.md)
+- [📋 MCP Best Practices](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/mcp_best_practices.md)
+- [🐍 Python Implementation Guide](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/python_mcp_server.md)
+- [⚡ TypeScript Implementation Guide](https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/node_mcp_server.md)
+
+--- .config/mcp/oraclepack-gold-pack/SKILL.md ---
+---
+name: oraclepack-gold-pack
+description: Generate a single canonical Stage-1 oraclepack question pack as Markdown:exactly one ```bash fence containing exactly 20 steps (01..20) with strict ROI header tokens, per-step --write-output, fixed categories + coverage check. Use when you need a gold, runner-ingestible pack template (Stage 1 only; not Stage 3 taskify).
+metadata:
+  short-description: Gold Stage-1 oraclepack pack generator + validators
+---
+
+# Oraclepack Gold Pack (Stage 1)
+
+This skill produces the **canonical Stage-1** oraclepack question pack (20 Oracle CLI calls). It is intentionally strict to prevent schema drift.
+
+**Non-negotiable contract (pack output):**
+- Exactly **one** fenced code block: starts with exactly ` ```bash` on its own line, and ends with exactly ` ````
+- No other fenced code blocks anywhere in the pack.
+- Exactly **20** steps, numbered **01..20** in order.
+- Every step has a header line matching:
+  - `# NN) ROI=... impact=... confidence=... effort=... horizon=... category=... reference=...`
+- Every step includes `--write-output "<out_dir>/<nn>-<slug>.md"`.
+- Categories are fixed to this exact set (no additions/renames):
+  - `contracts/interfaces`
+  - `invariants`
+  - `caching/state`
+  - `background jobs`
+  - `observability`
+  - `permissions`
+  - `migrations`
+  - `UX flows`
+  - `failure modes`
+  - `feature flags`
+- Pack ends with a **Coverage check** section listing all 10 categories as `OK` or `Missing(<step ids>)`.
+
+The pack template is the contract. The scratch doc is **not** a pack format.
+
+References:
+- Contract template: `references/oracle-pack-template.md`
+- Repo discovery: `references/inference-first-discovery.md`
+- Attachment rules: `references/attachment-minimization.md`
+- Scratch playbook (not pack): `references/oracle-scratch-format.md`
+
+## Quick start
+
+1) Generate a pack file (intended path):
+- `docs/oracle-pack-YYYY-MM-DD.md`
+
+1) Validate it (recommended before running oraclepack):
+- `python3 scripts/validate_pack.py docs/oracle-pack-YYYY-MM-DD.md`
+
+1) Optional attachment lint:
+- `python3 scripts/lint_attachments.py docs/oracle-pack-YYYY-MM-DD.md`
+
+## Inputs (do not ask follow-ups)
+
+Interpret the user’s trailing text as conceptual `{{args}}`. Extract:
+
+- `codebase_name` (default `Unknown`)
+- `constraints` (default `None`)
+- `non_goals` (default `None`)
+- `team_size` (default `Unknown`)
+- `deadline` (default `Unknown`)
+- `out_dir` (default `docs/oracle-questions-YYYY-MM-DD`)
+- `oracle_cmd` (default `oracle`)
+- `oracle_flags` (default `--files-report`)
+- `engine` (`api|browser`; optional; if provided, append to flags *only if your oracle CLI supports it*, else omit and record `TODO(engine flag unknown)`)
+- `model` (optional; if provided, append to flags *only if your oracle CLI supports it*, else omit and record `TODO(model flag unknown)`)
+- `extra_files` (default empty; if provided, append **literally** to every command)
+
+If any value is missing: use defaults and proceed.
+
+## Workflow (deterministic)
+
+### 1) Read the contract template first
+Open `references/oracle-pack-template.md` and treat it as the **single source of truth** for formatting.
+
+### 2) Repo discovery (inference-first)
+Follow `references/inference-first-discovery.md`:
+- Read a small set of “anchors” first.
+- Infer what’s present in the repo.
+- Only then choose the best 1–2 attachments per step.
+
+### 3) Plan the 20 probes (2 per category)
+Use the fixed categories and produce **exactly 2 steps per category** (20 total). Keep each step’s prompt focused and non-overlapping.
+
+For each step:
+- Pick a **reference anchor** (`reference=` token): `{path}:{symbol}` OR `{path}` OR `Unknown`.
+- Pick ≤2 attachments (or fewer) using `references/attachment-minimization.md`.
+- Ensure the prompt asks for:
+  - Direct answer (bullets)
+  - Risks/unknowns
+  - Next smallest concrete experiment
+  - Missing artifact patterns to request if evidence is insufficient
+
+### 4) Emit the pack (single file)
+Produce exactly one Markdown document with:
+- Title + parsed args section (plain markdown; no code fences)
+- Exactly one ` ```bash` fence containing the 20 steps
+- A Coverage check section after the fence
+
+### 5) Validate and correct drift
+Run:
+- `python3 scripts/validate_pack.py <pack.md>`
+If it fails, fix the pack until it passes.
+
+Optionally run:
+- `python3 scripts/lint_attachments.py <pack.md>`
+If it fails, reduce attachments to ≤2 per step (before any literal `extra_files`).
+
+## Output contract
+
+When invoked, you produce:
+- One runner-ingestible Markdown pack (intended filename: `docs/oracle-pack-YYYY-MM-DD.md`)
+
+You do **not**:
+- Run oraclepack
+- Generate Stage-3 “action packs” (that is `oraclepack-taskify`)
+
+## Failure modes (do not guess)
+
+- Missing repo evidence → set `reference=Unknown`, attach fewer files, and explicitly request missing file/path patterns in the prompt.
+- Uncertain CLI flag support (`engine`, `model`) → omit flags and write `TODO(engine/model flag unknown)` in the pack’s parsed args notes (do not invent flags).
+- Any schema drift → fix until `scripts/validate_pack.py` passes.
+
+## Invocation examples
+
+1) “Generate a gold oraclepack Stage-1 pack for this repo. out_dir=docs/oracle-questions-2026-01-06”
+2) “Make the strict 20-step pack for codebase_name=AcmeAPI constraints=‘no DB changes’”
+3) “Create the canonical pack; engine=browser model=gpt-5.2-pro (if supported)”
+4) “Produce the gold pack; add extra_files='-f docs/ARCHITECTURE.md -f docs/API.md'”
+5) “Regenerate this pack but fix headers and coverage check so it validates.”
+
+
+--- .config/mcp/oraclepack-taskify/SKILL.md ---
+---
+name: oraclepack-taskify
+description: Generate a Stage-3 Action Pack from oraclepack output (oracle-out 01–20 .md answers) that synthesizes a canonical actions plan + Task Master PRD, runs Task Master to create/expand tasks, and by default starts a guarded autopilot to begin implementation.
+metadata:
+  short-description: Stage 3:answers → tasks → pipelines/autopilot
+---
+
+# oraclepack-taskify
+
+## Use when
+
+Use this skill only after **oraclepack Stage 2** has produced **20 answer files** under an output directory (default `oracle-out/`), and the user wants Stage 3 work products such as:
+
+- “Stage 3” / “taskify” / “actionize” / “turn oracle outputs into tasks”
+- “Task Master follow-up” / “PRD from oracle-out” / “implementation plan”
+- “Start work automatically from oracle-out” / “autopilot top tasks”
+
+## Deliverable
+
+When invoked, produce exactly one primary deliverable:
+
+- A single Markdown doc at `pack_path` (default `docs/oracle-actions-pack-YYYY-MM-DD.md`)
+
+The generated Action Pack MUST be oraclepack-ingestible and MUST obey:
+
+- Exactly **one** fenced code block labeled `bash` in the entire document.
+- No other code fences anywhere in the document.
+- Inside the bash fence, include sequential step headers exactly like: `# NN)` where `NN` is `01, 02, 03...`
+- Each step is self-contained and must **not rely on shell variables created in previous steps**.
+- Each step writes artifacts to explicit, deterministic paths.
+
+## Skill interface (args)
+
+Parse user trailing text as whitespace-separated `KEY=value` tokens (last-one-wins). Do not ask follow-ups.
+
+Supported args (all optional):
+
+- `out_dir` (default `oracle-out`)
+- `pack_path` (default `docs/oracle-actions-pack-YYYY-MM-DD.md`)
+- `actions_json` (default `<out_dir>/_actions.json`)
+- `actions_md` (default `<out_dir>/_actions.md`)
+- `prd_path` (default `.taskmaster/docs/oracle-actions-prd.md`)
+- `tag` (default `oraclepack`)
+- `mode` (default `autopilot`; allowed `backlog|pipelines|autopilot`)
+- `top_n` (default `10`; clamp to `1..20`)
+- `oracle_cmd` (default `oracle`; allow a multi-word command like `npx -y @steipete/oracle` only if the user requests it)
+- `task_master_cmd` (default `task-master`)
+- `tm_cmd` (default `tm`; used only in autopilot mode)
+- `extra_files` (default empty; if provided, treat as a comma-separated list of file paths; attach them wherever the synthesis step accepts file inputs)
+
+If any referenced file/path does not exist, the skill still outputs the Action Pack, but includes an early step that prints a clear error and exits non-zero.
+
+## Workflow (what to do when invoked)
+
+1) Parse args from `KEY=value` tokens (no follow-ups; last-one-wins; unknown keys ignored).
+
+2) Resolve defaults deterministically:
+   - Compute `YYYY-MM-DD` using the local date at generation time.
+   - Apply defaults and clamp `top_n` to `1..20`.
+   - Default `mode=autopilot` unless explicitly overridden.
+   - Derive:
+     - `actions_json = <out_dir>/_actions.json` unless user overrides
+     - `actions_md = <out_dir>/_actions.md` unless user overrides
+
+3) Render the Action Pack:
+   - Start from `assets/action-pack-template.md`.
+   - Substitute placeholders:
+     - `{{pack_date}}`, `{{out_dir}}`, `{{pack_path}}`, `{{actions_json}}`, `{{actions_md}}`, `{{prd_path}}`, `{{tag}}`, `{{mode}}`, `{{top_n}}`, `{{oracle_cmd}}`, `{{task_master_cmd}}`, `{{tm_cmd}}`
+   - Expand `extra_files` into literal bash lines of the form:
+     - `oracle_file_flags+=( -f "<path>" )`
+     - and insert them only where the template indicates “Extra attachments”.
+
+4) Ensure Action Pack contract:
+   - Exactly one `bash` code fence in the document.
+   - No other code fences.
+   - Step headers `# 01)`.. are sequential and stable.
+   - Each step re-declares its variables and does not depend on variables from earlier steps.
+
+5) Write the final pack to `pack_path` (create parent dirs).
+
+## Modes
+
+### mode=backlog
+
+Action Pack should:
+- Synthesize canonical `_actions.json` + `_actions.md`
+- Write PRD to `prd_path`
+- Run:
+  - `task-master parse-prd <prd_path>` (attempt with tag scoping if supported)
+  - `task-master analyze-complexity --output <out_dir>/tm-complexity.json`
+  - `task-master expand --all`
+
+### mode=pipelines
+
+Do everything in `backlog`, then:
+- Generate deterministic pipelines from tasks.json
+- Write: `docs/oracle-actions-pipelines.md`
+
+### mode=autopilot (default)
+
+Do everything in `backlog`, then:
+- Enforce branch safety and tests-first guardrails
+- Start a guarded autopilot entrypoint (expects `tm`-style autopilot tooling)
+- Never commit to the default branch (do not run `git commit` on main/master; create a work branch first)
+
+Important: if the environment does not provide a compatible `tm autopilot`, Step 08 will fail fast with a clear error. To avoid that, run Stage 3 with `mode=backlog` or `mode=pipelines`.
+
+## Determinism + safety rules
+
+- No interactive prompts in the generated pack.
+- Stable ordering: select exactly the 20 outputs by filename prefix ordering `01`..`20`.
+- Fail fast when required tools are missing:
+  - `command -v <task_master_cmd first word>`
+  - `command -v <oracle_cmd first word>`
+  - `command -v <tm_cmd first word>` only in autopilot mode
+- Always create directories before writing files.
+- Avoid destructive commands:
+  - Do not delete files.
+  - Do not force-push.
+  - Do not commit to main/master (autopilot mode creates a new branch).
+- If multiple outputs exist for a prefix (e.g., `01-*.md` expands to more than one file), exit non-zero with an explicit error listing the matches.
+
+## Failure modes (handle without questions)
+
+- Missing `out_dir` → pack Step 01 exits non-zero with a clear message.
+- Missing any of `01-*.md`..`20-*.md` → Step 01 exits non-zero (and prints which one is missing).
+- Missing required tools → Step 01 exits non-zero (and prints which command is missing).
+- Unknown `mode` → treat as `autopilot` (clamp at generation time) and render `mode=autopilot` in the pack.
+
+## Resources
+
+- `assets/action-pack-template.md`: base template for the Action Pack deliverable.
+- `assets/actions-json-schema.md`: canonical schema spec for `_actions.json` normalization.
+- `assets/prd-synthesis-prompt.md`: exact prompt text embedded into the Action Pack for synthesis.
+- `references/*`: Stage 3 overview and guardrails for future maintenance.
+- `scripts/*`: optional helpers (standalone); may also be embedded verbatim into packs if desired.
+
+## Invocation examples
+
+- `$oraclepack-taskify out_dir=oracle-out` (defaults to mode=autopilot)
+- `$oraclepack-taskify out_dir=oracle-out mode=backlog`
+- `$oraclepack-taskify out_dir=oracle-out mode=pipelines tag=oraclepack-top top_n=10`
+- `$oraclepack-taskify out_dir=oracle-out mode=autopilot tag=oraclepack-top pack_path=docs/oracle-actions-pack-2026-01-05.md`
+- `$oraclepack-taskify out_dir=oracle-out extra_files=README.md,package.json`
+
+
+--- .config/skills/oracle-pack-rpg-infused/SKILL.md ---
+---
+name: oracle-pack-rpg-infused
+description: Generate a strictly oraclepack-ingestible “oracle strategist question pack” Markdown file under docs/oracle-pack-YYYY-MM-DD.md containing exactly one fenced bash block with exactly 20 numbered oracle commands (01..20), ROI-scored/sorted and category-covered, with an RPG block (WHAT/HOW + dependency edges) embedded in each -p prompt for graph extraction.
+---
+
+# Oracle Pack (RPG-infused)
+
+## Quick start
+
+1) Read `assets/oracle-pack-template.md` and keep its structure exactly.
+2) Produce exactly one Markdown deliverable and output it verbatim in your final response:
+   - First line: `Output file: docs/oracle-pack-YYYY-MM-DD.md`
+   - Then the exact Markdown content (no extra commentary, no additional code fences).
+3) Ensure the bash block contains exactly 20 steps, numbered `01..20`, each with:
+   - One header comment line in the required format
+   - Exactly one runnable oracle command line
+
+For the full spec, follow `references/oracle-pack-spec.md`.
+
+## Inputs and defaults
+
+Interpret any user-provided details as “args” and apply these defaults when missing:
+
+- `codebase_name=Unknown`
+- `constraints=None`
+- `non_goals=None`
+- `team_size=Unknown`
+- `deadline=Unknown`
+- `out_dir=oracle-out`
+- `oracle_cmd=oracle`
+- `oracle_flags=--files-report`
+- `extra_files=empty` (only use if the user provides an explicit mechanism/flag; otherwise omit and keep evidence handling inside the prompt body as text)
+
+If the user supplies their own values, use them verbatim unless they would break the strict output contract.
+
+## Workflow
+
+1) Establish minimal repo understanding (inference-first)
+   - Prefer reading index artifacts (e.g., README, top-level config/manifests) before proposing file sweeps.
+   - If you cannot access the repo contents, keep `reference=Unknown` and make the “missing artifact pattern(s)” explicit in the prompt body.
+
+2) Plan the 20 questions (before writing any command lines)
+   - Use only the required categories (no additions, no removals).
+   - Ensure horizon mix: exactly 12 `Immediate` and 8 `Strategic`.
+   - Ensure RPG infusion in every step’s `-p` prompt (WHAT/HOW + DependsOn + Phase).
+   - Ensure dependencies only point backward (DependsOn may reference only earlier step IDs).
+   - Ensure coverage: across all 20 steps, each required category appears at least once.
+
+3) Assign scoring and compute ROI
+   - Pick `impact`, `confidence`, `effort` each as one decimal in `[0.1..1.0]`.
+   - Compute `ROI = (impact * confidence) / effort` (one decimal).
+   - Sort all 20 steps by ROI descending; tie-break by lower effort.
+
+4) Emit the pack Markdown
+   - Copy `assets/oracle-pack-template.md` structure exactly.
+   - Fill in metadata values and the 20 steps.
+   - Keep exactly ONE fenced bash block.
+   - Keep exactly 20 steps (01..20) inside that block.
+
+5) Emit the coverage check section
+   - List the 10 required categories exactly once each with `OK` or `Missing(...)`.
+
+6) Validate (optional but recommended when execution is available)
+   - Run `scripts/validate_oracle_pack.py docs/oracle-pack-YYYY-MM-DD.md` and fix any reported issues.
+
+## Output contract (must hold)
+
+- Exactly one Markdown deliverable.
+- Matches `assets/oracle-pack-template.md` structure exactly.
+- Exactly one fenced bash block.
+- Bash block contains exactly 20 steps, numbered 01..20.
+- Each step has:
+  - Header line with: `ROI=... impact=... confidence=... effort=... horizon=... category=... reference=...`
+  - Exactly one runnable oracle command including:
+    - `${oracle_cmd}` (default `oracle`)
+    - `${oracle_flags}` (default `--files-report`)
+    - `--write-output "<out_dir>/<nn>-<slug>.md"`
+- Steps sorted by ROI desc; tie-break by lower effort.
+- Coverage check section present and correctly formatted.
+
+## Failure modes (do not guess)
+
+- Unknown subsystem/file references: set `reference=Unknown` and include explicit missing file/path patterns in section (4) of the prompt body.
+- Missing or unclear user args: apply defaults; do not invent tool flags or repo-specific details.
+- Potential contract violations: prioritize strict compliance over richer prose.
+
+## Invocation examples
+
+1) “Generate an RPG-infused oracle strategist pack for this repo. out_dir=oracle-out.”
+2) “Create the oracle-pack for a monorepo; prioritize caching/state, observability, and permissions. Use oracle_flags=--files-report.”
+3) “Make a pack for codebase_name=AcmeWeb, constraints=‘No DB migrations this sprint’, non_goals=‘No UI redesign’.”
+4) “Produce a pack that emphasizes feature flags and invariants, but still covers all required categories.”
+5) “Generate the pack with conservative confidence values (0.2–0.6) and document missing artifact patterns explicitly.”
+
+
+--- .config/skills/oracle-pack/SKILL.md ---
+---
+name: oracle-pack
+description: Generate exactly 20 evidence-cited, ROI-ranked strategist questions for the current repository (12 immediate + 8 strategic), then emit them as runnable @steipete/oracle CLI commands with minimal targeted file attachments and deterministic per-question output paths (a copy/paste-ready “oracle question pack” in the same scratch-style format as oracle-scratch.md).
+---
+
+## Quick start
+
+Use this skill when the user wants strategist questions **and** wants to run each question through Oracle as a separate command (so a second model can answer with repo context).
+
+Invocation:
+
+- `$oracle-pack <free-text args>`
+
+Primary output: a Markdown doc whose main content is a **single** fenced `bash` block containing **exactly 20** `oracle ...` commands (copy/paste-ready), in the same “scratch-style” format shown in `references/oracle-scratch-format.md`.
+
+## Inputs
+
+- Repository contents (current working directory).
+- Free-text args (may include): `codebase_name`, `constraints`, `non_goals`, `team_size`, `deadline`, plus Oracle pack controls:
+  - `out_dir` (default: `oracle-out`)
+  - `oracle_cmd` (default: `oracle`)
+  - `oracle_flags` (default: `--files-report`)
+  - `extra_files` (optional: comma-separated extra `-f/--file` entries to include in *every* command; default: none)
+
+## Deterministic search/tooling rules (must follow)
+
+- Prefer deterministic, non-interactive commands so runs are reproducible.
+- Before using `ck` in a session, **always run**: `ck --help` and only rely on flags that `ck --help` confirms.
+- Default search tool is `ck`:
+  - Conceptual: `ck --sem "<query>"`
+  - Literal: `ck --regex "<pattern>"`
+  - Best of both: `ck --hybrid "<query>"`
+  - For post-processing: prefer `ck --jsonl | jq ... | sort | head`
+- Structural search: use `ast-grep` when syntax/shape matters (see `references/inference-first-discovery.md`).
+- File finding: prefer `fd` (filename/path/extension filters).
+
+## Args parsing (no follow-ups)
+
+Extract values if present; otherwise set defaults:
+
+- `codebase_name`: `Unknown`
+- `constraints`: `None`
+- `non_goals`: `None`
+- `team_size`: `Unknown`
+- `deadline`: `Unknown`
+- `out_dir`: `oracle-out`
+- `oracle_cmd`: `oracle`
+- `oracle_flags`: `--files-report`
+- `extra_files`: (empty)
+
+Honor `constraints`. Explicitly exclude `non_goals`.
+
+## Workflow (inference-first discovery → evidence → questions → oracle pack)
+
+### 1) Inference-first discovery (adaptive, codebase-search compliant)
+
+Goal: infer *what this repo is* and *where the truth likely lives* before broad sweeps.
+
+Do this in order:
+
+1. **Discover the search interface (required)**
+   - Run: `ck --help`
+   - If `ck` indicates it needs setup/indexing, follow the instructions printed by `ck`.
+
+2. **Map the repo surface (cheap, high-signal)**
+   - Use `fd` to list likely roots deterministically:
+     - `fd . -d 2`
+     - `fd -p README.md`
+     - `fd -p package.json`
+     - `fd -p pyproject.toml`
+     - `fd -p go.mod`
+     - `fd -p Cargo.toml`
+   - Read the smallest set of “index” files that describe structure:
+     - README / docs index if present
+     - primary manifests/config
+     - obvious entrypoint referenced by scripts/manifests
+
+3. **Infer stack + conventions from evidence**
+   - From manifests/config, infer runtime + framework signals (dependencies, filenames, directory conventions).
+   - From entrypoints, infer wiring patterns (router, DI/container, job scheduler, migration tool).
+
+4. **Derive a “search plan” from inferred signals**
+   - Prefer following imports/references from entrypoints into:
+     - routing/handlers
+     - auth middleware/policies
+     - job/queue registration
+     - data layer/migrations
+     - feature flags config
+     - observability bootstrap
+   - Use `ck` in the smallest inferred app roots first:
+     - Conceptual: `ck --sem "<subsystem intent>"`
+     - Hybrid when unsure: `ck --hybrid "<subsystem intent>"`
+   - If results are broad/noisy:
+     - Narrow to directories/files from the top hits, then re-run `ck`.
+     - Use `ast-grep` when you need structure, not text matches.
+
+This improves efficiency vs. hard-targeting a long list of patterns up front: you start with the repo’s own “self-description” and expand only as needed.
+
+### 2) Evidence harvesting (collect anchors before writing questions)
+
+Collect **at least 20 candidate anchors** as one of:
+
+- `{path}:{symbol}` (preferred: nearest function/class/type/handler)
+- `{endpoint}` (literal endpoint string)
+- `{event}` (job/queue/event name)
+
+For each required category, attempt to identify at least one anchor:
+
+- contracts/interfaces
+- invariants
+- caching/state
+- background jobs
+- observability
+- permissions
+- migrations
+- UX flows
+- failure modes
+- feature flags
+
+Use deterministic selection of candidates:
+- If using `ck --jsonl`, post-process to stable top-N:
+  - `ck --jsonl ... | jq ... | sort | head -n 20`
+- If using plain output, cap deterministically with `head`.
+
+If evidence for a category cannot be found:
+
+- still generate a question for it with reference `Unknown`
+- explicitly state which missing artifact pattern would likely provide it (e.g., `**/migrations/**` not found)
+
+### 3) Generate exactly 20 strategist questions (evidence-cited + minimal experiments)
+
+Produce exactly:
+
+- **12** Immediate Exploration
+- **8** Strategic Planning
+
+Each question must include:
+
+- **Reference**: `{path}:{symbol}` OR `{endpoint}` OR `{event}` OR `Unknown`
+- **Question**: incisive, feasibility-focused, no scope creep
+- **Rationale**: exactly one sentence
+- **Smallest experiment today**: exactly one concrete action runnable today (targeted `ck` query, targeted `ast-grep` pattern, trace a codepath, add a log line, minimal unit/integration test, run migration dry-run, execute a single endpoint, etc.)
+
+No duplicates (by intent or reference).
+
+### 4) Score and order by near-term ROI (required math + sorting)
+
+For each question compute:
+
+- `ROI = (impact * confidence) / effort`
+- `impact`, `confidence`, `effort` ∈ `{0.1..1.0}` (one decimal)
+
+Sort all 20 descending by ROI; break ties by lower effort.
+
+### 5) Convert the 20 questions into an Oracle “question pack” (final deliverable)
+
+For each question (in final sorted order), emit a runnable command using:
+
+- command: `{{oracle_cmd}}` (default `oracle`)
+- include `{{oracle_flags}}` (default `--files-report`)
+- deterministic output file: `--write-output "<out_dir>/<nn>-<slug>.md"`
+  - `<nn>` = zero-padded 2-digit index (01..20)
+  - `<slug>` = short, filesystem-safe slug derived from `{category}` + a hint of `{reference}` (fallback to category only)
+- prompt: a structured prompt that includes the strategist question fields and constraints:
+  - reference, question, rationale, smallest experiment today
+  - constraints + non_goals (explicit)
+  - requested Oracle answer shape (concise, evidence-cited, and actionable)
+
+#### Attachment selection (must be minimal, evidence-driven)
+
+For each command, attach only the smallest set of files that lets Oracle answer correctly:
+
+- If reference is `{path}:{symbol}`:
+  - attach that `path`
+  - optionally attach **one** upstream config/router/entrypoint file that shows how it’s invoked (only if needed)
+- If reference is `{endpoint}` or `{event}`:
+  - attach the file(s) where you found the literal endpoint/event definition
+- If reference is `Unknown`:
+  - attach only “index” files (README + manifest + 1 best-guess entrypoint), and in the prompt state what artifact pattern is missing
+
+Follow `references/attachment-minimization.md`.
+
+Also:
+- If `extra_files` was provided in args, include those `-f` entries in every command (after the evidence-minimal attachments).
+
+### 6) Render final output using the pack template
+
+Use `assets/oracle-pack-template.md` as the strict shape for the final Markdown deliverable.
+
+## Output contract (strict)
+
+Produce exactly one Markdown deliverable that:
+
+1. Matches the structure in `assets/oracle-pack-template.md`
+2. Contains **exactly 20** `oracle` invocations total
+3. Commands are sorted by ROI (desc; ties by lower effort)
+4. Each command:
+   - includes `--write-output "<out_dir>/<nn>-<slug>.md"`
+   - includes minimal targeted `-f/--file` attachments
+   - embeds the strategist question (reference, question, rationale, experiment) in the `-p/--prompt` text
+
+## Failure modes
+
+- Missing/insufficient evidence:
+  - use reference `Unknown`
+  - state the missing artifact pattern that would provide evidence
+  - keep the question actionable and experiment minimal
+  - keep attachments limited to index files (don’t attach huge globs)
+- Search tool limitations (`ck` missing/setup required):
+  - run `ck --help` and follow printed setup; if unavailable, fall back to reading index files + minimal `fd`-based locating
+  - proceed with partial evidence; mark affected references `Unknown`
+- Ambiguous args:
+  - apply defaults without follow-ups
+
+## References
+
+- `assets/oracle-pack-template.md` — exact final output shape
+- `references/inference-first-discovery.md` — inference-driven search plan aligned to `ck`/`ast-grep`/`fd`
+- `references/attachment-minimization.md` — deterministic rules for minimal `-f` selections
+- `references/oracle-scratch-format.md` — the target “scratch-style” formatting to mimic
+
+## Invocation examples
+
+- “Generate an oracle question pack for this repo. codebase_name=Payments API; constraints=no new infra; non_goals=mobile app; team_size=3; deadline=2 weeks; out_dir=artifacts/oracle”
+- “Create oracle strategist questions; constraints=ship bugfixes only; deadline=Friday; out_dir=oracle-out”
+- “Produce an oracle pack: focus on auth + jobs + migrations; non_goals=refactor; out_dir=oracle-q”
+- “Generate strategist oracle commands; constraints=keep DB schema stable; team_size=2; deadline=1 week”
+- “Make an Oracle question pack; oracle_cmd='npx -y @steipete/oracle'; oracle_flags='--engine browser  --files-report'; out_dir=oracle-out”
+
+### Write output to `docs/` (required)
+
+- Ensure a `docs/` directory exists at the repo root (create it if missing).
+- Write the complete final deliverable to:
+  - `docs/oracle-pack-YYYY-MM-DD.md` (use today’s date; ISO 8601)
+  - Fallback if date is unavailable: `docs/oracle-pack.md`
+- The file must contain only the deliverable Markdown (no extra preamble/epilogue).
+- In the assistant response, print the chosen path first on a single line: `Output file: <path>`, then print the same Markdown content.
+
+
+--- .config/skills/oracle-strategist-commands/SKILL.md ---
+---
+
+name: oracle-strategist-commands
+description: Generate exactly 20 evidence-anchored strategist questions as runnable @steipete/oracle bash commands (12 immediate + 8 strategic), using inference-first repo discovery to avoid wasted searching.
+metadata:
+  short-description: 20 ROI-ranked Oracle CLI question commands for a repo (inference-first discovery)
+  output: bash
+  count: 20
+---
+
+## Use when
+
+Use this skill when the user wants incisive, feasibility-focused strategist questions, but **as an executable pack** of **exactly 20** `oracle` CLI commands.
+
+## Deliverable (strict)
+
+Output MUST be:
+
+- A single fenced code block: ```bash
+- Optional header lines (env vars, `mkdir -p`, shared preamble)
+- Then **exactly 20** Oracle invocations (lines beginning with `oracle` or `npx -y @steipete/oracle`)
+- Counts:
+  - **12** commands that are “Immediate” (01–12)
+  - **8** commands that are “Strategic” (13–20)
+- No prose outside the bash code fence.
+
+Each command MUST include:
+
+- `-p/--prompt`
+- at least one `-f/--file`
+- `--files-report`
+- `--write-output "<out_dir>/<nn>-<slug>.md"`
+- `--wait` (unless user explicitly requests omitting it)
+
+Optional but recommended:
+
+- a commented preflight line using `--dry-run summary` before each real command.
+
+## Inputs (do not ask follow-ups)
+
+Interpret free-text args as optionally including:
+
+- `codebase_name` (default `Unknown`)
+- `constraints` (default `None`)
+- `non_goals` (default `None`)
+- `team_size` (default `Unknown`)
+- `deadline` (default `Unknown`)
+- `engine` (`api|browser`; if unspecified, omit)
+- `model` (if unspecified, omit)
+- `out_dir` (default `docs/oracle-questions-YYYY-MM-DD`)
+
+If missing, apply defaults and proceed.
+
+## Core principle: inference-first discovery
+
+Avoid “hard-targeting” specific artifact types up front (e.g., hunting for migrations/auth/jobs) because many repos won’t have them. Instead:
+
+1) Gather cheap high-signal evidence (anchors).
+2) Infer the stack and architecture hypotheses.
+3) Run small, evidence-gated probes to confirm.
+4) Only search/read deeper for categories that now have supporting evidence.
+
+This reduces wasted probing and keeps attachments minimal.
+
+## Workflow
+
+### 1) Build a repo fingerprint (anchors only)
+
+Read the smallest set of files that often exist and immediately reveal stack/shape:
+
+- `README*` (first ~200 lines)
+- root manifests that exist (one or more): `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `pom.xml`, `build.gradle`, `composer.json`, `Gemfile`
+- `Dockerfile`, `docker-compose.*` (if present)
+- `.github/workflows/*` (names + one representative workflow file)
+- `Makefile` / `Taskfile.*` (if present)
+
+Also capture a lightweight file index summary (without reading everything):
+
+- top-level directories
+- dominant file extensions
+- any “obvious entrypoint” indicators from scripts/config (e.g., package.json scripts, go `cmd/`, rust `src/main.rs`)
+
+### 2) Form hypotheses (stack + entrypoints)
+
+From the fingerprint, infer:
+
+- primary language/runtime
+- framework candidates (e.g., Express/Nest/Next, FastAPI/Django, chi/gin, Rails, Spring)
+- likely entrypoints and routing surfaces
+- where “truth” lives (schema, API contracts, config)
+
+Write down 3–6 candidate entrypoints (paths) you will validate.
+
+### 3) Evidence-gated probing loop (bounded)
+
+Run a small loop of probes; each probe must have a clear purpose and a stop condition.
+
+**Budgets (defaults):**
+
+- max probes: 12
+- max file reads: 25
+- max search passes: 6
+
+**Allowed probes (choose the cheapest next step):**
+
+- Open an inferred entrypoint and follow imports to one routing/handler layer.
+- Read a config file referenced by an entrypoint.
+- Perform a targeted search ONLY for confirmed-framework idioms (e.g., “router”, “app.get”, “FastAPI()”, “chi.NewRouter”) after framework is evidenced.
+- If you see a strong signal (e.g., `prisma` in deps), then and only then probe its likely files (`prisma/schema.prisma`, migrations).
+
+**Do NOT** scan for categories (auth/jobs/migrations/feature flags/observability) unless you have at least one of:
+
+- a dependency/config signal (library name, config key)
+- an import path signal
+- a directory naming signal found naturally via the fingerprint or followed imports
+
+### 4) Build the evidence index (mandatory)
+
+Create an internal evidence index with **>= 20** references that actually exist, as one of:
+
+- `path:symbol` (function/class/type/handler name)
+- explicit endpoint strings (e.g., `/api/users`)
+- job/event names (queue/topic/schedule identifiers)
+- config keys/flags (feature gates, env var keys)
+
+For each reference, also record a “best attachment set” (1–6 files) that makes it intelligible.
+
+If the repo is too small to reach 20, pad with `Unknown` entries; those questions must explicitly call out missing evidence.
+
+### 5) Draft exactly 20 strategist questions (12 immediate + 8 strategic)
+
+Each question must:
+
+- be feasibility-focused and grounded in repo reality
+- respect `constraints`
+- explicitly exclude `non_goals`
+- be actionable for `team_size` and `deadline`
+- cite at least one evidence reference (or `Unknown` with a clear gap)
+- fall into one of these areas (only when evidenced; otherwise treat as a “risk/unknowns” question):
+  - contracts/interfaces
+  - invariants/data consistency
+  - auth/permissions
+  - migrations/schema
+  - request/UX flows (if applicable)
+  - failure modes & reliability
+  - feature flags/config gating
+  - observability (logs/metrics/tracing)
+
+Guidance:
+
+- Immediate (01–12): unblockers, correctness, runtime risk, deployment friction, quick wins.
+- Strategic (13–20): architectural constraints, roadmap leverage, risk retirement, scalability, maintainability.
+
+### 6) Emit the question pack as bash commands (final output)
+
+#### Common command shape
+
+Each command MUST:
+
+- call Oracle with `-p/--prompt` and `-f/--file` (repeat `-f` as needed)
+- include `--files-report`
+- include `--write-output "<out_dir>/<nn>-<slug>.md"`
+- include `--wait` unless user opted out
+- attach minimal files:
+  - small base context: 1–3 anchor files (entrypoint + config)
+  - focus context: files containing the cited evidence reference(s)
+
+Avoid broad `**/*` globs. Prefer explicit files and small globs with negation excludes.
+
+#### Prompt micro-format (required in every `-p`)
+
+Each `-p` must require Oracle to respond using exactly:
+
+- **Answer**
+- **Evidence** (bullets; cite concrete refs)
+- **Risks / unknowns**
+- **Smallest experiment** (runnable today)
+
+Keep prompts short and specific.
+
+#### Optional preflight (recommended)
+
+For each command, optionally emit a commented “dry-run” line immediately above it:
+
+- same command + `--dry-run summary`
+This lets the user validate attachments/token weights without sending.
+
+## Failure handling rules
+
+- Missing evidence for a category:
+  - do NOT hunt for it
+  - convert into a “risk/unknowns” question
+  - attach best available anchors + nearest relevant files
+- Very large repos:
+  - tighten budgets
+  - reduce base context to 1–2 files
+  - prefer following import chains over directory scans
+- Unclear entrypoint:
+  - use build scripts/config to infer; otherwise choose the most central “composition root” file you can find and proceed
+
+## Write output to docs (required)
+
+When running this skill, also write the complete deliverable (the single `bash` fence) to:
+
+- `docs/oracle-strategist-commands-YYYY-MM-DD.md` (ISO date)
+Fallback:
+- `docs/oracle-strategist-commands.md`
+
+In the assistant response:
+
+1) Print: `Output file: <path>`
+2) Then print the exact same `bash` fenced deliverable.
+
+
+--- .config/skills/oraclepack-usecase-rpg/SKILL.md ---
+---
+name: oraclepack-usecase-rpg
+description: Generate a strict, oraclepack-ingestible 20-step Oracle strategist pack (single ```bash fence) with ROI-ranked step headers and RPG (Repository Planning Graph) metadata embedded in each -p prompt body.
+metadata:
+  short-description: Strict oraclepack pack generator (RPG-infused)
+---
+
+## Quick start
+
+Use this skill when the user asks for any of the following:
+- an “oraclepack pack”, “oracle strategist question pack”, or “20-step ROI-ranked pack”
+- “oraclepack use cases” that must keep the strict runner-ingestible output
+- the same, but with RPG/RPG graph/Repository Planning Graph infusion
+
+What you produce:
+- Exactly one Markdown deliverable (intended path: `docs/oracle-pack-YYYY-MM-DD.md`)
+- The deliverable contains **exactly one** fenced code block that starts with **exactly** ` ```bash` then a newline (no extra tokens after `bash`)
+- The fenced `bash` block contains **exactly 20** sequential steps, `01..20`
+
+Reference template: `references/oracle-pack-template.md`
+
+Optional validator:
+- `python3 scripts/validate_oraclepack_pack.py docs/oracle-pack-YYYY-MM-DD.md`
+
+## Workflow
+
+### 1) Parse inputs (free-text args)
+
+Interpret the user’s trailing text as conceptual `{{args}}` and extract:
+- `codebase_name` (default: `Unknown`)
+- `constraints` (default: `None`)
+- `non_goals` (default: `None`)
+- `team_size` (default: `Unknown`)
+- `deadline` (default: `Unknown`)
+- `out_dir` (default: `oracle-out`)
+- `oracle_cmd` (default: `oracle`)
+- `oracle_flags` (default: `--files-report`)
+- `extra_files` (default: empty; append **literally** to every command if provided)
+
+If any value is missing or ambiguous, use the defaults above (do not ask questions).
+
+### 2) Repo discovery (inference-first, deterministic)
+
+Read small, high-signal “index” artifacts first (if they exist):
+- README / overview docs
+- manifests / dependency lockfiles
+- entrypoints (main binaries, CLI, server startup)
+- config examples
+- CI configuration
+
+Then do targeted discovery (only as needed):
+- Prefer deterministic searches (e.g., `ck`, `ast-grep`, `fd`) if available.
+- Cap results deterministically (fixed max hits).
+- If a file/path does not exist: record `Unknown` and continue.
+
+### 3) Plan the 20 probes (what to cover)
+
+You must keep categories **exactly** to this set (do not add/remove/rename):
+- contracts/interfaces
+- invariants
+- caching/state
+- background jobs
+- observability
+- permissions
+- migrations
+- UX flows
+- failure modes
+- feature flags
+
+Across the 20 steps, ensure at least one step explicitly targets each sub-layer below (embed it in the *Question* text; map to the best required category above):
+- supply chain/dependencies
+- secrets/credentials
+- CI/CD or release process
+- runtime configuration/IaC (if present)
+- privacy/PII/retention (if applicable)
+- SLO/alerting/runbooks
+- cost/performance hotspots
+- testing strategy/coverage
+
+Horizon mix requirement:
+- Exactly **12** steps with `horizon=Immediate`
+- Exactly **8** steps with `horizon=Strategic`
+
+### 4) RPG infusion (non-breaking)
+
+Inside each step’s `-p` prompt body, include an `RPG:` block with:
+- `FunctionalNode: <Capability>::<Feature> (WHAT)`
+- `StructuralNode: <module-or-dir> :: <public surface> (HOW)`
+- `DependsOn: [<prior step ids, optional>]`
+- `Phase: <P0|P1|P2|P3>`
+
+Dependency rule (to preserve ROI-sorted executability):
+- `DependsOn` may reference **only earlier step IDs**.
+
+Phase mapping guidance (do not create new categories):
+- `P0`: contracts/interfaces, invariants, permissions, observability
+- `P1`: caching/state, background jobs, failure modes
+- `P2`: migrations, feature flags
+- `P3`: UX flows
+
+### 5) ROI scoring and ordering
+
+For each step choose:
+- `impact`, `confidence`, `effort` as **one decimal** in `0.1..1.0`
+
+Compute:
+- `ROI = (impact * confidence) / effort`
+
+Ordering requirement:
+- Sort all 20 steps by ROI descending
+- Tie-break by lower effort
+- After sorting, assign IDs `01..20` in that sorted order
+
+If ordering conflicts with RPG dependencies:
+- Adjust impact/confidence/effort (and thus ROI) so prerequisite/foundation steps float earlier.
+- Keep `DependsOn` pointing backwards only.
+
+### 6) Render the pack (strict output)
+
+You must output exactly one Markdown deliverable matching the structure in `references/oracle-pack-template.md`:
+- Title section
+- Parsed args list
+- Commands section with **exactly one** fenced code block:
+  - opening fence must be exactly: <code>```bash</code>
+  - closing fence must be exactly: <code>```</code>
+- Coverage check section
+
+Inside the fenced `bash` block:
+- Include a small prelude setting `out_dir="..."` (so pack metadata can be derived).
+- Each of the 20 steps must start with a header line matching one of:
+  - `# 01) ...`
+  - `# 01 — ...`
+  - `# 01 - ...`
+
+Each step header line must include all tokens:
+- `ROI=<number>`
+- `impact=<i>`
+- `confidence=<c>`
+- `effort=<e>`
+- `horizon=<Immediate|Strategic>`
+- `category=<one of required categories>`
+- `reference=<...>` (use `Unknown` if needed)
+
+Each step must invoke the Oracle CLI once and must include:
+- `--write-output "<out_dir>/<nn>-<slug>.md"`
+- A `-p` prompt body that includes (in this exact section order):
+  - `Strategist question #NN`
+  - `RPG:` block (fields listed above)
+  - `Reference: ...`
+  - `Category: ...`
+  - `Horizon: ...`
+  - `ROI: ... (impact=..., confidence=..., effort=...)`
+  - `Question: ...`
+  - `Rationale: ...` (exactly one sentence)
+  - `Smallest experiment today: ...` (exactly one action)
+  - `Constraints: ...`
+  - `Non-goals: ...`
+  - `Answer format:` with the 4 required numbered items
+
+Quoting guidance for `-p` (recommended, robust):
+- Use a heredoc in command substitution so the prompt stays readable while remaining a single oracle invocation:
+  - `-p "$(cat <<'PROMPT' ... PROMPT)"`
+
+### 7) Validate before finalizing
+
+Run the included validator if possible:
+- `python3 scripts/validate_oraclepack_pack.py docs/oracle-pack-YYYY-MM-DD.md`
+
+Fix any failures by editing the pack until it passes.
+
+## Output contract
+
+When invoked, produce:
+
+1) A single line:
+- `Output file: docs/oracle-pack-YYYY-MM-DD.md`
+
+2) Immediately after, the **exact** Markdown content for that file (no extra commentary).
+
+If the current date is not available in the execution context:
+- Use `docs/oracle-pack.md`.
+
+## Failure modes (do not guess)
+
+- Missing repo evidence → use `Reference: Unknown` and in the prompt’s item (4) name the exact missing file/path patterns to attach next.
+- Missing args → apply defaults; do not ask follow-ups.
+- Conflicting constraints (ordering vs dependencies vs horizon mix) → preserve strict ingestion first:
+  1) single `bash` fence
+  2) 20 sequential steps
+  3) required header tokens
+  4) horizon mix 12/8
+  Then adjust ROI inputs and dependency edges.
+
+## Invocation examples
+
+1) “Generate an RPG-infused oraclepack strategist pack for this repo; focus on permissions boundaries and CI/CD; keep strict oraclepack output.”
+
+2) “Create a 20-step ROI-ranked oraclepack pack for `promptbench` with constraints=None and non_goals=None; default out_dir; strict format.”
+
+3) “Produce an oraclepack pack emphasizing caching/state correctness and observability; include at least one step about cost/performance hotspots; strict template; RPG nodes.”
+
+4) “Generate an oraclepack use-case pack for a Go CLI; include secrets/credentials handling and release process; keep categories fixed; strict single ```bash fence.”
+
+5) “Make an oraclepack pack with explicit dependency edges (DependsOn) that only point backwards; preserve ROI-sorted order; strict output.”
+
+
+--- .config/skills/strategist-questions-oracle-pack/SKILL.md ---
 ---
 name: strategist-questions-oracle-pack
 description: Generate exactly 20 evidence-cited, ROI-ranked strategist questions for the current repository (12 immediate + 8 strategic), then emit them as runnable @steipete/oracle CLI commands with minimal targeted file attachments and deterministic per-question output paths (a copy/paste-ready “oracle question pack” in the same scratch-style format as oracle-scratch.md).
@@ -11912,82 +15330,456 @@ Produce exactly one Markdown deliverable that:
 - In the assistant response, print the chosen path first on a single line: `Output file: <path>`, then print the same Markdown content.
 
 
---- .config/skill/strategist-questions-oracle-pack/assets/oracle-pack-template.md ---
-<!-- path: ~/.codex/skills/strategist-questions-oracle-pack/assets/oracle-pack-template.md -->
-# oracle strategist question pack
+--- .config/mcp/oraclepack-taskify/assets/action-pack-template.md ---
+# Oraclepack Stage 3 — Action Pack (Taskify)
 
----
+Generated: {{pack_date}}
 
-## parsed args
+Parsed args (resolved):
+- out_dir: {{out_dir}}
+- pack_path: {{pack_path}}
+- actions_json: {{actions_json}}
+- actions_md: {{actions_md}}
+- prd_path: {{prd_path}}
+- tag: {{tag}}
+- mode: {{mode}}
+- top_n: {{top_n}}
+- oracle_cmd: {{oracle_cmd}}
+- task_master_cmd: {{task_master_cmd}}
+- tm_cmd: {{tm_cmd}}
+- extra_files: (embedded where applicable)
 
-- codebase_name: <Unknown|value>
-- constraints: <None|value>
-- non_goals: <None|value>
-- team_size: <Unknown|value>
-- deadline: <Unknown|value>
-- out_dir: <oracle-out|value>
-- oracle_cmd: <oracle|value>
-- oracle_flags: <--browser-attachments always --files-report|value>
-- extra_files: <empty|value>
-
----
-
-## commands (exactly 20; sorted by ROI desc; ties by lower effort)
+This document must contain exactly one bash code fence, and no other code fences.
 
 ```bash
-# 01 — ROI=<..> impact=<..> confidence=<..> effort=<..> horizon=<Immediate|Strategic> category=<...> reference=<...>
-<oracle_cmd> \
-  <oracle_flags> \
-  --write-output "<out_dir>/01-<slug>.md" \
-  -p "Strategist question #01
-Reference: <{path}:{symbol} OR {endpoint} OR {event} OR Unknown>
-Category: <one of required categories>
-Horizon: <Immediate|Strategic>
-ROI: <roi> (impact=<i>, confidence=<c>, effort=<e>)
-Question: <question text>
-Rationale: <exactly one sentence>
-Smallest experiment today: <exactly one action>
-Constraints: <constraints or None>
-Non-goals: <non_goals or None>
+# 01) Preflight: verify inputs and tools (fail fast)
+set -euo pipefail
 
-Answer format:
-1) Direct answer (1–4 bullets, evidence-cited)
-2) Risks/unknowns (bullets)
-3) Next smallest concrete experiment (1 action) — may differ from the suggested one if you justify it
-4) If evidence is insufficient, name the exact missing file/path pattern(s) to attach next." \
-  -f "<minimal evidence file 1>" \
-  -f "<optional supporting file 2>" \
-  <optional extra_files entries...>
+OUT_DIR="{{out_dir}}"
+MODE="{{mode}}"
+TASK_MASTER_CMD="{{task_master_cmd}}"
+ORACLE_CMD="{{oracle_cmd}}"
+TM_CMD="{{tm_cmd}}"
 
-# 02 ...
-# ...
-# 20 ...
+if [ ! -d "${OUT_DIR}" ]; then
+  echo "ERROR: out_dir does not exist: ${OUT_DIR}" >&2
+  exit 2
+fi
+
+shopt -s nullglob
+for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20; do
+  matches=( "${OUT_DIR}/${n}-"*.md )
+  if [ "${#matches[@]}" -eq 0 ]; then
+    echo "ERROR: missing oracle output for prefix ${n}: expected ${OUT_DIR}/${n}-*.md" >&2
+    exit 3
+  fi
+  if [ "${#matches[@]}" -gt 1 ]; then
+    echo "ERROR: multiple oracle outputs for prefix ${n}; expected exactly one file." >&2
+    printf '%s\n' "${matches[@]}" >&2
+    exit 4
+  fi
+done
+
+if ! command -v "${TASK_MASTER_CMD%% *}" >/dev/null 2>&1; then
+  echo "ERROR: required tool missing: ${TASK_MASTER_CMD%% *} (from task_master_cmd='${TASK_MASTER_CMD}')" >&2
+  exit 10
+fi
+
+if ! command -v "${ORACLE_CMD%% *}" >/dev/null 2>&1; then
+  echo "ERROR: required tool missing: ${ORACLE_CMD%% *} (from oracle_cmd='${ORACLE_CMD}')" >&2
+  exit 11
+fi
+
+if [ "${MODE}" = "autopilot" ]; then
+  if ! command -v "${TM_CMD%% *}" >/dev/null 2>&1; then
+    echo "ERROR: autopilot mode requires tm_cmd, but tool missing: ${TM_CMD%% *} (from tm_cmd='${TM_CMD}')" >&2
+    echo "HINT: rerun Stage 3 with mode=backlog if you only want tasks generated." >&2
+    exit 12
+  fi
+fi
+
+mkdir -p "$(dirname "{{actions_json}}")" "$(dirname "{{actions_md}}")" "$(dirname "{{prd_path}}")" "docs" "${OUT_DIR}"
+
+cat > "${OUT_DIR}/_actions.schema.md" <<'SCHEMA'
+# Canonical Actions JSON Schema (human-readable)
+
+This file describes the required structure of `_actions.json` produced in Step 02.
+
+## Root object
+
+- `metadata` (object, required)
+  - `generated_at` (string, ISO-8601 recommended)
+  - `pack_date` (string, YYYY-MM-DD)
+  - `source_out_dir` (string)
+  - `repo` (object)
+    - `name` (string, optional)
+    - `root` (string, optional)
+    - `head_sha` (string, optional)
+  - `tooling` (object)
+    - `oracle_cmd` (string)
+    - `task_master_cmd` (string)
+  - `top_n` (number)
+
+- `items` (array, required; max 20)
+  - Each item is normalized and must include:
+
+## Item fields (required unless marked optional)
+
+- `id` (string): "01".."20"
+- `source_file` (string): the exact answer file path used for this item
+- `category` (string): a stable label (e.g., `contracts/interfaces`, `permissions`, `observability`, etc.)
+- `priority_score` (number): higher means more important (can be ROI if available)
+- `recommended_next_action` (string): a single imperative sentence
+- `missing_artifacts` (array of strings): file/path globs to locate or create
+- `acceptance_criteria` (array of strings): testable, objective conditions
+- `risk_notes` (array of strings): specific risks/unknowns, no generic filler
+- `estimated_effort` (string): one of `XS|S|M|L|XL` (or a short consistent scale)
+
+## Optional item fields
+
+- `dependencies` (array of strings): other `id` values that should precede this item
+
+## Normalization rules
+
+- Keep `items` sorted by `id` ascending (01..20), regardless of priority.
+- Keep all arrays stably ordered (most important first; ties by lexical order).
+- Do not include code fences in any string values.
+SCHEMA
+
+cat > "${OUT_DIR}/_prd_synthesis_prompt.md" <<'PROMPT'
+See the canonical prompt text in the skill asset: assets/prd-synthesis-prompt.md.
+
+This repo-local copy exists for traceability and to keep the Action Pack portable.
+PROMPT
+
+echo "OK: Preflight passed."
+echo "OK: Inputs: ${OUT_DIR}/01-*.md .. ${OUT_DIR}/20-*.md"
+echo "OK: Mode: ${MODE}"
+
+
+# 02) Synthesize canonical actions JSON + summary MD
+set -euo pipefail
+
+OUT_DIR="{{out_dir}}"
+ACTIONS_JSON="{{actions_json}}"
+ACTIONS_MD="{{actions_md}}"
+
+shopt -s nullglob
+oracle_file_flags=()
+for n in 01 02 03 04 05 06 07 08 09 10 11 12 13 14 15 16 17 18 19 20; do
+  matches=( "${OUT_DIR}/${n}-"*.md )
+  if [ "${#matches[@]}" -ne 1 ]; then
+    echo "ERROR: expected exactly one match for ${OUT_DIR}/${n}-*.md, got ${#matches[@]}" >&2
+    printf '%s\n' "${matches[@]:-}" >&2
+    exit 20
+  fi
+  oracle_file_flags+=( -f "${matches[0]}" )
+done
+
+# Extra attachments (auto-expanded at pack generation time)
+# (If none, this section is empty)
+{{EXTRA_FILES_LINES}}
+
+mkdir -p "$(dirname "${ACTIONS_JSON}")" "$(dirname "${ACTIONS_MD}")"
+
+{{oracle_cmd}} \
+  --write-output "${ACTIONS_JSON}" \
+  "${oracle_file_flags[@]}" \
+  -p "$(cat <<'PROMPT'
+You are producing a SINGLE JSON document and nothing else.
+
+Task: Normalize 20 oraclepack answer files into a canonical actionable plan.
+
+Hard requirements:
+- Output MUST be valid JSON (no markdown, no prose, no code fences).
+- Output MUST follow the schema described below.
+- Output MUST be deterministic in ordering:
+  - items sorted by id ascending: 01..20
+  - arrays use stable ordering (highest priority first; ties lexical)
+- Extract only actionable work. Do not invent repo facts. If evidence is missing, record it in missing_artifacts/risk_notes explicitly.
+
+Schema (summarized):
+Root object:
+- metadata: { generated_at, pack_date, source_out_dir, repo?, tooling?, top_n }
+- items: array (max 20)
+Each item:
+- id: "01".."20"
+- source_file: string
+- category: string
+- priority_score: number
+- recommended_next_action: string (single imperative sentence)
+- missing_artifacts: string[]
+- acceptance_criteria: string[] (testable)
+- risk_notes: string[]
+- estimated_effort: "XS"|"S"|"M"|"L"|"XL"
+- dependencies?: string[] of ids
+
+Repo/run context:
+- pack_date: {{pack_date}}
+- source_out_dir: {{out_dir}}
+- top_n: {{top_n}}
+- tag: {{tag}}
+
+Output hygiene:
+- Do not include backticks or fenced code blocks anywhere.
+- Keep strings concise and specific.
+
+Now produce the JSON.
+PROMPT
+)"
+
+{{oracle_cmd}} \
+  --write-output "${ACTIONS_MD}" \
+  -f "${ACTIONS_JSON}" \
+  -p "$(cat <<'PROMPT'
+Write a human-readable Markdown summary of the canonical actions JSON.
+
+Hard requirements:
+- Output MUST be Markdown text with headings/bullets only (no code fences).
+- Keep ordering aligned with items id ascending (01..20).
+- Include:
+  - short executive summary (5–10 bullets)
+  - top {{top_n}} prioritized list (with id, title inferred from recommended_next_action, category, and why)
+  - per-item: recommended_next_action + acceptance_criteria bullets + missing_artifacts bullets
+- Do not invent facts; reflect only what is present in the JSON.
+
+Now write the summary Markdown.
+PROMPT
+)"
+
+echo "OK: Wrote ${ACTIONS_JSON}"
+echo "OK: Wrote ${ACTIONS_MD}"
+
+
+# 03) Generate PRD for Task Master
+set -euo pipefail
+
+ACTIONS_JSON="{{actions_json}}"
+PRD_PATH="{{prd_path}}"
+
+mkdir -p "$(dirname "${PRD_PATH}")"
+
+{{oracle_cmd}} \
+  --write-output "${PRD_PATH}" \
+  -f "${ACTIONS_JSON}" \
+  -p "$(cat <<'PROMPT'
+Write a Task Master-compatible PRD (Markdown) derived from the canonical actions JSON.
+
+Hard requirements:
+- Output MUST be Markdown (no code fences).
+- Be dependency-aware (use dependencies if present; otherwise infer minimal dependencies cautiously).
+- Prioritize focus: select the top N items by priority_score (N = TOP_N), but keep a traceability appendix mapping all ids 01..20.
+- Every selected item must become an implementation-ready PRD section with:
+  - Goal
+  - Scope
+  - Non-goals
+  - Constraints
+  - Acceptance criteria (testable)
+  - Risks/unknowns
+  - Dependencies (explicit)
+- Use the tag value "{{tag}}" in the PRD text where helpful for grouping.
+
+Constants:
+- TOP_N={{top_n}}
+- TAG={{tag}}
+
+Now produce the PRD.
+PROMPT
+)"
+
+echo "OK: Wrote ${PRD_PATH}"
+
+
+# 04) Task Master: parse PRD into tasks
+set -euo pipefail
+
+PRD_PATH="{{prd_path}}"
+TASK_MASTER_CMD="{{task_master_cmd}}"
+TAG="{{tag}}"
+
+if "${TASK_MASTER_CMD}" parse-prd "${PRD_PATH}" --tag "${TAG}" 2>/dev/null; then
+  echo "OK: task-master parse-prd (tagged) succeeded."
+else
+  echo "INFO: task-master parse-prd did not accept --tag; retrying without tag."
+  "${TASK_MASTER_CMD}" parse-prd "${PRD_PATH}"
+fi
+
+if [ -f ".taskmaster/tasks.json" ]; then
+  echo "OK: Found .taskmaster/tasks.json"
+elif [ -f "tasks.json" ]; then
+  echo "OK: Found tasks.json"
+else
+  echo "WARN: tasks.json not found at .taskmaster/tasks.json or tasks.json. Check your Task Master configuration/output path."
+fi
+
+
+# 05) Task Master: analyze complexity and save report
+set -euo pipefail
+
+TASK_MASTER_CMD="{{task_master_cmd}}"
+OUT_DIR="{{out_dir}}"
+
+mkdir -p "${OUT_DIR}"
+
+"${TASK_MASTER_CMD}" analyze-complexity --output "${OUT_DIR}/tm-complexity.json"
+echo "OK: Wrote ${OUT_DIR}/tm-complexity.json"
+
+
+# 06) Task Master: expand tasks
+set -euo pipefail
+
+TASK_MASTER_CMD="{{task_master_cmd}}"
+
+"${TASK_MASTER_CMD}" expand --all
+echo "OK: Expanded tasks."
+
+
+# 07) Pipelines (pipelines mode only): generate deterministic pipelines from tasks.json
+set -euo pipefail
+
+MODE="{{mode}}"
+
+if [ "${MODE}" != "pipelines" ]; then
+  echo "SKIP: mode=${MODE} (pipelines step runs only when mode=pipelines)."
+else
+  tasks_path=""
+  if [ -f ".taskmaster/tasks.json" ]; then
+    tasks_path=".taskmaster/tasks.json"
+  elif [ -f "tasks.json" ]; then
+    tasks_path="tasks.json"
+  else
+    echo "ERROR: tasks.json not found; cannot generate pipelines." >&2
+    exit 70
+  fi
+
+  mkdir -p "docs"
+
+  {{oracle_cmd}} \
+    --write-output "docs/oracle-actions-pipelines.md" \
+    -f "${tasks_path}" \
+    -p "$(cat <<'PROMPT'
+Generate deterministic command pipelines from tasks.json.
+
+Hard requirements:
+- Output MUST be Markdown (no code fences).
+- Include 3–6 pipelines, each a numbered list of shell commands.
+- Each pipeline must be tests-first and avoid destructive operations.
+- Commands should be generic and repo-agnostic (no invented scripts).
+- Include a short “resume strategy” section explaining how to re-run pipelines safely.
+
+Now write docs/oracle-actions-pipelines.md content.
+PROMPT
+)"
+
+  echo "OK: Wrote docs/oracle-actions-pipelines.md"
+fi
+
+
+# 08) Autopilot (autopilot mode only): branch safety + guarded entrypoint
+set -euo pipefail
+
+MODE="{{mode}}"
+TM_CMD="{{tm_cmd}}"
+OUT_DIR="{{out_dir}}"
+PACK_DATE="{{pack_date}}"
+TAG="{{tag}}"
+
+if [ "${MODE}" != "autopilot" ]; then
+  echo "SKIP: mode=${MODE} (autopilot step runs only when mode=autopilot)."
+else
+  if ! command -v git >/dev/null 2>&1; then
+    echo "ERROR: autopilot mode requires git on PATH." >&2
+    exit 80
+  fi
+
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    echo "ERROR: not inside a git work tree; autopilot mode requires a git repo." >&2
+    exit 81
+  fi
+
+  if ! git diff --quiet || ! git diff --cached --quiet; then
+    echo "ERROR: working tree not clean. Commit/stash before autopilot." >&2
+    exit 82
+  fi
+
+  current_branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [ "${current_branch}" = "main" ] || [ "${current_branch}" = "master" ]; then
+    new_branch="oraclepack/${PACK_DATE}-${TAG}"
+    echo "INFO: on default-like branch (${current_branch}); creating work branch: ${new_branch}"
+    git checkout -b "${new_branch}"
+  else
+    echo "OK: current branch is ${current_branch}"
+  fi
+
+  mkdir -p "${OUT_DIR}"
+  cat > "${OUT_DIR}/tm-autopilot.state.json" <<STATE
+{"pack_date":"${PACK_DATE}","tag":"${TAG}","mode":"autopilot","notes":"State file created by Stage-3 Action Pack. Autopilot tooling should resume from this file if supported."}
+STATE
+
+  echo "OK: Wrote ${OUT_DIR}/tm-autopilot.state.json"
+  echo "INFO: Starting autopilot via: ${TM_CMD} autopilot"
+  echo "INFO: If your tm tool uses a different subcommand, edit this step accordingly."
+
+  if ! "${TM_CMD}" --help 2>&1 | grep -qi "autopilot"; then
+    echo "ERROR: '${TM_CMD}' does not advertise 'autopilot' in --help output." >&2
+    echo "HINT: rerun Stage 3 with mode=backlog if you only want tasks generated." >&2
+    exit 83
+  fi
+
+  "${TM_CMD}" autopilot
+fi
 ```
 
----
+--- .config/mcp/oraclepack-taskify/assets/actions-json-schema.md ---
+# Canonical Actions JSON Schema (human-readable)
 
-## coverage check (must be satisfied)
+This schema defines the required structure of the canonical actions file:
 
-*   contracts/interfaces: <OK|Missing (state missing artifact pattern)>
+- Default path: `<out_dir>/_actions.json`
 
-*   invariants: <OK|Missing (...)>
+## Root object
 
-*   caching/state: <OK|Missing (...)>
+The root MUST be a JSON object with:
 
-*   background jobs: <OK|Missing (...)>
+### metadata (required)
 
-*   observability: <OK|Missing (...)>
+- `generated_at` (string): generation timestamp (ISO-8601 recommended)
+- `pack_date` (string): `YYYY-MM-DD`
+- `source_out_dir` (string): the oraclepack output dir used (e.g., `oracle-out`)
+- `repo` (object, optional):
+  - `name` (string, optional)
+  - `root` (string, optional)
+  - `head_sha` (string, optional)
+- `tooling` (object, optional):
+  - `oracle_cmd` (string)
+  - `task_master_cmd` (string)
+- `top_n` (number): the top-N focus value used to build PRD/pipelines
 
-*   permissions: <OK|Missing (...)>
+### items (required; max 20)
 
-*   migrations: <OK|Missing (...)>
+`items` MUST be an array with up to 20 objects. Each item MUST include:
 
-*   UX flows: <OK|Missing (...)>
+- `id` (string): `"01"`..`"20"`
+- `source_file` (string): the specific answer file used for this item
+- `category` (string): stable label describing the domain area
+- `priority_score` (number): higher means higher priority (can be ROI if present)
+- `recommended_next_action` (string): single imperative sentence
+- `missing_artifacts` (array of strings): file/path globs or concrete paths
+- `acceptance_criteria` (array of strings): testable, objective conditions
+- `risk_notes` (array of strings): risks/unknowns grounded in evidence gaps
+- `estimated_effort` (string): use a consistent scale such as `XS|S|M|L|XL`
 
-*   failure modes: <OK|Missing (...)>
+Optional:
 
-*   feature flags: <OK|Missing (...)>
-```
+- `dependencies` (array of strings): other ids (e.g., `["03","07"]`) that should precede this item
+
+## Normalization rules
+
+- Items MUST be sorted by `id` ascending (`01..20`) for machine stability.
+- Within each item:
+  - `missing_artifacts`, `acceptance_criteria`, and `risk_notes` MUST be stably ordered.
+- Do not include fenced code blocks in any string values.
+
 
 --- .cursor/commands/tm/add-dependency.md ---
 Add a dependency between tasks.

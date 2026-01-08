@@ -31,7 +31,7 @@ class AppConfig:
     """
     lm_model: str = field(
         default_factory=lambda: os.getenv(
-            "LMSTUDIO_MODEL", "qwen3-4b-instruct-2507@q6_k_xl"
+            "LMSTUDIO_MODEL", "qwen_qwen3-vl-4b-instruct"
         )
     )
     lm_api_base: str = field(

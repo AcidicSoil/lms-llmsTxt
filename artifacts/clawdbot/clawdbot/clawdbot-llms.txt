@@ -1,0 +1,126 @@
+# Clawdbot
+
+> Clawdbot is an AI assistant platform built for Clawd — a space lobster AI assistant — that enables users to interact with AI agents across multiple platforms (macOS, iOS, Android, Linux, Windows) via chat interfaces (WhatsApp, Telegram, Slack, Discord, iMessage, WebChat), remote access over Tailscale or SSH tunnels, and device-local actions (screen recording, camera, notifications, system commands). It supports secure, sandboxed execution of tools, agent coordination across sessions, and extensibility through skills, prompts, and configuration. The platform aims to provide a flexible, secure, and multi-platform AI assistant experience with deep integration into user workflows.
+
+**Remember:**
+- Gateway: Central hub that handles client connections and orchestrates device actions
+- Tailscale Serve/Funnel: Secure remote access for clients to connect to the Gateway
+- Nodes: Device-local agents (iOS, Android, macOS) that execute local commands like screen recording or notifications
+- Sessions: Isolated agent workspaces that can be coordinated across platforms and users
+- Sandboxing: Docker-based isolation for non-main sessions to ensure security and separation
+- Skills Registry: ClawdHub allows dynamic loading of AI skills for extensibility
+
+## Docs
+- [Postinstall](https://github.com/clawdbot/clawdbot/blob/main/scripts/postinstall.js): install & quickstart.
+- [Bun](https://github.com/clawdbot/clawdbot/blob/main/docs/install/bun.md): install & quickstart.
+- [Docker](https://github.com/clawdbot/clawdbot/blob/main/docs/install/docker.md): install & quickstart.
+- [Getting Started](https://github.com/clawdbot/clawdbot/blob/main/docs/start/getting-started.md): install & quickstart.
+- [Nix](https://github.com/clawdbot/clawdbot/blob/main/docs/install/nix.md): install & quickstart.
+- [Signal Install](https://github.com/clawdbot/clawdbot/blob/main/src/commands/signal-install.ts): install & quickstart.
+- [Skills Install](https://github.com/clawdbot/clawdbot/blob/main/src/agents/skills-install.ts): install & quickstart.
+- [Updating](https://github.com/clawdbot/clawdbot/blob/main/docs/install/updating.md): install & quickstart.
+- [Overview](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/views/overview.ts): install & quickstart.
+- [Docs](https://github.com/clawdbot/clawdbot/blob/main/docs/index.md): docs page.
+
+## Tutorials
+- [Browser Cli Examples](https://github.com/clawdbot/clawdbot/blob/main/src/cli/browser-cli-examples.ts): worked example.
+- [Cli Examples](https://github.com/clawdbot/clawdbot/blob/main/skills/1password/references/cli-examples.md): API reference.
+
+## API
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/openai-whisper-api/SKILL.md): docs page.
+- [Codexbar Cli](https://github.com/clawdbot/clawdbot/blob/main/skills/model-usage/references/codexbar-cli.md): API reference.
+- [Configuration](https://github.com/clawdbot/clawdbot/blob/main/skills/himalaya/references/configuration.md): API reference.
+- [Get Started](https://github.com/clawdbot/clawdbot/blob/main/skills/1password/references/get-started.md): API reference.
+- [Message Composition](https://github.com/clawdbot/clawdbot/blob/main/skills/himalaya/references/message-composition.md): API reference.
+- [Public Api](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/renderers/angular/src/public-api.ts): docs page.
+
+## Optional
+- [Changelog](https://github.com/clawdbot/clawdbot/blob/main/CHANGELOG.md): version history.
+- [Contributing](https://github.com/clawdbot/clawdbot/blob/main/CONTRIBUTING.md): docs page.
+- [Changelog](https://github.com/clawdbot/clawdbot/blob/main/Swabble/CHANGELOG.md): version history.
+- [Release Check](https://github.com/clawdbot/clawdbot/blob/main/scripts/release-check.ts): version history.
+- [Contributing](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/CONTRIBUTING.md): docs page.
+- [Doctor Security](https://github.com/clawdbot/clawdbot/blob/main/src/commands/doctor-security.ts): security policy.
+- [License.Apple Device Identifiers](https://github.com/clawdbot/clawdbot/blob/main/apps/macos/Sources/Clawdbot/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt): usage terms.
+- [Agents](https://github.com/clawdbot/clawdbot/blob/main/AGENTS.md): docs page.
+- [Claude](https://github.com/clawdbot/clawdbot/blob/main/CLAUDE.md): docs page.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/README.md): docs page.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/Swabble/README.md): install & quickstart.
+- [Showcase](https://github.com/clawdbot/clawdbot/blob/main/showcase.md): docs page.
+- [Vitest.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.config.ts): docs page.
+- [Vitest.E2E.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.e2e.config.ts): docs page.
+- [Vitest.Live.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.live.config.ts): docs page.
+
+## .Github
+- [Bug Report](https://github.com/clawdbot/clawdbot/blob/main/.github/ISSUE_TEMPLATE/bug_report.md): docs page.
+- [Feature Request](https://github.com/clawdbot/clawdbot/blob/main/.github/ISSUE_TEMPLATE/feature_request.md): docs page.
+
+## Apps
+- [README](https://github.com/clawdbot/clawdbot/blob/main/apps/android/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/apps/ios/README.md): install & quickstart.
+- [Setup](https://github.com/clawdbot/clawdbot/blob/main/apps/ios/fastlane/SETUP.md): docs page.
+- [Bootstrap](https://github.com/clawdbot/clawdbot/blob/main/apps/shared/ClawdbotKit/Tools/CanvasA2UI/bootstrap.js): docs page.
+- [Notice](https://github.com/clawdbot/clawdbot/blob/main/apps/macos/Sources/Clawdbot/Resources/DeviceModels/NOTICE.md): docs page.
+- [Scaffold](https://github.com/clawdbot/clawdbot/blob/main/apps/shared/ClawdbotKit/Sources/ClawdbotKit/Resources/CanvasScaffold/scaffold.html): docs page.
+
+## Scripts
+- [Bench Model](https://github.com/clawdbot/clawdbot/blob/main/scripts/bench-model.ts): docs page.
+- [Canvas A2Ui Copy](https://github.com/clawdbot/clawdbot/blob/main/scripts/canvas-a2ui-copy.ts): docs page.
+- [Protocol Gen](https://github.com/clawdbot/clawdbot/blob/main/scripts/protocol-gen.ts): docs page.
+- [Protocol Gen Swift](https://github.com/clawdbot/clawdbot/blob/main/scripts/protocol-gen-swift.ts): docs page.
+- [Test Force](https://github.com/clawdbot/clawdbot/blob/main/scripts/test-force.ts): docs page.
+- [Ui](https://github.com/clawdbot/clawdbot/blob/main/scripts/ui.js): docs page.
+
+## Skills
+- [Server Readme](https://github.com/clawdbot/clawdbot/blob/main/skills/local-places/SERVER_README.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/1password/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/apple-notes/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/apple-reminders/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/bear-notes/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/bird/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/blogwatcher/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/blucli/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/brave-search/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/camsnap/SKILL.md): docs page.
+
+## Src
+- [A2Ui](https://github.com/clawdbot/clawdbot/blob/main/src/canvas-host/a2ui/index.html): docs page.
+- [Entry](https://github.com/clawdbot/clawdbot/blob/main/src/entry.ts): docs page.
+- [Globals](https://github.com/clawdbot/clawdbot/blob/main/src/globals.ts): docs page.
+- [Globals.Test](https://github.com/clawdbot/clawdbot/blob/main/src/globals.test.ts): docs page.
+- [Index](https://github.com/clawdbot/clawdbot/blob/main/src/index.ts): docs page.
+- [Index.Test](https://github.com/clawdbot/clawdbot/blob/main/src/index.test.ts): docs page.
+- [Logger](https://github.com/clawdbot/clawdbot/blob/main/src/logger.ts): docs page.
+- [Logger.Test](https://github.com/clawdbot/clawdbot/blob/main/src/logger.test.ts): docs page.
+- [Logging](https://github.com/clawdbot/clawdbot/blob/main/src/logging.ts): docs page.
+- [Polls](https://github.com/clawdbot/clawdbot/blob/main/src/polls.ts): docs page.
+
+## Test
+- [Auto Reply.Retry.Test](https://github.com/clawdbot/clawdbot/blob/main/test/auto-reply.retry.test.ts): docs page.
+- [Gateway.Multi.E2E.Test](https://github.com/clawdbot/clawdbot/blob/main/test/gateway.multi.e2e.test.ts): docs page.
+- [Setup](https://github.com/clawdbot/clawdbot/blob/main/test/setup.ts): docs page.
+- [Baileys](https://github.com/clawdbot/clawdbot/blob/main/test/mocks/baileys.ts): docs page.
+
+## Ui
+- [Ui](https://github.com/clawdbot/clawdbot/blob/main/ui/index.html): docs page.
+- [Vite.Config](https://github.com/clawdbot/clawdbot/blob/main/ui/vite.config.ts): docs page.
+- [Vitest.Config](https://github.com/clawdbot/clawdbot/blob/main/ui/vitest.config.ts): docs page.
+- [Main](https://github.com/clawdbot/clawdbot/blob/main/ui/src/main.ts): docs page.
+- [App](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app.ts): docs page.
+- [App Render](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-render.ts): docs page.
+- [Chat Markdown.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/chat-markdown.browser.test.ts): docs page.
+- [Config Form.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/config-form.browser.test.ts): docs page.
+- [Focus Mode.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/focus-mode.browser.test.ts): docs page.
+- [Format](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/format.ts): docs page.
+
+## Vendor
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/renderers/angular/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/renderers/lit/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.8/eval/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.8/json/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.9/eval/README.md): install & quickstart.
+- [Gemini](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/.gemini/GEMINI.md): docs page.
+- [Gemini](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.8/eval/GEMINI.md): docs page.
+- [Genkit.Conf](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.8/eval/genkit.conf.js): docs page.
+- [Genkit.Conf](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/specification/0.9/eval/genkit.conf.js): docs page.

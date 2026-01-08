@@ -1,0 +1,384 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Oracle",
+    "summary": "<p align=\"center\"> <img src=\"./README-header.png\" alt=\"Oracle CLI header banner\" width=\"1100\"> </p> <p align=\"center\"> <a href=\"https://www.npmjs.com/package/@steipete/oracle\"><img src=\"https://img.shields.io/npm/v/@steipete/oracle?style=for-the-badge&logo=npm&logoColor=white\" alt=\"npm version\"></a>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Anthropic",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/anthropic.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Browser Mode",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/browser-mode.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chromium Forks",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/chromium-forks.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Configuration",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/configuration.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Docs List",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/docs-list.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Gemini",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/gemini.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Grok",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/grok.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Linux",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/linux.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Manual Tests",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/manual-tests.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp",
+          "url": "https://github.com/steipete/oracle/blob/main/docs/mcp.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Win Dpapi.D",
+          "url": "https://github.com/steipete/oracle/blob/main/types/win-dpapi.d.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://github.com/steipete/oracle/blob/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/steipete/oracle/blob/main/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/steipete/oracle/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/steipete/oracle/blob/main/skills/oracle/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/steipete/oracle/blob/main/vendor/oracle-notifier/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Vitest.Config",
+          "url": "https://github.com/steipete/oracle/blob/main/vitest.config.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Bin",
+      "links": [
+        {
+          "title": "Oracle Cli",
+          "url": "https://github.com/steipete/oracle/blob/main/bin/oracle-cli.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Oracle Mcp",
+          "url": "https://github.com/steipete/oracle/blob/main/bin/oracle-mcp.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Agent Send",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/agent-send.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Browser Tools",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/browser-tools.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Vendor",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/build-vendor.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Check",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/check.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Git Policy",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/git-policy.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Run Cli",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/run-cli.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Runner",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/runner.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Browser",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/test-browser.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Remote Chrome",
+          "url": "https://github.com/steipete/oracle/blob/main/scripts/test-remote-chrome.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "Browsermode",
+          "url": "https://github.com/steipete/oracle/blob/main/src/browserMode.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Config",
+          "url": "https://github.com/steipete/oracle/blob/main/src/config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Heartbeat",
+          "url": "https://github.com/steipete/oracle/blob/main/src/heartbeat.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Oracle",
+          "url": "https://github.com/steipete/oracle/blob/main/src/oracle.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Oraclehome",
+          "url": "https://github.com/steipete/oracle/blob/main/src/oracleHome.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sessionmanager",
+          "url": "https://github.com/steipete/oracle/blob/main/src/sessionManager.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sessionstore",
+          "url": "https://github.com/steipete/oracle/blob/main/src/sessionStore.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Version",
+          "url": "https://github.com/steipete/oracle/blob/main/src/version.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Background",
+          "url": "https://github.com/steipete/oracle/blob/main/src/oracle/background.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Browserconfig",
+          "url": "https://github.com/steipete/oracle/blob/main/src/cli/browserConfig.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "Config.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/config.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Engine.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/engine.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Gemini.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/gemini.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Logging.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/logging.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp.Integration.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/mcp.integration.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp.Resources.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/mcp.resources.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp.Schema.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/mcp.schema.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp.Stdout.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/mcp.stdout.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Mcp.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/mcp.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Notifier.Test",
+          "url": "https://github.com/steipete/oracle/blob/main/tests/notifier.test.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Types",
+      "links": [
+        {
+          "title": "Oracle.D",
+          "url": "https://github.com/steipete/oracle/blob/main/types/oracle.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Pty.D",
+          "url": "https://github.com/steipete/oracle/blob/main/types/pty.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Toasted Notifier.D",
+          "url": "https://github.com/steipete/oracle/blob/main/types/toasted-notifier.d.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

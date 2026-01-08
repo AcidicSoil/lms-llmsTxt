@@ -1017,11 +1017,16 @@ declare module 'win-dpapi' {
 --- CHANGELOG.md ---
 # Changelog
 
-## 0.8.4 — Unreleased
+## 0.8.5 — Unreleased
+
+## 0.8.4 — 2026-01-04
 
 ### Changed
-- Deps: update zod to `4.3.3`.
+- Deps: update zod to `4.3.5`.
 - Deps: add `qs` as a direct dependency (avoids Dependabot pnpm transitive-update failures).
+
+### Fixed
+- Browser: fix attachment uploads in the current ChatGPT composer (avoid duplicate uploads; avoid image-only inputs for non-image files). Original PR #60 by Alex Naidis (@TheCrazyLex) — thank you!
 
 ## 0.8.3 — 2025-12-31
 
@@ -1516,6 +1521,7 @@ Oracle-specific notes:
 - Working on Windows? Read and update `docs/windows-work.md` before you start.
 - Sparkle signing key lives at `/Users/steipete/Library/CloudStorage/Dropbox/Backup/Sparkle`; set `SPARKLE_PRIVATE_KEY_FILE` to that path when notarizing the notifier.
 - Browser cookie sync + Node 25: if browser runs fail with “Failed to load keytar… Cannot find module '../build/Release/keytar.node'” and no cookies are applied, rebuild keytar in the pnpm dlx cache: run `PYTHON=/usr/bin/python3 /Users/steipete/Projects/oracle/runner npx node-gyp rebuild` inside the keytar directory printed in the error, then rerun the oracle command.
+- npm publish OTP: prepare/tag/release first, then run `npm publish ...` and stop at `Enter OTP:`; ask user for the OTP and continue (ok to handle OTP in chat).
 
 Browser-mode debug notes (ChatGPT URL override)
 - When a ChatGPT folder/workspace URL is set, Cloudflare can block automation even after cookie sync. Use `--browser-keep-browser` to leave Chrome open, solve the interstitial manually, then rerun.

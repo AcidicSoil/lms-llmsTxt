@@ -1,0 +1,419 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Oraclepack",
+    "summary": "<p align=\"center\"> <a href=\"https://github.com/acidicsoil/oraclepack/actions/workflows/ci.yml\"><img alt=\"CI\" src=\"https://github.com/acidicsoil/oraclepack/actions/workflows/ci.yml/badge.svg\" /></a> <a href=\"https://github.com/acidicsoil/oraclepack/actions/workflows/release.yml\"><img alt=\"Release\" src=\"https://github.com/acidicsoil/oraclepack/actions/workflows/release.yml/badge.svg\" /></a>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Build Install Oraclepack",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/scripts/build_install_oraclepack.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install Taskmaster",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/install-taskmaster.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quick Install Taskmaster",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/quick-install-taskmaster.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Workflow Overview",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-taskify/references/workflow-overview.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Strategist Questions Oracle Pack 2026 01 02",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/docs/strategist-questions-oracle-pack-2026-01-02.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Oracle Llms",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle/oracle-llms.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Oracle Llms Full",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle/oracle-llms-full.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Prd",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/PRD.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Prd",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/_PRD.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Example Prd",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/templates/example_prd.txt",
+          "note": "worked example"
+        },
+        {
+          "title": "Example Prd Rpg",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/templates/example_prd_rpg.txt",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Attachment Minimization",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-gold-pack/references/attachment-minimization.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Attachment Minimization",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oracle-pack/references/attachment-minimization.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Attachment Minimization",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/strategist-questions-oracle-pack/references/attachment-minimization.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Determinism And Safety",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-taskify/references/determinism-and-safety.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Evaluation",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/evaluation.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Inference First Discovery",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-gold-pack/references/inference-first-discovery.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Inference First Discovery",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oracle-pack/references/inference-first-discovery.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Inference First Discovery",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/strategist-questions-oracle-pack/references/inference-first-discovery.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Mcp Best Practices",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/mcp_best_practices.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Node Mcp Server",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/reference/node_mcp_server.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/README.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Config",
+      "links": [
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/mcp-builder/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-gold-pack/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-taskify/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oracle-pack-rpg-infused/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oracle-pack/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oracle-strategist-commands/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/oraclepack-usecase-rpg/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/skills/strategist-questions-oracle-pack/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Action Pack Template",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-taskify/assets/action-pack-template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Actions Json Schema",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.config/mcp/oraclepack-taskify/assets/actions-json-schema.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Cursor",
+      "links": [
+        {
+          "title": "Add Dependency",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/add-dependency.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Add Subtask",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/add-subtask.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Add Task",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/add-task.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Analyze Complexity",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/analyze-complexity.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Analyze Project",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/analyze-project.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Auto Implement Tasks",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/auto-implement-tasks.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Command Pipeline",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/command-pipeline.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Complexity Report",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/complexity-report.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Convert Task To Subtask",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/convert-task-to-subtask.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Expand All Tasks",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.cursor/commands/tm/expand-all-tasks.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Ruler",
+      "links": [
+        {
+          "title": "Agents",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Tm Agents",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/tm-AGENTS.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Rules",
+      "links": [
+        {
+          "title": "Dev Workflow",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.rules/dev_workflow.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Rules",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.rules/rules.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Self Improve",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.rules/self_improve.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Taskmaster",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.rules/taskmaster.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Taskmaster",
+      "links": [
+        {
+          "title": "Agents",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Oracle Pack 2026 01 02",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/oracle-pack-2026-01-02.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Tm Help",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/tm_help.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Tm Tags Help",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/tm_tags-help.txt",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Tickets",
+      "links": [
+        {
+          "title": "Improving Oraclepack Workflow",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Improving Oraclepack Workflow.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Oraclepack Pipeline Improvements",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack Pipeline Improvements.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Oraclepack Workflow Enhancement",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack Workflow Enhancement.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Verbose Payload Rendering Tui",
+          "url": "https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Verbose Payload Rendering TUI.md",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}
