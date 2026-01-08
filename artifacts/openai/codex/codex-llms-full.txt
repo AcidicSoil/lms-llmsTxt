@@ -2510,10 +2510,10 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 - [Learn more about what's included in your ChatGPT plan](https://help.openai.com/en/articles/11369540-codex-in-chatgpt)
 - [additional setup](https://developers.openai.com/codex/auth#sign-in-with-an-api-key)
 - [**Codex Documentation**](https://developers.openai.com/codex)
-- [**Contributing**](https://raw.githubusercontent.com/openai/codex/main/docs/contributing.md)
-- [**Installing & building**](https://raw.githubusercontent.com/openai/codex/main/docs/install.md)
-- [**Open source fund**](https://raw.githubusercontent.com/openai/codex/main/docs/open-source-fund.md)
-- [Apache-2.0 License](https://raw.githubusercontent.com/openai/codex/main/LICENSE.md)
+- [**Contributing**](https://github.com/openai/codex/blob/main/docs/contributing.md)
+- [**Installing & building**](https://github.com/openai/codex/blob/main/docs/install.md)
+- [**Open source fund**](https://github.com/openai/codex/blob/main/docs/open-source-fund.md)
+- [Apache-2.0 License](https://github.com/openai/codex/blob/main/LICENSE.md)
 - [install in your IDE.](https://developers.openai.com/codex/ide)
 - [chatgpt.com/codex](https://chatgpt.com/codex)
 - [latest GitHub Release](https://github.com/openai/codex/releases/latest)
@@ -3494,8 +3494,8 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 
 ## Links discovered
 - [README in the root of the Codex repository](https://github.com/openai/codex/blob/main/README.md)
-- [Codex demo GIF using: codex "explain this codebase to me"](https://raw.githubusercontent.com/openai/codex/main/.github/demo.gif)
-- [`run_in_container.sh`](https://raw.githubusercontent.com/openai/codex/main/codex-cli/scripts/run_in_container.sh)
+- [Codex demo GIF using: codex "explain this codebase to me"](https://github.com/openai/codex/blob/main/.github/demo.gif)
+- [`run_in_container.sh`](https://github.com/openai/codex/blob/main/codex-cli/scripts/run_in_container.sh)
 - [prompting guide](https://github.com/openai/codex/blob/main/codex-cli/examples/prompting_guide.md)
 - [Responses API](https://platform.openai.com/docs/api-reference/responses)
 - [API account needs to be verified](https://help.openai.com/en/articles/10910291-api-organization-verification)
@@ -3503,9 +3503,9 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 - [Zero Data Retention (ZDR)](https://platform.openai.com/docs/guides/your-data#zero-data-retention)
 - [Apply here](https://openai.com/form/codex-open-source-fund/)
 - [Husky](https://typicode.github.io/husky/)
-- [HUSKY.md](https://raw.githubusercontent.com/openai/codex/main/codex-cli/HUSKY.md)
+- [HUSKY.md](https://github.com/openai/codex/blob/main/codex-cli/HUSKY.md)
 - [Contributor Covenant](https://www.contributor-covenant.org/)
-- [Apache-2.0 License](https://raw.githubusercontent.com/openai/codex/main/codex-cli/LICENSE.md)
+- [Apache-2.0 License](https://github.com/openai/codex/blob/main/codex-cli/LICENSE.md)
 
 --- codex-cli/scripts/README.md ---
 # npm releases
@@ -4136,18 +4136,18 @@ This folder is the root of a Cargo workspace. It contains quite a bit of experim
 
 ## Links discovered
 - [GitHub Releases](https://github.com/openai/codex/releases)
-- [`docs/getting-started.md`](https://raw.githubusercontent.com/openai/codex/main/docs/getting-started.md)
-- [`docs/config.md`](https://raw.githubusercontent.com/openai/codex/main/docs/config.md)
-- [`docs/install.md`](https://raw.githubusercontent.com/openai/codex/main/docs/install.md)
-- [`configuration documentation`](https://raw.githubusercontent.com/openai/codex/main/docs/config.md#connecting-to-mcp-servers)
+- [`docs/getting-started.md`](https://github.com/openai/codex/blob/main/docs/getting-started.md)
+- [`docs/config.md`](https://github.com/openai/codex/blob/main/docs/config.md)
+- [`docs/install.md`](https://github.com/openai/codex/blob/main/docs/install.md)
+- [`configuration documentation`](https://github.com/openai/codex/blob/main/docs/config.md#connecting-to-mcp-servers)
 - [`@modelcontextprotocol/inspector`](https://github.com/modelcontextprotocol/inspector)
-- [notify documentation](https://raw.githubusercontent.com/openai/codex/main/docs/config.md#notify)
+- [notify documentation](https://github.com/openai/codex/blob/main/docs/config.md#notify)
 - [terminal-notifier](https://github.com/julienXX/terminal-notifier)
-- [`core/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/core.md)
-- [`exec/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/exec.md)
-- [`tui/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/tui.md)
+- [`core/`](https://github.com/openai/codex/blob/main/codex-rs/core.md)
+- [`exec/`](https://github.com/openai/codex/blob/main/codex-rs/exec.md)
+- [`tui/`](https://github.com/openai/codex/blob/main/codex-rs/tui.md)
 - [Ratatui](https://ratatui.rs/)
-- [`cli/`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/cli.md)
+- [`cli/`](https://github.com/openai/codex/blob/main/codex-rs/cli.md)
 
 --- codex-rs/ansi-escape/README.md ---
 # oai-codex-ansi-escape
@@ -4186,6 +4186,8 @@ Exercises simple `codex app-server` flows end-to-end, logging JSON-RPC messages 
 - [Initialization](#initialization)
 - [API Overview](#api-overview)
 - [Events](#events)
+- [Approvals](#approvals)
+- [Skills](#skills)
 - [Auth endpoints](#auth-endpoints)
 
 ## Protocol
@@ -4247,6 +4249,7 @@ Example (from OpenAI's official VSCode extension):
 - `thread/resume` — reopen an existing thread by id so subsequent `turn/start` calls append to it.
 - `thread/list` — page through stored rollouts; supports cursor-based pagination and optional `modelProviders` filtering.
 - `thread/archive` — move a thread’s rollout file into the archived directory; returns `{}` on success.
+- `thread/rollback` — drop the last N turns from the agent’s in-memory context and persist a rollback marker in the rollout so future resumes see the pruned history; returns the updated `thread` (with `turns` populated) on success.
 - `turn/start` — add user input to a thread and begin Codex generation; responds with the initial `turn` object and streams `turn/started`, `item/*`, and `turn/completed` notifications.
 - `turn/interrupt` — request cancellation of an in-flight turn by `(thread_id, turn_id)`; success is an empty `{}` response and the turn finishes with `status: "interrupted"`.
 - `review/start` — kick off Codex’s automated reviewer for a thread; responds like `turn/start` and emits `item/started`/`item/completed` notifications with `enteredReviewMode` and `exitedReviewMode` items, plus a final assistant `agentMessage` containing the review.
@@ -4260,6 +4263,7 @@ Example (from OpenAI's official VSCode extension):
 - `config/read` — fetch the effective config on disk after resolving config layering.
 - `config/value/write` — write a single config key/value to the user's config.toml on disk.
 - `config/batchWrite` — apply multiple config edits atomically to the user's config.toml on disk.
+- `configRequirements/read` — fetch the loaded requirements allow-lists from `requirements.toml` and/or MDM (or `null` if none are configured).
 
 ### Example: Start or resume a thread
 
@@ -4364,6 +4368,25 @@ You can optionally specify config overrides on the new turn. If specified, these
 } }
 { "id": 30, "result": { "turn": {
     "id": "turn_456",
+    "status": "inProgress",
+    "items": [],
+    "error": null
+} } }
+```
+
+### Example: Start a turn (invoke a skill)
+
+Invoke a skill by sending a text input that begins with `$<skill-name>`.
+
+```json
+{ "method": "turn/start", "id": 33, "params": {
+    "threadId": "thr_123",
+    "input": [
+        { "type": "text", "text": "$skill-creator Add a new skill for triaging flaky CI and include step-by-step usage." }
+    ]
+} }
+{ "id": 33, "result": { "turn": {
+    "id": "turn_457",
     "status": "inProgress",
     "items": [],
     "error": null
@@ -4578,6 +4601,30 @@ Order of messages:
 4. `item/completed` — returns the same `fileChange` item with `status` updated to `completed`, `failed`, or `declined` after the patch attempt. Rely on this to show success/failure and finalize the diff state in your UI.
 
 UI guidance for IDEs: surface an approval dialog as soon as the request arrives. The turn will proceed after the server receives a response to the approval request. The terminal `item/completed` notification will be sent with the appropriate status.
+
+## Skills
+
+Skills are invoked by sending a text input that starts with `$<skill-name>`. The rest of the text is passed to the skill as its input.
+
+Example:
+
+```
+$skill-creator Add a new skill for triaging flaky CI and include step-by-step usage.
+```
+
+Use `skills/list` to fetch the available skills (optionally scoped by `cwd` and/or with `forceReload`).
+
+```json
+{ "method": "skills/list", "id": 25, "params": {
+    "cwd": "/Users/me/project",
+    "forceReload": false
+} }
+{ "id": 25, "result": {
+    "skills": [
+        { "name": "skill-creator", "description": "Create or update a Codex skill" }
+    ]
+} }
+```
 
 ## Auth endpoints
 
@@ -4953,10 +5000,10 @@ cargo run -p codex-execpolicy-legacy -- check applied deploy | jq
 
 ## Links discovered
 - [`execv(3)`](https://linux.die.net/man/3/execv)
-- [`default.policy`](https://raw.githubusercontent.com/openai/codex/main/codex-rs/execpolicy-legacy/src/default.policy)
+- [`default.policy`](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/src/default.policy)
 - [Starlark](https://bazel.build/rules/language)
 - [`starlark-rust`](https://github.com/facebook/starlark-rust)
-- [via unit tests](https://raw.githubusercontent.com/openai/codex/main/codex-rs/execpolicy-legacy/tests.md)
+- [via unit tests](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/tests.md)
 
 --- scripts/readme_toc.py ---
 #!/usr/bin/env python3

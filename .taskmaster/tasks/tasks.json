@@ -1934,7 +1934,7 @@
   "chore-dist-name": {
     "tasks": [
       {
-        "id": "12",
+        "id": 12,
         "title": "Research and Select New Distribution Name",
         "description": "Research and selection process for the Python package name. 'lms-lmstxt' has been selected as the new distribution name to align with the repository name and maintain consistency across the project.",
         "status": "done",
@@ -1977,7 +1977,7 @@
         "updatedAt": "2026-01-06T16:53:50.485Z"
       },
       {
-        "id": "13",
+        "id": 13,
         "title": "Update [project].name in pyproject.toml",
         "description": "Formally change the distribution name in the project configuration file.",
         "details": "1. Open 'pyproject.toml'.\n2. Locate the '[project]' section.\n3. Update the 'name' field to the selected new distribution name.\n4. Ensure it remains a static string as per PEP 621.",
@@ -1991,7 +1991,7 @@
         "updatedAt": "2026-01-06T17:05:12.032Z"
       },
       {
-        "id": "14",
+        "id": 14,
         "title": "Rename CLI Entry Points in pyproject.toml",
         "description": "Decide and implement changes to the command names users type in the terminal.",
         "details": "1. Locate '[project.scripts]' in 'pyproject.toml'.\n2. Review 'lmstxt' and 'lmstxt-mcp'.\n3. If aligning with the new distribution name, update the keys (the command names).\n4. Update the values (module:function mapping) if the module structure is planned to change.",
@@ -2005,7 +2005,7 @@
         "updatedAt": "2026-01-06T17:05:12.035Z"
       },
       {
-        "id": "15",
+        "id": 15,
         "title": "Rename Internal Source Package and Modules",
         "description": "Rename the directories under 'src/' to match the new distribution name for internal consistency.",
         "details": "1. Identify the current package directory (likely 'src/lmstudio_lmstxt_generator').\n2. Rename this directory to the new normalized name (e.g., 'src/lmstxt').\n3. Use underscores for the directory name if the distribution name has hyphens (Python import convention).",
@@ -2019,7 +2019,7 @@
         "updatedAt": "2026-01-06T17:05:12.038Z"
       },
       {
-        "id": "16",
+        "id": 16,
         "title": "Update Internal Code Imports",
         "description": "Search and replace all instances of the old package name in import statements and code references.",
         "details": "1. Search for 'from lmstudio_lmstxt_generator ...' and 'import lmstudio_lmstxt_generator'.\n2. Update them to the new package name.\n3. Check '__init__.py' files for any relative import or metadata exports that might be affected.",
@@ -2033,7 +2033,7 @@
         "updatedAt": "2026-01-06T17:05:12.041Z"
       },
       {
-        "id": "17",
+        "id": 17,
         "title": "Update Documentation and Installation Snippets",
         "description": "Refresh the README and any other documentation with the new distribution name and installation instructions.",
         "details": "1. Update 'pip install' commands in README.md.\n2. Update 'pipx' or 'uv' usage examples.\n3. Update any mentions of the project name in the description or header sections.\n4. Update repository badges if they contain the old name (e.g., PyPI version badges).",
@@ -2047,7 +2047,7 @@
         "updatedAt": "2026-01-06T17:05:12.043Z"
       },
       {
-        "id": "18",
+        "id": 18,
         "title": "Update Release Automation and CI/CD Config",
         "description": "Ensure the GitHub Actions or other CI/CD pipelines correctly handle the new package name for publishing.",
         "details": "1. Check '.github/workflows/' for any environment variables referencing the old name.\n2. Update Trusted Publisher settings on PyPI if applicable to authorize the new project name.\n3. Update any release scripts that specifically target the old distribution.",
@@ -2061,7 +2061,7 @@
         "updatedAt": "2026-01-06T17:05:12.046Z"
       },
       {
-        "id": "19",
+        "id": 19,
         "title": "Create Migration Strategy for PyPI (If Applicable)",
         "description": "Plan the deprecation of the old package name on PyPI by creating a transition package.",
         "details": "1. Prepare a final release for 'lmstudio-lmstxt-generator'.\n2. Set the new distribution as a dependency in the old package's 'pyproject.toml'.\n3. Add a post-install message or a deprecation warning in the old package to notify users.",
@@ -2075,7 +2075,7 @@
         "updatedAt": "2026-01-06T17:05:18.341Z"
       },
       {
-        "id": "20",
+        "id": 20,
         "title": "Local Build and Install Verification",
         "description": "Perform a final end-to-end local installation check in a clean environment.",
         "details": "1. Clear 'dist/' and 'build/' folders.\n2. Run 'python -m build'.\n3. Create a fresh virtual environment ('python -m venv venv_test').\n4. Install the wheel: 'pip install dist/*.whl'.\n5. Verify commands: 'lmstxt --help' (or new command names).",
@@ -2097,7 +2097,10 @@
       "completedCount": 8,
       "tags": [
         "chore-dist-name"
-      ]
+      ],
+      "created": "2026-01-08T02:14:43.900Z",
+      "description": "Tasks for chore-dist-name context",
+      "updated": "2026-01-08T02:14:43.900Z"
     }
   }
 }
