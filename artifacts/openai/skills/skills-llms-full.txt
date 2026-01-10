@@ -4009,6 +4009,38 @@ Use this template when you need to make an important decision with your team.
 
 
 
+--- contributing.md ---
+## Contributing
+
+### Community values
+
+- **Be kind and inclusive.** Treat others with respect; we follow the [Contributor Covenant](https://www.contributor-covenant.org/).
+- **Assume good intent.** Written communication is hard - err on the side of generosity.
+- **Teach & learn.** If you spot something confusing, open an issue or PR with improvements.
+
+### Contributor license agreement (CLA)
+
+All contributors **must** accept the CLA. The process is lightweight:
+
+1. Open your pull request.
+2. Paste the following comment (or reply `recheck` if you've signed before):
+
+   ```text
+   I have read the CLA Document and I hereby sign the CLA
+   ```
+
+3. The CLA-Assistant bot records your signature in the repo and marks the status check as passed.
+
+No special Git commands, email attachments, or commit footers required.
+
+### Security & responsible AI
+
+Have you discovered a vulnerability or have concerns about model output? Please e-mail **security@openai.com** and we will respond promptly.
+
+
+## Links discovered
+- [Contributor Covenant](https://www.contributor-covenant.org/)
+
 --- skills/.curated/gh-address-comments/LICENSE.txt ---
 
                                  Apache License
@@ -5071,6 +5103,58 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
    limitations under the License.
 
 
+--- CLA.md ---
+# Individual Contributor License Agreement (v1.0, OpenAI)
+
+_Based on the Apache Software Foundation Individual CLA v 2.2._
+
+By commenting **“I have read the CLA Document and I hereby sign the CLA”**
+on a Pull Request, **you (“Contributor”) agree to the following terms** for any
+past and future “Contributions” submitted to the **OpenAI Codex CLI project
+(the “Project”)**.
+
+---
+
+## 1. Definitions
+
+- **“Contribution”** – any original work of authorship submitted to the Project
+  (code, documentation, designs, etc.).
+- **“You” / “Your”** – the individual (or legal entity) posting the acceptance
+  comment.
+
+## 2. Copyright License
+
+You grant **OpenAI, Inc.** and all recipients of software distributed by the
+Project a perpetual, worldwide, non‑exclusive, royalty‑free, irrevocable
+license to reproduce, prepare derivative works of, publicly display, publicly
+perform, sublicense, and distribute Your Contributions and derivative works.
+
+## 3. Patent License
+
+You grant **OpenAI, Inc.** and all recipients of the Project a perpetual,
+worldwide, non‑exclusive, royalty‑free, irrevocable (except as below) patent
+license to make, have made, use, sell, offer to sell, import, and otherwise
+transfer Your Contributions alone or in combination with the Project.
+
+If any entity brings patent litigation alleging that the Project or a
+Contribution infringes a patent, the patent licenses granted by You to that
+entity under this CLA terminate.
+
+## 4. Representations
+
+1. You are legally entitled to grant the licenses above.
+2. Each Contribution is either Your original creation or You have authority to
+   submit it under this CLA.
+3. Your Contributions are provided **“AS IS”** without warranties of any kind.
+4. You will notify the Project if any statement above becomes inaccurate.
+
+## 5. Miscellany
+
+This Agreement is governed by the laws of the **State of California**, USA,
+excluding its conflict‑of‑laws rules. If any provision is held unenforceable,
+the remaining provisions remain in force.
+
+
 --- README.md ---
 # Agent Skills
 
@@ -5078,6 +5162,49 @@ Agent Skills are folders of instructions, scripts, and resources that AI agents 
 
 Codex uses skills to help package capabilities that teams and individuals can use to complete specific tasks in a repeatable way. This repository catalogs skills for use and distribution with Codex.
 
+Learn more:
+- [Using skills in Codex](https://developers.openai.com/codex/skills)
+- [Create custom skills in Codex](https://developers.openai.com/codex/skills/create-skill)
+- [Agent Skills open standard](https://agentskills.io)
+
+## Installing a skill
+
+Skills in [`.system`](skills/.system/) are automatically installed in the latest version of Codex.
+
+To install [curated](skills/.curated/) or [experimental](skills/.experimental/) skills, you can use the `$skill-installer` inside Codex.
+
+Curated skills can be installed by name (defaults to `skills/.curated`):
+
+```
+$skill-installer gh-address-comments
+```
+
+For experimental skills, specify the skill folder. For example:
+
+```
+$skill-installer install the create-plan skill from the .experimental folder
+```
+
+Or provide the GitHub directory URL:
+
+```
+$skill-installer install https://github.com/openai/skills/tree/main/skills/.experimental/create-plan
+```
+
+After installing a skill, restart Codex to pick up new skills.
+
+## License
+
+The license of an individual skill can be found directly inside the skill's directory inside the `LICENSE.txt` file.
+
+
+## Links discovered
+- [Using skills in Codex](https://developers.openai.com/codex/skills)
+- [Create custom skills in Codex](https://developers.openai.com/codex/skills/create-skill)
+- [Agent Skills open standard](https://agentskills.io)
+- [`.system`](https://github.com/openai/skills/blob/main/skills/.system)
+- [curated](https://github.com/openai/skills/blob/main/skills/.curated)
+- [experimental](https://github.com/openai/skills/blob/main/skills/.experimental)
 
 --- skills/.curated/notion-knowledge-capture/evaluations/README.md ---
 # Knowledge Capture Skill Evaluations
