@@ -1,26 +1,25 @@
 # Promptbench
 
-> The purpose of `prompt-bench` is to systematically evaluate and compare different prompt compositions across multiple LLM providers by running Cartesian products of templates, payloads, and skills. It enables developers and researchers to measure how variations in prompt structure affect output quality, consistency, and performance. The system supports recursive fusion, multi-provider execution, and structured artifact logging, making it ideal for benchmarking prompt engineering workflows. Additionally, the TUI enhances usability for interactive exploration and configuration.
+> PromptBench enables developers to compare different prompt compositions by running Cartesian products of system templates, user payloads, and skills across multiple LLM providers. Its core goal is to evaluate how variations in prompt structure affect model output, supporting iterative prompt engineering. The tool also facilitates reproducible benchmarking through atomic artifact capture and structured logging, with optional TUI for interactive exploration and advanced configuration.
 
 **Remember:**
-- Triple-Layer Recursive Fusion
-- System Template (House)
-- Influence Skill (Primary)
-- Target Payload (Secondary)
+- Triple-Layer Recursive Fusion (House, Influence, Target)
 - Composition Modes: Engine, Marker, Append
 - Multi-Provider Support (LM Studio, Codex CLI, Gemini CLI)
+- Atomic Artifact Capture with structured output files
+- Skill Router for auto-mapping skills based on template/payload content
+- Event Stream (JSONL) for job lifecycle tracking
 
 ## Docs
-- [Oracle Actions Pack 2026 01 07](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-actions-pack-2026-01-07.md): docs page.
-- [Oracle Pack 2026 01 07](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-pack-2026-01-07.md): docs page.
-- [01 Contracts Interfaces Surface](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/01-contracts-interfaces-surface.md): docs page.
-- [02 Contracts Interfaces Integration](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/02-contracts-interfaces-integration.md): docs page.
-- [03 Invariants Domain](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/03-invariants-domain.md): docs page.
-- [04 Invariants Validation](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/04-invariants-validation.md): docs page.
-- [05 Caching State Layers](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/05-caching-state-layers.md): docs page.
-- [06 Caching State Consistency](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/06-caching-state-consistency.md): docs page.
-- [07 Background Jobs Discovery](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/07-background-jobs-discovery.md): docs page.
-- [08 Background Jobs Reliability](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-07/08-background-jobs-reliability.md): docs page.
+- [Prompt Bench Overview.Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/Prompt-bench Overview.prd.md): install & quickstart.
+- [Prompt Bench Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/prompt-bench_PRD.md): docs page.
+- [Promptbench Tui.Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/promptbench-tui.prd.md): docs page.
+- [Bugs](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/bugs.md): docs page.
+- [Lm Studio](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/lm-studio.md): docs page.
+- [Mcp](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/mcp.md): docs page.
+- [Misc](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/misc.md): docs page.
+- [Raw Exports](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/raw-exports.md): docs page.
+- [Standardize Promptbench Workspace](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/standardize-promptbench-workspace.md): docs page.
 
 ## Tutorials
 - [Expected Output](https://github.com/AcidicSoil/promptbench/blob/main/examples/expected-output.md): worked example.
@@ -30,14 +29,30 @@
 - [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/composed_system.txt): worked example.
 - [Output](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/output.txt): worked example.
 
+## API
+- [Lm Studio Api Error](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/raw-exports/LM Studio API Error.md): docs page.
+
 ## Concepts
-- [Promptbench Mcp Server Design Implementation](https://github.com/AcidicSoil/promptbench/blob/main/tickets/mcp/promptbench_mcp_server_design_implementation.md): docs page.
+- [Composition Modes Redesign](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Composition Modes Redesign.md): docs page.
+- [Promptbench Mcp Server Design Implementation](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/mcp/promptbench_mcp_server_design_implementation.md): docs page.
 
 ## Optional
 - [Agents](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/AGENTS.md): docs page.
 - [README](https://github.com/AcidicSoil/promptbench/blob/main/README.md): docs page.
 - [Skill Context Router](https://github.com/AcidicSoil/promptbench/blob/main/scripts/skill_context_router.py): docs page.
 - [When To Use This Skill](https://github.com/AcidicSoil/promptbench/blob/main/skills/when-to-use-this-skill.md): docs page.
+
+## .Tickets
+- [Progress View Issue](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Progress View Issue.md): docs page.
+- [Prompt Bench Pipeline Enhancement](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Prompt-Bench Pipeline Enhancement.md): docs page.
+- [Promptbench Composition Modes](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Promptbench Composition Modes.md): docs page.
+- [Promptbench Lm Studio Integration](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/PromptBench LM Studio Integration.md): docs page.
+- [Skill Router Improvement Plan](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Skill Router Improvement Plan.md): docs page.
+- [Web Search For Promptbench Skills](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Web-search for promptbench skills.md): docs page.
+- [Expose Mcp Server For Promptbench](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/mcp/Expose MCP Server for Promptbench.md): docs page.
+- [Expose Promptbench As Mcp](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/mcp/Expose promptbench as MCP.md): docs page.
+- [Lm Studio Model Selection](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/lm-studio/LM-Studio-Model-Selection.md): docs page.
+- [Lm Studio Sampling Params](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/lm-studio/LM Studio Sampling Params.md): docs page.
 
 ## Payloads
 - [Haiku](https://github.com/AcidicSoil/promptbench/blob/main/payloads/haiku.md): docs page.
@@ -71,15 +86,3 @@
 - [Test Core](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_core.py): docs page.
 - [Test Engine Composition](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_engine_composition.py): docs page.
 - [Test Eventing Executor](https://github.com/AcidicSoil/promptbench/blob/main/tests/test_eventing_executor.py): docs page.
-
-## Tickets
-- [Prompt Bench Pipeline Enhancement](https://github.com/AcidicSoil/promptbench/blob/main/tickets/Prompt-Bench Pipeline Enhancement.md): docs page.
-- [Web Search For Promptbench Skills](https://github.com/AcidicSoil/promptbench/blob/main/tickets/Web-search for promptbench skills.md): docs page.
-- [Expose Mcp Server For Promptbench](https://github.com/AcidicSoil/promptbench/blob/main/tickets/mcp/Expose MCP Server for Promptbench.md): docs page.
-- [Expose Promptbench As Mcp](https://github.com/AcidicSoil/promptbench/blob/main/tickets/mcp/Expose promptbench as MCP.md): docs page.
-- [Lm Studio Model Selection](https://github.com/AcidicSoil/promptbench/blob/main/tickets/lm-studio/LM-Studio-Model-Selection.md): docs page.
-- [Lm Studio Sampling Params](https://github.com/AcidicSoil/promptbench/blob/main/tickets/lm-studio/LM Studio Sampling Params.md): docs page.
-- [Lmstudioadapter Enhancement](https://github.com/AcidicSoil/promptbench/blob/main/tickets/lm-studio/LMStudioAdapter Enhancement.md): docs page.
-- [Mcp Goal](https://github.com/AcidicSoil/promptbench/blob/main/tickets/mcp/mcp-goal.md): docs page.
-- [Mcp Server Implementation](https://github.com/AcidicSoil/promptbench/blob/main/tickets/mcp/MCP server implementation.md): docs page.
-- [Parent Ticket Summary](https://github.com/AcidicSoil/promptbench/blob/main/tickets/bugs/Parent Ticket Summary.md): docs page.
