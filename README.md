@@ -4,6 +4,9 @@ description: "Generate llms.txt, llms-full, and fallback artifacts for GitHub re
 ---
 
 [![PyPI](https://img.shields.io/pypi/v/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/) [![Downloads](https://img.shields.io/pypi/dm/lms-llmstxt)](https://pypi.org/project/lms-llmsTxt/) [![TestPyPI](https://img.shields.io/badge/TestPyPI-lms--llmsTxt-informational)](https://test.pypi.org/project/lms-llmsTxt/) [![CI](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml/badge.svg?branch=main)](https://github.com/AcidicSoil/lms-llmsTxt/actions/workflows/release.yml) [![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2Flms--llmsTxt-181717?logo=github)](https://github.com/AcidicSoil/lms-llmsTxt)
+[![LM Studio Hub](https://img.shields.io/badge/LM%20Studio%20Hub-%40dirty--data-blue)](https://lmstudio.ai/dirty-data)
+[![GitHub](https://img.shields.io/badge/GitHub-AcidicSoil-181717?logo=github)](https://github.com/AcidicSoil)
+
 
 ## Overview
 
@@ -31,10 +34,23 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
+Using uv:
+
+```bash
+uv venv
+source .venv/bin/activate
+```
+
 ### Install the package with developer extras
 
 ```bash
 pip install -e '.[dev]'
+```
+
+Using uv:
+
+```bash
+uv pip install -e '.[dev]'
 ```
 
 Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` server.
@@ -69,6 +85,38 @@ lmstxt https://github.com/owner/repo \
 ```
 
 The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
+
+## Private GitHub repositories
+
+To run against a private repository you own, the GitHub API calls must be authenticated. The CLI reads a token from `GITHUB_ACCESS_TOKEN` or `GH_TOKEN` and sends it as a `Bearer` token.
+
+Token options:
+
+- **Classic PAT**: grant at least `repo` scope for private repo read access.
+- **Fine-grained PAT**: grant read access to **Contents** and **Metadata** for the target repo.
+- **Org SSO**: if your org enforces SSO, you must authorize the token in the GitHub SSO UI.
+
+Environment setup examples:
+
+```bash
+export GITHUB_ACCESS_TOKEN="ghp_..."
+# or
+export GH_TOKEN="ghp_..."
+```
+
+You can also use a `.env` file; the CLI calls `load_dotenv()` on startup and reads the token into `AppConfig.github_token`.
+
+```bash
+GITHUB_ACCESS_TOKEN=ghp_...
+```
+
+Run the CLI normally once the token is available:
+
+```bash
+lmstxt https://github.com/<owner>/<repo>
+```
+
+If you run the MCP server, the same env vars must be present in the process environment that launches `lmstxt-mcp` (for example, in your MCP client config).
 
 ### Environment variables
 
@@ -172,12 +220,49 @@ source .venv/bin/activate
 python -m pytest
 ```
 
+Using uv:
+
+```bash
+source .venv/bin/activate
+uv run pytest
+```
+
 All tests should pass, confirming URL validation, fallback handling, and MCP resource exposure.
+
+## Build & verify a local package
+
+Use this flow to rebuild locally and verify the installed CLI before tagging and publishing.
+
+```bash
+python3 -m pip install -U pip
+python3 -m pip install build
+python3 -m build
+python3 -m pip install --force-reinstall dist/*.whl
+lmstxt --help
+```
+
+Using uv:
+
+```bash
+uv pip install -U pip
+uv pip install build
+uv build
+uv pip install --force-reinstall dist/*.whl
+lmstxt --help
+```
+
+Note: this project uses `setuptools_scm`, so the version comes from git tags. Before tagging, you will see a post-release + date suffix.
 
 ## Troubleshooting
 
 > [!WARNING]
 > If `pip install -e .[dev]` fails with build tool errors, ensure `cmake` and necessary compilers are installed.
+
+Using uv:
+
+```bash
+uv pip install -e '.[dev]'
+```
 
 > [!TIP]
 > If the MCP server times out during generation, check `lmstxt_list_runs` to see if the background task is still processing. The `lmstxt_generate_*` tools return immediately to avoid client timeouts.

@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List, Tuple
 
 import requests
 
-from .github import construct_github_file_url, owner_repo_from_url
+from .github import construct_github_file_url, fetch_file_content, owner_repo_from_url
 try:
     import dspy
 except ImportError:
@@ -112,11 +112,31 @@ def _url_alive(url: str) -> bool:
         return False
 
 
+def _github_path_exists(
+    repo_url: str,
+    path: str,
+    ref: str | None,
+    token: str | None,
+) -> bool:
+    try:
+        owner, repo = owner_repo_from_url(repo_url)
+    except Exception:
+        return False
+    resolved_ref = ref or "main"
+    try:
+        content = fetch_file_content(owner, repo, path, resolved_ref, token)
+    except Exception:
+        return False
+    return content is not None
+
+
 def build_dynamic_buckets(
     repo_url: str,
     file_tree: str,
     default_ref: str | None = None,
     validate_urls: bool = True,
+    is_private: bool = False,
+    github_token: str | None = None,
     link_style: str = "blob",
 ) -> List[Tuple[str, List[Tuple[str, str, str]]]]:
     paths = [p.strip() for p in file_tree.splitlines() if p.strip()]
@@ -162,7 +182,16 @@ def build_dynamic_buckets(
         for name, items in list(buckets.items()):
             filtered = []
             for page in items:
-                if _url_alive(page["url"]):
+                if is_private and github_token:
+                    ok = _github_path_exists(
+                        repo_url,
+                        page["path"],
+                        default_ref,
+                        github_token,
+                    )
+                else:
+                    ok = _url_alive(page["url"])
+                if ok:
                     filtered.append(page)
                 else:
                     logger.debug("Dropping %s due to missing resource.", page["url"])
@@ -246,6 +275,8 @@ class RepositoryAnalyzer(dspy.Module):
         readme_content: str,
         package_files: str,
         default_branch: str | None = None,
+        is_private: bool = False,
+        github_token: str | None = None,
         link_style: str = "blob",
     ):
         repo_analysis = self.analyze_repo(
@@ -275,6 +306,9 @@ class RepositoryAnalyzer(dspy.Module):
             repo_url,
             file_tree,
             default_ref=default_branch,
+            validate_urls=True,
+            is_private=is_private,
+            github_token=github_token,
             link_style=link_style,
         )
 

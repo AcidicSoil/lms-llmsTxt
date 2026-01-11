@@ -88,6 +88,8 @@ def run_generation(
             readme_content=material.readme_content,
             package_files=material.package_files,
             default_branch=material.default_branch,
+            is_private=material.is_private,
+            github_token=config.github_token,
             link_style=config.link_style,
         )
         llms_text = result.llms_txt_content
@@ -105,6 +107,8 @@ def run_generation(
             file_tree=material.file_tree,
             readme_content=material.readme_content,
             default_branch=material.default_branch,
+            is_private=material.is_private,
+            github_token=config.github_token,
             link_style=config.link_style,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
@@ -118,6 +122,8 @@ def run_generation(
             file_tree=material.file_tree,
             readme_content=material.readme_content,
             default_branch=material.default_branch,
+            is_private=material.is_private,
+            github_token=config.github_token,
             link_style=config.link_style,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)

@@ -36,7 +36,9 @@ def test_analyzer_integration():
         file_tree=material.file_tree,
         readme_content=material.readme_content,
         package_files=material.package_files,
-        default_branch=material.default_branch
+        default_branch=material.default_branch,
+        is_private=material.is_private,
+        github_token=config.github_token,
     )
     
     assert hasattr(result, "llms_txt_content")
