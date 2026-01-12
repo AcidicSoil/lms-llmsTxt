@@ -1,43 +1,53 @@
 # React Grab
 
-> React Grab aims to accelerate developer workflows by enabling quick context extraction from web pages or IDEs. By allowing users to capture HTML, React components, or source code with a single interaction, it reduces the time spent manually copying and pasting content. The tool is especially beneficial for AI-powered coding assistants, potentially improving their performance by up to 55%. The project also supports customization, extensibility, and integration across multiple frameworks (Next.js, Vite, Webpack) and includes a browser extension for seamless in-browser use.
+> React Grab’s main purpose is to bridge the gap between user interface elements and coding agents by automating context extraction from web pages. It enables developers to select any UI component and have it directly fed into AI tools for code generation or modification, improving efficiency and accuracy. The tool also supports customization via plugins for analytics, custom actions, theme adjustments, and agent integration — making it extensible for diverse workflows.
 
 **Remember:**
-- React Grab
-- Context extraction
-- AI development tools
-- Cursor, Claude Code, Copilot integration
-- Element selection and copying
-- Customizable UI themes
+- UI element context capture
+- Coding agent integration
+- Plugin system for extensibility
+- Keyboard-based interaction (Ctrl/Cmd+C)
+- React component and HTML source extraction
+- Development server integration with AI agents
+
+## Docs
+- [Install.Test](https://github.com/aidenybai/react-grab/blob/main/packages/cli/test/install.test.ts): install & quickstart.
+- [Install](https://github.com/aidenybai/react-grab/blob/main/packages/cli/src/utils/install.ts): install & quickstart.
 
 ## API
-- [Classnames](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/website/utils/classnames.ts): docs page.
-- [Is Capitalized](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/react-grab/src/utils/is-capitalized.ts): docs page.
-- [Route](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/website/app/api/version/route.ts): API reference.
+- [Api Methods.Spec](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/e2e/api-methods.spec.ts): API reference.
+- [Classnames](https://github.com/aidenybai/react-grab/blob/main/packages/website/utils/classnames.ts): docs page.
+- [Is Capitalized](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/utils/is-capitalized.ts): docs page.
+- [Noop Api](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/core/noop-api.ts): docs page.
+- [Route](https://github.com/aidenybai/react-grab/blob/main/packages/website/app/api/check-visual-edit/route.ts): API reference.
+- [Route](https://github.com/aidenybai/react-grab/blob/main/packages/website/app/api/report-cli/route.ts): API reference.
+- [Route](https://github.com/aidenybai/react-grab/blob/main/packages/website/app/api/version/route.ts): API reference.
+- [Route](https://github.com/aidenybai/react-grab/blob/main/packages/website/app/api/visual-edit/route.ts): API reference.
 
 ## Optional
-- [README](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/shadcn-dashboard/README.md): install & quickstart.
-- [Benchmarks](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/index.html): docs page.
-- [Changelog](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/react-grab/CHANGELOG.md): version history.
-- [Claude Code](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/claude-code.ts): docs page.
-- [Index](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/index.ts): docs page.
-- [Test Cases](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/test-cases.ts): docs page.
-- [Vite.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/vite.config.ts): docs page.
-- [Instrumentation Client](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/shadcn-dashboard/instrumentation-client.ts): docs page.
-- [Next.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/shadcn-dashboard/next.config.ts): docs page.
-- [README](https://raw.githubusercontent.com/aidenybai/react-grab/main/.changeset/README.md): install & quickstart.
-- [Agents](https://raw.githubusercontent.com/aidenybai/react-grab/main/AGENTS.md): docs page.
-- [README](https://raw.githubusercontent.com/aidenybai/react-grab/main/README.md): docs page.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/benchmarks/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/benchmarks/shadcn-dashboard/README.md): install & quickstart.
+- [Benchmarks](https://github.com/aidenybai/react-grab/blob/main/packages/benchmarks/index.html): docs page.
+- [Contributing](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md): docs page.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/cli/CHANGELOG.md): version history.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/grab/CHANGELOG.md): version history.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/provider-ami/CHANGELOG.md): version history.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/provider-amp/CHANGELOG.md): version history.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/provider-claude-code/CHANGELOG.md): version history.
+- [Changelog](https://github.com/aidenybai/react-grab/blob/main/packages/provider-codex/CHANGELOG.md): version history.
+- [README](https://github.com/aidenybai/react-grab/blob/main/.changeset/README.md): install & quickstart.
+- [Agents](https://github.com/aidenybai/react-grab/blob/main/AGENTS.md): docs page.
+- [README](https://github.com/aidenybai/react-grab/blob/main/README.md): docs page.
+- [Serve Dist](https://github.com/aidenybai/react-grab/blob/main/scripts/serve-dist.ts): docs page.
 
 ## Packages
-- [README](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/react-grab/README.md): install & quickstart.
-- [Vite Playground](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/vite-playground/index.html): docs page.
-- [Eslint.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/react-grab/eslint.config.js): docs page.
-- [Instrumentation Client](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/next-playground/instrumentation-client.ts): docs page.
-- [Instrumentation Client](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/website/instrumentation-client.ts): docs page.
-- [Next.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/next-playground/next.config.ts): docs page.
-- [Next.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/website/next.config.ts): docs page.
-- [Tsup.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/react-grab/tsup.config.ts): docs page.
-- [Vite.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/vite-playground/vite.config.ts): docs page.
-- [Vite.Config](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/web-extension/vite.config.ts): docs page.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/cli/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/grab/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-ami/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-amp/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-claude-code/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-codex/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-cursor/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-droid/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-gemini/README.md): install & quickstart.
+- [README](https://github.com/aidenybai/react-grab/blob/main/packages/provider-opencode/README.md): install & quickstart.

@@ -1,19 +1,20 @@
 # Promptbench
 
-> PromptBench enables developers to compare different prompt compositions by running Cartesian products of system templates, user payloads, and skills across multiple LLM providers. Its core goal is to evaluate how variations in prompt structure affect model output, supporting iterative prompt engineering. The tool also facilitates reproducible benchmarking through atomic artifact capture and structured logging, with optional TUI for interactive exploration and advanced configuration.
+> The purpose of prompt-bench is to systematically compare and evaluate different prompt compositions across multiple LLM providers by running Cartesian products of templates, payloads, and skills. It enables developers and researchers to benchmark prompt effectiveness in a repeatable, atomic manner, capturing structured outputs for analysis. The system also supports interactive TUI-based management, event logging, and configurable composition modes to suit various use cases, from simple variable substitution to complex recursive fusion.
 
 **Remember:**
+- Fused Prompt Generator
 - Triple-Layer Recursive Fusion (House, Influence, Target)
-- Composition Modes: Engine, Marker, Append
+- Composition Modes (replace_last_line_legacy, marker, append, nested_marker, messages, placeholders)
 - Multi-Provider Support (LM Studio, Codex CLI, Gemini CLI)
-- Atomic Artifact Capture with structured output files
-- Skill Router for auto-mapping skills based on template/payload content
-- Event Stream (JSONL) for job lifecycle tracking
+- Atomic Artifact Capture (composed_system.txt, output.json, inputs.json)
+- Event Stream (JSONL for job lifecycle events)
 
 ## Docs
 - [Prompt Bench Overview.Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/Prompt-bench Overview.prd.md): install & quickstart.
 - [Prompt Bench Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/prompt-bench_PRD.md): docs page.
 - [Promptbench Tui.Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/promptbench-tui.prd.md): docs page.
+- [Rpg Style Prd For Tui](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/docs/RPG-style PRD for TUI.md): docs page.
 - [Bugs](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/bugs.md): docs page.
 - [Lm Studio](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/lm-studio.md): docs page.
 - [Mcp](https://github.com/AcidicSoil/promptbench/blob/main/docs/oracle-questions-2026-01-09-154207-run-2026-01-09-154207/packs/mcp.md): docs page.
@@ -26,8 +27,12 @@
 - [User Input](https://github.com/AcidicSoil/promptbench/blob/main/examples/user-input.md): worked example.
 - [Example Prd](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/templates/example_prd.txt): worked example.
 - [Example Prd Rpg](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/templates/example_prd_rpg.txt): worked example.
-- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/composed_system.txt): worked example.
-- [Output](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/71d38850b64a/output.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-37-06-106416_1c9c236a7a20/composed_system.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-37-31-241844_1c9c236a7a20/composed_system.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-38-07-742213_1c9c236a7a20/composed_system.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-38-17-741171_1c9c236a7a20/composed_system.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-38-18-017518_1c9c236a7a20/composed_system.txt): worked example.
+- [Composed System](https://github.com/AcidicSoil/promptbench/blob/main/benchmarks/demo/2026-01-09_23-38-18-056326_1c9c236a7a20/composed_system.txt): worked example.
 
 ## API
 - [Lm Studio Api Error](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/raw-exports/LM Studio API Error.md): docs page.
@@ -39,7 +44,6 @@
 ## Optional
 - [Agents](https://github.com/AcidicSoil/promptbench/blob/main/.taskmaster/AGENTS.md): docs page.
 - [README](https://github.com/AcidicSoil/promptbench/blob/main/README.md): docs page.
-- [Skill Context Router](https://github.com/AcidicSoil/promptbench/blob/main/scripts/skill_context_router.py): docs page.
 - [When To Use This Skill](https://github.com/AcidicSoil/promptbench/blob/main/skills/when-to-use-this-skill.md): docs page.
 
 ## .Tickets
@@ -48,11 +52,11 @@
 - [Promptbench Composition Modes](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Promptbench Composition Modes.md): docs page.
 - [Promptbench Lm Studio Integration](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/PromptBench LM Studio Integration.md): docs page.
 - [Skill Router Improvement Plan](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Skill Router Improvement Plan.md): docs page.
+- [Tui Config Error Handling](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/TUI config error handling.md): docs page.
+- [Tui Run Cancellation Issue](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/TUI Run Cancellation Issue.md): docs page.
+- [Tui Visual Hierarchy Issue](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/TUI Visual Hierarchy Issue.md): docs page.
 - [Web Search For Promptbench Skills](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/Web-search for promptbench skills.md): docs page.
 - [Expose Mcp Server For Promptbench](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/mcp/Expose MCP Server for Promptbench.md): docs page.
-- [Expose Promptbench As Mcp](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/mcp/Expose promptbench as MCP.md): docs page.
-- [Lm Studio Model Selection](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/lm-studio/LM-Studio-Model-Selection.md): docs page.
-- [Lm Studio Sampling Params](https://github.com/AcidicSoil/promptbench/blob/main/.tickets/lm-studio/LM Studio Sampling Params.md): docs page.
 
 ## Payloads
 - [Haiku](https://github.com/AcidicSoil/promptbench/blob/main/payloads/haiku.md): docs page.
@@ -69,6 +73,10 @@
 - [Constants](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/constants.py): docs page.
 - [Contract](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/contract.py): docs page.
 - [Discovery](https://github.com/AcidicSoil/promptbench/blob/main/promptbench/core/discovery.py): docs page.
+
+## Scripts
+- [Skill Context Router](https://github.com/AcidicSoil/promptbench/blob/main/scripts/skill_context_router.py): docs page.
+- [Sync Schema](https://github.com/AcidicSoil/promptbench/blob/main/scripts/sync_schema.py): docs page.
 
 ## Templates
 - [Creative Writer](https://github.com/AcidicSoil/promptbench/blob/main/templates/creative_writer.md): docs page.

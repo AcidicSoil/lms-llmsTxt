@@ -13945,6 +13945,43 @@ export * from './prompt-manager.js';
 --- CHANGELOG.md ---
 # task-master-ai
 
+## 0.41.0
+
+### Minor Changes
+
+- [#1571](https://github.com/eyaltoledano/claude-task-master/pull/1571) [`c2d6c18`](https://github.com/eyaltoledano/claude-task-master/commit/c2d6c18a96fce5a2d5cb50bd1ae5d58ef577501c) Thanks [@Crunchyman-ralph](https://github.com/Crunchyman-ralph)! - Add loop command for automated task execution with Claude Code
+
+  **New Features:**
+  - `task-master loop` command that runs Claude Code in a Docker sandbox, executing one task per iteration based on the selected tag
+  - Built-in presets for different workflows:
+    - `default` - General task completion from the Task Master backlog
+    - `test-coverage` - Find uncovered code and write meaningful tests
+    - `linting` - Fix lint errors and type errors one by one
+    - `duplication` - Find duplicated code and refactor into shared utilities
+    - `entropy` - Find code smells and clean them up
+  - Progress file tracking to maintain context across iterations (inside `.taskmaster/loop-progress.txt`)
+    - Remember to delete this file between loops to not pollute the agent with bad context
+  - Automatic completion detection via `<loop-complete>` and `<loop-blocked>` markers
+
+### Patch Changes
+
+- [#1556](https://github.com/eyaltoledano/claude-task-master/pull/1556) [`1befc6a`](https://github.com/eyaltoledano/claude-task-master/commit/1befc6a341babd825b8dd000513ffbf8a1620e62) Thanks [@TheLazyIndianTechie](https://github.com/TheLazyIndianTechie)! - fix: tolerate AI SDK versions without jsonSchema export
+
+  Fallback to sanitized Zod schema handling when jsonSchema is unavailable, and
+  align structured-output tests and registration perf thresholds to reduce CI
+  failures.
+
+  Also enforce sequential, unique subtask ids when regenerating subtasks during
+  scope adjustment.
+
+- [#1553](https://github.com/eyaltoledano/claude-task-master/pull/1553) [`226678b`](https://github.com/eyaltoledano/claude-task-master/commit/226678b93aa01d0e62c0fac852802e9955c7ebd7) Thanks [@Crunchyman-ralph](https://github.com/Crunchyman-ralph)! - fix: Remove .default() from Zod schemas to satisfy OpenAI strict JSON schema validation
+
+  This fixes an issue where codex-cli provider (using OpenAI API) would fail with "Missing 'dependencies'" error during task expansion. OpenAI's structured outputs require all properties to be in the 'required' array, but Zod's .default() makes fields optional. The fix removes .default() from schemas and applies defaults at the application level instead.
+
+- [#1543](https://github.com/eyaltoledano/claude-task-master/pull/1543) [`9a6fa1b`](https://github.com/eyaltoledano/claude-task-master/commit/9a6fa1bd2ab389097f1074fe4a4f779dee8180b6) Thanks [@triepod-ai](https://github.com/triepod-ai)! - feat: Add tool annotations for improved LLM tool understanding
+
+  Added MCP tool annotations (readOnlyHint, destructiveHint, title) to all 12 tools to help LLMs better understand tool behavior and make safer decisions about tool execution.
+
 ## 0.40.1
 
 ### Patch Changes
@@ -17823,9 +17860,19 @@ export * from './prompt-manager.js';
 
 
 ## Links discovered
+- [#1571](https://github.com/eyaltoledano/claude-task-master/pull/1571)
+- [`c2d6c18`](https://github.com/eyaltoledano/claude-task-master/commit/c2d6c18a96fce5a2d5cb50bd1ae5d58ef577501c)
+- [@Crunchyman-ralph](https://github.com/Crunchyman-ralph)
+- [#1556](https://github.com/eyaltoledano/claude-task-master/pull/1556)
+- [`1befc6a`](https://github.com/eyaltoledano/claude-task-master/commit/1befc6a341babd825b8dd000513ffbf8a1620e62)
+- [@TheLazyIndianTechie](https://github.com/TheLazyIndianTechie)
+- [#1553](https://github.com/eyaltoledano/claude-task-master/pull/1553)
+- [`226678b`](https://github.com/eyaltoledano/claude-task-master/commit/226678b93aa01d0e62c0fac852802e9955c7ebd7)
+- [#1543](https://github.com/eyaltoledano/claude-task-master/pull/1543)
+- [`9a6fa1b`](https://github.com/eyaltoledano/claude-task-master/commit/9a6fa1bd2ab389097f1074fe4a4f779dee8180b6)
+- [@triepod-ai](https://github.com/triepod-ai)
 - [#1523](https://github.com/eyaltoledano/claude-task-master/pull/1523)
 - [`fc1a79f`](https://github.com/eyaltoledano/claude-task-master/commit/fc1a79f2565b0d8c24f009aec2c473a335262ae2)
-- [@Crunchyman-ralph](https://github.com/Crunchyman-ralph)
 - [#1549](https://github.com/eyaltoledano/claude-task-master/pull/1549)
 - [`98087ac`](https://github.com/eyaltoledano/claude-task-master/commit/98087acae91fad7345bdb4c253d4dfd0d584f81e)
 - [#1545](https://github.com/eyaltoledano/claude-task-master/pull/1545)
@@ -17913,16 +17960,6 @@ export * from './prompt-manager.js';
 - [#1362](https://github.com/eyaltoledano/claude-task-master/pull/1362)
 - [`3e70edf`](https://github.com/eyaltoledano/claude-task-master/commit/3e70edfa3a1f47bd8a6d2d2a30c20c72f5758b9b)
 - [#1358](https://github.com/eyaltoledano/claude-task-master/pull/1358)
-- [`0c639bd`](https://github.com/eyaltoledano/claude-task-master/commit/0c639bd1db9d2d9b4c2c22ac60b0d875ba75f80e)
-- [#1339](https://github.com/eyaltoledano/claude-task-master/pull/1339)
-- [`3b09b5d`](https://github.com/eyaltoledano/claude-task-master/commit/3b09b5da2a929f260d275f056d35bb6ded54ca6d)
-- [#1326](https://github.com/eyaltoledano/claude-task-master/pull/1326)
-- [`9d5812b`](https://github.com/eyaltoledano/claude-task-master/commit/9d5812ba6725cfadebb8db8f4aa732cf3cdb3a36)
-- [@SharifMrCreed](https://github.com/SharifMrCreed)
-- [#1340](https://github.com/eyaltoledano/claude-task-master/pull/1340)
-- [`d63a40c`](https://github.com/eyaltoledano/claude-task-master/commit/d63a40c6ddc1ed2fe418206a19acd3e9dc27fd99)
-- [#1305](https://github.com/eyaltoledano/claude-task-master/pull/1305)
-- [`a98d96e`](https://github.com/eyaltoledano/claude-task-master/commit/a98d96ef0414833b948672f86da4acc11f700ebb)
 
 --- CONTRIBUTING.md ---
 # Contributing to Task Master
@@ -25193,7 +25230,7 @@ Task Master uses tiered tool loading to optimize context window usage:
 |------|-------|----------|
 | `core` | 7 | Minimal daily workflow tools (default) |
 | `standard` | 14 | Common task management |
-| `all` | 44+ | Full suite with research, autopilot, dependencies |
+| `all` | 42+ | Full suite with research, autopilot, dependencies |
 
 **Core tools (7):** `get_tasks`, `next_task`, `get_task`, `set_task_status`, `update_subtask`, `parse_prd`, `expand_task`
 
@@ -25511,6 +25548,16 @@ These commands make AI calls and may take up to a minute:
 ---
 
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
+
+
+--- .taskmaster/loop-progress.txt ---
+# Loop Feature Progress
+
+## 2026-01-08
+- 1.1: Created loop module directory and types.ts. All types already implemented: LoopPreset, LoopConfig, LoopIteration, LoopResult, LoopCompletionMarker. index.ts barrel export also present.
+- 1.2: Added types.spec.ts with compile-time type tests. LoopPreset/LoopConfig were already in types.ts from 1.1. tsc --noEmit passes. Native rollup module issue in env blocked vitest but types are correct.
+- 1.3: LoopIteration and LoopResult interfaces already defined in types.ts (lines 38-63) from 1.1. Tests present in types.spec.ts (lines 69-129). tsc --noEmit passes. Marked done.
+- 1.4: LoopCompletionMarker already defined in types.ts (lines 65-73) from 1.1. Tests in types.spec.ts (lines 131-149). tsc --noEmit passes. Marked done.
 
 
 --- .taskmaster/tasks/task_001_tm-start.txt ---
@@ -26245,6 +26292,7 @@ import { ExportCommand, ExportTagCommand } from './commands/export.command.js';
 import { GenerateCommand } from './commands/generate.command.js';
 // Import all commands
 import { ListTasksCommand } from './commands/list.command.js';
+import { LoopCommand } from './commands/loop.command.js';
 import { LoginCommand } from './commands/login.command.js';
 import { LogoutCommand } from './commands/logout.command.js';
 import { NextCommand } from './commands/next.command.js';
@@ -26319,6 +26367,12 @@ export class CommandRegistry {
 			description:
 				'AI agent orchestration for TDD workflow (start, resume, next, complete, commit, status, abort)',
 			commandClass: AutopilotCommand as any,
+			category: 'development'
+		},
+		{
+			name: 'loop',
+			description: 'Run Claude Code in a loop, one task per iteration',
+			commandClass: LoopCommand as any,
 			category: 'development'
 		},
 
@@ -26794,6 +26848,7 @@ export { SetStatusCommand } from './commands/set-status.command.js';
 export { ExportCommand } from './commands/export.command.js';
 export { TagsCommand } from './commands/tags.command.js';
 export { BriefsCommand } from './commands/briefs.command.js';
+export { LoopCommand } from './commands/loop.command.js';
 
 // Command Registry
 export {
@@ -48082,191 +48137,3 @@ async function startServer() {
 
 // Start the server
 startServer();
-
-
---- mcp-server/src/index.js ---
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import * as Sentry from '@sentry/node';
-import dotenv from 'dotenv';
-import { FastMCP } from 'fastmcp';
-import packageJson from '../../package.json' with { type: 'json' };
-import ProviderRegistry from '../../src/provider-registry/index.js';
-import { initializeSentry } from '../../src/telemetry/sentry.js';
-import logger from './logger.js';
-import { MCPProvider } from './providers/mcp-provider.js';
-import {
-	getToolsConfiguration,
-	registerTaskMasterTools
-} from './tools/index.js';
-
-dotenv.config();
-
-// Initialize Sentry after .env is loaded
-initializeSentry();
-
-// Constants
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-/**
- * Main MCP server class that integrates with Task Master
- */
-class TaskMasterMCPServer {
-	constructor() {
-		this.options = {
-			name: 'Task Master MCP Server',
-			version: packageJson.version
-		};
-
-		// Create FastMCP instance
-		const fastmcpServer = new FastMCP(this.options);
-
-		// Wrap the underlying MCP server with Sentry instrumentation
-		// FastMCP exposes the internal MCP server via _mcpServer property
-		if (fastmcpServer._mcpServer && Sentry.wrapMcpServerWithSentry) {
-			try {
-				fastmcpServer._mcpServer = Sentry.wrapMcpServerWithSentry(
-					fastmcpServer._mcpServer
-				);
-			} catch (error) {
-				logger.warn(`Failed to wrap MCP server with Sentry: ${error.message}`);
-			}
-		}
-
-		this.server = fastmcpServer;
-		this.initialized = false;
-
-		this.init = this.init.bind(this);
-		this.start = this.start.bind(this);
-		this.stop = this.stop.bind(this);
-
-		this.logger = logger;
-	}
-
-	/**
-	 * Initialize the MCP server with necessary tools and routes
-	 */
-	async init() {
-		if (this.initialized) return;
-
-		const normalizedToolMode = getToolsConfiguration();
-
-		this.logger.info('Task Master MCP Server starting...');
-		this.logger.info(`Tool mode configuration: ${normalizedToolMode}`);
-
-		const registrationResult = registerTaskMasterTools(
-			this.server,
-			normalizedToolMode
-		);
-
-		this.logger.info(
-			`Normalized tool mode: ${registrationResult.normalizedMode}`
-		);
-		this.logger.info(
-			`Registered ${registrationResult.registeredTools.length} tools successfully`
-		);
-
-		if (registrationResult.registeredTools.length > 0) {
-			this.logger.debug(
-				`Registered tools: ${registrationResult.registeredTools.join(', ')}`
-			);
-		}
-
-		if (registrationResult.failedTools.length > 0) {
-			this.logger.warn(
-				`Failed to register ${registrationResult.failedTools.length} tools: ${registrationResult.failedTools.join(', ')}`
-			);
-		}
-
-		this.initialized = true;
-
-		return this;
-	}
-
-	/**
-	 * Start the MCP server
-	 */
-	async start() {
-		if (!this.initialized) {
-			await this.init();
-		}
-
-		this.server.on('connect', (event) => {
-			event.session.server.sendLoggingMessage({
-				data: {
-					context: event.session.context,
-					message: `MCP Server connected: ${event.session.name}`
-				},
-				level: 'info'
-			});
-			this.registerRemoteProvider(event.session);
-		});
-
-		// Start the FastMCP server with increased timeout
-		await this.server.start({
-			transportType: 'stdio',
-			timeout: 120000 // 2 minutes timeout (in milliseconds)
-		});
-
-		return this;
-	}
-
-	/**
-	 * Register both MCP providers with the provider registry
-	 */
-	registerRemoteProvider(session) {
-		// Check if the server has at least one session
-		if (session) {
-			// Make sure session has required capabilities
-			if (!session.clientCapabilities || !session.clientCapabilities.sampling) {
-				session.server.sendLoggingMessage({
-					data: {
-						context: session.context,
-						message: `MCP session missing required sampling capabilities, providers not registered`
-					},
-					level: 'info'
-				});
-				return;
-			}
-
-			// Register MCP provider with the Provider Registry
-
-			// Register the unified MCP provider
-			const mcpProvider = new MCPProvider();
-			mcpProvider.setSession(session);
-
-			// Register provider with the registry
-			const providerRegistry = ProviderRegistry.getInstance();
-			providerRegistry.registerProvider('mcp', mcpProvider);
-
-			session.server.sendLoggingMessage({
-				data: {
-					context: session.context,
-					message: `MCP Server connected`
-				},
-				level: 'info'
-			});
-		} else {
-			session.server.sendLoggingMessage({
-				data: {
-					context: session.context,
-					message: `No MCP sessions available, providers not registered`
-				},
-				level: 'warn'
-			});
-		}
-	}
-
-	/**
-	 * Stop the MCP server
-	 */
-	async stop() {
-		if (this.server) {
-			await this.server.stop();
-		}
-	}
-}
-
-export default TaskMasterMCPServer;

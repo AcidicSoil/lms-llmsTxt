@@ -28082,7 +28082,7 @@ RPG-structured PRDs provide:
 </task-master-integration>
 
 
---- benchmarks/demo/71d38850b64a/composed_system.txt ---
+--- benchmarks/demo/2026-01-09_23-37-06-106416_1c9c236a7a20/composed_system.txt ---
 You are a world-class creative writer.
 Your goal is to fulfill the user request with elegance and precision.
 
@@ -28092,10 +28092,47 @@ User prompt: Write a haiku about a rusty robot in a garden.
 
 
 
---- benchmarks/demo/71d38850b64a/output.txt ---
---- Assistant Response ---
-I have analyzed your request and generated this response based on the provided template.
-Input received via stdin:
+--- benchmarks/demo/2026-01-09_23-37-31-241844_1c9c236a7a20/composed_system.txt ---
+You are a world-class creative writer.
+Your goal is to fulfill the user request with elegance and precision.
+
+{{USER_PROMPT}}
+
+User prompt: Write a haiku about a rusty robot in a garden.
+
+
+
+--- benchmarks/demo/2026-01-09_23-38-07-742213_1c9c236a7a20/composed_system.txt ---
+You are a world-class creative writer.
+Your goal is to fulfill the user request with elegance and precision.
+
+{{USER_PROMPT}}
+
+User prompt: Write a haiku about a rusty robot in a garden.
+
+
+
+--- benchmarks/demo/2026-01-09_23-38-17-741171_1c9c236a7a20/composed_system.txt ---
+You are a world-class creative writer.
+Your goal is to fulfill the user request with elegance and precision.
+
+{{USER_PROMPT}}
+
+User prompt: Write a haiku about a rusty robot in a garden.
+
+
+
+--- benchmarks/demo/2026-01-09_23-38-18-017518_1c9c236a7a20/composed_system.txt ---
+You are a world-class creative writer.
+Your goal is to fulfill the user request with elegance and precision.
+
+{{USER_PROMPT}}
+
+User prompt: Write a haiku about a rusty robot in a garden.
+
+
+
+--- benchmarks/demo/2026-01-09_23-38-18-056326_1c9c236a7a20/composed_system.txt ---
 You are a world-class creative writer.
 Your goal is to fulfill the user request with elegance and precision.
 
@@ -29448,10 +29485,13 @@ These commands make AI calls and may take up to a minute:
 - Provides more informed task creation and updates
 - Recommended for complex technical tasks
 
+### Core Constraints
+
+- **Tag Retention Policy:** Do not switch to the `master` tag. Stay on the current tag (e.g., `chore-overview`) and never switch tags unless explicitly instructed by the user.
+
 ---
 
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
-
 
 --- README.md ---
 # prompt-bench
@@ -29468,13 +29508,16 @@ A systematic prompt benchmark runner for comparing system templates, user payloa
   - **The House (Skeleton)**: The outer meta-instruction (Template).
   - **The Influence (Primary)**: The style/optimization driver (Skill).
   - **The Target (Secondary)**: The core content to be transformed (Payload).
-  - In `engine` mode, these are fused recursively by replacing instruction lines verbatim.
+  - In `replace_last_line_legacy` mode (alias: `engine`), these are fused recursively by replacing instruction lines verbatim.
 - **Multi-Mode Composition Engine**:
-  - **Engine**: Strict spec-compliant recursive last-line replacement.
-  - **Marker**: Standard `{{USER_PROMPT}}` variable replacement.
-  - **Append**: Simple end-of-file concatenation.
+  - **replace_last_line_legacy**: Strict spec-compliant recursive last-line replacement (alias: `engine`, deprecated).
+  - **marker**: Standard `{{USER_PROMPT}}` variable replacement.
+  - **append**: Single newline boundary concatenation.
+  - **nested_marker**: Two-stage marker fusion (skill + payload, then template).
+  - **messages**: Returns OpenAI-style message arrays.
+  - **placeholders**: Strict `{{PAYLOAD}}` / `{{CONTEXT}}` replacement.
 - **Multi-Provider Support**:
-  - **LM Studio**: OpenAI-compatible HTTP adapter with system-only fallback and auto-model unloading.
+  - **LM Studio**: OpenAI-compatible HTTP adapter with system-only fallback and configurable unload policy.
   - **Codex CLI**: Standardized execution of the `codex` tool.
   - **Gemini CLI**: Headless execution with optional JSON output parsing.
 - **Atomic Artifact Capture**: Writes a dedicated directory per job containing the composed prompt, raw response, and a structured `output.json`.
@@ -29520,7 +29563,11 @@ skills = "skills/*.md"
 payloads = "payloads/*.md"
 
 [runner]
-composition_mode = "engine"
+composition_mode = "replace_last_line_legacy" # or "engine" (deprecated alias)
+# Optional: override the marker token for marker/nested_marker
+# composition_marker = "<<HERE>>"
+# Optional: require a sentinel string to exist in output
+# composition_sentinel = "{{SENTINEL}}"
 concurrency = 4
 # Optional: use eventing executor without --event-log (JSONL emitted to stdout)
 use_eventing_executor = true
@@ -29534,6 +29581,17 @@ enabled = true
 skills_path = "~/.codex/skills"
 # Force specific skills to always attach
 force_skills = ["python"]
+
+[providers.lms]
+type = "lmstudio"
+model = "local-model"
+url = "http://localhost:1234"
+
+[providers.lms.params]
+# Optional: "no-op" (default) or "api"
+unload_policy = "no-op"
+# Optional request timeout override (seconds)
+timeout = 60
 ```
 
 ### 2. Run the Benchmark
@@ -29560,7 +29618,7 @@ uv run promptbench discover --config config.toml
 
 ## Composition Modes
 
-### `engine` (Recommended for Prompt Generation)
+### `replace_last_line_legacy` (Recommended for Prompt Generation)
 
 Strictly follows the `templates/prompt-composition-engine.md` spec with a recursive twist:
 
@@ -29574,7 +29632,19 @@ Replaces the string `{{USER_PROMPT}}` in the template with the skill-injected pa
 
 ### `append`
 
-Adds a newline, the string `User prompt:`, and then the payload to the very end of the template.
+Adds exactly one newline boundary between the template and payload.
+
+### `nested_marker`
+
+Replaces markers in the skill with the payload, then replaces markers in the template with the result.
+
+### `messages`
+
+Returns a list of `{role, content}` messages for chat-based providers.
+
+### `placeholders`
+
+Strictly replaces `{{PAYLOAD}}` and `{{CONTEXT}}` (if a skill is present), erroring on missing/unknown placeholders.
 
 ---
 
@@ -29620,12 +29690,48 @@ From the setup screen press `a` to open advanced options. You can override:
 
 Press `s` to save the overrides to a sidecar file: `<config>.tui.json`. This file is reloaded automatically when you select the same config.
 
+### TUI Config Selection Troubleshooting
+
+If config selection fails, run the same commands the TUI uses to see the real error:
+
+```bash
+python3 -V
+python3 -m promptbench discover --config /path/to/config.toml
+```
+
+Common causes:
+- Wrong Python environment (promptbench not installed in the `python3` on your PATH).
+- Python version < 3.11 (promptbench requires >= 3.11).
+- Module import/cwd issues (running from a directory where `promptbench` is not importable).
+- Config/load validation errors (bad template/payload paths).
+
+The CLI output/traceback is the authoritative root cause if the TUI shows a failure.
+
+### TUI Color Troubleshooting
+
+If the TUI looks flat or mostly monochrome, check for terminal-level color suppression first:
+
+```bash
+env | grep -E 'NO_COLOR|CLICOLOR|COLORTERM|TERM'
+```
+
+- If `NO_COLOR` is set, unset it for this session and re-run the TUI.
+- Ensure `TERM` is a 256-color capable value (for example: `xterm-256color`).
+- Compare rendering in an external terminal (not VS Code) with `NO_COLOR` unset.
+- In VS Code's integrated terminal, check the "minimum contrast" setting; reducing or disabling it can restore expected contrast.
+
 ## Development
 
 ### Running Tests
 
 ```bash
-uv run pytest tests/
+PYTHONPATH=. uv run pytest tests/
+```
+
+### Sync Event Schema (Go)
+
+```bash
+python3 scripts/sync_schema.py
 ```
 
 ## License
@@ -29636,63 +29742,6 @@ MIT
 ## Links discovered
 - [uv](https://github.com/astral-sh/uv)
 - [config example](https://github.com/AcidicSoil/promptbench/blob/main/demo_config.toml)
-
---- scripts/skill_context_router.py ---
-#!/usr/bin/env python3
-from __future__ import annotations
-
-import argparse
-import json
-import os
-from pathlib import Path
-
-from promptbench.utils.skill_context import resolve_context
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Resolve nested skill context and scenario attachments.")
-    parser.add_argument("--skills", default="", help="Comma-separated skill names or paths")
-    parser.add_argument("--skills-dir", default="", help="Override skills root (default: ~/.codex/skills or $CODEX_SKILLS_DIR)")
-    parser.add_argument("--context-map", default="", help="Optional JSON/TOML context map file")
-    parser.add_argument("--category", default="", help="Category selector for context map")
-    parser.add_argument("--reference", default="", help="Reference selector for context map")
-    parser.add_argument("--horizon", default="", help="Horizon selector for context map")
-    parser.add_argument("--tags", default="", help="Comma-separated tags for context map")
-    return parser.parse_args()
-
-
-def main() -> int:
-    args = parse_args()
-    skills_root = args.skills_dir or os.environ.get("CODEX_SKILLS_DIR", "~/.codex/skills")
-    skills_root_path = Path(skills_root).expanduser()
-    selectors = [s.strip() for s in args.skills.split(",") if s.strip()]
-    context_map = Path(args.context_map).expanduser() if args.context_map else None
-    tags = [t.strip() for t in args.tags.split(",") if t.strip()]
-
-    resolution = resolve_context(
-        selectors,
-        skills_root_path,
-        context_map=context_map,
-        category=args.category or None,
-        reference=args.reference or None,
-        horizon=args.horizon or None,
-        tags=tags,
-    )
-
-    payload = {
-        "skills": [{"name": skill.name, "path": str(skill.path)} for skill in resolution.skills],
-        "context_files": [str(path) for path in resolution.context_files],
-        "nested_files": [str(path) for path in resolution.nested_files],
-        "scenario_files": [str(path) for path in resolution.scenario_files],
-        "missing": resolution.missing,
-    }
-    print(json.dumps(payload, indent=2))
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
-
 
 --- skills/when-to-use-this-skill.md ---
 
@@ -29720,92 +29769,6 @@ Rules:
 
 - Keep tone developer-neutral and execution-oriented.
 - Use realistic SDLC phases and include at least 2 examples per major phase.
-
-
---- .tickets/lm-studio/LM-Studio-Model-Selection.md ---
-Title:
-
-* Expose full LM Studio sampling parameters in promptbench LMStudioAdapter and tune defaults for deterministic vs creative runs
-
-Summary:
-
-* The user wants the optimal LM Studio model selection and inference parameters for running promptbench.
-
-    LM Studio Model Selection
-
-* Current promptbench LM Studio integration appears to only pass `temperature` and `ttl`, limiting the ability to run reproducible benchmarks or controlled-variability runs using `top_p`, `top_k`, `repeat_penalty`, `seed`, `max_tokens`, and `stop`.
-
-    LM Studio Model Selection
-
-* The request also highlights runtime stability concerns (model auto-eviction via low TTL) for longer promptbench runs.
-
-    LM Studio Model Selection
-
-Background / Context:
-
-* User asked: “optimal lm-studio model and model parameters for runs using promptbench?” and referenced LM Studio docs.
-
-    LM Studio Model Selection
-
-* The assistant response indicates promptbench’s current config points at `qwen_qwen3-vl-4b-instruct`, with a recommended upgrade to `qwen3-vl-8b-instruct`.
-
-    LM Studio Model Selection
-
-* The assistant also states the current `LMStudioAdapter` sends only `temperature` and `ttl`, and uses a system-only message with a `"user '.'"` fallback on HTTP 400.
-
-    LM Studio Model Selection
-
-Current Behavior (Actual):
-
-* LM Studio provider requests from promptbench only include:
-
-  * `temperature`
-
-  * `ttl` (noted as currently set to `60` seconds)
-
-        LM Studio Model Selection
-
-* Advanced inference controls supported by LM Studio’s OpenAI-compatible endpoint are not passed through by promptbench (as described): `top_p`, `top_k`, `repeat_penalty`, `seed`, `max_tokens`, `stop`, etc.
-
-    LM Studio Model Selection
-
-* Low `ttl` may cause unload/reload churn if there are gaps between jobs.
-
-    LM Studio Model Selection
-
-Expected Behavior:
-
-* Promptbench should allow configuring and sending LM Studio inference parameters beyond `temperature`/`ttl`, including at least: `top_p`, `top_k`, `repeat_penalty`, `seed`, `max_tokens`, `stop` (and optionally `presence_penalty`, `frequency_penalty`).
-
-    LM Studio Model Selection
-
-* Provide a clear recommended default model choice and parameter presets for:
-
-  * Deterministic / reproducible benchmark runs
-
-  * Higher-variability / creative exploration runs
-
-        LM Studio Model Selection
-
-* Reduce model eviction risk during long runs by increasing `ttl` (recommended `3600+`) or supporting omission of TTL when models are preloaded.
-
-    LM Studio Model Selection
-
-Requirements:
-
-* Model recommendation (from the user’s installed LM Studio set, per assistant response):
-
-  * Preferred: `qwen3-vl-8b-instruct`
-
-  * Alternative: `essentialai_rnj-1-instruct (Gemma3 ~8.3B)`
-
-  * Throughput option: `mistralai_ministral-3-3b-instruct-2512`
-
-  * Avoid “thinking/reasoning” variants unless explicitly desired and constrained to “final answer only.”
-
-        LM Studio Model Selection
-
-* Add/enable parameter passthrough in `promptbench/providers/lmstudio.py` so `ProviderSpec` can pass: `top_p`, `top_k`, `repeat_penalty`, `seed`, \`max\_tokens
 
 
 --- payloads/haiku.md ---
@@ -30448,11 +30411,12 @@ if __name__ == '__main__':
 --- promptbench/providers/base.py ---
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
+from typing import Union, List, Dict
 from promptbench.core.types import ProviderSpec, JobSpec, Config, ProviderResponse
 
 @dataclass
 class ProviderRunContext:
-    composed_system: str
+    composed_system: Union[str, List[Dict[str, str]]]
     config: Config
     job: JobSpec
 
@@ -30473,6 +30437,7 @@ class ProviderAdapter(ABC):
         Returns True if successful or not needed.
         """
         return True
+
 
 --- promptbench/providers/codex_cli.py ---
 import subprocess
@@ -30540,11 +30505,15 @@ class CodexCLIAdapter(ProviderAdapter):
 
 
 --- promptbench/core/compose.py ---
-from enum import Enum
-from typing import Optional
-from promptbench.core.types import CompositionMode
+from enum import StrEnum
+from typing import Optional, Union, List, Dict
 
-class SkillInjectionMode(str, Enum):
+from promptbench.core.composition import get_composition_strategy, CompositionOptions
+from promptbench.core.composition.contracts import CompositionMode
+from promptbench.core.errors import CompositionError
+
+
+class SkillInjectionMode(StrEnum):
     PREFIX = "prefix"
     SUFFIX = "suffix"
     NONE = "none"
@@ -30553,68 +30522,52 @@ def compose_system(
     template_text: str, 
     payload_text: str, 
     skill_text: Optional[str] = None,
-    mode: CompositionMode = CompositionMode.MARKER
-) -> str:
+    mode: CompositionMode = CompositionMode.MARKER,
+    marker: Optional[str] = None,
+    sentinel: Optional[str] = None,
+) -> Union[str, List[Dict[str, str]]]:
     """
-    Build the composed system prompt. 
-    In 'engine' mode, this performs recursive replacement:
+    Build the composed system prompt using composition strategies.
+    In replace_last_line_legacy mode, this performs recursive replacement:
     1. If skill exists, replace Skill's last line with 'User prompt: {payload}'.
     2. Replace Template's last line with 'User prompt: {Result of 1}'.
     """
-    if mode == CompositionMode.REPLACE_LAST_LINE:
-        # Step 1: Fuse Skill and Payload if Skill exists
-        if skill_text and skill_text.lower() != "none":
-            # The Skill is now the 'Primary' and the Payload is the 'Secondary'
-            fused_inner = compose_engine_style(skill_text, payload_text)
-            # Step 2: Fuse the House (Template) with the fused inner content
-            return compose_engine_style(template_text, fused_inner)
+    mode_value = mode.value if isinstance(mode, CompositionMode) else str(mode)
+    strategy = get_composition_strategy(mode_value)
+
+    options = CompositionOptions(
+        skill=skill_text if skill_text and skill_text.lower() != "none" else None,
+        marker=marker,
+        sentinel=sentinel,
+    )
+
+    if mode_value == CompositionMode.REPLACE_LAST_LINE_LEGACY.value:
+        if options.skill:
+            inner = strategy.compose(options.skill, payload_text, options)
+            result = strategy.compose(template_text, inner, options)
         else:
-            # No skill, just fuse House and Payload
-            return compose_engine_style(template_text, payload_text)
+            result = strategy.compose(template_text, payload_text, options)
+        return _validate_sentinel(result, sentinel)
 
-    # Fallback to older logic for other modes
     effective_payload = payload_text
-    if skill_text and skill_text.lower() != "none":
-        effective_payload = inject_skill(payload_text, skill_text)
+    if options.skill and mode_value not in (CompositionMode.NESTED_MARKER.value, CompositionMode.MESSAGES.value):
+        effective_payload = inject_skill(payload_text, options.skill, mode=SkillInjectionMode.PREFIX)
 
-    if mode == CompositionMode.MARKER and "{{USER_PROMPT}}" in template_text:
-        return template_text.replace("{{USER_PROMPT}}", effective_payload, 1)
-    
-    return f"{template_text}\nUser prompt:\n{effective_payload}"
+    result = strategy.compose(template_text, effective_payload, options)
+    return _validate_sentinel(result, sentinel)
 
-def compose_engine_style(primary_text: str, secondary_text: str) -> str:
-    """
-    Implements the 'prompt-composition-engine' logic:
-    1. Locates the last non-empty line in primary.
-    2. Replaces it with 'User prompt: {secondary}'.
-    3. Preserves trailing blank lines.
-    """
-    lines = primary_text.splitlines(keepends=True)
-    if not lines:
-        return f"User prompt: {secondary_text}"
 
-    # Find the index of the last non-empty/non-whitespace line
-    target_idx = -1
-    for i in range(len(lines) - 1, -1, -1):
-        if lines[i].strip():
-            target_idx = i
-            break
-    
-    if target_idx == -1: # All lines are empty or whitespace
-        return f"User prompt: {secondary_text}\n" + "".join(lines)
-
-    # Preserve the line ending if it had one
-    original_line = lines[target_idx]
-    newline = ""
-    if original_line.endswith("\r\n"):
-        newline = "\r\n"
-    elif original_line.endswith("\n"):
-        newline = "\n"
-
-    # Replace the target line verbatim as per spec: "User prompt: {S}"
-    lines[target_idx] = f"User prompt: {secondary_text}{newline}" 
-    
-    return "".join(lines)
+def _validate_sentinel(result: Union[str, List[Dict[str, str]]], sentinel: Optional[str]) -> Union[str, List[Dict[str, str]]]:
+    if not sentinel:
+        return result
+    if isinstance(result, str):
+        if sentinel not in result:
+            raise CompositionError(f"Output is missing required sentinel: '{sentinel}'")
+        return result
+    for message in result:
+        if sentinel in message.get("content", ""):
+            return result
+    raise CompositionError(f"Output is missing required sentinel: '{sentinel}'")
 
 def inject_skill(payload_text: str, skill_text: str, mode: SkillInjectionMode = SkillInjectionMode.PREFIX) -> str:
     """Standard non-engine skill injection."""
@@ -30628,11 +30581,13 @@ def inject_skill(payload_text: str, skill_text: str, mode: SkillInjectionMode = 
     else:
         return f"{skill_text}{payload_text}"
 
+
 --- promptbench/core/config.py ---
 import tomllib
 import pathlib
 from typing import Dict, Any, Optional
 from promptbench.core.types import Config, ProviderSpec, CompositionMode, SkillRouterConfig
+from promptbench.core.composition.contracts import resolve_mode_alias
 from promptbench.core.errors import ConfigError
 
 def load_config(path: str) -> Config:
@@ -30669,13 +30624,15 @@ def load_config(path: str) -> Config:
             model=p_data.get("model"),
             url=p_data.get("url"),
             args=p_data.get("args", []),
-            env=p_data.get("env", {})
+            env=p_data.get("env", {}),
+            params=p_data.get("params", {}),
         ))
 
     runner_cfg = data.get("runner", {}) or {}
 
     # Parse composition mode
     raw_mode = runner_cfg.get("composition_mode", "marker")
+    raw_mode = resolve_mode_alias(raw_mode)
     try:
         comp_mode = CompositionMode(raw_mode)
     except ValueError:
@@ -30699,6 +30656,8 @@ def load_config(path: str) -> Config:
         timeout=runner_cfg.get("timeout", 60),
         use_eventing_executor=runner_cfg.get("use_eventing_executor", False),
         composition_mode=comp_mode,
+        composition_marker=runner_cfg.get("composition_marker"),
+        composition_sentinel=runner_cfg.get("composition_sentinel"),
         write_markdown_output=bool(runner_cfg.get("write_markdown_output", False)),
         skill_router=skill_router,
     )
@@ -30847,6 +30806,129 @@ def discover_files_cached(
     }
     cache.save(cache_data)
     return paths
+
+
+--- scripts/skill_context_router.py ---
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+
+from promptbench.utils.skill_context import resolve_context
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Resolve nested skill context and scenario attachments.")
+    parser.add_argument("--skills", default="", help="Comma-separated skill names or paths")
+    parser.add_argument("--skills-dir", default="", help="Override skills root (default: ~/.codex/skills or $CODEX_SKILLS_DIR)")
+    parser.add_argument("--context-map", default="", help="Optional JSON/TOML context map file")
+    parser.add_argument("--category", default="", help="Category selector for context map")
+    parser.add_argument("--reference", default="", help="Reference selector for context map")
+    parser.add_argument("--horizon", default="", help="Horizon selector for context map")
+    parser.add_argument("--tags", default="", help="Comma-separated tags for context map")
+    return parser.parse_args()
+
+
+def main() -> int:
+    args = parse_args()
+    skills_root = args.skills_dir or os.environ.get("CODEX_SKILLS_DIR", "~/.codex/skills")
+    skills_root_path = Path(skills_root).expanduser()
+    selectors = [s.strip() for s in args.skills.split(",") if s.strip()]
+    context_map = Path(args.context_map).expanduser() if args.context_map else None
+    tags = [t.strip() for t in args.tags.split(",") if t.strip()]
+
+    resolution = resolve_context(
+        selectors,
+        skills_root_path,
+        context_map=context_map,
+        category=args.category or None,
+        reference=args.reference or None,
+        horizon=args.horizon or None,
+        tags=tags,
+    )
+
+    payload = {
+        "skills": [{"name": skill.name, "path": str(skill.path)} for skill in resolution.skills],
+        "context_files": [str(path) for path in resolution.context_files],
+        "nested_files": [str(path) for path in resolution.nested_files],
+        "scenario_files": [str(path) for path in resolution.scenario_files],
+        "missing": resolution.missing,
+    }
+    print(json.dumps(payload, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+
+--- scripts/sync_schema.py ---
+#!/usr/bin/env python3
+"""Generate Go event schema from promptbench.core.eventing.schema."""
+from __future__ import annotations
+
+import pathlib
+import sys
+from typing import Iterable
+
+from promptbench.core.eventing import schema
+
+
+def _go_const_name(value: str) -> str:
+    parts = value.lower().split("_")
+    return "EventType" + "".join(part.capitalize() for part in parts)
+
+
+def _render_event_types(values: Iterable[str]) -> str:
+    lines = []
+    for value in values:
+        const_name = _go_const_name(value)
+        lines.append(f"\t{const_name} EventType = \"{value}\"")
+    return "\n".join(lines)
+
+
+def generate_go_schema() -> str:
+    values = [item.value for item in schema.EventType]
+    consts = _render_event_types(values)
+
+    return """// Code generated by scripts/sync_schema.py; DO NOT EDIT.
+
+package events
+
+import "time"
+
+type EventType string
+
+const (
+{consts}
+)
+
+type Event struct {{
+    TS         time.Time              `json:"ts"`
+    Type       EventType              `json:"type"`
+    RunID      string                 `json:"run_id"`
+    JobID      *string                `json:"job_id,omitempty"`
+    ProviderID *string                `json:"provider_id,omitempty"`
+    Payload    map[string]interface{{}} `json:"payload"`
+}}
+""".format(consts=consts)
+
+
+def main() -> int:
+    output = pathlib.Path("tui/internal/events/schema.go")
+    if len(sys.argv) > 1:
+        output = pathlib.Path(sys.argv[1])
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(generate_go_schema(), encoding="utf-8")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 
 
 --- templates/creative_writer.md ---
@@ -31375,6 +31457,8 @@ def test_cli_failure_capture():
 --- tests/test_compose.py ---
 import pytest
 from promptbench.core.compose import compose_system, inject_skill, SkillInjectionMode
+from promptbench.core.types import CompositionMode
+from promptbench.core.errors import CompositionError
 
 def test_compose_marker_replacement():
     template = "System instructions.\n{{USER_PROMPT}}\nEnd instructions."
@@ -31382,24 +31466,17 @@ def test_compose_marker_replacement():
     expected = "System instructions.\nDo this.\nEnd instructions."
     assert compose_system(template, payload) == expected
 
-def test_compose_marker_replacement_first_only():
+def test_compose_marker_replacement_multiple_markers():
     template = "{{USER_PROMPT}} again {{USER_PROMPT}}"
     payload = "FIRST"
-    expected = "FIRST again {{USER_PROMPT}}"
-    assert compose_system(template, payload) == expected
+    with pytest.raises(CompositionError, match="multiple instances"):
+        compose_system(template, payload)
 
 def test_compose_append_logic():
     template = "System instructions."
     payload = "Do this."
-    result = compose_system(template, payload)
-    assert result == "System instructions.\nUser prompt:\nDo this."
-
-def test_compose_preserves_trailing_blank_lines():
-    template = "Instructions.\n\n"
-    payload = "Payload."
-    result = compose_system(template, payload)
-    # The \n in the f-string adds one newline
-    assert result == "Instructions.\n\n\nUser prompt:\nPayload."
+    result = compose_system(template, payload, mode=CompositionMode.APPEND)
+    assert result == "System instructions.\nDo this."
 
 def test_inject_skill_prefix():
     payload = "User query."
@@ -31615,23 +31692,23 @@ def test_engine_composition_replaces_last_line():
     template = "Line 1\nOptimize this input:\n"
     payload = "Find the bug."
     # The last non-empty line is "Optimize this input:"
-    result = compose_system(template, payload, mode=CompositionMode.REPLACE_LAST_LINE)
+    result = compose_system(template, payload, mode=CompositionMode.REPLACE_LAST_LINE_LEGACY)
     assert result == "Line 1\nUser prompt: Find the bug.\n"
 
 def test_engine_composition_with_trailing_blank_lines():
     template = "Instruction 1\nInstruction 2 (to be replaced)\n\n\n"
     payload = "Payload"
-    result = compose_system(template, payload, mode=CompositionMode.REPLACE_LAST_LINE)
+    result = compose_system(template, payload, mode=CompositionMode.REPLACE_LAST_LINE_LEGACY)
     # Replaces "Instruction 2", preserves three \n
     assert result == "Instruction 1\nUser prompt: Payload\n\n\n"
 
 def test_engine_composition_empty_template():
-    result = compose_system("", "Payload", mode=CompositionMode.REPLACE_LAST_LINE)
+    result = compose_system("", "Payload", mode=CompositionMode.REPLACE_LAST_LINE_LEGACY)
     assert result == "User prompt: Payload"
 
 def test_engine_composition_only_whitespace_template():
     template = "   \n\n"
-    result = compose_system(template, "Payload", mode=CompositionMode.REPLACE_LAST_LINE)
+    result = compose_system(template, "Payload", mode=CompositionMode.REPLACE_LAST_LINE_LEGACY)
     assert result == "User prompt: Payload\n   \n\n"
 
 

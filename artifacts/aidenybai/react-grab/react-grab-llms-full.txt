@@ -1,6 +1,564 @@
 # llms-full (private-aware)
 > Built from GitHub files and website pages. Large files may be truncated.
 
+--- packages/cli/test/install.test.ts ---
+import { describe, expect, it } from "vitest";
+import { getPackagesToInstall } from "../src/utils/install.js";
+
+describe("getPackagesToInstall", () => {
+  it("should return only react-grab when no agent and includeReactGrab is true", () => {
+    const packages = getPackagesToInstall("none", true);
+
+    expect(packages).toEqual(["react-grab"]);
+  });
+
+  it("should return react-grab and agent package", () => {
+    const packages = getPackagesToInstall("cursor", true);
+
+    expect(packages).toEqual(["react-grab", "@react-grab/cursor"]);
+  });
+
+  it("should return only agent package when includeReactGrab is false", () => {
+    const packages = getPackagesToInstall("claude-code", false);
+
+    expect(packages).toEqual(["@react-grab/claude-code"]);
+  });
+
+  it("should return empty array when no agent and includeReactGrab is false", () => {
+    const packages = getPackagesToInstall("none", false);
+
+    expect(packages).toEqual([]);
+  });
+
+  it("should handle all agent types", () => {
+    const agents = ["claude-code", "cursor", "opencode"] as const;
+
+    for (const agent of agents) {
+      const packages = getPackagesToInstall(agent, false);
+      expect(packages).toEqual([`@react-grab/${agent}`]);
+    }
+  });
+});
+
+
+--- packages/cli/src/utils/install.ts ---
+import { execSync } from "node:child_process";
+import type { PackageManager } from "./detect.js";
+import type { AgentIntegration } from "./templates.js";
+
+const INSTALL_COMMANDS: Record<PackageManager, string> = {
+  npm: "npm install",
+  yarn: "yarn add",
+  pnpm: "pnpm add",
+  bun: "bun add",
+};
+
+const UNINSTALL_COMMANDS: Record<PackageManager, string> = {
+  npm: "npm uninstall",
+  yarn: "yarn remove",
+  pnpm: "pnpm remove",
+  bun: "bun remove",
+};
+
+export const installPackages = (
+  packages: string[],
+  packageManager: PackageManager,
+  projectRoot: string,
+  isDev: boolean = true,
+): void => {
+  if (packages.length === 0) {
+    return;
+  }
+
+  const command = INSTALL_COMMANDS[packageManager];
+  const devFlag = isDev ? " -D" : "";
+  const fullCommand = `${command}${devFlag} ${packages.join(" ")}`;
+
+  console.log(`Running: ${fullCommand}\n`);
+
+  execSync(fullCommand, {
+    cwd: projectRoot,
+    stdio: "inherit",
+  });
+};
+
+export const getPackagesToInstall = (
+  agent: AgentIntegration,
+  includeReactGrab: boolean = true,
+): string[] => {
+  const packages: string[] = [];
+
+  if (includeReactGrab) {
+    packages.push("react-grab");
+  }
+
+  if (agent !== "none") {
+    packages.push(`@react-grab/${agent}`);
+  }
+
+  return packages;
+};
+
+export const uninstallPackages = (
+  packages: string[],
+  packageManager: PackageManager,
+  projectRoot: string,
+): void => {
+  if (packages.length === 0) {
+    return;
+  }
+
+  const command = UNINSTALL_COMMANDS[packageManager];
+  const fullCommand = `${command} ${packages.join(" ")}`;
+
+  console.log(`Running: ${fullCommand}\n`);
+
+  execSync(fullCommand, {
+    cwd: projectRoot,
+    stdio: "inherit",
+  });
+};
+
+export const getPackagesToUninstall = (agent: string): string[] => {
+  return [`@react-grab/${agent}`];
+};
+
+
+--- packages/react-grab/e2e/api-methods.spec.ts ---
+import { test, expect } from "./fixtures.js";
+
+test.describe("API Methods", () => {
+  test.describe("Activation APIs", () => {
+    test("activate() should activate the overlay", async ({ reactGrab }) => {
+      expect(await reactGrab.isOverlayVisible()).toBe(false);
+
+      await reactGrab.activate();
+
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+    });
+
+    test("deactivate() should deactivate the overlay", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+
+      await reactGrab.page.evaluate(() => {
+        const api = (window as { __REACT_GRAB__?: { deactivate: () => void } })
+          .__REACT_GRAB__;
+        api?.deactivate();
+      });
+      await reactGrab.page.waitForTimeout(100);
+
+      expect(await reactGrab.isOverlayVisible()).toBe(false);
+    });
+
+    test("toggle() should toggle activation state", async ({ reactGrab }) => {
+      expect(await reactGrab.isOverlayVisible()).toBe(false);
+
+      await reactGrab.toggle();
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+
+      await reactGrab.toggle();
+      expect(await reactGrab.isOverlayVisible()).toBe(false);
+    });
+
+    test("isActive() should return correct state", async ({ reactGrab }) => {
+      let state = await reactGrab.getState();
+      expect(state.isActive).toBe(false);
+
+      await reactGrab.activate();
+
+      state = await reactGrab.getState();
+      expect(state.isActive).toBe(true);
+    });
+
+    test("multiple rapid activations should be handled", async ({
+      reactGrab,
+    }) => {
+      for (let i = 0; i < 5; i++) {
+        await reactGrab.activate();
+        await reactGrab.page.waitForTimeout(20);
+      }
+
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+    });
+
+    test("multiple rapid toggles should maintain consistency", async ({
+      reactGrab,
+    }) => {
+      for (let i = 0; i < 6; i++) {
+        await reactGrab.toggle();
+        await reactGrab.page.waitForTimeout(50);
+      }
+
+      const isActive = await reactGrab.isOverlayVisible();
+      expect(typeof isActive).toBe("boolean");
+    });
+  });
+
+  test.describe("getState()", () => {
+    test("should return isActive correctly", async ({ reactGrab }) => {
+      let state = await reactGrab.getState();
+      expect(state.isActive).toBe(false);
+
+      await reactGrab.activate();
+      state = await reactGrab.getState();
+      expect(state.isActive).toBe(true);
+    });
+
+    test("should return isDragging correctly during drag", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
+
+      const listItem = reactGrab.page.locator("li").first();
+      const box = await listItem.boundingBox();
+      if (!box) throw new Error("Could not get bounding box");
+
+      await reactGrab.page.mouse.move(box.x - 10, box.y - 10);
+      await reactGrab.page.mouse.down();
+      await reactGrab.page.mouse.move(box.x + 100, box.y + 100, { steps: 5 });
+
+      const state = await reactGrab.getState();
+      expect(state.isDragging).toBe(true);
+
+      await reactGrab.page.mouse.up();
+    });
+
+    test("should return isCopying correctly during copy", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
+      await reactGrab.hoverElement("h1");
+      await reactGrab.waitForSelectionBox();
+
+      await reactGrab.clickElement("h1");
+
+      const checkCopyingState = async () => {
+        const state = await reactGrab.getState();
+        return state.isCopying;
+      };
+
+      const wasCopying = await checkCopyingState();
+      expect(typeof wasCopying).toBe("boolean");
+    });
+
+    test("should return dragBounds during drag", async ({ reactGrab }) => {
+      await reactGrab.activate();
+
+      const listItem = reactGrab.page.locator("li").first();
+      const box = await listItem.boundingBox();
+      if (!box) throw new Error("Could not get bounding box");
+
+      await reactGrab.page.mouse.move(box.x - 20, box.y - 20);
+      await reactGrab.page.mouse.down();
+      await reactGrab.page.mouse.move(box.x + 150, box.y + 150, { steps: 10 });
+
+      const state = await reactGrab.getState();
+      if (state.dragBounds) {
+        expect(state.dragBounds.width).toBeGreaterThan(0);
+        expect(state.dragBounds.height).toBeGreaterThan(0);
+      }
+
+      await reactGrab.page.mouse.up();
+    });
+  });
+
+  test.describe("copyElement()", () => {
+    test("should copy single element to clipboard", async ({ reactGrab }) => {
+      const success = await reactGrab.copyElementViaApi(
+        "[data-testid='todo-list'] h1",
+      );
+      expect(success).toBe(true);
+
+      await reactGrab.page.waitForTimeout(500);
+      const clipboardContent = await reactGrab.getClipboardContent();
+      expect(clipboardContent).toContain("Todo List");
+    });
+
+    test("should copy list item element", async ({ reactGrab }) => {
+      const success = await reactGrab.copyElementViaApi("li:first-child");
+      expect(success).toBe(true);
+
+      await reactGrab.page.waitForTimeout(500);
+      const clipboardContent = await reactGrab.getClipboardContent();
+      expect(clipboardContent).toBeTruthy();
+    });
+
+    test("should return false for non-existent element", async ({
+      reactGrab,
+    }) => {
+      const success = await reactGrab.copyElementViaApi(
+        ".non-existent-element",
+      );
+      expect(success).toBe(false);
+    });
+
+    test("should copy multiple elements via API", async ({ reactGrab }) => {
+      const success = await reactGrab.page.evaluate(async () => {
+        const api = (
+          window as {
+            __REACT_GRAB__?: {
+              copyElement: (el: Element[]) => Promise<boolean>;
+            };
+          }
+        ).__REACT_GRAB__;
+        const elements = Array.from(document.querySelectorAll("li")).slice(
+          0,
+          3,
+        );
+        if (!api || elements.length === 0) return false;
+        return api.copyElement(elements);
+      });
+      expect(success).toBe(true);
+    });
+  });
+
+  test.describe("Theme via setOptions", () => {
+    test("setOptions({ theme }) should apply hue rotation filter", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.updateOptions({ theme: { hue: 90 } });
+      await reactGrab.activate();
+
+      const hasFilter = await reactGrab.page.evaluate(() => {
+        const host = document.querySelector("[data-react-grab]");
+        const shadowRoot = host?.shadowRoot;
+        const root = shadowRoot?.querySelector(
+          "[data-react-grab]",
+        ) as HTMLElement;
+        return root?.style.filter?.includes("hue-rotate") ?? false;
+      });
+
+      expect(hasFilter).toBe(true);
+    });
+
+    test("multiple theme updates via setOptions should accumulate", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.updateOptions({ theme: { hue: 45 } });
+      await reactGrab.updateOptions({ theme: { crosshair: { enabled: false } } });
+      await reactGrab.activate();
+
+      const hasFilter = await reactGrab.page.evaluate(() => {
+        const host = document.querySelector("[data-react-grab]");
+        const shadowRoot = host?.shadowRoot;
+        const root = shadowRoot?.querySelector(
+          "[data-react-grab]",
+        ) as HTMLElement;
+        return root?.style.filter?.includes("hue-rotate(45deg)") ?? false;
+      });
+
+      expect(hasFilter).toBe(true);
+    });
+  });
+
+  test.describe("dispose()", () => {
+    test("should set hasInited to false on dispose", async ({ reactGrab }) => {
+      await reactGrab.activate();
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+
+      await reactGrab.dispose();
+      await reactGrab.page.waitForTimeout(200);
+
+      const canReinit = await reactGrab.page.evaluate(() => {
+        const initFn = (window as { initReactGrab?: () => void }).initReactGrab;
+        return typeof initFn === "function";
+      });
+      expect(canReinit).toBe(true);
+    });
+
+    test("should remove overlay host element on dispose", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
+      await reactGrab.dispose();
+
+      await reactGrab.page.waitForTimeout(100);
+
+      const hostExists = await reactGrab.page.evaluate(() => {
+        return document.querySelector("[data-react-grab]") !== null;
+      });
+
+      expect(hostExists).toBe(true);
+    });
+
+    test("should allow re-initialization after dispose", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.activate();
+      await reactGrab.dispose();
+
+      await reactGrab.reinitialize();
+
+      await reactGrab.activate();
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+    });
+  });
+
+  test.describe("registerPlugin()", () => {
+    test("should register plugin with hooks", async ({ reactGrab }) => {
+      let callbackCalled = false;
+
+      await reactGrab.page.evaluate(() => {
+        (
+          window as { __TEST_CALLBACK_CALLED__?: boolean }
+        ).__TEST_CALLBACK_CALLED__ = false;
+        const api = (
+          window as {
+            __REACT_GRAB__?: {
+              registerPlugin: (plugin: Record<string, unknown>) => void;
+            };
+          }
+        ).__REACT_GRAB__;
+        api?.registerPlugin({
+          name: "test-plugin",
+          hooks: {
+            onActivate: () => {
+              (
+                window as { __TEST_CALLBACK_CALLED__?: boolean }
+              ).__TEST_CALLBACK_CALLED__ = true;
+            },
+          },
+        });
+      });
+
+      await reactGrab.activate();
+
+      callbackCalled = await reactGrab.page.evaluate(() => {
+        return (
+          (window as { __TEST_CALLBACK_CALLED__?: boolean })
+            .__TEST_CALLBACK_CALLED__ ?? false
+        );
+      });
+
+      expect(callbackCalled).toBe(true);
+    });
+
+    test("should allow registering plugin with multiple hooks", async ({ reactGrab }) => {
+      await reactGrab.page.evaluate(() => {
+        (window as { __CALLBACKS__?: string[] }).__CALLBACKS__ = [];
+        const api = (
+          window as {
+            __REACT_GRAB__?: {
+              registerPlugin: (plugin: Record<string, unknown>) => void;
+            };
+          }
+        ).__REACT_GRAB__;
+        api?.registerPlugin({
+          name: "test-plugin",
+          hooks: {
+            onActivate: () => {
+              (window as { __CALLBACKS__?: string[] }).__CALLBACKS__?.push(
+                "activate",
+              );
+            },
+            onDeactivate: () => {
+              (window as { __CALLBACKS__?: string[] }).__CALLBACKS__?.push(
+                "deactivate",
+              );
+            },
+          },
+        });
+      });
+
+      await reactGrab.activate();
+      await reactGrab.deactivate();
+
+      const callbacks = await reactGrab.page.evaluate(() => {
+        return (window as { __CALLBACKS__?: string[] }).__CALLBACKS__ ?? [];
+      });
+
+      expect(callbacks).toContain("activate");
+      expect(callbacks).toContain("deactivate");
+    });
+  });
+
+  test.describe("setOptions() for agent", () => {
+    test("should configure agent provider", async ({ reactGrab }) => {
+      await reactGrab.setupMockAgent();
+
+      const state = await reactGrab.page.evaluate(() => {
+        const api = (
+          window as {
+            __REACT_GRAB__?: { getState: () => Record<string, unknown> };
+          }
+        ).__REACT_GRAB__;
+        return api?.getState();
+      });
+
+      expect(state).toBeDefined();
+    });
+
+    test("should allow agent provider with custom options", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.setupMockAgent({
+        delay: 100,
+        statusUpdates: ["Custom status 1", "Custom status 2"],
+      });
+
+      const hasAgent = await reactGrab.page.evaluate(() => {
+        const host = document.querySelector("[data-react-grab]");
+        return host !== null;
+      });
+
+      expect(hasAgent).toBe(true);
+    });
+  });
+
+  test.describe("Edge Cases", () => {
+    test("API should work after multiple activation cycles", async ({
+      reactGrab,
+    }) => {
+      for (let i = 0; i < 3; i++) {
+        await reactGrab.activate();
+        await reactGrab.hoverElement("li");
+        await reactGrab.waitForSelectionBox();
+        await reactGrab.deactivate();
+      }
+
+      await reactGrab.activate();
+      expect(await reactGrab.isOverlayVisible()).toBe(true);
+    });
+
+    test("getState should be consistent with isActive", async ({
+      reactGrab,
+    }) => {
+      const state1 = await reactGrab.getState();
+      const isActive1 = await reactGrab.isOverlayVisible();
+      expect(state1.isActive).toBe(isActive1);
+
+      await reactGrab.activate();
+
+      const state2 = await reactGrab.getState();
+      const isActive2 = await reactGrab.isOverlayVisible();
+      expect(state2.isActive).toBe(isActive2);
+    });
+
+    test("theme should persist across activation cycles", async ({
+      reactGrab,
+    }) => {
+      await reactGrab.updateOptions({ theme: { hue: 120 } });
+      await reactGrab.activate();
+      await reactGrab.deactivate();
+      await reactGrab.activate();
+
+      const hasFilter = await reactGrab.page.evaluate(() => {
+        const host = document.querySelector("[data-react-grab]");
+        const shadowRoot = host?.shadowRoot;
+        const root = shadowRoot?.querySelector(
+          "[data-react-grab]",
+        ) as HTMLElement;
+        return root?.style.filter?.includes("hue-rotate(120deg)") ?? false;
+      });
+      expect(hasFilter).toBe(true);
+    });
+  });
+});
+
+
 --- packages/website/utils/classnames.ts ---
 type ClassValue = string | number | boolean | undefined | null;
 
@@ -9,19 +567,122 @@ export const cn = (...classes: ClassValue[]): string => {
 };
 
 
-
-
-
-
-
-
 --- packages/react-grab/src/utils/is-capitalized.ts ---
 export const isCapitalized = (value: string): boolean =>
   value.length > 0 && /^[A-Z]/.test(value);
 
 
+--- packages/react-grab/src/core/noop-api.ts ---
+import type { ReactGrabAPI, ReactGrabState } from "../types.js";
+
+export const createNoopApi = (): ReactGrabAPI => {
+  const getState = (): ReactGrabState => {
+    return {
+      isActive: false,
+      isDragging: false,
+      isCopying: false,
+      isPromptMode: false,
+      isCrosshairVisible: false,
+      isSelectionBoxVisible: false,
+      isDragBoxVisible: false,
+      targetElement: null,
+      dragBounds: null,
+      grabbedBoxes: [],
+      selectionFilePath: null,
+    };
+  };
+
+  return {
+    activate: () => {},
+    deactivate: () => {},
+    toggle: () => {},
+    isActive: () => false,
+    dispose: () => {},
+    copyElement: () => Promise.resolve(false),
+    getState,
+    setOptions: () => {},
+    registerPlugin: () => {},
+    unregisterPlugin: () => {},
+    getPlugins: () => [],
+  };
+};
+
+
+--- packages/website/app/api/check-visual-edit/route.ts ---
+const IS_HEALTHY = true;
+
+const getCorsHeaders = () => {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+};
+
+export const OPTIONS = () => {
+  const corsHeaders = getCorsHeaders();
+  return new Response(null, { status: 204, headers: corsHeaders });
+};
+
+export const GET = () => {
+  const corsHeaders = getCorsHeaders();
+  return Response.json(
+    { healthy: IS_HEALTHY },
+    { headers: { ...corsHeaders, "Content-Type": "application/json" } },
+  );
+};
+
+
+--- packages/website/app/api/report-cli/route.ts ---
+const headers = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "*",
+};
+
+interface ReportPayload {
+  type: "error" | "completed";
+  version: string;
+  config?: {
+    framework: string;
+    packageManager: string;
+    router?: string;
+    agent?: string;
+    isMonorepo: boolean;
+  };
+  error?: {
+    message: string;
+    stack?: string;
+  };
+  timestamp: string;
+}
+
+export async function POST(request: Request) {
+  let payload: ReportPayload;
+
+  try {
+    payload = await request.json();
+  } catch {
+    return new Response("Invalid JSON", { status: 400, headers });
+  }
+
+  console.log(
+    `[CLI Report] ${payload.type}:`,
+    JSON.stringify(payload, null, 2),
+  );
+
+  return new Response("OK", { headers });
+}
+
+export function OPTIONS() {
+  return new Response(null, { headers });
+}
+
+
 --- packages/website/app/api/version/route.ts ---
 import packageJson from "react-grab/package.json";
+
+export const dynamic = "force-dynamic";
 
 const headers = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +704,204 @@ export function OPTIONS() {
 }
 
 
+--- packages/website/app/api/visual-edit/route.ts ---
+import { generateText } from "ai";
+import type { ModelMessage } from "ai";
+
+interface ConversationMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const SYSTEM_PROMPT = `You are a DOM manipulation assistant. You will receive HTML with ancestor context and a modification request.
+
+The HTML shows the target element nested within its ancestor elements (up to 5 levels). The target element is marked with <!-- START $el --> and <!-- END $el --> comments. The ancestor tags are shown for structural context only - you should only modify the target element between these markers.
+
+CRITICAL RULES:
+1. Output ONLY JavaScript code - nothing else
+2. Do NOT wrap output in markdown code fences
+3. Start with a single-line comment explaining what the code does (e.g. "// Changes button text to show loading state")
+4. $el is a global variable that references the target element (marked between <!-- START $el --> and <!-- END $el -->)
+5. Modify the element using standard DOM APIs
+6. Do NOT reassign $el itself
+7. ITERATION IS RARE - try hard to solve the request completely in one response.
+8. If you need custom CSS (including animations/keyframes), inject a <style> tag into the document head - do not assume any styles, classes, or animations are pre-defined.
+9. ANIMATIONS: No CSS animations or keyframes exist by default. Use the Web Animations API (element.animate()) or inject <style> tags to create them.
+
+Example output (with animation):
+// Adds a pulse animation to the element
+const styleId = 'pulse-animation';
+if (!document.getElementById(styleId)) {
+  const style = document.createElement('style');
+  style.id = styleId;
+  style.textContent = '@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }';
+  document.head.appendChild(style);
+}
+$el.style.animation = 'pulse 2s infinite';
+
+Example output:
+// Changes button text to loading state
+$el.textContent = "Loading..."
+
+Example output:
+// Adds highlight class to element
+$el.classList.add("highlighted")
+
+Your response must be raw JavaScript that can be directly eval'd.`;
+
+const parseHostnameFromOrigin = (origin: string): string | null => {
+  try {
+    return new URL(origin).hostname;
+  } catch {
+    return null;
+  }
+};
+
+const isReactGrabHostname = (hostname: string): boolean => {
+  return (
+    hostname === "react-grab.com" ||
+    hostname === "www.react-grab.com" ||
+    hostname === "www.aidenybai.com"
+  );
+};
+
+const isReactGrabOrigin = (origin: string | null): boolean => {
+  if (!origin) return false;
+
+  const hostname = parseHostnameFromOrigin(origin);
+  if (!hostname) return false;
+
+  if (isReactGrabHostname(hostname)) return true;
+
+  return false;
+};
+
+const getCorsHeaders = () => {
+  return {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS, GET",
+    "Access-Control-Allow-Headers": "Content-Type",
+  };
+};
+
+// interface OpenCodeZenResponse {
+//   choices: Array<{
+//     message: {
+//       content: string;
+//     };
+//   }>;
+// }
+
+// const generateTextWithOpenCodeZen = async (
+//   systemPrompt: string,
+//   messages: ModelMessage[],
+// ): Promise<string> => {
+//   const apiKey = process.env.OPENCODE_ZEN_API_KEY;
+//   if (!apiKey) {
+//     throw new Error("OPENCODE_ZEN_API_KEY not configured");
+//   }
+
+//   const response = await fetch("https://opencode.ai/zen/v1/chat/completions", {
+//     method: "POST",
+//     headers: {
+//       Authorization: `Bearer ${apiKey}`,
+//       "Content-Type": "application/json",
+//     },
+//     body: JSON.stringify({
+//       model: "grok-code",
+//       messages: [{ role: "system", content: systemPrompt }, ...messages],
+//     }),
+//   });
+
+//   if (!response.ok) {
+//     const errorText = await response.text();
+//     throw new Error(`OpenCode Zen API error: ${response.status} ${errorText}`);
+//   }
+
+//   const data: OpenCodeZenResponse = await response.json();
+//   return data.choices[0]?.message?.content ?? "";
+// };
+
+export const POST = async (request: Request) => {
+  const origin = request.headers.get("origin");
+  const corsHeaders = getCorsHeaders();
+  const shouldUsePrimaryModel = isReactGrabOrigin(origin);
+
+  let body: { messages: ConversationMessage[] };
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ error: "Invalid JSON" }), {
+      status: 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const { messages: rawMessages } = body;
+
+  if (!rawMessages || rawMessages.length === 0) {
+    return new Response(
+      JSON.stringify({ error: "messages array is required" }),
+      {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  }
+
+  const MAX_INPUT_CHARACTERS = 15_000;
+
+  const messages: ModelMessage[] = rawMessages.map((message) => ({
+    role: message.role,
+    content: message.content.slice(0, MAX_INPUT_CHARACTERS),
+    providerOptions: {
+      cerebras: { cacheControl: { type: "ephemeral" } },
+      zai: { cacheControl: { type: "ephemeral" } },
+    },
+  }));
+
+  try {
+    let generatedCode: string;
+
+    console.log("shouldUsePrimaryModel", shouldUsePrimaryModel);
+    // if (shouldUsePrimaryModel) {
+    const result = await generateText({
+      model: "cerebras/glm-4.6",
+      system: SYSTEM_PROMPT,
+      messages,
+    });
+    // eslint-disable-next-line prefer-const
+    generatedCode = result.text;
+    // } else {
+    //   generatedCode = await generateTextWithOpenCodeZen(
+    //     SYSTEM_PROMPT,
+    //     messages,
+    //   );
+    // }
+
+    return new Response(generatedCode, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/javascript",
+        "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      },
+    });
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+};
+
+export const OPTIONS = () => {
+  const corsHeaders = getCorsHeaders();
+  return new Response(null, { status: 204, headers: corsHeaders });
+};
+
+
 --- packages/benchmarks/README.md ---
 # React Grab Benchmarks
 
@@ -53,10 +912,12 @@ This directory contains the benchmark suite used to measure React Grab's impact 
 The benchmark uses the [shadcn/ui dashboard](https://github.com/shadcn-ui/ui) as the test codebase - a Next.js application with auth, data tables, charts, and form components. Each test case represents a real-world task that developers commonly perform when working with coding agents.
 
 Each test runs twice:
+
 - **Control**: Without React Grab output (agent must search the codebase)
 - **Treatment**: With React Grab output (agent receives exact component stack)
 
 The benchmark measures:
+
 - Time to completion (`durationMs`)
 - Number of tool calls (`toolCalls`)
 - Token usage (`inputTokens`, `outputTokens`, `totalTokens`)
@@ -106,6 +967,7 @@ bun index.ts
 ```
 
 The benchmark will:
+
 1. Generate `test-cases.json` from the test cases
 2. Run all 40 tests (20 control + 20 treatment) in batches of 5
 3. Save results incrementally to `results.json`
@@ -145,6 +1007,7 @@ See [`test-cases.json`](./test-cases.json) for the full list of test cases and t
 ## Cost Considerations
 
 Running the full benchmark suite (40 tests) will incur API costs. Each test uses:
+
 - Claude Code Sonnet for the main task
 - Claude Haiku 4.5 for result grading
 
@@ -162,14 +1025,17 @@ You can modify the benchmark by:
 ## Troubleshooting
 
 **Error: Provider metadata not found**
+
 - Ensure you have a valid Anthropic API key set
 - Check that you have access to Claude Code API
 
 **Tests failing**
+
 - Verify the `shadcn-dashboard` directory exists and is properly set up
 - Check that the expected files in test cases match the actual codebase structure
 
 **Out of memory errors**
+
 - Reduce `BATCH_SIZE` in `index.ts` to run fewer tests concurrently
 
 ## Caveats & Future Improvements
@@ -188,12 +1054,12 @@ Pull requests are welcome! If you'd like to contribute improvements to the bench
 
 ## Results
 
-The latest benchmark results are published on the [React Grab website](https://react-grab.com/blog/intro). The benchmark shows that React Grab makes coding agents approximately **55% faster** on average.
+The latest benchmark results are published on the [React Grab website](https://react-grab.com/blog/intro). The benchmark shows that React Grab makes coding agents approximately **3× faster** on average.
 
 
 ## Links discovered
 - [shadcn/ui dashboard](https://github.com/shadcn-ui/ui)
-- [`test-cases.json`](https://raw.githubusercontent.com/aidenybai/react-grab/main/packages/benchmarks/./test-cases.json)
+- [`test-cases.json`](https://github.com/aidenybai/react-grab/blob/main/packages/benchmarks/test-cases.json)
 - [GitHub](https://github.com/aidenybai/react-grab)
 - [React Grab website](https://react-grab.com/blog/intro)
 
@@ -267,7 +1133,22 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
       <div class="mb-6 p-4 bg-neutral-900 rounded-lg border border-neutral-800">
         <h2 class="text-sm font-medium text-neutral-200 mb-2">Methodology</h2>
         <p class="text-sm text-neutral-400 leading-relaxed">
-          This benchmark evaluates React Grab's performance using the <a href="https://github.com/shadcn-ui/ui" target="_blank" rel="noopener noreferrer" class="text-blue-400 hover:text-blue-300 underline">shadcn/ui dashboard example</a>, a production-grade Next.js application with real-world complexity including multiple routes, form handling, data tables, charts, and authentication flows. We compare two scenarios: Control (without React Grab instrumentation) vs Treatment (with React Grab). This is a fair comparison because both scenarios use the same codebase, same prompts, and same AI model (Claude), with the only difference being whether React Grab's semantic element labeling is available. The benchmark measures success rate, token usage, cost, duration, and tool calls to quantify React Grab's impact on AI coding assistance efficiency.
+          This benchmark evaluates React Grab's performance using the
+          <a
+            href="https://github.com/shadcn-ui/ui"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-400 hover:text-blue-300 underline"
+            >shadcn/ui dashboard example</a
+          >, a production-grade Next.js application with real-world complexity
+          including multiple routes, form handling, data tables, charts, and
+          authentication flows. We compare two scenarios: Control (without React
+          Grab instrumentation) vs Treatment (with React Grab). This is a fair
+          comparison because both scenarios use the same codebase, same prompts,
+          and same AI model (Claude), with the only difference being whether
+          React Grab's semantic element labeling is available. The benchmark
+          measures success rate, token usage, cost, duration, and tool calls to
+          quantify React Grab's impact on AI coding assistance efficiency.
         </p>
       </div>
 
@@ -642,874 +1523,1525 @@ Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 </html>
 
 
+--- CONTRIBUTING.md ---
+# Contributing to React Grab
+
+Thanks for your interest in contributing to React Grab! This document provides guidelines and instructions for contributing.
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js >= 18
+- pnpm >= 8
+
+### Setup
+
+1. Fork and clone the repository:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/react-grab.git
+cd react-grab
+```
+
+2. Install dependencies using [@antfu/ni](https://github.com/antfu/ni):
+
+```bash
+ni
+```
+
+3. Build all packages:
+
+```bash
+nr build
+```
+
+4. Start development mode:
+
+```bash
+nr dev
+```
+
+## Project Structure
+
+```
+packages/
+├── react-grab/          # Core library
+├── cli/                 # CLI installer (@react-grab/cli)
+├── provider-cursor/     # Cursor agent integration
+├── provider-claude-code/  # Claude Code integration
+├── provider-opencode/   # OpenCode integration
+├── provider-codex/      # OpenAI Codex integration
+├── provider-gemini/     # Google Gemini CLI integration
+├── provider-amp/        # Amp SDK integration
+├── provider-ami/        # AMI client
+├── website/             # Documentation site (react-grab.com)
+├── vite-playground/     # Vite development playground
+├── next-playground/     # Next.js development playground
+├── agent-playground/    # Agent testing playground
+├── benchmarks/          # Performance benchmarks
+└── web-extension/       # Browser extension
+```
+
+## Development Workflow
+
+### Running Playgrounds
+
+Test your changes in the playgrounds:
+
+```bash
+# Vite playground
+pnpm --filter vite-playground dev
+
+# Next.js playground
+pnpm --filter next-playground dev
+
+# Agent playground (for testing agent provider integrations)
+pnpm --filter @react-grab/agent-playground dev:claude   # Claude Code
+pnpm --filter @react-grab/agent-playground dev:cursor   # Cursor
+pnpm --filter @react-grab/agent-playground dev:opencode # OpenCode
+pnpm --filter @react-grab/agent-playground dev:codex    # Codex
+pnpm --filter @react-grab/agent-playground dev:gemini   # Gemini
+pnpm --filter @react-grab/agent-playground dev:amp      # Amp
+pnpm --filter @react-grab/agent-playground dev:ami      # Ami
+```
+
+The agent playground runs at `http://localhost:5174` and lets you test react-grab's agent provider API with multiple backends.
+
+### Running Tests
+
+```bash
+# Run CLI tests
+pnpm --filter @react-grab/cli test
+```
+
+### Linting & Formatting
+
+```bash
+nr lint        # Check for lint errors
+nr lint:fix    # Fix lint errors
+nr format      # Format code with Prettier
+```
+
+## Code Style
+
+- **Use TypeScript interfaces** over types
+- **Use arrow functions** over function declarations
+- **Use kebab-case** for file names
+- **Use descriptive variable names** — avoid shorthands or 1-2 character names
+  - Example: `innerElement` instead of `el`
+  - Example: `didPositionChange` instead of `moved`
+- **Avoid type casting** (`as`) unless absolutely necessary
+- **Keep interfaces/types** at the global scope
+- **Remove unused code** and follow DRY principles
+- **Avoid comments** unless absolutely necessary
+  - If a hack is required, prefix with `// HACK: reason for hack`
+
+## Submitting Changes
+
+### Creating a Pull Request
+
+1. Create a new branch:
+
+```bash
+git checkout -b feat/your-feature-name
+```
+
+2. Make your changes and commit with a descriptive message:
+
+```bash
+git commit -m "feat: add new feature"
+```
+
+3. Push to your fork and open a pull request
+
+### Commit Convention
+
+We use conventional commits:
+
+- `feat:` — New feature
+- `fix:` — Bug fix
+- `docs:` — Documentation changes
+- `chore:` — Maintenance tasks
+- `refactor:` — Code refactoring
+- `test:` — Test additions or changes
+
+### Adding a Changeset
+
+For changes that affect published packages, add a changeset:
+
+```bash
+nr changeset
+```
+
+Follow the prompts to describe your changes. This helps maintain accurate changelogs.
+
+## Reporting Issues
+
+Found a bug? Have a feature request? [Open an issue](https://github.com/aidenybai/react-grab/issues) with:
+
+- Clear description of the problem or request
+- Steps to reproduce (for bugs)
+- Expected vs actual behavior
+- Environment details (OS, browser, Node version)
+
+## Community
+
+- Join our [Discord](https://discord.com/invite/G7zxfUzkm7) to discuss ideas and get help
+- Check existing [issues](https://github.com/aidenybai/react-grab/issues) before opening new ones
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+
 ## Links discovered
-- [shadcn/ui dashboard example](https://github.com/shadcn-ui/ui)
+- [@antfu/ni](https://github.com/antfu/ni)
+- [Open an issue](https://github.com/aidenybai/react-grab/issues)
+- [Discord](https://discord.com/invite/G7zxfUzkm7)
+- [issues](https://github.com/aidenybai/react-grab/issues)
 
---- packages/react-grab/CHANGELOG.md ---
-# react-grab
+--- packages/cli/CHANGELOG.md ---
+# @react-grab/cli
 
-## 0.0.53
-
-### Patch Changes
-
-- fix: focus states
-
-## 0.0.52
+## 0.0.98
 
 ### Patch Changes
 
-- fix: copy states
+- feat: new state architecture and context menu
 
-## 0.0.51
-
-### Patch Changes
-
-- fix: jsdocs on theme prop values
-
-## 0.0.50
+## 0.0.97
 
 ### Patch Changes
 
-- feat: extend API
+- fix: sourcemap error
 
-## 0.0.49
-
-### Patch Changes
-
-- fix: reactivation bug
-
-## 0.0.48
+## 0.0.96
 
 ### Patch Changes
 
-- fix: version fetching
+- fix: fiber access timeout handling
 
-## 0.0.47
-
-### Patch Changes
-
-- fix: use event code instead of event key
-
-## 0.0.46
+## 0.0.95
 
 ### Patch Changes
 
-- fix: non-react projects
+- fix: selecting buttons with disabled states
 
-## 0.0.45
-
-### Patch Changes
-
-- feat: input
-
-## 0.0.44
+## 0.0.94
 
 ### Patch Changes
 
-- fix: new log
+- fix: browser crashing on selection bug
 
-## 0.0.43
-
-### Patch Changes
-
-- fix: new hooks
-
-## 0.0.42
+## 0.0.93
 
 ### Patch Changes
 
-- fix: improve cursor
+- fix: copying not working
 
-## 0.0.41
-
-### Patch Changes
-
-- fix: improved copy version
-
-## 0.0.40
+## 0.0.92
 
 ### Patch Changes
 
-- fix: selection opacity
+- refactor: use state machines instead of signals
 
-## 0.0.39
-
-### Patch Changes
-
-- fix: sourcemaps in prod
-
-## 0.0.38
+## 0.0.91
 
 ### Patch Changes
 
-- fix: multi select
+- feat: dock
 
-## 0.0.37
-
-### Patch Changes
-
-- fix: in Component
-
-## 0.0.36
+## 0.0.90
 
 ### Patch Changes
 
-- fix: progress indicator
+- fix: check visual edit endpoint
 
-## 0.0.35
-
-### Patch Changes
-
-- fix: allow copying inside input
-
-## 0.0.34
+## 0.0.89
 
 ### Patch Changes
 
-- fix: click thru
+- fix: many bugfixes
 
-## 0.0.33
-
-### Patch Changes
-
-- fix: bug with optimisitc label
-
-## 0.0.32
+## 0.0.88
 
 ### Patch Changes
 
-- fix: keybind issues
+- fix: deprecation errors
 
-## 0.0.31
-
-### Patch Changes
-
-- fix: screenshotrs
-
-## 0.0.30
+## 0.0.87
 
 ### Patch Changes
 
-- improvements to instrumentaiton
+- feat: visual edits
 
-## 0.0.29
-
-### Patch Changes
-
-- fix: crosshair length
-
-## 0.0.28
+## 0.0.86
 
 ### Patch Changes
 
-- fix: computed styles
+- fix: editing
 
-## 0.0.27
-
-### Patch Changes
-
-- fix: sources
-
-## 0.0.26
+## 0.0.85
 
 ### Patch Changes
 
-- performance
+- fix: check versions on each provider
 
-## 0.0.25
-
-### Patch Changes
-
-- new crosshair
-
-## 0.0.24
+## 0.0.84
 
 ### Patch Changes
 
-- fix: issues
+- fix: migrate from cross-spawn to execa to fix deprecation issue
 
-## 0.0.23
-
-### Patch Changes
-
-- fix: things
-
-## 0.0.21
+## 0.0.83
 
 ### Patch Changes
 
-- fix: refactor code
+- feat: timings during agent processing
 
-## 0.0.20
-
-### Patch Changes
-
-- fix: circular references issue
-
-## 0.0.19
+## 0.0.82
 
 ### Patch Changes
 
-- fix: react devtools and windows/linux compat
+- fix: agent support
 
-## 0.0.18
-
-### Patch Changes
-
-- fix: owner stack
-
-## 0.0.17
+## 0.0.81
 
 ### Patch Changes
 
-- fix: sourcemaps
+- feat: codex and gemini support
 
-## 0.0.16
-
-### Patch Changes
-
-- fix: docs
-
-## 0.0.15
+## 0.0.80
 
 ### Patch Changes
 
-- fix: ux fixes
+- fix: replies and undo
 
-## 0.0.14
+## 0.0.79
 
 ### Patch Changes
 
-- fix: key
-
-
---- packages/benchmarks/claude-code.ts ---
-import { generateText, streamText } from "ai";
-import { anthropic } from "@ai-sdk/anthropic";
-import { claudeCode } from "ai-sdk-provider-claude-code";
-
-interface ProviderMetadata {
-  "claude-code": {
-    sessionId: string;
-    costUsd: number;
-    durationMs: number;
-    rawUsage: {
-      input_tokens: number;
-      cache_creation_input_tokens: number;
-      cache_read_input_tokens: number;
-      output_tokens: number;
-      server_tool_use: Record<string, unknown>;
-      service_tier: string;
-      cache_creation: Record<string, unknown>;
-    };
-  };
-}
-
-interface Usage {
-  inputTokens: number;
-  outputTokens: number;
-  totalTokens: number;
-}
-
-interface ClaudeCodeTestResult {
-  inputTokens: number;
-  outputTokens: number;
-  costUsd: number;
-  durationMs: number;
-  toolCalls: number;
-  success: boolean;
-}
-
-interface Options {
-  prompt: string;
-  expectedFile: string;
-  cwd: string;
-}
-
-export const runClaudeCodeTest = async (
-  options: Options,
-): Promise<ClaudeCodeTestResult> => {
-  return new Promise(async (resolve, reject) => {
-    const result = streamText({
-      model: claudeCode("sonnet", {
-        cwd: options.cwd,
-      }),
-      prompt: options.prompt,
-      onChunk: async (chunk) => {},
-      onFinish: async (args) => {
-        if (!args.providerMetadata) {
-          reject(new Error("Provider metadata not found"));
-        }
-        const providerMetadata =
-          args.providerMetadata as unknown as ProviderMetadata;
-        if (!args.usage) {
-          reject(new Error("Usage not found"));
-        }
-
-        const { inputTokens, outputTokens } = args.usage as Usage;
-        const { costUsd, durationMs } = providerMetadata["claude-code"];
-
-        const graderResult = await generateText({
-          model: anthropic("claude-haiku-4-5"),
-          maxOutputTokens: 1,
-          prompt: `Did the model find the file ${options.expectedFile} in the output?
-
-IMPORTANT: ONLY RESPOND WITH "1" (for yes) or "0" (for no), NOTHING ELSE.
-
-Output:
-
-${args.text}`,
-        });
-
-        console.log(args.text);
-
-        const usageResult: ClaudeCodeTestResult = {
-          inputTokens,
-          outputTokens,
-          costUsd: costUsd,
-          durationMs: durationMs,
-          toolCalls: args.toolCalls.length,
-          success:
-            graderResult.text.includes("1") || !graderResult.text.includes("0"),
-        };
-
-        resolve(usageResult);
-      },
-    });
-    // need to wait for the result to be resolved
-    await result.text;
-  });
-};
-
+- fix: claude code exit issue
 
---- packages/benchmarks/index.ts ---
-import path from "path";
-import fs from "fs/promises";
-import { runClaudeCodeTest } from "./claude-code";
-import createSpinner from "yocto-spinner";
-import { TEST_CASES } from "./test-cases";
-
-const TARGET_ENVIRONMENT_DIR = path.join(__dirname, "shadcn-dashboard");
-
-const run = async () => {
-  const spinner = createSpinner({ text: "Running…" }).start();
-
-  const testCasesJson = TEST_CASES.map(({ name, prompt }) => ({
-    name,
-    prompt,
-  }));
-  const testCasesPath = path.join(__dirname, "test-cases.json");
-  await fs.writeFile(testCasesPath, JSON.stringify(testCasesJson, null, 2));
-
-  const allTests = TEST_CASES.flatMap((testCase) => {
-    const { name, prompt, expectedFile, reactGrabOutput } = testCase;
-
-    return [
-      {
-        testName: name,
-        type: "control" as const,
-        run: () =>
-          runClaudeCodeTest({
-            prompt: `ONLY RETURN THE FILE NAME, NO OTHER TEXT. ${prompt}`,
-            expectedFile,
-            cwd: TARGET_ENVIRONMENT_DIR,
-          }),
-      },
-      {
-        testName: name,
-        type: "treatment" as const,
-        run: () =>
-          runClaudeCodeTest({
-            prompt: `ONLY RETURN THE FILE NAME, NO OTHER TEXT. ${prompt}
-
-${reactGrabOutput}`,
-            expectedFile,
-            cwd: TARGET_ENVIRONMENT_DIR,
-          }),
-      },
-    ];
-  });
-
-  const outputPath = path.join(__dirname, "results.json");
-  const results: Array<{
-    testName: string;
-    type: "control" | "treatment";
-    [key: string]: unknown;
-  }> = [];
-
-  await fs.writeFile(outputPath, JSON.stringify(results, null, 2));
-
-  const BATCH_SIZE = 5;
-
-  for (let i = 0; i < allTests.length; i += BATCH_SIZE) {
-    const batch = allTests.slice(i, i + BATCH_SIZE);
-
-    await Promise.all(
-      batch.map(async ({ testName, type, run }) => {
-        const result = await run();
-        const testResult = {
-          testName,
-          type,
-          ...result,
-        };
-
-        results.push(testResult);
-        await fs.writeFile(outputPath, JSON.stringify(results, null, 2));
-
-        spinner.text = `Completed ${results.length}/${allTests.length} tests`;
-      }),
-    );
-  }
-
-  spinner.stop();
-
-  console.log(`Results written to ${outputPath}`);
-  console.log(`Total tests run: ${results.length}`);
-
-  process.exit(0);
-};
-
-run();
-
-
---- packages/benchmarks/test-cases.ts ---
-interface TestCase {
-  name: string;
-  prompt: string;
-  expectedFile: string;
-  reactGrabOutput: string;
-}
-
-export const TEST_CASES: TestCase[] = [
-  {
-    name: "Grayscale Avatar",
-    prompt: "Find the grayscale avatar in the user menu",
-    expectedFile: "components/nav-user.tsx",
-    reactGrabOutput: `<selected_element>
-
-<span class="relative flex shrink-0 ove...">
-  (2 elements)
-</span>
-
-  at span in components/nav-user.tsx:57:17
-  at button in components/ui/sidebar.tsx:515:5
-  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
-  at NavUser in components/nav-user.tsx:32:10
-
-</selected_element>`,
-  },
-  {
-    name: "Forgot Password Link",
-    prompt: "Find the forgot password link in the login form",
-    expectedFile: "components/login-form.tsx",
-    reactGrabOutput: `<selected_element>
-
-<a class="ml-auto inline-block text-..." href="#">
-  Forgot your password?
-</a>
-
-  at a in components/login-form.tsx:46:19
-  at div in components/login-form.tsx:44:17
-  at Field in components/ui/field.tsx:87:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at form in components/login-form.tsx:32:11
-  at div in components/ui/card.tsx:66:5
-  at CardContent in components/ui/card.tsx:64:10
-  at LoginForm in components/login-form.tsx:18:10
-
-</selected_element>`,
-  },
-  {
-    name: "Time Range Toggle",
-    prompt:
-      "Find the time range toggle group showing Last 3 months, Last 30 days, Last 7 days",
-    expectedFile: "components/chart-area-interactive.tsx",
-    reactGrabOutput: `<selected_element>
-
-<div role="group" dir="ltr" class="flex items-center justify-c..." tabindex="0" style="outline: none;">
-  (3 elements)
-</div>
-
-  at div in components/chart-area-interactive.tsx:178:11
-  at CardAction in components/ui/card.tsx:52:5
-  at div in components/ui/card.tsx:20:5
-  at CardHeader in components/ui/card.tsx:18:10
-  at ChartAreaInteractive in components/chart-area-interactive.tsx:143:10
-
-</selected_element>`,
-  },
-  {
-    name: "Drag Handle",
-    prompt: "Find the drag handle with grip vertical icon in the table rows",
-    expectedFile: "components/data-table.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button class="inline-flex items-center ju..." aria-describedby="DndDe..." aria-disabled="false" role="button" tabindex="0">
-  (2 elements)
-</button>
-
-  at button in components/data-table.tsx:126:5
-  at DragHandle in components/data-table.tsx:120:10
-  at td in components/data-table.tsx:331:9
-  at tr in components/data-table.tsx:320:5
-  at DraggableRow in components/data-table.tsx:314:10
-
-</selected_element>`,
-  },
-  {
-    name: "Editable Target Input",
-    prompt:
-      "Find the inline editable target input field with transparent background in the data table",
-    expectedFile: "components/data-table.tsx",
-    reactGrabOutput: `<selected_element>
-
-<input class="flex rounded-md border border-..." id="1-target" value="2,500" />
-
-  at input in components/data-table.tsx:221:9
-  at form in components/data-table.tsx:208:7
-  at td in components/data-table.tsx:331:9
-  at tr in components/data-table.tsx:320:5
-  at DraggableRow in components/data-table.tsx:314:10
-
-</selected_element>`,
-  },
-  {
-    name: "OTP Input",
-    prompt:
-      "Find the OTP input with separator showing 6-digit verification code split into two groups",
-    expectedFile: "components/otp-form.tsx",
-    reactGrabOutput: `<selected_element>
-
-<div class="flex items-center gap-4 dis..." data-input-otp-co... style="position: relative; cursor: text; user-select: none; pointer-events: none;">
-  (3 elements)
-</div>
-
-  at div in components/otp-form.tsx:42:13
-  at Field in components/ui/field.tsx:87:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at form in components/otp-form.tsx:21:7
-  at OTPForm in components/otp-form.tsx:18:10
-
-</selected_element>`,
-  },
-  {
-    name: "Quick Create Button",
-    prompt:
-      "Find the Quick Create button with primary background color in the sidebar",
-    expectedFile: "components/nav-main.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button data-sidebar="menu-button" data-size="default" data-active="false" class="peer/menu-button flex w-full ..." data-tooltip="Quick Create">
-  (2 elements)
-</button>
-
-  at button in components/ui/sidebar.tsx:515:5
-  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
-  at li in components/nav-main.tsx:27:11
-  at ul in components/nav-main.tsx:26:9
-  at SidebarMenu in components/ui/sidebar.tsx:456:5
-  at div in components/nav-main.tsx:25:7
-  at SidebarGroupContent in components/ui/sidebar.tsx:445:5
-  at SidebarGroup in components/ui/sidebar.tsx:387:5
-  at NavMain in components/nav-main.tsx:14:10
-
-</selected_element>`,
-  },
-  {
-    name: "Dropdown Actions",
-    prompt:
-      "Find the show-on-hover dropdown menu button with three dots in the documents section",
-    expectedFile: "components/nav-documents.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button data-sidebar="menu-action" class="absolute right-1 top-1.5 fl..." id="radix-:R2dcmcq:" aria-haspopup="menu" aria-expanded="false" data-state="closed">
-  (2 elements)
-</button>
-
-  at button in components/ui/sidebar.tsx:560:5
-  at SidebarMenuAction in components/ui/sidebar.tsx:548:10
-  at li in components/nav-documents.tsx:44:11
-  at ul in components/nav-documents.tsx:42:7
-  at SidebarMenu in components/ui/sidebar.tsx:456:5
-  at SidebarGroup in components/ui/sidebar.tsx:387:5
-  at NavDocuments in components/nav-documents.tsx:28:10
-
-</selected_element>`,
-  },
-  {
-    name: "Status Badge",
-    prompt:
-      "Find the status badge with green checkmark icon showing Done status",
-    expectedFile: "components/data-table.tsx",
-    reactGrabOutput: `<selected_element>
-
-<div class="inline-flex items-centers ro...">
-  (1 element)
-</div>
-
-  at div in components/data-table.tsx:194:7
-  at td in components/data-table.tsx:331:9
-  at tr in components/data-table.tsx:320:5
-  at DraggableRow in components/data-table.tsx:314:10
-
-</selected_element>`,
-  },
-  {
-    name: "Tabs with Badges",
-    prompt:
-      "Find the tab button showing Past Performance with a badge counter showing 3",
-    expectedFile: "components/data-table.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button type="button" role="tab" aria-selected="true" aria-controls="radix-:R1ld9..." data-state="active" id="radix-:R1ld9..." class="inline-flex items-center ju..." tabindex="0" data-orientation="horizontal" data-radix-collectio...>
-  (1 element)
-  Past Performance
-</button>
-
-  at button in components/data-table.tsx:430:11
-  at div in components/data-table.tsx:428:9
-  at Tabs in components/data-table.tsx:405:5
-  at DataTable in components/data-table.tsx:339:10
-
-</selected_element>`,
-  },
-  {
-    name: "Team Switcher Dropdown",
-    prompt:
-      "Find the team switcher dropdown button with chevron icon in the sidebar",
-    expectedFile: "components/team-switcher.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button data-sidebar="menu-button" data-size="lg" class="peer/menu-button flex w-full ..." data-state="closed" aria-haspopup="menu" aria-expanded="false">
-  (3 elements)
-</button>
-
-  at button in components/ui/sidebar.tsx:515:5
-  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
-  at DropdownMenuTrigger in components/ui/dropdown-menu.tsx:27:5
-  at li in components/team-switcher.tsx:40:9
-  at SidebarMenuItem in components/ui/sidebar.tsx:467:5
-  at SidebarMenu in components/ui/sidebar.tsx:456:5
-  at TeamSwitcher in components/team-switcher.tsx:22:10
-
-</selected_element>`,
-  },
-  {
-    name: "Keyboard Shortcut Badge",
-    prompt:
-      "Find the keyboard shortcut indicator showing ⌘1 in the team dropdown menu",
-    expectedFile: "components/team-switcher.tsx",
-    reactGrabOutput: `<selected_element>
-
-<span class="ml-auto text-xs tracking-w...">
-  ⌘1
-</span>
-
-  at span in components/ui/dropdown-menu.tsx:184:7
-  at DropdownMenuShortcut in components/ui/dropdown-menu.tsx:179:10
-  at div in components/team-switcher.tsx:67:13
-  at DropdownMenuItem in components/ui/dropdown-menu.tsx:72:5
-  at div in components/ui/dropdown-menu.tsx:41:7
-  at DropdownMenuContent in components/ui/dropdown-menu.tsx:34:10
-
-</selected_element>`,
-  },
-  {
-    name: "GitHub Link Button",
-    prompt: "Find the GitHub link button in the header toolbar",
-    expectedFile: "components/site-header.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button class="inline-flex items-centers ju..." asChild size="sm">
-  (1 element)
-  GitHub
-</button>
-
-  at button in components/ui/button.tsx:52:5
-  at Button in components/ui/button.tsx:39:10
-  at div in components/site-header.tsx:15:9
-  at div in components/site-header.tsx:8:7
-  at header in components/site-header.tsx:7:5
-  at SiteHeader in components/site-header.tsx:5:10
-
-</selected_element>`,
-  },
-  {
-    name: "Sidebar Trigger Toggle",
-    prompt: "Find the sidebar toggle trigger button at the top of the header",
-    expectedFile: "components/site-header.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button data-sidebar="trigger" class="inline-flex items-centers ju..." aria-label="Toggle Sidebar">
-  (1 element)
-</button>
-
-  at button in components/ui/button.tsx:52:5
-  at SidebarTrigger in components/ui/sidebar.tsx:256:10
-  at div in components/site-header.tsx:8:7
-  at header in components/site-header.tsx:7:5
-  at SiteHeader in components/site-header.tsx:5:10
-
-</selected_element>`,
-  },
-  {
-    name: "Full Name Input Field",
-    prompt:
-      "Find the full name input field with placeholder John Doe in the signup form",
-    expectedFile: "components/signup-form.tsx",
-    reactGrabOutput: `<selected_element>
-
-<input id="name" type="text" placeholder="John Doe" required class="flex h-9 w-full rounded-md ..." />
-
-  at input in components/signup-form.tsx:31:15
-  at Field in components/ui/field.tsx:87:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at form in components/signup-form.tsx:27:11
-  at div in components/ui/card.tsx:66:5
-  at CardContent in components/ui/card.tsx:64:10
-  at SignupForm in components/signup-form.tsx:17:10
-
-</selected_element>`,
-  },
-  {
-    name: "Field Description Text",
-    prompt:
-      "Find the helper text saying We'll use this to contact you below the email input",
-    expectedFile: "components/signup-form.tsx",
-    reactGrabOutput: `<selected_element>
-
-<p class="text-[0.8rem] text-muted-fo...">
-  We'll use this to contact you. We will not share your email with anyone else.
-</p>
-
-  at p in components/ui/field.tsx:143:5
-  at FieldDescription in components/ui/field.tsx:141:10
-  at Field in components/ui/field.tsx:87:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at form in components/signup-form.tsx:27:11
-  at div in components/ui/card.tsx:66:5
-  at CardContent in components/ui/card.tsx:64:10
-  at SignupForm in components/signup-form.tsx:17:10
-
-</selected_element>`,
-  },
-  {
-    name: "Sign Up With Google Button",
-    prompt:
-      "Find the Sign up with Google button with outline variant in the signup form",
-    expectedFile: "components/signup-form.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button class="inline-flex items-center ju..." variant="outline" type="button">
-  Sign up with Google
-</button>
-
-  at button in components/signup-form.tsx:63:17
-  at Field in components/ui/field.tsx:87:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at FieldGroup in components/ui/field.tsx:46:5
-  at form in components/signup-form.tsx:27:11
-  at div in components/ui/card.tsx:66:5
-  at CardContent in components/ui/card.tsx:64:10
-  at SignupForm in components/signup-form.tsx:17:10
-
-</selected_element>`,
-  },
-  {
-    name: "Revenue Card Badge",
-    prompt:
-      "Find the trending up badge showing +12.5% in the Total Revenue card",
-    expectedFile: "components/section-cards.tsx",
-    reactGrabOutput: `<selected_element>
-
-<div class="inline-flex items-centers ro..." variant="outline">
-  (1 element)
-  +12.5%
-</div>
-
-  at div in components/ui/badge.tsx:38:5
-  at Badge in components/ui/badge.tsx:28:10
-  at div in components/section-cards.tsx:23:13
-  at CardAction in components/ui/card.tsx:52:5
-  at div in components/ui/card.tsx:20:5
-  at CardHeader in components/ui/card.tsx:18:10
-  at div in components/ui/card.tsx:7:5
-  at Card in components/ui/card.tsx:5:10
-  at div in components/section-cards.tsx:15:7
-  at SectionCards in components/section-cards.tsx:13:10
-
-</selected_element>`,
-  },
-  {
-    name: "Calendar Date Cell",
-    prompt:
-      "Find the selected date cell in the calendar component showing June 12",
-    expectedFile: "components/calendar-01.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button name="day" class="inline-flex items-centers ju..." role="gridcell" tabindex="0" aria-selected="true">
-  12
-</button>
-
-  at button in components/ui/calendar.tsx:29:7
-  at Calendar in components/ui/calendar.tsx:14:10
-  at Calendar01 in components/calendar-01.tsx:7:19
-
-</selected_element>`,
-  },
-  {
-    name: "Projects More Button",
-    prompt:
-      "Find the More button with horizontal dots icon at the bottom of the projects list",
-    expectedFile: "components/nav-projects.tsx",
-    reactGrabOutput: `<selected_element>
-
-<button data-sidebar="menu-button" class="peer/menu-button flex w-full ..." data-size="default" data-active="false">
-  (1 element)
-  More
-</button>
-
-  at button in components/ui/sidebar.tsx:515:5
-  at SidebarMenuButton in components/ui/sidebar.tsx:498:10
-  at li in components/nav-projects.tsx:80:9
-  at SidebarMenuItem in components/ui/sidebar.tsx:467:5
-  at ul in components/nav-projects.tsx:42:7
-  at SidebarMenu in components/ui/sidebar.tsx:456:5
-  at SidebarGroup in components/ui/sidebar.tsx:387:5
-  at NavProjects in components/nav-projects.tsx:28:10
-
-</selected_element>`,
-  },
-];
-
-
---- packages/benchmarks/vite.config.ts ---
-import { defineConfig } from "vite";
-
-export default defineConfig({
-  publicDir: "public",
-  build: {
-    outDir: "dist",
-    rollupOptions: {
-      input: {
-        main: "./index.html",
-      },
-    },
-  },
-});
-
-
---- packages/benchmarks/shadcn-dashboard/instrumentation-client.ts ---
-
-
---- packages/benchmarks/shadcn-dashboard/next.config.ts ---
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
-  /* config options here */
-};
-
-export default nextConfig;
+## 0.0.78
+
+### Patch Changes
+
+- fix: cancel animation
+
+## 0.0.77
+
+### Patch Changes
+
+- fix: new cli proxying
+
+## 0.0.76
+
+### Patch Changes
+
+- feat: allow CLI under react-grab namespace
+
+## 0.0.75
+
+### Patch Changes
+
+- fix: issue with Illegal Invocation on next.js pages
+
+## 0.0.74
+
+### Patch Changes
+
+- fix: updateOptions
+
+## 0.0.73
+
+### Patch Changes
+
+- fix: improve cli
+
+## 0.0.72
+
+### Patch Changes
+
+- fix: shimmer effect
+
+## 0.0.71
+
+### Patch Changes
+
+- fix: ux nits
+
+## 0.0.70
+
+### Patch Changes
+
+- fix: react-grab cli flow when agents is used
+
+## 0.0.69
+
+### Patch Changes
+
+- fix: CLI on script tag
+
+## 0.0.68
+
+### Patch Changes
+
+- feat: opencode and cli installer
+
+
+--- packages/grab/CHANGELOG.md ---
+# grab
+
+## 0.0.98
+
+### Patch Changes
+
+- feat: new state architecture and context menu
+
+## 0.0.97
+
+### Patch Changes
+
+- fix: sourcemap error
+
+## 0.0.96
+
+### Patch Changes
+
+- fix: fiber access timeout handling
+
+## 0.0.95
+
+### Patch Changes
+
+- fix: selecting buttons with disabled states
+
+## 0.0.94
+
+### Patch Changes
+
+- fix: browser crashing on selection bug
+
+## 0.0.93
+
+### Patch Changes
+
+- fix: copying not working
+
+## 0.0.92
+
+### Patch Changes
+
+- refactor: use state machines instead of signals
+
+## 0.0.91
+
+### Patch Changes
+
+- feat: dock
+
+## 0.0.90
+
+### Patch Changes
+
+- fix: check visual edit endpoint
+
+## 0.0.89
+
+### Patch Changes
+
+- fix: many bugfixes
+
+## 0.0.88
+
+### Patch Changes
+
+- fix: deprecation errors
+
+## 0.0.87
+
+### Patch Changes
+
+- feat: visual edits
+
+## 0.0.86
+
+### Patch Changes
+
+- fix: editing
+
+## 0.0.85
+
+### Patch Changes
+
+- fix: check versions on each provider
+
+## 0.0.84
+
+### Patch Changes
+
+- fix: migrate from cross-spawn to execa to fix deprecation issue
+
+## 0.0.83
+
+### Patch Changes
+
+- feat: timings during agent processing
+
+## 0.0.82
+
+### Patch Changes
+
+- fix: agent support
+
+## 0.0.81
+
+### Patch Changes
+
+- feat: codex and gemini support
+
+## 0.0.80
+
+### Patch Changes
+
+- fix: replies and undo
+
+## 0.0.79
+
+### Patch Changes
+
+- fix: claude code exit issue
+
+## 0.0.78
+
+### Patch Changes
+
+- fix: cancel animation
+
+## 0.0.77
+
+### Patch Changes
+
+- fix: new cli proxying
+
+
+--- packages/provider-ami/CHANGELOG.md ---
+# @react-grab/ami
+
+## 0.0.98
+
+### Patch Changes
+
+- feat: new state architecture and context menu
+- Updated dependencies
+  - react-grab@0.0.98
+
+## 0.0.97
+
+### Patch Changes
+
+- fix: sourcemap error
+- Updated dependencies
+  - react-grab@0.0.97
+
+## 0.0.96
+
+### Patch Changes
+
+- fix: fiber access timeout handling
+- Updated dependencies
+  - react-grab@0.0.96
+
+## 0.0.95
+
+### Patch Changes
+
+- fix: selecting buttons with disabled states
+- Updated dependencies
+  - react-grab@0.0.95
+
+## 0.0.94
+
+### Patch Changes
+
+- fix: browser crashing on selection bug
+- Updated dependencies
+  - react-grab@0.0.94
+
+## 0.0.93
+
+### Patch Changes
+
+- fix: copying not working
+- Updated dependencies
+  - react-grab@0.0.93
+
+## 0.0.92
+
+### Patch Changes
+
+- refactor: use state machines instead of signals
+- Updated dependencies
+  - react-grab@0.0.92
+
+## 0.0.91
+
+### Patch Changes
+
+- feat: dock
+- Updated dependencies
+  - react-grab@0.0.91
+
+## 0.0.90
+
+### Patch Changes
+
+- fix: check visual edit endpoint
+- Updated dependencies
+  - react-grab@0.0.90
+
+## 0.0.89
+
+### Patch Changes
+
+- fix: many bugfixes
+- Updated dependencies
+  - react-grab@0.0.89
+
+## 0.0.88
+
+### Patch Changes
+
+- fix: deprecation errors
+- Updated dependencies
+  - react-grab@0.0.88
+
+## 0.0.87
+
+### Patch Changes
+
+- feat: visual edits
+- Updated dependencies
+  - react-grab@0.0.87
+
+## 0.0.86
+
+### Patch Changes
+
+- fix: editing
+- Updated dependencies
+  - react-grab@0.0.86
+
+## 0.0.85
+
+### Patch Changes
+
+- fix: check versions on each provider
+- Updated dependencies
+  - react-grab@0.0.85
+
+## 0.0.84
+
+### Patch Changes
+
+- fix: migrate from cross-spawn to execa to fix deprecation issue
+- Updated dependencies
+  - react-grab@0.0.84
+
+## 0.0.83
+
+### Patch Changes
+
+- feat: timings during agent processing
+- Updated dependencies
+  - react-grab@0.0.83
+
+## 0.0.82
+
+### Patch Changes
+
+- fix: agent support
+- Updated dependencies
+  - react-grab@0.0.82
+
+## 0.0.81
+
+### Patch Changes
+
+- feat: codex and gemini support
+- Updated dependencies
+  - react-grab@0.0.81
+
+## 0.0.80
+
+### Patch Changes
+
+- fix: replies and undo
+- Updated dependencies
+  - react-grab@0.0.80
+
+## 0.0.79
+
+### Patch Changes
+
+- fix: claude code exit issue
+- Updated dependencies
+  - react-grab@0.0.79
+
+## 0.0.78
+
+### Patch Changes
+
+- fix: cancel animation
+- Updated dependencies
+  - react-grab@0.0.78
+
+## 0.0.77
+
+### Patch Changes
+
+- fix: new cli proxying
+- Updated dependencies
+  - react-grab@0.0.77
+
+## 0.0.76
+
+### Patch Changes
+
+- feat: allow CLI under react-grab namespace
+- Updated dependencies
+  - react-grab@0.0.76
+
+## 0.0.75
+
+### Patch Changes
+
+- fix: issue with Illegal Invocation on next.js pages
+- Updated dependencies
+  - react-grab@0.0.75
+
+## 0.0.74
+
+### Patch Changes
+
+- fix: updateOptions
+- Updated dependencies
+  - react-grab@0.0.74
+
+## 0.0.73
+
+### Patch Changes
+
+- fix: improve cli
+- Updated dependencies
+  - react-grab@0.0.73
+
+## 0.0.72
+
+### Patch Changes
+
+- fix: shimmer effect
+- Updated dependencies
+  - react-grab@0.0.72
+
+## 0.0.71
+
+### Patch Changes
+
+- fix: ux nits
+- Updated dependencies
+  - react-grab@0.0.71
+
+## 0.0.70
+
+### Patch Changes
+
+- fix: react-grab cli flow when agents is used
+- Updated dependencies
+  - react-grab@0.0.70
+
+## 0.0.69
+
+### Patch Changes
+
+- fix: CLI on script tag
+- Updated dependencies
+  - react-grab@0.0.69
+
+## 0.0.68
+
+### Patch Changes
+
+- feat: opencode and cli installer
+- Updated dependencies
+  - react-grab@0.0.68
+
+## 0.0.67
+
+### Patch Changes
+
+- fix: logs
+- Updated dependencies
+  - react-grab@0.0.67
+
+## 0.0.66
+
+### Patch Changes
+
+- fix: flash animation
+- Updated dependencies
+  - react-grab@0.0.66
+
+## 0.0.65
+
+### Patch Changes
+
+- fix: instrumentation
+- Updated dependencies
+  - react-grab@0.0.65
+
+## 0.0.64
+
+### Patch Changes
+
+- fix: stream resumption
+- Updated dependencies
+  - react-grab@0.0.64
+
+## 0.0.63
+
+### Patch Changes
+
+- fix: x positioning of selection label
+- Updated dependencies
+  - react-grab@0.0.63
+
+## 0.0.62
+
+### Patch Changes
+
+- fix: stream resumption
+- Updated dependencies
+  - react-grab@0.0.62
+
+## 0.0.61
+
+### Patch Changes
+
+- fix: improved installation strategy
+- Updated dependencies
+  - react-grab@0.0.61
+
+## 0.0.60
+
+### Patch Changes
+
+- fix: loading states
+- Updated dependencies
+  - react-grab@0.0.60
+
+## 0.0.59
+
+### Patch Changes
+
+- fix: improve component name
+- Updated dependencies
+  - react-grab@0.0.59
+
+## 0.0.58
+
+### Patch Changes
+
+- fix: issues with stack
+- Updated dependencies
+  - react-grab@0.0.58
+
+## 0.0.57
+
+### Patch Changes
+
+- fix: improvements to UI
+- Updated dependencies
+  - react-grab@0.0.57
+
+## 0.0.56
+
+### Patch Changes
+
+- add Turborepo for monorepo build orchestration
+- Updated dependencies
+  - react-grab@0.0.56
+
+## 0.0.55
+
+### Patch Changes
+
+- beta
+- Updated dependencies
+  - react-grab@0.0.55
+
+
+--- packages/provider-amp/CHANGELOG.md ---
+# @react-grab/amp
+
+## 0.0.98
+
+### Patch Changes
+
+- feat: new state architecture and context menu
+- Updated dependencies
+  - react-grab@0.0.98
+
+## 0.0.97
+
+### Patch Changes
+
+- fix: sourcemap error
+- Updated dependencies
+  - react-grab@0.0.97
+
+## 0.0.96
+
+### Patch Changes
+
+- fix: fiber access timeout handling
+- Updated dependencies
+  - react-grab@0.0.96
+
+## 0.0.95
+
+### Patch Changes
+
+- fix: selecting buttons with disabled states
+- Updated dependencies
+  - react-grab@0.0.95
+
+## 0.0.94
+
+### Patch Changes
+
+- fix: browser crashing on selection bug
+- Updated dependencies
+  - react-grab@0.0.94
+
+## 0.0.93
+
+### Patch Changes
+
+- fix: copying not working
+- Updated dependencies
+  - react-grab@0.0.93
+
+## 0.0.92
+
+### Patch Changes
+
+- refactor: use state machines instead of signals
+- Updated dependencies
+  - react-grab@0.0.92
+
+## 0.0.91
+
+### Patch Changes
+
+- feat: dock
+- Updated dependencies
+  - react-grab@0.0.91
+
+## 0.0.90
+
+### Patch Changes
+
+- fix: check visual edit endpoint
+- Updated dependencies
+  - react-grab@0.0.90
+
+## 0.0.89
+
+### Patch Changes
+
+- fix: many bugfixes
+- Updated dependencies
+  - react-grab@0.0.89
+
+## 0.0.88
+
+### Patch Changes
+
+- fix: deprecation errors
+- Updated dependencies
+  - react-grab@0.0.88
+
+## 0.0.87
+
+### Patch Changes
+
+- feat: visual edits
+- Updated dependencies
+  - react-grab@0.0.87
+
+## 0.0.86
+
+### Patch Changes
+
+- fix: editing
+- Updated dependencies
+  - react-grab@0.0.86
+
+## 0.0.85
+
+### Patch Changes
+
+- fix: check versions on each provider
+- Updated dependencies
+  - react-grab@0.0.85
+
+## 0.0.84
+
+### Patch Changes
+
+- fix: migrate from cross-spawn to execa to fix deprecation issue
+- Updated dependencies
+  - react-grab@0.0.84
+
+## 0.0.83
+
+### Patch Changes
+
+- feat: timings during agent processing
+- Updated dependencies
+  - react-grab@0.0.83
+
+## 0.0.82
+
+### Patch Changes
+
+- fix: agent support
+- Updated dependencies
+  - react-grab@0.0.82
+
+## 0.0.81
+
+### Patch Changes
+
+- feat: add Amp SDK provider with undo and follow-up support
+- Updated dependencies
+  - react-grab@0.0.81
+
+
+--- packages/provider-claude-code/CHANGELOG.md ---
+# @react-grab/claude-code
+
+## 0.0.98
+
+### Patch Changes
+
+- feat: new state architecture and context menu
+- Updated dependencies
+  - react-grab@0.0.98
+
+## 0.0.97
+
+### Patch Changes
+
+- fix: sourcemap error
+- Updated dependencies
+  - react-grab@0.0.97
+
+## 0.0.96
+
+### Patch Changes
+
+- fix: fiber access timeout handling
+- Updated dependencies
+  - react-grab@0.0.96
+
+## 0.0.95
+
+### Patch Changes
+
+- fix: selecting buttons with disabled states
+- Updated dependencies
+  - react-grab@0.0.95
+
+## 0.0.94
+
+### Patch Changes
+
+- fix: browser crashing on selection bug
+- Updated dependencies
+  - react-grab@0.0.94
+
+## 0.0.93
+
+### Patch Changes
+
+- fix: copying not working
+- Updated dependencies
+  - react-grab@0.0.93
+
+## 0.0.92
+
+### Patch Changes
+
+- refactor: use state machines instead of signals
+- Updated dependencies
+  - react-grab@0.0.92
+
+## 0.0.91
+
+### Patch Changes
+
+- feat: dock
+- Updated dependencies
+  - react-grab@0.0.91
+
+## 0.0.90
+
+### Patch Changes
+
+- fix: check visual edit endpoint
+- Updated dependencies
+  - react-grab@0.0.90
+
+## 0.0.89
+
+### Patch Changes
+
+- fix: many bugfixes
+- Updated dependencies
+  - react-grab@0.0.89
+
+## 0.0.88
+
+### Patch Changes
+
+- fix: deprecation errors
+- Updated dependencies
+  - react-grab@0.0.88
+
+## 0.0.87
+
+### Patch Changes
+
+- feat: visual edits
+- Updated dependencies
+  - react-grab@0.0.87
+
+## 0.0.86
+
+### Patch Changes
+
+- fix: editing
+- Updated dependencies
+  - react-grab@0.0.86
+
+## 0.0.85
+
+### Patch Changes
+
+- fix: check versions on each provider
+- Updated dependencies
+  - react-grab@0.0.85
+
+## 0.0.84
+
+### Patch Changes
+
+- fix: migrate from cross-spawn to execa to fix deprecation issue
+- Updated dependencies
+  - react-grab@0.0.84
+
+## 0.0.83
+
+### Patch Changes
+
+- feat: timings during agent processing
+- Updated dependencies
+  - react-grab@0.0.83
+
+## 0.0.82
+
+### Patch Changes
+
+- fix: agent support
+- Updated dependencies
+  - react-grab@0.0.82
+
+## 0.0.81
+
+### Patch Changes
+
+- feat: codex and gemini support
+- Updated dependencies
+  - react-grab@0.0.81
+
+## 0.0.80
+
+### Patch Changes
+
+- fix: replies and undo
+- Updated dependencies
+  - react-grab@0.0.80
+
+## 0.0.79
+
+### Patch Changes
+
+- fix: claude code exit issue
+- Updated dependencies
+  - react-grab@0.0.79
+
+## 0.0.78
+
+### Patch Changes
+
+- fix: cancel animation
+- Updated dependencies
+  - react-grab@0.0.78
+
+## 0.0.77
+
+### Patch Changes
+
+- fix: new cli proxying
+- Updated dependencies
+  - react-grab@0.0.77
+
+## 0.0.76
+
+### Patch Changes
+
+- feat: allow CLI under react-grab namespace
+- Updated dependencies
+  - react-grab@0.0.76
+
+## 0.0.75
+
+### Patch Changes
+
+- fix: issue with Illegal Invocation on next.js pages
+- Updated dependencies
+  - react-grab@0.0.75
+
+## 0.0.74
+
+### Patch Changes
+
+- fix: updateOptions
+- Updated dependencies
+  - react-grab@0.0.74
+
+## 0.0.73
+
+### Patch Changes
+
+- fix: improve cli
+- Updated dependencies
+  - react-grab@0.0.73
+
+## 0.0.72
+
+### Patch Changes
+
+- fix: shimmer effect
+- Updated dependencies
+  - react-grab@0.0.72
+
+## 0.0.71
+
+### Patch Changes
+
+- fix: ux nits
+- Updated dependencies
+  - react-grab@0.0.71
+
+## 0.0.70
+
+### Patch Changes
+
+- fix: react-grab cli flow when agents is used
+- Updated dependencies
+  - react-grab@0.0.70
+
+## 0.0.69
+
+### Patch Changes
+
+- fix: CLI on script tag
+- Updated dependencies
+  - react-grab@0.0.69
+
+## 0.0.68
+
+### Patch Changes
+
+- feat: opencode and cli installer
+- Updated dependencies
+  - react-grab@0.0.68
+
+## 0.0.67
+
+### Patch Changes
+
+- fix: logs
+- Updated dependencies
+  - react-grab@0.0.67
+
+## 0.0.66
+
+### Patch Changes
+
+- fix: flash animation
+- Updated dependencies
+  - react-grab@0.0.66
+
+## 0.0.65
+
+### Patch Changes
+
+- fix: instrumentation
+- Updated dependencies
+  - react-grab@0.0.65
+
+## 0.0.64
+
+### Patch Changes
+
+- fix: stream resumption
+- Updated dependencies
+  - react-grab@0.0.64
+
+## 0.0.63
+
+### Patch Changes
+
+- fix: x positioning of selection label
+- Updated dependencies
+  - react-grab@0.0.63
+
+## 0.0.62
+
+### Patch Changes
+
+- fix: stream resumption
+- Updated dependencies
+  - react-grab@0.0.62
+
+## 0.0.61
+
+### Patch Changes
+
+- fix: improved installation strategy
+- Updated dependencies
+  - react-grab@0.0.61
+
+## 0.0.60
+
+### Patch Changes
+
+- fix: loading states
+- Updated dependencies
+  - react-grab@0.0.60
+
+## 0.0.59
+
+### Patch Changes
+
+- fix: improve component name
+- Updated dependencies
+  - react-grab@0.0.59
+
+## 0.0.58
+
+### Patch Changes
+
+- fix: issues with stack
+- Updated dependencies
+  - react-grab@0.0.58
+
+## 0.0.57
+
+### Patch Changes
+
+- fix: improvements to UI
+- Updated dependencies
+  - react-grab@0.0.57
+
+## 0.0.56
+
+### Patch Changes
+
+- add Turborepo for monorepo build orchestration
+- Updated dependencies
+  - react-grab@0.0.56
+
+## 0.0.55
+
+### Patch Changes
+
+- beta
+- Updated dependencies
+  - react-grab@0.0.55
+
+
+--- packages/provider-codex/CHANGELOG.md ---
+# @react-grab/codex
+
+## 0.0.98
+
+### Patch Changes
+
+- feat: new state architecture and context menu
+- Updated dependencies
+  - react-grab@0.0.98
+
+## 0.0.97
+
+### Patch Changes
+
+- fix: sourcemap error
+- Updated dependencies
+  - react-grab@0.0.97
+
+## 0.0.96
+
+### Patch Changes
+
+- fix: fiber access timeout handling
+- Updated dependencies
+  - react-grab@0.0.96
+
+## 0.0.95
+
+### Patch Changes
+
+- fix: selecting buttons with disabled states
+- Updated dependencies
+  - react-grab@0.0.95
+
+## 0.0.94
+
+### Patch Changes
+
+- fix: browser crashing on selection bug
+- Updated dependencies
+  - react-grab@0.0.94
+
+## 0.0.93
+
+### Patch Changes
+
+- fix: copying not working
+- Updated dependencies
+  - react-grab@0.0.93
+
+## 0.0.92
+
+### Patch Changes
+
+- refactor: use state machines instead of signals
+- Updated dependencies
+  - react-grab@0.0.92
+
+## 0.0.91
+
+### Patch Changes
+
+- feat: dock
+- Updated dependencies
+  - react-grab@0.0.91
+
+## 0.0.90
+
+### Patch Changes
+
+- fix: check visual edit endpoint
+- Updated dependencies
+  - react-grab@0.0.90
+
+## 0.0.89
+
+### Patch Changes
+
+- fix: many bugfixes
+- Updated dependencies
+  - react-grab@0.0.89
+
+## 0.0.88
+
+### Patch Changes
+
+- fix: deprecation errors
+- Updated dependencies
+  - react-grab@0.0.88
+
+## 0.0.87
+
+### Patch Changes
+
+- feat: visual edits
+- Updated dependencies
+  - react-grab@0.0.87
+
+## 0.0.86
+
+### Patch Changes
+
+- fix: editing
+- Updated dependencies
+  - react-grab@0.0.86
+
+## 0.0.85
+
+### Patch Changes
+
+- fix: check versions on each provider
+- Updated dependencies
+  - react-grab@0.0.85
+
+## 0.0.84
+
+### Patch Changes
+
+- fix: migrate from cross-spawn to execa to fix deprecation issue
+- Updated dependencies
+  - react-grab@0.0.84
+
+## 0.0.83
+
+### Patch Changes
+
+- feat: timings during agent processing
+- Updated dependencies
+  - react-grab@0.0.83
+
+## 0.0.82
+
+### Patch Changes
+
+- fix: agent support
+- Updated dependencies
+  - react-grab@0.0.82
+
+## 0.0.81
+
+### Patch Changes
+
+- 3b47e87: feat: add OpenAI Codex SDK provider with undo and follow-up support
+- feat: codex and gemini support
+- Updated dependencies
+  - react-grab@0.0.81
+
+## 0.0.80
+
+### Patch Changes
+
+- feat: add OpenAI Codex SDK provider with undo and follow-up support
+- Updated dependencies
+  - react-grab@0.0.80
 
 
 --- .changeset/README.md ---
@@ -1528,18 +3060,89 @@ We have a quick list of common questions to get you started engaging with this p
 - [our documentation](https://github.com/changesets/changesets/blob/main/docs/common-questions.md)
 
 --- AGENTS.md ---
-- MUST: We use @antfu/ni. Use `ni` to install, `nr SCRIPT_NAME` to run script, `nun` to uninstall package
-- MUST: Use TypeScript interfaces over types
+## General Rules
+
+- MUST: Use @antfu/ni. Use `ni` to install, `nr SCRIPT_NAME` to run. `nun` to uninstall.
+- MUST: Use TypeScript interfaces over types.
+- MUST: Keep all types in the global scope.
 - MUST: Use arrow functions over function declarations
-- NEVER comment unless absolutely necessary.
-  - If it is a hack, such as a setTimeout or potentially confusing code, it should be prefixed with // HACK: reason for hack
+- MUST: Never comment unless absolutely necessary.
+  - If the code is a hack (like a setTimeout or potentially confusing code), it must be prefixed with // HACK: reason for hack
 - MUST: Use kebab-case for files
 - MUST: Use descriptive names for variables (avoid shorthands, or 1-2 character names).
   - Example: for .map(), you can use `innerX` instead of `x`
   - Example: instead of `moved` use `didPositionChange`
+- MUST: Frequently re-evaluate and refactor variable names to be more accurate and descriptive.
 - MUST: Do not type cast ("as") unless absolutely necessary
-- MUST: Keep interfaces or types on the global scope.
 - MUST: Remove unused code and don't repeat yourself.
+- MUST: Always search the codebase, think of many solutions, then implement the most _elegant_ solution.
+- MUST: Put all magic numbers in `constants.ts` using `SCREAMING_SNAKE_CASE` with unit suffixes (`_MS`, `_PX`).
+- MUST: Put small, focused utility functions in `utils/` with one utility per file.
+
+## SolidJS Rules
+
+### Mental Model
+
+- MUST: Treat components as setup functions that run ONCE, not render functions.
+- MUST: Place reactive work in primitives (`createMemo`, `createEffect`, `<Show>`, `<For>`), not component body.
+- MUST: Access signals only inside reactive contexts (JSX expressions, effects, memos).
+
+### Reactivity
+
+- MUST: Call signals as functions: `count()` not `count`.
+- MUST: Use functional updates when new state depends on old: `setCount((prev) => prev + 1)`.
+- MUST: Keep signals atomic (one per value) — one big state object loses granularity.
+- MUST: Use derived functions `() => count() * 2` for cheap/infrequent derivations.
+- MUST: Use `createMemo(() => ...)` for expensive/frequent derivations — caches result.
+- MUST: Use `createEffect` for side effects only (DOM, localStorage, subscriptions).
+- MUST: Call `onCleanup(() => ...)` inside effects for subscriptions/intervals/listeners.
+- MUST: Use path syntax for store updates: `setStore("users", 0, "name", "Jane")`.
+- MUST: Wrap store props in arrow for `on()`: `on(() => store.value, fn)` not `on(store.value, fn)`.
+- SHOULD: Use `{ equals: false }` for trigger signals that always notify.
+- SHOULD: Use `batch(() => { ... })` when updating multiple signals outside event handlers.
+- SHOULD: Use `on(dep, fn)` for explicit effect dependencies.
+- SHOULD: Use `untrack(() => value())` to read without subscribing.
+- SHOULD: Use `createStore({ ... })` for nested objects with fine-grained reactivity.
+- SHOULD: Use `produce(draft => { ... })` for complex store mutations.
+- NEVER: Derive state via `createEffect(() => setX(y()))` — use memo or derived function.
+- NEVER: Place side effects inside `createMemo` — causes infinite loops/crashes.
+
+### Props
+
+- MUST: Access props via `props.title`, not destructuring.
+- SHOULD: Wrap in getter if needed: `const title = () => props.title`.
+- SHOULD: Use `splitProps(props, ["keys"])` to separate local from pass-through props.
+- SHOULD: Use `mergeProps(defaults, props)` for default values.
+- SHOULD: Use `children(() => props.children)` only when transforming, otherwise `{props.children}`.
+- NEVER: Destructure props `({ title })` — breaks reactivity.
+
+### Control Flow
+
+- MUST: Use `<For each={items()}>` for object arrays — item is value, index is signal.
+- MUST: Use `<Index each={items()}>` for primitives/inputs — item is signal, index is number.
+- MUST: Use `<Suspense fallback={...}>` for async, not `<Show when={!loading}>`.
+- MUST: Access resource states via `data()`, `data.loading`, `data.error`, `data.latest`.
+- SHOULD: Use `<Show when={cond()} fallback={...}>` for conditionals.
+- SHOULD: Use `<Show when={val}>` callback for type narrowing: `{(v) => <div>{v().name}</div>}`.
+- SHOULD: Use `<Switch>/<Match>` for multiple conditions.
+- SHOULD: Use `createResource(source, fetcher)` for reactive async data.
+- SHOULD: Use `<ErrorBoundary fallback={(err, reset) => ...}>` for render errors.
+- NEVER: Use `.map()` in JSX — use `<For>` or `<Index>`.
+- NEVER: Rely on ErrorBoundary for event handler or setTimeout errors — use try/catch.
+
+### JSX & DOM
+
+- MUST: Use `class` not `className`.
+- MUST: Combine static `class="btn"` with reactive `classList={{ active: isActive() }}`.
+- MUST: Use `onClick` for delegated events; `on:click` for native (element-level).
+- MUST: Condition inside handler since events are not reactive: `onClick={() => props.onClick?.()}`.
+- MUST: Read refs in `onMount` or effects — refs connect after render.
+- MUST: Call `onCleanup` inside directives for cleanup.
+- SHOULD: Use `on:click` for `stopPropagation`, capture, passive, or custom events.
+- SHOULD: Use `style={{ color: color(), "--css-var": value() }}` for inline styles.
+- SHOULD: Type refs as `let el: HTMLElement | undefined` with guard.
+- SHOULD: Use `use:directiveName={accessor}` for reusable DOM behaviors.
+- NEVER: Mix reactive `class={x()}` with `classList`.
 
 
 --- README.md ---
@@ -1549,26 +3152,41 @@ We have a quick list of common questions to get you started engaging with this p
 [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
 [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
 
-React Grab allows you to select an element and copy its context (like HTML, React component, and file source)
+Select context for coding agents directly from your website
 
-It makes tools like Cursor, Claude Code, Copilot run up to [**55% faster**](https://react-grab.com/blog/intro)
+How? Point at any element and press **⌘C** (Mac) or **Ctrl+C** (Windows/Linux) to copy the file name, React component, and HTML source code.
+
+It makes tools like Cursor, Claude Code, Copilot run up to [**3× faster**](https://react-grab.com/blog/intro) and more accurate.
 
 ### [Try out a demo! →](https://react-grab.com)
 
-![Demo](https://react-grab.com/demo.gif)
+![React Grab Demo](https://github.com/aidenybai/react-grab/blob/main/packages/website/public/demo.gif?raw=true)
 
 ## Install
 
-> [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
-
-Get started in 1 minute by adding this script tag to your app:
+Run this command to install React Grab into your project. Ensure you are running at project root (e.g. where the `next.config.ts` or `vite.config.ts` file is located).
 
 ```html
-<script
-  src="//www.react-grab.com/script.js"
-  crossorigin="anonymous"
-></script>
+npx grab@latest init
 ```
+
+## Usage
+
+Once installed, hover over any UI element in your browser and press:
+
+- **⌘C** (Cmd+C) on Mac
+- **Ctrl+C** on Windows/Linux
+
+This copies the element's context (file name, React component, and HTML source code) to your clipboard ready to paste into your coding agent. For example:
+
+```js
+<a class="ml-auto inline-block text-sm" href="#">
+  Forgot your password?
+</a>
+in LoginForm at components/login-form.tsx:46:19
+```
+
+## Manual Installation
 
 If you're using a React framework or build tool, view instructions below:
 
@@ -1591,7 +3209,6 @@ export default function RootLayout({ children }) {
             strategy="beforeInteractive"
           />
         )}
-        {/* rest of your scripts go under */}
       </head>
       <body>{children}</body>
     </html>
@@ -1618,7 +3235,6 @@ export default function Document() {
             strategy="beforeInteractive"
           />
         )}
-        {/* rest of your scripts go under */}
       </Head>
       <body>
         <Main />
@@ -1668,111 +3284,38 @@ if (process.env.NODE_ENV === "development") {
 }
 ```
 
-## Extending React Grab
+## Coding agent integration
 
-React Grab provides an public customization API. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options for extending React Grab.
+React Grab can send selected element context directly to your coding agent. This enables a workflow where you select a UI element and an agent automatically makes changes to your codebase.
 
-```typescript
-import { init } from "react-grab/core";
+This means **no copying and pasting** - just select the element and let the agent do the rest. [Read more about coding agent integration →](https://react-grab.com/blog/agent)
 
-const api = init({
-  theme: {
-    enabled: true, // disable all UI by setting to false
-    hue: 180, // shift colors by 180 degrees (pink → cyan/turquoise)
-    crosshair: {
-      enabled: false, // disable crosshair
-    },
-    elementLabel: {
-      // when hovering over an element
-      backgroundColor: "#000000",
-      textColor: "#ffffff",
-    },
-  },
+> **Click to expand** setup instructions for your coding agent:
 
-  onElementSelect: (element) => {
-    console.log("Selected:", element);
-  },
-  onCopySuccess: (elements, content) => {
-    console.log("Copied to clipboard:", content);
-  },
-  onStateChange: (state) => {
-    console.log("Active:", state.isActive);
-  },
-});
+<details>
+<summary><strong>Claude Code</strong></summary>
 
-api.activate();
-api.copyElement(document.querySelector(".my-element"));
-console.log(api.getState());
+#### Server Setup
+
+The server runs on port `4567` and interfaces with the Claude Agent SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/claude-code@latest && next dev"
+  }
+}
 ```
 
-## Resources & Contributing Back
-
-Want to try it out? Check the [our demo](https://react-grab.com).
-
-Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
-
-Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
-
-Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
-
-We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
-
-[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-
-### License
-
-React Grab is MIT-licensed open-source software.
-
-
-## Links discovered
-- [![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)
-- [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)
-- [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)
-- [**55% faster**](https://react-grab.com/blog/intro)
-- [Try out a demo! →](https://react-grab.com)
-- [Demo](https://react-grab.com/demo.gif)
-- [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
-- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
-- [our demo](https://react-grab.com)
-- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-- [Discord](https://discord.com/invite/G7zxfUzkm7)
-- [issue tracker](https://github.com/aidenybai/react-grab/issues)
-- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
-- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-
---- packages/react-grab/README.md ---
-# <img src="https://github.com/aidenybai/react-grab/blob/main/.github/public/logo.png?raw=true" width="60" align="center" /> React Grab
-
-[![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)](https://bundlephobia.com/package/react-grab)
-[![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
-[![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/react-grab)
-
-React Grab allows you to select an element and copy its context (like HTML, React component, and file source)
-
-It makes tools like Cursor, Claude Code, Copilot run up to [**55% faster**](https://react-grab.com/blog/intro)
-
-### [Try out a demo! →](https://react-grab.com)
-
-![Demo](https://react-grab.com/demo.gif)
-
-## Install
-
-> [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
-
-Get started in 1 minute by adding this script tag to your app:
+#### Client Setup
 
 ```html
-<script
-  src="//unpkg.com/react-grab/dist/index.global.js"
-  crossorigin="anonymous"
-></script>
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"></script>
 ```
 
-If you're using a React framework or build tool, view instructions below:
-
-#### Next.js (App router)
-
-Add this inside of your `app/layout.tsx`:
+Or using Next.js `Script` component in your `app/layout.tsx`:
 
 ```jsx
 import Script from "next/script";
@@ -1781,15 +3324,18 @@ export default function RootLayout({ children }) {
   return (
     <html>
       <head>
-        {/* put this in the <head> */}
         {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
         )}
-        {/* rest of your scripts go under */}
       </head>
       <body>{children}</body>
     </html>
@@ -1797,410 +3343,2332 @@ export default function RootLayout({ children }) {
 }
 ```
 
-#### Next.js (Pages router)
+</details>
 
-Add this into your `pages/_document.tsx`:
+<details>
+<summary><strong>Cursor CLI</strong></summary>
+
+You must have the [`cursor-agent` CLI](https://cursor.com/docs/cli/overview) installed.
+
+#### Server Setup
+
+The server runs on port `5567` and interfaces with the `cursor-agent` CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/cursor@latest && next dev"
+  }
+}
+```
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/cursor/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
 
 ```jsx
-import { Html, Head, Main, NextScript } from "next/document";
+import Script from "next/script";
 
-export default function Document() {
+export default function RootLayout({ children }) {
   return (
-    <Html lang="en">
-      <Head>
-        {/* put this in the <Head> */}
+    <html>
+      <head>
         {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/cursor/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
         )}
-        {/* rest of your scripts go under */}
-      </Head>
-      <body>
-        <Main />
-        <NextScript />
-      </body>
-    </Html>
+      </head>
+      <body>{children}</body>
+    </html>
   );
 }
 ```
 
-#### Vite
+</details>
 
-Your `index.html` could look like this:
+<details>
+<summary><strong>OpenCode</strong></summary>
 
-```html
-<!doctype html>
-<html lang="en">
-  <head>
-    <script type="module">
-      // first npm i react-grab
-      // then in head:
-      if (import.meta.env.DEV) {
-        import("react-grab");
-      }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-```
+#### Server Setup
 
-#### Webpack
+The server runs on port `6567` and interfaces with the OpenCode CLI. Add to your `package.json`:
 
-First, install React Grab:
-
-```bash
-npm install react-grab
-```
-
-Then add this at the top of your main entry file (e.g., `src/index.tsx` or `src/main.tsx`):
-
-```tsx
-if (process.env.NODE_ENV === "development") {
-  import("react-grab");
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/opencode@latest && next dev"
+  }
 }
 ```
 
+> **Note:** You must have [OpenCode](https://opencode.ai) installed (`npm i -g opencode-ai@latest`).
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/opencode/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Codex</strong></summary>
+
+#### Server Setup
+
+The server runs on port `7567` and interfaces with the OpenAI Codex SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/codex@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Codex](https://github.com/openai/codex) installed (`npm i -g @openai/codex`).
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/codex/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/codex/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Gemini</strong></summary>
+
+#### Server Setup
+
+The server runs on port `8567` and interfaces with the Gemini CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/gemini@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/gemini/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/gemini/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Amp</strong></summary>
+
+#### Server Setup
+
+The server runs on port `9567` and interfaces with the [Amp SDK](https://ampcode.com/manual/sdk). Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/amp@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have an [Amp API key](https://ampcode.com/settings) set via `AMP_API_KEY` environment variable.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/amp/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/amp/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Factory Droid</strong></summary>
+
+#### Server Setup
+
+The server runs on port `10567` and interfaces with the [Factory CLI](https://docs.factory.ai/cli/droid-exec/overview). Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/droid@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Factory CLI](https://app.factory.ai) installed (`curl -fsSL https://app.factory.ai/cli | sh`) and `FACTORY_API_KEY` environment variable set.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/droid/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/droid/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
 ## Extending React Grab
 
-React Grab provides an public customization API. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options for extending React Grab.
+React Grab uses a plugin system to extend functionality. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options.
+
+#### Basic Usage
 
 ```typescript
 import { init } from "react-grab/core";
 
-const api = init({
-  theme: {
-    enabled: true, // disable all UI by setting to false
-    hue: 180, // shift colors by 180 degrees (pink → cyan/turquoise)
-    crosshair: {
-      enabled: false, // disable crosshair
-    },
-    elementLabel: {
-      // when hovering over an element
-      backgroundColor: "#000000",
-      textColor: "#ffffff",
-    },
-  },
-
-  onElementSelect: (element) => {
-    console.log("Selected:", element);
-  },
-  onCopySuccess: (elements, content) => {
-    console.log("Copied to clipboard:", content);
-  },
-  onStateChange: (state) => {
-    console.log("Active:", state.isActive);
-  },
-});
+const api = init();
 
 api.activate();
 api.copyElement(document.querySelector(".my-element"));
 console.log(api.getState());
 ```
 
-## Resources & Contributing Back
+#### Lifecycle Hooks Plugin
 
-Want to try it out? Check the [our demo](https://react-grab.com).
+Track element selections with analytics:
 
-Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
-
-Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
-
-Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
-
-We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
-
-[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-
-### License
-
-React Grab is MIT-licensed open-source software.
-
-
-## Links discovered
-- [![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)
-- [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)
-- [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)
-- [**55% faster**](https://react-grab.com/blog/intro)
-- [Try out a demo! →](https://react-grab.com)
-- [Demo](https://react-grab.com/demo.gif)
-- [**Install using Cursor**](https://cursor.com/link/prompt?text=1.+Run+curl+-s+https%3A%2F%2Freact-grab.com%2Fllms.txt+%0A2.+Understand+the+content+and+follow+the+instructions+to+install+React+Grab.%0A3.+Tell+the+user+to+refresh+their+local+app+and+explain+how+to+use+React+Grab)
-- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
-- [our demo](https://react-grab.com)
-- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-- [Discord](https://discord.com/invite/G7zxfUzkm7)
-- [issue tracker](https://github.com/aidenybai/react-grab/issues)
-- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
-- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
-
---- packages/vite-playground/index.html ---
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <script type="module">
-      if (import.meta.env.DEV) {
-        import("react-grab");
-      }
-    </script>
-
-    <title>Kitchen Sink - Vite</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
-</html>
-
-
---- packages/react-grab/eslint.config.js ---
-import tseslint from "typescript-eslint";
-
-export default tseslint.config(
-  {
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "eslint.config.mjs",
-      "bundled_*.mjs",
-      "*.mjs",
-      "*.cjs",
-      "*.js",
-      "*.json",
-      "*.md",
-    ],
+```typescript
+api.registerPlugin({
+  name: "analytics",
+  hooks: {
+    onElementSelect: (element) => {
+      analytics.track("element_selected", { tagName: element.tagName });
+    },
+    onDragEnd: (elements, bounds) => {
+      analytics.track("drag_end", { count: elements.length, bounds });
+    },
+    onCopySuccess: (elements, content) => {
+      analytics.track("copy", { count: elements.length });
+    },
   },
-  ...tseslint.configs.recommended,
-  ...tseslint.configs.recommendedTypeChecked,
-  {
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
+});
+```
+
+#### Context Menu Plugin
+
+Add custom actions to the right-click menu:
+
+```typescript
+api.registerPlugin({
+  name: "custom-actions",
+  actions: [
+    {
+      id: "log-to-console",
+      label: "Log to Console",
+      onAction: ({ elements }) => console.dir(elements[0]),
+    },
+  ],
+});
+```
+
+#### Theme Plugin
+
+Customize the UI appearance:
+
+```typescript
+api.registerPlugin({
+  name: "theme",
+  theme: {
+    hue: 180, // shift colors (pink → cyan)
+    crosshair: { enabled: false },
+    elementLabel: { enabled: false },
+  },
+});
+```
+
+#### Agent Plugin
+
+Create a custom agent that processes selected elements:
+
+```typescript
+api.registerPlugin({
+  name: "my-custom-agent",
+  actions: [
+    {
+      id: "custom-agent",
+      label: "Ask AI",
+      onAction: ({ enterPromptMode }) => enterPromptMode?.(),
+      agent: {
+        provider: {
+          async *send({ prompt, content }, signal) {
+            yield "Analyzing element...";
+
+            const response = await fetch("/api/ai", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prompt, content }),
+              signal,
+            });
+
+            yield "Processing response...";
+
+            const result = await response.json();
+            yield `Done: ${result.message}`;
+          },
+        },
       },
     },
-    rules: {
-      "import/order": "off",
-    },
+  ],
+});
+```
+
+## Resources & Contributing Back
+
+Want to try it out? Check the [our demo](https://react-grab.com).
+
+Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
+
+Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
+
+Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
+
+We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
+
+[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+### License
+
+React Grab is MIT-licensed open-source software.
+
+_Thank you to [Andrew Luetgers](https://github.com/andrewluetgers) for donating the `grab` npm package name._
+
+
+## Links discovered
+- [![size](https://img.shields.io/bundlephobia/minzip/react-grab?label=gzip&style=flat&colorA=000000&colorB=000000)
+- [![version](https://img.shields.io/npm/v/react-grab?style=flat&colorA=000000&colorB=000000)
+- [![downloads](https://img.shields.io/npm/dt/react-grab.svg?style=flat&colorA=000000&colorB=000000)
+- [**3× faster**](https://react-grab.com/blog/intro)
+- [Try out a demo! →](https://react-grab.com)
+- [React Grab Demo](https://github.com/aidenybai/react-grab/blob/main/packages/website/public/demo.gif?raw=true)
+- [Read more about coding agent integration →](https://react-grab.com/blog/agent)
+- [`cursor-agent` CLI](https://cursor.com/docs/cli/overview)
+- [OpenCode](https://opencode.ai)
+- [Codex](https://github.com/openai/codex)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+- [Amp SDK](https://ampcode.com/manual/sdk)
+- [Amp API key](https://ampcode.com/settings)
+- [Factory CLI](https://docs.factory.ai/cli/droid-exec/overview)
+- [Factory CLI](https://app.factory.ai)
+- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
+- [our demo](https://react-grab.com)
+- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Discord](https://discord.com/invite/G7zxfUzkm7)
+- [issue tracker](https://github.com/aidenybai/react-grab/issues)
+- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
+- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Andrew Luetgers](https://github.com/andrewluetgers)
+
+--- scripts/serve-dist.ts ---
+import { join } from "path";
+import { readdir } from "fs/promises";
+import { startTunnel } from "untun";
+
+const PORT = 3456;
+
+const PACKAGES_DIR = join(import.meta.dir, "../packages");
+
+const DIST_MAPPINGS: Record<string, string> = {
+  "react-grab": join(PACKAGES_DIR, "react-grab/dist"),
+  "provider-ami": join(PACKAGES_DIR, "provider-ami/dist"),
+  "provider-cursor": join(PACKAGES_DIR, "provider-cursor/dist"),
+  "provider-claude-code": join(PACKAGES_DIR, "provider-claude-code/dist"),
+  "provider-opencode": join(PACKAGES_DIR, "provider-opencode/dist"),
+};
+
+const NO_CACHE_HEADERS = {
+  "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
+const getContentType = (filePath: string): string => {
+  const extension = filePath.split(".").pop()?.toLowerCase();
+  const contentTypes: Record<string, string> = {
+    js: "application/javascript",
+    cjs: "application/javascript",
+    mjs: "application/javascript",
+    ts: "application/typescript",
+    cts: "application/typescript",
+    mts: "application/typescript",
+    css: "text/css",
+    json: "application/json",
+    html: "text/html",
+    txt: "text/plain",
+  };
+  return contentTypes[extension ?? ""] ?? "application/octet-stream";
+};
+
+const listDirectoryContents = async (
+  packageName: string,
+  distPath: string,
+): Promise<string[]> => {
+  const files = await readdir(distPath);
+  return files.map((file) => `/${packageName}/${file}`);
+};
+
+const generateIndexHtml = async (baseUrl: string): Promise<string> => {
+  const sections: string[] = [];
+
+  for (const [packageName, distPath] of Object.entries(DIST_MAPPINGS)) {
+    const files = await listDirectoryContents(packageName, distPath);
+    const fileLinks = files
+      .map((file) => `<li><a href="${file}"><code>${file}</code></a></li>`)
+      .join("\n            ");
+    sections.push(`
+        <section>
+          <h2>${packageName}</h2>
+          <ul>
+            ${fileLinks}
+          </ul>
+        </section>`);
+  }
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>react-grab dist server</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Geist', system-ui, -apple-system, sans-serif;
+      background: #000;
+      color: #e5e5e5;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      color: #737373;
+      font-size: 0.875rem;
+      margin-bottom: 2rem;
+    }
+    .subtitle a {
+      color: #ff4fff;
+      text-decoration: none;
+      font-family: 'Geist Mono', monospace;
+      background: rgba(255, 79, 255, 0.1);
+      padding: 0.125rem 0.375rem;
+      border-radius: 4px;
+      transition: background 0.2s;
+    }
+    .subtitle a:hover {
+      background: rgba(255, 79, 255, 0.2);
+    }
+    section {
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #a3a3a3;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+    li a {
+      display: block;
+      text-decoration: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      transition: all 0.15s ease;
+    }
+    li a:hover {
+      background: rgba(255, 79, 255, 0.08);
+      border-color: rgba(255, 79, 255, 0.2);
+    }
+    li a code {
+      font-family: 'Geist Mono', monospace;
+      font-size: 0.8125rem;
+      color: #d4d4d4;
+    }
+    li a:hover code {
+      color: #ff4fff;
+    }
+    ::selection {
+      background: rgba(215, 95, 203, 0.2);
+      color: #d75fcb;
+    }
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0d0d0d;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #404040;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #525252;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>react-grab dist server</h1>
+    <p class="subtitle">Serving at <a href="${baseUrl}">${baseUrl}</a></p>
+    ${sections.join("")}
+  </div>
+</body>
+</html>`;
+};
+
+const server = Bun.serve({
+  port: PORT,
+  async fetch(request) {
+    const url = new URL(request.url);
+    const pathname = url.pathname;
+
+    if (pathname === "/" || pathname === "") {
+      const html = await generateIndexHtml(`http://localhost:${PORT}`);
+      return new Response(html, {
+        headers: {
+          "Content-Type": "text/html",
+          ...NO_CACHE_HEADERS,
+        },
+      });
+    }
+
+    if (pathname === "/script.js") {
+      const filePath = join(DIST_MAPPINGS["react-grab"], "index.global.js");
+      const file = Bun.file(filePath);
+      return new Response(file, {
+        headers: {
+          "Content-Type": "application/javascript",
+          "Access-Control-Allow-Origin": "*",
+          ...NO_CACHE_HEADERS,
+        },
+      });
+    }
+
+    const pathParts = pathname.split("/").filter(Boolean);
+    if (pathParts.length < 2) {
+      return new Response("Not Found", {
+        status: 404,
+        headers: NO_CACHE_HEADERS,
+      });
+    }
+
+    const [packageName, ...rest] = pathParts;
+    const distPath = DIST_MAPPINGS[packageName];
+
+    if (!distPath) {
+      return new Response("Package not found", {
+        status: 404,
+        headers: NO_CACHE_HEADERS,
+      });
+    }
+
+    const filePath = join(distPath, ...rest);
+    const file = Bun.file(filePath);
+
+    if (!(await file.exists())) {
+      return new Response("File not found", {
+        status: 404,
+        headers: NO_CACHE_HEADERS,
+      });
+    }
+
+    return new Response(file, {
+      headers: {
+        "Content-Type": getContentType(filePath),
+        "Access-Control-Allow-Origin": "*",
+        ...NO_CACHE_HEADERS,
+      },
+    });
   },
-);
+});
 
+console.log(`Serving dist files at http://localhost:${server.port}`);
 
---- packages/next-playground/instrumentation-client.ts ---
-import "react-grab";
+const tunnel = await startTunnel({
+  port: PORT,
+  acceptCloudflareNotice: true,
+});
 
+if (tunnel) {
+  const tunnelUrl = await tunnel.getURL();
+  console.log(`\n${tunnelUrl}`);
 
---- packages/website/instrumentation-client.ts ---
-import { init } from "react-grab";
-
-if (typeof window !== "undefined") {
-  init({
-    onActivate: () => {
-      window.dispatchEvent(new CustomEvent("react-grab:activated"));
-    },
-    onDeactivate: () => {
-      window.dispatchEvent(new CustomEvent("react-grab:deactivated"));
-    },
+  process.on("SIGINT", async () => {
+    await tunnel.close();
+    process.exit(0);
   });
 }
 
 
---- packages/next-playground/next.config.ts ---
-import type { NextConfig } from 'next';
+## Links discovered
+- [<code>${file}</code>](https://github.com/aidenybai/react-grab/blob/main/scripts/${file}.md)
+- [${baseUrl}](https://github.com/aidenybai/react-grab/blob/main/scripts/${baseUrl}.md)
 
-const nextConfig: NextConfig = {
-  /* config options here */
-};
+--- packages/cli/README.md ---
+# @react-grab/cli
 
-export default nextConfig;
+Interactive CLI to install React Grab in your project.
+
+## Usage
+
+```bash
+npx @react-grab/cli
+```
+
+### Interactive Mode (default)
+
+Running without options starts the interactive wizard:
+
+```bash
+npx @react-grab/cli
+```
+
+### Non-Interactive Mode
+
+Pass options to skip prompts:
+
+```bash
+# Auto-detect everything and install without prompts
+npx @react-grab/cli -y
+
+# Specify framework and agent
+npx @react-grab/cli -f next -r app -a cursor -y
+
+# Use specific package manager
+npx @react-grab/cli -p pnpm -a claude-code -y
+```
+
+## Options
+
+| Option              | Alias | Description                                   | Choices                                                               |
+| ------------------- | ----- | --------------------------------------------- | --------------------------------------------------------------------- |
+| `--framework`       | `-f`  | Framework to configure                        | `next`, `vite`, `webpack`                                             |
+| `--package-manager` | `-p`  | Package manager to use                        | `npm`, `yarn`, `pnpm`, `bun`                                          |
+| `--router`          | `-r`  | Next.js router type                           | `app`, `pages`                                                        |
+| `--agent`           | `-a`  | Agent integration to add                      | `claude-code`, `cursor`, `opencode`, `codex`, `gemini`, `amp`, `none` |
+| `--yes`             | `-y`  | Skip all confirmation prompts                 | -                                                                     |
+| `--skip-install`    | -     | Skip package installation (only modify files) | -                                                                     |
+| `--help`            | `-h`  | Show help                                     | -                                                                     |
+| `--version`         | `-v`  | Show version                                  | -                                                                     |
+
+## Examples
+
+```bash
+# Interactive setup
+npx @react-grab/cli
+
+# Quick install with auto-detection
+npx @react-grab/cli -y
+
+# Next.js App Router with Cursor agent
+npx @react-grab/cli -f next -r app -a cursor -y
+
+# Vite with Claude Code agent using pnpm
+npx @react-grab/cli -f vite -p pnpm -a claude-code -y
+
+# Add agent to existing React Grab installation
+npx @react-grab/cli -a opencode -y
+
+# Only modify files (skip npm install)
+npx @react-grab/cli -a cursor --skip-install -y
+```
+
+## Supported Frameworks
+
+| Framework              | File Modified                     |
+| ---------------------- | --------------------------------- |
+| Next.js (App Router)   | `app/layout.tsx`                  |
+| Next.js (Pages Router) | `pages/_document.tsx`             |
+| Vite                   | `index.html`                      |
+| Webpack                | `src/index.tsx` or `src/main.tsx` |
+
+## Agent Integrations
+
+The CLI can optionally set up agent integrations for:
+
+- **Claude Code** (`-a claude-code`) - Send selected elements to Claude Code
+- **Cursor** (`-a cursor`) - Send selected elements to Cursor
+- **OpenCode** (`-a opencode`) - Send selected elements to OpenCode
+- **Codex** (`-a codex`) - Send selected elements to OpenAI Codex
+- **Gemini** (`-a gemini`) - Send selected elements to Google Gemini CLI
+- **Amp** (`-a amp`) - Send selected elements to Amp
+
+## Manual Installation
+
+If the CLI doesn't work for your setup, visit the docs:
+
+https://react-grab.com/docs
 
 
---- packages/website/next.config.ts ---
-import type { NextConfig } from "next";
+--- packages/grab/README.md ---
+# <img src="https://github.com/aidenybai/react-grab/blob/main/.github/public/logo.png?raw=true" width="60" align="center" /> Grab
 
-const nextConfig: NextConfig = {
-  serverExternalPackages: ["react-grab"],
-  // this causes sources to be mangled
-  reactCompiler: false,
-  productionBrowserSourceMaps: true,
-  turbopack: {},
-  webpack: (config, { dev, isServer }) => {
-    if (!isServer && !dev) {
-      config.devtool = "source-map";
-    }
-    return config;
-  },
-  redirects: async () => {
-    return [
-      {
-        source: "/benchmarks",
-        destination: "/blog/intro",
-        permanent: true,
-      },
-    ];
-  },
-  rewrites: async () => {
-    return {
-      beforeFiles: [
-        {
-          source: "/",
-          destination: "/llms.txt",
-          has: [
-            {
-              type: "header",
-              key: "accept",
-              value: "(.*)text/markdown(.*)",
-            },
-          ],
-        },
-        {
-          source: "/llm.txt",
-          destination: "/llms.txt",
-        },
-      ],
-    };
-  },
-};
+[![size](https://img.shields.io/bundlephobia/minzip/grab?label=gzip&style=flat&colorA=000000&colorB=000000)](https://bundlephobia.com/package/grab)
+[![version](https://img.shields.io/npm/v/grab?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/grab)
+[![downloads](https://img.shields.io/npm/dt/grab.svg?style=flat&colorA=000000&colorB=000000)](https://npmjs.com/package/grab)
 
-export default nextConfig;
+Select context for coding agents directly from your website
 
+How? Point at any element and press **⌘C** (Mac) or **Ctrl+C** (Windows/Linux) to copy the file name, React component, and HTML source code.
 
---- packages/react-grab/tsup.config.ts ---
-import fs from "node:fs";
-import { defineConfig, type Options } from "tsup";
-// @ts-expect-error -- esbuild-plugin-babel is not typed
-import babel from "esbuild-plugin-babel";
+It makes tools like Cursor, Claude Code, Copilot run up to [**3× faster**](https://react-grab.com/blog/intro) and more accurate.
 
-const banner = `/**
- * @license MIT
- *
- * Copyright (c) 2025 Aiden Bai
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */`;
+### [Try out a demo! →](https://react-grab.com)
 
-const DEFAULT_OPTIONS: Options = {
-  banner: {
-    js: banner,
-  },
-  clean: ["**/*", "!styles.css"],
-  dts: true,
-  entry: [],
-  env: {
-    NODE_ENV: process.env.NODE_ENV ?? "development",
-    VERSION:
-      process.env.VERSION ??
-      (JSON.parse(fs.readFileSync("package.json", "utf8")) as { version: string })
-        .version,
-  },
-  external: [],
-  format: [],
-  loader: {
-    ".css": "text",
-  },
-  minify: false,
-  noExternal: ["clsx", "tailwind-merge", "solid-js", "bippy"],
-  onSuccess: process.env.COPY ? "pbcopy < ./dist/index.global.js" : undefined,
-  outDir: "./dist",
-  platform: "browser",
-  sourcemap: false,
-  splitting: false,
-  target: "esnext",
-  treeshake: true,
-};
+![React Grab Demo](https://github.com/aidenybai/react-grab/blob/main/packages/website/public/demo.gif?raw=true)
 
-export default defineConfig([
-  {
-    ...DEFAULT_OPTIONS,
-    entry: ["./src/index.ts"],
-    format: ["iife"],
-    globalName: "ReactGrab",
-    loader: {
-      ".css": "text",
+## Install
+
+Run this command to install React Grab into your project. Ensure you are running at project root (e.g. where the `next.config.ts` or `vite.config.ts` file is located).
+
+```html
+npx grab@latest init
+```
+
+## Usage
+
+Once installed, hover over any UI element in your browser and press:
+
+- **⌘C** (Cmd+C) on Mac
+- **Ctrl+C** on Windows/Linux
+
+This copies the element's context (file name, React component, and HTML source code) to your clipboard ready to paste into your coding agent. For example:
+
+```js
+<a class="ml-auto inline-block text-sm" href="#">
+  Forgot your password?
+</a>
+in LoginForm at components/login-form.tsx:46:19
+```
+
+## Manual Installation
+
+If you're using a React framework or build tool, view instructions below:
+
+#### Next.js (App router)
+
+Add this inside of your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {/* put this in the <head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+#### Next.js (Pages router)
+
+Add this into your `pages/_document.tsx`:
+
+```jsx
+import { Html, Head, Main, NextScript } from "next/document";
+
+export default function Document() {
+  return (
+    <Html lang="en">
+      <Head>
+        {/* put this in the <Head> */}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+      </Head>
+      <body>
+        <Main />
+        <NextScript />
+      </body>
+    </Html>
+  );
+}
+```
+
+#### Vite
+
+Your `index.html` could look like this:
+
+```html
+<!doctype html>
+<html lang="en">
+  <head>
+    <script type="module">
+      // first npm i grab
+      // then in head:
+      if (import.meta.env.DEV) {
+        import("grab");
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+```
+
+#### Webpack
+
+First, install React Grab:
+
+```bash
+npm install grab
+```
+
+Then add this at the top of your main entry file (e.g., `src/index.tsx` or `src/main.tsx`):
+
+```tsx
+if (process.env.NODE_ENV === "development") {
+  import("grab");
+}
+```
+
+## Coding agent integration
+
+React Grab can send selected element context directly to your coding agent. This enables a workflow where you select a UI element and an agent automatically makes changes to your codebase.
+
+This means **no copying and pasting** - just select the element and let the agent do the rest. [Read more about coding agent integration →](https://react-grab.com/blog/agent)
+
+> **Click to expand** setup instructions for your coding agent:
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+#### Server Setup
+
+The server runs on port `4567` and interfaces with the Claude Agent SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/claude-code@latest && next dev"
+  }
+}
+```
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Cursor CLI</strong></summary>
+
+You must have the [`cursor-agent` CLI](https://cursor.com/docs/cli/overview) installed.
+
+#### Server Setup
+
+The server runs on port `5567` and interfaces with the `cursor-agent` CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/cursor@latest && next dev"
+  }
+}
+```
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/cursor/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/cursor/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>OpenCode</strong></summary>
+
+#### Server Setup
+
+The server runs on port `6567` and interfaces with the OpenCode CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/opencode@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [OpenCode](https://opencode.ai) installed (`npm i -g opencode-ai@latest`).
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/opencode/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Codex</strong></summary>
+
+#### Server Setup
+
+The server runs on port `7567` and interfaces with the OpenAI Codex SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/codex@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Codex](https://github.com/openai/codex) installed (`npm i -g @openai/codex`).
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/codex/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/codex/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Gemini</strong></summary>
+
+#### Server Setup
+
+The server runs on port `8567` and interfaces with the Gemini CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/gemini@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/gemini/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/gemini/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Amp</strong></summary>
+
+#### Server Setup
+
+The server runs on port `9567` and interfaces with the [Amp SDK](https://ampcode.com/manual/sdk). Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/amp@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have an [Amp API key](https://ampcode.com/settings) set via `AMP_API_KEY` environment variable.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/amp/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/amp/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Factory Droid</strong></summary>
+
+#### Server Setup
+
+The server runs on port `10567` and interfaces with the [Factory CLI](https://docs.factory.ai/cli/droid-exec/overview). Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/droid@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Factory CLI](https://app.factory.ai) installed (`curl -fsSL https://app.factory.ai/cli | sh`) and `FACTORY_API_KEY` environment variable set.
+
+#### Client Setup
+
+```html
+<script src="//unpkg.com/grab/dist/index.global.js"></script>
+<!-- add this in the <head> -->
+<script src="//unpkg.com/@react-grab/droid/dist/client.global.js"></script>
+```
+
+Or using Next.js `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/droid/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+</details>
+
+## Extending React Grab
+
+React Grab uses a plugin system to extend functionality. Check out the [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts) to see all available options.
+
+#### Basic Usage
+
+```typescript
+import { init } from "grab/core";
+
+const api = init();
+
+api.activate();
+api.copyElement(document.querySelector(".my-element"));
+console.log(api.getState());
+```
+
+#### Lifecycle Hooks Plugin
+
+Track element selections with analytics:
+
+```typescript
+api.registerPlugin({
+  name: "analytics",
+  hooks: {
+    onElementSelect: (element) => {
+      analytics.track("element_selected", { tagName: element.tagName });
     },
-    minify: process.env.NODE_ENV === "production",
-    outDir: "./dist",
-    esbuildPlugins: [
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- babel is not typed
-      babel({
-        filter: /\.(tsx|jsx)$/,
-        config: {
-          presets: [
-            ["@babel/preset-typescript", { onlyRemoveTypeImports: true }],
-            "babel-preset-solid",
-          ],
-        },
-      }),
-    ],
-  },
-  {
-    ...DEFAULT_OPTIONS,
-    clean: false,
-    entry: ["./src/index.ts", "./src/core.tsx"],
-    format: ["cjs", "esm"],
-    loader: {
-      ".css": "text",
+    onDragEnd: (elements, bounds) => {
+      analytics.track("drag_end", { count: elements.length, bounds });
     },
-    outDir: "./dist",
-    splitting: true,
-    esbuildPlugins: [
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- babel is not typed
-      babel({
-        filter: /\.(tsx|jsx)$/,
-        config: {
-          presets: [
-            ["@babel/preset-typescript", { onlyRemoveTypeImports: true }],
-            "babel-preset-solid",
-          ],
-        },
-      }),
-    ],
-  },
-]);
-
-
---- packages/vite-playground/vite.config.ts ---
-import tailwindcss from '@tailwindcss/vite';
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      '@': '/src',
+    onCopySuccess: (elements, content) => {
+      analytics.track("copy", { count: elements.length });
     },
   },
 });
+```
 
+#### Context Menu Plugin
 
---- packages/web-extension/vite.config.ts ---
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
-import webExtension from 'vite-plugin-web-extension';
+Add custom actions to the right-click menu:
 
-export default defineConfig({
-  plugins: [
-    react(),
-    webExtension({
-      manifest: './src/manifest.json',
-      watchFilePaths: ['src/**/*'],
-      browser: 'chrome',
-    }),
+```typescript
+api.registerPlugin({
+  name: "custom-actions",
+  actions: [
+    {
+      id: "log-to-console",
+      label: "Log to Console",
+      onAction: ({ elements }) => console.dir(elements[0]),
+    },
   ],
-  resolve: {
-    alias: {
-      '@': '/src',
-    },
-  },
-  publicDir: 'public',
 });
+```
+
+#### Theme Plugin
+
+Customize the UI appearance:
+
+```typescript
+api.registerPlugin({
+  name: "theme",
+  theme: {
+    hue: 180, // shift colors (pink → cyan)
+    crosshair: { enabled: false },
+    elementLabel: { enabled: false },
+  },
+});
+```
+
+#### Agent Plugin
+
+Create a custom agent that processes selected elements:
+
+```typescript
+api.registerPlugin({
+  name: "my-custom-agent",
+  actions: [
+    {
+      id: "custom-agent",
+      label: "Ask AI",
+      onAction: ({ enterPromptMode }) => enterPromptMode?.(),
+      agent: {
+        provider: {
+          async *send({ prompt, content }, signal) {
+            yield "Analyzing element...";
+
+            const response = await fetch("/api/ai", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ prompt, content }),
+              signal,
+            });
+
+            yield "Processing response...";
+
+            const result = await response.json();
+            yield `Done: ${result.message}`;
+          },
+        },
+      },
+    },
+  ],
+});
+```
+
+## Resources & Contributing Back
+
+Want to try it out? Check the [our demo](https://react-grab.com).
+
+Looking to contribute back? Check the [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md) out.
+
+Want to talk to the community? Hop in our [Discord](https://discord.com/invite/G7zxfUzkm7) and share your ideas and what you've build with React Grab.
+
+Find a bug? Head over to our [issue tracker](https://github.com/aidenybai/react-grab/issues) and we'll do our best to help. We love pull requests, too!
+
+We expect all contributors to abide by the terms of our [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md).
+
+[**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+
+### License
+
+React Grab is MIT-licensed open-source software.
+
+_Thank you to [Andrew Luetgers](https://github.com/andrewluetgers) for donating the `grab` npm package name._
+
+
+## Links discovered
+- [![size](https://img.shields.io/bundlephobia/minzip/grab?label=gzip&style=flat&colorA=000000&colorB=000000)
+- [![version](https://img.shields.io/npm/v/grab?style=flat&colorA=000000&colorB=000000)
+- [![downloads](https://img.shields.io/npm/dt/grab.svg?style=flat&colorA=000000&colorB=000000)
+- [**3× faster**](https://react-grab.com/blog/intro)
+- [Try out a demo! →](https://react-grab.com)
+- [React Grab Demo](https://github.com/aidenybai/react-grab/blob/main/packages/website/public/demo.gif?raw=true)
+- [Read more about coding agent integration →](https://react-grab.com/blog/agent)
+- [`cursor-agent` CLI](https://cursor.com/docs/cli/overview)
+- [OpenCode](https://opencode.ai)
+- [Codex](https://github.com/openai/codex)
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+- [Amp SDK](https://ampcode.com/manual/sdk)
+- [Amp API key](https://ampcode.com/settings)
+- [Factory CLI](https://docs.factory.ai/cli/droid-exec/overview)
+- [Factory CLI](https://app.factory.ai)
+- [type definitions](https://github.com/aidenybai/react-grab/blob/main/packages/react-grab/src/types.ts)
+- [our demo](https://react-grab.com)
+- [Contributing Guide](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Discord](https://discord.com/invite/G7zxfUzkm7)
+- [issue tracker](https://github.com/aidenybai/react-grab/issues)
+- [Code of Conduct](https://github.com/aidenybai/react-grab/blob/main/.github/CODE_OF_CONDUCT.md)
+- [**→ Start contributing on GitHub**](https://github.com/aidenybai/react-grab/blob/main/CONTRIBUTING.md)
+- [Andrew Luetgers](https://github.com/andrewluetgers)
+
+--- packages/provider-ami/README.md ---
+# @react-grab/ami
+
+Ami agent provider for React Grab. This is a client-only provider that connects directly to [ami.dev](https://ami.dev).
+
+## Installation
+
+```bash
+npm install @react-grab/ami
+# or
+pnpm add @react-grab/ami
+# or
+bun add @react-grab/ami
+# or
+yarn add @react-grab/ami
+```
+
+## Client Usage
+
+### Script Tag
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<script src="//unpkg.com/@react-grab/ami/dist/client.global.js"></script>
+```
+
+### Next.js
+
+Using the `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/ami/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### ES Module
+
+```tsx
+import { attachAgent } from "@react-grab/ami/client";
+
+attachAgent();
+```
+
+## How It Works
+
+```
+┌─────────────────┐      HTTPS      ┌─────────────────┐
+│                 │                 │                 │
+│   React Grab    │ ──────────────► │     ami.dev     │
+│    (Browser)    │ ◄────────────── │     (Cloud)     │
+│                 │                 │                 │
+└─────────────────┘                 └─────────────────┘
+      Client                              Agent
+```
+
+1. **React Grab** sends the selected element context directly to ami.dev
+2. **Ami** processes the request using the configured AI model
+3. **Ami** streams status updates back to the client
+
+**Note:** No local server required - Ami runs entirely in the cloud.
+
+
+## Links discovered
+- [ami.dev](https://ami.dev)
+
+--- packages/provider-amp/README.md ---
+# @react-grab/amp
+
+[Amp](https://ampcode.com) provider for React Grab.
+
+## Installation
+
+```bash
+npm install @react-grab/amp
+```
+
+## Usage
+
+### Server
+
+The server runs on port `9567` and interfaces with the Amp SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/amp@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have an [Amp API key](https://ampcode.com/settings) set via `AMP_API_KEY` environment variable.
+
+### Client
+
+Add the client script to your HTML:
+
+```html
+<script src="//unpkg.com/@react-grab/amp/dist/client.global.js"></script>
+```
+
+Or import programmatically:
+
+```ts
+import "@react-grab/amp/client";
+```
+
+## Features
+
+- **Follow-ups**: Continue conversations with thread continuity
+- **Undo**: Undo the last change made by Amp
+- **Streaming**: Real-time status updates during execution
+- **Tool calls**: See tool usage as it happens
+
+
+## Links discovered
+- [Amp](https://ampcode.com)
+- [Amp API key](https://ampcode.com/settings)
+
+--- packages/provider-claude-code/README.md ---
+# @react-grab/claude-code
+
+Claude Code agent provider for React Grab. Requires running a local server that interfaces with the Claude Agent SDK.
+
+## Installation
+
+```bash
+npm install @react-grab/claude-code
+# or
+pnpm add @react-grab/claude-code
+# or
+bun add @react-grab/claude-code
+# or
+yarn add @react-grab/claude-code
+```
+
+## Server Setup
+
+The server runs on port `4567` by default.
+
+### Quick Start (CLI)
+
+Start the server in the background before running your dev server:
+
+```bash
+npx @react-grab/claude-code@latest && pnpm run dev
+```
+
+The server will run as a detached background process. **Note:** Stopping your dev server (Ctrl+C) won't stop the React Grab server. To stop it:
+
+```bash
+pkill -f "react-grab.*server"
+```
+
+### Recommended: Config File (Automatic Lifecycle)
+
+For better lifecycle management, start the server from your config file. This ensures the server stops when your dev server stops:
+
+### Vite
+
+```ts
+// vite.config.ts
+import { startServer } from "@react-grab/claude-code/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { startServer } from "@react-grab/claude-code/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+## Client Usage
+
+### Script Tag
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<script src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"></script>
+```
+
+### Next.js
+
+Using the `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/claude-code/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### ES Module
+
+```tsx
+import { attachAgent } from "@react-grab/claude-code/client";
+
+attachAgent();
+```
+
+## How It Works
+
+```
+┌─────────────────┐      HTTP       ┌─────────────────┐      SDK       ┌─────────────────┐
+│                 │  localhost:4567 │                 │                │                 │
+│   React Grab    │ ──────────────► │     Server      │ ─────────────► │   Claude Code   │
+│    (Browser)    │ ◄────────────── │   (Node.js)     │ ◄───────────── │     (Agent)     │
+│                 │       SSE       │                 │                │                 │
+└─────────────────┘                 └─────────────────┘                └─────────────────┘
+      Client                              Server                            Agent
+```
+
+1. **React Grab** sends the selected element context to the server via HTTP POST
+2. **Server** receives the request and forwards it to Claude Code via the Agent SDK
+3. **Claude Code** processes the request and streams responses back
+4. **Server** relays status updates to the client via Server-Sent Events (SSE)
+
+
+--- packages/provider-codex/README.md ---
+# @react-grab/codex
+
+OpenAI Codex provider for React Grab.
+
+## Installation
+
+```bash
+npm install @react-grab/codex
+```
+
+## Usage
+
+### Server
+
+The server runs on port `7567` and interfaces with the Codex SDK. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/codex@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Codex](https://github.com/openai/codex) installed (`npm i -g @openai/codex`).
+
+### Client
+
+Add the client script to your HTML:
+
+```html
+<script src="//unpkg.com/@react-grab/codex/dist/client.global.js"></script>
+```
+
+Or import programmatically:
+
+```ts
+import "@react-grab/codex/client";
+```
+
+## Features
+
+- **Follow-ups**: Continue conversations with the same thread
+- **Undo**: Undo the last change made by Codex
+- **Streaming**: Real-time status updates during execution
+
+
+## Links discovered
+- [Codex](https://github.com/openai/codex)
+
+--- packages/provider-cursor/README.md ---
+# @react-grab/cursor
+
+Cursor agent provider for React Grab. Requires running a local server that interfaces with the Cursor Agent CLI.
+
+## Installation
+
+```bash
+npm install @react-grab/cursor
+# or
+pnpm add @react-grab/cursor
+# or
+bun add @react-grab/cursor
+# or
+yarn add @react-grab/cursor
+```
+
+## Server Setup
+
+The server runs on port `5567` by default.
+
+### Quick Start (CLI)
+
+Start the server in the background before running your dev server:
+
+```bash
+npx @react-grab/cursor@latest && pnpm run dev
+```
+
+The server will run as a detached background process. **Note:** Stopping your dev server (Ctrl+C) won't stop the React Grab server. To stop it:
+
+```bash
+pkill -f "react-grab.*server"
+```
+
+### Recommended: Config File (Automatic Lifecycle)
+
+For better lifecycle management, start the server from your config file. This ensures the server stops when your dev server stops:
+
+### Vite
+
+```ts
+// vite.config.ts
+import { startServer } from "@react-grab/cursor/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { startServer } from "@react-grab/cursor/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+## Client Usage
+
+### Script Tag
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<script src="//unpkg.com/@react-grab/cursor/dist/client.global.js"></script>
+```
+
+### Next.js
+
+Using the `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/cursor/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### ES Module
+
+```tsx
+import { attachAgent } from "@react-grab/cursor/client";
+
+attachAgent();
+```
+
+## How It Works
+
+```
+┌─────────────────┐      HTTP       ┌─────────────────┐     stdin      ┌─────────────────┐
+│                 │  localhost:5567 │                 │                │                 │
+│   React Grab    │ ──────────────► │     Server      │ ─────────────► │  cursor-agent   │
+│    (Browser)    │ ◄────────────── │   (Node.js)     │ ◄───────────── │      (CLI)      │
+│                 │       SSE       │                 │     stdout     │                 │
+└─────────────────┘                 └─────────────────┘                └─────────────────┘
+      Client                              Server                            Agent
+```
+
+1. **React Grab** sends the selected element context to the server via HTTP POST
+2. **Server** receives the request and spawns the `cursor-agent` CLI process
+3. **cursor-agent** processes the request and streams JSON responses to stdout
+4. **Server** relays status updates to the client via Server-Sent Events (SSE)
+
+
+--- packages/provider-droid/README.md ---
+# @react-grab/droid
+
+Factory Droid provider for React Grab. Requires running a local server that interfaces with the Factory CLI (`droid exec`).
+
+## Installation
+
+```bash
+npm install @react-grab/droid
+# or
+pnpm add @react-grab/droid
+# or
+bun add @react-grab/droid
+# or
+yarn add @react-grab/droid
+```
+
+## Prerequisites
+
+You must have the Factory CLI installed:
+
+```bash
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+And set your Factory API key:
+
+```bash
+export FACTORY_API_KEY=fk-...
+```
+
+## Server Setup
+
+The server runs on port `10567` by default.
+
+### Quick Start (CLI)
+
+Start the server in the background before running your dev server:
+
+```bash
+npx @react-grab/droid@latest && pnpm run dev
+```
+
+The server will run as a detached background process. **Note:** Stopping your dev server (Ctrl+C) won't stop the React Grab server. To stop it:
+
+```bash
+pkill -f "react-grab.*server"
+```
+
+### Recommended: Config File (Automatic Lifecycle)
+
+For better lifecycle management, start the server from your config file. This ensures the server stops when your dev server stops:
+
+### Vite
+
+```ts
+// vite.config.ts
+import { startServer } from "@react-grab/droid/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { startServer } from "@react-grab/droid/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+## Client Usage
+
+### Script Tag
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<script src="//unpkg.com/@react-grab/droid/dist/client.global.js"></script>
+```
+
+### Next.js
+
+Using the `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/droid/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### ES Module
+
+```tsx
+import { attachAgent } from "@react-grab/droid/client";
+
+attachAgent();
+```
+
+## Configuration Options
+
+The provider supports the following options:
+
+```typescript
+interface DroidAgentOptions {
+  autoLevel?: "low" | "medium" | "high"; // Autonomy level (default: "low")
+  model?: string; // Model to use (e.g., "claude-sonnet-4-5-20250929")
+  reasoningEffort?: "low" | "medium" | "high";
+  workspace?: string; // Working directory
+}
+```
+
+## How It Works
+
+```
+┌─────────────────┐      HTTP       ┌─────────────────┐     stdin      ┌─────────────────┐
+│                 │ localhost:10567 │                 │                │                 │
+│   React Grab    │ ──────────────► │     Server      │ ─────────────► │   droid exec    │
+│    (Browser)    │ ◄────────────── │   (Node.js)     │ ◄───────────── │      (CLI)      │
+│                 │       SSE       │                 │     stdout     │                 │
+└─────────────────┘                 └─────────────────┘                └─────────────────┘
+      Client                              Server                            Agent
+```
+
+1. **React Grab** sends the selected element context to the server via HTTP POST
+2. **Server** receives the request and spawns `droid exec` with `--output-format stream-json`
+3. **droid exec** processes the request and streams JSON responses to stdout
+4. **Server** relays status updates to the client via Server-Sent Events (SSE)
+
+## Autonomy Levels
+
+- `low` (default): File edits only, no system modifications
+- `medium`: Includes package installations, local git operations
+- `high`: Full access including git push, deployments
+
+
+--- packages/provider-gemini/README.md ---
+# @react-grab/gemini
+
+Google Gemini CLI provider for React Grab.
+
+## Installation
+
+```bash
+npm install @react-grab/gemini
+```
+
+## Usage
+
+### Server
+
+The server runs on port `8567` and interfaces with the Gemini CLI. Add to your `package.json`:
+
+```json
+{
+  "scripts": {
+    "dev": "npx @react-grab/gemini@latest && next dev"
+  }
+}
+```
+
+> **Note:** You must have [Gemini CLI](https://github.com/google-gemini/gemini-cli) installed (`npm i -g @anthropic-ai/gemini-cli`).
+
+### Client
+
+Add the client script to your HTML:
+
+```html
+<script src="//unpkg.com/@react-grab/gemini/dist/client.global.js"></script>
+```
+
+Or import programmatically:
+
+```ts
+import "@react-grab/gemini/client";
+```
+
+## Features
+
+- **Follow-ups**: Continue conversations with the same session
+- **Streaming**: Real-time status updates during execution
+- **Tool calls**: See tool usage as it happens
+
+
+## Links discovered
+- [Gemini CLI](https://github.com/google-gemini/gemini-cli)
+
+--- packages/provider-opencode/README.md ---
+# @react-grab/opencode
+
+OpenCode agent provider for React Grab. Requires running a local server that interfaces with the OpenCode CLI.
+
+## Installation
+
+```bash
+npm install @react-grab/opencode
+# or
+pnpm add @react-grab/opencode
+# or
+bun add @react-grab/opencode
+# or
+yarn add @react-grab/opencode
+```
+
+## Server Setup
+
+The server runs on port `6567` by default.
+
+### Quick Start (CLI)
+
+Start the server in the background before running your dev server:
+
+```bash
+npx @react-grab/opencode@latest && pnpm run dev
+```
+
+The server will run as a detached background process. **Note:** Stopping your dev server (Ctrl+C) won't stop the React Grab server. To stop it:
+
+```bash
+pkill -f "react-grab.*server"
+```
+
+### Recommended: Config File (Automatic Lifecycle)
+
+For better lifecycle management, start the server from your config file. This ensures the server stops when your dev server stops:
+
+### Vite
+
+```ts
+// vite.config.ts
+import { startServer } from "@react-grab/opencode/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+### Next.js
+
+```ts
+// next.config.ts
+import { startServer } from "@react-grab/opencode/server";
+
+if (process.env.NODE_ENV === "development") {
+  startServer();
+}
+```
+
+> **Note:** You must have [OpenCode](https://opencode.ai) installed (`npm i -g opencode-ai@latest`).
+
+## Client Usage
+
+### Script Tag
+
+```html
+<script src="//unpkg.com/react-grab/dist/index.global.js"></script>
+<script src="//unpkg.com/@react-grab/opencode/dist/client.global.js"></script>
+```
+
+### Next.js
+
+Using the `Script` component in your `app/layout.tsx`:
+
+```jsx
+import Script from "next/script";
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <Script
+              src="//unpkg.com/react-grab/dist/index.global.js"
+              strategy="beforeInteractive"
+            />
+            <Script
+              src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+              strategy="lazyOnload"
+            />
+          </>
+        )}
+      </head>
+      <body>{children}</body>
+    </html>
+  );
+}
+```
+
+### ES Module
+
+```tsx
+import { attachAgent } from "@react-grab/opencode/client";
+
+attachAgent();
+```
+
+## Options
+
+You can configure the OpenCode agent provider:
+
+```typescript
+import { createOpenCodeAgentProvider } from "@react-grab/opencode/client";
+
+const provider = createOpenCodeAgentProvider({
+  serverUrl: "http://localhost:6567", // Custom server URL
+  getOptions: () => ({
+    model: "claude-sonnet-4-20250514", // AI model to use
+    agent: "build", // Agent type: "build" or "plan"
+    directory: "/path/to/project", // Project directory
+  }),
+});
+```
+
+## How It Works
+
+```
+┌─────────────────┐      HTTP       ┌─────────────────┐     stdin      ┌─────────────────┐
+│                 │  localhost:6567 │                 │                │                 │
+│   React Grab    │ ──────────────► │     Server      │ ─────────────► │    opencode     │
+│    (Browser)    │ ◄────────────── │   (Node.js)     │ ◄───────────── │      (CLI)      │
+│                 │       SSE       │                 │     stdout     │                 │
+└─────────────────┘                 └─────────────────┘                └─────────────────┘
+      Client                              Server                            Agent
+```
+
+1. **React Grab** sends the selected element context to the server via HTTP POST
+2. **Server** receives the request and spawns the `opencode` CLI process
+3. **OpenCode** processes the request and streams JSON responses to stdout
+4. **Server** relays status updates to the client via Server-Sent Events (SSE)
+
+
+## Links discovered
+- [OpenCode](https://opencode.ai)

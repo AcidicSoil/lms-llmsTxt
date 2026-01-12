@@ -1,0 +1,250 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/install-devcontainer.md ---
+# Dev Containers拡張機能のインストール方法
+
+Dev Containersは、Visual Studio Codeの拡張機能で、Dockerコンテナ内で開発環境を構築・実行できます。本書のハンズオンでは、この拡張機能を使用して開発環境を構築します。
+
+## 前提条件
+
+Dev Containersを使用するには、以下がインストールされている必要があります。
+
+- [Visual Studio Code](install-vscode.md)
+- [Docker](install-docker.md)
+
+## インストール手順
+
+1. Visual Studio Codeを起動します
+2. 左側のサイドバーで拡張機能アイコン（四角が4つ並んだアイコン）をクリックします
+   - または、`Ctrl + Shift + X`（macOSは`Cmd + Shift + X`）を押します
+3. 検索ボックスに「Dev Containers」と入力します
+4. 「Dev Containers」（Microsoft製）を選択します
+5. 「インストール」ボタンをクリックします
+
+## Dev Containerで開発環境を開く
+
+本書のハンズオン用リポジトリをDev Containerで開くには、以下の手順に従います。
+
+1. リポジトリをクローンします
+
+```bash
+git clone https://github.com/GenerativeAgents/claude-code-book-template.git
+```
+
+2. Visual Studio Codeでリポジトリを開きます
+
+```bash
+cd claude-code-book-template
+code .
+```
+
+3. Visual Studio Codeがリポジトリ内の`.devcontainer/devcontainer.json`を検出し、「Reopen in Container」（コンテナで再度開く）という通知が表示されます
+4. 通知をクリックするか、コマンドパレットから「Dev Containers: Reopen in Container」を実行します
+5. 初回起動時はコンテナのビルドに数分かかります。完了すると、コンテナ内の開発環境でVisual Studio Codeが開きます
+
+## トラブルシューティング
+
+### Dockerが起動していない場合
+
+「Cannot connect to the Docker daemon」というエラーが表示される場合は、Docker Desktopが起動しているか確認してください。
+
+### コンテナのビルドに失敗する場合
+
+1. Docker Desktopに十分なリソース（メモリ、CPU）が割り当てられているか確認してください
+2. コマンドパレットから「Dev Containers: Rebuild Container」を実行して、再ビルドを試みてください
+
+## 参考リンク
+
+- [Dev Containers拡張機能（Visual Studio Marketplace）](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [Dev Containers公式ドキュメント](https://code.visualstudio.com/docs/devcontainers/containers)
+
+
+## Links discovered
+- [Visual Studio Code](https://github.com/GenerativeAgents/claude-code-book/blob/main/docs/install-vscode.md)
+- [Docker](https://github.com/GenerativeAgents/claude-code-book/blob/main/docs/install-docker.md)
+- [Dev Containers拡張機能（Visual Studio Marketplace）](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- [Dev Containers公式ドキュメント](https://code.visualstudio.com/docs/devcontainers/containers)
+
+--- docs/install-docker.md ---
+# Dockerのインストール方法
+
+Dockerは、コンテナ技術を利用してアプリケーションの開発・実行環境を構築するためのツールです。本書ではDev Containerを利用するためにDockerが必要です。
+
+## Docker Desktop
+
+Windows、macOSでは「Docker Desktop」をインストールします。Docker Desktopには、Docker Engine、Docker CLI、Docker Composeなどが含まれています。
+
+<https://www.docker.com/products/docker-desktop/>
+
+※ Docker Desktopは個人利用・教育目的・小規模事業者は無償ですが、大企業等での商用利用は有償プランが必要な場合があります。詳細は[Docker公式のライセンス情報](https://www.docker.com/pricing/)を確認してください。
+
+## インストール手順
+
+### Windows
+
+#### システム要件
+
+詳細は公式ドキュメントを参照してください。
+
+<https://docs.docker.com/desktop/setup/install/windows-install/>
+
+#### WSL 2の有効化
+
+Docker Desktopは通常WSL 2バックエンド（推奨）を使用します。WSL 2が未設定の場合は、以下の手順で有効化してください。
+
+1. PowerShellを管理者として実行します
+2. 以下のコマンドを実行します：
+
+```powershell
+wsl --install
+```
+
+3. PCを再起動します
+
+#### Docker Desktopのインストール
+
+1. [公式サイト](https://www.docker.com/products/docker-desktop/)からインストーラーをダウンロードします
+2. ダウンロードしたインストーラーを実行します
+3. インストールウィザードの指示に従います
+4. 「Use WSL 2 instead of Hyper-V」オプションが選択されていることを確認します
+5. インストールが完了したら、PCを再起動します
+6. Docker Desktopを起動し、サービス規約に同意します
+
+### macOS
+
+#### システム要件
+
+詳細は公式ドキュメントを参照してください。
+
+<https://docs.docker.com/desktop/setup/install/mac-install/>
+
+#### インストール手順
+
+1. [公式サイト](https://www.docker.com/products/docker-desktop/)からインストーラーをダウンロードします
+2. ダウンロードしたファイルを開きます
+3. DockerアイコンをApplicationsフォルダにドラッグ＆ドロップします
+4. アプリケーションフォルダから「Docker」を起動します
+5. 初回起動時にシステムパスワードの入力を求められる場合があります
+6. サービス規約に同意します
+7. メニューバーにDockerアイコン（クジラのマーク）が表示されれば起動完了です
+
+## インストールの確認
+
+ターミナル（コマンドプロンプト）で以下のコマンドを実行し、バージョンが表示されればインストール成功です。
+
+```bash
+docker --version
+```
+
+さらに、以下のコマンドでDockerが正しく動作することを確認できます。
+
+```bash
+docker run hello-world
+```
+
+「Hello from Docker!」というメッセージが表示されれば、Dockerが正常に動作しています。
+
+## 参考リンク
+
+- [Docker公式サイト](https://www.docker.com/)
+- [Docker Desktop公式ドキュメント](https://docs.docker.com/desktop/)
+
+
+## Links discovered
+- [Docker公式のライセンス情報](https://www.docker.com/pricing/)
+- [公式サイト](https://www.docker.com/products/docker-desktop/)
+- [Docker公式サイト](https://www.docker.com/)
+- [Docker Desktop公式ドキュメント](https://docs.docker.com/desktop/)
+
+--- docs/install-vscode.md ---
+# Visual Studio Codeのインストール方法
+
+Visual Studio Codeは、Microsoft社が提供するコードエディタです。
+
+## ダウンロード
+
+公式サイトからインストーラーをダウンロードします。
+
+<https://code.visualstudio.com/>
+
+お使いのOS（Windows / macOS）に合わせたインストーラーを選択してください。
+
+## インストール手順
+
+### Windows
+
+1. ダウンロードしたインストーラーを実行します
+2. インストールウィザードの指示に従ってインストールを完了します
+
+### macOS
+
+1. ダウンロードしたファイルを開き、「Visual Studio Code.app」を「アプリケーション」フォルダに移動します
+2. アプリケーションフォルダから「Visual Studio Code」を起動します
+
+## コマンドラインから起動できるようにする（推奨）
+
+ターミナルから`code`コマンドでVisual Studio Codeを起動できるようにします。ターミナルで以下のコマンドを実行し、バージョンが表示されればすでに使用可能です。
+
+```bash
+code --version
+```
+
+`code`コマンドが使えない場合は、以下を試してください。
+
+- ターミナルを一度閉じて開き直す
+- Visual Studio Codeのコマンドパレット（`Ctrl + Shift + P` / `Cmd + Shift + P`）から「Shell Command: Install 'code' command in PATH」を実行する
+
+## 参考リンク
+
+- [Visual Studio Code公式サイト](https://code.visualstudio.com/)
+- [Visual Studio Code公式ドキュメント](https://code.visualstudio.com/docs)
+
+
+## Links discovered
+- [Visual Studio Code公式サイト](https://code.visualstudio.com/)
+- [Visual Studio Code公式ドキュメント](https://code.visualstudio.com/docs)
+
+--- README.md ---
+# 実践Claude Code入門―現場で活用するためのAIコーディングの思考法
+
+「実践Claude Code入門―現場で活用するためのAIコーディングの思考法」のGitHubリポジトリです。
+
+<https://www.amazon.co.jp/dp/4297153548>
+
+<img src="assets/cover.jpg" width="50%" />
+
+## インストールガイド
+
+ハンズオンを始める前に、以下のツールをインストールしてください。
+
+- [Visual Studio Code](docs/install-vscode.md)
+- [Docker](docs/install-docker.md)
+- [Dev Containers拡張機能](docs/install-devcontainer.md)
+
+## ハンズオンで使用するGitHubリポジトリ
+
+本書のハンズオンで使用するGitHubリポジトリは、以下の2つです。
+
+- 第1部2章のハンズオン：<https://github.com/GenerativeAgents/claude-code-book-template>
+- 第1部4章のハンズオン：<https://github.com/GenerativeAgents/claude-code-book-chapter4>
+- 第2部8章のハンズオン：<https://github.com/GenerativeAgents/claude-code-book-chapter8>
+
+## 書籍の誤り・エラーについて
+
+書籍の誤り（誤字など）や、発生したエラーについては、GitHubのIssueからご連絡ください。
+
+<https://github.com/GenerativeAgents/claude-code-book/issues>
+
+## リンク
+
+- [技術評論社](https://gihyo.jp/book/2026/978-4-297-15354-0)
+- [Amazon](https://www.amazon.co.jp/dp/4297153548)
+
+
+## Links discovered
+- [Visual Studio Code](https://github.com/GenerativeAgents/claude-code-book/blob/main/docs/install-vscode.md)
+- [Docker](https://github.com/GenerativeAgents/claude-code-book/blob/main/docs/install-docker.md)
+- [Dev Containers拡張機能](https://github.com/GenerativeAgents/claude-code-book/blob/main/docs/install-devcontainer.md)
+- [技術評論社](https://gihyo.jp/book/2026/978-4-297-15354-0)
+- [Amazon](https://www.amazon.co.jp/dp/4297153548)

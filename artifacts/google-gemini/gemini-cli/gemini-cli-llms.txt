@@ -1,14 +1,14 @@
 # Gemini Cli
 
-> Gemini CLI is an open-source AI agent designed to bring the power of Google’s Gemini models directly into the terminal for developers. It enables lightweight, interactive, and scriptable access to advanced AI capabilities such as code generation, debugging, automation, and context-aware reasoning — all without requiring a web browser or GUI. The tool supports multiple authentication methods (OAuth, API keys, Vertex AI), integrates with GitHub workflows, and offers extensibility via MCP servers and custom tools.
+> Gemini CLI is an open-source, terminal-based AI agent that provides direct access to Google's Gemini models (particularly Gemini 2.5 Pro) for developers. It enables users to query, generate, edit, and automate tasks on their local file systems using natural language prompts, with built-in tools for file operations, shell commands, web search, and more. The CLI is designed for developers who prefer the command line interface and offers extensibility via MCP (Model Context Protocol) servers and custom extensions.
 
 **Remember:**
-- Terminal-first AI assistant
-- Gemini 2.5 Pro model access
-- Built-in tools: file operations, shell commands, web search
-- MCP server integration for custom capabilities
-- Checkpointing and session resumption
-- Context files (GEMINI.md)
+- Gemini 2.5 Pro model with 1M token context window
+- Terminal-first design for developer workflows
+- Built-in tools: file system, shell, web search, and more
+- MCP (Model Context Protocol) for custom integrations
+- Checkpointing to save and resume complex sessions
+- GEMINI.md context files for persistent project context
 
 ## Docs
 - [Skills Getting Started](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/tutorials/skills-getting-started.md): install & quickstart.
@@ -23,11 +23,12 @@
 - [Installationmanager](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/installationManager.ts): install & quickstart.
 
 ## Tutorials
-- [Example](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/example.ts): worked example.
 - [Example.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/example.test.ts): worked example.
 - [Gemini](https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/context/GEMINI.md): worked example.
 
 ## API
+- [Apiconversionutils](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/apiConversionUtils.ts): API reference.
+- [Apiconversionutils.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/apiConversionUtils.test.ts): API reference.
 - [Apikeycredentialstorage](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.ts): API reference.
 - [Apikeycredentialstorage.Test](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.test.ts): API reference.
 - [Errorclassification](https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/availability/errorClassification.ts): docs page.

@@ -1,68 +1,68 @@
 # Claude Code
 
-> Claude Code is designed to accelerate software development by allowing developers to execute routine coding tasks — such as committing code, reviewing pull requests, or analyzing code structure — through natural language commands. It operates as an agentic tool that understands the context of a user’s codebase and can perform actions like generating explanations, automating git workflows, and triaging issues. Its purpose is to reduce boilerplate and cognitive load, enabling developers to focus on higher-level problem-solving.
+> Claude Code aims to accelerate software development by enabling developers to interact with their codebases using natural language commands through a terminal interface. It automates routine tasks, provides explanations of complex code, and integrates with Git workflows — such as commit management and PR review — without requiring explicit scripting or configuration. The project supports extensibility via plugins that offer specialized agents and commands tailored for different development needs.
 
 **Remember:**
-- Agentic coding assistant
-- Natural language commands
+- Agentic coding tool
+- Natural language interface
+- Plugin architecture
 - Git workflow automation
-- Code review and explanation
-- Plugins for extended functionality
-- Terminal-based interaction
+- Code review agents
+- Hook-based execution system
 
 ## Tutorials
-- [Bash Command Validator Example](https://raw.githubusercontent.com/anthropics/claude-code/main/examples/hooks/bash_command_validator_example.py): worked example.
-- [Console Log Warning.Local](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/hookify/examples/console-log-warning.local.md): worked example.
-- [Dangerous Rm.Local](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/hookify/examples/dangerous-rm.local.md): worked example.
-- [Require Tests Stop.Local](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/hookify/examples/require-tests-stop.local.md): worked example.
-- [Sensitive Files Warning.Local](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/hookify/examples/sensitive-files-warning.local.md): worked example.
-- [Advanced Plugin](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/plugin-structure/examples/advanced-plugin.md): worked example.
-- [Agent Creation Prompt](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/agent-development/examples/agent-creation-prompt.md): worked example.
-- [Complete Agent Examples](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/agent-development/examples/complete-agent-examples.md): worked example.
-- [Create Settings Command](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/plugin-settings/examples/create-settings-command.md): worked example.
-- [Example Settings](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/plugin-settings/examples/example-settings.md): worked example.
+- [Bash Command Validator Example](https://github.com/anthropics/claude-code/blob/main/examples/hooks/bash_command_validator_example.py): worked example.
+- [Console Log Warning.Local](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/examples/console-log-warning.local.md): worked example.
+- [Dangerous Rm.Local](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/examples/dangerous-rm.local.md): worked example.
+- [Require Tests Stop.Local](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/examples/require-tests-stop.local.md): worked example.
+- [Sensitive Files Warning.Local](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/examples/sensitive-files-warning.local.md): worked example.
+- [Advanced Plugin](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/plugin-structure/examples/advanced-plugin.md): worked example.
+- [Agent Creation Prompt](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/agent-development/examples/agent-creation-prompt.md): worked example.
+- [Complete Agent Examples](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/agent-development/examples/complete-agent-examples.md): worked example.
+- [Create Settings Command](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/plugin-settings/examples/create-settings-command.md): worked example.
+- [Example Settings](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/plugin-settings/examples/example-settings.md): worked example.
 
 ## API
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/agent-sdk-dev/README.md): install & quickstart.
-- [Agent Sdk Verifier Py](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/agent-sdk-dev/agents/agent-sdk-verifier-py.md): docs page.
-- [Agent Sdk Verifier Ts](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/agent-sdk-dev/agents/agent-sdk-verifier-ts.md): docs page.
-- [New Sdk App](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/agent-sdk-dev/commands/new-sdk-app.md): docs page.
-- [Advanced](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/hook-development/references/advanced.md): API reference.
-- [Advanced Workflows](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/command-development/references/advanced-workflows.md): API reference.
-- [Agent Creation System Prompt](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/agent-development/references/agent-creation-system-prompt.md): API reference.
-- [Authentication](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/mcp-integration/references/authentication.md): API reference.
-- [Component Patterns](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/plugin-structure/references/component-patterns.md): API reference.
-- [Documentation Patterns](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/skills/command-development/references/documentation-patterns.md): API reference.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/agent-sdk-dev/README.md): install & quickstart.
+- [Agent Sdk Verifier Py](https://github.com/anthropics/claude-code/blob/main/plugins/agent-sdk-dev/agents/agent-sdk-verifier-py.md): docs page.
+- [Agent Sdk Verifier Ts](https://github.com/anthropics/claude-code/blob/main/plugins/agent-sdk-dev/agents/agent-sdk-verifier-ts.md): docs page.
+- [New Sdk App](https://github.com/anthropics/claude-code/blob/main/plugins/agent-sdk-dev/commands/new-sdk-app.md): docs page.
+- [Advanced](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/hook-development/references/advanced.md): API reference.
+- [Advanced Workflows](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/command-development/references/advanced-workflows.md): API reference.
+- [Agent Creation System Prompt](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/agent-development/references/agent-creation-system-prompt.md): API reference.
+- [Authentication](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/mcp-integration/references/authentication.md): API reference.
+- [Component Patterns](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/plugin-structure/references/component-patterns.md): API reference.
+- [Documentation Patterns](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/skills/command-development/references/documentation-patterns.md): API reference.
 
 ## Concepts
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/frontend-design/README.md): install & quickstart.
-- [Type Design Analyzer](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/pr-review-toolkit/agents/type-design-analyzer.md): docs page.
-- [Skill](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/frontend-design/skills/frontend-design/SKILL.md): docs page.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/README.md): install & quickstart.
+- [Type Design Analyzer](https://github.com/anthropics/claude-code/blob/main/plugins/pr-review-toolkit/agents/type-design-analyzer.md): docs page.
+- [Skill](https://github.com/anthropics/claude-code/blob/main/plugins/frontend-design/skills/frontend-design/SKILL.md): docs page.
 
 ## Optional
-- [Changelog](https://raw.githubusercontent.com/anthropics/claude-code/main/CHANGELOG.md): version history.
-- [License](https://raw.githubusercontent.com/anthropics/claude-code/main/LICENSE.md): usage terms.
-- [Security](https://raw.githubusercontent.com/anthropics/claude-code/main/SECURITY.md): security policy.
-- [Security Reminder Hook](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/security-guidance/hooks/security_reminder_hook.py): security policy.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/README.md): docs page.
+- [Changelog](https://github.com/anthropics/claude-code/blob/main/CHANGELOG.md): version history.
+- [License](https://github.com/anthropics/claude-code/blob/main/LICENSE.md): usage terms.
+- [Security](https://github.com/anthropics/claude-code/blob/main/SECURITY.md): security policy.
+- [Security Reminder Hook](https://github.com/anthropics/claude-code/blob/main/plugins/security-guidance/hooks/security_reminder_hook.py): security policy.
+- [README](https://github.com/anthropics/claude-code/blob/main/README.md): docs page.
 
 ## .Claude
-- [Commit Push Pr](https://raw.githubusercontent.com/anthropics/claude-code/main/.claude/commands/commit-push-pr.md): docs page.
-- [Dedupe](https://raw.githubusercontent.com/anthropics/claude-code/main/.claude/commands/dedupe.md): docs page.
-- [Oncall Triage](https://raw.githubusercontent.com/anthropics/claude-code/main/.claude/commands/oncall-triage.md): docs page.
+- [Commit Push Pr](https://github.com/anthropics/claude-code/blob/main/.claude/commands/commit-push-pr.md): docs page.
+- [Dedupe](https://github.com/anthropics/claude-code/blob/main/.claude/commands/dedupe.md): docs page.
+- [Oncall Triage](https://github.com/anthropics/claude-code/blob/main/.claude/commands/oncall-triage.md): docs page.
 
 ## Plugins
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/claude-opus-4-5-migration/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/code-review/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/commit-commands/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/explanatory-output-style/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/feature-dev/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/hookify/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/learning-output-style/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/plugin-dev/README.md): install & quickstart.
-- [README](https://raw.githubusercontent.com/anthropics/claude-code/main/plugins/pr-review-toolkit/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/claude-opus-4-5-migration/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/code-review/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/commit-commands/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/explanatory-output-style/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/feature-dev/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/hookify/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/learning-output-style/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/plugin-dev/README.md): install & quickstart.
+- [README](https://github.com/anthropics/claude-code/blob/main/plugins/pr-review-toolkit/README.md): install & quickstart.
 
 ## Scripts
-- [Auto Close Duplicates](https://raw.githubusercontent.com/anthropics/claude-code/main/scripts/auto-close-duplicates.ts): docs page.
-- [Backfill Duplicate Comments](https://raw.githubusercontent.com/anthropics/claude-code/main/scripts/backfill-duplicate-comments.ts): docs page.
+- [Auto Close Duplicates](https://github.com/anthropics/claude-code/blob/main/scripts/auto-close-duplicates.ts): docs page.
+- [Backfill Duplicate Comments](https://github.com/anthropics/claude-code/blob/main/scripts/backfill-duplicate-comments.ts): docs page.
