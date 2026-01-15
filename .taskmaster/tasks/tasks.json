@@ -2102,5 +2102,521 @@
       "description": "Tasks for chore-dist-name context",
       "updated": "2026-01-08T02:14:43.900Z"
     }
+  },
+  "chore-update": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Define Event Models and Schemas",
+        "description": "Create the core event definitions and typing structure to serve as the foundation for the streaming architecture.",
+        "details": "Implement `src/lms_llmsTxt_mcp/events.py`. Define a `RunEvent` Pydantic model containing `run_id`, `sequence_number`, `timestamp`, `type`, and `payload`. Create an `EventType` Enum including `run.started`, `progress`, `log`, `artifact.partial`, `run.completed`, `run.failed`, and `run.canceled`. Define payload schemas for each event type to ensure strict typing. Ensure serialization/deserialization logic is robust.",
+        "testStrategy": "Unit tests ensuring all event types can be instantiated, serialized to JSON, and deserialized back to the correct Pydantic models. Validate required fields.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define EventType Enum",
+            "description": "Create the EventType enumeration to categorize the different stages and types of events in the system.",
+            "dependencies": [],
+            "details": "Create `src/lms_llmsTxt_mcp/events.py` if it does not exist. Define a Python Enum named `EventType` inheriting from `str` and `Enum`. It must include members: `RUN_STARTED = 'run.started'`, `PROGRESS = 'progress'`, `LOG = 'log'`, `ARTIFACT_PARTIAL = 'artifact.partial'`, `RUN_COMPLETED = 'run.completed'`, `RUN_FAILED = 'run.failed'`, and `RUN_CANCELED = 'run.canceled'`.",
+            "status": "pending",
+            "testStrategy": "Verify that all required enum members exist and string values match the specification."
+          },
+          {
+            "id": 2,
+            "title": "Define Event Payload Models",
+            "description": "Implement specific Pydantic models for the payload of each event type to ensure strict schema validation.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/lms_llmsTxt_mcp/events.py`, define Pydantic models for payloads: `RunStartedPayload` (inputs), `ProgressPayload` (percentage, current_step), `LogPayload` (level, message), `ArtifactPartialPayload` (delta, artifact_id), `RunCompletedPayload` (result), `RunFailedPayload` (error_code, message, traceback), and `RunCanceledPayload` (reason). Ensure all inherit from `pydantic.BaseModel`.",
+            "status": "pending",
+            "testStrategy": "Unit tests ensuring valid data instantiates correctly and invalid data raises ValidationError."
+          },
+          {
+            "id": 3,
+            "title": "Create RunEvent Model",
+            "description": "Define the main envelope model that wraps the specific payload and provides metadata like timestamp and sequence number.",
+            "dependencies": [
+              1,
+              2
+            ],
+            "details": "In `src/lms_llmsTxt_mcp/events.py`, define `RunEvent`. It must have fields: `run_id` (str), `sequence_number` (int), `timestamp` (datetime, defaulting to `datetime.utcnow`), `type` (EventType), and `payload` (Union of the payload models defined in subtask 2). Use a Pydantic discriminator if possible for polymorphic parsing, or ensure validation checks the payload matches the type.",
+            "status": "pending",
+            "testStrategy": "Test instantiation of RunEvent with various payloads to ensure type/payload matching."
+          },
+          {
+            "id": 4,
+            "title": "Implement Serialization Utilities",
+            "description": "Add functionality to serialize events to JSON strings compatible with SSE (Server-Sent Events) or standard JSON lines.",
+            "dependencies": [
+              3
+            ],
+            "details": "Add a method `to_json()` to `RunEvent` (or a standalone utility function) that dumps the model using `model_dump_json()`. Ensure that `datetime` objects are serialized to ISO format strings. Create a factory method `from_json(json_str)` to reconstruct the object, handling polymorphic payload resolution.",
+            "status": "pending",
+            "testStrategy": "Round-trip tests: Serialize an event to JSON and deserialize it back, checking for equality."
+          },
+          {
+            "id": 5,
+            "title": "Create Unit Tests for Event Schemas",
+            "description": "Implement a comprehensive test suite to validate the robustness of the event models.",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Create `tests/test_events.py`. Include tests for: 1. Successful creation of every event type. 2. Validation errors for missing fields. 3. Mismatches between `type` and `payload` (if validation logic exists). 4. JSON serialization format (verifying fields like `timestamp` are formatted correctly).",
+            "status": "pending",
+            "testStrategy": null
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Implement In-Process Event Bus",
+        "description": "Build a thread-safe publish/subscribe mechanism to manage event flow for individual runs.",
+        "details": "Implement `src/lms_llmsTxt_mcp/event_bus.py`. The `EventBus` class should support `subscribe(run_id) -> Iterator` and `publish(event)`. Use `queue.Queue` or `asyncio.Queue` (depending on the async nature of the server) to handle buffering. Implement logic to handle backpressure or bounded buffers to prevent memory leaks if consumers are slow. Include a `close_run(run_id)` method to clean up resources.",
+        "testStrategy": "Unit tests verifying that multiple subscribers receive events in order. Test fan-out capabilities (one publisher, multiple subscribers). Test buffer limits and cleanup on run close.",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Core EventBus Pub/Sub with asyncio",
+            "description": "Create the basic EventBus class structure and implement the core mechanism for publishing events and allowing components to subscribe via asyncio queues.",
+            "dependencies": [],
+            "details": "Create `src/lms_llmsTxt_mcp/event_bus.py`. Define the `EventBus` class. Implement the `subscribe(run_id)` method which should initialize a bounded `asyncio.Queue` for the specific run and return an async generator/iterator to yield events. Implement the `publish(event)` method to iterate through all active queues for the given `run_id` and put the event into them. Ensure the queues use a reasonable maxsize to handle backpressure.",
+            "status": "pending",
+            "testStrategy": "Unit test verifying that a message published to a specific run_id is correctly received by an async subscriber."
+          },
+          {
+            "id": 2,
+            "title": "Implement Subscriber Management and Cleanup Logic",
+            "description": "Add lifecycle management to the EventBus to handle adding/removing subscribers and properly cleaning up resources when a run is finished.",
+            "dependencies": [
+              1
+            ],
+            "details": "Extend `src/lms_llmsTxt_mcp/event_bus.py`. Implement internal storage (e.g., `Dict[str, List[Queue]]`) to track subscribers per run. Implement `close_run(run_id)` which should signal completion to all subscriber queues (e.g., via a sentinel value or closing the queue) and remove the run from the internal registry to free memory. Ensure thread-safety principles are applied if the bus is accessed from multiple contexts.",
+            "status": "pending",
+            "testStrategy": "Test subscribing multiple listeners, then calling close_run; verify all listeners terminate gracefully and the registry is empty."
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Implement Completion Controller",
+        "description": "Create a controller to enforce deterministic run completion semantics, ensuring exactly one terminal event is emitted.",
+        "details": "Implement `src/lms_llmsTxt_mcp/completion.py`. Create `CompletionController` class that wraps the EventBus publishing logic for terminal states. It should track the state of a run and prevent invalid transitions (e.g., emitting 'completed' after 'failed'). Implement methods: `mark_failed(error)`, `mark_completed(metadata)`, `mark_canceled(reason)`. Ensure `ensure_terminal_on_exit()` pattern handles worker thread termination.",
+        "testStrategy": "Unit tests simulating race conditions (e.g., success and error called nearly simultaneously). Verify only the first terminal event is emitted and subsequent attempts are ignored.",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Run States and Transition Logic",
+            "description": "Define the enumeration of possible run states and implement the validation logic for state transitions.",
+            "dependencies": [],
+            "details": "In `src/lms_llmsTxt_mcp/completion.py`, create a `RunState` enum (e.g., PENDING, RUNNING, COMPLETED, FAILED, CANCELED). Implement a private method `_can_transition(current, new)` to strictly enforce invalid state changes (e.g., terminal states cannot transition to anything else).",
+            "status": "pending",
+            "testStrategy": "Unit tests verifying that illegal transitions return False and legal ones return True."
+          },
+          {
+            "id": 2,
+            "title": "Create CompletionController Class Skeleton",
+            "description": "Scaffold the CompletionController class with initialization logic and Event Bus integration.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create the `CompletionController` class in `src/lms_llmsTxt_mcp/completion.py`. The constructor should accept an `EventBus` instance and a `run_id`. Initialize an internal lock (e.g., `threading.Lock`) to ensure thread safety for state updates.",
+            "status": "pending",
+            "testStrategy": "Verify the class instantiates correctly and stores the reference to the EventBus."
+          },
+          {
+            "id": 3,
+            "title": "Implement Terminal State Methods",
+            "description": "Implement the core methods to mark the run as completed, failed, or canceled.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement `mark_completed(metadata)`, `mark_failed(error)`, and `mark_canceled(reason)`. Each method must acquire the lock, check if the transition is valid, update the internal state, and publish the specific terminal event to the `EventBus`. If the run is already terminal, these calls should be ignored or log a warning, but not raise an exception.",
+            "status": "pending",
+            "testStrategy": "Simulate concurrent calls to different mark methods and ensure only the first one wins (publishes an event)."
+          },
+          {
+            "id": 4,
+            "title": "Implement Context Manager for Automatic Termination",
+            "description": "Create a context manager mechanism to ensure a terminal event is always emitted when a worker exits.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement `ensure_terminal_on_exit()` as a context manager (`__enter__` and `__exit__`). In `__exit__`, check if the run is still in a non-terminal state. If so, default to `mark_failed` with a generic 'Unexpected termination' error. This handles cases where code crashes or returns without explicitly setting a status.",
+            "status": "pending",
+            "testStrategy": "Use the context manager in a test block that raises an unhandled exception. Verify that `mark_failed` is called automatically."
+          },
+          {
+            "id": 5,
+            "title": "Integrate with Event Definitions",
+            "description": "Ensure the events emitted match the expected schema defined in the project.",
+            "dependencies": [
+              3
+            ],
+            "details": "Review the event schemas (likely defined in `events.py` or similar). Ensure that `mark_completed` emits a `run.completed` event, `mark_failed` emits `run.failed`, and `mark_canceled` emits `run.canceled` with the correct payload structures (e.g., including error messages or result metadata).",
+            "status": "pending",
+            "testStrategy": "inspect the specific event objects published to the mock EventBus to ensure payload correctness."
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Refactor Pipeline for Milestone Emission",
+        "description": "Instrument the existing synchronous generation pipeline to emit status events at key milestones.",
+        "details": "Modify `src/lms_llmsTxt/pipeline.py` or create a wrapper in `src/lms_llmsTxt_mcp/runner.py` (`run_llmstxt_with_events`). Inject the `EventBus` or a callback function into the `run_generation` logic. Emit events for: 'start', 'repo_fetched', 'analysis_started', 'writing_files', and 'done'. Ensure existing file I/O behavior remains unchanged.",
+        "testStrategy": "Integration test running the pipeline with a mock EventBus. Verify that the expected sequence of milestone events is received while the actual artifacts are still created on disk.",
+        "priority": "medium",
+        "dependencies": [
+          3
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Instrument Core Pipeline with Event Hooks",
+            "description": "Modify the core pipeline logic to support an optional callback mechanism for status updates without altering synchronous behavior.",
+            "dependencies": [],
+            "details": "Analyze `src/lms_llmsTxt/pipeline.py`. Update the main entry function (e.g., `run_generation`) to accept an optional `on_event` callable. Insert calls to this function at key execution points: 'start', 'repo_fetched', 'analysis_started', 'writing_files', and 'done'. Ensure the function defaults to no-op if no callback is provided to maintain backward compatibility.",
+            "status": "pending",
+            "testStrategy": "Unit test the modified pipeline function with a mock callback to verify it is called the expected number of times with correct arguments."
+          },
+          {
+            "id": 2,
+            "title": "Implement Event-Aware Runner Adapter",
+            "description": "Create a wrapper function in the MCP layer to bridge the core pipeline's new callback interface with the system EventBus.",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement `run_llmstxt_with_events` in `src/lms_llmsTxt_mcp/runner.py`. This function should accept a `run_id` and the `EventBus` instance. It invokes the modified pipeline from Subtask 1, passing a lambda/callback that wraps the raw strings into formatted Event objects and calls `event_bus.publish()`. Ensure it handles context passing correctly.",
+            "status": "pending",
+            "testStrategy": "Unit test the adapter logic to ensure it correctly translates string tokens from the pipeline into structured Event objects sent to the mock bus."
+          },
+          {
+            "id": 3,
+            "title": "Verify Milestone Emission via Integration Tests",
+            "description": "Develop and run integration tests to confirm the full sequence of events is emitted during a generation run.",
+            "dependencies": [
+              2
+            ],
+            "details": "Create an integration test in the test suite that sets up a mock EventBus and runs `run_llmstxt_with_events`. Verify the sequence: start -> repo_fetched -> analysis_started -> writing_files -> done. Check that the pipeline still produces the actual output files on disk (or mocked FS) to ensure no regression in functionality.",
+            "status": "pending",
+            "testStrategy": null
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Integrate DSPy Streaming Hooks",
+        "description": "Connect DSPy's internal streaming mechanisms to the EventBus to provide real-time feedback.",
+        "details": "Research the installed `dspy` version's streaming capabilities (e.g., `streamify` or callbacks). In `src/lms_llmsTxt/lmstudio.py` or the runner, attach a listener to the DSPy LM or Program. Map DSPy internal events (token generation, intermediate reasoning steps) to `progress` or `log` events in the `EventBus`. Implement throttling for token-level events to avoid flooding the bus.",
+        "testStrategy": "Integration test with a mocked LLM backend or a small local model. Verify that token/status events are flowing through to the EventBus during a generation task.",
+        "priority": "medium",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Prototype DSPy Streaming Interface",
+            "description": "Investigate the specific streaming capabilities of the installed DSPy version and verify connectivity with the backend.",
+            "dependencies": [],
+            "details": "Create a standalone script or unit test to verify how the `dspy.LM` or `dspy.Module` yields tokens. Determine if `stream=True` returns a generator or requires a callback handler. Confirm compatibility with the LM Studio backend usage to ensure tokens can be intercepted in real-time.",
+            "status": "pending",
+            "testStrategy": "Create a temporary script `scripts/test_dspy_stream.py` that connects to LM Studio and prints tokens to stdout as they are generated."
+          },
+          {
+            "id": 2,
+            "title": "Implement DSPy to EventBus Adapter",
+            "description": "Develop the logic to translate DSPy's internal generation events into the project's standard Event objects.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create a wrapper or callback class in `src/lms_llmsTxt/lmstudio.py` that intercepts token generation. Map these raw inputs into the `RunEvent` schema (specifically `progress` events for tokens and `log` events for reasoning steps), ensuring correct timestamps and run IDs are attached to each event payload.",
+            "status": "pending",
+            "testStrategy": "Unit test the adapter by feeding it mock DSPy token streams and asserting that it produces correctly formatted `RunEvent` objects."
+          },
+          {
+            "id": 3,
+            "title": "Integrate Streaming with Throttling Logic",
+            "description": "Hook the adapter into the main execution runner and apply rate-limiting to high-frequency events.",
+            "dependencies": [
+              2
+            ],
+            "details": "Modify the runner to use the streaming adapter during execution. Implement a throttling mechanism (e.g., publish only every 100ms or every 5 tokens) for `progress` events to prevent EventBus congestion. Ensure the final result is still captured accurately regardless of throttling.",
+            "status": "pending",
+            "testStrategy": "Integration test: Run a generation task and verify that the EventBus receives a stream of events that are spaced out according to the throttling logic, rather than one event per token."
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Streaming MCP Tool",
+        "description": "Create the new `lmstxt_generate_llms_txt_stream` tool that exposes the event stream to MCP clients.",
+        "details": "In `src/lms_llmsTxt_mcp/streaming_tool.py`, define the new tool function using `FastMCP` decorators. This function should: 1. Generate a `run_id`. 2. Initialize the `EventBus` for this run. 3. Spawn the background worker (using the runner from Task 4). 4. Return an iterator/generator that yields SSE-formatted events from the bus to the client. Ensure it handles the terminal event to close the stream.",
+        "testStrategy": "End-to-end test using an MCP client (or mock). Call the streaming tool and assert that a stream of JSON events is received, ending with a terminal event.",
+        "priority": "high",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Scaffold Streaming Tool and Initialization",
+            "description": "Create the `streaming_tool.py` module and define the FastMCP tool entry point `lmstxt_generate_llms_txt_stream`, including unique run ID generation and EventBus setup.",
+            "dependencies": [],
+            "details": "Create `src/lms_llmsTxt_mcp/streaming_tool.py`. Import `FastMCP` and the `EventBus` class. Define the tool function `lmstxt_generate_llms_txt_stream` with appropriate arguments (url, options). Inside the function, generate a UUID v4 `run_id` and initialize the `EventBus` for this specific run. Return the `run_id` and initialized bus for the next steps.",
+            "status": "pending",
+            "testStrategy": "Unit test the function to verify it returns a valid UUID and initializes an EventBus instance without errors."
+          },
+          {
+            "id": 2,
+            "title": "Implement Background Runner Execution",
+            "description": "Implement the logic to spawn the LLM generation runner in a non-blocking background thread to prevent blocking the async event loop.",
+            "dependencies": [
+              1
+            ],
+            "details": "Integrate the runner logic (from Task 4). Use `asyncio.create_task` combined with `asyncio.to_thread` (or a `ThreadPoolExecutor`) to execute the synchronous generation process in the background. Pass the `run_id`, `event_bus`, and input arguments to the runner. Ensure exceptions in the thread are caught and published as failure events to the bus.",
+            "status": "pending",
+            "testStrategy": "Mock the runner function and verify that calling the tool spawns the thread and that the main async loop remains responsive."
+          },
+          {
+            "id": 3,
+            "title": "Implement Event-to-SSE Bridge Generator",
+            "description": "Create the asynchronous generator that consumes events from the EventBus subscription and yields them to the client until a terminal event is reached.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement an `async for` loop iterating over `event_bus.subscribe(run_id)`. Transform internal event objects into the required SSE format (or JSON dictionaries if FastMCP handles wrapping). Detect terminal events (completed, failed, canceled) to break the loop and perform cleanup. This generator is the return value of the tool function.",
+            "status": "pending",
+            "testStrategy": "Simulate a sequence of events (start, progress, complete) in the EventBus and verify the generator yields them correctly and stops after the terminal event."
+          }
+        ]
+      },
+      {
+        "id": 7,
+        "title": "Implement Run Cancellation Support",
+        "description": "Add mechanisms to interrupt a running generation task and clean up resources.",
+        "details": "Extend `EventBus` and `Runner` to support cancellation. Add a `cancel_run` method in the bus that sets a flag. Update the generation loop in `pipeline.py` (or the wrapper) to check this flag periodically and abort execution. Ensure `CompletionController.mark_canceled` is called. Create a new tool `lmstxt_cancel_run(run_id)` in `server.py`.",
+        "testStrategy": "Start a long-running generation task, then immediately call the cancel tool. Verify that the stream receives a `run.canceled` event and the background thread terminates.",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Core Cancellation Logic in EventBus and Runner",
+            "description": "Modify the EventBus to support a cancellation state and update the execution loop to respect it.",
+            "dependencies": [],
+            "details": "Modify the `EventBus` class to include a thread-safe cancellation mechanism (e.g., `threading.Event`). Update the main generation loop in `pipeline.py` to check `event_bus.is_canceled()` at each step. If true, break the loop and trigger `CompletionController.mark_canceled` to ensure the correct terminal event is emitted and resources are released.",
+            "status": "pending",
+            "testStrategy": "Create a unit test with a mock long-running loop that checks the flag. Trigger the cancellation from a separate thread and assert the loop terminates early with a 'canceled' status."
+          },
+          {
+            "id": 2,
+            "title": "Implement lmstxt_cancel_run Tool",
+            "description": "Expose the cancellation functionality via a new MCP tool in the server.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/lms_llmsTxt_mcp/server.py`, register a new tool `lmstxt_cancel_run(run_id: str)`. This function should look up the active `EventBus` or context for the provided `run_id`. If found, call the cancellation method implemented in the previous subtask. Handle edge cases where the run ID does not exist or the task is already finished.",
+            "status": "pending",
+            "testStrategy": "Integration test: Start a generation task via the API, immediately call `lmstxt_cancel_run` with the returned run ID, and verify the stream ends with a cancellation event."
+          }
+        ]
+      },
+      {
+        "id": 8,
+        "title": "Register Tools and Update Server Entry Point",
+        "description": "Expose the new streaming tools in the main server definition while preserving backward compatibility.",
+        "details": "Update `src/lms_llmsTxt_mcp/server.py`. Import and register `lmstxt_generate_llms_txt_stream` and other streaming variants. Ensure existing tools (`lmstxt_generate_llms_txt`, `lmstxt_list_runs`) remain registered and functional. Verify that the `RunStore` is still updated so legacy polling clients still work even if the run was started via streaming (optional, but good for hybrid use).",
+        "testStrategy": "Regression testing: Verify legacy tools still return immediate `run_id` and polling works. Verify new tools stream data. Check server startup logs for successful registration.",
+        "priority": "high",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Analyze and Refactor Existing Server Tool Registration",
+            "description": "Examine `src/lms_llmsTxt_mcp/server.py` to understand the current `FastMCP` instantiation and tool registration pattern. Identify if refactoring is needed to support both synchronous and asynchronous/streaming tool definitions side-by-side.",
+            "dependencies": [],
+            "details": "Read `src/lms_llmsTxt_mcp/server.py`. Ensure the `mcp` server instance (likely `FastMCP`) is configured correctly to accept generator-based tools if specific configuration is required, or verify that the existing instance supports standard python `async def` and generators. Plan the import statements for the new tools.",
+            "status": "pending",
+            "testStrategy": null
+          },
+          {
+            "id": 2,
+            "title": "Import and Register Streaming Generation Tool",
+            "description": "Import the `lmstxt_generate_llms_txt_stream` function from the streaming module and register it as an MCP tool.",
+            "dependencies": [
+              1
+            ],
+            "details": "In `src/lms_llmsTxt_mcp/server.py`, add the import `from .streaming_tool import lmstxt_generate_llms_txt_stream` (adjusting path based on Task 6 output). Use the `@mcp.tool()` decorator (or `mcp.add_tool()`) to expose it. Ensure the tool description accurately reflects that it returns a stream of events.",
+            "status": "pending",
+            "testStrategy": "Check `mcp list-tools` output to see the new tool."
+          },
+          {
+            "id": 3,
+            "title": "Implement Hybrid RunStore Updates",
+            "description": "Ensure that the new streaming tool updates the shared `RunStore` so that legacy polling tools can still observe the run status.",
+            "dependencies": [
+              2
+            ],
+            "details": "Verify or modify the logic within the imported streaming handler or wrap it in `server.py` to ensure that when a streaming run is initialized, it is also added to the global `run_store` used by `lmstxt_list_runs`. This ensures hybrid compatibility where a user starts a stream but lists runs via the legacy tool.",
+            "status": "pending",
+            "testStrategy": "Start a streaming run, then immediately call `lmstxt_list_runs` to verify the run appears in the list."
+          },
+          {
+            "id": 4,
+            "title": "Register Cancellation Tool",
+            "description": "Import and register the `lmstxt_cancel_run` tool to allow clients to interrupt streaming or long-running tasks.",
+            "dependencies": [
+              2
+            ],
+            "details": "In `src/lms_llmsTxt_mcp/server.py`, implement or import the cancellation logic. Register `lmstxt_cancel_run(run_id: str)` as a tool. This tool should look up the run in the `RunStore` or `EventBus` registry and trigger the cancellation flag.",
+            "status": "pending",
+            "testStrategy": "Verify the tool exists in the server capabilities."
+          },
+          {
+            "id": 5,
+            "title": "Verify Server Startup and Tool Registry",
+            "description": "Perform a sanity check on the server entry point to ensure no import cycles or registration conflicts occur with the new additions.",
+            "dependencies": [
+              2,
+              4
+            ],
+            "details": "Run the server locally (`mcp run src/lms_llmsTxt_mcp/server.py` or equivalent). Check logs for any FastMCP warnings regarding tool schema generation. Verify that both legacy tools (`lmstxt_generate_llms_txt`) and new tools (`lmstxt_generate_llms_txt_stream`, `lmstxt_cancel_run`) are listed.",
+            "status": "pending",
+            "testStrategy": "Run the server and query the list of tools via an MCP client inspector."
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Harden Completion Determinism",
+        "description": "Ensure robustness against worker crashes, network issues, or ambiguous LLM finish reasons.",
+        "details": "Enhance `CompletionController` and `Runner`. Wrap the worker thread execution in a broad `try/finally` block. In `finally`, call `completion_controller.ensure_terminal_on_exit()` to guarantee a terminal event (failed or completed) is always emitted if one hasn't been sent yet. Add logic to ignore `finish_reason` if it conflicts with explicit stream markers.",
+        "testStrategy": "Fault injection testing: Simulate an unhandled exception in the worker thread. Verify that a `run.failed` event is emitted to the stream.",
+        "priority": "medium",
+        "dependencies": [
+          3,
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Global Exception Handling in Worker Thread",
+            "description": "Wrap the worker thread execution in a robust try/finally structure to guarantee terminal event emission.",
+            "dependencies": [],
+            "details": "In `src/lms_llmsTxt_mcp/runner.py`, encapsulate the payload execution within a top-level `try/except/finally` block. In the `finally` clause, invoke `completion_controller.ensure_terminal_on_exit()` to ensure that if the thread dies unexpectedly (e.g., OOM, unhandled exception), a terminal event is still sent to the client.",
+            "status": "pending",
+            "testStrategy": "Strict fault injection where a `RuntimeError` is raised explicitly within the worker logic; assert that the EventBus receives a `run.failed` message despite the crash."
+          },
+          {
+            "id": 2,
+            "title": "Refactor CompletionController for Idempotency and State Validation",
+            "description": "Enhance the CompletionController to safely handle concurrent state transitions and ambiguous finish reasons.",
+            "dependencies": [
+              1
+            ],
+            "details": "Update `src/lms_llmsTxt_mcp/completion.py`. Add a `threading.Lock` around state transitions. Implement `ensure_terminal_on_exit` which checks if `is_terminal` is false before emitting a fallback failure. Add logic to ignore `finish_reason` provided by the LLM API if explicit stream markers indicate a different state (e.g., successful parsing despite 'length' stop reason).",
+            "status": "pending",
+            "testStrategy": "Parallel unit tests invoking `mark_failed` and `mark_completed` simultaneously on the same controller instance; verify exactly one terminal event is published."
+          }
+        ]
+      },
+      {
+        "id": 10,
+        "title": "Implement ODA Step Runner (Foundation)",
+        "description": "Create the basic structure for the Observe-Decide-Act loop to demonstrate chaining.",
+        "details": "Create `src/lms_llmsTxt_mcp/agent_loop.py`. Implement a simple `AgentLoop` class that takes a list of step definitions. It should subscribe to the `EventBus` of the current step, wait for a terminal event, and strictly based on that event (Completed vs Failed), decide to execute the next step or abort. This is the foundation for the Post-MVP feature.",
+        "testStrategy": "Unit test with mock steps. Sequence: Step 1 succeeds -> Step 2 triggers. Step 1 fails -> Loop aborts. Verify no polling is used.",
+        "priority": "low",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define Step Interface and Mock Implementation",
+            "description": "Create abstract base classes or protocols for 'Step' definitions to be used by the AgentLoop.",
+            "dependencies": [],
+            "details": "Define a `Step` protocol/interface in `src/lms_llmsTxt_mcp/interfaces.py` (or within `agent_loop.py` if preferred) that requires an `execute(context)` method. Create a `MockStep` class for testing that simulates work and emits events via the EventBus. This ensures the loop has a consistent contract to interact with steps.",
+            "status": "pending",
+            "testStrategy": "Verify the interface enforces required methods. Test MockStep emits expected start/end events."
+          },
+          {
+            "id": 2,
+            "title": "Implement AgentLoop Class Structure",
+            "description": "Scaffold the AgentLoop class including initialization with step definitions and EventBus connection.",
+            "dependencies": [
+              1
+            ],
+            "details": "Create `src/lms_llmsTxt_mcp/agent_loop.py`. Define `AgentLoop` class. Constructor should accept `steps: List[Step]`, `event_bus: EventBus`, and `run_id: str`. Implement internal state tracking for `current_step_index` and `status` (e.g., idle, running, completed, failed).",
+            "status": "pending",
+            "testStrategy": "Unit test initialization to ensure correct storage of steps and event bus reference."
+          },
+          {
+            "id": 3,
+            "title": "Implement Event Subscription and Monitoring Logic",
+            "description": "Add logic to subscribe to the EventBus and listen for terminal events from the current step.",
+            "dependencies": [
+              2
+            ],
+            "details": "Implement a `_monitor_step(step_id)` method (or async equivalent) in `AgentLoop`. It should subscribe to the `EventBus` for the specific step execution. It needs to filter for `step.completed` or `step.failed` events (or the equivalent terminal events defined in the CompletionController) to trigger the decision logic.",
+            "status": "pending",
+            "testStrategy": "Mock the EventBus. Publish a completion event and verify the monitor method detects it."
+          },
+          {
+            "id": 4,
+            "title": "Implement ODA Decision and Execution Logic",
+            "description": "Create the core loop mechanics to transition between steps based on previous step outcomes.",
+            "dependencies": [
+              3
+            ],
+            "details": "Implement the `run()` or `start()` method. Logic: 1. Execute current step. 2. Wait for terminal event (via monitor). 3. If Success -> increment index and repeat. 4. If Failure -> Abort loop and emit loop failure. 5. If No more steps -> Emit loop completion. Use a simple iterator or while loop structure.",
+            "status": "pending",
+            "testStrategy": "Test with a sequence of 2 mock steps. Verify Step 2 only starts after Step 1 succeeds. Test failure in Step 1 prevents Step 2."
+          },
+          {
+            "id": 5,
+            "title": "Integrate Cancellation Handling in Loop",
+            "description": "Ensure the loop respects the run cancellation flag/event between steps.",
+            "dependencies": [
+              4
+            ],
+            "details": "Enhance the loop execution logic in `agent_loop.py` to check for a cancellation signal (either via a flag on the `EventBus` or a specific event) before starting the next step. If cancelled, terminate the loop immediately and clean up.",
+            "status": "pending",
+            "testStrategy": "Start a loop with 3 steps. Trigger cancellation during step 1. Verify step 2 is never executed."
+          }
+        ]
+      }
+    ],
+    "metadata": {
+      "created": "2026-01-15T00:25:56.942Z",
+      "updated": "2026-01-15T00:39:31.722Z",
+      "description": "Tasks for chore-update context"
+    }
   }
 }

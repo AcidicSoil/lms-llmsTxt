@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-01-15T00:39:50.555Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Define Event Models and Schemas",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is a straightforward definition of Pydantic models. No external dependencies or complex logic involved. It's purely declarative code to establish the schema."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Implement In-Process Event Bus",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Break down the Event Bus implementation into: 1. Core Pub/Sub logic with asyncio.Queue. 2. Management of subscribers (adding/removing) and cleanup logic.",
+			"reasoning": "While the concept is simple, ensuring thread-safety with `asyncio` or `threading`, handling backpressure (if necessary), and proper cleanup of resources adds moderate complexity."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement Completion Controller",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This acts as a state machine wrapper around the Event Bus. The logic is primarily conditional checks to ensure valid state transitions. Complexity is low-to-moderate."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Refactor Pipeline for Milestone Emission",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "1. Analyze `src/lms_llmsTxt/pipeline.py` to identify injection points. 2. Implement a wrapper or modification to inject the EventBus/Callback. 3. Insert emission logic at 'start', 'fetch', 'analyze', and 'write' stages without breaking existing synchronous logic.",
+			"reasoning": "Modifying the core logic `src/lms_llmsTxt/pipeline.py` requires care to avoid breaking existing functionality. Injecting event hooks into a potentially synchronous or mixed async/sync pipeline increases the risk of side effects."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Integrate DSPy Streaming Hooks",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "1. Investigate DSPy's specific streaming API (callbacks vs generator). 2. Implement an adapter to translate DSPy token events to internal 'progress' events. 3. Implement throttling logic to prevent event flooding.",
+			"reasoning": "High complexity due to dependency on external library internals (DSPy). Intercepting token generation in a framework often requires custom adapters or callbacks that may not be well-documented. Throttling adds logic complexity."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Implement Streaming MCP Tool",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "1. Define the FastMCP tool signature. 2. Implement the background worker spawning logic (threading vs asyncio). 3. Implement the generator that bridges the internal Queue to the SSE response format.",
+			"reasoning": "Requires bridging synchronous or threaded background work with an async generator for the MCP server. Managing the lifecycle of the background task and ensuring the stream closes correctly is error-prone."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Implement Run Cancellation Support",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Update EventBus/Context to hold a cancellation flag. 2. Insert periodic checks for this flag in the deep loops of `pipeline.py` and `lmstudio.py`.",
+			"reasoning": "Cancellation in Python is tricky, especially if code blocks on I/O. It requires intrusive changes to the execution loops to check for flags, or handling `asyncio.CancelledError` correctly."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Register Tools and Update Server Entry Point",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "This is primarily wiring: importing the new functions and adding them to the MCP server instance. Low complexity assuming previous tasks define the tools correctly."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Harden Completion Determinism",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "1. Implement top-level try/except/finally blocks in the worker entry point. 2. Refactor the CompletionController to be idempotent and thread-safe.",
+			"reasoning": "Important for reliability but technically is about robust error handling patterns. The complexity lies in testing edge cases rather than the code itself."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implement ODA Step Runner (Foundation)",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "As a 'Foundation' task, this is a basic loop. It depends on the Event Bus but logic is simple conditional chaining. Complexity will grow later, but this task is scoped to the basic structure."
+		}
+	]
+}
