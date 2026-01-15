@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-01-15T01:18:11.912Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Establish Project Structure and Configuration Module",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Greenfield setup. While critical, it involves standard boilerplate using well-documented libraries (pydantic-settings). No complex logic, just structure definition."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Define Core Type Definitions and Event Models",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Standard Pydantic model definition. Complexity is low as it's purely declarative schema creation without logic."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Implement DSPy Runtime Initialization and Adapter Setup",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Split into 1) Basic Runtime Configuration (LM setup) and 2) Adapter/Schema enforcement layer implementation.",
+			"reasoning": "Requires deep understanding of DSPy 3.x internals and adapter patterns. Configuring the LM is simple, but ensuring robust schema enforcement (the adapter layer) often involves intricate handling of prompt nuances and output parsing logic."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Develop IO Module for Repo Context Extraction",
+			"complexityScore": 4,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Split into 1) Repository Traversal/Gitignore Logic and 2) File Reading & Encoding Handling.",
+			"reasoning": "Handling file encodings and correctly implementing .gitignore rules (via pathspec) covers many edge cases. It's not just file reading; it's robust content extraction."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Create DSPy Analysis Program with Structured Outputs",
+			"complexityScore": 6,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Split into 1) Signature Definitions & Prompt Engineering and 2) Module Implementation with TypedPredictor integration.",
+			"reasoning": "The core logic of the application. Designing the prompt signatures to reliably produce complex JSON structures (RepoAnalysisArtifact) requires significant prompt engineering and testing, not just Python coding."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Implement Validation and Retry Logic",
+			"complexityScore": 5,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "Implementing a custom retry loop that intelligently feeds validation errors back into the context is moderately complex. It requires careful state management to avoid infinite loops or context window overflows."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Integrate Deterministic Caching",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "",
+			"reasoning": "DSPy has built-in caching support. The main work is ensuring the cache key generation correctly accounts for the `RepoContext` hash to ensure determinism."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Build Orchestration Layer with Streaming Support",
+			"complexityScore": 7,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into 1) Async Pipeline Skeleton, 2) Event Generation System, and 3) Batch vs. Stream Execution Logic.",
+			"reasoning": "Concurrency (asyncio) combined with generator-based streaming adds architectural complexity. Managing the flow of data from IO -> Analysis -> Output while yielding intermediate status events is error-prone and requires robust error handling."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Create Evaluation Harness for Quality Metrics",
+			"complexityScore": 5,
+			"recommendedSubtasks": 2,
+			"expansionPrompt": "Split into 1) Dataset Loading & Management and 2) Metric Implementation (e.g., Semantic Similarity).",
+			"reasoning": "Defining meaningful metrics for 'code analysis quality' is non-trivial. Implementing the mechanics is standard, but the subjective nature of the evaluation logic increases the difficulty."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implement MIPROv2 Optimizer Integration",
+			"complexityScore": 8,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Split into 1) Optimization Loop Setup, 2) Metric Integration for MIPRO, and 3) Persistence of Optimized Prompts.",
+			"reasoning": "Integration with DSPy's advanced optimizers (MIPROv2) is complex and often experimental. It requires a functioning pipeline, a solid dataset, and careful tuning of the optimizer's parameters to get results without crashing or spiraling costs."
+		}
+	]
+}
