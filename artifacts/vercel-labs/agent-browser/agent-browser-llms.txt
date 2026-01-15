@@ -1,29 +1,38 @@
-<!-- Generated via fallback path (no LM). -->
-
 # Agent Browser
 
-> Headless browser automation CLI for AI agents. Fast Rust CLI with Node.js fallback.
+> agent-browser empowers AI agents to automate web tasks with precision, using a fast Rust CLI that interfaces with Chromium via Playwright. It enables AI-driven workflows such as navigating sites, interacting with elements using semantic or ref-based selectors, and capturing snapshots for deterministic LLM interactions. The tool supports isolated sessions, network interception, authentication handling, and real-time streaming for human-AI collaboration — all while being cross-platform and performant.
 
 **Remember:**
-- Start with Docs for install & onboarding
-- Check Tutorials for end-to-end workflows
-- Review API references before integrating
+- Headless browser automation
+- Semantic locators (ARIA roles, text, labels)
+- Snapshot-based element refs (@e1, @e2)
+- Agent mode with JSON output for AI integration
+- Daemon-client architecture (Rust CLI + Node.js daemon)
+- CDP mode for remote browser control
 
 ## Docs
 - [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.
+- [Next.Config](https://github.com/vercel-labs/agent-browser/blob/main/docs/next.config.ts): docs page.
 
 ## Optional
 - [Agents](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md): docs page.
 - [README](https://github.com/vercel-labs/agent-browser/blob/main/README.md): docs page.
-- [Copy Native](https://github.com/vercel-labs/agent-browser/blob/main/scripts/copy-native.js): docs page.
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
+- [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.
 - [Vitest.Config](https://github.com/vercel-labs/agent-browser/blob/main/vitest.config.ts): docs page.
+
+## Scripts
+- [Copy Native](https://github.com/vercel-labs/agent-browser/blob/main/scripts/copy-native.js): docs page.
+- [Sync Version](https://github.com/vercel-labs/agent-browser/blob/main/scripts/sync-version.js): docs page.
 
 ## Src
 - [Actions](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.ts): docs page.
+- [Actions.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.test.ts): docs page.
 - [Browser](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.ts): docs page.
 - [Browser.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.test.ts): docs page.
 - [Daemon](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.ts): docs page.
 - [Protocol](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.ts): docs page.
 - [Protocol.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.test.ts): docs page.
 - [Snapshot](https://github.com/vercel-labs/agent-browser/blob/main/src/snapshot.ts): docs page.
+- [Stream Server](https://github.com/vercel-labs/agent-browser/blob/main/src/stream-server.ts): docs page.
 - [Types](https://github.com/vercel-labs/agent-browser/blob/main/src/types.ts): docs page.

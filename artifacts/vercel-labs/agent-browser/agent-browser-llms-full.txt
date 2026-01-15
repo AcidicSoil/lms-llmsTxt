@@ -119,6 +119,16 @@ async function main() {
 main().catch(console.error);
 
 
+--- docs/next.config.ts ---
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  /* config options here */
+};
+
+export default nextConfig;
+
+
 --- AGENTS.md ---
 # AGENTS.md
 
@@ -173,6 +183,8 @@ git clone https://github.com/vercel-labs/agent-browser
 cd agent-browser
 pnpm install
 pnpm build
+pnpm build:native   # Requires Rust (https://rustup.rs)
+pnpm link --global  # Makes agent-browser available globally
 agent-browser install
 ```
 
@@ -210,13 +222,13 @@ agent-browser find role button click --name "Submit"
 ### Core Commands
 
 ```bash
-agent-browser open <url>              # Navigate to URL
+agent-browser open <url>              # Navigate to URL (aliases: goto, navigate)
 agent-browser click <sel>             # Click element
 agent-browser dblclick <sel>          # Double-click element
 agent-browser focus <sel>             # Focus element
 agent-browser type <sel> <text>       # Type into element
 agent-browser fill <sel> <text>       # Clear and fill
-agent-browser press <key>             # Press key (Enter, Tab, Control+a)
+agent-browser press <key>             # Press key (Enter, Tab, Control+a) (alias: key)
 agent-browser keydown <key>           # Hold key down
 agent-browser keyup <key>             # Release key
 agent-browser hover <sel>             # Hover element
@@ -224,14 +236,14 @@ agent-browser select <sel> <val>      # Select dropdown option
 agent-browser check <sel>             # Check checkbox
 agent-browser uncheck <sel>           # Uncheck checkbox
 agent-browser scroll <dir> [px]       # Scroll (up/down/left/right)
-agent-browser scrollintoview <sel>    # Scroll element into view
+agent-browser scrollintoview <sel>    # Scroll element into view (alias: scrollinto)
 agent-browser drag <src> <tgt>        # Drag and drop
 agent-browser upload <sel> <files>    # Upload files
 agent-browser screenshot [path]       # Take screenshot (--full for full page)
 agent-browser pdf <path>              # Save as PDF
 agent-browser snapshot                # Accessibility tree with refs (best for AI)
 agent-browser eval <js>               # Run JavaScript
-agent-browser close                   # Close browser
+agent-browser close                   # Close browser (aliases: quit, exit)
 ```
 
 ### Get Info
@@ -284,9 +296,9 @@ agent-browser find nth 2 "a" text
 ### Wait
 
 ```bash
-agent-browser wait <selector>         # Wait for element
-agent-browser wait <ms>               # Wait for time
-agent-browser wait --text "Welcome"   # Wait for text
+agent-browser wait <selector>         # Wait for element to be visible
+agent-browser wait <ms>               # Wait for time (milliseconds)
+agent-browser wait --text "Welcome"   # Wait for text to appear
 agent-browser wait --url "**/dash"    # Wait for URL pattern
 agent-browser wait --load networkidle # Wait for load state
 agent-browser wait --fn "window.ready === true"  # Wait for JS condition
@@ -408,6 +420,10 @@ AGENT_BROWSER_SESSION=agent1 agent-browser click "#btn"
 
 # List active sessions
 agent-browser session list
+# Output:
+# Active sessions:
+# -> default
+#    agent1
 
 # Show current session
 agent-browser session
@@ -444,11 +460,14 @@ agent-browser snapshot -i -c -d 5         # Combine options
 | Option | Description |
 |--------|-------------|
 | `--session <name>` | Use isolated session (or `AGENT_BROWSER_SESSION` env) |
+| `--headers <json>` | Set HTTP headers scoped to the URL's origin |
+| `--executable-path <path>` | Custom browser executable (or `AGENT_BROWSER_EXECUTABLE_PATH` env) |
 | `--json` | JSON output (for agents) |
 | `--full, -f` | Full page screenshot |
 | `--name, -n` | Locator name filter |
 | `--exact` | Exact text match |
 | `--headed` | Show browser window (not headless) |
+| `--cdp <port>` | Connect via Chrome DevTools Protocol |
 | `--debug` | Debug output |
 
 ## Selectors
@@ -538,6 +557,200 @@ agent-browser open example.com --headed
 
 This opens a visible browser window instead of running headless.
 
+## Authenticated Sessions
+
+Use `--headers` to set HTTP headers for a specific origin, enabling authentication without login flows:
+
+```bash
+# Headers are scoped to api.example.com only
+agent-browser open api.example.com --headers '{"Authorization": "Bearer <token>"}'
+
+# Requests to api.example.com include the auth header
+agent-browser snapshot -i --json
+agent-browser click @e2
+
+# Navigate to another domain - headers are NOT sent (safe!)
+agent-browser open other-site.com
+```
+
+This is useful for:
+- **Skipping login flows** - Authenticate via headers instead of UI
+- **Switching users** - Start new sessions with different auth tokens
+- **API testing** - Access protected endpoints directly
+- **Security** - Headers are scoped to the origin, not leaked to other domains
+
+To set headers for multiple origins, use `--headers` with each `open` command:
+
+```bash
+agent-browser open api.example.com --headers '{"Authorization": "Bearer token1"}'
+agent-browser open api.acme.com --headers '{"Authorization": "Bearer token2"}'
+```
+
+For global headers (all domains), use `set headers`:
+
+```bash
+agent-browser set headers '{"X-Custom-Header": "value"}'
+```
+
+## Custom Browser Executable
+
+Use a custom browser executable instead of the bundled Chromium. This is useful for:
+- **Serverless deployment**: Use lightweight Chromium builds like `@sparticuz/chromium` (~50MB vs ~684MB)
+- **System browsers**: Use an existing Chrome/Chromium installation
+- **Custom builds**: Use modified browser builds
+
+### CLI Usage
+
+```bash
+# Via flag
+agent-browser --executable-path /path/to/chromium open example.com
+
+# Via environment variable
+AGENT_BROWSER_EXECUTABLE_PATH=/path/to/chromium agent-browser open example.com
+```
+
+### Serverless Example (Vercel/AWS Lambda)
+
+```typescript
+import chromium from '@sparticuz/chromium';
+import { BrowserManager } from 'agent-browser';
+
+export async function handler() {
+  const browser = new BrowserManager();
+  await browser.launch({
+    executablePath: await chromium.executablePath(),
+    headless: true,
+  });
+  // ... use browser
+}
+```
+
+## CDP Mode
+
+Connect to an existing browser via Chrome DevTools Protocol:
+
+```bash
+# Connect to Electron app
+agent-browser --cdp 9222 snapshot
+
+# Connect to Chrome with remote debugging
+# (Start Chrome with: google-chrome --remote-debugging-port=9222)
+agent-browser --cdp 9222 open about:blank
+```
+
+This enables control of:
+- Electron apps
+- Chrome/Chromium instances with remote debugging
+- WebView2 applications
+- Any browser exposing a CDP endpoint
+
+## Streaming (Browser Preview)
+
+Stream the browser viewport via WebSocket for live preview or "pair browsing" where a human can watch and interact alongside an AI agent.
+
+### Enable Streaming
+
+Set the `AGENT_BROWSER_STREAM_PORT` environment variable:
+
+```bash
+AGENT_BROWSER_STREAM_PORT=9223 agent-browser open example.com
+```
+
+This starts a WebSocket server on the specified port that streams the browser viewport and accepts input events.
+
+### WebSocket Protocol
+
+Connect to `ws://localhost:9223` to receive frames and send input:
+
+**Receive frames:**
+```json
+{
+  "type": "frame",
+  "data": "<base64-encoded-jpeg>",
+  "metadata": {
+    "deviceWidth": 1280,
+    "deviceHeight": 720,
+    "pageScaleFactor": 1,
+    "offsetTop": 0,
+    "scrollOffsetX": 0,
+    "scrollOffsetY": 0
+  }
+}
+```
+
+**Send mouse events:**
+```json
+{
+  "type": "input_mouse",
+  "eventType": "mousePressed",
+  "x": 100,
+  "y": 200,
+  "button": "left",
+  "clickCount": 1
+}
+```
+
+**Send keyboard events:**
+```json
+{
+  "type": "input_keyboard",
+  "eventType": "keyDown",
+  "key": "Enter",
+  "code": "Enter"
+}
+```
+
+**Send touch events:**
+```json
+{
+  "type": "input_touch",
+  "eventType": "touchStart",
+  "touchPoints": [{ "x": 100, "y": 200 }]
+}
+```
+
+### Programmatic API
+
+For advanced use, control streaming directly via the protocol:
+
+```typescript
+import { BrowserManager } from 'agent-browser';
+
+const browser = new BrowserManager();
+await browser.launch({ headless: true });
+await browser.navigate('https://example.com');
+
+// Start screencast
+await browser.startScreencast((frame) => {
+  // frame.data is base64-encoded image
+  // frame.metadata contains viewport info
+  console.log('Frame received:', frame.metadata.deviceWidth, 'x', frame.metadata.deviceHeight);
+}, {
+  format: 'jpeg',
+  quality: 80,
+  maxWidth: 1280,
+  maxHeight: 720,
+});
+
+// Inject mouse events
+await browser.injectMouseEvent({
+  type: 'mousePressed',
+  x: 100,
+  y: 200,
+  button: 'left',
+});
+
+// Inject keyboard events
+await browser.injectKeyboardEvent({
+  type: 'keyDown',
+  key: 'Enter',
+  code: 'Enter',
+});
+
+// Stop when done
+await browser.stopScreencast();
+```
+
 ## Architecture
 
 agent-browser uses a client-daemon architecture:
@@ -548,19 +761,314 @@ agent-browser uses a client-daemon architecture:
 
 The daemon starts automatically on first command and persists between commands for fast subsequent operations.
 
+**Browser Engine:** Uses Chromium by default. The daemon also supports Firefox and WebKit via the Playwright protocol.
+
 ## Platforms
 
 | Platform | Binary | Fallback |
 |----------|--------|----------|
-| macOS ARM64 | ✅ Native Rust | Node.js |
-| macOS x64 | ✅ Native Rust | Node.js |
-| Linux ARM64 | ✅ Native Rust | Node.js |
-| Linux x64 | ✅ Native Rust | Node.js |
-| Windows | - | Node.js |
+| macOS ARM64 | Native Rust | Node.js |
+| macOS x64 | Native Rust | Node.js |
+| Linux ARM64 | Native Rust | Node.js |
+| Linux x64 | Native Rust | Node.js |
+| Windows x64 | Native Rust | Node.js |
+
+## Usage with AI Agents
+
+### Just ask the agent
+
+The simplest approach - just tell your agent to use it:
+
+```
+Use agent-browser to test the login flow. Run agent-browser --help to see available commands.
+```
+
+The `--help` output is comprehensive and most agents can figure it out from there.
+
+### AGENTS.md / CLAUDE.md
+
+For more consistent results, add to your project or global instructions file:
+
+```markdown
+## Browser Automation
+
+Use `agent-browser` for web automation. Run `agent-browser --help` for all commands.
+
+Core workflow:
+1. `agent-browser open <url>` - Navigate to page
+2. `agent-browser snapshot -i` - Get interactive elements with refs (@e1, @e2)
+3. `agent-browser click @e1` / `fill @e2 "text"` - Interact using refs
+4. Re-snapshot after page changes
+```
+
+### Claude Code Skill
+
+For Claude Code, a [skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) provides richer context:
+
+```bash
+cp -r node_modules/agent-browser/skills/agent-browser .claude/skills/
+```
+
+Or download:
+
+```bash
+mkdir -p .claude/skills/agent-browser
+curl -o .claude/skills/agent-browser/SKILL.md \
+  https://raw.githubusercontent.com/vercel-labs/agent-browser/main/skills/agent-browser/SKILL.md
+```
 
 ## License
 
 Apache-2.0
+
+
+## Links discovered
+- [skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
+
+--- skills/agent-browser/SKILL.md ---
+---
+name: agent-browser
+description: Automates browser interactions for web testing, form filling, screenshots, and data extraction. Use when the user needs to navigate websites, interact with web pages, fill forms, take screenshots, test web applications, or extract information from web pages.
+---
+
+# Browser Automation with agent-browser
+
+## Quick start
+
+```bash
+agent-browser open <url>        # Navigate to page
+agent-browser snapshot -i       # Get interactive elements with refs
+agent-browser click @e1         # Click element by ref
+agent-browser fill @e2 "text"   # Fill input by ref
+agent-browser close             # Close browser
+```
+
+## Core workflow
+
+1. Navigate: `agent-browser open <url>`
+2. Snapshot: `agent-browser snapshot -i` (returns elements with refs like `@e1`, `@e2`)
+3. Interact using refs from the snapshot
+4. Re-snapshot after navigation or significant DOM changes
+
+## Commands
+
+### Navigation
+```bash
+agent-browser open <url>      # Navigate to URL
+agent-browser back            # Go back
+agent-browser forward         # Go forward  
+agent-browser reload          # Reload page
+agent-browser close           # Close browser
+```
+
+### Snapshot (page analysis)
+```bash
+agent-browser snapshot        # Full accessibility tree
+agent-browser snapshot -i     # Interactive elements only (recommended)
+agent-browser snapshot -c     # Compact output
+agent-browser snapshot -d 3   # Limit depth to 3
+```
+
+### Interactions (use @refs from snapshot)
+```bash
+agent-browser click @e1           # Click
+agent-browser dblclick @e1        # Double-click
+agent-browser fill @e2 "text"     # Clear and type
+agent-browser type @e2 "text"     # Type without clearing
+agent-browser press Enter         # Press key
+agent-browser press Control+a     # Key combination
+agent-browser hover @e1           # Hover
+agent-browser check @e1           # Check checkbox
+agent-browser uncheck @e1         # Uncheck checkbox
+agent-browser select @e1 "value"  # Select dropdown
+agent-browser scroll down 500     # Scroll page
+agent-browser scrollintoview @e1  # Scroll element into view
+```
+
+### Get information
+```bash
+agent-browser get text @e1        # Get element text
+agent-browser get value @e1       # Get input value
+agent-browser get title           # Get page title
+agent-browser get url             # Get current URL
+```
+
+### Screenshots
+```bash
+agent-browser screenshot          # Screenshot to stdout
+agent-browser screenshot path.png # Save to file
+agent-browser screenshot --full   # Full page
+```
+
+### Wait
+```bash
+agent-browser wait @e1                     # Wait for element
+agent-browser wait 2000                    # Wait milliseconds
+agent-browser wait --text "Success"        # Wait for text
+agent-browser wait --load networkidle      # Wait for network idle
+```
+
+### Semantic locators (alternative to refs)
+```bash
+agent-browser find role button click --name "Submit"
+agent-browser find text "Sign In" click
+agent-browser find label "Email" fill "user@test.com"
+```
+
+## Example: Form submission
+
+```bash
+agent-browser open https://example.com/form
+agent-browser snapshot -i
+# Output shows: textbox "Email" [ref=e1], textbox "Password" [ref=e2], button "Submit" [ref=e3]
+
+agent-browser fill @e1 "user@example.com"
+agent-browser fill @e2 "password123"
+agent-browser click @e3
+agent-browser wait --load networkidle
+agent-browser snapshot -i  # Check result
+```
+
+## Example: Authentication with saved state
+
+```bash
+# Login once
+agent-browser open https://app.example.com/login
+agent-browser snapshot -i
+agent-browser fill @e1 "username"
+agent-browser fill @e2 "password"
+agent-browser click @e3
+agent-browser wait --url "**/dashboard"
+agent-browser state save auth.json
+
+# Later sessions: load saved state
+agent-browser state load auth.json
+agent-browser open https://app.example.com/dashboard
+```
+
+## Sessions (parallel browsers)
+
+```bash
+agent-browser --session test1 open site-a.com
+agent-browser --session test2 open site-b.com
+agent-browser session list
+```
+
+## JSON output (for parsing)
+
+Add `--json` for machine-readable output:
+```bash
+agent-browser snapshot -i --json
+agent-browser get text @e1 --json
+```
+
+## Debugging
+
+```bash
+agent-browser open example.com --headed  # Show browser window
+agent-browser console                    # View console messages
+agent-browser errors                     # View page errors
+```
+
+
+--- test/serverless.test.ts ---
+/**
+ * Integration test for @sparticuz/chromium compatibility
+ * This tests the executablePath option with a serverless-optimized Chromium build
+ *
+ * Note: @sparticuz/chromium only works on Linux (designed for AWS Lambda).
+ * This test will skip on non-Linux platforms.
+ */
+import { describe, it, expect, afterAll } from 'vitest';
+import { BrowserManager } from '../src/browser.js';
+import * as os from 'os';
+
+const isLinux = os.platform() === 'linux';
+
+// Only run if @sparticuz/chromium is available AND we're on Linux
+const canRunTest = await (async () => {
+  if (!isLinux) {
+    console.log('Skipping @sparticuz/chromium test: only runs on Linux');
+    return false;
+  }
+  try {
+    await import('@sparticuz/chromium');
+    return true;
+  } catch {
+    console.log('Skipping @sparticuz/chromium test: package not installed');
+    return false;
+  }
+})();
+
+describe.skipIf(!canRunTest)('Serverless Chromium Integration', () => {
+  let browser: BrowserManager;
+  let chromiumPath: string;
+
+  it('should get executable path from @sparticuz/chromium', async () => {
+    const chromium = await import('@sparticuz/chromium');
+    chromiumPath = await chromium.default.executablePath();
+    expect(chromiumPath).toBeTruthy();
+    expect(typeof chromiumPath).toBe('string');
+    console.log('Chromium executable path:', chromiumPath);
+  });
+
+  it('should launch browser with custom executablePath', async () => {
+    const chromium = await import('@sparticuz/chromium');
+    chromiumPath = await chromium.default.executablePath();
+
+    browser = new BrowserManager();
+    await browser.launch({
+      headless: true,
+      executablePath: chromiumPath,
+    });
+
+    expect(browser.isLaunched()).toBe(true);
+  });
+
+  it('should navigate to a page', async () => {
+    const page = browser.getPage();
+    await page.goto('https://example.com');
+    expect(page.url()).toBe('https://example.com/');
+  });
+
+  it('should get page title', async () => {
+    const page = browser.getPage();
+    const title = await page.title();
+    expect(title).toBe('Example Domain');
+  });
+
+  it('should take snapshot with refs', async () => {
+    const { tree, refs } = await browser.getSnapshot();
+    expect(tree).toContain('Example Domain');
+    expect(typeof refs).toBe('object');
+    expect(Object.keys(refs).length).toBeGreaterThan(0);
+  });
+
+  it('should take screenshot', async () => {
+    const page = browser.getPage();
+    const buffer = await page.screenshot();
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  afterAll(async () => {
+    if (browser?.isLaunched()) {
+      await browser.close();
+    }
+  });
+});
+
+
+--- vitest.config.ts ---
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    include: ['src/**/*.test.ts', 'test/**/*.test.ts'],
+    testTimeout: 30000,
+  },
+});
 
 
 --- scripts/copy-native.js ---
@@ -601,21 +1109,55 @@ copyFileSync(sourcePath, targetPath);
 console.log(`✓ Copied native binary to ${targetPath}`);
 
 
---- vitest.config.ts ---
-import { defineConfig } from 'vitest/config';
+--- scripts/sync-version.js ---
+#!/usr/bin/env node
 
-export default defineConfig({
-  test: {
-    globals: true,
-    include: ['src/**/*.test.ts'],
-    testTimeout: 30000,
-  },
-});
+/**
+ * Syncs the version from package.json to all other config files.
+ * Run this script before building or releasing.
+ */
+
+import { readFileSync, writeFileSync } from "fs";
+import { dirname, join } from "path";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const rootDir = join(__dirname, "..");
+
+// Read version from package.json (single source of truth)
+const packageJson = JSON.parse(
+  readFileSync(join(rootDir, "package.json"), "utf-8")
+);
+const version = packageJson.version;
+
+console.log(`Syncing version ${version} to all config files...`);
+
+// Update Cargo.toml
+const cargoTomlPath = join(rootDir, "cli/Cargo.toml");
+let cargoToml = readFileSync(cargoTomlPath, "utf-8");
+const cargoVersionRegex = /^version\s*=\s*"[^"]*"/m;
+const newCargoVersion = `version = "${version}"`;
+
+if (cargoVersionRegex.test(cargoToml)) {
+  const oldMatch = cargoToml.match(cargoVersionRegex)?.[0];
+  if (oldMatch !== newCargoVersion) {
+    cargoToml = cargoToml.replace(cargoVersionRegex, newCargoVersion);
+    writeFileSync(cargoTomlPath, cargoToml);
+    console.log(`  Updated cli/Cargo.toml: ${oldMatch} -> ${newCargoVersion}`);
+  } else {
+    console.log(`  cli/Cargo.toml already up to date`);
+  }
+} else {
+  console.error("  Could not find version field in cli/Cargo.toml");
+  process.exit(1);
+}
+
+console.log("Version sync complete.");
 
 
 --- src/actions.ts ---
 import type { Page, Frame } from 'playwright-core';
-import type { BrowserManager } from './browser.js';
+import type { BrowserManager, ScreencastFrame } from './browser.js';
 import type {
   Command,
   Response,
@@ -710,6 +1252,11 @@ import type {
   MultiSelectCommand,
   WaitForDownloadCommand,
   ResponseBodyCommand,
+  ScreencastStartCommand,
+  ScreencastStopCommand,
+  InputMouseCommand,
+  InputKeyboardCommand,
+  InputTouchCommand,
   NavigateData,
   ScreenshotData,
   EvaluateData,
@@ -718,13 +1265,80 @@ import type {
   TabNewData,
   TabSwitchData,
   TabCloseData,
+  ScreencastStartData,
+  ScreencastStopData,
+  InputEventData,
 } from './types.js';
 import { successResponse, errorResponse } from './protocol.js';
+
+// Callback for screencast frames - will be set by the daemon when streaming is active
+let screencastFrameCallback: ((frame: ScreencastFrame) => void) | null = null;
+
+/**
+ * Set the callback for screencast frames
+ * This is called by the daemon to set up frame streaming
+ */
+export function setScreencastFrameCallback(
+  callback: ((frame: ScreencastFrame) => void) | null
+): void {
+  screencastFrameCallback = callback;
+}
 
 // Snapshot response type
 interface SnapshotData {
   snapshot: string;
   refs?: Record<string, { role: string; name?: string }>;
+}
+
+/**
+ * Convert Playwright errors to AI-friendly messages
+ * @internal Exported for testing
+ */
+export function toAIFriendlyError(error: unknown, selector: string): Error {
+  const message = error instanceof Error ? error.message : String(error);
+
+  // Handle strict mode violation (multiple elements match)
+  if (message.includes('strict mode violation')) {
+    // Extract count if available
+    const countMatch = message.match(/resolved to (\d+) elements/);
+    const count = countMatch ? countMatch[1] : 'multiple';
+
+    return new Error(
+      `Selector "${selector}" matched ${count} elements. ` +
+        `Run 'snapshot' to get updated refs, or use a more specific CSS selector.`
+    );
+  }
+
+  // Handle element not interactable (must be checked BEFORE timeout case)
+  // This includes cases where an overlay/modal blocks the element
+  if (message.includes('intercepts pointer events')) {
+    return new Error(
+      `Element "${selector}" is blocked by another element (likely a modal or overlay). ` +
+        `Try dismissing any modals/cookie banners first.`
+    );
+  }
+
+  // Handle element not visible
+  if (message.includes('not visible') && !message.includes('Timeout')) {
+    return new Error(
+      `Element "${selector}" is not visible. ` +
+        `Try scrolling it into view or check if it's hidden.`
+    );
+  }
+
+  // Handle element not found (timeout waiting for element)
+  if (
+    message.includes('waiting for') &&
+    (message.includes('to be visible') || message.includes('Timeout'))
+  ) {
+    return new Error(
+      `Element "${selector}" not found or not visible. ` +
+        `Run 'snapshot' to see current page elements.`
+    );
+  }
+
+  // Return original error for unknown cases
+  return error instanceof Error ? error : new Error(message);
 }
 
 /**
@@ -961,6 +1575,16 @@ export async function executeCommand(command: Command, browser: BrowserManager):
         return await handleWaitForDownload(command, browser);
       case 'responsebody':
         return await handleResponseBody(command, browser);
+      case 'screencast_start':
+        return await handleScreencastStart(command, browser);
+      case 'screencast_stop':
+        return await handleScreencastStop(command, browser);
+      case 'input_mouse':
+        return await handleInputMouse(command, browser);
+      case 'input_keyboard':
+        return await handleInputKeyboard(command, browser);
+      case 'input_touch':
+        return await handleInputTouch(command, browser);
       default: {
         // TypeScript narrows to never here, but we handle it for safety
         const unknownCommand = command as { id: string; action: string };
@@ -986,6 +1610,12 @@ async function handleNavigate(
   browser: BrowserManager
 ): Promise<Response<NavigateData>> {
   const page = browser.getPage();
+
+  // If headers are provided, set up scoped headers for this origin
+  if (command.headers && Object.keys(command.headers).length > 0) {
+    await browser.setScopedHeaders(command.url, command.headers);
+  }
+
   await page.goto(command.url, {
     waitUntil: command.waitUntil ?? 'load',
   });
@@ -999,12 +1629,16 @@ async function handleNavigate(
 async function handleClick(command: ClickCommand, browser: BrowserManager): Promise<Response> {
   // Support both refs (@e1) and regular selectors
   const locator = browser.getLocator(command.selector);
-  
-  await locator.click({
-    button: command.button,
-    clickCount: command.clickCount,
-    delay: command.delay,
-  });
+
+  try {
+    await locator.click({
+      button: command.button,
+      clickCount: command.clickCount,
+      delay: command.delay,
+    });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 
   return successResponse(command.id, { clicked: true });
 }
@@ -1012,13 +1646,17 @@ async function handleClick(command: ClickCommand, browser: BrowserManager): Prom
 async function handleType(command: TypeCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
 
-  if (command.clear) {
-    await locator.fill('');
-  }
+  try {
+    if (command.clear) {
+      await locator.fill('');
+    }
 
-  await locator.pressSequentially(command.text, {
-    delay: command.delay,
-  });
+    await locator.pressSequentially(command.text, {
+      delay: command.delay,
+    });
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 
   return successResponse(command.id, { typed: true });
 }
@@ -1065,7 +1703,13 @@ async function handleScreenshot(
 }
 
 async function handleSnapshot(
-  command: Command & { action: 'snapshot'; interactive?: boolean; maxDepth?: number; compact?: boolean; selector?: string },
+  command: Command & {
+    action: 'snapshot';
+    interactive?: boolean;
+    maxDepth?: number;
+    compact?: boolean;
+    selector?: string;
+  },
   browser: BrowserManager
 ): Promise<Response<SnapshotData>> {
   // Use enhanced snapshot with refs and optional filtering
@@ -1166,14 +1810,22 @@ async function handleSelect(command: SelectCommand, browser: BrowserManager): Pr
   const locator = browser.getLocator(command.selector);
   const values = Array.isArray(command.values) ? command.values : [command.values];
 
-  await locator.selectOption(values);
+  try {
+    await locator.selectOption(values);
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 
   return successResponse(command.id, { selected: values });
 }
 
 async function handleHover(command: HoverCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.hover();
+  try {
+    await locator.hover();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
 
   return successResponse(command.id, { hovered: true });
 }
@@ -1225,7 +1877,7 @@ async function handleTabSwitch(
   command: TabSwitchCommand,
   browser: BrowserManager
 ): Promise<Response<TabSwitchData>> {
-  const result = browser.switchTo(command.index);
+  const result = await browser.switchTo(command.index);
   const page = browser.getPage();
   return successResponse(command.id, {
     ...result,
@@ -1253,26 +1905,42 @@ async function handleWindowNew(
 
 async function handleFill(command: FillCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.fill(command.value);
+  try {
+    await locator.fill(command.value);
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { filled: true });
 }
 
 async function handleCheck(command: CheckCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.check();
+  try {
+    await locator.check();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { checked: true });
 }
 
 async function handleUncheck(command: UncheckCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.uncheck();
+  try {
+    await locator.uncheck();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { unchecked: true });
 }
 
 async function handleUpload(command: UploadCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
   const files = Array.isArray(command.files) ? command.files : [command.files];
-  await locator.setInputFiles(files);
+  try {
+    await locator.setInputFiles(files);
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { uploaded: files });
 }
 
@@ -1281,13 +1949,21 @@ async function handleDoubleClick(
   browser: BrowserManager
 ): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.dblclick();
+  try {
+    await locator.dblclick();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { clicked: true });
 }
 
 async function handleFocus(command: FocusCommand, browser: BrowserManager): Promise<Response> {
   const locator = browser.getLocator(command.selector);
-  await locator.focus();
+  try {
+    await locator.focus();
+  } catch (error) {
+    throw toAIFriendlyError(error, command.selector);
+  }
   return successResponse(command.id, { focused: true });
 }
 
@@ -1407,7 +2083,15 @@ async function handleCookiesSet(
 ): Promise<Response> {
   const page = browser.getPage();
   const context = page.context();
-  await context.addCookies(command.cookies);
+  // Auto-fill URL for cookies that don't have domain/path/url set
+  const pageUrl = page.url();
+  const cookies = command.cookies.map((cookie) => {
+    if (!cookie.url && !cookie.domain && !cookie.path) {
+      return { ...cookie, url: pageUrl };
+    }
+    return cookie;
+  });
+  await context.addCookies(cookies);
   return successResponse(command.id, { set: true });
 }
 
@@ -2285,6 +2969,127 @@ async function handleResponseBody(
   });
 }
 
+// Screencast and input injection handlers
+
+async function handleScreencastStart(
+  command: ScreencastStartCommand,
+  browser: BrowserManager
+): Promise<Response<ScreencastStartData>> {
+  if (!screencastFrameCallback) {
+    throw new Error('Screencast frame callback not set. Start the streaming server first.');
+  }
+
+  await browser.startScreencast(screencastFrameCallback, {
+    format: command.format,
+    quality: command.quality,
+    maxWidth: command.maxWidth,
+    maxHeight: command.maxHeight,
+    everyNthFrame: command.everyNthFrame,
+  });
+
+  return successResponse(command.id, {
+    started: true,
+    format: command.format ?? 'jpeg',
+    quality: command.quality ?? 80,
+  });
+}
+
+async function handleScreencastStop(
+  command: ScreencastStopCommand,
+  browser: BrowserManager
+): Promise<Response<ScreencastStopData>> {
+  await browser.stopScreencast();
+  return successResponse(command.id, { stopped: true });
+}
+
+async function handleInputMouse(
+  command: InputMouseCommand,
+  browser: BrowserManager
+): Promise<Response<InputEventData>> {
+  await browser.injectMouseEvent({
+    type: command.type,
+    x: command.x,
+    y: command.y,
+    button: command.button,
+    clickCount: command.clickCount,
+    deltaX: command.deltaX,
+    deltaY: command.deltaY,
+    modifiers: command.modifiers,
+  });
+  return successResponse(command.id, { injected: true });
+}
+
+async function handleInputKeyboard(
+  command: InputKeyboardCommand,
+  browser: BrowserManager
+): Promise<Response<InputEventData>> {
+  await browser.injectKeyboardEvent({
+    type: command.type,
+    key: command.key,
+    code: command.code,
+    text: command.text,
+    modifiers: command.modifiers,
+  });
+  return successResponse(command.id, { injected: true });
+}
+
+async function handleInputTouch(
+  command: InputTouchCommand,
+  browser: BrowserManager
+): Promise<Response<InputEventData>> {
+  await browser.injectTouchEvent({
+    type: command.type,
+    touchPoints: command.touchPoints,
+    modifiers: command.modifiers,
+  });
+  return successResponse(command.id, { injected: true });
+}
+
+
+--- src/actions.test.ts ---
+import { describe, it, expect } from 'vitest';
+import { toAIFriendlyError } from './actions.js';
+
+describe('toAIFriendlyError', () => {
+  describe('element blocked by overlay', () => {
+    it('should detect intercepts pointer events even when Timeout is in message', () => {
+      // This is the exact error from Playwright when a cookie banner blocks an element
+      // Bug: Previously this was incorrectly reported as "not found or not visible"
+      const error = new Error(
+        'TimeoutError: locator.click: Timeout 10000ms exceeded.\n' +
+          'Call log:\n' +
+          "  - waiting for getByRole('link', { name: 'Anmelden', exact: true }).first()\n" +
+          '    - locator resolved to <a href="https://example.com/login">Anmelden</a>\n' +
+          '  - attempting click action\n' +
+          '    2 x waiting for element to be visible, enabled and stable\n' +
+          '      - element is visible, enabled and stable\n' +
+          '      - scrolling into view if needed\n' +
+          '      - done scrolling\n' +
+          '      - <body class="font-sans antialiased">...</body> intercepts pointer events\n' +
+          '    - retrying click action'
+      );
+
+      const result = toAIFriendlyError(error, '@e4');
+
+      // Must NOT say "not found" - the element WAS found
+      expect(result.message).not.toContain('not found');
+      // Must indicate the element is blocked
+      expect(result.message).toContain('blocked by another element');
+      expect(result.message).toContain('modal or overlay');
+    });
+
+    it('should suggest dismissing cookie banners', () => {
+      const error = new Error('<div class="cookie-overlay"> intercepts pointer events');
+      const result = toAIFriendlyError(error, '@e1');
+
+      expect(result.message).toContain('cookie banners');
+    });
+  });
+});
+
+
+## Links discovered
+- [Anmelden](https://example.com/login)
 
 --- src/browser.ts ---
 import {
@@ -2300,9 +3105,36 @@ import {
   type Request,
   type Route,
   type Locator,
+  type CDPSession,
 } from 'playwright-core';
+import path from 'node:path';
+import os from 'node:os';
 import type { LaunchCommand } from './types.js';
 import { type RefMap, type EnhancedSnapshot, getEnhancedSnapshot, parseRef } from './snapshot.js';
+
+// Screencast frame data from CDP
+export interface ScreencastFrame {
+  data: string; // base64 encoded image
+  metadata: {
+    offsetTop: number;
+    pageScaleFactor: number;
+    deviceWidth: number;
+    deviceHeight: number;
+    scrollOffsetX: number;
+    scrollOffsetY: number;
+    timestamp?: number;
+  };
+  sessionId: number;
+}
+
+// Screencast options
+export interface ScreencastOptions {
+  format?: 'jpeg' | 'png';
+  quality?: number; // 0-100, only for jpeg
+  maxWidth?: number;
+  maxHeight?: number;
+  everyNthFrame?: number;
+}
 
 interface TrackedRequest {
   url: string;
@@ -2328,6 +3160,8 @@ interface PageError {
  */
 export class BrowserManager {
   private browser: Browser | null = null;
+  private cdpPort: number | null = null;
+  private isPersistentContext: boolean = false;
   private contexts: BrowserContext[] = [];
   private pages: Page[] = [];
   private activePageIndex: number = 0;
@@ -2340,12 +3174,20 @@ export class BrowserManager {
   private isRecordingHar: boolean = false;
   private refMap: RefMap = {};
   private lastSnapshot: string = '';
+  private scopedHeaderRoutes: Map<string, (route: Route) => Promise<void>> = new Map();
+
+  // CDP session for screencast and input injection
+  private cdpSession: CDPSession | null = null;
+  private screencastActive: boolean = false;
+  private screencastSessionId: number = 0;
+  private frameCallback: ((frame: ScreencastFrame) => void) | null = null;
+  private screencastFrameHandler: ((params: any) => void) | null = null;
 
   /**
    * Check if browser is launched
    */
   isLaunched(): boolean {
-    return this.browser !== null;
+    return this.browser !== null || this.isPersistentContext;
   }
 
   /**
@@ -2383,13 +3225,21 @@ export class BrowserManager {
     if (!refData) return null;
 
     const page = this.getPage();
-    
-    // Parse the selector and create locator
+
+    // Build locator with exact: true to avoid substring matches
+    let locator: Locator;
     if (refData.name) {
-      return page.getByRole(refData.role as any, { name: refData.name });
+      locator = page.getByRole(refData.role as any, { name: refData.name, exact: true });
     } else {
-      return page.getByRole(refData.role as any);
+      locator = page.getByRole(refData.role as any);
     }
+
+    // If an nth index is stored (for disambiguation), use it
+    if (refData.nth !== undefined) {
+      locator = locator.nth(refData.nth);
+    }
+
+    return locator;
   }
 
   /**
@@ -2720,12 +3570,82 @@ export class BrowserManager {
   }
 
   /**
-   * Set extra HTTP headers
+   * Set extra HTTP headers (global - all requests)
    */
   async setExtraHeaders(headers: Record<string, string>): Promise<void> {
     const context = this.contexts[0];
     if (context) {
       await context.setExtraHTTPHeaders(headers);
+    }
+  }
+
+  /**
+   * Set scoped HTTP headers (only for requests matching the origin)
+   * Uses route interception to add headers only to matching requests
+   */
+  async setScopedHeaders(origin: string, headers: Record<string, string>): Promise<void> {
+    const page = this.getPage();
+
+    // Build URL pattern from origin (e.g., "api.example.com" -> "**://api.example.com/**")
+    // Handle both full URLs and just hostnames
+    let urlPattern: string;
+    try {
+      const url = new URL(origin.startsWith('http') ? origin : `https://${origin}`);
+      // Match any protocol, the host, and any path
+      urlPattern = `**://${url.host}/**`;
+    } catch {
+      // If parsing fails, treat as hostname pattern
+      urlPattern = `**://${origin}/**`;
+    }
+
+    // Remove existing route for this origin if any
+    const existingHandler = this.scopedHeaderRoutes.get(urlPattern);
+    if (existingHandler) {
+      await page.unroute(urlPattern, existingHandler);
+    }
+
+    // Create handler that adds headers to matching requests
+    const handler = async (route: Route) => {
+      const requestHeaders = route.request().headers();
+      await route.continue({
+        headers: {
+          ...requestHeaders,
+          ...headers,
+        },
+      });
+    };
+
+    // Store and register the route
+    this.scopedHeaderRoutes.set(urlPattern, handler);
+    await page.route(urlPattern, handler);
+  }
+
+  /**
+   * Clear scoped headers for an origin (or all if no origin specified)
+   */
+  async clearScopedHeaders(origin?: string): Promise<void> {
+    const page = this.getPage();
+
+    if (origin) {
+      let urlPattern: string;
+      try {
+        const url = new URL(origin.startsWith('http') ? origin : `https://${origin}`);
+        urlPattern = `**://${url.host}/**`;
+      } catch {
+        urlPattern = `**://${origin}/**`;
+      }
+
+      const handler = this.scopedHeaderRoutes.get(urlPattern);
+      if (handler) {
+        await page.unroute(urlPattern, handler);
+        this.scopedHeaderRoutes.delete(urlPattern);
+      }
+    } else {
+      // Clear all scoped header routes
+      for (const [pattern, handler] of this.scopedHeaderRoutes) {
+        await page.unroute(pattern, handler);
+      }
+      this.scopedHeaderRoutes.clear();
     }
   }
 
@@ -2784,46 +3704,150 @@ export class BrowserManager {
   }
 
   /**
+   * Check if an existing CDP connection is still alive
+   * by verifying we can access browser contexts and that at least one has pages
+   */
+  private isCdpConnectionAlive(): boolean {
+    if (!this.browser) return false;
+    try {
+      const contexts = this.browser.contexts();
+      if (contexts.length === 0) return false;
+      return contexts.some((context) => context.pages().length > 0);
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Check if CDP connection needs to be re-established
+   */
+  private needsCdpReconnect(cdpPort: number): boolean {
+    if (!this.browser?.isConnected()) return true;
+    if (this.cdpPort !== cdpPort) return true;
+    if (!this.isCdpConnectionAlive()) return true;
+    return false;
+  }
+
+  /**
    * Launch the browser with the specified options
    * If already launched, this is a no-op (browser stays open)
    */
   async launch(options: LaunchCommand): Promise<void> {
-    // If already launched, don't relaunch
-    if (this.browser) {
+    const cdpPort = options.cdpPort;
+    const hasExtensions = !!options.extensions?.length;
+
+    if (hasExtensions && cdpPort) {
+      throw new Error('Extensions cannot be used with CDP connection');
+    }
+
+    if (this.isLaunched()) {
+      const needsRelaunch =
+        (!cdpPort && this.cdpPort !== null) || (!!cdpPort && this.needsCdpReconnect(cdpPort));
+      if (needsRelaunch) {
+        await this.close();
+      } else {
+        return;
+      }
+    }
+
+    if (cdpPort) {
+      await this.connectViaCDP(cdpPort);
       return;
     }
 
-    // Select browser type
     const browserType = options.browser ?? 'chromium';
+    if (hasExtensions && browserType !== 'chromium') {
+      throw new Error('Extensions are only supported in Chromium');
+    }
+
     const launcher =
       browserType === 'firefox' ? firefox : browserType === 'webkit' ? webkit : chromium;
+    const viewport = options.viewport ?? { width: 1280, height: 720 };
 
-    // Launch browser
-    this.browser = await launcher.launch({
-      headless: options.headless ?? true,
-    });
+    let context: BrowserContext;
+    if (hasExtensions) {
+      const extPaths = options.extensions!.join(',');
+      const session = process.env.AGENT_BROWSER_SESSION || 'default';
+      context = await launcher.launchPersistentContext(
+        path.join(os.tmpdir(), `agent-browser-ext-${session}`),
+        {
+          headless: false,
+          executablePath: options.executablePath,
+          args: [`--disable-extensions-except=${extPaths}`, `--load-extension=${extPaths}`],
+          viewport,
+          extraHTTPHeaders: options.headers,
+        }
+      );
+      this.isPersistentContext = true;
+    } else {
+      this.browser = await launcher.launch({
+        headless: options.headless ?? true,
+        executablePath: options.executablePath,
+      });
+      this.cdpPort = null;
+      context = await this.browser.newContext({ viewport, extraHTTPHeaders: options.headers });
+    }
 
-    // Create context with viewport
-    const context = await this.browser.newContext({
-      viewport: options.viewport ?? { width: 1280, height: 720 },
-    });
-
-    // Set default timeout to 10 seconds (Playwright default is 30s)
     context.setDefaultTimeout(10000);
-
     this.contexts.push(context);
 
-    // Create initial page
-    const page = await context.newPage();
+    const page = context.pages()[0] ?? (await context.newPage());
     this.pages.push(page);
     this.activePageIndex = 0;
-
-    // Automatically start console and error tracking
     this.setupPageTracking(page);
   }
 
   /**
-   * Set up console and error tracking for a page
+   * Connect to a running browser via CDP (Chrome DevTools Protocol)
+   */
+  private async connectViaCDP(cdpPort: number | undefined): Promise<void> {
+    if (!cdpPort) {
+      throw new Error('cdpPort is required for CDP connection');
+    }
+
+    const browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`).catch(() => {
+      throw new Error(
+        `Failed to connect via CDP on port ${cdpPort}. ` +
+          `Make sure the app is running with --remote-debugging-port=${cdpPort}`
+      );
+    });
+
+    // Validate and set up state, cleaning up browser connection if anything fails
+    try {
+      const contexts = browser.contexts();
+      if (contexts.length === 0) {
+        throw new Error('No browser context found. Make sure the app has an open window.');
+      }
+
+      const allPages = contexts.flatMap((context) => context.pages());
+      if (allPages.length === 0) {
+        throw new Error('No page found. Make sure the app has loaded content.');
+      }
+
+      // All validation passed - commit state
+      this.browser = browser;
+      this.cdpPort = cdpPort;
+
+      for (const context of contexts) {
+        this.contexts.push(context);
+        this.setupContextTracking(context);
+      }
+
+      for (const page of allPages) {
+        this.pages.push(page);
+        this.setupPageTracking(page);
+      }
+
+      this.activePageIndex = 0;
+    } catch (error) {
+      // Clean up browser connection if validation or setup failed
+      await browser.close().catch(() => {});
+      throw error;
+    }
+  }
+
+  /**
+   * Set up console, error, and close tracking for a page
    */
   private setupPageTracking(page: Page): void {
     page.on('console', (msg) => {
@@ -2840,6 +3864,26 @@ export class BrowserManager {
         timestamp: Date.now(),
       });
     });
+
+    page.on('close', () => {
+      const index = this.pages.indexOf(page);
+      if (index !== -1) {
+        this.pages.splice(index, 1);
+        if (this.activePageIndex >= this.pages.length) {
+          this.activePageIndex = Math.max(0, this.pages.length - 1);
+        }
+      }
+    });
+  }
+
+  /**
+   * Set up tracking for new pages in a context (for CDP connections)
+   */
+  private setupContextTracking(context: BrowserContext): void {
+    context.on('page', (page) => {
+      this.pages.push(page);
+      this.setupPageTracking(page);
+    });
   }
 
   /**
@@ -2849,6 +3893,9 @@ export class BrowserManager {
     if (!this.browser || this.contexts.length === 0) {
       throw new Error('Browser not launched');
     }
+
+    // Invalidate CDP session since we're switching to a new page
+    await this.invalidateCDPSession();
 
     const context = this.contexts[0]; // Use first context for tabs
     const page = await context.newPage();
@@ -2889,11 +3936,33 @@ export class BrowserManager {
   }
 
   /**
+   * Invalidate the current CDP session (must be called before switching pages)
+   * This ensures screencast and input injection work correctly after tab switch
+   */
+  private async invalidateCDPSession(): Promise<void> {
+    // Stop screencast if active (it's tied to the current page's CDP session)
+    if (this.screencastActive) {
+      await this.stopScreencast();
+    }
+
+    // Detach and clear the CDP session
+    if (this.cdpSession) {
+      await this.cdpSession.detach().catch(() => {});
+      this.cdpSession = null;
+    }
+  }
+
+  /**
    * Switch to a specific tab/page by index
    */
-  switchTo(index: number): { index: number; url: string; title: string } {
+  async switchTo(index: number): Promise<{ index: number; url: string; title: string }> {
     if (index < 0 || index >= this.pages.length) {
       throw new Error(`Invalid tab index: ${index}. Available: 0-${this.pages.length - 1}`);
+    }
+
+    // Invalidate CDP session before switching (it's page-specific)
+    if (index !== this.activePageIndex) {
+      await this.invalidateCDPSession();
     }
 
     this.activePageIndex = index;
@@ -2918,6 +3987,11 @@ export class BrowserManager {
 
     if (this.pages.length === 1) {
       throw new Error('Cannot close the last tab. Use "close" to close the browser.');
+    }
+
+    // If closing the active tab, invalidate CDP session first
+    if (targetIndex === this.activePageIndex) {
+      await this.invalidateCDPSession();
     }
 
     const page = this.pages[targetIndex];
@@ -2950,27 +4024,222 @@ export class BrowserManager {
   }
 
   /**
+   * Get or create a CDP session for the current page
+   * Only works with Chromium-based browsers
+   */
+  async getCDPSession(): Promise<CDPSession> {
+    if (this.cdpSession) {
+      return this.cdpSession;
+    }
+
+    const page = this.getPage();
+    const context = page.context();
+
+    // Create a new CDP session attached to the page
+    this.cdpSession = await context.newCDPSession(page);
+    return this.cdpSession;
+  }
+
+  /**
+   * Check if screencast is currently active
+   */
+  isScreencasting(): boolean {
+    return this.screencastActive;
+  }
+
+  /**
+   * Start screencast - streams viewport frames via CDP
+   * @param callback Function called for each frame
+   * @param options Screencast options
+   */
+  async startScreencast(
+    callback: (frame: ScreencastFrame) => void,
+    options?: ScreencastOptions
+  ): Promise<void> {
+    if (this.screencastActive) {
+      throw new Error('Screencast already active');
+    }
+
+    const cdp = await this.getCDPSession();
+    this.frameCallback = callback;
+    this.screencastActive = true;
+
+    // Create and store the frame handler so we can remove it later
+    this.screencastFrameHandler = async (params: any) => {
+      const frame: ScreencastFrame = {
+        data: params.data,
+        metadata: params.metadata,
+        sessionId: params.sessionId,
+      };
+
+      // Acknowledge the frame to receive the next one
+      await cdp.send('Page.screencastFrameAck', { sessionId: params.sessionId });
+
+      // Call the callback with the frame
+      if (this.frameCallback) {
+        this.frameCallback(frame);
+      }
+    };
+
+    // Listen for screencast frames
+    cdp.on('Page.screencastFrame', this.screencastFrameHandler);
+
+    // Start the screencast
+    await cdp.send('Page.startScreencast', {
+      format: options?.format ?? 'jpeg',
+      quality: options?.quality ?? 80,
+      maxWidth: options?.maxWidth ?? 1280,
+      maxHeight: options?.maxHeight ?? 720,
+      everyNthFrame: options?.everyNthFrame ?? 1,
+    });
+  }
+
+  /**
+   * Stop screencast
+   */
+  async stopScreencast(): Promise<void> {
+    if (!this.screencastActive) {
+      return;
+    }
+
+    try {
+      const cdp = await this.getCDPSession();
+      await cdp.send('Page.stopScreencast');
+
+      // Remove the event listener to prevent accumulation
+      if (this.screencastFrameHandler) {
+        cdp.off('Page.screencastFrame', this.screencastFrameHandler);
+      }
+    } catch {
+      // Ignore errors when stopping
+    }
+
+    this.screencastActive = false;
+    this.frameCallback = null;
+    this.screencastFrameHandler = null;
+  }
+
+  /**
+   * Inject a mouse event via CDP
+   */
+  async injectMouseEvent(params: {
+    type: 'mousePressed' | 'mouseReleased' | 'mouseMoved' | 'mouseWheel';
+    x: number;
+    y: number;
+    button?: 'left' | 'right' | 'middle' | 'none';
+    clickCount?: number;
+    deltaX?: number;
+    deltaY?: number;
+    modifiers?: number; // 1=Alt, 2=Ctrl, 4=Meta, 8=Shift
+  }): Promise<void> {
+    const cdp = await this.getCDPSession();
+
+    const cdpButton =
+      params.button === 'left'
+        ? 'left'
+        : params.button === 'right'
+          ? 'right'
+          : params.button === 'middle'
+            ? 'middle'
+            : 'none';
+
+    await cdp.send('Input.dispatchMouseEvent', {
+      type: params.type,
+      x: params.x,
+      y: params.y,
+      button: cdpButton,
+      clickCount: params.clickCount ?? 1,
+      deltaX: params.deltaX ?? 0,
+      deltaY: params.deltaY ?? 0,
+      modifiers: params.modifiers ?? 0,
+    });
+  }
+
+  /**
+   * Inject a keyboard event via CDP
+   */
+  async injectKeyboardEvent(params: {
+    type: 'keyDown' | 'keyUp' | 'char';
+    key?: string;
+    code?: string;
+    text?: string;
+    modifiers?: number; // 1=Alt, 2=Ctrl, 4=Meta, 8=Shift
+  }): Promise<void> {
+    const cdp = await this.getCDPSession();
+
+    await cdp.send('Input.dispatchKeyEvent', {
+      type: params.type,
+      key: params.key,
+      code: params.code,
+      text: params.text,
+      modifiers: params.modifiers ?? 0,
+    });
+  }
+
+  /**
+   * Inject touch event via CDP (for mobile emulation)
+   */
+  async injectTouchEvent(params: {
+    type: 'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel';
+    touchPoints: Array<{ x: number; y: number; id?: number }>;
+    modifiers?: number;
+  }): Promise<void> {
+    const cdp = await this.getCDPSession();
+
+    await cdp.send('Input.dispatchTouchEvent', {
+      type: params.type,
+      touchPoints: params.touchPoints.map((tp, i) => ({
+        x: tp.x,
+        y: tp.y,
+        id: tp.id ?? i,
+      })),
+      modifiers: params.modifiers ?? 0,
+    });
+  }
+
+  /**
    * Close the browser and clean up
    */
   async close(): Promise<void> {
-    for (const page of this.pages) {
-      await page.close().catch(() => {});
+    // Stop screencast if active
+    if (this.screencastActive) {
+      await this.stopScreencast();
     }
+
+    // Clean up CDP session
+    if (this.cdpSession) {
+      await this.cdpSession.detach().catch(() => {});
+      this.cdpSession = null;
+    }
+
+    // CDP: only disconnect, don't close external app's pages
+    if (this.cdpPort !== null) {
+      if (this.browser) {
+        await this.browser.close().catch(() => {});
+        this.browser = null;
+      }
+    } else {
+      // Regular browser: close everything
+      for (const page of this.pages) {
+        await page.close().catch(() => {});
+      }
+      for (const context of this.contexts) {
+        await context.close().catch(() => {});
+      }
+      if (this.browser) {
+        await this.browser.close().catch(() => {});
+        this.browser = null;
+      }
+    }
+
     this.pages = [];
-
-    for (const context of this.contexts) {
-      await context.close().catch(() => {});
-    }
     this.contexts = [];
-
-    if (this.browser) {
-      await this.browser.close().catch(() => {});
-      this.browser = null;
-    }
-
+    this.cdpPort = null;
+    this.isPersistentContext = false;
     this.activePageIndex = 0;
     this.refMap = {};
     this.lastSnapshot = '';
+    this.frameCallback = null;
   }
 }
 
@@ -2999,6 +4268,35 @@ describe('BrowserManager', () => {
     it('should have a page', () => {
       const page = browser.getPage();
       expect(page).toBeDefined();
+    });
+
+    it('should reject invalid executablePath', async () => {
+      const testBrowser = new BrowserManager();
+      await expect(
+        testBrowser.launch({
+          headless: true,
+          executablePath: '/nonexistent/path/to/chromium',
+        })
+      ).rejects.toThrow();
+    });
+
+    it('should be no-op when relaunching with same options', async () => {
+      const browserInstance = browser.getBrowser();
+      await browser.launch({ id: 'test', action: 'launch', headless: true });
+      expect(browser.getBrowser()).toBe(browserInstance);
+    });
+
+    it('should reconnect when CDP port changes', async () => {
+      const newBrowser = new BrowserManager();
+      await newBrowser.launch({ id: 'test', action: 'launch', headless: true });
+      expect(newBrowser.getBrowser()).not.toBeNull();
+
+      await expect(
+        newBrowser.launch({ id: 'test', action: 'launch', cdpPort: 59999 })
+      ).rejects.toThrow();
+
+      expect(newBrowser.getBrowser()).toBeNull();
+      await newBrowser.close();
     });
   });
 
@@ -3098,6 +4396,30 @@ describe('BrowserManager', () => {
       expect(testCookie?.value).toBe('value');
     });
 
+    it('should set cookie with domain', async () => {
+      const page = browser.getPage();
+      const context = page.context();
+      await context.addCookies([
+        { name: 'domainCookie', value: 'domainValue', domain: 'example.com', path: '/' },
+      ]);
+      const cookies = await context.cookies();
+      const testCookie = cookies.find((c) => c.name === 'domainCookie');
+      expect(testCookie?.value).toBe('domainValue');
+    });
+
+    it('should set multiple cookies at once', async () => {
+      const page = browser.getPage();
+      const context = page.context();
+      await context.clearCookies();
+      await context.addCookies([
+        { name: 'cookie1', value: 'value1', url: 'https://example.com' },
+        { name: 'cookie2', value: 'value2', url: 'https://example.com' },
+      ]);
+      const cookies = await context.cookies();
+      expect(cookies.find((c) => c.name === 'cookie1')?.value).toBe('value1');
+      expect(cookies.find((c) => c.name === 'cookie2')?.value).toBe('value2');
+    });
+
     it('should clear cookies', async () => {
       const page = browser.getPage();
       const context = page.context();
@@ -3107,18 +4429,81 @@ describe('BrowserManager', () => {
     });
   });
 
-  describe('storage via evaluate', () => {
-    it('should set and get localStorage', async () => {
+  describe('localStorage operations', () => {
+    it('should set and get localStorage item', async () => {
       const page = browser.getPage();
+      await page.goto('https://example.com');
       await page.evaluate(() => localStorage.setItem('testKey', 'testValue'));
       const value = await page.evaluate(() => localStorage.getItem('testKey'));
       expect(value).toBe('testValue');
+    });
+
+    it('should get all localStorage items', async () => {
+      const page = browser.getPage();
+      await page.evaluate(() => {
+        localStorage.clear();
+        localStorage.setItem('key1', 'value1');
+        localStorage.setItem('key2', 'value2');
+      });
+      const storage = await page.evaluate(() => {
+        const items: Record<string, string> = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key) items[key] = localStorage.getItem(key) || '';
+        }
+        return items;
+      });
+      expect(storage.key1).toBe('value1');
+      expect(storage.key2).toBe('value2');
     });
 
     it('should clear localStorage', async () => {
       const page = browser.getPage();
       await page.evaluate(() => localStorage.clear());
       const value = await page.evaluate(() => localStorage.getItem('testKey'));
+      expect(value).toBeNull();
+    });
+
+    it('should return null for non-existent key', async () => {
+      const page = browser.getPage();
+      await page.evaluate(() => localStorage.clear());
+      const value = await page.evaluate(() => localStorage.getItem('nonexistent'));
+      expect(value).toBeNull();
+    });
+  });
+
+  describe('sessionStorage operations', () => {
+    it('should set and get sessionStorage item', async () => {
+      const page = browser.getPage();
+      await page.goto('https://example.com');
+      await page.evaluate(() => sessionStorage.setItem('sessionKey', 'sessionValue'));
+      const value = await page.evaluate(() => sessionStorage.getItem('sessionKey'));
+      expect(value).toBe('sessionValue');
+    });
+
+    it('should get all sessionStorage items', async () => {
+      const page = browser.getPage();
+      await page.evaluate(() => {
+        sessionStorage.clear();
+        sessionStorage.setItem('skey1', 'svalue1');
+        sessionStorage.setItem('skey2', 'svalue2');
+      });
+      const storage = await page.evaluate(() => {
+        const items: Record<string, string> = {};
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key) items[key] = sessionStorage.getItem(key) || '';
+        }
+        return items;
+      });
+      expect(storage.skey1).toBe('svalue1');
+      expect(storage.skey2).toBe('svalue2');
+    });
+
+    it('should clear sessionStorage', async () => {
+      const page = browser.getPage();
+      await page.evaluate(() => sessionStorage.clear());
+      const value = await page.evaluate(() => sessionStorage.getItem('sessionKey'));
       expect(value).toBeNull();
     });
   });
@@ -3185,6 +4570,313 @@ describe('BrowserManager', () => {
       expect(h1).toBe('Example Domain');
     });
   });
+
+  describe('scoped headers', () => {
+    it('should register route for scoped headers', async () => {
+      // Test that setScopedHeaders doesn't throw and completes successfully
+      await browser.clearScopedHeaders();
+      await expect(
+        browser.setScopedHeaders('https://example.com', { 'X-Test': 'value' })
+      ).resolves.not.toThrow();
+      await browser.clearScopedHeaders();
+    });
+
+    it('should handle full URL origin', async () => {
+      await browser.clearScopedHeaders();
+      await expect(
+        browser.setScopedHeaders('https://api.example.com/path', { Authorization: 'Bearer token' })
+      ).resolves.not.toThrow();
+      await browser.clearScopedHeaders();
+    });
+
+    it('should handle hostname-only origin', async () => {
+      await browser.clearScopedHeaders();
+      await expect(
+        browser.setScopedHeaders('example.com', { 'X-Custom': 'value' })
+      ).resolves.not.toThrow();
+      await browser.clearScopedHeaders();
+    });
+
+    it('should clear scoped headers for specific origin', async () => {
+      await browser.clearScopedHeaders();
+      await browser.setScopedHeaders('https://example.com', { 'X-Test': 'value' });
+      await expect(browser.clearScopedHeaders('https://example.com')).resolves.not.toThrow();
+    });
+
+    it('should clear all scoped headers', async () => {
+      await browser.setScopedHeaders('https://example.com', { 'X-Test-1': 'value1' });
+      await browser.setScopedHeaders('https://example.org', { 'X-Test-2': 'value2' });
+      await expect(browser.clearScopedHeaders()).resolves.not.toThrow();
+    });
+
+    it('should replace headers when called twice for same origin', async () => {
+      await browser.clearScopedHeaders();
+      await browser.setScopedHeaders('https://example.com', { 'X-First': 'first' });
+      // Second call should replace, not add
+      await expect(
+        browser.setScopedHeaders('https://example.com', { 'X-Second': 'second' })
+      ).resolves.not.toThrow();
+      await browser.clearScopedHeaders();
+    });
+
+    it('should handle clearing non-existent origin gracefully', async () => {
+      await browser.clearScopedHeaders();
+      // Should not throw when clearing headers that were never set
+      await expect(browser.clearScopedHeaders('https://never-set.com')).resolves.not.toThrow();
+    });
+  });
+
+  describe('CDP session', () => {
+    it('should create CDP session on demand', async () => {
+      const cdp = await browser.getCDPSession();
+      expect(cdp).toBeDefined();
+    });
+
+    it('should reuse existing CDP session', async () => {
+      const cdp1 = await browser.getCDPSession();
+      const cdp2 = await browser.getCDPSession();
+      expect(cdp1).toBe(cdp2);
+    });
+  });
+
+  describe('screencast', () => {
+    it('should report screencasting state correctly', () => {
+      expect(browser.isScreencasting()).toBe(false);
+    });
+
+    it('should start screencast', async () => {
+      const frames: Array<{ data: string }> = [];
+      await browser.startScreencast((frame) => {
+        frames.push(frame);
+      });
+      expect(browser.isScreencasting()).toBe(true);
+
+      // Wait a bit for at least one frame
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await browser.stopScreencast();
+      expect(browser.isScreencasting()).toBe(false);
+      expect(frames.length).toBeGreaterThan(0);
+    });
+
+    it('should start screencast with custom options', async () => {
+      const frames: Array<{ data: string }> = [];
+      await browser.startScreencast(
+        (frame) => {
+          frames.push(frame);
+        },
+        {
+          format: 'png',
+          quality: 100,
+          maxWidth: 800,
+          maxHeight: 600,
+          everyNthFrame: 1,
+        }
+      );
+      expect(browser.isScreencasting()).toBe(true);
+
+      // Wait for a frame
+      await new Promise((resolve) => setTimeout(resolve, 200));
+
+      await browser.stopScreencast();
+      expect(frames.length).toBeGreaterThan(0);
+    });
+
+    it('should throw when starting screencast twice', async () => {
+      await browser.startScreencast(() => {});
+      await expect(browser.startScreencast(() => {})).rejects.toThrow('Screencast already active');
+      await browser.stopScreencast();
+    });
+
+    it('should handle stop when not screencasting', async () => {
+      // Should not throw
+      await expect(browser.stopScreencast()).resolves.not.toThrow();
+    });
+  });
+
+  describe('tab switch invalidates CDP session', () => {
+    // Clean up any extra tabs before each test
+    beforeEach(async () => {
+      // Close all tabs except the first one
+      const tabs = await browser.listTabs();
+      for (let i = tabs.length - 1; i > 0; i--) {
+        await browser.closeTab(i);
+      }
+      // Ensure we're on tab 0
+      await browser.switchTo(0);
+      // Stop any active screencast
+      if (browser.isScreencasting()) {
+        await browser.stopScreencast();
+      }
+    });
+
+    it('should not invalidate CDP when switching to same tab', async () => {
+      // Get CDP session for current tab
+      const cdp1 = await browser.getCDPSession();
+
+      // Switch to same tab - should NOT invalidate
+      await browser.switchTo(0);
+
+      // Should be the same session
+      const cdp2 = await browser.getCDPSession();
+      expect(cdp2).toBe(cdp1);
+    });
+
+    it('should invalidate CDP session on tab switch', async () => {
+      // Get CDP session for tab 0
+      const cdp1 = await browser.getCDPSession();
+      expect(cdp1).toBeDefined();
+
+      // Create new tab - this switches to the new tab automatically
+      await browser.newTab();
+
+      // Get CDP session - should be different since we're on a new page
+      const cdp2 = await browser.getCDPSession();
+      expect(cdp2).toBeDefined();
+
+      // Sessions should be different objects (different pages have different CDP sessions)
+      expect(cdp2).not.toBe(cdp1);
+    });
+
+    it('should stop screencast on tab switch', async () => {
+      // Start screencast on tab 0
+      await browser.startScreencast(() => {});
+      expect(browser.isScreencasting()).toBe(true);
+
+      // Create new tab and switch
+      await browser.newTab();
+      await browser.switchTo(1);
+
+      // Screencast should be stopped (it's page-specific)
+      expect(browser.isScreencasting()).toBe(false);
+    });
+  });
+
+  describe('input injection', () => {
+    it('should inject mouse move event', async () => {
+      await expect(
+        browser.injectMouseEvent({
+          type: 'mouseMoved',
+          x: 100,
+          y: 100,
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject mouse click events', async () => {
+      await expect(
+        browser.injectMouseEvent({
+          type: 'mousePressed',
+          x: 100,
+          y: 100,
+          button: 'left',
+          clickCount: 1,
+        })
+      ).resolves.not.toThrow();
+
+      await expect(
+        browser.injectMouseEvent({
+          type: 'mouseReleased',
+          x: 100,
+          y: 100,
+          button: 'left',
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject mouse wheel event', async () => {
+      await expect(
+        browser.injectMouseEvent({
+          type: 'mouseWheel',
+          x: 100,
+          y: 100,
+          deltaX: 0,
+          deltaY: 100,
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject keyboard events', async () => {
+      await expect(
+        browser.injectKeyboardEvent({
+          type: 'keyDown',
+          key: 'a',
+          code: 'KeyA',
+        })
+      ).resolves.not.toThrow();
+
+      await expect(
+        browser.injectKeyboardEvent({
+          type: 'keyUp',
+          key: 'a',
+          code: 'KeyA',
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject char event', async () => {
+      // CDP char events only accept single characters
+      await expect(
+        browser.injectKeyboardEvent({
+          type: 'char',
+          text: 'h',
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject keyboard with modifiers', async () => {
+      await expect(
+        browser.injectKeyboardEvent({
+          type: 'keyDown',
+          key: 'c',
+          code: 'KeyC',
+          modifiers: 2, // Ctrl
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject touch events', async () => {
+      await expect(
+        browser.injectTouchEvent({
+          type: 'touchStart',
+          touchPoints: [{ x: 100, y: 100 }],
+        })
+      ).resolves.not.toThrow();
+
+      await expect(
+        browser.injectTouchEvent({
+          type: 'touchMove',
+          touchPoints: [{ x: 150, y: 150 }],
+        })
+      ).resolves.not.toThrow();
+
+      await expect(
+        browser.injectTouchEvent({
+          type: 'touchEnd',
+          touchPoints: [],
+        })
+      ).resolves.not.toThrow();
+    });
+
+    it('should inject multi-touch events', async () => {
+      await expect(
+        browser.injectTouchEvent({
+          type: 'touchStart',
+          touchPoints: [
+            { x: 100, y: 100, id: 0 },
+            { x: 200, y: 200, id: 1 },
+          ],
+        })
+      ).resolves.not.toThrow();
+
+      await expect(
+        browser.injectTouchEvent({
+          type: 'touchEnd',
+          touchPoints: [],
+        })
+      ).resolves.not.toThrow();
+    });
+  });
 });
 
 
@@ -3196,12 +4888,19 @@ import * as os from 'os';
 import { BrowserManager } from './browser.js';
 import { parseCommand, serializeResponse, errorResponse } from './protocol.js';
 import { executeCommand } from './actions.js';
+import { StreamServer } from './stream-server.js';
 
 // Platform detection
 const isWindows = process.platform === 'win32';
 
 // Session support - each session gets its own socket/pid
 let currentSession = process.env.AGENT_BROWSER_SESSION || 'default';
+
+// Stream server for browser preview
+let streamServer: StreamServer | null = null;
+
+// Default stream port (can be overridden with AGENT_BROWSER_STREAM_PORT)
+const DEFAULT_STREAM_PORT = 9223;
 
 /**
  * Set the current session
@@ -3224,7 +4923,7 @@ export function getSession(): string {
 function getPortForSession(session: string): number {
   let hash = 0;
   for (let i = 0; i < session.length; i++) {
-    hash = ((hash << 5) - hash) + session.charCodeAt(i);
+    hash = (hash << 5) - hash + session.charCodeAt(i);
     hash |= 0;
   }
   // Port range 49152-65535 (dynamic/private ports)
@@ -3281,7 +4980,9 @@ export function isDaemonRunning(session?: string): boolean {
  * Get connection info for the current session
  * Returns { type: 'unix', path: string } or { type: 'tcp', port: number }
  */
-export function getConnectionInfo(session?: string): { type: 'unix'; path: string } | { type: 'tcp'; port: number } {
+export function getConnectionInfo(
+  session?: string
+): { type: 'unix'; path: string } | { type: 'tcp'; port: number } {
   const sess = session ?? currentSession;
   if (isWindows) {
     return { type: 'tcp', port: getPortForSession(sess) };
@@ -3294,8 +4995,10 @@ export function getConnectionInfo(session?: string): { type: 'unix'; path: strin
  */
 export function cleanupSocket(session?: string): void {
   const pidFile = getPidFile(session);
+  const streamPortFile = getStreamPortFile(session);
   try {
     if (fs.existsSync(pidFile)) fs.unlinkSync(pidFile);
+    if (fs.existsSync(streamPortFile)) fs.unlinkSync(streamPortFile);
     if (isWindows) {
       const portFile = getPortFile(session);
       if (fs.existsSync(portFile)) fs.unlinkSync(portFile);
@@ -3309,14 +5012,39 @@ export function cleanupSocket(session?: string): void {
 }
 
 /**
- * Start the daemon server
+ * Get the stream port file path
  */
-export async function startDaemon(): Promise<void> {
+export function getStreamPortFile(session?: string): string {
+  const sess = session ?? currentSession;
+  return path.join(os.tmpdir(), `agent-browser-${sess}.stream`);
+}
+
+/**
+ * Start the daemon server
+ * @param options.streamPort Port for WebSocket stream server (0 to disable)
+ */
+export async function startDaemon(options?: { streamPort?: number }): Promise<void> {
   // Clean up any stale socket
   cleanupSocket();
 
   const browser = new BrowserManager();
   let shuttingDown = false;
+
+  // Start stream server if port is specified (or use default if env var is set)
+  const streamPort =
+    options?.streamPort ??
+    (process.env.AGENT_BROWSER_STREAM_PORT
+      ? parseInt(process.env.AGENT_BROWSER_STREAM_PORT, 10)
+      : 0);
+
+  if (streamPort > 0) {
+    streamServer = new StreamServer(browser, streamPort);
+    await streamServer.start();
+
+    // Write stream port to file for clients to discover
+    const streamPortFile = getStreamPortFile();
+    fs.writeFileSync(streamPortFile, streamPort.toString());
+  }
 
   const server = net.createServer((socket) => {
     let buffer = '';
@@ -3347,7 +5075,18 @@ export async function startDaemon(): Promise<void> {
             parseResult.command.action !== 'launch' &&
             parseResult.command.action !== 'close'
           ) {
-            await browser.launch({ id: 'auto', action: 'launch', headless: true });
+            const extensions = process.env.AGENT_BROWSER_EXTENSIONS
+              ? process.env.AGENT_BROWSER_EXTENSIONS.split(',')
+                  .map((p) => p.trim())
+                  .filter(Boolean)
+              : undefined;
+            await browser.launch({
+              id: 'auto',
+              action: 'launch',
+              headless: true,
+              executablePath: process.env.AGENT_BROWSER_EXECUTABLE_PATH,
+              extensions: extensions,
+            });
           }
 
           // Handle close command specially
@@ -3411,6 +5150,20 @@ export async function startDaemon(): Promise<void> {
   const shutdown = async () => {
     if (shuttingDown) return;
     shuttingDown = true;
+
+    // Stop stream server if running
+    if (streamServer) {
+      await streamServer.stop();
+      streamServer = null;
+      // Clean up stream port file
+      const streamPortFile = getStreamPortFile();
+      try {
+        if (fs.existsSync(streamPortFile)) fs.unlinkSync(streamPortFile);
+      } catch {
+        // Ignore cleanup errors
+      }
+    }
+
     await browser.close();
     server.close();
     cleanupSocket();
@@ -3474,6 +5227,7 @@ const launchSchema = baseCommandSchema.extend({
     })
     .optional(),
   browser: z.enum(['chromium', 'firefox', 'webkit']).optional(),
+  cdpPort: z.number().positive().optional(),
 });
 
 const navigateSchema = baseCommandSchema.extend({
@@ -4040,6 +5794,55 @@ const responseBodySchema = baseCommandSchema.extend({
   timeout: z.number().positive().optional(),
 });
 
+// Screencast schemas for streaming browser viewport
+const screencastStartSchema = baseCommandSchema.extend({
+  action: z.literal('screencast_start'),
+  format: z.enum(['jpeg', 'png']).optional(),
+  quality: z.number().min(0).max(100).optional(),
+  maxWidth: z.number().positive().optional(),
+  maxHeight: z.number().positive().optional(),
+  everyNthFrame: z.number().positive().optional(),
+});
+
+const screencastStopSchema = baseCommandSchema.extend({
+  action: z.literal('screencast_stop'),
+});
+
+// Input injection schemas for pair browsing
+const inputMouseSchema = baseCommandSchema.extend({
+  action: z.literal('input_mouse'),
+  type: z.enum(['mousePressed', 'mouseReleased', 'mouseMoved', 'mouseWheel']),
+  x: z.number(),
+  y: z.number(),
+  button: z.enum(['left', 'right', 'middle', 'none']).optional(),
+  clickCount: z.number().positive().optional(),
+  deltaX: z.number().optional(),
+  deltaY: z.number().optional(),
+  modifiers: z.number().optional(),
+});
+
+const inputKeyboardSchema = baseCommandSchema.extend({
+  action: z.literal('input_keyboard'),
+  type: z.enum(['keyDown', 'keyUp', 'char']),
+  key: z.string().optional(),
+  code: z.string().optional(),
+  text: z.string().optional(),
+  modifiers: z.number().optional(),
+});
+
+const inputTouchSchema = baseCommandSchema.extend({
+  action: z.literal('input_touch'),
+  type: z.enum(['touchStart', 'touchEnd', 'touchMove', 'touchCancel']),
+  touchPoints: z.array(
+    z.object({
+      x: z.number(),
+      y: z.number(),
+      id: z.number().optional(),
+    })
+  ),
+  modifiers: z.number().optional(),
+});
+
 const pressSchema = baseCommandSchema.extend({
   action: z.literal('press'),
   key: z.string().min(1),
@@ -4250,6 +6053,11 @@ const commandSchema = z.discriminatedUnion('action', [
   multiSelectSchema,
   waitForDownloadSchema,
   responseBodySchema,
+  screencastStartSchema,
+  screencastStopSchema,
+  inputMouseSchema,
+  inputKeyboardSchema,
+  inputTouchSchema,
 ]);
 
 // Parse result type
@@ -4423,9 +6231,22 @@ describe('parseCommand', () => {
     it('should parse cookies_get', () => {
       const result = parseCommand(cmd({ id: '1', action: 'cookies_get' }));
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('cookies_get');
+      }
     });
 
-    it('should parse cookies_set', () => {
+    it('should parse cookies_get with urls filter', () => {
+      const result = parseCommand(
+        cmd({ id: '1', action: 'cookies_get', urls: ['https://example.com'] })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.urls).toEqual(['https://example.com']);
+      }
+    });
+
+    it('should parse cookies_set with minimal cookie', () => {
       const result = parseCommand(
         cmd({
           id: '1',
@@ -4434,18 +6255,129 @@ describe('parseCommand', () => {
         })
       );
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('cookies_set');
+        expect(result.command.cookies).toHaveLength(1);
+        expect(result.command.cookies[0].name).toBe('session');
+        expect(result.command.cookies[0].value).toBe('abc123');
+      }
+    });
+
+    it('should parse cookies_set with full cookie options', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'cookies_set',
+          cookies: [
+            {
+              name: 'auth',
+              value: 'token123',
+              domain: 'example.com',
+              path: '/',
+              expires: Date.now() / 1000 + 3600,
+              httpOnly: true,
+              secure: true,
+              sameSite: 'Strict',
+            },
+          ],
+        })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.cookies[0].httpOnly).toBe(true);
+        expect(result.command.cookies[0].secure).toBe(true);
+        expect(result.command.cookies[0].sameSite).toBe('Strict');
+      }
+    });
+
+    it('should parse cookies_set with multiple cookies', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'cookies_set',
+          cookies: [
+            { name: 'cookie1', value: 'value1' },
+            { name: 'cookie2', value: 'value2' },
+          ],
+        })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.cookies).toHaveLength(2);
+      }
+    });
+
+    it('should reject cookies_set without cookies array', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'cookies_set' }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should accept cookies_set with empty cookies array', () => {
+      // Empty array is technically valid (no-op)
+      const result = parseCommand(cmd({ id: '1', action: 'cookies_set', cookies: [] }));
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject cookies_set with cookie missing name', () => {
+      const result = parseCommand(
+        cmd({ id: '1', action: 'cookies_set', cookies: [{ value: 'test' }] })
+      );
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject cookies_set with cookie missing value', () => {
+      const result = parseCommand(
+        cmd({ id: '1', action: 'cookies_set', cookies: [{ name: 'test' }] })
+      );
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject cookies_set with invalid sameSite value', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'cookies_set',
+          cookies: [{ name: 'test', value: 'val', sameSite: 'Invalid' }],
+        })
+      );
+      expect(result.success).toBe(false);
     });
 
     it('should parse cookies_clear', () => {
       const result = parseCommand(cmd({ id: '1', action: 'cookies_clear' }));
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('cookies_clear');
+      }
     });
   });
 
   describe('storage', () => {
-    it('should parse storage_get', () => {
+    it('should parse storage_get for localStorage', () => {
       const result = parseCommand(cmd({ id: '1', action: 'storage_get', type: 'local' }));
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('storage_get');
+        expect(result.command.type).toBe('local');
+      }
+    });
+
+    it('should parse storage_get for sessionStorage', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'storage_get', type: 'session' }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.type).toBe('session');
+      }
+    });
+
+    it('should parse storage_get with specific key', () => {
+      const result = parseCommand(
+        cmd({ id: '1', action: 'storage_get', type: 'local', key: 'mykey' })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.key).toBe('mykey');
+      }
     });
 
     it('should parse storage_set', () => {
@@ -4459,6 +6391,59 @@ describe('parseCommand', () => {
         })
       );
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('storage_set');
+        expect(result.command.key).toBe('test');
+        expect(result.command.value).toBe('value');
+      }
+    });
+
+    it('should reject storage_set without key', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'storage_set',
+          type: 'local',
+          value: 'value',
+        })
+      );
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject storage_set without value', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'storage_set',
+          type: 'local',
+          key: 'test',
+        })
+      );
+      expect(result.success).toBe(false);
+    });
+
+    it('should parse storage_clear for localStorage', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'storage_clear', type: 'local' }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('storage_clear');
+        expect(result.command.type).toBe('local');
+      }
+    });
+
+    it('should parse storage_clear for sessionStorage', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'storage_clear', type: 'session' }));
+      expect(result.success).toBe(true);
+    });
+
+    it('should reject storage_get without type', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'storage_get' }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject storage_get with invalid type', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'storage_get', type: 'invalid' }));
+      expect(result.success).toBe(false);
     });
   });
 
@@ -4562,14 +6547,16 @@ describe('parseCommand', () => {
     });
 
     it('should parse snapshot with all options', () => {
-      const result = parseCommand(cmd({
-        id: '1',
-        action: 'snapshot',
-        interactive: true,
-        compact: true,
-        maxDepth: 5,
-        selector: '.content',
-      }));
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'snapshot',
+          interactive: true,
+          compact: true,
+          maxDepth: 5,
+          selector: '.content',
+        })
+      );
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.command.interactive).toBe(true);
@@ -4592,6 +6579,24 @@ describe('parseCommand', () => {
       if (result.success) {
         expect(result.command.headless).toBe(false);
       }
+    });
+
+    it('should parse launch with cdpPort', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', cdpPort: 9222 }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.cdpPort).toBe(9222);
+      }
+    });
+
+    it('should reject launch with invalid cdpPort', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', cdpPort: -1 }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject launch with non-numeric cdpPort', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', cdpPort: 'invalid' }));
+      expect(result.success).toBe(false);
     });
   });
 
@@ -4623,7 +6628,9 @@ describe('parseCommand', () => {
 
   describe('scroll', () => {
     it('should parse scroll command', () => {
-      const result = parseCommand(cmd({ id: '1', action: 'scroll', direction: 'down', amount: 300 }));
+      const result = parseCommand(
+        cmd({ id: '1', action: 'scroll', direction: 'down', amount: 300 })
+      );
       expect(result.success).toBe(true);
     });
 
@@ -4657,7 +6664,9 @@ describe('parseCommand', () => {
     });
 
     it('should parse geolocation', () => {
-      const result = parseCommand(cmd({ id: '1', action: 'geolocation', latitude: 37.7749, longitude: -122.4194 }));
+      const result = parseCommand(
+        cmd({ id: '1', action: 'geolocation', latitude: 37.7749, longitude: -122.4194 })
+      );
       expect(result.success).toBe(true);
     });
 
@@ -4708,7 +6717,9 @@ describe('parseCommand', () => {
     });
 
     it('should parse dialog accept with prompt text', () => {
-      const result = parseCommand(cmd({ id: '1', action: 'dialog', response: 'accept', promptText: 'hello' }));
+      const result = parseCommand(
+        cmd({ id: '1', action: 'dialog', response: 'accept', promptText: 'hello' })
+      );
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.command.promptText).toBe('hello');
@@ -4725,6 +6736,391 @@ describe('parseCommand', () => {
     it('should parse mainframe', () => {
       const result = parseCommand(cmd({ id: '1', action: 'mainframe' }));
       expect(result.success).toBe(true);
+    });
+  });
+
+  describe('screencast', () => {
+    it('should parse screencast_start with defaults', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'screencast_start' }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('screencast_start');
+      }
+    });
+
+    it('should parse screencast_start with all options', () => {
+      const result = parseCommand(
+        cmd({
+          id: '1',
+          action: 'screencast_start',
+          format: 'png',
+          quality: 90,
+          maxWidth: 1920,
+          maxHeight: 1080,
+          everyNthFrame: 2,
+        })
+      );
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.format).toBe('png');
+        expect(result.command.quality).toBe(90);
+        expect(result.command.maxWidth).toBe(1920);
+        expect(result.command.maxHeight).toBe(1080);
+        expect(result.command.everyNthFrame).toBe(2);
+      }
+    });
+
+    it('should reject screencast_start with invalid format', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'screencast_start', format: 'gif' }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject screencast_start with quality out of range', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'screencast_start', quality: 150 }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should reject screencast_start with negative maxWidth', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'screencast_start', maxWidth: -100 }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should parse screencast_stop', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'screencast_stop' }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.action).toBe('screencast_stop');
+      }
+    });
+  });
+
+  describe('input injection', () => {
+    describe('input_mouse', () => {
+      it('should parse mousePressed event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mousePressed',
+            x: 100,
+            y: 200,
+            button: 'left',
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.action).toBe('input_mouse');
+          expect(result.command.type).toBe('mousePressed');
+          expect(result.command.x).toBe(100);
+          expect(result.command.y).toBe(200);
+          expect(result.command.button).toBe('left');
+        }
+      });
+
+      it('should parse mouseReleased event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mouseReleased',
+            x: 100,
+            y: 200,
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse mouseMoved event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mouseMoved',
+            x: 150,
+            y: 250,
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse mouseWheel event with deltas', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mouseWheel',
+            x: 100,
+            y: 200,
+            deltaX: 0,
+            deltaY: 100,
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.deltaX).toBe(0);
+          expect(result.command.deltaY).toBe(100);
+        }
+      });
+
+      it('should parse mouse event with modifiers', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mousePressed',
+            x: 100,
+            y: 200,
+            modifiers: 6, // Ctrl + Meta
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.modifiers).toBe(6);
+        }
+      });
+
+      it('should parse mouse event with clickCount', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mousePressed',
+            x: 100,
+            y: 200,
+            clickCount: 2,
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.clickCount).toBe(2);
+        }
+      });
+
+      it('should reject input_mouse with invalid type', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'invalid',
+            x: 100,
+            y: 200,
+          })
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject input_mouse without x coordinate', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mousePressed',
+            y: 200,
+          })
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject input_mouse without y coordinate', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_mouse',
+            type: 'mousePressed',
+            x: 100,
+          })
+        );
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe('input_keyboard', () => {
+      it('should parse keyDown event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_keyboard',
+            type: 'keyDown',
+            key: 'Enter',
+            code: 'Enter',
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.action).toBe('input_keyboard');
+          expect(result.command.type).toBe('keyDown');
+          expect(result.command.key).toBe('Enter');
+          expect(result.command.code).toBe('Enter');
+        }
+      });
+
+      it('should parse keyUp event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_keyboard',
+            type: 'keyUp',
+            key: 'a',
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse char event with text', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_keyboard',
+            type: 'char',
+            text: 'hello',
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.text).toBe('hello');
+        }
+      });
+
+      it('should parse keyboard event with modifiers', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_keyboard',
+            type: 'keyDown',
+            key: 'c',
+            modifiers: 2, // Ctrl
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.modifiers).toBe(2);
+        }
+      });
+
+      it('should reject input_keyboard with invalid type', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_keyboard',
+            type: 'invalid',
+          })
+        );
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe('input_touch', () => {
+      it('should parse touchStart event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchStart',
+            touchPoints: [{ x: 100, y: 200 }],
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.action).toBe('input_touch');
+          expect(result.command.type).toBe('touchStart');
+          expect(result.command.touchPoints).toHaveLength(1);
+          expect(result.command.touchPoints[0].x).toBe(100);
+          expect(result.command.touchPoints[0].y).toBe(200);
+        }
+      });
+
+      it('should parse touchEnd event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchEnd',
+            touchPoints: [],
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse touchMove event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchMove',
+            touchPoints: [{ x: 150, y: 250 }],
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse touchCancel event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchCancel',
+            touchPoints: [],
+          })
+        );
+        expect(result.success).toBe(true);
+      });
+
+      it('should parse multi-touch event', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchStart',
+            touchPoints: [
+              { x: 100, y: 200, id: 0 },
+              { x: 300, y: 400, id: 1 },
+            ],
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.touchPoints).toHaveLength(2);
+        }
+      });
+
+      it('should parse touch event with modifiers', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchStart',
+            touchPoints: [{ x: 100, y: 200 }],
+            modifiers: 8, // Shift
+          })
+        );
+        expect(result.success).toBe(true);
+        if (result.success) {
+          expect(result.command.modifiers).toBe(8);
+        }
+      });
+
+      it('should reject input_touch with invalid type', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'invalid',
+            touchPoints: [],
+          })
+        );
+        expect(result.success).toBe(false);
+      });
+
+      it('should reject input_touch without touchPoints', () => {
+        const result = parseCommand(
+          cmd({
+            id: '1',
+            action: 'input_touch',
+            type: 'touchStart',
+          })
+        );
+        expect(result.success).toBe(false);
+      });
     });
   });
 
@@ -4774,6 +7170,8 @@ export interface RefMap {
     selector: string;
     role: string;
     name?: string;
+    /** Index for disambiguation when multiple elements have same role+name */
+    nth?: number;
   };
 }
 
@@ -4879,7 +7277,7 @@ const STRUCTURAL_ROLES = new Set([
 function buildSelector(role: string, name?: string): string {
   if (name) {
     const escapedName = name.replace(/"/g, '\\"');
-    return `getByRole('${role}', { name: "${escapedName}" })`;
+    return `getByRole('${role}', { name: "${escapedName}", exact: true })`;
   }
   return `getByRole('${role}')`;
 }
@@ -4912,47 +7310,107 @@ export async function getEnhancedSnapshot(
 }
 
 /**
+ * Track role+name combinations to detect duplicates
+ */
+interface RoleNameTracker {
+  counts: Map<string, number>;
+  /** Maps role+name key to array of ref IDs that use it */
+  refsByKey: Map<string, string[]>;
+  getKey(role: string, name?: string): string;
+  getNextIndex(role: string, name?: string): number;
+  trackRef(role: string, name: string | undefined, ref: string): void;
+  /** Get all role+name keys that have duplicates */
+  getDuplicateKeys(): Set<string>;
+}
+
+function createRoleNameTracker(): RoleNameTracker {
+  const counts = new Map<string, number>();
+  const refsByKey = new Map<string, string[]>();
+  return {
+    counts,
+    refsByKey,
+    getKey(role: string, name?: string): string {
+      return `${role}:${name ?? ''}`;
+    },
+    getNextIndex(role: string, name?: string): number {
+      const key = this.getKey(role, name);
+      const current = counts.get(key) ?? 0;
+      counts.set(key, current + 1);
+      return current;
+    },
+    trackRef(role: string, name: string | undefined, ref: string): void {
+      const key = this.getKey(role, name);
+      const refs = refsByKey.get(key) ?? [];
+      refs.push(ref);
+      refsByKey.set(key, refs);
+    },
+    getDuplicateKeys(): Set<string> {
+      const duplicates = new Set<string>();
+      for (const [key, refs] of refsByKey) {
+        if (refs.length > 1) {
+          duplicates.add(key);
+        }
+      }
+      return duplicates;
+    },
+  };
+}
+
+/**
  * Process ARIA snapshot: add refs and apply filters
  */
 function processAriaTree(ariaTree: string, refs: RefMap, options: SnapshotOptions): string {
   const lines = ariaTree.split('\n');
   const result: string[] = [];
+  const tracker = createRoleNameTracker();
 
   // For interactive-only mode, we collect just interactive elements
   if (options.interactive) {
     for (const line of lines) {
       const match = line.match(/^(\s*-\s*)(\w+)(?:\s+"([^"]*)")?(.*)$/);
       if (!match) continue;
-      
+
       const [, , role, name, suffix] = match;
       const roleLower = role.toLowerCase();
-      
+
       if (INTERACTIVE_ROLES.has(roleLower)) {
         const ref = nextRef();
+        const nth = tracker.getNextIndex(roleLower, name);
+        tracker.trackRef(roleLower, name, ref);
         refs[ref] = {
           selector: buildSelector(roleLower, name),
           role: roleLower,
           name,
+          nth, // Always store nth, we'll use it for duplicates
         };
-        
+
         let enhanced = `- ${role}`;
         if (name) enhanced += ` "${name}"`;
         enhanced += ` [ref=${ref}]`;
+        // Only show nth in output if it's > 0 (for readability)
+        if (nth > 0) enhanced += ` [nth=${nth}]`;
         if (suffix && suffix.includes('[')) enhanced += suffix;
-        
+
         result.push(enhanced);
       }
     }
+
+    // Post-process: remove nth from refs that don't have duplicates
+    removeNthFromNonDuplicates(refs, tracker);
+
     return result.join('\n') || '(no interactive elements)';
   }
 
   // Normal processing with depth/compact filters
   for (const line of lines) {
-    const processed = processLine(line, refs, options);
+    const processed = processLine(line, refs, options, tracker);
     if (processed !== null) {
       result.push(processed);
     }
   }
+
+  // Post-process: remove nth from refs that don't have duplicates
+  removeNthFromNonDuplicates(refs, tracker);
 
   // If compact mode, remove empty structural elements
   if (options.compact) {
@@ -4960,6 +7418,22 @@ function processAriaTree(ariaTree: string, refs: RefMap, options: SnapshotOption
   }
 
   return result.join('\n');
+}
+
+/**
+ * Remove nth from refs that ended up not having duplicates
+ * This keeps single-element locators simple (no unnecessary .nth(0))
+ */
+function removeNthFromNonDuplicates(refs: RefMap, tracker: RoleNameTracker): void {
+  const duplicateKeys = tracker.getDuplicateKeys();
+
+  for (const [ref, data] of Object.entries(refs)) {
+    const key = tracker.getKey(data.role, data.name);
+    if (!duplicateKeys.has(key)) {
+      // Not a duplicate, remove nth to keep locator simple
+      delete refs[ref].nth;
+    }
+  }
 }
 
 /**
@@ -4976,7 +7450,8 @@ function getIndentLevel(line: string): number {
 function processLine(
   line: string,
   refs: RefMap,
-  options: SnapshotOptions
+  options: SnapshotOptions,
+  tracker: RoleNameTracker
 ): string | null {
   const depth = getIndentLevel(line);
 
@@ -5027,17 +7502,22 @@ function processLine(
 
   if (shouldHaveRef) {
     const ref = nextRef();
+    const nth = tracker.getNextIndex(roleLower, name);
+    tracker.trackRef(roleLower, name, ref);
 
     refs[ref] = {
       selector: buildSelector(roleLower, name),
       role: roleLower,
       name,
+      nth, // Always store nth, we'll clean up non-duplicates later
     };
 
     // Build enhanced line with ref
     let enhanced = `${prefix}${role}`;
     if (name) enhanced += ` "${name}"`;
     enhanced += ` [ref=${ref}]`;
+    // Only show nth in output if it's > 0 (for readability)
+    if (nth > 0) enhanced += ` [nth=${nth}]`;
     if (suffix) enhanced += suffix;
 
     return enhanced;
@@ -5052,27 +7532,27 @@ function processLine(
 function compactTree(tree: string): string {
   const lines = tree.split('\n');
   const result: string[] = [];
-  
+
   // Simple pass: keep lines that have content or refs
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    
+
     // Always keep lines with refs
     if (line.includes('[ref=')) {
       result.push(line);
       continue;
     }
-    
+
     // Keep lines with text content (after :)
     if (line.includes(':') && !line.endsWith(':')) {
       result.push(line);
       continue;
     }
-    
+
     // Check if this structural element has children with refs
     const currentIndent = getIndentLevel(line);
     let hasRelevantChildren = false;
-    
+
     for (let j = i + 1; j < lines.length; j++) {
       const childIndent = getIndentLevel(lines[j]);
       if (childIndent <= currentIndent) break;
@@ -5081,12 +7561,12 @@ function compactTree(tree: string): string {
         break;
       }
     }
-    
+
     if (hasRelevantChildren) {
       result.push(line);
     }
   }
-  
+
   return result.join('\n');
 }
 
@@ -5109,17 +7589,18 @@ export function parseRef(arg: string): string | null {
 /**
  * Get snapshot statistics
  */
-export function getSnapshotStats(tree: string, refs: RefMap): {
+export function getSnapshotStats(
+  tree: string,
+  refs: RefMap
+): {
   lines: number;
   chars: number;
   tokens: number;
   refs: number;
   interactive: number;
 } {
-  const interactive = Object.values(refs).filter(r => 
-    INTERACTIVE_ROLES.has(r.role)
-  ).length;
-  
+  const interactive = Object.values(refs).filter((r) => INTERACTIVE_ROLES.has(r.role)).length;
+
   return {
     lines: tree.split('\n').length,
     chars: tree.length,
@@ -5127,6 +7608,373 @@ export function getSnapshotStats(tree: string, refs: RefMap): {
     refs: Object.keys(refs).length,
     interactive,
   };
+}
+
+
+--- src/stream-server.ts ---
+import { WebSocketServer, WebSocket } from 'ws';
+import type { BrowserManager, ScreencastFrame } from './browser.js';
+import { setScreencastFrameCallback } from './actions.js';
+
+// Message types for WebSocket communication
+export interface FrameMessage {
+  type: 'frame';
+  data: string; // base64 encoded image
+  metadata: {
+    offsetTop: number;
+    pageScaleFactor: number;
+    deviceWidth: number;
+    deviceHeight: number;
+    scrollOffsetX: number;
+    scrollOffsetY: number;
+    timestamp?: number;
+  };
+}
+
+export interface InputMouseMessage {
+  type: 'input_mouse';
+  eventType: 'mousePressed' | 'mouseReleased' | 'mouseMoved' | 'mouseWheel';
+  x: number;
+  y: number;
+  button?: 'left' | 'right' | 'middle' | 'none';
+  clickCount?: number;
+  deltaX?: number;
+  deltaY?: number;
+  modifiers?: number;
+}
+
+export interface InputKeyboardMessage {
+  type: 'input_keyboard';
+  eventType: 'keyDown' | 'keyUp' | 'char';
+  key?: string;
+  code?: string;
+  text?: string;
+  modifiers?: number;
+}
+
+export interface InputTouchMessage {
+  type: 'input_touch';
+  eventType: 'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel';
+  touchPoints: Array<{ x: number; y: number; id?: number }>;
+  modifiers?: number;
+}
+
+export interface StatusMessage {
+  type: 'status';
+  connected: boolean;
+  screencasting: boolean;
+  viewportWidth?: number;
+  viewportHeight?: number;
+}
+
+export interface ErrorMessage {
+  type: 'error';
+  message: string;
+}
+
+export type StreamMessage =
+  | FrameMessage
+  | InputMouseMessage
+  | InputKeyboardMessage
+  | InputTouchMessage
+  | StatusMessage
+  | ErrorMessage;
+
+/**
+ * WebSocket server for streaming browser viewport and receiving input
+ */
+export class StreamServer {
+  private wss: WebSocketServer | null = null;
+  private clients: Set<WebSocket> = new Set();
+  private browser: BrowserManager;
+  private port: number;
+  private isScreencasting: boolean = false;
+
+  constructor(browser: BrowserManager, port: number = 9223) {
+    this.browser = browser;
+    this.port = port;
+  }
+
+  /**
+   * Start the WebSocket server
+   */
+  start(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        this.wss = new WebSocketServer({ port: this.port });
+
+        this.wss.on('connection', (ws) => {
+          this.handleConnection(ws);
+        });
+
+        this.wss.on('error', (error) => {
+          console.error('[StreamServer] WebSocket error:', error);
+          reject(error);
+        });
+
+        this.wss.on('listening', () => {
+          console.log(`[StreamServer] Listening on port ${this.port}`);
+
+          // Set up the screencast frame callback
+          setScreencastFrameCallback((frame) => {
+            this.broadcastFrame(frame);
+          });
+
+          resolve();
+        });
+      } catch (error) {
+        reject(error);
+      }
+    });
+  }
+
+  /**
+   * Stop the WebSocket server
+   */
+  async stop(): Promise<void> {
+    // Stop screencasting
+    if (this.isScreencasting) {
+      await this.stopScreencast();
+    }
+
+    // Clear the callback
+    setScreencastFrameCallback(null);
+
+    // Close all clients
+    for (const client of this.clients) {
+      client.close();
+    }
+    this.clients.clear();
+
+    // Close the server
+    if (this.wss) {
+      return new Promise((resolve) => {
+        this.wss!.close(() => {
+          this.wss = null;
+          resolve();
+        });
+      });
+    }
+  }
+
+  /**
+   * Handle a new WebSocket connection
+   */
+  private handleConnection(ws: WebSocket): void {
+    console.log('[StreamServer] Client connected');
+    this.clients.add(ws);
+
+    // Send initial status
+    this.sendStatus(ws);
+
+    // Start screencasting if this is the first client
+    if (this.clients.size === 1 && !this.isScreencasting) {
+      this.startScreencast().catch((error) => {
+        console.error('[StreamServer] Failed to start screencast:', error);
+        this.sendError(ws, error.message);
+      });
+    }
+
+    // Handle messages from client
+    ws.on('message', (data) => {
+      try {
+        const message = JSON.parse(data.toString()) as StreamMessage;
+        this.handleMessage(message, ws);
+      } catch (error) {
+        console.error('[StreamServer] Failed to parse message:', error);
+      }
+    });
+
+    // Handle client disconnect
+    ws.on('close', () => {
+      console.log('[StreamServer] Client disconnected');
+      this.clients.delete(ws);
+
+      // Stop screencasting if no more clients
+      if (this.clients.size === 0 && this.isScreencasting) {
+        this.stopScreencast().catch((error) => {
+          console.error('[StreamServer] Failed to stop screencast:', error);
+        });
+      }
+    });
+
+    ws.on('error', (error) => {
+      console.error('[StreamServer] Client error:', error);
+      this.clients.delete(ws);
+    });
+  }
+
+  /**
+   * Handle incoming messages from clients
+   */
+  private async handleMessage(message: StreamMessage, ws: WebSocket): Promise<void> {
+    try {
+      switch (message.type) {
+        case 'input_mouse':
+          await this.browser.injectMouseEvent({
+            type: message.eventType,
+            x: message.x,
+            y: message.y,
+            button: message.button,
+            clickCount: message.clickCount,
+            deltaX: message.deltaX,
+            deltaY: message.deltaY,
+            modifiers: message.modifiers,
+          });
+          break;
+
+        case 'input_keyboard':
+          await this.browser.injectKeyboardEvent({
+            type: message.eventType,
+            key: message.key,
+            code: message.code,
+            text: message.text,
+            modifiers: message.modifiers,
+          });
+          break;
+
+        case 'input_touch':
+          await this.browser.injectTouchEvent({
+            type: message.eventType,
+            touchPoints: message.touchPoints,
+            modifiers: message.modifiers,
+          });
+          break;
+
+        case 'status':
+          // Client is requesting status
+          this.sendStatus(ws);
+          break;
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.sendError(ws, errorMessage);
+    }
+  }
+
+  /**
+   * Broadcast a frame to all connected clients
+   */
+  private broadcastFrame(frame: ScreencastFrame): void {
+    const message: FrameMessage = {
+      type: 'frame',
+      data: frame.data,
+      metadata: frame.metadata,
+    };
+
+    const payload = JSON.stringify(message);
+
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(payload);
+      }
+    }
+  }
+
+  /**
+   * Send status to a client
+   */
+  private sendStatus(ws: WebSocket): void {
+    let viewportWidth: number | undefined;
+    let viewportHeight: number | undefined;
+
+    try {
+      const page = this.browser.getPage();
+      const viewport = page.viewportSize();
+      viewportWidth = viewport?.width;
+      viewportHeight = viewport?.height;
+    } catch {
+      // Browser not launched yet
+    }
+
+    const message: StatusMessage = {
+      type: 'status',
+      connected: true,
+      screencasting: this.isScreencasting,
+      viewportWidth,
+      viewportHeight,
+    };
+
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    }
+  }
+
+  /**
+   * Send an error to a client
+   */
+  private sendError(ws: WebSocket, errorMessage: string): void {
+    const message: ErrorMessage = {
+      type: 'error',
+      message: errorMessage,
+    };
+
+    if (ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    }
+  }
+
+  /**
+   * Start screencasting
+   */
+  private async startScreencast(): Promise<void> {
+    // Set flag immediately to prevent race conditions with concurrent calls
+    if (this.isScreencasting) return;
+    this.isScreencasting = true;
+
+    try {
+      // Check if browser is launched
+      if (!this.browser.isLaunched()) {
+        throw new Error('Browser not launched');
+      }
+
+      await this.browser.startScreencast((frame) => this.broadcastFrame(frame), {
+        format: 'jpeg',
+        quality: 80,
+        maxWidth: 1280,
+        maxHeight: 720,
+        everyNthFrame: 1,
+      });
+
+      // Notify all clients
+      for (const client of this.clients) {
+        this.sendStatus(client);
+      }
+    } catch (error) {
+      // Reset flag on failure so caller can retry
+      this.isScreencasting = false;
+      throw error;
+    }
+  }
+
+  /**
+   * Stop screencasting
+   */
+  private async stopScreencast(): Promise<void> {
+    if (!this.isScreencasting) return;
+
+    await this.browser.stopScreencast();
+    this.isScreencasting = false;
+
+    // Notify all clients
+    for (const client of this.clients) {
+      this.sendStatus(client);
+    }
+  }
+
+  /**
+   * Get the port the server is running on
+   */
+  getPort(): number {
+    return this.port;
+  }
+
+  /**
+   * Get the number of connected clients
+   */
+  getClientCount(): number {
+    return this.clients.size;
+  }
 }
 
 
@@ -5145,12 +7993,17 @@ export interface LaunchCommand extends BaseCommand {
   headless?: boolean;
   viewport?: { width: number; height: number };
   browser?: 'chromium' | 'firefox' | 'webkit';
+  headers?: Record<string, string>;
+  executablePath?: string;
+  cdpPort?: number;
+  extensions?: string[];
 }
 
 export interface NavigateCommand extends BaseCommand {
   action: 'navigate';
   url: string;
   waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
+  headers?: Record<string, string>;
 }
 
 export interface ClickCommand extends BaseCommand {
@@ -5587,6 +8440,49 @@ export interface ResponseBodyCommand extends BaseCommand {
   timeout?: number;
 }
 
+// Screencast commands for streaming browser viewport
+export interface ScreencastStartCommand extends BaseCommand {
+  action: 'screencast_start';
+  format?: 'jpeg' | 'png';
+  quality?: number; // 0-100, jpeg only
+  maxWidth?: number;
+  maxHeight?: number;
+  everyNthFrame?: number;
+}
+
+export interface ScreencastStopCommand extends BaseCommand {
+  action: 'screencast_stop';
+}
+
+// Input injection commands for pair browsing
+export interface InputMouseCommand extends BaseCommand {
+  action: 'input_mouse';
+  type: 'mousePressed' | 'mouseReleased' | 'mouseMoved' | 'mouseWheel';
+  x: number;
+  y: number;
+  button?: 'left' | 'right' | 'middle' | 'none';
+  clickCount?: number;
+  deltaX?: number;
+  deltaY?: number;
+  modifiers?: number;
+}
+
+export interface InputKeyboardCommand extends BaseCommand {
+  action: 'input_keyboard';
+  type: 'keyDown' | 'keyUp' | 'char';
+  key?: string;
+  code?: string;
+  text?: string;
+  modifiers?: number;
+}
+
+export interface InputTouchCommand extends BaseCommand {
+  action: 'input_touch';
+  type: 'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel';
+  touchPoints: Array<{ x: number; y: number; id?: number }>;
+  modifiers?: number;
+}
+
 // Video recording
 export interface VideoStartCommand extends BaseCommand {
   action: 'video_start';
@@ -5970,7 +8866,12 @@ export type Command =
   | InsertTextCommand
   | MultiSelectCommand
   | WaitForDownloadCommand
-  | ResponseBodyCommand;
+  | ResponseBodyCommand
+  | ScreencastStartCommand
+  | ScreencastStopCommand
+  | InputMouseCommand
+  | InputKeyboardCommand
+  | InputTouchCommand;
 
 // Response types
 export interface SuccessResponse<T = unknown> {
@@ -6036,6 +8937,20 @@ export interface TabSwitchData {
 export interface TabCloseData {
   closed: number;
   remaining: number;
+}
+
+export interface ScreencastStartData {
+  started: boolean;
+  format: string;
+  quality: number;
+}
+
+export interface ScreencastStopData {
+  stopped: boolean;
+}
+
+export interface InputEventData {
+  injected: boolean;
 }
 
 // Browser state
