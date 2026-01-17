@@ -1,13 +1,17 @@
 from __future__ import annotations
 
 import base64
+import logging
 import os
+import posixpath
 import re
 from typing import Iterable
 
 import requests
-import posixpath
+
 from .models import RepositoryMaterial
+
+logger = logging.getLogger(__name__)
 
 def _normalize_repo_path(path: str) -> str:
     """
@@ -48,22 +52,69 @@ def owner_repo_from_url(repo_url: str) -> tuple[str, str]:
     return owner, repo
 
 
-def _auth_headers(token: str | None) -> dict[str, str]:
+def _auth_headers(token: str | None, *, scheme: str = "bearer") -> dict[str, str]:
     headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "lms-lmstxt",
     }
     if token:
-        headers["Authorization"] = f"Bearer {token}"
+        scheme_l = scheme.strip().lower()
+        if scheme_l == "token":
+            headers["Authorization"] = f"token {token}"
+        else:
+            headers["Authorization"] = f"Bearer {token}"
     return headers
 
 
-def get_repository_metadata(owner: str, repo: str, token: str | None) -> dict[str, object]:
+def _get(
+    url: str,
+    *,
+    params: dict[str, object] | None = None,
+    token: str | None = None,
+    timeout: int = 20,
+) -> requests.Response:
+    """
+    GitHub GET with defensive auth handling.
+
+    Order:
+      1) If token present: try Bearer
+      2) If 401: try legacy "token" scheme
+      3) If still 401: retry without Authorization (helps public repos when env token is stale)
+    """
+    if not token:
+        return _SESSION.get(url, params=params, headers=_auth_headers(None), timeout=timeout)
+
     resp = _SESSION.get(
+        url, params=params, headers=_auth_headers(token, scheme="bearer"), timeout=timeout
+    )
+    if resp.status_code != 401:
+        return resp
+
+    resp2 = _SESSION.get(
+        url, params=params, headers=_auth_headers(token, scheme="token"), timeout=timeout
+    )
+    if resp2.status_code != 401:
+        logger.warning("GitHub accepted token with 'token' auth scheme (not Bearer).")
+        return resp2
+
+    logger.warning(
+        "GitHub API returned 401 with provided token; retrying without auth. "
+        "If this is a private repo, set a valid GH_TOKEN/GITHUB_ACCESS_TOKEN."
+    )
+    return _SESSION.get(url, params=params, headers=_auth_headers(None), timeout=timeout)
+
+
+def get_repository_metadata(owner: str, repo: str, token: str | None) -> dict[str, object]:
+    resp = _get(
         f"https://api.github.com/repos/{owner}/{repo}",
-        headers=_auth_headers(token),
+        token=token,
         timeout=20,
     )
+    if resp.status_code == 401:
+        raise PermissionError(
+            "GitHub API unauthorized (401). If you set GH_TOKEN or GITHUB_ACCESS_TOKEN, it may be invalid. "
+            "Unset it for public repos, or set a valid token for private repos."
+        )
     if resp.status_code == 404:
         raise FileNotFoundError(f"Repository not found: {owner}/{repo}")
     resp.raise_for_status()
@@ -83,12 +134,17 @@ def get_default_branch(owner: str, repo: str, token: str | None) -> str:
 def fetch_file_tree(
     owner: str, repo: str, ref: str, token: str | None
 ) -> Iterable[str]:
-    resp = _SESSION.get(
+    resp = _get(
         f"https://api.github.com/repos/{owner}/{repo}/git/trees/{ref}",
         params={"recursive": 1},
-        headers=_auth_headers(token),
+        token=token,
         timeout=30,
     )
+    if resp.status_code == 401:
+        raise PermissionError(
+            "GitHub API unauthorized (401) while fetching tree. "
+            "Unset invalid GH_TOKEN/GITHUB_ACCESS_TOKEN, or provide a valid token."
+        )
     resp.raise_for_status()
     payload = resp.json()
     return [
@@ -101,12 +157,17 @@ def fetch_file_tree(
 def fetch_file_content(
     owner: str, repo: str, path: str, ref: str, token: str | None
 ) -> str | None:
-    resp = _SESSION.get(
+    resp = _get(
         f"https://api.github.com/repos/{owner}/{repo}/contents/{path}",
         params={"ref": ref},
-        headers=_auth_headers(token),
+        token=token,
         timeout=20,
     )
+    if resp.status_code == 401:
+        raise PermissionError(
+            "GitHub API unauthorized (401) while fetching content. "
+            "Unset invalid GH_TOKEN/GITHUB_ACCESS_TOKEN, or provide a valid token."
+        )
     if resp.status_code == 404:
         return None
     resp.raise_for_status()
@@ -175,4 +236,3 @@ def construct_github_file_url(
     if style == "raw":
         return f"https://raw.githubusercontent.com/{owner}/{repo}/{ref}/{norm_path}"
     return f"https://github.com/{owner}/{repo}/blob/{ref}/{norm_path}"
-
