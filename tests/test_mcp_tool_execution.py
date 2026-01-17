@@ -9,8 +9,8 @@ def test_mcp_stdio_server_tool_execution():
     """
     Launches the installed lmstxt-mcp CLI and verifies actual tool execution via JSON-RPC.
     """
-    cmd = ["venv_test/bin/lmstxt-mcp"]
-    
+    cmd = [".venv/bin/lmstxt-mcp"]
+
     process = subprocess.Popen(
         cmd,
         stdin=subprocess.PIPE,
@@ -59,19 +59,19 @@ def test_mcp_stdio_server_tool_execution():
         }
         process.stdin.write(json.dumps(call_req) + "\n")
         process.stdin.flush()
-        
+
         response_line = process.stdout.readline()
         assert response_line, "Server produced no output for tool call"
-        
+
         resp = json.loads(response_line)
         assert resp.get("id") == 2
         assert "result" in resp
-        
+
         # FastMCP returns tool results in a specific content format
         content = resp["result"]["content"]
         assert len(content) > 0
         assert content[0]["type"] == "text"
-        
+
         # The tool returns a JSON string, so we parse that
         tool_result_json = content[0]["text"]
         runs = json.loads(tool_result_json)
@@ -96,15 +96,15 @@ def test_mcp_stdio_server_tool_execution():
         }
         process.stdin.write(json.dumps(call_req_error) + "\n")
         process.stdin.flush()
-        
+
         response_line = process.stdout.readline()
         resp = json.loads(response_line)
-        
+
         # FastMCP might return isError: true in the result or a JSON-RPC error
-        # In this case, the python function raises an exception. 
-        # FastMCP catches exceptions and usually returns a successful JSON-RPC response 
+        # In this case, the python function raises an exception.
+        # FastMCP catches exceptions and usually returns a successful JSON-RPC response
         # containing the error message in the content text (or isError=True).
-        
+
         assert resp.get("id") == 3
         # Check for isError flag in result
         assert resp["result"].get("isError") is True

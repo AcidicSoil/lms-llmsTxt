@@ -126,7 +126,10 @@ If you run the MCP server, the same env vars must be present in the process envi
 | `LMSTUDIO_BASE_URL` | Base URL such as `http://localhost:1234/v1` |
 | `LMSTUDIO_API_KEY` | API key for secured LM Studio deployments |
 | `OUTPUT_DIR` | Custom root directory for artifacts |
+| `LINK_STYLE` | GitHub link style (`blob` or `raw`) |
 | `ENABLE_CTX=1` | Emit `llms-ctx.txt` using the optional `llms_txt` package |
+| `LMSTUDIO_STREAMING` | Enable LM Studio streaming responses (default: true) |
+| `LMSTUDIO_AUTO_UNLOAD` | Automatically unload LM Studio models after runs (default: true) |
 
 ## Generated artifacts
 

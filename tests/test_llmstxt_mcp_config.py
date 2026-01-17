@@ -25,6 +25,11 @@ def test_config_env_vars():
     finally:
         del os.environ["LLMSTXT_MCP_RESOURCE_MAX_CHARS"]
 
+def test_config_allowed_root_env_var(tmp_path, monkeypatch):
+    monkeypatch.setenv("LLMSTXT_MCP_ALLOWED_ROOT", str(tmp_path))
+    settings = Settings()
+    assert settings.LLMSTXT_MCP_ALLOWED_ROOT == tmp_path
+
 def test_custom_errors():
     with pytest.raises(OutputDirNotAllowedError):
         raise OutputDirNotAllowedError("Not allowed")

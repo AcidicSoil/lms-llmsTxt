@@ -1,0 +1,3 @@
+# Private Repo Artifact Generation
+
+Update lms-llmsTxt to support generating llms.txt artifacts from either (a) a GitHub repo URL or (b) a local filesystem repo path, in a “codefetch-like” way (walk the local tree, respect ignore patterns, build a project tree/file list, and generate consolidated LLM-friendly artifacts). Also make private GitHub repo handling robust: when a repo fetch fails with “not found,” distinguish true 404 from “unauthorized private repo” by requiring/validating GH_TOKEN/GITHUB_ACCESS_TOKEN with appropriate permissions, and emit a clear auth/permissions error message if the token is missing or insufficient.

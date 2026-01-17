@@ -2624,67 +2624,65 @@
       {
         "id": 1,
         "title": "Establish Project Structure and Configuration Module",
-        "description": "Initialize the Python project structure and implement the configuration loader to handle environment variables, schema versioning, and DSPy settings.",
-        "details": "Create the directory structure as proposed (src/config, src/core_types, etc.). Implement `src/config/loader.py` using `pydantic-settings` to load configuration from environment variables and `.env` files. Define a `Config` class that includes settings for LLM providers (API keys, model names), caching strategies (path, type), and concurrency limits. Ensure strict validation of configuration values. Create `src/config/schema.py` to hold version constants.\n\nLibraries: `pydantic`, `pydantic-settings`, `python-dotenv`.\nStructure:\n- `src/config/__init__.py`\n- `src/config/loader.py`\n- `tests/unit/test_config.py`",
-        "testStrategy": "Unit tests ensuring valid configs load correctly, missing required vars raise errors, and default values are applied.",
-        "priority": "high",
-        "dependencies": [],
+        "description": "Validate and finalize the existing configuration modules for the application and MCP server, ensuring environment variable overrides, default values, and documentation alignment.",
         "status": "pending",
+        "dependencies": [],
+        "priority": "high",
+        "details": "The project structure is already established under `src/lms_llmsTxt` and `src/lms_llmsTxt_mcp`. This task now focuses on validating the configuration logic in `src/lms_llmsTxt/config.py` (AppConfig) and `src/lms_llmsTxt_mcp/config.py` (Settings). Specifically, verify that environment variables (e.g., `LMSTUDIO_MODEL`, `BASE_URL`) correctly override defaults. Create new unit tests for AppConfig and ensure MCP settings are fully tested. Finally, ensure the README documentation accurately reflects the supported environment variables.",
+        "testStrategy": "Implement `tests/test_lmstxt_config.py` to verify AppConfig loading with and without environment variables. Run existing or updated `tests/test_llmstxt_mcp_config.py` to verify MCP Settings.",
         "subtasks": [
           {
             "id": 1,
-            "title": "Initialize Directory Structure",
-            "description": "Create the root source directory and necessary package subdirectories to establish the project layout.",
+            "title": "Review AppConfig Environment Variables and Defaults",
+            "description": "Analyze `src/lms_llmsTxt/config.py` to ensure all required configuration fields are handled correctly.",
             "dependencies": [],
-            "details": "Create the following directories: `src/config`, `src/core_types`, `src/io`, `src/analysis`, `src/orchestration`, and `tests/unit`. Add empty `__init__.py` files in each `src` subdirectory to make them importable Python packages.",
-            "status": "pending",
-            "testStrategy": null
+            "details": "Review the `AppConfig` class. Verify defaults and environment variable mapping for: `LMSTUDIO_MODEL`, `BASE_URL`, `API_KEY`, `OUTPUT_DIR`, `LINK_STYLE` (default 'wikipedia'), `ENABLE_CTX` (boolean), `LMSTUDIO_STREAMING`, and `LMSTUDIO_AUTO_UNLOAD`. Ensure type casting is handled (e.g., string to boolean for flags).",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined"
           },
           {
             "id": 2,
-            "title": "Define Version Schema Constants",
-            "description": "Create the schema module to hold versioning constants for the application configuration and artifacts.",
+            "title": "Implement AppConfig Unit Tests",
+            "description": "Create a new test file to validate the application configuration logic.",
             "dependencies": [
               1
             ],
-            "details": "Create `src/config/schema.py`. Define constants such as `CONFIG_VERSION` (e.g., '1.0.0') and potentially other static schema-related identifiers that the configuration loader or other modules might need to reference.",
-            "status": "pending",
-            "testStrategy": null
+            "details": "Create `tests/test_lmstxt_config.py`. Test cases should include: 1. Default values when no env vars are set. 2. Overriding values via environment variables (use `monkeypatch`). 3. Specific validation for `link_style` options and `enable_ctx` boolean parsing.",
+            "status": "done",
+            "testStrategy": "Run `pytest tests/test_lmstxt_config.py`",
+            "parentId": "undefined"
           },
           {
             "id": 3,
-            "title": "Implement Base Configuration Model",
-            "description": "Develop the Pydantic settings model to define the structure of the application configuration.",
+            "title": "Verify and Extend MCP Settings Tests",
+            "description": "Ensure the MCP server configuration is fully tested, specifically for environment overrides.",
             "dependencies": [
-              2
+              1
             ],
-            "details": "In `src/config/loader.py`, import `BaseSettings` from `pydantic-settings`. Define a `Config` class that includes fields for: LLM providers (api_key, model_name, base_url), caching (cache_dir, cache_type), and concurrency_limit (int). Ensure appropriate types and default values (e.g., concurrency_limit=5).",
-            "status": "pending",
-            "testStrategy": "Unit test to verify default values are assigned when no env vars are present."
+            "details": "Check `src/lms_llmsTxt_mcp/config.py` and `tests/test_llmstxt_mcp_config.py` (if exists, or create it). Confirm that the `Settings` class correctly processes environment variables. Add tests if missing.",
+            "status": "done",
+            "testStrategy": "Run `pytest tests/test_llmstxt_mcp_config.py`",
+            "parentId": "undefined"
           },
           {
             "id": 4,
-            "title": "Implement Environment Loading Logic",
-            "description": "Configure the settings model to load values from environment variables and .env files.",
+            "title": "Align Documentation with Configuration",
+            "description": "Update the README to reflect the actual environment variables supported by the code.",
             "dependencies": [
-              3
+              1,
+              2
             ],
-            "details": "Update the `Config` class in `src/config/loader.py` to use `model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8')`. Ensure that environment variables (e.g., `LLM_API_KEY`) correctly override defaults. Add a utility function `get_settings()` to return a cached instance using `lru_cache`.",
-            "status": "pending",
-            "testStrategy": "Unit test using a temporary .env file to verify values are loaded correctly."
-          },
-          {
-            "id": 5,
-            "title": "Create Configuration Unit Tests",
-            "description": "Write a comprehensive test suite to validate configuration loading, validation rules, and error handling.",
-            "dependencies": [
-              4
-            ],
-            "details": "Create `tests/unit/test_config.py`. Include tests for: 1. Successful loading of valid defaults. 2. Correct loading from environment variables (using `monkeypatch` or similar). 3. Validation errors when required fields (like API keys if no default) are missing. 4. Type validation failures (e.g., string for concurrency limit).",
-            "status": "pending",
-            "testStrategy": "Run pytest to ensure all configuration tests pass."
+            "details": "Review `README.md`. Ensure all environment variables found in `AppConfig` and MCP `Settings` are documented with their default values and descriptions. Fix any discrepancies found during the review.",
+            "status": "done",
+            "testStrategy": null,
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-15T05:48:09.360Z"
       },
       {
         "id": 2,
@@ -2694,7 +2692,7 @@
         "testStrategy": "Unit tests verifying schema validation, JSON serialization/deserialization, and handling of invalid data types.",
         "priority": "high",
         "dependencies": [
-          1
+          "1"
         ],
         "status": "pending",
         "subtasks": [
@@ -2704,8 +2702,9 @@
             "description": "Create the core_types package structure and add a common base model for consistent configuration.",
             "dependencies": [],
             "details": "Create directory `src/core_types` if it doesn't exist. Add `src/core_types/__init__.py`. Create `src/core_types/base.py` defining a `CoreModel` class inheriting from `pydantic.BaseModel` with `model_config` set to `{'populate_by_name': True, 'arbitrary_types_allowed': True}` to ensure consistent behavior across all derived models.",
-            "status": "pending",
-            "testStrategy": "Verify importability of the package and instantiation of the base model."
+            "status": "done",
+            "testStrategy": "Verify importability of the package and instantiation of the base model.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2715,8 +2714,9 @@
               1
             ],
             "details": "Create `src/core_types/analysis_artifacts.py`. Define `RepoAnalysisArtifact` inheriting from `CoreModel`. Include fields: `purpose` (str), `key_concepts` (List[str]), `constraints` (List[str]), `remember_bullets` (List[str]), and `version` (str, default='1.0.0'). Add docstrings and field descriptions for better schema generation.",
-            "status": "pending",
-            "testStrategy": "Unit test verifying `RepoAnalysisArtifact` validation logic and correct field types."
+            "status": "done",
+            "testStrategy": "Unit test verifying `RepoAnalysisArtifact` validation logic and correct field types.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2726,8 +2726,9 @@
               1
             ],
             "details": "Create `src/core_types/events.py`. Define `StreamEvent` with fields like `type` (Literal['chunk']), `content` (str), and `timestamp` (float). Define `CompletionEvent` with fields `type` (Literal['completion']), `checksum` (str), and `artifact` (Optional[RepoAnalysisArtifact]). Ensure types are discriminated unions if needed for polymorphic handling.",
-            "status": "pending",
-            "testStrategy": "Unit test verifying serialization of events and ensuring required fields are present."
+            "status": "done",
+            "testStrategy": "Unit test verifying serialization of events and ensuring required fields are present.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2738,8 +2739,9 @@
               3
             ],
             "details": "In `src/core_types/base.py` or specific model files, add helper methods `to_json()` and `from_json()` if Pydantic's default `model_dump_json` needs wrapper logic (e.g. for pretty printing or specific encoding). Ensure `CompletionEvent` can properly serialize the nested `RepoAnalysisArtifact`.",
-            "status": "pending",
-            "testStrategy": "Unit test round-tripping (object -> json -> object) for complex nested structures."
+            "status": "done",
+            "testStrategy": "Unit test round-tripping (object -> json -> object) for complex nested structures.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2751,10 +2753,15 @@
               4
             ],
             "details": "Create `tests/core_types/test_models.py`. Write tests to: 1) Validate valid data for `RepoAnalysisArtifact`, 2) Assert failure on invalid data types (e.g. list instead of str), 3) Verify default values (like version), 4) Test `StreamEvent` and `CompletionEvent` instantiation and JSON conversion.",
-            "status": "pending",
-            "testStrategy": "Run `pytest tests/core_types/test_models.py` and check for 100% pass rate."
+            "status": "done",
+            "testStrategy": "Run `pytest tests/core_types/test_models.py` and check for 100% pass rate.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-15T05:43:54.258Z"
       },
       {
         "id": 3,
@@ -2764,8 +2771,8 @@
         "testStrategy": "Integration test: Initialize DSPy with a mock/test LM and verify it can process a basic request. Verify settings are applied globally or contextually as needed.",
         "priority": "high",
         "dependencies": [
-          1,
-          2
+          "1",
+          "2"
         ],
         "status": "pending",
         "subtasks": [
@@ -2776,7 +2783,8 @@
             "dependencies": [],
             "details": "Create `src/dspy_runtime/runtime.py`. Implement the `configure_dspy(config)` function. This function must inspect the provided configuration (model name, API keys, parameters) and call `dspy.configure` (or `dspy.settings.configure` in v3). Instantiate the appropriate Language Model client (e.g., `dspy.LM`) based on the config and set it as the default context for the application lifetime.",
             "status": "pending",
-            "testStrategy": "Integration test: Call `configure_dspy` with a mock configuration and verify that `dspy.settings.lm` (or the v3 equivalent global state) reflects the initialized model instance correctly."
+            "testStrategy": "Integration test: Call `configure_dspy` with a mock configuration and verify that `dspy.settings.lm` (or the v3 equivalent global state) reflects the initialized model instance correctly.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2787,9 +2795,14 @@
             ],
             "details": "Create `src/dspy_runtime/adapters.py`. Implement logic to wrap DSPy's prediction mechanisms (specifically focusing on `TypedPredictor` or the functional signature pattern in v3) to enforce JSON schema compliance. This layer acts as the interface between the raw LM string output and the application's Pydantic models, handling the serialization of the schema into the prompt and the deserialization of the response.",
             "status": "pending",
-            "testStrategy": "Unit test: Define a simple Pydantic model. Use the adapter to process a mocked raw JSON string from an LLM and verify it instantiates the correct Pydantic object with valid fields."
+            "testStrategy": "Unit test: Define a simple Pydantic model. Use the adapter to process a mocked raw JSON string from an LLM and verify it instantiates the correct Pydantic object with valid fields.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Split into 1) Basic Runtime Configuration (LM setup) and 2) Adapter/Schema enforcement layer implementation.",
+        "updatedAt": "2026-01-15T05:43:54.267Z"
       },
       {
         "id": 4,
@@ -2799,7 +2812,7 @@
         "testStrategy": "Unit tests with temporary directory fixtures containing various file types. verify `RepoContext` structure and content.",
         "priority": "medium",
         "dependencies": [
-          2
+          "2"
         ],
         "status": "pending",
         "subtasks": [
@@ -2810,7 +2823,8 @@
             "dependencies": [],
             "details": "In `src/io/repo_reader.py`, implement a `traverse_repo(root_path: Path)` function. Use `pathspec` to parse `.gitignore` files. Use `pathlib` to walk the directory tree, filtering out ignored files, hidden directories (e.g., `.git`), and non-text extensions if defined. Return a list of valid file paths.",
             "status": "pending",
-            "testStrategy": "Create a temporary directory structure with a `.gitignore` file and nested folders. Assert that the traversal function excludes ignored files and returns the correct set of paths."
+            "testStrategy": "Create a temporary directory structure with a `.gitignore` file and nested folders. Assert that the traversal function excludes ignored files and returns the correct set of paths.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2821,9 +2835,14 @@
             ],
             "details": "Add functionality to `src/io/repo_reader.py` to read file contents, trying `utf-8` then `latin-1`, and handling `UnicodeDecodeError`. Construct the `RepoContext`. Create `src/io/artifact_writer.py` to serialize `RepoAnalysisArtifact` objects to JSON with deterministic key sorting for consistency.",
             "status": "pending",
-            "testStrategy": "Unit tests using files with various encodings (including invalid UTF-8) to verify graceful degradation. Verify that `artifact_writer` produces valid, deterministically ordered JSON output."
+            "testStrategy": "Unit tests using files with various encodings (including invalid UTF-8) to verify graceful degradation. Verify that `artifact_writer` produces valid, deterministically ordered JSON output.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Split into 1) Repository Traversal/Gitignore Logic and 2) File Reading & Encoding Handling.",
+        "updatedAt": "2026-01-15T05:43:54.273Z"
       },
       {
         "id": 5,
@@ -2833,8 +2852,8 @@
         "testStrategy": "Integration tests using a small fixture repo content. Mock the LLM response to return valid/invalid JSON and verify the program returns the correct Pydantic object or raises specific errors.",
         "priority": "high",
         "dependencies": [
-          3,
-          4
+          "3",
+          "4"
         ],
         "status": "pending",
         "subtasks": [
@@ -2845,7 +2864,8 @@
             "dependencies": [],
             "details": "Create `src/analysis_program/signatures.py`. Import `RepoAnalysisArtifact` from `src.core_types` and `RepoContext` from the relevant module. Define a class `GenerateRepoAnalysis(dspy.Signature)` with input fields for repository context (e.g., file tree, readme content) and an output field typed as `RepoAnalysisArtifact`. Write extensive docstrings for the signature and its fields to act as the system prompt and field-level instructions for the LLM.",
             "status": "pending",
-            "testStrategy": "Unit tests verifying that `dspy` correctly inspects the signature fields and types, and that the Pydantic models are correctly referenced within the signature schema."
+            "testStrategy": "Unit tests verifying that `dspy` correctly inspects the signature fields and types, and that the Pydantic models are correctly referenced within the signature schema.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2856,9 +2876,14 @@
             ],
             "details": "Create `src/analysis_program/program.py`. Define a class `RepoAnalysisProgram(dspy.Module)`. inside `__init__`, instantiate a `dspy.TypedPredictor` (or equivalent v3 structured adapter) using the signature defined in the previous subtask. Implement the `forward` method to accept `RepoContext` data, pass it to the predictor, and return the validated `RepoAnalysisArtifact` object. Ensure error handling wraps the prediction call to catch schema validation failures.",
             "status": "pending",
-            "testStrategy": "Integration tests using `dspy.DummyLM` or a mocked LLM response to verify that the module successfully parses JSON into the Pydantic object and handles malformed outputs by raising appropriate exceptions."
+            "testStrategy": "Integration tests using `dspy.DummyLM` or a mocked LLM response to verify that the module successfully parses JSON into the Pydantic object and handles malformed outputs by raising appropriate exceptions.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Split into 1) Signature Definitions & Prompt Engineering and 2) Module Implementation with TypedPredictor integration.",
+        "updatedAt": "2026-01-15T05:43:54.276Z"
       },
       {
         "id": 6,
@@ -2868,7 +2893,7 @@
         "testStrategy": "Unit tests with mocked failures (1st attempt fails, 2nd succeeds) to verify retry logic. Test exhaustion of retries leading to a graceful failure state.",
         "priority": "medium",
         "dependencies": [
-          5
+          "5"
         ],
         "status": "pending",
         "subtasks": [
@@ -2879,7 +2904,8 @@
             "dependencies": [],
             "details": "Update `src/config.py` (or equivalent) to include `max_retries` (default 3). Create `src/core_types/exceptions.py` to define `MaxRetriesExceededError` which will carry the last validation failure message. This ensures the retry logic is configurable and errors are typed.",
             "status": "pending",
-            "testStrategy": "Unit test verifying config defaults and exception initialization."
+            "testStrategy": "Unit test verifying config defaults and exception initialization.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2890,7 +2916,8 @@
             ],
             "details": "Create a class `Validator` that accepts a `dspy.Module` (the analysis program) and the config object. Implement the `__init__` method. Define the main method signature `validate_and_run(input_context: RepoContext) -> RepoAnalysisArtifact`.",
             "status": "pending",
-            "testStrategy": "Unit test instantiation of the Validator class with a mock module."
+            "testStrategy": "Unit test instantiation of the Validator class with a mock module.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2901,7 +2928,8 @@
             ],
             "details": "Inside `validate_and_run`, create a loop running `max_retries` times. Call the DSPy module. Wrap the call in a try/except block specifically catching `dspy.dsp.modules.dsp_program.DSPyAssertionError` (or generic Pydantic `ValidationError` depending on how `TypedPredictor` fails). If successful, return the artifact.",
             "status": "pending",
-            "testStrategy": "Unit test with a mock function that succeeds on the first try."
+            "testStrategy": "Unit test with a mock function that succeeds on the first try.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2912,7 +2940,8 @@
             ],
             "details": "When a validation error is caught in the loop, extract the error message (e.g., 'missing field X'). If using `dspy.Assert` or `Suggest`, this might be handled internally, but for manual retries, log the error and potentially update the call signature if the DSPy signature allows for 'previous_errors'. For this task, ensure the error is logged and the retry counter increments.",
             "status": "pending",
-            "testStrategy": "Unit test with a mock that fails once then succeeds, ensuring the loop continues."
+            "testStrategy": "Unit test with a mock that fails once then succeeds, ensuring the loop continues.",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2924,9 +2953,14 @@
             ],
             "details": "If the loop finishes without success, catch the final exception. Construct a `RepoAnalysisArtifact` with a specific 'error' state or raise the `MaxRetriesExceededError` defined in subtask 1. Ensure the system doesn't crash silently. The return value must adhere to the expected return type or control flow.",
             "status": "pending",
-            "testStrategy": "Unit test where the mock fails every time, verifying the final exception or error artifact is returned."
+            "testStrategy": "Unit test where the mock fails every time, verifying the final exception or error artifact is returned.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-15T05:43:54.280Z"
       },
       {
         "id": 7,
@@ -2936,7 +2970,7 @@
         "testStrategy": "Integration test: Run the analysis twice on the same input. Verify the second run is significantly faster/instant and does not trigger an actual LLM call (inspect logs/mocks).",
         "priority": "medium",
         "dependencies": [
-          3
+          "3"
         ],
         "status": "pending",
         "subtasks": [
@@ -2947,7 +2981,8 @@
             "dependencies": [],
             "details": "Update `src/config/models.py` (or `loader.py`) to include a `CacheConfig` nested model. Fields should include `enabled` (bool), `cache_path` (str, default to `~/.cache/lms-llmsTxt`), and `in_memory` (bool). Ensure environment variables like `DSPY_CACHE_ENABLED` can override these settings.",
             "status": "pending",
-            "testStrategy": "Unit test verifying that config loads correctly with default values and can be overridden by env vars."
+            "testStrategy": "Unit test verifying that config loads correctly with default values and can be overridden by env vars.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -2958,7 +2993,8 @@
             ],
             "details": "Create `src/dspy_runtime/cache.py`. Implement a function `configure_cache(config: Config)` that calls `dspy.settings.configure` or specific backend cache settings if using `dspy-ai` v2.5+. If the config enables caching, ensure the file path is created. Add logic to clear the cache if a specific flag is passed.",
             "status": "pending",
-            "testStrategy": "Integration test: Call `configure_cache`, then run a dummy DSPy predictor. Check if the cache file is created at the specified path."
+            "testStrategy": "Integration test: Call `configure_cache`, then run a dummy DSPy predictor. Check if the cache file is created at the specified path.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -2967,7 +3003,8 @@
             "dependencies": [],
             "details": "In `src/utils/hashing.py` (create if needed), implement `compute_repo_hash(context: RepoContext) -> str`. This function should serialize the `RepoContext` (files, content, structure) in a deterministic order (e.g., sorting keys) and return a SHA-256 hash. This ensures that any change in the repository content invalidates the cache for downstream tasks.",
             "status": "pending",
-            "testStrategy": "Unit test: Create two identical RepoContext objects and verify they produce the same hash. Modify one file in the context and verify the hash changes."
+            "testStrategy": "Unit test: Create two identical RepoContext objects and verify they produce the same hash. Modify one file in the context and verify the hash changes.",
+            "parentId": "undefined"
           },
           {
             "id": 4,
@@ -2978,7 +3015,8 @@
             ],
             "details": "Modify the main analysis program (likely in `src/agent/analysis.py` or similar) or create a wrapper. When invoking the DSPy module, inject the `repo_hash` computed in step 3 as a field in the input signature (even if not used by the LLM prompt directly, or add it to the prompt metadata) so that DSPy's lookup key is unique per repository state. Alternatively, explore `dspy`'s manual cache key overrides if available.",
             "status": "pending",
-            "testStrategy": "Integration test: Run the analysis with `cache=True`. Run again -> hit. Change repo content -> run -> miss (new computation)."
+            "testStrategy": "Integration test: Run the analysis with `cache=True`. Run again -> hit. Change repo content -> run -> miss (new computation).",
+            "parentId": "undefined"
           },
           {
             "id": 5,
@@ -2989,9 +3027,14 @@
             ],
             "details": "In the main CLI entry point (e.g., `src/main.py`), add a `--clear-cache` flag or a subcommand. This should invoke a `clear_cache()` function from `src/dspy_runtime/cache.py` that removes the underlying SQLite or JSON cache files defined in the config.",
             "status": "pending",
-            "testStrategy": "Manual/Scripted test: Populate cache, run CLI with --clear-cache, verify cache files are removed or size is reset."
+            "testStrategy": "Manual/Scripted test: Populate cache, run CLI with --clear-cache, verify cache files are removed or size is reset.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 3,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "",
+        "updatedAt": "2026-01-15T05:43:54.283Z"
       },
       {
         "id": 8,
@@ -3001,8 +3044,8 @@
         "testStrategy": "End-to-End test: Call `stream_run_pipeline` and collect all yielded events. Verify sequence order and presence of the final `CompletionEvent`.",
         "priority": "high",
         "dependencies": [
-          6,
-          7
+          "6",
+          "7"
         ],
         "status": "pending",
         "subtasks": [
@@ -3013,7 +3056,8 @@
             "dependencies": [],
             "details": "Create `src/orchestration/streaming.py`. Import base event models from `src/core_types/events.py`. Define specific event subclasses (or factory methods) for distinct pipeline stages: 'ReadingFiles', 'Analyzing', 'Validating', and 'Writing'. Define the empty async generator signature for `stream_run_pipeline`.",
             "status": "pending",
-            "testStrategy": "Verify that the module imports correctly and that event classes can be instantiated with valid payloads."
+            "testStrategy": "Verify that the module imports correctly and that event classes can be instantiated with valid payloads.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -3024,7 +3068,8 @@
             ],
             "details": "In `src/orchestration/pipeline.py`, implement `stream_run_pipeline`. Use `asyncio` to await file reading from `src/io`. Yield status events. Pass context to the analysis program (Task 6). Yield validation events. Ensure exceptions are caught and yielded as error events within the stream.",
             "status": "pending",
-            "testStrategy": "Unit test the generator with mocked IO and Analysis modules to ensure it yields the expected sequence of events."
+            "testStrategy": "Unit test the generator with mocked IO and Analysis modules to ensure it yields the expected sequence of events.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -3035,9 +3080,14 @@
             ],
             "details": "Implement `run_pipeline` to consume `stream_run_pipeline` completely and return the final artifact. Add logic to the end of the stream to serialize the final `RepoAnalysisArtifact`, calculate a SHA-256 checksum, and yield a `CompletionEvent` containing this hash before closing the stream.",
             "status": "pending",
-            "testStrategy": "End-to-End test: Run the full pipeline in batch mode, asserting the final object matches the checksum provided in the completion event."
+            "testStrategy": "End-to-End test: Run the full pipeline in batch mode, asserting the final object matches the checksum provided in the completion event.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 7,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Split into 1) Async Pipeline Skeleton, 2) Event Generation System, and 3) Batch vs. Stream Execution Logic.",
+        "updatedAt": "2026-01-15T05:43:54.287Z"
       },
       {
         "id": 9,
@@ -3047,7 +3097,7 @@
         "testStrategy": "Unit tests for metric functions. Integration test running the eval harness on a dummy dataset to ensure it generates a report.",
         "priority": "low",
         "dependencies": [
-          8
+          "8"
         ],
         "status": "pending",
         "subtasks": [
@@ -3058,7 +3108,8 @@
             "dependencies": [],
             "details": "Create `src/optimization/datasets.py` to define the `EvaluationExample` model and functions to load pairs of repository inputs and gold-standard analysis outputs (e.g., from JSONL files). Implement the skeleton of `src/optimization/eval.py` to iterate through loaded datasets, execute the analysis program (mocked or actual), and prepare the results for scoring.",
             "status": "pending",
-            "testStrategy": "Unit tests for `datasets.py` to ensure correct parsing of data files. Integration test for `eval.py` to verify it can iterate through a dummy dataset without errors."
+            "testStrategy": "Unit tests for `datasets.py` to ensure correct parsing of data files. Integration test for `eval.py` to verify it can iterate through a dummy dataset without errors.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -3069,9 +3120,14 @@
             ],
             "details": "Create `src/optimization/metrics.py`. Implement specific scoring functions such as `semantic_similarity` (comparing embedding distance of 'key concepts') and `json_compliance` (validating schema adherence). Integrate these metrics into the `src/optimization/eval.py` loop created in the previous task to generate a final report.",
             "status": "pending",
-            "testStrategy": "Unit tests for individual metric functions in `metrics.py` using synthetic inputs with known high and low scores to verify calculation accuracy."
+            "testStrategy": "Unit tests for individual metric functions in `metrics.py` using synthetic inputs with known high and low scores to verify calculation accuracy.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 2,
+        "expansionPrompt": "Split into 1) Dataset Loading & Management and 2) Metric Implementation (e.g., Semantic Similarity).",
+        "updatedAt": "2026-01-15T05:43:54.290Z"
       },
       {
         "id": 10,
@@ -3081,7 +3137,7 @@
         "testStrategy": "Integration test: Run a short optimization loop (few iterations) on a small dataset to verify the code path works and artifacts are saved.",
         "priority": "low",
         "dependencies": [
-          9
+          "9"
         ],
         "status": "pending",
         "subtasks": [
@@ -3092,7 +3148,8 @@
             "dependencies": [],
             "details": "Create `src/optimization/compile.py`. Instantiate `dspy.MIPROv2` targeting the `analysis_program`. Configure hyperparameters such as `num_candidates`, `init_temperature`, and `prompt_model` (likely using a stronger model like GPT-4 for the optimization process). Define the `compile_program` function signature that accepts the module to be optimized.",
             "status": "pending",
-            "testStrategy": "Unit test verifying that the `dspy.MIPROv2` class is instantiated with the correct parameters and does not raise configuration errors."
+            "testStrategy": "Unit test verifying that the `dspy.MIPROv2` class is instantiated with the correct parameters and does not raise configuration errors.",
+            "parentId": "undefined"
           },
           {
             "id": 2,
@@ -3103,7 +3160,8 @@
             ],
             "details": "Import the custom metric function and training data loader (from Task 9). Ensure the metric signature is compatible with DSPy's optimizer requirements. Pass the metric and training set into the `mipro_optimizer.compile(...)` call. Implement a basic execution block to run the optimization process.",
             "status": "pending",
-            "testStrategy": "Integration test: Run the optimization loop with a very small subset of data (e.g., 2 examples) and 1 iteration to verify the metric is called and returns a score."
+            "testStrategy": "Integration test: Run the optimization loop with a very small subset of data (e.g., 2 examples) and 1 iteration to verify the metric is called and returns a score.",
+            "parentId": "undefined"
           },
           {
             "id": 3,
@@ -3114,15 +3172,27 @@
             ],
             "details": "After optimization, call `compiled_program.save()` to write the optimized instructions to `data/optimized_prompts.json`. Modify `src/config.py` to add a `use_optimized_prompts` boolean flag. Update `src/dspy_runtime/runtime.py` to check this flag and, if true, load the saved state into the `analysis_program` instance during initialization.",
             "status": "pending",
-            "testStrategy": "Test saving a dummy program to a file, then reloading it into a fresh instance and verifying that the prompt signatures/instructions match the saved state."
+            "testStrategy": "Test saving a dummy program to a file, then reloading it into a fresh instance and verifying that the prompt signatures/instructions match the saved state.",
+            "parentId": "undefined"
           }
-        ]
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Split into 1) Optimization Loop Setup, 2) Metric Integration for MIPRO, and 3) Persistence of Optimized Prompts.",
+        "updatedAt": "2026-01-15T05:43:54.293Z"
       }
     ],
     "metadata": {
-      "created": "2026-01-15T01:12:59.399Z",
-      "updated": "2026-01-15T01:17:50.556Z",
-      "description": "Tasks for chore_update-v2 context"
+      "version": "1.0.0",
+      "lastModified": "2026-01-15T05:48:09.362Z",
+      "taskCount": 10,
+      "completedCount": 0,
+      "tags": [
+        "chore_update-v2"
+      ],
+      "created": "2026-01-15T15:09:56.490Z",
+      "description": "Tasks for chore_update-v2 context",
+      "updated": "2026-01-15T15:13:58.042Z"
     }
   }
 }
