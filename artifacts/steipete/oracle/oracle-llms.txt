@@ -1,17 +1,18 @@
 # Oracle
 
-> Oracle aims to simplify the process of sending prompts and files to large language models by bundling them into a single, reusable package that can be executed via API or browser automation. It supports multi-model runs, session replay, remote execution, and integration with IDEs like Cursor and Codex. The tool is designed for developers who need to review codebases, generate documentation, analyze data, or run tests — all while preserving context across models and platforms.
+> Oracle enables developers to generate context-aware AI responses by bundling prompts and files, then sending them to multiple or single AI models via API or browser automation. It supports multi-model runs, file safety controls, session persistence, and cross-platform compatibility (macOS, Linux, Windows). The tool aims to streamline AI-assisted development workflows—especially for review, debugging, and automation—by abstracting the complexity of model selection, token estimation, and environment setup. Its browser mode offers experimental automation without requiring API keys, while its integration with tools like Cursor and Codex enhances developer productivity.
 
 **Remember:**
-- Prompt bundling
-- Multi-model AI runs
-- Browser automation with Chrome
-- Session management and replay
-- API integration (OpenAI, Gemini, Anthropic, OpenRouter)
-- Remote browser service via `oracle serve`
+- CLI tool for AI context bundling
+- Multi-model API runs
+- Browser automation via Chrome
+- Session management (replay, pruning)
+- Model selection strategy (API vs. browser)
+- Token estimation and usage reporting
 
 ## Docs
 - [Anthropic](https://github.com/steipete/oracle/blob/main/docs/anthropic.md): docs page.
+- [Bridge](https://github.com/steipete/oracle/blob/main/docs/bridge.md): docs page.
 - [Browser Mode](https://github.com/steipete/oracle/blob/main/docs/browser-mode.md): docs page.
 - [Chromium Forks](https://github.com/steipete/oracle/blob/main/docs/chromium-forks.md): docs page.
 - [Configuration](https://github.com/steipete/oracle/blob/main/docs/configuration.md): docs page.
@@ -20,7 +21,6 @@
 - [Grok](https://github.com/steipete/oracle/blob/main/docs/grok.md): docs page.
 - [Linux](https://github.com/steipete/oracle/blob/main/docs/linux.md): docs page.
 - [Manual Tests](https://github.com/steipete/oracle/blob/main/docs/manual-tests.md): docs page.
-- [Mcp](https://github.com/steipete/oracle/blob/main/docs/mcp.md): docs page.
 
 ## API
 - [Win Dpapi.D](https://github.com/steipete/oracle/blob/main/types/win-dpapi.d.ts): docs page.
@@ -64,6 +64,7 @@
 - [Config.Test](https://github.com/steipete/oracle/blob/main/tests/config.test.ts): docs page.
 - [Engine.Test](https://github.com/steipete/oracle/blob/main/tests/engine.test.ts): docs page.
 - [Gemini.Test](https://github.com/steipete/oracle/blob/main/tests/gemini.test.ts): docs page.
+- [Logging.Test](https://github.com/steipete/oracle/blob/main/tests/logging.test.ts): docs page.
 - [Mcp.Integration.Test](https://github.com/steipete/oracle/blob/main/tests/mcp.integration.test.ts): docs page.
 - [Mcp.Resources.Test](https://github.com/steipete/oracle/blob/main/tests/mcp.resources.test.ts): docs page.
 - [Mcp.Schema.Test](https://github.com/steipete/oracle/blob/main/tests/mcp.schema.test.ts): docs page.

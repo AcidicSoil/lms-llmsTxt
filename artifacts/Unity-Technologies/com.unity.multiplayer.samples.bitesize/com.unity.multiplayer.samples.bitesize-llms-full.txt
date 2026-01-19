@@ -1,0 +1,1830 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- CHANGELOG.md ---
+# Changelog
+
+## [1.10.0] 2024-12-23
+
+### Distributed Authority Social Hub
+
+#### Added
+- Textchat feature has been added. Chat is using Vivox, UI was integrated using UI Toolkit. (#258)
+- Mobile and gamepad support, with associated UI for mobile controls using UIToolkit has been integrated to the sample (#256)
+- Positional voicechat feature has been added. Chat is using Vivox, UI was integrated using UI Toolkit. See limitations in PR.(#261)
+- Improve usability on Mobile, general UI improvements. (#266)
+- In-editor tutorials have been added to the sample (#268) They walk you through:
+  - Associating your project with a Unity Cloud Id
+  - Creating a Virtual Player through Multiplayer Play Mode
+  - Enabling Network Scene Visualization through Multiplayer Tools
+  - A typical session owner promotion while connected to a session
+
+#### Changed
+- Player spawning has been deferred to be performed manually by an in-scene placed NetworkObject (#257) Player spawn has been moved to coincide with NetworkManager's OnNetworkSessionSynchronized callback, ensuring the player is spawned after synchronizing the game scene's NetworkObjects.
+- Adjusted lighting and shadow settings and custom shaders to improve the overall look of the sample, also water transparency issue has been fixed (#265)
+
+### 2D Space Shooter
+
+#### Added
+- Added a welcome dialog and the standard Table of Contents for Bitesize Samples to 2D Space Shooter Sample (#264)
+
+#### Changed
+- Update Project to Unity 6 (#263)
+- Replaced 3rd party ParrelSync package with Unity's Multiplayer Play Mode (#263)
+- Replaced old input system with new input system (#267)
+
+### Client Driven
+
+#### Added
+- Added a welcome dialog and the standard Table of Contents for Bitesize Samples to the ClientDriven sample (#262)
+
+#### Changed
+- Updated project to Unity 6 (#259)
+  - Replaced 3rd party ParrelSync package with Unity's Multiplayer Play Mode
+
+## [1.9.0] 2024-10-31
+
+### Distributed Authority Social Hub
+
+#### Changed
+- This sample is no longer "Experimental", and it has been moved into the "Basic" folder
+
+## [1.8.0] 2024-10-23
+
+### Multiplayer Use Cases
+
+#### Added
+- The last page of the "Data/Event Synchronization" tutorial redirects to the "Proximity Checks" tutorial
+- Imported TextMeshPro essentials so you don't have to do it
+
+#### Changed
+- Updated project to Unity 6
+- All inputs are handled through the new Unity Input System
+- In-Game UI is now responsive and adapts to screen size
+- Replaced 3rd party ParrelSync package with Unity's Multiplayer Play Mode
+- Disabled compatibility mode for RenderGraph, as it's going to be deprecated and throws warnings
+- Removed runtime network stats monitor from the scene to improve readability
+- Removed deprecated visual studio code package
+- Updated packages: Rider to 3.0.31, Input System to 1.11.1, Tutorial Framework to 4.0.2, Multiplayer Tools to 2.2.1, Netcode For GameObjects to 2.0.0, UGUI to 2.0.0, Test Framework to 1.4.5, Universal Render Pipeline to 17.0.3
+
+#### Fixed
+- Fixed "Build Profile" window not being clickable during the last page of each tutorial
+
+## [1.7.0] 2024-08-31
+
+### Bitesize Samples Repository
+
+#### Added
+- Added a "Deprecated" folder for samples that are no longer supported
+
+### Invaders
+
+#### Changed
+- This sample is now "Deprecated"
+
+### Multiplayer Use Cases
+
+#### Changed
+- This sample is no longer "Experimental", and it has been moved into the "Basic" folder
+- In-game UI now uses UIToolkit instead of UGUI
+- Updated README to provide a clear path to the onboarding resources in case a user closed the Tutorial window 
+
+### Dedicated Game Server
+
+#### Changed
+- Upgraded project to Unity 6000.0.3f1
+- Updated dedicated server packages to 1.1.0
+- Updated Netcode For GameObjects version to 1.8.1, and replaced RPCs using the new workflow provided
+
+## [1.6.0] 2024-05-30
+
+### Bitesize Samples Repository
+
+#### Cleanup
+- Formatted .cs files inside the Bitesize Samples repository to adhere to coding standards (#156) Internal testing job definition files were added in order for internal processes to execute.
+
+### 2D Space Shooter
+
+#### Added
+- Added local pooling for explosionParticles to optimize performance and showcase built-in pooling component (#167)
+
+#### Changed
+- Upgraded to IDE Rider v3.0.28 (#166)
+- Upgraded to Unity 2022.3.27f1 (#170)
+  - upgraded to com.unity.burst v1.8.13
+  - added com.unity.modules.jsonserialize v1.0.0
+  - upgraded to com.unity.render-pipelines.core v14.0.11
+  - upgraded to com.unity.render-pipelines.universal-config v14.0.10
+  - upgraded to com.unity.shadergraph v14.0.11
+  - upgraded to com.unity.services.authentication v2.7.4
+  - upgraded to com.unity.services.qos v1.3.0
+  - upgraded to com.unity.transport v1.4.1
+  - upgraded to com.unity.services.core v1.12.5
+- Upgraded to Netcode for GameObjects v1.8.1 (#174)
+  - Upgraded to the newer API for Rpcs, Universal Rpcs
+  - Upgraded to newer API for Connection Events, OnConnectionEvent
+
+#### Fixed
+- Reset values and buffs after respawn of ship (#167)
+
+### Client Driven
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.8.1 (#164)
+  - Upgraded to the newer API for Rpcs, Universal Rpcs
+  - The place of execution for a client's position was moved to ClientNetworkTransform child class, ClientDrivenNetworkTransform. This ensures no race condition issues on a client's first position sync. Server code now modifies a NetworkVariable that client-owned instances of ClientDrivenNetworkTransform use on OnNetworkSpawn to initially move a player
+  - Upgraded to use NetworkObject.InstantiateAndSpawn() API where appropriate (#173)
+- Upgraded to IDE Rider v3.0.28 (#166)
+- Upgraded to Unity 2022.3.27f1 (#175)
+  - com.unity.render-pipelines.core upgraded to v14.0.11
+  - com.unity.services.authentication upgraded to v2.7.4
+  - com.unity.services.core upgraded to v1.12.5
+  - com.unity.services.qos upgraded to v1.3.0
+  - com.unity.transport upgraded to v1.4.1
+
+#### Fixed
+- Added Spawner with event executed on Server Start to fix inconsistent ghost ingredients issue (#157)
+
+### Dynamic Addressables Network Prefabs
+
+#### Changed
+- Upgraded to IDE Rider v3.0.28 (#166)
+- Upgraded to Unity 2022.3.27f1 (#176)
+  - com.unity.transport upgraded to v1.4.1
+
+#### Fixed
+- Releasing an Addressables handle on OnDestroy inside Preloading scene to prevent releasing loaded dynamic prefab from memory (#179)
+
+### Invaders
+
+#### Changed
+- Upgraded to IDE Rider v3.0.28 (#166)
+- Upgraded to Unity 2022.3.27f1 (#169)
+- Upgraded to Netcode for GameObjects v1.8.1 (#172)
+  - Upgraded to the newer API for Rpcs, Universal Rpcs
+  - Upgraded to the newer API for NetworkObject spawning to use NetworkObject.InstantiateAndSpawn
+  - Upgraded usage of NetworkManager.OnClientConnectedCallback to the new NetworkManager.OnConnectionEvent 
+
+#### Fixed
+- Optimized NetworkTransform on all networked prefabs so the Clients objects movements are closer to the Host ones (#168)
+
+## [1.5.0] 2023-12-15
+
+### Bitesize Samples Repository
+
+#### Cleanup
+- Removed the usage of System.Linq across the repository (#146)
+
+### 2D Space Shooter
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.7.1 (#147)
+- Upgraded sample to 2022.3.14f1 LTS (#147)
+- Upgraded Samples Utilities package to v1.8.0 (#151)
+
+#### Fixed
+- Corrected the variables used for initialization of Health and Energy (#150)
+- Converted unnecessary ship thrust NetworkVariable to a float (#149)
+- Fixed non-host clients not hearing the Fire SFX (#148)
+
+### Client Driven
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.7.1 (#147)
+- Upgraded sample to 2022.3.14f1 LTS (#147)
+- Upgraded Samples Utilities package to v1.8.0 (#151)
+
+### Dynamic Addressables Network Prefabs
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.7.1 (#147)
+- Upgraded sample to 2022.3.14f1 LTS (#147)
+
+### Invaders
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.7.1 (#147)
+- Upgraded sample to 2022.3.14f1 LTS (#147)
+- Upgraded Samples Utilities package to v1.8.0 (#151)
+
+## [1.4.0] - 2023-09-25
+
+### 2D Space Shooter
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.6.0 (#134)
+- Upgraded sample to 2022.3.9f1 LTS (#134)
+
+#### Fixed
+- Fixed warnings when spawning new bullets or asteroids by instantiating a new NetworkVariable pre-spawn (#134)
+
+### Client Driven
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.6.0 (#134)
+- Upgraded sample to 2022.3.9f1 LTS (#134)
+
+#### Fixed
+- Added a script to handle NetworkObject parent changes on Ingredients to address a bug where Ingredients would not get stuck on client disconnect events (#136)
+
+### Dynamic Addressables Network Prefabs
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.6.0 (#134)
+- Upgraded sample to 2022.3.9f1 LTS (#134)
+
+#### Fixed
+- Fixed loaded status displayed on UI for synchronous prefab spawns inside 05_API Playground Showcasing All Post-Connection Use-Cases scene (#132)
+
+### Invaders
+
+#### Changed
+- Upgraded to Netcode for GameObjects v1.6.0 (#134)
+- Upgraded sample to 2022.3.9f1 LTS (#134)
+
+## [1.3.0] - 2023-07-07
+
+### Dynamic Addressables Network Prefabs
+
+#### Changed
+- Upgrade to Netcode for GameObjects 1.4.0 (#118)
+- Upgraded sample to 2021.3.24f1 LTS (#119)
+- Upgraded sample to 2022.3.0f1 LTS (#124)
+
+#### Fixed
+- Resolved visual bug where the load status of dynamic prefabs on the host was not correct (#111)
+
+### 2D Space Shooter
+
+#### Changed
+- Upgrade to Netcode for GameObjects 1.4.0 (#118)
+- Upgraded sample to 2021.3.24f1 LTS (#119)
+- Upgraded sample to 2022.3.0f1 LTS (#124)
+- Upgraded Samples Utilities version to v2.2.0 (#129)
+
+### Client Driven
+
+#### Changed
+- Upgrade to Netcode for GameObjects 1.4.0 (#118)
+- Upgraded sample to 2021.3.24f1 LTS (#119)
+- Upgraded sample to 2022.3.0f1 LTS (#124)
+- Upgraded Samples Utilities version to v2.2.0 (#129)
+
+### Invaders
+
+#### Changed
+- Upgrade to Netcode for GameObjects 1.4.0 (#118)
+- Upgraded sample to 2021.3.24f1 LTS (#119)
+- Upgraded sample to 2022.3.0f1 LTS (#124)
+- Upgraded Samples Utilities version to v2.2.0 (#129)
+  
+#### Fixed
+- IP address input field text value is now passed into UTP's ConnectionData, allowing for remote IP address hosting (#112)
+- Enemy and Player bullet explosion FX are now replicated on clients via ClientRpcs (#113)
+- Fixed an error produced when a client disconnected once the host disconnected after the game was complete (#124)
+
+### Bitesize Samples Repository
+
+#### Fixed
+- Removed individual gitignore files for individual projects and added parrelsync clones to root gitignore file (#117)
+- Fixed link to old tutorial and clarified supported platforms (#120)
+
+## [1.2.1] - 2023-02-17
+
+### Dynamic Addressables Network Prefabs
+
+#### Changed
+- Readme updated with link to the Dynamic Addressables Network Prefabs sample documentation, and broken links fixed (#106)
+
+### 2D Space Shooter
+
+#### Changed
+- Readme updated with link to the 2D Space Shooter sample documentation, and broken links fixed (#106)
+
+### Client Driven
+
+#### Changed
+- Readme updated with link to the Client Driven sample documentation, and broken links fixed (#106)
+
+### Invaders
+
+#### Changed
+- Readme updated with link to the Invaders samples documentation, and broken links fixed (#106)
+
+### Bitesize Samples Repository
+
+#### Fixed
+- Readme formatting adjustments and broken link fixes (#106) (#108)
+
+## [1.2.0] - 2023-02-16
+
+### Dynamic Addressables Network Prefabs Sample
+
+Added the Dynamic Addressables Network Prefabs Sample. This sample showcases the available use-cases for the dynamic prefab system, which allows us to add new spawnable prefabs at runtime. This would be useful for games trying to use both [Addressables](https://docs.unity3d.com/Packages/com.unity.addressables@0.8/manual/index.html) and Netcode for GameObjects (#63) (#94) (#96) (#97) (#98) (#99) (#100) (#101) (#103)
+
+### 2DSpaceShooter
+
+#### Fixed
+- Resolved issue where the colour of powerups was not displayed correctly (#91)
+- Removing warning when spawning powerups (#90). Fixed the order in which powerups were spawned and when their NetworkVariable value was initialized. Now they are spawned beforehand.
+- Fixing bullet explosion desync (#89). Bullet explosion vfx were happening too early on clients because of NetworkTransform's interpolation. Bullets are now no longer synchronised by NetworkTransforms and instead only have their velocity set through client rpcs when they are spawned. Since they are no longer interpolated, they are not lagging behind the server and are at the correct position when they receive the despawn message from the server.
+- Fix: Broken Reference for Underline Character in Font Asset (#87)
+
+#### Changed
+- Upgraded sample to 2021.3.18f1 LTS (#91)
+- Readme was updated (#96)
+- Added readme banner image (#101)
+
+
+### Client Driven
+
+#### Changed
+- Upgraded sample to 2021.3.18f1 LTS (#91)
+- Readme was updated (#96)
+- Added readme banner image (#101)
+
+### Invaders
+
+#### Changed
+- Upgraded sample to 2021.3.18f1 LTS (#91)
+- Readme was updated (#96)
+- Added readme banner image (#101)
+
+### Bitesize Samples Repository
+#### Changed
+- Readme was updated (#96)
+
+
+## [1.1.0] - 2022-12-13
+
+### Client Driven
+
+#### Changed
+- Changed connection UI to use UI buttons and events instead of OnGUI [MTT-4201] (#60)
+- ThirdPersonController starter assets added (#62)
+- Uniformize gitignore files (#65)
+- Art Pass (#68)
+- Anti Aliasing (#72)
+- Third Person Character Controller integration with custom IP UI (#66) The sample has been refactored to feature a PlayerPrefab inside NetworkManager that is a networked variant of a prefab from [Unity's Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-third-person-character-controller-196526). Other improvements include:
+  - Input polling via the new Input System
+  - Connection UI utilizes UI Toolkit
+  - Updated to Unity 2021.3.15f1 LTS
+- Change URP grading mode to HDR (#73)
+- Player Colors (#75)
+- UI Art (#69)
+- Readme added (#76)
+- Upgrade to Netcode for GameObjects v1.2.0 & cleaned up in-scene NetworkVariables (#78)
+- Ingredient spawn position offset (#81)
+- In-game UI backgrounds (#82)
+- Initial position sync fix on owning clients (#85)
+
+### 2DSpaceShooter
+
+#### Changed
+- UI Pass using UI Toolkit (#55)
+- Uniformize gitignore files (#65)
+- 2DSpaceShooter & Invaders 2021.3.15f1 LTS update & Readmes (#77)
+- Updating Invaders and 2DSpaceShooter to Netcode for GameObjects v1.2.0 (#84)
+
+### Invaders
+
+#### Fixed
+- Fixing NotServerException [MTT-4029] (#59)
+- Despawning enemies instead of destroying them (#74)
+
+#### Changed
+- Updated to Unity 2021.3.15f1 LTS
+- 2DSpaceShooter & Invaders 2021.3.15f1 LTS update & Readmes (#77)
+- Updating Invaders and 2DSpaceShooter to Netcode for GameObjects v1.2.0 (#84)
+
+## [1.0.0] - 2021-10-20
+
+### Client Driven
+
+A new sample was added named client driven. It focus on client driven movements, networked physics, spawning vs statically placed objects, object reparenting
+
+### Invaders
+
+#### Changed
+- Updated to Netcode for GameObjects 1.0.0.
+- Player now use ClientNetworkTransform for client driven movement
+- Network Manager now uses Unity Transport instead of UNet
+- SceneTransitionHandler : now uses the new Scene Manager and Scene Loading events
+- InvadersGame : replicated time remaining now uses a RPC instead of a one time synchonized NetworkVariable
+
+#### Fixed
+- Network behaviour in OnDestroy was moved to OnNetworkDespawn
+
+### 2DSpaceShooter
+
+#### Changed
+- Updated to Netcode for GameObjects 1.0.0.
+- Player name is no longer static but based on the client id.
+
+#### Fixed
+- Fixed a bug where explosions from bullet impacts where only visible on the host.
+- Fixed a bug where setting the hosts port in the UI wouldn't change the port on which the server was hosted.
+
+## [0.2.0] - 2021-07-21
+
+### Invaders
+
+#### New Changes
+
+- Game - rename all our alien prefabs to have a more generic name, the same principle was applied to our codebase, renamed variables/fields/classes to something more generic
+- Game: Fix a crash in shipping build
+- Enemies: Rename our main enemy class to EnemyAgent + minor clean-ups + implement a grace shoot timer period
+- InvadersGame: Some big refactories here, the UpdateEnemies function not outputs a set of flags (bitmask) rather than having separated booleans to keep track off
+- InvadersGame: Fix an edge case of the game loop where if the enemies would reach the bottom they would never respawn, now when they do reach that bottom boundary it will be game over
+- InvadersGame: Introduce additional game over reasons
+- LobbyControl: Introduce a minimum player count variable that could be tweaked in the inspector so that the users can start playing in the editor with just the host in the lobby
+- PlayerControl: Unified the NotifyGameOver function with the InvadersGame one + added different texts for all the possible game over reasons to be displayed
+- PlayerControl: Fix a minor issue where the Player graphics are not hidden on all connected instances upon "death".
+
+#### Known Issues
+
+- Upon import a MissingReferenceException is triggered from within MLAPI: **"MissingReferenceException: The object of type ‘GameObject' has been destroyed but you are still trying to access it.
+  Your script should either check if it is null or you should not destroy the object."** in:
+  - UnityEngine.GameObject.GetComponent[T] () (at /Users/bokken/buildslave/unity/build/Runtime/Export/Scripting/GameObject.bindings.cs:28)
+
+### 2DSpaceShooter
+
+#### New Changes
+- Cleaned up project structure, removed duplicate art assets and moved remaining asset into sub folders.
+- Removed empty MonoBehaviours which were used as tags and using the Unity tag system instead.
+- Removed the dependency to the community contributions repository and copied `NetworkManagerHud` and `NetworkObjectPool` into the sample.
+- Small QoL improvements to scripting. Using `TryGetComponent` and `CompareTag`.
+- Fix audio issues by moving the audio listener onto the player ship object.
+
+#### Known Issues
+
+- Missing Reference Exception thrown when leaving playmode, can be ignored:<br>
+*MissingReferenceException: The object of type 'NetworkObjectPool' has been destroyed but you are still trying to access it.
+Your script should either check if it is null or you should not destroy the object.
+MLAPI.Extensions.NetworkObjectPool.ReturnNetworkObject*
+
+## [0.1.0] - 2021-04-07
+
+Initial release of MLAPI Bitesize Samples repository. Samples support the following versions:
+
+| Unity Version | Unity MLAPI Version |
+| -- | -- |
+| 2020.3 | 0.1.0 |
+
+### New features
+
+- Added Invaders sample.
+- Added 2D Space Shooter sample.
+
+### License
+
+The Bitesize Samples repository and code projects are licensed under the Unity Companion License for Unity-dependent projects (see https://unity3d.com/legal/licenses/unity_companion_license). See [LICENSE](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/LICENSE.md) for full details.
+
+
+## Links discovered
+- [Addressables](https://docs.unity3d.com/Packages/com.unity.addressables@0.8/manual/index.html)
+- [Unity's Starter Assets](https://assetstore.unity.com/packages/essentials/starter-assets-third-person-character-controller-196526)
+- [LICENSE](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/LICENSE.md)
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+Thank you for your interest in contributing to Netcode for GameObjects Bitesize Samples repository!
+
+Here are our guidelines for contributing:
+
+* [Code of Conduct](#coc)
+* [Ways to Contribute](#ways)
+* [Issues and Bugs](#issue)
+* [Feature Requests](#feature)
+* [Contributor License Agreement](#cla)
+
+## <a name="coc"></a> Code of Conduct
+
+Please help us keep Netcode for GameObjects Bitesize Samples open and inclusive. Read and follow our [Code of Conduct](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/main/CODE_OF_CONDUCT.md).
+
+## <a name="ways"></a> Ways to Contribute
+
+There are many ways in which you can contribute to Netcode for GameObjects Bitesize Samples.
+
+### <a name="issue"></a> Issues and Bugs
+
+If you find a bug in the source code, you can help us by submitting an [issue](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues/new/choose) to our GitHub Repository. Even better, you can submit a Pull Request with a fix.
+
+### <a name="feature"></a> Feature Requests
+
+Please note that the goal of this repository is to provide educational content to learn Netcode for GameObjects. 
+
+If you would like to see a certain feature in the samples or implement one yourself, create a request by [submitting an issue](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues/new?assignees=&labels=stat%3Aawaiting+triage%2C+type%3Afeature&template=feature_request.md&title=) to our GitHub Repository.
+
+If you would like to implement a new feature then please also get in contact with us in the #dev-samples channel of our [Discord](https://discord.gg/buMxnnPvTb).
+
+## <a name="cla"></a> Contributor License Agreement
+
+When you open a pull request, you will be asked to enter into Unity's License Agreement which is based on The Apache Software Foundation's contribution agreement. We allow both individual contributions and contributions made on behalf of companies. We use an open source tool called CLA assistant. If you have any questions on our CLA, please submit an issue
+
+
+## Links discovered
+- [Code of Conduct](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/main/CODE_OF_CONDUCT.md)
+- [issue](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues/new/choose)
+- [submitting an issue](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues/new?assignees=&labels=stat%3Aawaiting+triage%2C+type%3Afeature&template=feature_request.md&title=)
+- [Discord](https://discord.gg/buMxnnPvTb)
+
+--- LICENSE.md ---
+Multiplayer Bitesize Samples Repository © 2021 Unity Technologies
+
+Licensed under the Unity Companion License for Unity-dependent projects (see https://unity3d.com/legal/licenses/unity_companion_license).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+--- Basic/ClientDriven/Assets/StarterAssets/license.txt ---
+This package is licensed under the Unity Companion License. 
+For full license terms, please see: https://unity3d.com/legal/licenses/Unity_Companion_License
+
+--- Experimental/DedicatedGameServer/Assets/StarterAssets/license.txt ---
+This package is licensed under the Unity Companion License. 
+For full license terms, please see: https://unity3d.com/legal/licenses/Unity_Companion_License
+
+--- .yamato/disable-burst-if-requested.py ---
+# Custom python script to enable/disable burst compilations. Disabling burst is currently required for Android tests.
+# Source: https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/develop/.yamato/disable-burst-if-requested.py
+
+import argparse
+import json
+import os
+
+
+args = None
+platform_plugin_definition = None
+
+
+def resolve_target(platform):
+    resolved_target = platform
+    if 'StandaloneWindows' in platform:
+        resolved_target = 'StandaloneWindows'
+    elif 'StandaloneLinux' in platform:
+        resolved_target = 'StandaloneLinux64'
+
+    return resolved_target
+
+
+def create_config(settings_path, platform):
+    config_name = os.path.join(settings_path, 'BurstAotSettings_{}.json'.format(resolve_target(platform)))
+    monobehaviour = {
+        'm_Enabled': True,
+        'm_EditorHideFlags': 0,
+        'm_Name': "",
+        'm_EditorClassIdentifier': 'Unity.Burst.Editor:Unity.Burst.Editor:BurstPlatformAotSettings',
+        'EnableOptimisations': True,
+        'EnableSafetyChecks': False,
+        'EnableBurstCompilation': True
+    }
+
+    data = {'MonoBehaviour': monobehaviour}
+    with open(config_name, 'w') as f:
+        json.dump(data, f)
+    return config_name
+
+
+def get_or_create_AOT_config(project_path, platform):
+    settings_path = os.path.join(project_path, 'ProjectSettings')
+    if not os.path.isdir(settings_path):
+        os.mkdir(settings_path)
+    config_names = [os.path.join(settings_path, filename) for filename in os.listdir(settings_path) if filename.startswith("BurstAotSettings_{}".format(resolve_target(platform)))]
+    if not config_names:
+        return [create_config(settings_path, platform)]
+    return config_names
+
+
+def disable_AOT(project_path, platform):
+    config_names = get_or_create_AOT_config(project_path, platform)
+    for config_name in config_names:
+        set_AOT(config_name, False)
+
+
+def enable_AOT(project_path, platform):
+    config_names = get_or_create_AOT_config(project_path, platform)
+    for config_name in config_names:
+        set_AOT(config_name, True)
+
+
+def set_AOT(config_file, status):
+    config = None
+    with open(config_file, 'r') as f:
+        config = json.load(f)
+
+    assert config is not None, 'AOT settings not found; did the burst-enabled build finish successfully?'
+
+    config['MonoBehaviour']['EnableBurstCompilation'] = status
+    with open(config_file, 'w') as f:
+        json.dump(config, f)
+
+
+def main():
+    enable_burst = os.environ.get('ENABLE_BURST_COMPILATION', 'true').strip().lower()
+    if enable_burst == 'true':
+        print('BURST COMPILATION: ENABLED')
+    elif enable_burst == 'false':
+        print('BURST COMPILATION: DISABLED')
+        disable_AOT(args.project_path, args.platform)
+    else:
+        sys.exit('BURST COMPILATION: unexpected value: {}'.format(enable_burst))
+
+
+def parse_args():
+    global args
+    parser = argparse.ArgumentParser(description='This tool disables burst AOT compilation')
+    parser.add_argument('--project-path', help='Specify the location of the unity project.')
+    parser.add_argument('--platform', help="Platform to be used to run the build.")
+    args = parser.parse_args()
+
+
+if __name__ == '__main__':
+    parse_args()
+    main()
+
+
+--- CODE_OF_CONDUCT.md ---
+The Netcode for GameObjects Bitesize Samples Repository follows the same code of conduct as the Netcode for GameObjects repository. Please read the [Netcode for GameObjects code of conduct](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/main/CODE_OF_CONDUCT.md), thank you!
+
+## Links discovered
+- [Netcode for GameObjects code of conduct](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/blob/main/CODE_OF_CONDUCT.md)
+
+--- README.md ---
+![Banner](Resources/bitesize_banner.png)
+<br><br>
+# Netcode for GameObjects Bitesize Samples
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3+%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/2022.3.0)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.0.0+-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F2.0.0)*
+[![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.10.0-57b9d3.svg?logo=github&color=brightgreen)](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/releases/tag/v1.10.0)
+<br><br>
+
+*: Due to a regression in Netcode for GameObjects pertaining to the destruction of NetworkObjects when a client unsuccessfully connects, the Dynamic Addressables Network Prefabs sample has remained at v1.7.1. It will be upgraded in the near future with the latest Netcode version including a fix for the regression.
+
+This repository contains a collection of bitesize sample projects and games that showcase different techniques
+which can help you get started with development of a multiplayer 
+project using [Netcode for GameObjects](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects).
+<br><br>
+
+# Bitesize Samples Overview
+
+### 2D Space Shooter Overview
+
+The [2D Space Shooter Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/2DSpaceShooter) was a UNET sample that has been converted over to NGO. Check it out to learn more about physics movement and status effects using Netcode `NetworkVariables` and `ObjectPooling`.
+<br><br>
+
+### Distributed Authority Social Hub
+
+[Social Hub](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/DistributedAuthoritySocialHub) is built with the Distributed Authority topology, showcasing recommended approaches to designing gameplay features with the new framework inside Netcode for GameObjects v2.0 in tandem with the Multiplayer SDK. This sample serves as the educational entry point for users who are looking to implement a similar networking topology inside their projects.
+<br><br>
+
+### Multiplayer Use Cases Overview
+
+The [Multiplayer Use Cases sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/MultiplayerUseCases) show you how to perform common actions in a multiplayer environment, so that you can build the features of your game with them in mind.
+
+In this sample you'll learn about the core features of Netcode For GameObjects (Netcode) through practical examples that you'll be able to extend and adapt to fit the gameplay logic of your own game. 
+
+Each scene comes with an in-editor tutorial that will help you explore the main scripts and object of each scene, so you know where to look at to find what you're looking for.
+<br><br>
+
+### Client Driven Overview
+See the [Client Driven Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/ClientDriven) to learn about client driven movements, networked physics, spawning vs in-scene placed `NetworkObjects`, and `NetworkObject` parenting.
+<br><br>
+
+### Dynamic Addressables Network Prefabs Overview
+
+Check out the [Dynamic Addressables Network Prefabs Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/DynamicAddressablesNetworkPrefabs) to learn more about the dynamic prefab system, which allows us to add new spawnable network prefabs at runtime.
+<br><br>
+
+---
+## Readme Contents and Quick Links
+<details open> <summary> Click to expand/collapse contents </summary>
+
+- ### [Getting the Project](#getting-the-project-1)
+- ### [Requirements](#requirements-1)
+- ### [Troubleshooting](#troubleshooting-1)
+  - [Bugs](#bugs)
+  - [Documentation](#documentation)
+- ### [Contributing](#contributing-1)
+- ### [Community](#community-1)
+- ### [Feedback Form](#feedback)
+- ### [Other Samples](#other-samples-1)
+  - [Boss Room](#boss-room-sample)
+
+</details>
+
+---
+<br>
+
+## Getting the project
+### Direct download
+
+ - You can download the latest versions these samples from our [Releases](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/releases) page
+
+ - __Alternatively:__ select `Code` and select the 'Download Zip' option.  Please note that this will download the branch you're currently viewing on Github
+<br><br>
+
+## Requirements
+
+The bitesize samples are compatible with the latest Unity Long Term Support (LTS) editor version, currently [2022 LTS](https://unity.com/releases/editor/qa/lts-releases?version=2022.3) and are supported on the Windows 10 and Mac OSX platforms. Please include standalone support for Windows/Mac in your installation.
+
+**PLEASE NOTE:** You will also need Netcode for Game Objects to use these samples. See the [Installation Documentation](https://docs-multiplayer.unity3d.com/netcode/current/installation) to prepare your environment. You can also complete the [Get Started With NGO](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/get-started-ngo) tutorial to familiarize yourself with Netcode For Game Objects.
+<br><br>
+
+## Troubleshooting
+### Bugs
+- Report bugs in the Bitesize samples using Github [issues](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues)
+- Report NGO bugs using NGO Github [issues](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/issues)
+- Report Unity bugs using the [Unity bug submission process](https://unity3d.com/unity/qa/bug-reporting)
+  
+### Documentation
+For a deep dive into Netcode for GameObjects and the Bitesize Samples, visit our [documentation site](https://docs-multiplayer.unity3d.com/).
+<br><br>
+
+## Community
+For help, questions, networking advice, or discussions about Netcode for GameObjects and its samples, please join our [Discord Community](https://discord.gg/FM8SE9E) or create a post in the [Unity Multiplayer Forum](https://forum.unity.com/forums/netcode-for-gameobjects.661/).
+<br><br>
+
+## Contributing
+We welcome your contributions to this sample code and objects. See our [contribution guidelines](CONTRIBUTING.md) for details.
+<br><br>
+
+## Feedback
+If you have tried these samples already, please consider leaving us feedback [here](https://unitytech.typeform.com/bitesize)--it will only take a couple of minutes. Thanks!
+<br><br>
+
+## Other samples
+### Boss Room Sample
+[Boss Room](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.coop/) is a fully functional co-op multiplayer RPG made with Unity Netcode. It is an educational sample designed to showcase typical netcode patterns that are frequently featured in similar multiplayer games.
+<br><br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [Banner](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Resources/bitesize_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3+%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.0.0+-57b9d3.svg?logo=unity&color=2196F3)
+- [![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.10.0-57b9d3.svg?logo=github&color=brightgreen)
+- [Netcode for GameObjects](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects)
+- [2D Space Shooter Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/2DSpaceShooter)
+- [Social Hub](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/DistributedAuthoritySocialHub)
+- [Multiplayer Use Cases sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/MultiplayerUseCases)
+- [Client Driven Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/ClientDriven)
+- [Dynamic Addressables Network Prefabs Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Basic/DynamicAddressablesNetworkPrefabs)
+- [Releases](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/releases)
+- [2022 LTS](https://unity.com/releases/editor/qa/lts-releases?version=2022.3)
+- [Installation Documentation](https://docs-multiplayer.unity3d.com/netcode/current/installation)
+- [Get Started With NGO](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/get-started-ngo)
+- [issues](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/issues)
+- [issues](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/issues)
+- [Unity bug submission process](https://unity3d.com/unity/qa/bug-reporting)
+- [documentation site](https://docs-multiplayer.unity3d.com/)
+- [Discord Community](https://discord.gg/FM8SE9E)
+- [Unity Multiplayer Forum](https://forum.unity.com/forums/netcode-for-gameobjects.661/)
+- [contribution guidelines](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/CONTRIBUTING.md)
+- [here](https://unitytech.typeform.com/bitesize)
+- [Boss Room](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.coop/)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- dotnet-tools/README.md ---
+# .NET Tools for Unity Netcode
+
+## Netcode.Standards
+
+C# coding standards tool for Netcode that relies on `.editorconfig` ruleset and `dotnet format` tool
+
+### How to Install & Uninstall
+
+Build (Pack)
+
+```zsh
+dotnet pack dotnet-tools/netcode.standards
+```
+
+Install
+
+```zsh
+dotnet tool install --global --add-source ./dotnet-tools/netcode.standards netcode.standards
+```
+
+Check
+
+```zsh
+netcode.standards --help
+```
+
+Uninstall
+
+```zsh
+dotnet tool uninstall --global netcode.standards
+```
+
+### How to Use
+
+#### Commands
+
+Check
+
+```zsh
+# check for standards issues without touching files
+netcode.standards --check
+```
+
+Fix
+```zsh
+# try to fix standards issues and save file changes
+netcode.standards --fix
+```
+
+#### Options
+
+Specifying at least one of `--check` or `--fix` is required.
+
+However, you can also specify other options to configure the tool.
+
+|Option|Description|
+|:-|:-|
+|`--project <project>`|Target project folder [default: testproject]|
+|`--pattern <pattern>`|Search pattern string [default: *.sln]|
+|`--verbosity <verbosity>`|Logs verbosity level [default: normal]|
+|`-?`, `-h`, `--help`|Show help and usage information|
+
+
+--- .github/PULL_REQUEST_TEMPLATE.md ---
+### Description
+<!---
+    Please provide a description of the changes proposed in the pull request.
+    Make sure your commit messages have meaningful information.
+    To help us link commits and PRs to JIRA work items, please include the JIRA ticket ID in the PR title or at least of your commit messages.
+-->
+
+### Issue Number(s)
+<!---
+    Provide a list of fixed issues from Jira (MTT-ticketnumber) or GitHub (#issuenumber).
+    This helps us understand the reasoning behind this change, what it fixes, feature being added, etc.
+-->
+
+### Contribution checklist
+ - [ ] Tests have been added for the project and/or any internal package
+ - [ ] Release notes have been added to the [project changelog](../CHANGELOG.md) file
+ - [ ] Pull request has a meaningful description of its purpose
+ - [ ] All commits are accompanied by meaningful commit messages
+ - [ ] JIRA ticket ID is in the PR title or at least one commit message
+ - [ ] Include the ticket ID number within the body message of the PR to create a hyperlink
+
+
+## Links discovered
+- [project changelog](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/CHANGELOG.md)
+
+--- .github/ISSUE_TEMPLATE/bug_report.md ---
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: stat:awaiting triage, type:bug
+assignees: ''
+
+---
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Environment (please complete the following information):**
+ - OS: [e.g. Windows 10]
+ - Unity Version: [e.g. 2019.1]
+ - MLAPI Version: [e.g. v6.0.1]
+ - Bitesize Samples Repository Version/Commit
+
+**Additional context**
+Add any other context about the problem here.
+
+
+--- .github/ISSUE_TEMPLATE/feature_request.md ---
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: stat:awaiting triage, type:feature
+assignees: ''
+
+---
+
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+
+--- .github/ISSUE_TEMPLATE/feedback.md ---
+---
+name: Feedback
+about: Provide feedback to the MLAPI team
+title: ''
+labels: stat:awaiting triage, type:feedback
+assignees: ''
+
+---
+
+**Feedback**
+Enter your feedback to the MLAPI team here. Please keep in mind that our teams focus is on multiplayer development. For other non-networking related feedback towards Unity please use the Forums.
+
+**Suggested Changes**
+If you think we could do something better, please let us know here what you would like us to change. Concrete and constructive suggestions are welcome and will help us to prioritize and act on feedback.
+
+
+--- .github/ISSUE_TEMPLATE/other-issues.md ---
+---
+name: Other Issues
+about: Use this template for any other non-support related issues
+title: ''
+labels: stat:awaiting triage
+assignees: ''
+
+---
+
+This template is for issues not covered by the other issue categories.
+
+
+--- .github/ISSUE_TEMPLATE/support.md ---
+---
+name: Support
+about: Have a question or need help with anything?
+title: ''
+labels: stat:awaiting triage, type:support
+assignees: ''
+
+---
+
+Post your questions or problems here.
+
+For general questions, networking advice or discussions about MLAPI, you can also reach us on our [Discord Community](https://discord.gg/FM8SE9E) or create a post in the [Unity Multiplayer Forum](https://forum.unity.com/forums/multiplayer.26/).
+
+
+## Links discovered
+- [Discord Community](https://discord.gg/FM8SE9E)
+- [Unity Multiplayer Forum](https://forum.unity.com/forums/multiplayer.26/)
+
+--- Basic/2DSpaceShooter/README.md ---
+![Banner](Resources/spaceshooter_banner.png)
+<br><br>
+
+# 2D Space Shooter
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.28f1%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/6000.0.28#notes)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F2.1.1)
+<br><br>
+
+This is a UNET sample project converted to Netcode for GameObjects. The 2DSpaceShooter sample is a bitesize sample designed to demonstrate networked 2D and physics-based character movement. 
+<br><br>
+
+# Sample Overview
+
+In this sample, learn more about:
+
+- Server authoritative physics based movement using Netcode for GameObject's `NetworkRigidbody2D` component
+- Managing health and a list of buffs for your players in a multiplayer game with a `NetworkVariable`
+- How to pool network objects such as bullets and asteroids to improve performance
+<br><br>
+---
+### 💡 Documentation
+Check out the [2D Space Shooter sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-spaceshooter) for a more in-depth technical breakdown of our engineering decisions and why the sample works the way it does.
+
+---
+<br>
+
+## Exploring the Sample
+
+The entry scene for this game is the network scene. From there a game can be hosted or an existing game can be joined. Control the ship using WASD and shoot asteroids (or other players!) using the spacebar. Fly over pickups in the scene to get different temporary buffs for your ship (like increased fly speed or shooting extra bullets).
+<br><br>
+
+
+---
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [Banner](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/2DSpaceShooter/Resources/spaceshooter_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.28f1%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)
+- [2D Space Shooter sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-spaceshooter)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Basic/ClientDriven/README.md ---
+![Banner](Resources/clientdriven_banner.png)
+<br><br>
+
+# Client Driven
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.28f1%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/6000.0.28#notes)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F2.1.1)
+<br><br>
+
+The ClientDriven sample is a sample project made with Netcode for GameObjects designed to demonstrate responsive 3rd-person WASD character movements even under unfavourable network conditions.
+<br><br>
+
+# Sample Overview
+
+In this sample, learn more about:
+
+- Client driven movements
+- Networked physics
+- Spawning vs in-scene placed `NetworkObjects`
+- `NetworkObject` parenting (client side object detection with server side pickup)
+<br><br>
+---
+### 💡 Documentation
+Check out the [Client Driven sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-clientdriven) for a more in-depth technical breakdown of our engineering decisions and why the sample works the way it does.
+
+---
+<br>
+
+## Exploring the Sample
+The entry scene for this game is the Bootstrap scene. From there a game can be hosted or an existing game can be joined. Run around the scene using WASD, and pick up orbs using the spacebar. Convert orbs from one color to another by dropping them in the converters in the middle of the level. Deposit orbs into the drop spots of the same color to earn points. 
+<br><br>
+
+---
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [Banner](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/ClientDriven/Resources/clientdriven_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.28f1%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)
+- [Client Driven sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-clientdriven)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Basic/DistributedAuthoritySocialHub/README.md ---
+![Banner Image](Assets/Editor/Tutorials/Images/social_hub_sample_banner.png)
+<br><br>
+
+# Distributed Authority Social Hub Sample
+<br>
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.24%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/6000.0.24)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/2.1.1/about)
+<br><br>
+
+Social Hub is a beginner-friendly sample project aimed to demonstrate Distributed Authority's core features and benefits, helping users seamlessly integrate Distributed Authority into their own game projects.
+
+Distributed Authority, a networking topology offered by Netcode for GameObjects v2+, is a flexible authority model and an out-of-the-box backend solution, targeting developers who require scalable, performant, and cost-effective networking options.
+
+<br>
+
+# Social Hub Overview
+
+Within Social Hub, you are free to explore Distributed Authority's key features & functionalities in a sandbox-like environment. Such features include: 
+* Automatic redistribution of ownership of NetworkObjects across connected clients
+* Client-side NetworkObject spawning and deferred NetworkObject despawning
+* Ownership transfer of NetworkObjects with variable ownership flags
+* Host migration of a networked game session
+
+<br>
+
+## Requirements
+
+Social Hub is compatible with the latest Unity Long Term Support (LTS) editor version, currently [6000.0 LTS](https://unity.com/releases/unity-6). Please include standalone support for Windows/Mac in your installation.
+
+Social Hub has been developed and tested on the following platforms:
+- Windows
+- Mac
+- Android (Pixel 6)
+- iOS (iPhone 13)
+
+<br>
+
+## Opening the project for the First Time
+
+Once you have downloaded the project, follow the steps below to get up and running:
+- Check that you have installed the most recent [LTS editor version](https://unity.com/releases/editor/archive).
+  - Include standalone support for Windows/Mac in your installation. 
+- Add the project to the _Unity Hub_ by clicking on the **Add** button and pointing it to the root folder of the downloaded project.
+- Hit the **Play** button. You can then host a new game or join an existing one using the in-game UI.
+
+<br>
+
+## Exploring the project
+
+Social Hub is an 64-player sandbox-style multiplayer experience where players can interact and collaborate within a simulated world. The control model is WASD controls, with the E button mapped as the key to interact with crates and pots. These NetworkObjects can be picked up and subsequently dropped or tossed, showcasing how to attach one NetworkObject to another with an animated rig through the use of FixedJoints. As a NetworkObject is picked up by a client, authority of that NetworkObject is transferred to that client.
+
+A client has authority over its player NetworkObject, thus the movement, animations, and interactions performed by a client are client-authoritative. 
+
+Code is organized in domain-based assemblies.
+
+<br>
+
+### Registering the project with Unity Gaming Services (UGS)
+
+Social Hub leverages several services from UGS to facilitate connectivity between players. To use these services inside your project, you must [create an organization](https://support.unity.com/hc/en-us/articles/208592876-How-do-I-create-a-new-Organization-) inside the Unity Dashboard. Consult the Multiplayer SDK [Getting Started](https://docs.unity.com/ugs/en-us/manual/mps-sdk/manual/get-started) manual for more resources.
+
+<br>
+
+## Testing multiplayer
+
+In order to see the multiplayer functionality in action, launch multiple instances of the game locally on your computer, using either Multiplayer Play Mode or standalone builds, and connect using the same session name. Friends can join along too, so long as they join via the Main Menu with the same session name. See [how to test](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/testing/testing_locally) for more info.
+
+<br>
+
+## 💡 Bitesize Readme
+
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [Banner Image](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DistributedAuthoritySocialHub/Assets/Editor/Tutorials/Images/social_hub_sample_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.24%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.1.1-57b9d3.svg?logo=unity&color=2196F3)
+- [6000.0 LTS](https://unity.com/releases/unity-6)
+- [LTS editor version](https://unity.com/releases/editor/archive)
+- [create an organization](https://support.unity.com/hc/en-us/articles/208592876-How-do-I-create-a-new-Organization-)
+- [Getting Started](https://docs.unity.com/ugs/en-us/manual/mps-sdk/manual/get-started)
+- [how to test](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/testing/testing_locally)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Basic/DynamicAddressablesNetworkPrefabs/README.md ---
+![Banner](Resources/dynamicprefab_banner.png)
+<br><br>
+
+# Dynamic Addressables Network Prefabs Sample
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/2022.3.0)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.7.1-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F1.7.1)*
+[![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.6.0-57b9d3.svg?logo=github&color=brightgreen)](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/releases/tag/v1.6.0)
+<br><br>
+
+*: Due to a regression in Netcode for GameObjects pertaining to the destruction of NetworkObjects when a client unsuccessfully connects, this sample has remained at v1.7.1. It will be upgraded in the near future with the latest Netcode version including a fix for the regression.
+
+The Dynamic Prefabs Sample showcases the available use-cases for the dynamic prefab system, which allows us to add new spawnable prefabs at runtime. This sample uses Addressables to load the dynamic prefab, however any GameObject with a NetworkObject component can be used, regardless of its source. This sample also uses in-game UI (created using UI Toolkit) to interface with the dynamic prefabs system with configurable options like artificial latency and network spawn timeout for easy testing.
+
+## Note on Addressables
+Addressables are great for managing your memory, download times, adding DLCs.
+
+Memory management with Addressables is great on platforms with restricted memory. Think mobile or webgl. In general on mobile, you won't load prefabs in memory directly on scene load, you'll want to load them only when you actually need them. You could load them from disk or from a CDN, that doesn't matter.
+Another use case is for reducing the initial app download time. You could ship a slim app with only the essentials asset wise. And when your player is in menus or playing the tutorial, start downloading the remainder of the app through addressables.
+
+There's a lot of optimizations potentials around asset bundles and addressables, we highly encourage you to look through them, they can be used on pretty much any platforms. 
+Some cool ressources:
+- Recent blog post on addressables: https://blog.unity.com/engine-platform/addressables-planning-and-best-practices
+- An older one: https://blog.unity.com/technology/tales-from-the-optimization-trenches-saving-memory-with-addressables
+<br><br>
+
+# Sample Overview
+
+In this sample, learn more about:
+- The dynamic prefabs system
+- Loading prefabs with addressables 
+<br><br>
+
+---
+### 💡 Documentation
+Check out the [Dynamic Addressables Network Prefabs sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-dynamicPrefabs) for a more in-depth technical breakdown of our engineering decisions and why the sample works the way it does.
+
+---
+<br>
+
+## Exploring the Sample
+
+Each scene in the project showcases a different, isolated feature of the API, allowing for easy extraction into other projects. We suggest exploring them in order to get a good understanding of the flow of dynamically loading and spawning network prefabs. The use-cases available in this sample are based around the current known limitations.
+
+**Important:** This sample assumes that Addressables will never fail to load, therefore the server does not account for the case in which a client fails to load an Addressable. In a realistic implementation, you would want to either have the offending client try to load the Addressable again, or disconnect it from the session. 
+<br><br>
+
+### Each Scene:
+
+- Scene 00_Preloading Dynamic Prefabs
+  - This is the simplest case of a dynamic prefab - we instruct all game instances to load a network prefab (it can be just one, it could also be a set of network prefabs) and inject them to NetworkManager's NetworkPrefabs list before starting the server.
+  
+  - This is the less intrusive option for your development, as you don't have any additional spawning and addressable management to do later in your game. 
+  <br><br>
+
+- Scene 01_Connection Approval Required For Late Joining
+  - An optional use-case scenario that walks through what a server would need to validate from a connecting client when dynamically loading network prefabs. Other use-cases don't allow for reconciliation after the server has loaded a prefab dynamically and before a client joined, whereas this one enables this functionality. 
+  
+  - This is to support late join and should be used in combination with the other techniques described below.
+  <br><br>
+
+- Scene 02_Server Authoritative Preload All Prefabs Asynchronously
+  - A simple use-case where the server notifies all clients to preload a collection of network prefabs. The server will not invoke a spawn directly after the addressable loading in this use-case, and will incrementally load each dynamic prefab, one prefab at a time.
+  
+  - This acts as a "warning" notification to clients that they'll soon need this prefab. This allows being less intrusive in the spawning process later as we can assume all clients have loaded the prefab already.
+  
+  - This is different from option 0, as here this is done when clients are connected and already in game. This allows for more flexibility around your gameplay and could load different prefabs depending on where your players are at in the game for example.
+  <br><br>
+
+- Scene 03_Server Authoritative Try Spawn Synchronously
+  - This is the first technique that loads and spawns sequentially. This is a dynamic prefab loading use-case where the server instructs all clients to load a single network prefab, and will only invoke a spawn once all clients have successfully completed their respective loads of said prefab. The server will initially send a ClientRpc to all clients, begin loading the prefab on the server, will await acknowledgement of a load via ServerRpcs from each client, and will only Spawn() the instantiated prefab over the network once it has received an acknowledgement from every client, within `m_SynchronousSpawnTimeoutTimer` seconds.
+
+  - This and the next technique allow for the most flexibility compared to the previous ones.
+
+  - This technique makes sure all clients have loaded a prefab before spawning and starting gameplay on that prefab. This is useful for game changing objects, like a big boss that could kill everyone. In that case you want to make sure all clients have loaded that prefab before spawning that object. 
+  <br><br>
+
+- Scene 04_Server Authoritative Spawn Dynamic Prefab Using Network Visibility
+  - A dynamic prefab loading use-case where the server instructs all clients to load a single network prefab via a ClientRpc, will spawn said prefab as soon as it is loaded on the server, and will mark it as network-visible only to clients that have already loaded that same prefab. As soon as a client loads the prefab locally, it sends an acknowledgement ServerRpc, and the server will mark that spawned NetworkObject as network-visible to that client.
+
+  - This makes sure that no client can block the spawn of certain objects by making it visible as soon as specific clients have loaded that prefab. This is great for network reactivity, but might create inconsistent world views for each client depending on whether you've loaded that prefab or not. Using that technique for boss loading could create a situation where your player sees its health decreasing rapidly for no visible reason because the boss is loaded server side and hitting you, but you haven't loaded it yet and it's invisible on your client.
+  <br><br>
+
+- Scene 05_API Playground Showcasing All Post-Connection Use-Cases
+  This scene serves as an API playground to test how all of the use-cases can work in tandem.
+<br><br><br>
+
+## Known Limitations
+- If you have NetworkConfig.ForceSamePrefabs enabled, you can only modify your prefab lists **before** starting
+  networking, and the server and all connected clients must all have the same exact set of prefabs
+  added via this method before connecting.
+
+- Adding a prefab on the server **does not** automatically add it on the client - it's up to you
+  to make sure the client and server are synchronized via whatever method makes sense for your game
+  (RPCs, configs, deterministic loading, etc). This sample lists some of those possible methods with basic implementations you can adapt to your various use cases.
+
+- If the server sends a Spawn message to a client that does not yet have the corresponding prefab loaded, the spawn message
+  (and any other relevant messages) will be held for a configurable time before an error is logged (default 1 second, configured via
+  NetworkConfig.SpawnTimeout). This is intented to enable the SDK to gracefully
+  handle unexpected conditions that slow down asset loading (slow disks, slow network, etc). This timeout
+  should not be relied upon and code shouldn't be written around it - your code should be written so that
+  the asset is expected to be loaded before it's needed.
+<br><br>
+
+## Index of Resources
+
+### Dynamic Prefabs System
+
+- Preloading Dynamic Prefabs - [Assets/Scripts/00_Preloading/Preloading.cs](Assets/Scripts/00_Preloading/Preloading.cs)
+- Connection Approval supporting late join - [Assets/Scripts/01_Connection Approval/ConnectionApproval.cs](Assets/Scripts/01_Connection%20Approval/ConnectionApproval.cs)
+- Server Authoritative Preloading All Prefabs Asynchronously - [Assets/Scripts/02_Server Authoritative Load All Async/ServerAuthoritativeLoadAllAsync.cs](Assets/Scripts/02_Server%20Authoritative%20Load%20All%20Async/ServerAuthoritativeLoadAllAsync.cs)
+- Server Authoritative Try Spawning Synchronously - [Assets/Scripts/03_Server Authoritative Synchronous Spawning/ServerAuthoritativeSynchronousSpawning.cs](Assets/Scripts/03_Server%20Authoritative%20Synchronous%20Spawning/ServerAuthoritativeSynchronousSpawning.cs)
+- Server Authoritative Spawn using Network-Visibility - [Assets/Scripts/04_Server Authoritative Network-Visibility Spawning/ServerAuthoritativeNetworkVisibilitySpawning.cs](Assets/Scripts/04_Server%20Authoritative%20Network-Visibility%20Spawning/ServerAuthoritativeNetworkVisibilitySpawning.cs)
+
+### UI
+- In Game UI [Assets/Scripts/UI/InGameUI.cs](Assets/Scripts/UI/InGameUI.cs)
+- IP Menu UI - [Assets/Scripts/UI/IPMenuUI.cs](Assets/Scripts/UI/IPMenuUI.cs)
+
+### Addressables
+- Package version - [Packages/manifest.json](Packages/manifest.json)
+- Docs - https://docs.unity3d.com/Packages/com.unity.addressables@1.19/manual/index.html
+<br><br>
+
+
+## Future Improvement Ideas
+This section describes some next steps a game developer could do to extend the sample code available here. This logic is left to the reader, this sample focuses on dynamic prefab management.
+<br><br>
+- Adding more advanced logic that would kick players that are consistently failing to load required Addressables.
+
+- Compress Addressable GUID list before it is sent, thus reducing the amount of data being exchanged.
+
+- Rather than exchanging Addressable GUIDS (underlying type `FixedString128Bytes`), the server and clients could instead exchange just a `short` index that would refer to an Addressable stored in some sort of list (potentially in a `ScriptableObject`). This would drastically reduce the amount of data being exchanged over the network. 
+
+- This sample does not cover the use-case of using Addressables to load in custom User Generated Content (UGC) and replicating that to other clients.
+<br><br>
+
+---
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+
+## Links discovered
+- [Banner](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Resources/dynamicprefab_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.7.1-57b9d3.svg?logo=unity&color=2196F3)
+- [![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.6.0-57b9d3.svg?logo=github&color=brightgreen)
+- [Dynamic Addressables Network Prefabs sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-dynamicPrefabs)
+- [Assets/Scripts/00_Preloading/Preloading.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/00_Preloading/Preloading.cs)
+- [Assets/Scripts/01_Connection Approval/ConnectionApproval.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/01_Connection%20Approval/ConnectionApproval.cs)
+- [Assets/Scripts/02_Server Authoritative Load All Async/ServerAuthoritativeLoadAllAsync.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/02_Server%20Authoritative%20Load%20All%20Async/ServerAuthoritativeLoadAllAsync.cs)
+- [Assets/Scripts/03_Server Authoritative Synchronous Spawning/ServerAuthoritativeSynchronousSpawning.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/03_Server%20Authoritative%20Synchronous%20Spawning/ServerAuthoritativeSynchronousSpawning.cs)
+- [Assets/Scripts/04_Server Authoritative Network-Visibility Spawning/ServerAuthoritativeNetworkVisibilitySpawning.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/04_Server%20Authoritative%20Network-Visibility%20Spawning/ServerAuthoritativeNetworkVisibilitySpawning.cs)
+- [Assets/Scripts/UI/InGameUI.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/UI/InGameUI.cs)
+- [Assets/Scripts/UI/IPMenuUI.cs](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Assets/Scripts/UI/IPMenuUI.cs)
+- [Packages/manifest.json](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Basic/DynamicAddressablesNetworkPrefabs/Packages/manifest.json)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Basic/MultiplayerUseCases/README.md ---
+# Multiplayer Use Cases
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.23f1%20-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/6000.0.23)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.0.0-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F2.0.0)
+<br><br>
+
+This sample provides a series of scenes. Each scene explains a specific API or system commonly used in Netcode for GameObjects. In this sample you will learn more about client-server communication, state synchronization, and other typical mechanics of multiplayer games.
+<br><br>
+
+## Sample overview
+
+Making a multiplayer game is different than making a singleplayer one. 
+
+Understanding how to send data and events over the network and to the right players is a challenge.
+
+Multiplayer Use Cases' goal is to show you how to perform common actions in a multiplayer environment, so that you can build the features of your game with them in mind.
+
+In this sample you'll learn about the core features of Netcode For GameObjects (Netcode) through practical examples that you'll be able to extend and adapt to fit the gameplay logic of your own game. 
+
+Each scene comes with an in-editor tutorial that will help you explore the main scripts and object of each scene, so you know where to look at to find what you're looking for.
+
+---
+### 💡 Documentation
+Check out the in-editor tutorials bundled with the sample for a more in-depth technical breakdown of our engineering decisions, why the sample works the way it does, and to learn core Netcode For GameObejcts concepts.
+
+You can always access both the Tutorials window and the Welcome Dialog from the *Tutorials* menu.
+
+---
+<br>
+
+## Exploring the Sample
+When you open the Sample for the first time, a popup will ask you if you want to be guided. If you choose to be not, the Sample will automatically open the SelectionScreen scene. From there, you can explore the different Scenes by your own.
+<br><br>
+
+---
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.23f1%20-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-2.0.0-57b9d3.svg?logo=unity&color=2196F3)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Basic/2DSpaceShooter/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.28f1
+m_EditorVersionWithRevision: 6000.0.28f1 (f336aca0cab5)
+
+
+--- Basic/ClientDriven/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.28f1
+m_EditorVersionWithRevision: 6000.0.28f1 (f336aca0cab5)
+
+
+--- Basic/DistributedAuthoritySocialHub/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.24f1
+m_EditorVersionWithRevision: 6000.0.24f1 (11fa355cd605)
+
+
+--- Basic/DynamicAddressablesNetworkPrefabs/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2022.3.27f1
+m_EditorVersionWithRevision: 2022.3.27f1 (73effa14754f)
+
+
+--- Deprecated/README.md ---
+# ‼️Deprecated Samples‼️
+
+Deprecated samples are samples no longer maintained and supported by Unity because they are obsolete, address currently unsupported use cases, or rely on deprecated technologies.
+
+Deprecated samples will not be updated, nor support will be provided. However they can still be useful as a point of reference if you're using an old version of the Unity Engine or deprecated workflows.
+
+## Goal and Purpose
+
+The goal of this folder is to aggregate samples that are no longer supported, but that can still be useful. They are made available as a point of reference for old workflows. 
+
+**These samples come with no maintenance guarantee and are _not_ recommended for production use.**
+
+This means:
+- They are unsupported and may be changed or removed at any time. 
+- They are not rigorously tested against the latest Unity Editor version, platforms, or devices.
+- They are not maintained to the same quality or standards as those labelled as _Production-Ready_.
+- They may address unsupported use cases.
+
+For education on game features critical to your production, please use our **Production-Ready** [Bitesize samples](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction/), [Boss Room](https://docs-multiplayer.unity3d.com/netcode/current/learn/bossroom/bossroom/), and [documentation](https://docs-multiplayer.unity3d.com/). 
+
+To connect, find support and share feedback, join the multiplayer community on the [Unity Discord](https://discord.gg/mNgM2XRDpb) and [Unity Forum](https://forum.unity.com/forums/multiplayer.26/).<br> <center>
+
+### Invaders Overview
+
+The [Invaders Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Deprecated/Invaders) was a UNET sample that has been converted over to NGO. Learn more about game flow, modes, unconventional networked movement, and using a shared timer in this sample.
+<br><br>
+
+## Links discovered
+- [Bitesize samples](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction/)
+- [Boss Room](https://docs-multiplayer.unity3d.com/netcode/current/learn/bossroom/bossroom/)
+- [documentation](https://docs-multiplayer.unity3d.com/)
+- [Unity Discord](https://discord.gg/mNgM2XRDpb)
+- [Unity Forum](https://forum.unity.com/forums/multiplayer.26/)
+- [Invaders Sample](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/tree/main/Deprecated/Invaders)
+
+--- Deprecated/Invaders/README.md ---
+![Banner](Resources/invaders_banner.png)
+<br><br>
+
+# Invaders
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3%20LTS-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/2022.3.0)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.8.1-57b9d3.svg?logo=unity&color=2196F3)](https://github.com/Unity-Technologies/com.unity.netcode.gameobjects/releases/tag/ngo%2F1.8.1)
+[![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.6.0-57b9d3.svg?logo=github&color=brightgreen)](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/releases/tag/v1.6.0)
+<br><br>
+
+This is a UNET sample project converted to Netcode for GameObjects. The Invaders sample is a sample project designed to demonstrate game flows and game modes.
+<br><br>
+
+# Sample Overview
+
+In this sample, learn more about:
+
+- Simple start, lobby, and finish flow with Netcode for GameObjects using Scene Management
+- Unconventional movement networked
+- Client driven movement with Client Network Transform
+- Shared timer between clients in a client-sided predicted way
+<br><br>
+---
+### 💡 Documentation
+Check out the [Invaders sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-invaders) for a more in-depth technical breakdown of our engineering decisions and why the sample works the way it does.
+
+---
+<br>
+
+## Exploring the Sample
+The entry scene for this game is the InitBootStrap scene. From there a game can be hosted or an existing game can be joined. Move back and forth using the A and D keys, and shoot using the spacebar. Shoot enemies to gain points, and avoid their bullets to avoid losing health (and eventually losing)!
+<br><br>
+
+---
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [Banner](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize/blob/main/Deprecated/Invaders/Resources/invaders_banner.png)
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-2022.3%20LTS-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.8.1-57b9d3.svg?logo=unity&color=2196F3)
+- [![LatestRelease](https://img.shields.io/badge/Latest%20%20Github%20Release:-v1.6.0-57b9d3.svg?logo=github&color=brightgreen)
+- [Invaders sample documentation](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-invaders)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Deprecated/Invaders/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2022.3.27f1
+m_EditorVersionWithRevision: 2022.3.27f1 (73effa14754f)
+
+
+--- Experimental/README.md ---
+# ‼️Experimental Samples‼️
+
+Experimental samples are new samples or experimental modifications made to mature samples. Unity does not support Experimental samples because they are in the early stages of development, address currently unsupported use cases, or rely on experimental technologies.
+
+Experimental samples can go through many changes before they are ready to be released and labelled as _Production-Ready_. They might pass the verification requirements; however, they could be deprecated. There is no guarantee for future support, so you should not use experimental samples in production.
+
+## Goal and Purpose
+
+The goal of this folder is to aggregate ideas and small projects in development to accelerate community access. They are made available to foster discussion and gauge interest in particular areas. 
+
+**These samples come with no quality guarantee and are _not_ recommended for production use.**
+
+This means:
+- They are unsupported and may be changed or removed at any time. 
+- They are not rigorously tested against Unity Editor versions, platforms, or devices.
+- They are not maintained to the same quality or standards as those labelled as _Production-Ready_.
+- They may address unsupported use cases.
+
+For education on game features critical to your production, please use our **Production-Ready** [Bitesize samples](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction/), [Boss Room](https://docs-multiplayer.unity3d.com/netcode/current/learn/bossroom/bossroom/), and [documentation](https://docs-multiplayer.unity3d.com/). 
+
+To connect, find support and share feedback, join the multiplayer community on the [Unity Discord](https://discord.gg/mNgM2XRDpb) and [Unity Forum](https://forum.unity.com/forums/multiplayer.26/).<br> <center>
+| -- | 
+
+## Contributing
+
+If you're a Unity employee, click [here](https://confluence.unity3d.com/display/MTT/Experimental+Folder+Contribution+Guidelines) for contribution guidelines.
+
+
+## Links discovered
+- [Bitesize samples](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction/)
+- [Boss Room](https://docs-multiplayer.unity3d.com/netcode/current/learn/bossroom/bossroom/)
+- [documentation](https://docs-multiplayer.unity3d.com/)
+- [Unity Discord](https://discord.gg/mNgM2XRDpb)
+- [Unity Forum](https://forum.unity.com/forums/multiplayer.26/)
+- [here](https://confluence.unity3d.com/display/MTT/Experimental+Folder+Contribution+Guidelines)
+
+--- Experimental/Asteroids-CMB-NGO-Sample/README.md ---
+# Getting Started
+This project is built to demonstrate Netcode for GameObjects (NGO) running in distributed authority mode. 
+
+## There are several distributed authority NGO mode demos:
+- **Asteroids:** A more "full feature" usage example of distributed authority.
+- **Parenting:** A parenting example in ditributed authority where everything is owner authoritative.
+- **Ownership:** Demonstrates various ownership permissions along with how "showing" and "hiding" objects works.
+- **Deferred Despawn:** A simpler sub-set from the Asteroids demo assets to demonstrate the deferred despawn feature.
+- **Scene Loading:** Demonstrates how NGO's integrated scene management works in distributed authority mode and how session owners control scene events.
+- **Stress Test:** A very simple spawning scale stress test.
+
+## Running Demos
+**Required Editor: Unity 6 (6000.0)**
+After cloning the repository, add the project to your Unity Hub and open it like any other project. Make a stand alone build and run.
+
+### Connect Mode Options:
+When you start any of the demos/samples you will always be presented with a "Mode" button in the top left corner and a "Main Menu" button in the top right corner. If you click the "Main Menu" button it will take you back to the demo scene selection screen. If you click the "Mode" button then you will be presented with several options of what mode you want to test:
+
+![image](https://media.github.cds.internal.unity3d.com/user/3057/files/87fd2ec4-bdb6-435f-ba72-b6300d367e5b)
+
+- **DAHost:** Primarily used for development. This mode will provide you with the option to start a "DAHost" (a host that mocks the cloud state service) or a "DAClient" (a standard client that runs in distributed authority session mode). 
+- **DAHostRelay:** Primarily used for development and network performance comparison. This acts just like the DAHost mode with the option to connect to a relay service. This provides a reasonable context when comparing network performance relative to when connected to a live service (the UGS backend cloud state service for distributed authority sessions).
+- **ServiceLocal:** Primarily for development when testing a locally running service (contact @noel.stephens if you are interested in setting this up).
+- **ServiceLive:** Connect to or start a cloud state service network session. This will provide you with a session name text field and a connect button. If you want to start a new session, enter in the name of the session and hit "connect". If you want to join an existing session perform the same steps (enter the session name to connect to and click "connect").
+
+![image](https://media.github.cds.internal.unity3d.com/user/3057/files/29bccbd7-2c90-463f-80f7-1cf52e5c954f)
+
+   
+# Project Overview
+The most complex full featured testing grounds/sandbox scene is the `Asteroids` scene asset located in the Assets\Scenes folder:
+
+<img width="416" alt="Screenshot 2024-07-11 at 16 04 49" src="https://github.com/user-attachments/assets/6041b766-b540-46fc-a823-d74eeab7442d">
+
+## Bootstrap scene
+Most of the time the `Asteroids` scene is the best way to test all of the POC feature functionality. However, there are other scenes that are used for testing purposes (or you might want to create your own for a new feature or to simplify testing). The `BootStrap` scene's camera contains the `BootstrapHandler` component that defines what scenes are presented in the initial first screen GUI when running a stand alone build (and the `BootStrap` scene is still in the index 0 slot of the scenes in build list):
+
+<img width="731" alt="Screenshot 2024-07-11 at 16 16 33" src="https://github.com/user-attachments/assets/4d5515c4-c38f-4209-9a83-90325e4a7a29">
+
+## Test Scenes and Scripts
+The test scenes are located in the Assets\Scenes\Tests folder along with test specific scripts in the Assets\Scenes\Tests\Scripts. If you want to create a test scene to validate a specific new feature (or the like), then this would be the area to add it. It might be easier to move the `BootstrapScene` the 0 index of the scenes in build list and add your newly created test scene to that (for rapid access/development if you are using stand alone builds).
+
+## Asteroids Scene
+For the most part, the content is developed like a standard NGO enabled game. Due to some of the differences in distributed authority vs cient-server NGO operation modes, there are a few things to take into consideration/be aware of:
+
+### Object Pools:
+In order to obtain the most performant response time in spawning objects (especially with things like POC interest management), almost everything that can be spawned has an associated object pool. Each pool system contains an `ObjectPoolSystem` component that is derived from a `MonoBehaviour` and implements the `INetworkPrefabInstanceHandler` interface. Pool systems only require that an existing `NetworkManager` instance be available in order to function properly. `ObjectPoolSystem` also provides you with the ability to persist the pool between network sessions (i.e. hitting the `X` and reloading the `Asteroids` scene) in order to reduce development iteration time when using large pools that can take awhile to instantiate. Check the `DontDestroyOnSceneUnload` property to enable this on a per `ObjectPoolSystem` basis.
+
+<img width="728" alt="Screenshot 2024-07-11 at 16 18 07" src="https://github.com/user-attachments/assets/6bf6929a-d30f-4c06-a8ff-66b511489dda">
+
+You can easily create additional pools by duplicating an existing prefab, renaming it, changing its assigned netowrk prefab to pool, and updating how many instances the pool should start with. The `ObjectPoolSystem` component will dynamically increase its pool size if the demand goes beyond the initial pool size settings.
+
+### Ship Controls:
+The ship controls are as follows:
+
+**WASD or Arrow Keys:** Activates ship thrusters. Momentum is gained over time.
+
+<img width="426" alt="Screenshot 2024-07-11 at 16 26 30" src="https://github.com/user-attachments/assets/f86db077-7026-4316-b463-b461ea8e872d">
+
+**Space Bar:** Fires lasers.
+
+<img width="434" alt="Screenshot 2024-07-11 at 16 28 33" src="https://github.com/user-attachments/assets/37311c24-9d08-446c-a650-3142806568c1">
+
+**{G}rab-Tractor:** The `(G)` key activates the tractor beam that lets a ship grap a mine. This feature was added to demonstrate the client-driven ownership transfer. If a mine is not owned by the client grabbing it, then the client will claim ownership over the mine as it pulls it in to be locked into place.
+
+<img width="421" alt="Screenshot 2024-07-11 at 16 32 19" src="https://github.com/user-attachments/assets/e936ef8b-cf6d-415f-bed3-9c96949ac958">
+
+### Display toggles
+
+**{O}wnership Overlay:** The `(O)` key toggles ownership overlays on all objects. The color corresponds to the owning client for each object.
+
+<img width="911" alt="Screenshot 2024-07-11 at 16 35 47" src="https://github.com/user-attachments/assets/8b68b92a-3221-47e6-bc98-36db44221e6b">
+
+**Runtime {N}etwork Stats Monitor:** The `(N)` or `(TAB)` key toggles the RNSM tool.
+
+**{M}ap Interest HUD:** The `(M)` key activates an interest heads up display that will pop up in the bottom right corner of the render view. 
+Hitting `(M)` once enables the transparent background view:
+
+<img width="789" alt="Screenshot 2024-07-11 at 16 41 46" src="https://github.com/user-attachments/assets/331e7bbf-72dd-4402-bb53-46485e0127ad">
+
+Hitting `(M)` a second time disables the view.
+
+**{ [ } & { ] } Zoom Keys:** The `([)` key zooms in and the `(])` key zooms out when the overlay interest map is enabled.
+
+<img width="779" alt="Screenshot 2024-07-11 at 16 44 18" src="https://github.com/user-attachments/assets/7f2ae57d-5356-46b9-8706-64e05889f5f4">
+
+**{`~`} Runtime Console Log:** Hitting the back quote/`(~)` key  will toggle the runtime log output for the console log.
+
+
+## Links discovered
+- [image](https://media.github.cds.internal.unity3d.com/user/3057/files/87fd2ec4-bdb6-435f-ba72-b6300d367e5b)
+- [image](https://media.github.cds.internal.unity3d.com/user/3057/files/29bccbd7-2c90-463f-80f7-1cf52e5c954f)
+
+--- Experimental/DedicatedGameServer/README.md ---
+<br><br>
+
+# Dedicated Game Server
+
+[![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.3f1%20-57b9d3.svg?logo=unity&color=2196F3)](https://unity.com/releases/editor/whats-new/6000.0.3)
+[![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.9.1-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/about)
+<br><br>
+
+The Dedicated Game Server sample project uses Netcode For GameObjects (NGO). It also demonstrates the structure of a project that uses the dedicated server and the tools that you can use to configure it.
+<br><br>
+
+# Sample Overview
+
+The dedicated server sample scene contains a small maze with interactive doors and patrolling AI characters. Player characters can move around and open or close the doors using the switches nearby. You can use this sample scene to learn how to do the following:
+
+- Integrate features from the [Dedicated Server](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/index.html) and [Multiplayer Play Mode](https://docs.unity3d.com/Packages/com.unity.multiplayer.playmode@1.0/manual/index.html) packages with Netcode for GameObjects to with the dedicated server architecture.
+* [Set default comand line arguments](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/cli-arguments.html)
+* Use [multiplayer roles](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/multiplayer-roles.html).
+* Use the dedicated server with [multiplayer play mode](https://docs-multiplayer.unity3d.com/mppm/current/about/).
+* Strip GameObjects from the clients and server.
+- Integrate a project that uses the dedicated server with the [Game Server Hosting](https://docs.unity.com/ugs/en-us/manual/game-server-hosting/manual/welcome) and [Matchmaker](https://docs.unity.com/ugs/en-us/manual/matchmaker/manual/matchmaker-overview) services.
+<br><br>
+
+## Exploring the Sample
+
+The dedicated server sample has a different workflows when you select the Client or Server multiplayer role. Both servers and clients start at the StartupScene, where Unity initializes the relevant systems. 
+
+### The server multiplayer role
+Unity moves the server to the game scene, where it waits for clients to connect. 
+
+### The client multiplayer role
+Unity moves clients to the Metagame scene. From here you can use the main menu to connect to a server. Select the **Find Match** to join a matchmaking queue to connect to a server. Select **Join with Direct IP** to connect to a server directly when you know its IP address. In both cases Unity moves clients to the game scene when the client connects.
+
+#### Autoconnect mode
+Use the autoconnect mode to automatically connect as a client to a local server without moving to the Metagame scene. You can use this mode to speed up testing.
+
+To enable autoconnect mode on the main editor, do the following:
+
+1. Set the editor [multiplayer role](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/multiplayer-roles.html) to **Client**.
+2. Open the StartupScene
+3. In the Hierarchy window, select the **ApplicationEntryPoint** GameObject.
+4. In the **ApplicationEntryPoint** component, select the **Autoconnect if client** checkbox .
+
+---
+<br>
+
+## Set up the dedicated game server sample
+
+### Register the project with Unity Gaming Services (UGS)
+
+This sample uses the following services from Unity Game Services (UGS) to help connect between players: 
+
+- Game Server Hosting
+- Matchmaker
+ 
+To use these services inside your project, [create an organization](https://support.unity.com/hc/en-us/articles/208592876-How-do-I-create-a-new-Organization-) inside the Unity Dashboard. 
+
+#### Set up the Game Server Hosting service
+
+To set up the Game Server Hosting (Multiplay) service, do the following: 
+1. [Test the dedicated server sample in a build](#test-dedicated-server-sample). 
+2. Generate the build that Unity uploads to the Game Server Hosting service. To learn how to do this, refer to [Create a build](https://docs.unity.com/ugs/en-us/manual/game-server-hosting/manual/guides/create-a-build).
+
+#### Set up the Matchmaker service
+
+Use the Matchmaker service to connect clients to the servers hosted by Game Server Hosting and control when a server starts. To use this service, [install and set up Matchmaker](https://docs.unity.com/ugs/en-us/manual/matchmaker/manual/get-started).
+
+ **Note**: Name your Queue "Queue01" for the sample to use it automatically.
+
+---
+<br><br>
+ <a name="test-dedicated-server-sample"></a>
+## Test the dedicated game server sample in multiplayer
+
+To run the dedicated game server sample as a multiplayer game, you can use [Multiplayer Play Mode](https://docs-multiplayer.unity3d.com/mppm/current/about/) to run multiple instances of the game locally, or connect to a friend over the internet. For more information, refer to [Testing locally](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/testing/testing_locally).
+
+To change the total number of players allowed in a single session, do the following:
+1. Open the StartupScene
+2. In the Hierarchy window, select the **ApplicationEntryPoint** GameObject.
+3. In the **ApplicationEntryPoint** component, adjust the numbers in the **Min Players** and **Max Players** fields.
+<br><br>
+
+### Use Multiplayer Play Mode to test the dedicated game server sample
+
+Multiplayer Play Mode allows quicker testing iterations without requiring to generate builds. To use this feature, you will first have to [enable one or more virtual players](https://docs-multiplayer.unity3d.com/mppm/current/virtual-players/). Each of those players can be a client or a server. To start testing, assign the server role to either the main editor or a player, then assign the client role to the rest. You can assign those roles using the same dropdown as the one on the main editor. You will then be able to have them connect to each other via direct connection, or have clients connect to a server hosted by Game Server Hosting via Matchmaker if both services are already setup in the dashboard (see the above sections about setting up Game Server Hosting and Matchmaker). However, make sure that the server build that is hosted is up to date.
+
+### Test the dedicated server sample in a build
+
+To generate a build to test the sample locally or over the internet do the following: 
+1. Open the Build window (menu: **DedicatedGameServerSample** > **Builds**). 
+2. Select the **Toggle...** option for the platform(s) you want to build for.
+3. Select **Build Client(s**), **Build Server(s**), or **Build Client(s) and Server(s)** to generate the builds.
+
+### Set up multiplayer in a local server
+
+After you create a build to test the sample, you can run a server build to host the server and run client builds to join the server. To connect to a local server, select **Join with Direct IP** and use the IP address 127.0.0.1.
+
+### Set up multiplayer over the internet
+
+To test the dedicated server sample in multiplayer over the internet, every client needs to use the same build version. This means you need to share the build executables to each client. Once each client has the same build, you can connect using one of the following ways: 
+* Use a direct IP address to connect to a server hosted by one of the playtesters. Note: the person hosting the server will need to open their ports and share their public IP address to allow clients to connect to the server. 
+* Use the Matchmaker and Game Server Hosting services to connect to a server on the cloud.
+Both of these options work in the editor and in Multiplayer Play Mode clones, but a build version stays the same acrross multiple clients. This reduces the risk of incompatibilities if you make any changes in the editor.
+
+#### Use a direct IP address
+
+To use a public IP address to connect players to the server in a client build, do the following: 
+1. Run the server executable on a player's machine.
+2. [Open the player's port](https://docs-multiplayer.unity3d.com/netcode/current/learn/faq/#what-are-recommendations-for-getting-a-game-connecting-over-the-internet) on the server to allow other players to connect to it.
+3. On Clients, enter the opened port and public IP address of the server in the **Join with Direct IP** screen of the game.
+
+
+---
+
+### 💡 Bitesize Readme
+Check out our main [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme) for more documentation, resources, releases, contribution guidelines, and our feedback form.
+
+---
+<br>
+
+[![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)](https://docs-multiplayer.unity3d.com/netcode/current/learn/bitesize/bitesize-introduction)
+[![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)](https://forum.unity.com/forums/multiplayer.26/)
+[![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)](https://discord.gg/FM8SE9E)
+
+
+## Links discovered
+- [![UnityVersion](https://img.shields.io/badge/Unity%20Version:-6000.0.3f1%20-57b9d3.svg?logo=unity&color=2196F3)
+- [![NetcodeVersion](https://img.shields.io/badge/Netcode%20Version:-1.9.1-57b9d3.svg?logo=unity&color=2196F3)
+- [Dedicated Server](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/index.html)
+- [Multiplayer Play Mode](https://docs.unity3d.com/Packages/com.unity.multiplayer.playmode@1.0/manual/index.html)
+- [Set default comand line arguments](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/cli-arguments.html)
+- [multiplayer roles](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/multiplayer-roles.html)
+- [multiplayer play mode](https://docs-multiplayer.unity3d.com/mppm/current/about/)
+- [Game Server Hosting](https://docs.unity.com/ugs/en-us/manual/game-server-hosting/manual/welcome)
+- [Matchmaker](https://docs.unity.com/ugs/en-us/manual/matchmaker/manual/matchmaker-overview)
+- [multiplayer role](https://docs.unity3d.com/Packages/com.unity.dedicated-server@1.0/manual/multiplayer-roles.html)
+- [create an organization](https://support.unity.com/hc/en-us/articles/208592876-How-do-I-create-a-new-Organization-)
+- [Create a build](https://docs.unity.com/ugs/en-us/manual/game-server-hosting/manual/guides/create-a-build)
+- [install and set up Matchmaker](https://docs.unity.com/ugs/en-us/manual/matchmaker/manual/get-started)
+- [Multiplayer Play Mode](https://docs-multiplayer.unity3d.com/mppm/current/about/)
+- [Testing locally](https://docs-multiplayer.unity3d.com/netcode/current/tutorials/testing/testing_locally)
+- [enable one or more virtual players](https://docs-multiplayer.unity3d.com/mppm/current/virtual-players/)
+- [Open the player's port](https://docs-multiplayer.unity3d.com/netcode/current/learn/faq/#what-are-recommendations-for-getting-a-game-connecting-over-the-internet)
+- [Bitesize Samples GitHub Readme](https://github.com/Unity-Technologies/com.unity.multiplayer.samples.bitesize#readme)
+- [![Documentation](https://img.shields.io/badge/Unity-bitesize--docs-57b9d3.svg?logo=unity&color=2196F3)
+- [![Forums](https://img.shields.io/badge/Unity-multiplayer--forum-57b9d3.svg?logo=unity&color=2196F3)
+- [![Discord](https://img.shields.io/discord/449263083769036810.svg?label=discord&logo=discord&color=5865F2)
+
+--- Experimental/Asteroids-CMB-NGO-Sample/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.5f1
+m_EditorVersionWithRevision: 6000.0.5f1 (17028576122a)
+
+
+--- Experimental/DedicatedGameServer/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.3f1
+m_EditorVersionWithRevision: 6000.0.3f1 (019aa96b6ed9)

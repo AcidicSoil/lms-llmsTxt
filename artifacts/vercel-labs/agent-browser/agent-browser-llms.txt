@@ -1,14 +1,14 @@
 # Agent Browser
 
-> agent-browser empowers AI agents to automate web tasks with precision, using a fast Rust CLI that interfaces with Chromium via Playwright. It enables AI-driven workflows such as navigating sites, interacting with elements using semantic or ref-based selectors, and capturing snapshots for deterministic LLM interactions. The tool supports isolated sessions, network interception, authentication handling, and real-time streaming for human-AI collaboration — all while being cross-platform and performant.
+> The primary purpose of agent-browser is to provide AI agents with a fast, reliable, and deterministic interface for web automation. It enables agents to navigate, interact with, and extract data from web pages using semantic selectors and snapshot-based element references, which are optimized for LLM-driven workflows. The tool also supports advanced features like session isolation, streaming previews, and CDP connections, making it suitable for complex automation tasks including API testing, login flows, and real-time browser interactions.
 
 **Remember:**
-- Headless browser automation
-- Semantic locators (ARIA roles, text, labels)
-- Snapshot-based element refs (@e1, @e2)
-- Agent mode with JSON output for AI integration
-- Daemon-client architecture (Rust CLI + Node.js daemon)
-- CDP mode for remote browser control
+- Agent Browser Automation
+- Semantic Locators (role, text, label, testid)
+- Snapshot-based Element References (@e1, @e2)
+- Rust CLI + Node.js Daemon Architecture
+- Headless vs Headed Mode
+- CDP (Chrome DevTools Protocol) Mode
 
 ## Docs
 - [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.

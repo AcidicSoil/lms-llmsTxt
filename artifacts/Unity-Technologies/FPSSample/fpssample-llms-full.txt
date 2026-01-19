@@ -1,0 +1,3409 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- Documentation/GettingStarted.md ---
+# Getting Started Guide
+
+## The game
+
+The FPS Sample is a multiplayer only game. There is no single player mode and
+you cannot play the game without being connected to a server. It is a pretty
+traditional shooter game with two different characters: The Terraformer and
+The Robot. Each have their own weapon with a primary and secondary fire mode.
+There are two game modes:
+
+1. Team deathmatch
+
+    Two teams fights for frags. Winner is team with most scores when time is up.
+
+2. Assault mode
+
+    One team is attacking, another is defending. Attackers win by capturing all 3 bases before time runs out. Defenders win by preventing that. Attackers can capture a base by having one or more players in the base. Defenders can take capture progress back by being in the base. Once a base is captured completely the battle proceeds to the next base.
+
+There are two levels in the game. The primary level is built for Assault mode. It is called Level_01. The other level is mainly for testing purposes and is much smaller both in size and assets. It is called Level_00.
+
+## Playing the game
+
+If you have a full build of the game, it will launch into the menu and you can either
+connect to a server or create a new game. If you create a new game, it will launch a
+server on your machine. If your firewall settings permit, other people on your LAN
+can now connect to your IP address and play.
+
+Key | Function
+--- | --- 
+WASD | Player movement
+Shift | Sprint
+Mouse | Look
+LeftClick | Primary fire
+RightClick | Secondary fire
+Space | Jump
+V | Melee attack
+H | When in captured base or spawn: change character
+Enter | Open chat
+Tab | Show scores
+ESC | Menu
+F1 | Open console
+Alt+Enter | Toggle full screen
+
+## Understanding the workflow: Standalone and AssetBundles
+
+Working with a multiplayer game in Unity means you will be working a lot with the
+standalone player. To make a client and a server that talks over a network connection there
+has to be two processes. To make this workflow as frictionless as possible, we
+use assetbundles for all the content (levels and characters etc.). 
+The only thing that goes into the standalone player is the code and a single, very small, bootstrapper scene. 
+Only if you have made changes to a level or a prefab do you have to rebuild the assetbundles. 
+(And you can rebuild selectively -- to some degree.)
+
+The Project Tools window is used to make this workflow function in practice. The most commonly used functions here are:
+
+Button | Function
+--- | --- 
+__Open__ | Open all the scenes that make up a level
+__Levels [force]__ | Build all the levels into bundles
+__Assets [force]__ | Build all prefabs into bundles (players etc)
+__All [force]__ | Build all levels and prefabs into bundles
+__Build game__ | Build code and bootstrapper scene
+__Run__ | Start game in _boot mode_. No level loaded, only bootstrapper.
+__Open build folder__ | Open the folder containing the standalone player
+__Update Registry__ | Updates the registry used when building prefab bundles. 
+
+Updating the registry only needs to be done when new game elements (ect. Character, Replicated entity, Hero definition) 
+are added to the project  
+
+
+From the _boot mode_ a standalone player can enter other modes. Some examples:
+
+This will enter preview mode on level_01. This is equivalent to pressing play in the editor when level_01 is open.
+```
+preview level_01
+```
+
+The following will enter client mode and connect to an ip address
+```
+connect 127.0.0.1
+```
+
+And finally, we can start a server by typing
+```
+serve level_00
+```
+
+These are the main modes. In practice one will most often use the __Quick Start__ section on the
+Project Tools window to launch different combinations of clients and servers. The way this works is that _command line arguments_ are passed on to the standalone player. Any command line argument
+that is prefixed with `+` will become an command on the console. At the very bottom of the
+Project Tools window the actual command line arguments are shown. This is a good place to learn
+how the quick start tool functions.
+
+## The Console, Commands and Vars
+
+To open the console at any time, press __F1__.
+
+The console support __commands__ and __variables__. As an example the command `quit` will quit the game. The console has __tab__ completion. Here are some of the commonly used commands:
+
+
+Command | Function
+--- | --- 
+`help` | Show list of all commands
+`serve <levelname>` | Enter servermode with the named level
+`connect <host>` | Enter client mode and connect to host
+`preview <levelname>` | Enter preview mode for testing levelname
+`nextchar` | Toggles character
+`exec <file>` | Executes the commands in file as if they were typed on console
+`respawn` | Force a respawn
+`thirdperson` | Toggle thirdperson view (for debugging)
+`runatserver <command>` | Executes the command on the server's console
+`vars` | Show all vars
+
+There are many more variables than commands. Here are a some of the most commonly used
+
+Variable | Function
+--- | --- 
+`client.debug` | Use 1, 2, 3 to get lots of spam about client networking
+`client.matchmaker` | Set this to the matchmaker `host:port` endpoint
+`client.playername` | Your visible player name
+`client.updaterate` | Max rate (bytes/sec) client wants from server (30000)
+`client.updatesendrate` | Rate (packets/sec) client wants from server (20)
+`config.fov`| Field of view
+`config.mousesensitivity` | Mouse sensitivity
+`game.assault.minplayers` | Players needed before starting assault round
+`game.assault.roundlength` | Length of a game round in seconds
+`game.dm.minplayers` | Players needed before starting deathmatch round
+`game.dm.roundlength` | Length of a game round in seconds
+`game.modename` | Can be either `deathmatch` or `assault`
+`net.stats`| Set to > 0 to get network stats/graphs
+`r.vsync` | Number of vblanks to sync to. 0 for no sync
+`r.resolution` | Current resolution, e.g. `1920x1080`
+`server.port` | The port to listen on (7912)
+`server.quitwhenempty` | Set to 1 to make server quit when last player leaves
+`server.recycleinterval` | If > 0 server will shut down after this seconds when no players
+`server.sqp_port` | Server Query Protocol poert (7912)
+`server.tickrate` | The tickrate of the server (and client)
+`show.compactstats` | Set to 1 to show FPS and RTT in top left corner
+`show.fps` | Show some fps stats if > 0
+`sound.debug` | Show debug info about sounds
+
+## Making builds
+
+To make a full build of the game, there is some menu items under __FPS Sample__ > __BuildSystem__. Use __CreateBuildWindows64__ to make a full windows build, for example.
+
+These menu items are directly available as functions that can be called from the commandline of Unity if you want to integrate with a build machine.
+
+
+
+--- Packages/com.unity.transport/Documentation/examples.md ---
+This is the home page of your new docs
+
+
+--- CHANGELOG.md ---
+# Changelog
+
+This file contains a summary of the changes that went into each release.
+
+## [0.3.1] - 2019-03-11
+
+- Fixed changelog not being properly updated (missing entries under 0.3.0 heading)
+- Updated to Unity 2018.3.8f1
+- Updated to latest Matchmaker example code
+
+## [0.3.0] - 2019-02-28
+
+- Updated HDRP to version 4.6
+- `net.stats 4` now show breakdown of incoming update packets
+- Updated to Unity 2018.3f2
+- Fix for too agressive framenting of network packets (would fragment before packet was full)
+- Improved compression of Schemas (sent out the clients the first time a new entity type is spawned)
+- Fixed network tests that were broken at last release
+- Added `server.disconnecttimeout` to allow tuning disconnect time
+- New type of headless client, "thinclient", to enable stresstesting of server. Start e.g. using `-batchmode -nographics +thinclient +debugmove 1 +connect localhost +thinclient.requested 16` to get 16 client connections.
+- Changed `client.updatesendrate` (number of updates from server per second) to `client.updateinterval` (time in simticks between updates from server). Old default was 20 updates/sec and new default is 3; with tickrate of 60 default is thus unchanged.
+- The oddly named `owner` to `server` in ServerConnection
+- Tweaks to Linux build steps to align with needs of Multiplay (naming etc.)
+- Game now looks for `-port` and `-query_port` for port numbers for game resp server query port.
+- Lots of optimizations to delta compression and snapshot generation on server
+- Redid all the old particles in with cool new Visual Effect Graph
+- Fix for crashes in netcode when client had very long stalls
+- Converted all of the UI to use Text Mesh Pro
+- Server Query Protocol now defaults to the port offset (+10) used by Multiplay
+- Fix and from (thanks: carlself) removing hang when joining an 'old' server
+- Fix for some elements of menu sometimes becoming unresponsive
+- UNITY_DISABLE_AUTOMATIC_SYSTEM_BOOTSTRAP no longer set in project settings. This means ECS systems automatically starts and runs in edit mode (Unless [DisableAutoCreation] attribute is set, which it is for most of our game systems)
+- HitCollision no longer uses Unity collision system for queries against moving colliders. For lag compensation server needs to do queries using different historical data and moving Unity physics colliders multiple times per frame is very inefficient. Now queries are handled using custom collision primitives and burst jobs. The structure of the collider and history data is still WIP.
+- Unified how ECS components are serialized. Serialized components should now implement either IReplicatedComponent, IPredictedComponent or IInterpolatedComponent and will automatically be serialized appropriately (if attached to entity with replicatedentity component). IMPORTANT: It is currently also required to define a static methods _CreateSerializerFactory_ that returns a serializer factory for the component type. This is something we are working on getting rid of.
+- Removed support for replicated monobehavior. All serialization is now performed by ECS component.
+- Config var debugmove 2  now also makes character shoot secondary weapon
+- UserCommand buttons now uses single int property together with enum to defined pressed buttons. 
+- Removed sprint button from UserCommand. This is now handled by button Ability1.
+- Removed DebugPrimitive module from project. Not used and needed cleanup.
+- Added VFXSystem that manages VFX assets. Currently has interface for starting spatial and hitscan effects. 
+- SpatialEffect and HitscanEffect now uses VFX system. Pools of effect prefabs are no longer created as effects can be triggered without gameobject instantiation (Yay!)
+- SpatialEffect and HitscanEffect registries removed.
+- Character properties that should be replicated to all clients have been moved to to new ECS component CharacterRepAll
+- Replicated MonoBehavior components converted to ECS components. Including GameEntityType, ReplicatedEntity, RagdollState, SpectatorCam, DamageHistory, HealthState, UserCommand, HitCollisionOwner , TeleporterPresentation, Moveable.
+- GameMode, PlayerState and CapturePoint are now replicated through an ECS component (they need to stay MonoBehavior as they contain strings properties and we don’t have good solution for storing strings on data components atm)
+- All abilities now have a request phase that is executed before movement update. This allows for multiple different movement abilities (before Ability_Movement was always active)
+- Renamed DefaultBehaviorController to AbilityCollection. AbilityCollection now has a general way to handle all abilities (before there where hardcoded handling of e.g. movement and death). All abilities are registered in one list and what abilities are active are determined by their requests (acquired in the request phase) and rules for what other abilities an ability can run together with and what it can interrupt (This is setup on AbilityCollection) 
+- Setup of buttons that should trigger an ability is now setup on each individual ability scriptable object.
+- Item registry removed (Items are not currently being replicated - they will probably be when weapon switching is implemented. All abilities are owned and replicated by AbilityCollection)
+- Added new module called Presentation. This is responsible for creating and attaching presentation geometry and logic to replicated entities. Entities can have different presentation depending on platform (e.g. Server, Client) and other properties. Only grenades use this atm. 
+- Grenades are now replicated as pure ECS entity. Client presentation handled by Presentation module.
+- Fixed error spam from BuildWindow after deleting scene. Build window now regenerates level list when it finds invalid level info.
+- Registries are now automatically generated before bundled are build (Manual generation can be triggered from _FPS Sample->Registries->Prepare Registries_). Manual fix-up of registries no longer needed after deleting registered objects.
+- ReplicatedEntityFactories are now stored in bundles. The goal is to generalize creation of entities (from prefabs or ReplicatedEntityFactory). Note: ReplicatedEntityFactory is currently used to create pure entities, but a prefab like workflow might be used in the future.   
+- WeakAssetReference are now blitable (struct and guid saved as ints) and can be stored on pure ECS components.
+
+
+## [0.2.0] - 2018-11-29
+- Removed “Update Registries” button from Project Tools. Prefabs and scriptable objects that should be referenced by a registry now each have custom inspector that is used to register them.
+- Removed support for client and server specific versions of the same replicated prefab. 
+- Characters now all use the same replicated character prefab (character.prefab). Different non-replicated presentation entities (with CharPresentation component) are created on server and client depending on hero type and view mode (1P or 3P). Characters require at least one CharPresentation that is used to update the animation state. Item presentation (skeleton, mesh and effects) are also setup as character presentation.
+- Character behaviours (or abilities - naming is quite a mess atm) are now instantiated as a separate replicated entity (DefaultCharBehaviourController). This creates various sub behaviors, but all replication is handled by DefaultCharBehaviourController.
+- Items are now created as replicated entities. They only contains two behaviours that are attached (in a currently hacky way) to the characters DefaultCharBehaviourController.
+- All character behaviour data are now IComponentData attached to “pure” ECS entities.
+- ReplicatedEntity property predictingPlayerId is now replicated. This is used to define what client should predict a given replicated entity. Clients add ServerEntity component to replicated entities it receives where predictingPlayerId is its on playerid (before this was done by client using controlled entity reference)
+- Various editor tools have been moved to separate tools folder
+- Updated Entities package to 0.0.12-preview.18 and package is no longer internalized.
+- Melee can now be triggered from sprint
+- Added simple emote framework. Emotes can be triggered by buttons J and K. Still work in progress
+- Removed all the old UNet stuff
+- Made `server.maxclients` actually work.
+- Added a serverlist to the main menu. List uses Unity Server Query Protocol (USQP) to check servers for game mode, number of players etc.
+- Switched to Unity2018.3b12 allowing enabling late sync for a good speedup on some configs.
+- Added GDRP compliance button (only works if built with a valid project id)
+- Fixed bugs where a failed join would leave client in bad state (unable to connect again)
+- Fix for `disconnect` console command not working. Added leave game option to ingame menu.
+- Some efforts to make movement more calm in 3P.
+- 3P movement: Re-works squash node, especially on direction change
+- 3P movement: Softens transition speeds and adds central animation in move blend space
+- 3P movement: Adds delay to to animation state (vs. game state) when transitioning from loco to standing
+- 3P movement: Turns down the characters acceleration (capsule)
+- FPS Projection of weapons is now done in a shader graph shader.
+
+## [0.1.1] - 2018-10-22
+- Fix for headless build not running on some machines (Mominon)
+- Changed boot behaviour. Now always read boot.cfg (previously named game.cfg) unless -noboot passed.
+- Added documentation about small tools in editor
+- Fix for exec command giving scary sounding warnings
+- Fix for project using Perforce by default
+- Tweak to animation for slightly smoother 3rd person
+- Fixes to SourceCode doc (Badger0101)
+- Changed Tick error message to just be info
+- Type fixes (jfmc)
+- Updated matchmaker code 
+- Added information about contribution
+- Improved documentation about animation
+- Fix for linux version of headless server not working with redict of in-/output
+
+## [0.1] - 2018-10-22
+- First public release, Unite L.A. 2018
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+## If you are interested in contributing, here are some ground rules:
+
+As the projects matures this will change, but currently it is like this:
+
+* We are not ready to take new features or bigger changes so don't make big PRs yet. Bring up your thoughts in the forum.
+* We are happy to get fixes to bugs and improvements to the out-of-box experience of the project.
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- LICENSE.md ---
+Copyright (c) 2018 Unity Technologies ApS
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License). 
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- Assets/LICENSE.md ---
+Unity Companion License (“License”)
+Software Copyright © 2017 Unity Technologies ApS 
+ 
+Unity Technologies ApS (“Unity”) grants to you a worldwide, non-exclusive, no-charge, and royalty-free copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute the software that is made available under this License (“Software”), subject to the following terms and conditions: 
+ 
+1. Unity Companion Use Only. Exercise of the license granted herein is limited to exercise for the creation, use, and/or distribution of applications, software, or other content pursuant to a valid Unity content authoring and rendering engine software license (“Engine License”). That means while use of the Software is not limited to use in the software licensed under the Engine License, the Software may not be used for any purpose other than the creation, use, and/or distribution of Engine License-dependent applications, software, or other content. No other exercise of the license granted herein is permitted, and in no event may the Software be used for competitive analysis or to develop a competing product or service.
+ 
+2. No Modification of Engine License. Neither this License nor any exercise of the license granted herein modifies the Engine License in any way.
+ 
+3. Ownership & Grant Back to You. 
+
+3.1 You own your content. In this License, “derivative works” means derivatives of the Software itself--works derived only from the Software by you under this License (for example, modifying the code of the Software itself to improve its efficacy); “derivative works” of the Software do not include, for example, games, apps, or content that you create using the Software. You keep all right, title, and interest to your own content.
+
+3.2 Unity owns its content. While you keep all right, title, and interest to your own content per the above, as between Unity and you, Unity will own all right, title, and interest to all intellectual property rights (including patent, trademark, and copyright) in the Software and derivative works of the Software, and you hereby assign and agree to assign all such rights in those derivative works to Unity. 
+
+3.3 You have a license to those derivative works. Subject to this License, Unity grants to you the same worldwide, non-exclusive, no-charge, and royalty-free copyright license to derivative works of the Software you create as is granted to you for the Software under this License.
+ 
+4. Trademarks. You are not granted any right or license under this License to use any trademarks, service marks, trade names, products names, or branding of Unity or its affiliates (“Trademarks”). Descriptive uses of Trademarks are permitted; see, for example, Unity’s Branding Usage Guidelines at https://unity3d.com/public-relations/brand.
+ 
+5. Notices & Third-Party Rights. This License, including the copyright notice associated with the Software, must be provided in all substantial portions of the Software and derivative works thereof (or, if that is impracticable, in any other location where such notices are customarily placed). Further, if the Software is accompanied by a Unity “third-party notices” or similar file, you acknowledge and agree that software identified in that file is governed by those separate license terms.
+ 
+6. DISCLAIMER, LIMITATION OF LIABILITY. THE SOFTWARE AND ANY DERIVATIVE WORKS THEREOF IS PROVIDED ON AN "AS IS" BASIS, AND IS PROVIDED WITHOUT WARRANTY OF ANY KIND, WHETHER EXPRESS OR IMPLIED, INCLUDING ANY WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND/OR NONINFRINGEMENT. IN NO EVENT SHALL ANY COPYRIGHT HOLDER OR AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES (WHETHER DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL, INCLUDING PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR PROFITS, AND BUSINESS INTERRUPTION), OR OTHER LIABILITY WHATSOEVER, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING FROM OR OUT OF, OR IN CONNECTION WITH, THE SOFTWARE OR ANY DERIVATIVE WORKS THEREOF OR THE USE OF OR OTHER DEALINGS IN SAME, EVEN WHERE ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ 
+7. USE IS ACCEPTANCE and License Versions. Your receipt and use of the Software constitutes your acceptance of this License and its terms and conditions. Software released by Unity under this License may be modified or updated and the License with it; upon any such modification or update, you will comply with the terms of the updated License for any use of any of the Software under the updated License. 
+ 
+8. Use in Compliance with Law and Termination. Your exercise of the license granted herein will at all times be in compliance with applicable law and will not infringe any proprietary rights (including intellectual property rights); this License will terminate immediately on any breach by you of this License.
+
+9. Severability. If any provision of this License is held to be unenforceable or invalid, that provision will be enforced to the maximum extent possible and the other provisions will remain in full force and effect.
+
+10. Governing Law and Venue. This License is governed by and construed in accordance with the laws of Denmark, except for its conflict of laws rules; the United Nations Convention on Contracts for the International Sale of Goods will not apply. If you reside (or your principal place of business is) within the United States, you and Unity agree to submit to the personal and exclusive jurisdiction of and venue in the state and federal courts located in San Francisco County, California concerning any dispute arising out of this License (“Dispute”). If you reside (or your principal place of business is) outside the United States, you and Unity agree to submit to the personal and exclusive jurisdiction of and venue in the courts located in Copenhagen, Denmark concerning any Dispute. 
+
+--- Packages/com.unity.postprocessing/CHANGELOG.md ---
+# Changelog
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [2.1.2] - 2018-12-05
+
+### Fixed
+- Made the package manager happy.
+
+## [2.1.1] - 2018-11-30
+
+### Fixed
+- Optimized volume texture blending.
+- Switch compilation issues with 2019.1+.
+
+### Changed
+- Chromatic aberration is now forced to "fast mode" when running on GLES2.0 platforms due to compatibility issues.
+
+## [2.1.0] - 2018-11-26
+
+### Changed
+- Minor version bump following the release of 2018.3 and verified compatibility with 2019.1.
+
+## [2.0.20] - 2018-11-22
+
+### Fixed
+- Camera viewport wasn't working properly when outputting directly to the backbuffer.
+- More improvements to VR support.
+- Compatibility fixes for 2017.1 to 2017.4.
+- Post-processing wouldn't work when loaded from an asset bundle.
+- Compilation issue when Cinemachine is used with Post-processing.
+
+### Changed
+- Scriptable Render Pipelines should now call `PostProcessLayer.UpdateVolumeSystem(Camera, CommandBuffer)` at the beginning of the frame.
+
+## [2.0.17-preview]
+
+### Fixed
+- First pass at improving VR support.
+- Assert on Invalid LDR Lookup Texture size; added a check in the inspector for the user.
+- Improved performance on Unity 2019.1+ by avoiding unnecessary blits if no other image effect is active.
+- Use new ASTC enums on unity 2019.1+.
+
+## [2.0.16-preview]
+
+### Fixed
+- Grain shader compilation errors on some mobile GPUs.
+- Compilation issue with Unity 2019.1+ due to an internal API change.
+
+## [2.0.15-preview]
+
+### Fixed
+- Warning on `[ShaderIncludePath]` in 2018.3+.
+
+## [2.0.14-preview]
+
+### Fixed
+- Bloom flicker in single-pass double-wide stereo rendering.
+- Right eye bloom offset in single-pass double-wide stereo rendering.
+- If any parent of PostProcessingVolume has non-identity scale the Gizmo is rendered incorrectly.
+- Cleanup error when going back'n'forth between Builtins & Scriptable pipelines.
+
+### Changed
+- Use `ExecuteAlways` in 2018.3+ for better compatibility with "Prefab Mode".
+
+## [2.0.13-preview]
+
+### Fixed
+- Compilation issue with Unity 2019.1.
+- Screen-space reflection memory leak.
+
+## [2.0.12-preview]
+
+### Fixed
+- Ambient Occlusion could distort the screen on Android/Vulkan.
+- Warning about SettingsProvider in 2018.3.
+- Fixed issue with physical camera mode not working with post-processing.
+- Fixed thread group warning message on Metal and Intel Iris.
+- Fixed compatibility with versions pre-2018.2.
+
+## [2.0.10-preview]
+
+### Fixed
+- Better handling of volumes in nested-prefabs.
+- The Multi-scale volumetric obscurance effect wasn't properly releasing some of its temporary targets.
+- N3DS deprecation warnings in 2018.3.
+
+## [2.0.9-preview]
+
+### Changed
+- Update assembly definitions to output assemblies that match Unity naming convention (Unity.*).
+
+## [2.0.8-preview]
+
+### Fixed
+- Post-processing is now working with VR SRP in PC.
+- Crash on Vulkan when blending 3D textures.
+- `RuntimeUtilities.DestroyVolume()` works as expected now.
+- Excessive CPU usage on PS4 due to a badly initialized render texture.
+
+### Changed
+- Improved volume texture blending.
+
+### Added
+- `Depth` debug mode can now display linear depth instead of the raw platform depth.
+
+## [2.0.7-preview]
+
+### Fixed
+- Post-processing wasn't working on Unity 2018.3.
+
+### Added
+- Bloom now comes with a `Clamp` parameter to limit the amount of bloom that comes with ultra-bright pixels.
+
+## [2.0.6-preview]
+
+### Fixed
+- On large scenes, the first object you'd add to a profile could throw a `NullReferenceException`. ([#530](https://github.com/Unity-Technologies/PostProcessing/pull/530))
+- Dithering now works correctly in dark areas when working in Gamma mode.
+- Colored grain wasn't colored when `POSTFX_DEBUG_STATIC_GRAIN` was set.
+- No more warning in the console when `POSTFX_DEBUG_STATIC_GRAIN` is set.
+
+### Changed
+- Minor scripting API improvements. ([#530](https://github.com/Unity-Technologies/PostProcessing/pull/530))
+- More implicit casts for `VectorXParameter` and `ColorParameter` to `Vector2`, `Vector3` and `Vector4`.
+- Script-instantiated profiles in volumes are now properly supported in the inspector. ([#530](https://github.com/Unity-Technologies/PostProcessing/pull/530))
+- Improved volume UI & styling.
+
+## [2.0.5-preview]
+
+### Fixed
+- More XR/Switch related fixes.
+
+## [2.0.4-preview]
+
+### Fixed
+- Temporal Anti-aliasing creating NaN values in some cases. ([#337](https://github.com/Unity-Technologies/PostProcessing/issues/337))
+- Auto-exposure has been fixed to work the same way it did before the full-compute port.
+- XR compilation errors on Xbox One & Switch (2018.2).
+- `ArgumentNullException` when attempting to get a property sheet for a null shader. ([#515](https://github.com/Unity-Technologies/PostProcessing/pull/515))
+- Stop NaN Propagation not working for opaque-only effects.
+- HDR color grading had a slight color temperature offset.
+- PSVita compatibility.
+- Tizen warning on 2018.2.
+- Errors in the console when toggling lighting on/off in the scene view when working in Deferred.
+- Debug monitors now work properly with HDRP.
+
+### Added
+- Contribution slider for the LDR Lut.
+- Support for proper render target load/store actions on mobile (2018.2).
+
+### Changed
+- Slightly improved speed & quality of Temporal Anti-aliasing.
+- Improved volume texture blending.
+- Improved support for LDR Luts of sizes other than 1024x32. ([#507](https://github.com/Unity-Technologies/PostProcessing/issues/507))
+- Bloom's `Fast Mode` has been made faster.
+- Depth of Field focus is now independent from the screen resolution.
+- The number of variants for some shaders has been reduced to improve first-build speed. The biggest one, Uber, is down to 576 variants.
+
+## [2.0.3-preview] - 2018-03-13
+
+### Fixed
+- Disabled debug compute shaders on OpenGL ES3 to avoid crashes on a lot of Android devices.
+- `NullReferenceException` while mixing volumes and global volumes. ([#498](https://github.com/Unity-Technologies/PostProcessing/issues/498))
+
+### Changed
+- Improved performances when blending between identical textures.
+
+## [2.0.2-preview] - 2018-03-07
+
+This is the first release of *PostProcessing*.
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+- [#530](https://github.com/Unity-Technologies/PostProcessing/pull/530)
+- [#337](https://github.com/Unity-Technologies/PostProcessing/issues/337)
+- [#515](https://github.com/Unity-Technologies/PostProcessing/pull/515)
+- [#507](https://github.com/Unity-Technologies/PostProcessing/issues/507)
+- [#498](https://github.com/Unity-Technologies/PostProcessing/issues/498)
+
+--- Packages/com.unity.render-pipelines.high-definition/CHANGELOG.md ---
+# Changelog
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [4.6.0-preview] - 2018-12-07
+
+### Added
+
+### Fixed
+- Fixed forward clustered lighting for VR (double-wide).
+- Fixed HDRenderPipelineAsset inspector broken when displaying its FrameSettings from project windows.
+- Fixed Decals and SSR diable flags for all shader graph master node (Lit, Fabric, StackLit, PBR)
+- Fixed Distortion blend mode for shader graph master node (Lit, StackLit)
+- Fixed bent Normal for Fabric master node in shader graph
+- Fixed PBR master node lightlayers
+- Fixed stacklit transmission and sun highlight
+- Fixed logic to disable FPTL with stereo rendering
+- Fixed an issue with flipped depth buffer during postprocessing
+- Fixed decals with stereo rendering
+- Fixed flip logic for postprocessing + VR
+- Fixed copyStencilBuffer pass for Switch
+- Fixed point light shadow map culling that wasn't taking into account far plane
+- Fixed usage of SSR with transparent on all master node
+- Fixed SSR and microshadowing on fabric material
+- Fixed shader stripping for built-in lit shaders.
+
+### Changed
+- Removing the simple lightloop used by the simple lit shader
+- Added a StackLit master node replacing the InspectorUI version. IMPORTANT: All previously authored StackLit Materials will be lost. You need to recreate them with the master node.
+
+## [4.3.0-preview] - 2018-11-23
+
+### Added
+- Added option to run Contact Shadows and Volumetrics Voxelization stage in Async Compute
+- Added camera freeze debug mode - Allow to visually see culling result for a camera
+- Added support of LuxAtDistance for punctual lights
+- Added option to remove more shader variants and display information when building a player
+
+### Fixed
+- Fixed issue in pyramid shaped spotlight handles manipulation
+- Fixed Debug.DrawLine and Debug.Ray call to work in game view
+- Fixed DebugMenu's enum resetted on change
+- Fixed divide by 0 in refraction causing NaN
+- Fixed disable rough refraction support
+- Fixed refraction, SSS and atmospheric scattering for VR
+- Fixed Light's UX to not allow negative intensity
+
+### Changed
+- Rename "Regular" in Diffusion profile UI "Thick Object"
+- Changed VBuffer depth parametrization for volumetric from distanceRange to depthExtent - Require update of volumetric settings - Fog start at near plan
+- SpotLight with box shape use Lux unit only
+
+## [4.2.0-preview] - 2018-11-16
+
+### Added
+- Added a y-axis offset for the PlanarReflectionProbe and offset tool.
+- Exposed the option to run SSR and SSAO on async compute.
+- Added support for the _GlossMapScale parameter in the Legacy to HDRP Material converter.
+- Added wave intrinsic instructions for use in Shaders (for AMD GCN).
+
+
+### Fixed
+- Fixed cubemap assignation on custom ReflectionProbe
+- Fixed Reflection Probes’ capture settings' shadow distance.
+- Fixed an issue with the SRP batcher and Shader variables declaration.
+- Fixed thickness and subsurface slots for fabric Shader master node that wasn't appearing with the right combination of flags.
+- Fixed d3d debug layer warning.
+- Fixed PCSS sampling quality.
+- Fixed the Subsurface and transmission Material feature enabling for fabric Shader.
+- Fixed the Shader Graph UV node’s dimensions when using it in a vertex Shader.
+- Fixed the planar reflection mirror gizmo's rotation.
+- Fixed HDRenderPipelineAsset's FrameSettings not showing the selected enum in the Inspector drop-down.
+- Fixed an error with async compute.
+- MSAA now supports transparency.
+- The HDRP Material upgrader tool now converts metallic values correctly.
+- Volumetrics now render in Reflection Probes.
+- Fixed a crash that occurred whenever you set a viewport size to 0.
+- Fixed the Camera physic parameter that the UI previously did not display.
+
+
+### Changed
+- Updated default FrameSettings used for realtime Reflection Probes when you create a new HDRenderPipelineAsset.
+- Remove multi-camera support. LWRP and HDRP will not support multi-camera layered rendering.
+- Updated Shader Graph subshaders to use the new instancing define.
+- Changed fog distance calculation from distance to plane to distance to sphere.
+- Optimized forward rendering using AMD GCN by scalarizing the light loop.
+- Changed the UI of the Light Editor.
+- Change ordering of includes in HDRP Materials in order to reduce iteration time for faster compilation.
+
+## [4.1.0-preview] - 2018-10-18
+
+### Added
+- Added occlusion mesh to depth prepass for VR (VR still disabled for now)
+- Added a debug mode to display only one shadow at once
+- Added controls for the highlight created by directional lights
+- Added a light radius setting to punctual lights to soften light attenuation and simulate fill lighting
+- Added a 'minRoughness' parameter to all non-area lights (was previously only available for certain light types)
+- Added separate volumetric light/shadow dimmers
+- Added per-pixel jitter to volumetrics to reduce aliasing artifacts
+- Added a SurfaceShading.hlsl file, which implements material-agnostic shading functionality in an efficient manner
+- Added support for shadow bias for thin object transmission
+- Added FrameSettings to control realtime planar reflection
+- Added control for SRPBatcher on HDRP Asset
+- Added an option to clear the shadow atlases in the debug menu
+- Added a color visualization of the shadow atlas rescale in debug mode
+- Added support for disabling SSR on materials
+- Added intrinsic for XBone
+- Added new light volume debugging tool
+- Added a new SSR debug view mode
+- Added translaction's scale invariance on DensityVolume
+- Added multiple supported LitShadermode and per renderer choice in case of both Forward and Deferred supported
+- Added custom specular occlusion mode to Lit Shader Graph Master node
+- Added separate editor resources file for those resources to not be taken in player builds.
+- Added support for disabling SSR on materials in shader graph
+- Added support of MSAA when Both ListShaderMode is enabled (previously only Forward mode was supported)
+- Added support of emissive color override in debug mode
+- Exposed max light for lightloop settings in hdrp asset UI
+- Disable NormalDBuffer pass update if no there is no decal
+- Added distant (fallback) volumetric fog + improved fog evaluation precision
+- Add an option to reflect sky in SSR
+
+### Fixed
+- Fixed a normal bias issue with Stacklit (Was causing light leaking)
+- Fixed camera preview outputing an error when both scene and game view where display and play and exit was call
+- Fixed override debug mode not apply correctly on static GI
+- Fixed issue where XRGraphicsConfig values set in the asset inspector GUI weren't propagating correctly (VR still disabled for now)
+- Fixed issue with tangent that was using SurfaceGradient instead of regular normal decoding
+- Fixed wrong error message display when switching to unsupported target like IOS
+- Fixed an issue with ambient occlusion texture sometimes not being created properly causing broken rendering
+- Shadow near plane is no longer limited at 0.1
+- Fixed decal draw order on transparent material
+- Fixed an issue where sometime the lookup texture used for GGX convolution was broken, causing broken rendering
+- Fixed an issue where you wouldn't see any fog for certain pipeline/scene configurations
+- Fixed an issue with volumetric lighting where the anisotropy value of 0 would not result in perfectly isotropic lighting
+- Fixed shadow bias when the atlas is rescaled
+- Fixed shadow cascade sampling outside of the atlas when cascade count is inferior to 4
+- Fixed shadow filter width in deferred rendering not matching shader config
+- Fixed stereo sampling of depth texture in MSAA DepthValues.shader
+- Fixed box light UI which allowed negative and zero sizes, thus causing NaNs
+- Fixed stereo rendering in HDRISky.shader (VR)
+- Fixed normal blend and blend sphere influence for reflection probe
+- Fixed distortion filtering (was point filtering, now trilinear)
+- Fixed contact shadow for large distance
+- Fixed depth pyramid debug view mode
+- Fixed sphere shaped influence handles clamping in reflection probes
+- Fixed reflection probes data migration for project created before using hdrp
+- Fixed sphere shaped influence handles clamping in reflection probes
+- Fixed reflection probes data migration for project created before using hdrp
+- Fixed UI of layered material where scrollbar was rendered above copy button.
+- Fixed material tesselation's parameters "start fade distance" and "end fade distance" that were clamped while being modified.
+- Fixed various distortion and refraction issues - handle a better fallback
+- Fixed SSR for multiple views
+- Fixed SSR issues related to self-intersections
+- Fixed shape density volume handle speed
+- Fixed density volume shape handle moving too fast
+- Fixed camera velocity pass that was remove by mistake
+- Fixed some null pointer exceptions when disabling motion vectors support
+- Fixed viewports for both SSS combine pass and transparent depth prepass
+- Fixed blend mode pop up in UI not appearing when pre refraction is on
+- Fixed some null pointer exceptions when disabling motion vectors support
+- Fixed layered lit UI issue with scrollbar
+- Fixed ambient occlusion for Lit Master Node when slot is connected
+
+### Changed
+- Use samplerunity_ShadowMask instead of samplerunity_samplerLightmap for shadow mask
+- Allow to resize reflection probe gizmo's size
+- Improve quality of screen space shadow
+- Remove support of projection model for ScreenSpaceLighting (SSR always use HiZ and refraction always Proxy)
+- Remove all the debug mode from SSR that are obsolete now
+- Expose frameSettings and Capture settings for reflection and planar probe
+- Update UI for reflection probe, planar probe, camera and HDRP Asset
+- Implement proper linear blending for volumetric lighting via deep compositing as described in the paper "Deep Compositing Using Lie Algebras"
+- Changed  planar mapping to match terrain convention (XZ instead of ZX)
+- XRGraphicsConfig is no longer Read/Write. Instead, it's read-only. This improves consistency of XR behavior between the legacy render pipeline and SRP
+- Change reflection probe data migration code (to update old reflection probe to new one)
+- Updated gizmo for ReflectionProbes
+- Updated UI and Gizmo of DensityVolume
+- Renamed "Line" shaped lights to "Tube" light
+- Use the "mean height" fog parametrization
+- Shadow quality settings are setup to "All" when using HDRP (Not visile in UI when using SRP). Avoid to have disabled shadow.
+- Internally use premultiplied alpha for all fog
+
+## [4.0.0-preview] - 2018-09-28
+
+### Added
+- Added a new TerrainLit shader that supports rendering of Unity terrains.
+- Added controls for linear fade at the boundary of density volumes
+- Added new API to control decals without monobehaviour object
+- Improve Decal Gizmo
+- Implement Screen Space Reflections (SSR) (alpha version, highly experimental)
+- Add an option to invert the fade parameter on a Density Volume
+- Added a Fabric shader (experimental) handling cotton and silk
+- Added support for MSAA in forward only for opaque only
+- Implement smoothness fade for SSR
+- Added support for AxF shader (X-rite format - require special AxF importer from Unity not part of HDRP)
+- Added control for sundisc on directional light (hack)
+- Added a new HD Lit Master node that implements Lit shader support for Shader Graph
+- Added Micro shadowing support (hack)
+- Added an event on HDAdditionalCameraData for custom rendering
+- HDRP Shader Graph shaders now support 4-channel UVs.
+
+### Fixed
+- Fixed an issue where sometimes the deferred shadow texture would not be valid, causing wrong rendering.
+- Stencil test during decals normal buffer update is now properly applied
+- Decals corectly update normal buffer in forward
+- Fixed a normalization problem in reflection probe face fading causing artefacts in some cases
+- Fix multi-selection behavior of Density Volumes overwriting the albedo value
+- Fixed support of depth texture for RenderTexture. HDRP now correctly output depth to user depth buffer if RenderTexture request it.
+- Fixed multi-selection behavior of Density Volumes overwriting the albedo value
+- Fixed support of depth for RenderTexture. HDRP now correctly output depth to user depth buffer if RenderTexture request it.
+- Fixed support of Gizmo in game view in the editor
+- Fixed gizmo for spot light type
+- Fixed issue with TileViewDebug mode being inversed in gameview
+- Fixed an issue with SAMPLE_TEXTURECUBE_SHADOW macro
+- Fixed issue with color picker not display correctly when game and scene view are visible at the same time
+- Fixed an issue with reflection probe face fading
+- Fixed camera motion vectors shader and associated matrices to update correctly for single-pass double-wide stereo rendering
+- Fixed light attenuation functions when range attenuation is disabled
+- Fixed shadow component algorithm fixup not dirtying the scene, so changes can be saved to disk.
+- Fixed some GC leaks for HDRP
+- Fixed contact shadow not affected by shadow dimmer
+- Fixed GGX that works correctly for the roughness value of 0 (mean specular highlgiht will disappeard for perfect mirror, we rely on maxSmoothness instead to always have a highlight even on mirror surface)
+- Add stereo support to ShaderPassForward.hlsl. Forward rendering now seems passable in limited test scenes with camera-relative rendering disabled.
+- Add stereo support to ProceduralSky.shader and OpaqueAtmosphericScattering.shader.
+- Added CullingGroupManager to fix more GC.Alloc's in HDRP
+- Fixed rendering when multiple cameras render into the same render texture
+
+### Changed
+- Changed the way depth & color pyramids are built to be faster and better quality, thus improving the look of distortion and refraction.
+- Stabilize the dithered LOD transition mask with respect to the camera rotation.
+- Avoid multiple depth buffer copies when decals are present
+- Refactor code related to the RT handle system (No more normal buffer manager)
+- Remove deferred directional shadow and move evaluation before lightloop
+- Add a function GetNormalForShadowBias() that material need to implement to return the normal used for normal shadow biasing
+- Remove Jimenez Subsurface scattering code (This code was disabled by default, now remove to ease maintenance)
+- Change Decal API, decal contribution is now done in Material. Require update of material using decal
+- Move a lot of files from CoreRP to HDRP/CoreRP. All moved files weren't used by Ligthweight pipeline. Long term they could move back to CoreRP after CoreRP become out of preview
+- Updated camera inspector UI
+- Updated decal gizmo
+- Optimization: The objects that are rendered in the Motion Vector Pass are not rendered in the prepass anymore
+- Removed setting shader inclue path via old API, use package shader include paths
+- The default value of 'maxSmoothness' for punctual lights has been changed to 0.99
+- Modified deferred compute and vert/frag shaders for first steps towards stereo support
+- Moved material specific Shader Graph files into corresponding material folders.
+- Hide environment lighting settings when enabling HDRP (Settings are control from sceneSettings)
+- Update all shader includes to use absolute path (allow users to create material in their Asset folder)
+- Done a reorganization of the files (Move ShaderPass to RenderPipeline folder, Move all shadow related files to Lighting/Shadow and others)
+- Improved performance and quality of Screen Space Shadows
+
+## [3.3.0-preview]
+
+### Added
+- Added an error message to say to use Metal or Vulkan when trying to use OpenGL API
+- Added a new Fabric shader model that supports Silk and Cotton/Wool
+- Added a new HDRP Lighting Debug mode to visualize Light Volumes for Point, Spot, Line, Rectangular and Reflection Probes
+- Add support for reflection probe light layers
+- Improve quality of anisotropic on IBL
+
+### Fixed
+- Fix an issue where the screen where darken when rendering camera preview
+- Fix display correct target platform when showing message to inform user that a platform is not supported
+- Remove workaround for metal and vulkan in normal buffer encoding/decoding
+- Fixed an issue with color picker not working in forward
+- Fixed an issue where reseting HDLight do not reset all of its parameters
+- Fixed shader compile warning in DebugLightVolumes.shader
+
+### Changed
+- Changed default reflection probe to be 256x256x6 and array size to be 64
+- Removed dependence on the NdotL for thickness evaluation for translucency (based on artist's input)
+- Increased the precision when comparing Planar or HD reflection probe volumes
+- Remove various GC alloc in C#. Slightly better performance
+
+## [3.2.0-preview]
+
+### Added
+- Added a luminance meter in the debug menu
+- Added support of Light, reflection probe, emissive material, volume settings related to lighting to Lighting explorer
+- Added support for 16bit shadows
+
+### Fixed
+- Fix issue with package upgrading (HDRP resources asset is now versionned to worarkound package manager limitation)
+- Fix HDReflectionProbe offset displayed in gizmo different than what is affected.
+- Fix decals getting into a state where they could not be removed or disabled.
+- Fix lux meter mode - The lux meter isn't affected by the sky anymore
+- Fix area light size reset when multi-selected
+- Fix filter pass number in HDUtils.BlitQuad
+- Fix Lux meter mode that was applying SSS
+- Fix planar reflections that were not working with tile/cluster (olbique matrix)
+- Fix debug menu at runtime not working after nested prefab PR come to trunk
+- Fix scrolling issue in density volume
+
+### Changed
+- Shader code refactor: Split MaterialUtilities file in two parts BuiltinUtilities (independent of FragInputs) and MaterialUtilities (Dependent of FragInputs)
+- Change screen space shadow rendertarget format from ARGB32 to RG16
+
+## [3.1.0-preview]
+
+### Added
+- Decal now support per channel selection mask. There is now two mode. One with BaseColor, Normal and Smoothness and another one more expensive with BaseColor, Normal, Smoothness, Metal and AO. Control is on HDRP Asset. This may require to launch an update script for old scene: 'Edit/Render Pipeline/Single step upgrade script/Upgrade all DecalMaterial MaskBlendMode'.
+- Decal now supports depth bias for decal mesh, to prevent z-fighting
+- Decal material now supports draw order for decal projectors 
+- Added LightLayers support (Base on mask from renderers name RenderingLayers and mask from light name LightLayers - if they match, the light apply) - cost an extra GBuffer in deferred (more bandwidth)
+- When LightLayers is enabled, the AmbientOclusion is store in the GBuffer in deferred path allowing to avoid double occlusion with SSAO. In forward the double occlusion is now always avoided.
+- Added the possibility to add an override transform on the camera for volume interpolation
+- Added desired lux intensity and auto multiplier for HDRI sky
+- Added an option to disable light by type in the debug menu
+- Added gradient sky
+- Split EmissiveColor and bakeDiffuseLighting in forward avoiding the emissiveColor to be affect by SSAO
+- Added a volume to control indirect light intensity
+- Added EV 100 intensity unit for area lights
+- Added support for RendererPriority on Renderer. This allow to control order of transparent rendering manually. HDRP have now two stage of sorting for transparent in addition to bact to front. Material have a priority then Renderer have a priority.
+- Add Coupling of (HD)Camera and HDAdditionalCameraData for reset and remove in inspector contextual menu of Camera
+- Add Coupling of (HD)ReflectionProbe and HDAdditionalReflectionData for reset and remove in inspector contextual menu of ReflectoinProbe
+- Add macro to forbid unity_ObjectToWorld/unity_WorldToObject to be use as it doesn't handle camera relative rendering
+- Add opacity control on contact shadow
+
+### Fixed
+- Fixed an issue with PreIntegratedFGD texture being sometimes destroyed and not regenerated causing rendering to break
+- PostProcess input buffers are not copied anymore on PC if the viewport size matches the final render target size
+- Fixed an issue when manipulating a lot of decals, it was displaying a lot of errors in the inspector
+- Fixed capture material with reflection probe
+- Refactored Constant Buffers to avoid hitting the maximum number of bound CBs in some cases.
+- Fixed the light range affecting the transform scale when changed.
+- Snap to grid now works for Decal projector resizing.
+- Added a warning for 128x128 cookie texture without mipmaps
+- Replace the sampler used for density volumes for correct wrap mode handling
+
+### Changed
+- Move Render Pipeline Debug "Windows from Windows->General-> Render Pipeline debug windows" to "Windows from Windows->Analysis-> Render Pipeline debug windows"
+- Update detail map formula for smoothness and albedo, goal it to bright and dark perceptually and scale factor is use to control gradient speed
+- Refactor the Upgrade material system. Now a material can be update from older version at any time. Call Edit/Render Pipeline/Upgrade all Materials to newer version
+- Change name EnableDBuffer to EnableDecals at several place (shader, hdrp asset...), this require a call to Edit/Render Pipeline/Upgrade all Materials to newer version to have up to date material.
+- Refactor shader code: BakeLightingData structure have been replace by BuiltinData. Lot of shader code have been remove/change.
+- Refactor shader code: All GBuffer are now handled by the deferred material. Mean ShadowMask and LightLayers are control by lit material in lit.hlsl and not outside anymore. Lot of shader code have been remove/change.
+- Refactor shader code: Rename GetBakedDiffuseLighting to ModifyBakedDiffuseLighting. This function now handle lighting model for transmission too. Lux meter debug mode is factor outisde.
+- Refactor shader code: GetBakedDiffuseLighting is not call anymore in GBuffer or forward pass, including the ConvertSurfaceDataToBSDFData and GetPreLightData, this is done in ModifyBakedDiffuseLighting now
+- Refactor shader code: Added a backBakeDiffuseLighting to BuiltinData to handle lighting for transmission
+- Refactor shader code: Material must now call InitBuiltinData (Init all to zero + init bakeDiffuseLighting and backBakeDiffuseLighting ) and PostInitBuiltinData
+
+## [3.0.0-preview]
+
+### Fixed
+- Fixed an issue with distortion that was using previous frame instead of current frame
+- Fixed an issue where disabled light where not upgrade correctly to the new physical light unit system introduce in 2.0.5-preview
+
+### Changed
+- Update assembly definitions to output assemblies that match Unity naming convention (Unity.*).
+
+## [2.0.5-preview]
+
+### Added
+- Add option supportDitheringCrossFade on HDRP Asset to allow to remove shader variant during player build if needed
+- Add contact shadows for punctual lights (in additional shadow settings), only one light is allowed to cast contact shadows at the same time and so at each frame a dominant light is choosed among all light with contact shadows enabled.
+- Add PCSS shadow filter support (from SRP Core)
+- Exposed shadow budget parameters in HDRP asset
+- Add an option to generate an emissive mesh for area lights (currently rectangle light only). The mesh fits the size, intensity and color of the light.
+- Add an option to the HDRP asset to increase the resolution of volumetric lighting.
+- Add additional ligth unit support for punctual light (Lumens, Candela) and area lights (Lumens, Luminance)
+- Add dedicated Gizmo for the box Influence volume of HDReflectionProbe / PlanarReflectionProbe
+
+### Changed
+- Re-enable shadow mask mode in debug view
+- SSS and Transmission code have been refactored to be able to share it between various material. Guidelines are in SubsurfaceScattering.hlsl
+- Change code in area light with LTC for Lit shader. Magnitude is now take from FGD texture instead of a separate texture
+- Improve camera relative rendering: We now apply camera translation on the model matrix, so before the TransformObjectToWorld(). Note: unity_WorldToObject and unity_ObjectToWorld must never be used directly.
+- Rename positionWS to positionRWS (Camera relative world position) at a lot of places (mainly in interpolator and FragInputs). In case of custom shader user will be required to update their code.
+- Rename positionWS, capturePositionWS, proxyPositionWS, influencePositionWS to positionRWS, capturePositionRWS, proxyPositionRWS, influencePositionRWS (Camera relative world position) in LightDefinition struct.
+- Improve the quality of trilinear filtering of density volume textures.
+- Improve UI for HDReflectionProbe / PlanarReflectionProbe
+
+### Fixed
+- Fixed a shader preprocessor issue when compiling DebugViewMaterialGBuffer.shader against Metal target
+- Added a temporary workaround to Lit.hlsl to avoid broken lighting code with Metal/AMD
+- Fixed issue when using more than one volume texture mask with density volumes.
+- Fixed an error which prevented volumetric lighting from working if no density volumes with 3D textures were present.
+- Fix contact shadows applied on transmission
+- Fix issue with forward opaque lit shader variant being removed by the shader preprocessor
+- Fixed compilation errors on Nintendo Switch (limited XRSetting support).
+- Fixed apply range attenuation option on punctual light
+- Fixed issue with color temperature not take correctly into account with static lighting
+- Don't display fog when diffuse lighting, specular lighting, or lux meter debug mode are enabled.
+
+## [2.0.4-preview]
+
+### Fixed
+- Fix issue when disabling rough refraction and building a player. Was causing a crash.
+
+## [2.0.3-preview]
+
+### Added
+- Increased debug color picker limit up to 260k lux
+
+## [2.0.2-preview]
+
+### Added
+- Add Light -> Planar Reflection Probe command
+- Added a false color mode in rendering debug
+- Add support for mesh decals
+- Add flag to disable projector decals on transparent geometry to save performance and decal texture atlas space
+- Add ability to use decal diffuse map as mask only
+- Add visualize all shadow masks in lighting debug
+- Add export of normal and roughness buffer for forwardOnly and when in supportOnlyForward mode for forward
+- Provide a define in lit.hlsl (FORWARD_MATERIAL_READ_FROM_WRITTEN_NORMAL_BUFFER) when output buffer normal is used to read the normal and roughness instead of caclulating it (can save performance, but lower quality due to compression)
+- Add color swatch to decal material
+
+### Changed
+- Change Render -> Planar Reflection creation to 3D Object -> Mirror
+- Change "Enable Reflector" name on SpotLight to "Angle Affect Intensity"
+- Change prototype of BSDFData ConvertSurfaceDataToBSDFData(SurfaceData surfaceData) to BSDFData ConvertSurfaceDataToBSDFData(uint2 positionSS, SurfaceData surfaceData)
+
+### Fixed
+- Fix issue with StackLit in deferred mode with deferredDirectionalShadow due to GBuffer not being cleared. Gbuffer is still not clear and issue was fix with the new Output of normal buffer.
+- Fixed an issue where interpolation volumes were not updated correctly for reflection captures.
+- Fixed an exception in Light Loop settings UI
+
+## [2.0.1-preview]
+
+### Added
+- Add stripper of shader variant when building a player. Save shader compile time.
+- Disable per-object culling that was executed in C++ in HD whereas it was not used (Optimization)
+- Enable texture streaming debugging (was not working before 2018.2)
+- Added Screen Space Reflection with Proxy Projection Model
+- Support correctly scene selection for alpha tested object
+- Add per light shadow mask mode control (i.e shadow mask distance and shadow mask). It use the option NonLightmappedOnly
+- Add geometric filtering to Lit shader (allow to reduce specular aliasing)
+- Add shortcut to create DensityVolume and PlanarReflection in hierarchy
+- Add a DefaultHDMirrorMaterial material for PlanarReflection
+- Added a script to be able to upgrade material to newer version of HDRP
+- Removed useless duplication of ForwardError passes.
+- Add option to not compile any DEBUG_DISPLAY shader in the player (Faster build) call Support Runtime Debug display
+
+### Changed
+- Changed SupportForwardOnly to SupportOnlyForward in render pipeline settings
+- Changed versioning variable name in HDAdditionalXXXData from m_version to version
+- Create unique name when creating a game object in the rendering menu (i.e Density Volume(2))
+- Re-organize various files and folder location to clean the repository
+- Change Debug windows name and location. Now located at:  Windows -> General -> Render Pipeline Debug
+
+### Removed
+- Removed GlobalLightLoopSettings.maxPlanarReflectionProbes and instead use value of GlobalLightLoopSettings.planarReflectionProbeCacheSize
+- Remove EmissiveIntensity parameter and change EmissiveColor to be HDR (Matching Builtin Unity behavior) - Data need to be updated - Launch Edit -> Single Step Upgrade Script -> Upgrade all Materials emissionColor
+
+### Fixed
+- Fix issue with LOD transition and instancing
+- Fix discrepency between object motion vector and camera motion vector
+- Fix issue with spot and dir light gizmo axis not highlighted correctly
+- Fix potential crash while register debug windows inputs at startup
+- Fix warning when creating Planar reflection
+- Fix specular lighting debug mode (was rendering black)
+- Allow projector decal with null material to allow to configure decal when HDRP is not set
+- Decal atlas texture offset/scale is updated after allocations (used to be before so it was using date from previous frame)
+
+## [2018.1 experimental]
+
+### Added
+- Configure the VolumetricLightingSystem code path to be on by default
+- Trigger a build exception when trying to build an unsupported platform
+- Introduce the VolumetricLightingController component, which can (and should) be placed on the camera, and allows one to control the near and the far plane of the V-Buffer (volumetric "froxel" buffer) along with the depth distribution (from logarithmic to linear)
+- Add 3D texture support for DensityVolumes
+- Add a better mapping of roughness to mipmap for planar reflection
+- The VolumetricLightingSystem now uses RTHandles, which allows to save memory by sharing buffers between different cameras (history buffers are not shared), and reduce reallocation frequency by reallocating buffers only if the rendering resolution increases (and suballocating within existing buffers if the rendering resolution decreases)
+- Add a Volumetric Dimmer slider to lights to control the intensity of the scattered volumetric lighting
+- Add UV tiling and offset support for decals.
+- Add mipmapping support for volume 3D mask textures
+
+### Changed
+- Default number of planar reflection change from 4 to 2
+- Rename _MainDepthTexture to _CameraDepthTexture
+- The VolumetricLightingController has been moved to the Interpolation Volume framework and now functions similarly to the VolumetricFog settings
+- Update of UI of cookie, CubeCookie, Reflection probe and planar reflection probe to combo box
+- Allow enabling/disabling shadows for area lights when they are set to baked.
+- Hide applyRangeAttenuation and FadeDistance for directional shadow as they are not used
+
+### Removed
+- Remove Resource folder of PreIntegratedFGD and add the resource to RenderPipeline Asset
+
+### Fixed
+- Fix ConvertPhysicalLightIntensityToLightIntensity() function used when creating light from script to match HDLightEditor behavior
+- Fix numerical issues with the default value of mean free path of volumetric fog 
+- Fix the bug preventing decals from coexisting with density volumes
+- Fix issue with alpha tested geometry using planar/triplanar mapping not render correctly or flickering (due to being wrongly alpha tested in depth prepass)
+- Fix meta pass with triplanar (was not handling correctly the normal)
+- Fix preview when a planar reflection is present
+- Fix Camera preview, it is now a Preview cameraType (was a SceneView)
+- Fix handling unknown GPUShadowTypes in the shadow manager.
+- Fix area light shapes sent as point lights to the baking backends when they are set to baked.
+- Fix unnecessary division by PI for baked area lights.
+- Fix line lights sent to the lightmappers. The backends don't support this light type.
+- Fix issue with shadow mask framesettings not correctly taken into account when shadow mask is enabled for lighting.
+- Fix directional light and shadow mask transition, they are now matching making smooth transition
+- Fix banding issues caused by high intensity volumetric lighting
+- Fix the debug window being emptied on SRP asset reload
+- Fix issue with debug mode not correctly clearing the GBuffer in editor after a resize
+- Fix issue with ResetMaterialKeyword not resetting correctly ToggleOff/Roggle Keyword
+- Fix issue with motion vector not render correctly if there is no depth prepass in deferred
+
+## [2018.1.0f2]
+
+### Added
+- Screen Space Refraction projection model (Proxy raycasting, HiZ raymarching)
+- Screen Space Refraction settings as volume component
+- Added buffered frame history per camera
+- Port Global Density Volumes to the Interpolation Volume System.
+- Optimize ImportanceSampleLambert() to not require the tangent frame.
+- Generalize SampleVBuffer() to handle different sampling and reconstruction methods.
+- Improve the quality of volumetric lighting reprojection.
+- Optimize Morton Order code in the Subsurface Scattering pass.
+- Planar Reflection Probe support roughness (gaussian convolution of captured probe)
+- Use an atlas instead of a texture array for cluster transparent decals
+- Add a debug view to visualize the decal atlas
+- Only store decal textures to atlas if decal is visible, debounce out of memory decal atlas warning.
+- Add manipulator gizmo on decal to improve authoring workflow
+- Add a minimal StackLit material (work in progress, this version can be used as template to add new material)
+
+### Changed
+- EnableShadowMask in FrameSettings (But shadowMaskSupport still disable by default)
+- Forced Planar Probe update modes to (Realtime, Every Update, Mirror Camera)
+- Screen Space Refraction proxy model uses the proxy of the first environment light (Reflection probe/Planar probe) or the sky
+- Moved RTHandle static methods to RTHandles
+- Renamed RTHandle to RTHandleSystem.RTHandle
+- Move code for PreIntegratedFDG (Lit.shader) into its dedicated folder to be share with other material
+- Move code for LTCArea (Lit.shader) into its dedicated folder to be share with other material
+
+### Removed
+- Removed Planar Probe mirror plane position and normal fields in inspector, always display mirror plane and normal gizmos
+
+### Fixed
+- Fix fog flags in scene view is now taken into account
+- Fix sky in preview windows that were disappearing after a load of a new level
+- Fix numerical issues in IntersectRayAABB().
+- Fix alpha blending of volumetric lighting with transparent objects.
+- Fix the near plane of the V-Buffer causing out-of-bounds look-ups in the clustered data structure.
+- Depth and color pyramid are properly computed and sampled when the camera renders inside a viewport of a RTHandle.
+- Fix decal atlas debug view to work correctly when shadow atlas view is also enabled
+
+## [2018.1.0b13]
+
+...
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+
+--- Packages/com.unity.transport/CHANGELOG.md ---
+# Changelog
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [0.1.0] - 2017-MM-DD
+
+### This is the first release of *Unity Package \<Your package name\>*.
+
+*Short description of this release*
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+
+--- Packages/com.unity.visualeffectgraph/CHANGELOG.md ---
+# Changelog
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [4.8.0-preview] - 2018-01-16
+
+## [4.7.0-preview] - 2018-01-13
+### Added
+- Add spawnTime & spawnCount operator
+- Add seed slot to constant random mode of Attribute from curve and map
+- Add customizable function in VariantProvider to replace the default cartesian product
+
+### Fixed
+- Fix in sequential line to include the end point
+- Fix a bug with attributes in Attribute from curve
+- Fix legacy render path shader compilation issues
+- Fix source attributes not being taken into account for attribute storage
+- Samll fixes in Parameter Binder editor
+- Fix fog on decals
+- Saturate alpha component in outputs
+- Fixed scaleY in ConnectTarget
+
+## [4.6.0-preview] - 2018-12-07
+### Fixed
+- Some fixes in noise library
+- Some fixes in the Visual Effect inspector
+- Visual Effects menu is now is the right place
+- Remove some D3D11, metal and C# warnings
+
+## [4.3.0-preview] - 2018-11-23
+
+Initial release
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+
+--- Packages/com.unity.transport/CONTRIBUTING.md ---
+# Contributing
+
+## If you are interested in contributing, here are some ground rules:
+* ... Define guidelines & rules for what contributors need to know to successfully make Pull requests against your repo ...
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- Assets/Fonts/LICENSE.txt ---
+
+                                 Apache License
+                           Version 2.0, January 2004
+                        http://www.apache.org/licenses/
+
+   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+
+   1. Definitions.
+
+      "License" shall mean the terms and conditions for use, reproduction,
+      and distribution as defined by Sections 1 through 9 of this document.
+
+      "Licensor" shall mean the copyright owner or entity authorized by
+      the copyright owner that is granting the License.
+
+      "Legal Entity" shall mean the union of the acting entity and all
+      other entities that control, are controlled by, or are under common
+      control with that entity. For the purposes of this definition,
+      "control" means (i) the power, direct or indirect, to cause the
+      direction or management of such entity, whether by contract or
+      otherwise, or (ii) ownership of fifty percent (50%) or more of the
+      outstanding shares, or (iii) beneficial ownership of such entity.
+
+      "You" (or "Your") shall mean an individual or Legal Entity
+      exercising permissions granted by this License.
+
+      "Source" form shall mean the preferred form for making modifications,
+      including but not limited to software source code, documentation
+      source, and configuration files.
+
+      "Object" form shall mean any form resulting from mechanical
+      transformation or translation of a Source form, including but
+      not limited to compiled object code, generated documentation,
+      and conversions to other media types.
+
+      "Work" shall mean the work of authorship, whether in Source or
+      Object form, made available under the License, as indicated by a
+      copyright notice that is included in or attached to the work
+      (an example is provided in the Appendix below).
+
+      "Derivative Works" shall mean any work, whether in Source or Object
+      form, that is based on (or derived from) the Work and for which the
+      editorial revisions, annotations, elaborations, or other modifications
+      represent, as a whole, an original work of authorship. For the purposes
+      of this License, Derivative Works shall not include works that remain
+      separable from, or merely link (or bind by name) to the interfaces of,
+      the Work and Derivative Works thereof.
+
+      "Contribution" shall mean any work of authorship, including
+      the original version of the Work and any modifications or additions
+      to that Work or Derivative Works thereof, that is intentionally
+      submitted to Licensor for inclusion in the Work by the copyright owner
+      or by an individual or Legal Entity authorized to submit on behalf of
+      the copyright owner. For the purposes of this definition, "submitted"
+      means any form of electronic, verbal, or written communication sent
+      to the Licensor or its representatives, including but not limited to
+      communication on electronic mailing lists, source code control systems,
+      and issue tracking systems that are managed by, or on behalf of, the
+      Licensor for the purpose of discussing and improving the Work, but
+      excluding communication that is conspicuously marked or otherwise
+      designated in writing by the copyright owner as "Not a Contribution."
+
+      "Contributor" shall mean Licensor and any individual or Legal Entity
+      on behalf of whom a Contribution has been received by Licensor and
+      subsequently incorporated within the Work.
+
+   2. Grant of Copyright License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      copyright license to reproduce, prepare Derivative Works of,
+      publicly display, publicly perform, sublicense, and distribute the
+      Work and such Derivative Works in Source or Object form.
+
+   3. Grant of Patent License. Subject to the terms and conditions of
+      this License, each Contributor hereby grants to You a perpetual,
+      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
+      (except as stated in this section) patent license to make, have made,
+      use, offer to sell, sell, import, and otherwise transfer the Work,
+      where such license applies only to those patent claims licensable
+      by such Contributor that are necessarily infringed by their
+      Contribution(s) alone or by combination of their Contribution(s)
+      with the Work to which such Contribution(s) was submitted. If You
+      institute patent litigation against any entity (including a
+      cross-claim or counterclaim in a lawsuit) alleging that the Work
+      or a Contribution incorporated within the Work constitutes direct
+      or contributory patent infringement, then any patent licenses
+      granted to You under this License for that Work shall terminate
+      as of the date such litigation is filed.
+
+   4. Redistribution. You may reproduce and distribute copies of the
+      Work or Derivative Works thereof in any medium, with or without
+      modifications, and in Source or Object form, provided that You
+      meet the following conditions:
+
+      (a) You must give any other recipients of the Work or
+          Derivative Works a copy of this License; and
+
+      (b) You must cause any modified files to carry prominent notices
+          stating that You changed the files; and
+
+      (c) You must retain, in the Source form of any Derivative Works
+          that You distribute, all copyright, patent, trademark, and
+          attribution notices from the Source form of the Work,
+          excluding those notices that do not pertain to any part of
+          the Derivative Works; and
+
+      (d) If the Work includes a "NOTICE" text file as part of its
+          distribution, then any Derivative Works that You distribute must
+          include a readable copy of the attribution notices contained
+          within such NOTICE file, excluding those notices that do not
+          pertain to any part of the Derivative Works, in at least one
+          of the following places: within a NOTICE text file distributed
+          as part of the Derivative Works; within the Source form or
+          documentation, if provided along with the Derivative Works; or,
+          within a display generated by the Derivative Works, if and
+          wherever such third-party notices normally appear. The contents
+          of the NOTICE file are for informational purposes only and
+          do not modify the License. You may add Your own attribution
+          notices within Derivative Works that You distribute, alongside
+          or as an addendum to the NOTICE text from the Work, provided
+          that such additional attribution notices cannot be construed
+          as modifying the License.
+
+      You may add Your own copyright statement to Your modifications and
+      may provide additional or different license terms and conditions
+      for use, reproduction, or distribution of Your modifications, or
+      for any such Derivative Works as a whole, provided Your use,
+      reproduction, and distribution of the Work otherwise complies with
+      the conditions stated in this License.
+
+   5. Submission of Contributions. Unless You explicitly state otherwise,
+      any Contribution intentionally submitted for inclusion in the Work
+      by You to the Licensor shall be under the terms and conditions of
+      this License, without any additional terms or conditions.
+      Notwithstanding the above, nothing herein shall supersede or modify
+      the terms of any separate license agreement you may have executed
+      with Licensor regarding such Contributions.
+
+   6. Trademarks. This License does not grant permission to use the trade
+      names, trademarks, service marks, or product names of the Licensor,
+      except as required for reasonable and customary use in describing the
+      origin of the Work and reproducing the content of the NOTICE file.
+
+   7. Disclaimer of Warranty. Unless required by applicable law or
+      agreed to in writing, Licensor provides the Work (and each
+      Contributor provides its Contributions) on an "AS IS" BASIS,
+      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+      implied, including, without limitation, any warranties or conditions
+      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
+      PARTICULAR PURPOSE. You are solely responsible for determining the
+      appropriateness of using or redistributing the Work and assume any
+      risks associated with Your exercise of permissions under this License.
+
+   8. Limitation of Liability. In no event and under no legal theory,
+      whether in tort (including negligence), contract, or otherwise,
+      unless required by applicable law (such as deliberate and grossly
+      negligent acts) or agreed to in writing, shall any Contributor be
+      liable to You for damages, including any direct, indirect, special,
+      incidental, or consequential damages of any character arising as a
+      result of this License or out of the use or inability to use the
+      Work (including but not limited to damages for loss of goodwill,
+      work stoppage, computer failure or malfunction, or any and all
+      other commercial damages or losses), even if such Contributor
+      has been advised of the possibility of such damages.
+
+   9. Accepting Warranty or Additional Liability. While redistributing
+      the Work or Derivative Works thereof, You may choose to offer,
+      and charge a fee for, acceptance of support, warranty, indemnity,
+      or other liability obligations and/or rights consistent with this
+      License. However, in accepting such obligations, You may act only
+      on Your own behalf and on Your sole responsibility, not on behalf
+      of any other Contributor, and only if You agree to indemnify,
+      defend, and hold each Contributor harmless for any liability
+      incurred by, or claims asserted against, such Contributor by reason
+      of your accepting any such warranty or additional liability.
+
+   END OF TERMS AND CONDITIONS
+
+   APPENDIX: How to apply the Apache License to your work.
+
+      To apply the Apache License to your work, attach the following
+      boilerplate notice, with the fields enclosed by brackets "[]"
+      replaced with your own identifying information. (Don't include
+      the brackets!)  The text should be enclosed in the appropriate
+      comment syntax for the file format. We also recommend that a
+      file or class name and description of purpose be included on the
+      same "printed page" as the copyright notice for easier
+      identification within third-party archives.
+
+   Copyright [yyyy] [name of copyright owner]
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
+
+
+--- README.md ---
+![](Documentation/Images/Banner.png)
+
+# FPS Sample
+
+**Update about the state of the project:**
+This project is based on Unity 2018.3 and no longer being actively maintained.
+Feel free to continue to use it as a learning resource or simply for
+inspiration. As always, you should upgrade to latest version of Unity
+and packages if you intend to start a project.
+
+Thanks for checking out this sample!
+
+This is a fully functional, first person multiplayer shooter game made in
+Unity and with full source and assets. It was developed by a small
+team from Unity Technologies. Our goals are to test and showcase new
+features in Unity and to be of use for teams who can bootstrap on top of
+this, extract useful bits and tools or simply learn from and get inspired by
+what is in the project.
+
+Visit our [landing page](https://unity.com/fps-sample) for more high
+level information about the project. Or reach out [in the forum](https://forum.unity.com/forums/fps-sample-game.184).
+
+The project is using a number of new technologies: We use the new [HD Render
+Pipeline](https://github.com/Unity-Technologies/ScriptableRenderPipeline), meaning 
+all content has been authored for HDRP. We are also using the new
+[network transport layer](https://github.com/Unity-Technologies/multiplayer) as well as the [Entity-Component System](https://unity3d.com/unity/features/job-system-ECS). 
+In the case of ECS, we have primarily adopted the "ECS-pattern" and use it in
+hybrid mode with a lot of regular components. As more and more features of
+Unity become available in ECS-aware versions, we will migrate to them.
+
+## Status and prerequisites
+
+Current status at a glance:
+```
+Unity version: 2018.3.8f1
+Platforms    : Windows (client and server) and Linux (server only)
+```
+
+## Getting the project
+
+To get the project folder you need to clone the project.
+Note, that 
+
+> __IMPORTANT__: 
+> This project uses Git Large Files Support (LFS). Downloading a zip file using the green button on Github
+> **will not work**. You must clone the project with a version of git that has LFS.
+> You can download Git LFS here: https://git-lfs.github.com/.
+
+The project size is about 18GB (size of Assets folder). Your cloned repository
+will be almost double of that due to git state. If it is much smaller,
+you most likely did not have LFS when you cloned.
+
+## Getting the right version of Unity
+
+Once you have cloned the repository, you should install
+the version of Unity that is listed above in the prerequisites section. Make
+sure you include windows standalone support in your installation (and Linux support
+if you want to build the Linux headless server).
+
+## Opening the project for the first time
+
+The following guide should take you to the point where
+you can hit play in the editor and run around the levels and also build a
+standalone version of the game and use it to spin up a server and connect a
+few clients to it.
+
+The first time you open the project you need patience! It takes a while
+to import all the assets.
+
+> __NOTE__: Due to a bug in Unity 2018.3, you have to take the following step right after the initial import:
+> 1 Search for `Firstperson_Projection` in the Project search field. Select the 4 shaders, right click and reimport them.
+> 2 If you have script compile errors related to entities, you need to remove and re-install the entities package.
+>
+> One day soon we will remove this note and there will be cake.
+
+Once the editor is ready, open the _Project Tools Window_ by
+navigating to ___FPS Sample > Windows > Project tools___.
+
+It should look like this:
+
+![](Documentation/Images/ProjectTools.png)
+
+Keep this window docked as you will use it a lot. From here you can open the
+levels, build assetbundles and build standalone players. Because this is a
+multiplayer game you will need to work with standalone players a lot.
+
+### Trying out preview mode
+
+From the Project Tools window click __Open__ next to Level_00. Our levels are
+split into multiple scenes but using these buttons will ensure you open all the scenes
+that make up a level.
+
+Once opened, try entering playmode in the editor. You should now
+be able to run around in the level. This is what we call 'preview mode'. Here
+you can move around and test your level, player traversal and weapons.
+
+### Building bundles and standalone
+
+Leave playmode again and in the Project Tools window, verify that
+it says "Building for: StandaloneWindows64..." under the Game headline.
+If it does not, change your platform in the usual way, using File > Build
+settings window.
+
+Now, in the Project Tools window in the bundles section, press __All \[force\]__.
+
+This will build the levels and other assets into assetbundles. The first time
+around this will take a significant amount of time as all shaders have to be
+compiled.
+
+Once you have built the bundles, hit __Build game__ in the game section.
+This builds the standalone player. Again, first time will be slow.
+
+> __NOTE__: Due to a limitation in Unity 2018.3, you have to look out for errors like this `Maximum number (256) of shader keywords exceeded, keyword <KEYWORD_NAME> will be ignored.` and similar. If you get these, you can close and open Unity and then try and build again. The errors are relatively harmless but can lead to graphical artifacts as some shaders will have wrong keywords.
+
+### Using the quick start launcher
+
+When this is done, locate the "Quick start" section at the bottom of the
+Project Tools window. Fill out the settings like this:
+
+> Mode: __Multiplayer__\
+> Level: __Level_00__\
+> Clients: __1__\
+> Headless: __Checked__\
+> Use editor: __Unused__
+
+Now hit the green __Start__ button. This should launch two processes: one is
+a standalone, headless server, the other is a client that will attempt to
+connect to the server.
+
+Congratulations! If you made it this far you should celebrate a bit!
+
+## Development of FPS Sample, Contributions etc.
+
+As of today, internally development of the project happens on Perforce. We
+push versions of the project to github from there. As we do that we will update
+the [CHANGELOG](CHANGELOG.md) with highlights but the full history is not
+carried over.
+
+For practical reasons we are not able to take larger contributions
+just now. But bugfixes are very welcome! Read the guidelines for
+contributing in [CONTRIBUTING](CONTRIBUTING.md).
+
+## More information
+
+Check out the [Documentation](Documentation/) folder for more information. In particular, the [Getting Started Guide](Documentation/GettingStarted.md) is a good place to, well, start.
+
+## License
+
+Our intention is that you can use everything in this project as a starting
+point or as bits and pieces in your own Unity games. For the legal words, see
+[LICENSE.md](LICENSE.md).
+
+## Links discovered
+- [landing page](https://unity.com/fps-sample)
+- [in the forum](https://forum.unity.com/forums/fps-sample-game.184)
+- [HD Render
+Pipeline](https://github.com/Unity-Technologies/ScriptableRenderPipeline)
+- [network transport layer](https://github.com/Unity-Technologies/multiplayer)
+- [Entity-Component System](https://unity3d.com/unity/features/job-system-ECS)
+- [CHANGELOG](https://github.com/Unity-Technologies/FPSSample/blob/master/CHANGELOG.md)
+- [CONTRIBUTING](https://github.com/Unity-Technologies/FPSSample/blob/master/CONTRIBUTING.md)
+- [Documentation](https://github.com/Unity-Technologies/FPSSample/blob/master/Documentation.md)
+- [Getting Started Guide](https://github.com/Unity-Technologies/FPSSample/blob/master/Documentation/GettingStarted.md)
+- [LICENSE.md](https://github.com/Unity-Technologies/FPSSample/blob/master/LICENSE.md)
+
+--- Assets/Plugins/AssetBundles-Browser-master/README.md ---
+# Unity Asset Bundle Browser tool
+
+This tool enables the user to view and edit the configuration of asset bundles for their Unity project.  It will block editing that would create invalid bundles, and inform you of any issues with existing bundles.  It also provides basic build functionality.
+
+This tool is intended to replace the current workflow of selecting assets and setting their asset bundle manually in the inspector.  It can be dropped into any Unity project with a version of 5.6 or greater.  It will create a new menu item in *Window->AssetBundle Browser*.  
+
+## Full Documentation
+#### Official Released Features
+See [the official manual page](https://docs.unity3d.com/Manual/AssetBundles-Browser.html) or view the included [project manual page](Documentation/com.unity.assetbundlebrowser.md)
+
+
+
+## Links discovered
+- [the official manual page](https://docs.unity3d.com/Manual/AssetBundles-Browser.html)
+- [project manual page](https://github.com/Unity-Technologies/FPSSample/blob/master/Assets/Plugins/AssetBundles-Browser-master/Documentation/com.unity.assetbundlebrowser.md)
+
+--- Assets/Plugins/PlayableGraphVisualizer/README.md ---
+# PlayableGraph Visualizer
+
+## Introduction
+
+The PlayableGraph Visualizer is a tool that displays the PlayableGraphs in the scene.
+It can be used in both Play and Edit mode and will always reflect the current state of the graph.
+Playable nodes are represented by colored nodes, varying according to their type. Connections color intensity indicates its weight.
+
+## Setup
+
+🚨 Be careful to use a release that is compatible with your Unity version (see table below). The `master` branch is compatible with 2018.1 and later.
+
+There are two ways to install the PlayableGraph Visualizer:
+
+1. Standalone:
+    - Download the release compatibles with your Unity version;
+    - Uncompress the downloaded file in your `Assets` direcroty.
+
+2. Git (command line):
+    - Change directory to your project's `Assets` directory.
+    - Run `git clone https://github.com/Unity-Technologies/graph-visualizer`
+
+## Usage
+
+- Open the PlayableGraph Visualizer in **Window > PlayableGraph Visualizer**.
+- Open any scene that contains at least one `PlayableGraph`.
+- Select the `PlayableGraph` to display in the window's top-left list.
+- Click on the nodes to display more information about the associated Playable Handle.
+
+_Note:_
+- You can show just your `PlayableGraph` using `GraphVisualizerClient.Show(PlayableGraph)` in the code.
+- If your `PlayableGraph` is only available in Play mode, you will not be able to see it in Edit mode.
+
+## Unity compatibility
+
+ Unity version | Release
+---------------|--------------
+ 2018.1+       | v2.2 (master)
+ 2017.1+       | v1.1
+
+
+--- Assets/UnityHDRI/Gareoult/Info.txt ---
+Shot name: Gareoult
+Location: Gareoult (South France)
+Date: 16/07/2016
+
+Time: 12h30
+
+Weather: Sunny
+
+
+Range: 26 EV
+
+Standard capture: 
+1/4000 - 1/30
+
+
+Highlight & Sun capture: 
+ND 1000 + 500: 1/4000 - 1/16
+ND 1000: 1/4000 - 1/8
+
+
+Camera Settings:
+EV Step: 1
+F/8
+ISO 100
+
+Lux: 135 000
+
+Luminance on Main green LED screen : 19730
+
+After Processing (With Sun):
+White balanced Lux: 3.088
+Absolute multiplier: 43717.6166
+
+--- Assets/Plugins/AssetBundles-Browser-master/QAReport.md ---
+# Quality Report
+
+## QA Owner: @davidla
+
+## Test strategy
+* Unit test coverage:
+  * Bundle renaming
+  * Bundle folder movement
+  * Bundle creation
+  * Asset movement
+  * Internal bundle updating
+  * Bundle merge and delete
+  * Basic variant functionality
+  * Internal data (model) stability
+
+## Package Status
+* open bugs: https://github.com/Unity-Technologies/AssetBundles-Browser/issues
+* package has been openly available on github since April, officially released on github and the asset store since June.  Users have been able to report bugs through github (see above link) and give feedback in the asset store.  Current asset store rating is 5 stars after 19 votes.
+
+
+--- Assets/Plugins/AssetBundles-Browser-master/Documentation/com.unity.assetbundlebrowser.md ---
+# Unity Asset Bundle Browser tool
+
+This tool enables the user to view and edit the configuration of asset bundles for their Unity project. It will block editing that would create invalid bundles, and inform you of any issues with existing bundles. It also provides basic build functionality.
+
+Use this tool as an alternative to selecting assets and setting their asset bundle manually in the inspector. It can be dropped into any Unity project with a version of 5.6 or greater. It will create a new menu item in __Window__ > __AssetBundle Browser__. The bundle configuration, build functionality, and build-bundle inspection are split into three tabs within the new window.
+
+![BrowserHeader](images/browser_header.png)
+
+### Requires Unity 5.6+
+
+# Usage - Configure
+
+This window provides an explorer like interface to managing and modifying asset bundles in your project. When first opened, the tool will parse all bundle data in the background, slowly marking warnings or errors it detects. It does what it can to stay in sync with the project, but cannot always be aware of activity outside the tool. To force a quick pass at error detection, or to update the tool with changes made externally, hit the Refresh button in the upper left.
+
+The window is broken into four sections: Bundle List, Bundle Details, Asset List, and Asset Details. 
+![BroserConfigure](images/browser_configure2.png)
+
+### Bundle List
+
+Left hand pane showing a list of all bundles in the project. Available functionality:
+
+* Select a bundle or set of bundles to see a list of the assets that will be in the bundle in the Asset List pane.
+
+* Bundles with variants are a darker grey and can be expanded to show the list of variants.
+
+* Right-click or slow-double-click to rename bundle or bundle folder.
+
+* If a bundle has any error, warning, or info message, an icon will appear on the right side. Mouse over the icon for more information.
+
+* If a bundle has at least one scene in it (making it a scene bundle) and non-scene assets explicitly included, it will be marked as having an error. This bundle will not build until fixed.
+
+* Bundles with duplicated assets will be marked with a warning (more information on duplication in Asset List section below)
+
+* Empty bundles will be marked with an info message. For a number of reasons, empty bundles are not very stable and can dissapear from this list at times.
+
+* Folders of bundles will be marked with the highest message from the contained bundles.
+
+* To fix the duplicated inclusion of assets in bundles, you can:
+
+    * Right click on a single bundle to move all assets determined to be duplicates into a new bundle.
+
+    * Right click on multiple bundles to either move the assets from all selected bundles that are duplicates into a new bundle, or only those that are shared within the selection.
+
+    * You can also drag duplicate assets out of the Asset List pane into the Bundle List to explicitly include them in a bundle. More info on this in the Asset List feature set below.
+
+* Right click or hit DEL to delete bundles.
+
+* Drag bundles around to move them into and out of folders, or merge them.
+
+* Drag assets from the Project Explorer onto bundels to add them.
+
+* Drag assets onto empty space to create a new bundle.
+
+* Right click to create new bundles or bundle folders.
+
+* Right click to "Convert to Variant"
+
+    * This will add a variant (initially called "newvariant") to the selected bundle.
+
+    * All assets currently in selected bundle will be moved into the new variant
+
+    * ComingSoon: Mismatch detection between variants.
+    
+Icons indicate if the bundle is a standard or a scene bundle. 
+
+![Icon for standard bundle](images/ABundleBrowserIconY1756Basic.png)
+
+![Icon for scene bundle](images/ABundleBrowserIconY1756Scene.png)
+
+### Bundle Details
+
+Lower left hand pane showing details of the bundles(s) selected in the Bundle List pane. This pane will show the following information if it is available:
+
+* Total bundle size. This is a sum of the on-disk size of all assets.
+
+* Bundles that the current bundle depends on
+
+* Any messages (error/warning/info) associated with the current bundle.
+
+### Asset List
+
+Upper right hand pane providing a list of assets contained in whichever bundles are selected in the Bundle List.  The search field above this list will match with assets in any bundle. The Asset List will only display matching assets, and the Bundle List will only display bundles that contain matching assets.  Available functionality:
+
+* View all assets anticipated to be included in bundle. Sort asset list by any column header.
+
+* View assets explicitly included in bundle. These are assets that have been assigned a bundle explicitly. The inspector will reflect the bundle inclusion, and in this view they will say the bundle name next to the asset name.
+
+* View assets implicitly included in bundle. These assets will say *auto* as the name of the bundle next to the asset name. If looking at these assets in the inspector they will say *None* as the assigned bundle.
+
+    * These assets have been added to the selected bundle(s) due to a dependency on another included asset. Only assets that are not explicitly assigned to a bundle will be implicitly included in any bundles.
+
+    * Note that this list of implicit includes can be incomplete. There are known issues with materials and textures not always showing up correctly.
+
+    * As multiple assets can share dependencies, it is common for a given asset to be implicitly included in multiple bundles. If the tool detects this case, it will mark both the bundle and the asset in question with a warning icon.
+
+    * To fix the duplicate-inclusion warnings, you can manually move assets into a new bundle or right click the bundle and selecting one of the "Move duplicate" options.
+
+* Drag assets from the Project Explorer into this view to add them to the selected bundle. This is only valid if only one bundle is selected, and the asset type is compatable (scenes onto scene bundles, etc.) 
+
+* Drag assets (explicit or implicit) from the Asset List into the Bundle List (to add them to different bundles, or a newly created bundle).
+
+* Right click or hit DEL to remove assets from bundles (does not remove assets from project).
+
+* Select or double-click assets to reveal them in the Project Explorer.
+
+A note on including folders in bundles. It is possible to assign an asset folder (from the Project Explorer) to a bundle. When viewing this in the browser, the folder itself will be listed as explicit and the contents implicit. This reflects the priority system used to assign assets to bundles. For example, say your game had five prefabs in Assets/Prefabs, and you marked the folder "Prefabs" as being in one bundle, and one of the actual prefabs ("PrefabA") as being in another. Once built, "PrefabA" would be in one bundle, and the other four prefabs would be in the other.
+
+### Asset Details
+
+Lower right hand pane showing details of the asset(s) selected in the Asset List pane. This pane cannot be interacted with, but will show the following information if it is available:
+
+* Full path of asset
+
+* Reason for implicit inclusion in bundles if it is implicit.
+
+* Reason for warning if any.
+
+* Reason for error if any.
+
+### Troubleshooting
+
+* *Can't rename or delet a specific bundle.* This is occasionally caused when first adding this tool to an existing project. Please force a reimport of your assets through the Unity menu system to refresh the data.
+
+### External Tool Integration
+Other tools that generate asset bundle data can choose to integrate with the browser. Currently the primary example is the [Asset Bundle Graph Tool](https://bitbucket.org/Unity-Technologies/assetbundlegraphtool).  If integrations are detected, then a selection bar will appear near the top of the browser.  It will allow you to select the Default data source (Unity's AssetDatabase) or an integrated tool. If none are detected, the selector is not present, though you can add it by right-clicking on the tab header and selecting "Custom Sources".  
+
+# Usage - Build
+
+The Build tab provides basic build functionality to get you started using asset bundles. In most profressional scenarios, users will end up needing a more advanced build setup. All are welcome to use the build code in this tool as a starting point for writing their own once this no longer meets their needs. For the most part, the options here are directly tied to the options the engine expects in [BuildAssetBundleOptions](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.html). Interface:
+
+* *Build Target* - Platform the bundles will be built for
+
+* *Output Path* - Path for saving built bundles. By default this is AssetBundles/. You can edit the path manually, or by selecting "Browse". To return to the default naming convention, hit "Reset".
+
+* *Clear Folders* - This will delete all data from the build path folder prior to building.
+
+* *Copy to StreamingAssets* - After the build is complete, this will copy the results to Assets/StreamingAssets. This can be useful for testing, but would not be used in production.
+
+* *Advanced Settings*
+
+    * *Compression* - Choose between no compression, standard LZMA, or chunk-based LZ4 compression.
+
+    * *Exclude Type Information* - Do not include type information within the asset bundle
+
+    * *Force Rebuild* - Rebuild bundles needing to be built. This is different than "Clear Folders" as this option will not delete bundles that no longer exist.
+
+    * *Ignore Type Tree Changes* - Ignore the type tree changes when doing the incremental build check.
+
+    * *Append Hash* - Append the hash to the asset bundle name.
+
+    * *Strict Mode* - Do not allow the build to succeed if any errors are reporting during it.
+
+    * *Dry Run Build* - Do a dry run build.
+
+* *Build* - Executes build.
+
+# Usage - Inspect
+This tab enables you to inspect the contents of bundles that have already been built. 
+### Usage
+* If you use the Browser to build, then the path you built to will automatically be added here.
+* Click "Add File" or "Add Folder" to add bundles to inspect.  
+* Click the "-" next to each row to remove that file or folder. Note, you cannot remove individual files that were added by adding a folder.  
+* Select any bundle listed to see details:
+  * Name
+  * Size on disk
+  * Source Asset Paths - the assets explicitly added to this bundle. Note this list is incomplete for scene bundles.
+  * Advanced Data - includes information on the Preload Table, Container (explicit assets) and Dependencies.
+
+
+## Links discovered
+- [BrowserHeader](https://github.com/Unity-Technologies/FPSSample/blob/master/Assets/Plugins/AssetBundles-Browser-master/Documentation/images/browser_header.png)
+- [BroserConfigure](https://github.com/Unity-Technologies/FPSSample/blob/master/Assets/Plugins/AssetBundles-Browser-master/Documentation/images/browser_configure2.png)
+- [Icon for standard bundle](https://github.com/Unity-Technologies/FPSSample/blob/master/Assets/Plugins/AssetBundles-Browser-master/Documentation/images/ABundleBrowserIconY1756Basic.png)
+- [Icon for scene bundle](https://github.com/Unity-Technologies/FPSSample/blob/master/Assets/Plugins/AssetBundles-Browser-master/Documentation/images/ABundleBrowserIconY1756Scene.png)
+- [Asset Bundle Graph Tool](https://bitbucket.org/Unity-Technologies/assetbundlegraphtool)
+- [BuildAssetBundleOptions](https://docs.unity3d.com/ScriptReference/BuildAssetBundleOptions.html)
+
+--- Documentation/Animation.md ---
+# Content
+### Authoring
+Animation is done in Maya. A Maya scene typically contains a grouping of related animations, for instance all animations
+for the Stand State.
+
+![](Images/MayaAnimation.png)
+
+In source animation clips are setup for export and exported to individual files (with the help of a custom export manager). 
+Splitting each animation into individual files allows for partial/quick export and import, but requires more work with 
+import settings.
+
+> //Assets/Animation/Characters/Terraformer/Clips/Locomotion--Run_N.anim.fbx
+> //Assets/Animation/Characters/Terraformer/Clips/Locomotion--Run_S.anim.fbx
+
+### Humanoid and Generic
+We use Humanoid for third person and Generic for first person. Using both allows us to demonstrate and exercise 
+both pipelines. Humanoid provides re-targeting and built in IK solving, while Generic offers slightly better performance 
+and more degrees of freedom in places like fingers.
+
+The use of translation driven squash and stretch (TranslateScale Component) allows for non-uniform scale to be used 
+with Generic as well as with Humanoid/Re-targeting.
+
+### Avatars
+We aim to define the Avatar for a Skeleton once (well once for Humanoid and Generic) and let any subsequent 
+model and animation FBX’s copy this avatar:
+
+![](Images/AvatarReference.png)
+
+Currently all Avatars copies must be updated if the source Avatar changes. Here is a small script that will accomplish 
+that: 
+
+> Menu > FPS Sample > Animation > Update Avatar References
+
+### Avatar Masks
+We use Avatar Masks for all our animations for a few reasons:
+
+* Only generate animation curves for relevant bones.
+* Generate curves for Generic bones when using Humanoid (these are masked out by default when no mask is used).
+
+
+![](Images/DefaultMask.png)
+
+As with Avatars, we assume a default mask will be used for all Clips, unless a special case mask is needed. 
+So we use the copy from option:
+
+![](Images/ClipMask.png)
+
+If the source mask changes it must be updated in all dependent clips. Here is a small script that will accomplish that: 
+
+> Menu > FPS Sample > Animation > Update Avatar Masks
+
+
+### Import AssetPostProcessor
+AssetPostProcessor `AnimationImport.cs` does just a few things:
+
+* We have a lot of fast movement in our game, so we over sample Humanoid animations by a factor 2. This will allow the resulting 
+Muscle clips to better represent the original motion and we in turn rely on compression to throw away keys that are not needed.
+* Force the frame range of any Clip that is present in the FBX, to always match the frame range of the source take (which normally only
+happens on first import).   
+
+
+### Humanoid Configuration
+Humanoid has the option of Leg and Arm stretch (Anti pop/Soft IK), which will slight lengthen the bones as they reach 
+full extension. This can be especially useful during re-targeting to avoid IK pops, but can have the side effect 
+that arm and legs may never fully straighten, when they do in the source animation.
+
+Having almost purely character specific animations in combination with our animation style, turning this feature off made the most sense. 
+
+![](Images/HumanoidSettings.PNG)
+
+### Iteration
+We try to have an iterative workflow where animations are put into game in their earliest/mockup form and continuously 
+updated as the projects progresses, bug surface and standards change late in production.
+
+# Animation Implementation
+
+## Third Person Animation
+
+Making network synchronised animation for a server authoritative multi player shooter, puts specific constraints on how we 
+implement animation. We need to handle things like replication, rollback, prediction and lag compensation. For this 
+reason we have chosen to use a custom Playable Graph for Third Person animation.
+
+![](Images/ThirdPerson.PNG)
+
+
+#### Playable Graph
+The playable graph is the backend for animation features like TimeLine and the Animator Controller. When you use these 
+a playable graph is created in the background. 
+Playable graphs can also be constructed and managed through code using the Playable API, which is what we do.
+
+You can view Playable graphs using the Playable Graph Visualizer:
+
+![](Images/PlayableGraphVisualizer.PNG)
+
+A graph like ours mainly consists of Animation Clips, Animation Mixers and a few Animation Script Playables.
+
+
+#### Animation Templates
+Animation Templates is our way defining pieces of animation network (sub graphs). These are typically hooked together to 
+form a larger network.
+
+A Template includes:
+
+* A settings Scriptable Object.
+* Code to build out the sub graph and connect it to any parent or child Templates.
+* Code that controls the state of the network & reads/writes replicated properties 
+(are we turning, how far into the turn are we, phase of the current animation etc.)
+* Code that reads the replicated state and applies it to actual playable nodes (mixer weight, clip time, foot ik enabled etc.)
+
+To create an instance of an animation template, right click in the Project window and select:
+> Create> FPS Sample >Animation> AnimGraph >Template
+
+Animation Templates for a third person character:
+
+![](Images/AnimationTemplate.PNG)
+
+Sprint Template Inspector:
+
+![](Images/SprintTemplate.PNG)
+
+Sub graph created from the Sprint Template, consisting of 4 animation clips, a regular Mixer and a layer mixer:
+
+![](Images/SprintGraph.PNG)
+
+### State Machine: Animation State Selector Template 
+A key Template is `AnimGraph_StateSelector`. It acts as a state machine and maps child 
+templates/sub graphs to character animation states and blends between them.
+
+> E.G: //Assets/Animation/Characters/Terraformer/AnimationSets/AnimStateSelector.asset
+
+Each state has a default blend in time, with the possibility of defining custom transition times from specific states.
+
+
+![](Images/AnimStateSelector.PNG)
+
+
+![](Images/AnimStateSelectorInGraph.PNG)
+
+###  Animation Stack
+The `AnimGraph_Stack` is currently used as the root Animation Template of our characters graphs. Here we assign 
+templates to be chained together in serial fashion.
+
+![](Images/AnimStack.PNG)
+
+> E.G: //Assets/Animation/Characters/Terraformer/AnimationSets/AnimGraph.asset
+
+### Animation Jobs
+Animation Jobs/Animation Script Playables are used for custom nodes that read and write to the animation stream. Examples are:
+
+* Offhand IK (Generic Stream)
+* Foot IK while standing (Humanoid Stream)
+* First Person Weapon Drag/Lead (Generic Stream)
+* Banking (Humanoid Stream)
+
+###  Assigning the Animation Graph to a Character
+To assign an Animation Template as a root template for a character, assign it to the `AnimStateController` in the 
+Characters Prefab.
+
+![](Images/AnimStateController.png)
+
+## First Person Animation
+![](Images/FirstPerson.PNG)
+
+First person is local to the client, which means no multi player constraints, so here we've used the Animator Controller:
+
+![](Images/AnimatorController1P.PNG)
+
+> E.G: //Assets/Animation/Characters/Robot_1P/AnimatorControllers/Robot.controller
+
+Characters and weapon are separate hierarchies, but need to play in sync, so an override controller is used for the weapons:
+
+![](Images/OverrideController.PNG)
+
+> E.G: //Assets/Animation/Characters/Robot_1P/AnimatorControllers/Robot_Weapon.overrideController
+
+### Setting up the First Person Controller
+
+The Animator Controller is not referenced in the Characters Animator Component, but assigned to an Animator Controller Template 
+(`AnimGraph_AnimatorController`). This template wraps the controller in an AnimatorControllerPlayable and forwards game state 
+to the Animator Controllers parameters etc. 
+
+> E.G: //Assets/Animation/Characters/Terraformer_1P/AnimationSets/Controller_Character.asset
+
+This is in turn assigned to an Animation Stack Template (`AnimGraph_Stack`) where we add additional nodes, like 
+Off Hand IK and Aim Drag.
+
+### Assigning the First Person Controller
+
+The Stack Template is assigned to the `AnimStateController` of the First Person Character Prefab:
+
+![](Images/AnimStateController.png)
+
+--- Documentation/Characters.md ---
+# Character Pipeline
+
+### Iteration
+We assume an iterative workflow where characters are put into game in their earliest/mockup phase and continuously 
+updated as the projects progresses, bug surface and standards change late in production.
+
+### Authoring
+Characters are Modeled and Rigged in Maya and exported into FBX files.
+
+> E.G: //Assets/Models/Characters/Terraformer/Terraformer_A.fbx
+
+### Prefabs
+Prefab are where Materials are assigned and additional components for game play systems are added and configured. 
+We use Prefab Variants as they allow the prefab to stay up to date as mesh, skeleton and skinning changes throughout production.
+
+![](Images/CharacterPrefabs.png)
+
+There are several prefabs for each character, like first person, client, server, hit collision and ragdoll. A simplified 
+version of the characters skeleton is used where appropriate:
+
+![](Images/ReducedSkeleton.png)
+
+### Skeleton Component
+The Skeleton Component stores information about the characters bone hierarchy, bone names and default pose for quick 
+lookup at runtime. It also lets you visualize and interact with the skeleton in the scene view.
+
+![](Images/SkeletonComponent.png)
+
+It’s added during import, in order to stay in sync with the model.fbx. Placing skeleton root nodes below a 
+transform/group called “Skeleton” (that is a child of the prefab root), should let the skeleton be picked up correctly 
+by the AssetPostProcessor `SkeletonImporter.cs.`
+
+### Procedural Bones
+Procedural bone components (Twist, Fan and TranslateScale) help with deformations and also allow for Squash and Stretch 
+like behaviors. They are added on import, based on markup saved in custom attributes on the skeleton when the rig is 
+built in Maya.
+
+![](Images/ProceduralBones.png)
+
+Procedural bone setup is stored in MonoBehaviours, which also drive the bones in edit mode (so you can interact with 
+the characters skeleton and see the behaviour of the procedural bones). When the game is running they are instead 
+driven by systems in LateUpdate using C# jobs and Burst.  For performance reasons procedural bones are not updated on the server.
+
+### Humanoid Configuration
+A Stance Pose that is parallel to world coordinates, without bends in in arms and knees is used for best results:
+
+![](Images/TPose.PNG)
+
+Additional Settings:
+* Twist extraction is disabled since we use our own twist solution with dedicated twist bones.
+* Translation DoF (Degrees of freedom) is enabled to allow for translation based stretch and other animated translations.
+
+![](Images/HumanoidSettings.PNG)
+
+
+--- Documentation/SmallEditorTools.md ---
+# Small editortools and scripts
+
+The FPS Sample project features a range of little tools, editorscripts, hotkeys and components
+that we used creating this project.
+
+This file documents the most commonly used ones, ordered by dicipline.
+
+## Scene editing
+
+__Toggle game view tracking [Hotkey toggle]__\
+Syncs position of scene view and default game camera.
+
+> Hotkey: Ctrl+Shift+K\
+> Menu: FPS Sample > Hotkeys > Toggle game view tracking
+
+
+__Cut GameObjects [Hotkey]__\
+Cuts the current selection in the scene Hierarchy. The cut objects are marked by a little round icon to the right in the scene Hierarchy
+
+![](Images/CutGameObjects.PNG)
+
+> Hotkey: Ctrl+Shift+X\
+> Menu: FPS Sample > Hotkeys > Cut GameObjects
+
+__Paste GameObjects [Hotkey]__\
+Paste in previous cut selections in the scene Hierarchy
+
+> Hotkey: Ctrl+Shift+V\
+> Menu: FPS Sample > Hotkeys > Paste GameObjects
+
+__Deselect All [Hotkey]__\
+Clears the current selection in the scene Hierarchy and Project
+
+> Hotkey: Alt+D\
+> Menu: FPS Sample > Hotkeys > Deselect all
+
+__Position under mouse [Hotkey]__\
+Positions current selection under the mouse cursor in the scene view on first found collider. Very handy for worldbuilding
+
+> Hotkey: Ctrl+Shift+Q\
+> Menu: FPS Sample > Hotkeys > Position under mouse
+
+__Align and position under mouse [Hotkey]__\
+Positions and aligns rotation of current selection under the mouse cursor in
+the scene view on first found collider
+
+> Hotkey: Ctrl+Shift+Z\
+> Menu: FPS Sample > Hotkeys > Align and position under mouse
+
+__Selection History [Dockable window]__\
+A dockable window that captures selection history. The checkbox next to history items is
+used to 'pin' the item so it doesn't get pushed out by later selected items.
+Items in the history window can be dragged onto component fields.
+This is useful for setting up assets with many cross references such as materials and complicated prefabs
+
+![](Images/SelectionHistory.PNG)
+
+> Menu: FPS Sample > Windows > Selection History
+
+__Toggle Gizmos [Hotkey toggle]__\
+Toggles the visibility of gizmos in the scene view
+
+> Hotkey: Ctrl+G\
+> Menu: FPS Sample > Hotkeys > Toggle Gizmos
+
+__LodSelector [Hotkey toggle]__\
+A toggle to prevent selection in the scene view of gameobjects that are
+referenced in a LOD Component. This helps you avoid mistakes where you select a LOD gameobject
+and e.g. move that instead of the prefab it belongs to.
+
+> Hotkey: Alt+L\
+> Menu: FPS Sample > Hotkeys > LodSelector
+
+__Replace scene selection by this prefab [Hotkey]__\
+Enables you to easily replace scene Hierarchy selection with another resource from Project. Simply make a selection in the 
+scene Hierarchy and Ctrl+RMB in Project on what resource you want to replace your selection with and press "Replace scene selection by this prefab"
+
+![](Images/ReplaceSceneSelectionByThisPrefab.PNG)
+
+> Hotkey: Ctrl+RMB
+
+__Take screenshot [Utility]__\
+Takes a screenshot using active game view and prompts user where to save screenshot. This script saves out the screenshot in whatever
+resolution is chosen in game view regardless of monitor resolution and because of this it can be used to capture high resolution screenshots better than a regular PrintScreen
+
+> Menu: FPS Sample > Take Screenshot
+
+__Fix sceneview fov [Utility]__\
+When zooming in the scene view by using the mousewheel the camera clipping
+planes are scaled. This script prevents that. Instead the mousewheel will
+dolly the camera (i.e. move it forward/backward).
+
+> Menu: FPS Sample > Fix sceneview fov
+
+__Material property override [Component][Asset]__\
+The _Material Property Override Component_ allows the user to override material properties based on shader keywords. This is handy as it enables you to tweak ie. the color of a material
+or the strength of a normalmap without having to create a new material.
+
+The _Material Property Override Asset_ allows you to push the properties you want to override to a Material Property Override Component from an asset rather than typing it in manually per instance.
+This way you can easily push changes to many different materials making it easy to manage ie. color schemes. In the FPS Sample we used Material Property Override Assets
+to manage the colors of the pipes, the industrial tanks, the factory exterior detail props and more. By using Material
+Property Override Assets we could push the same color values to many different materials making it easy to manage color schemes and keep the number of material resources at a minimum.
+
+![](Images/MaterialPropertyOverrideComponent.PNG)
+
+__Rope line [Component]__\
+These components help setting up ropes using a line renderer. The Rope Line Component keeps track of anchor gameobjects and
+draws lines using a line renderer between the ancors. Children of the gameobject that has a Rope Anchor Component will automatically be assigned
+to the anchor list if Simulate is ticked. When Simulate is ticked the anchor list is updated and the ropes are simulated. When you
+are satisfied with the ropes untick Simulate and the ropes are then saved.
+
+The Rope Anchor Component defines the length and number of segments for that section of the rope. 
+
+![](Images/RopeLine.PNG)
+![](Images/RopeAnchor.PNG)
+
+## Lighting
+
+__LPPV Tool [Component]__\
+This component helps set up and manage light probe proxy volumes. It is a component that references
+a given light probe proxy volume and basically checks if it's meshrenderer children are set up to use the same light probe proxy volume
+as it refers to. If this is not the case you can set this up by pressing "Assign". This speeds up bulk setup of light probe proxy volumes
+
+![](Images/LPPVTool.PNG)
+
+__Clear all reflectionprobes to black [Utility]__\
+Clears all reflectionprobes to black. This is required to get correct bakes when baking reflectionprobes
+
+> Menu: FPS Sample > Lighting > Reflection Probes > Clear To Black
+
+__Light probe placement [Component]__\
+This is a component that can be used for easier placement of lightprobes.
+To use this component add it to the gameobject you have your Light Probe Group component.
+Enable the script by pressing the toggle key labelled "Place [L key]" and press "Edit Light Probes" in the Light Probe Group Component.
+Now a lightprobe will be added whenever you press L. The placement of the probe is pushed in the normal direction of the collision you click on and the height can be altered in the Light Probe Placement component.
+It is important that the gameobject on which the component is placed is situated at 0, 0, 0 in worldspace as the probe placement otherwise will be incorrect.
+
+![](Images/LightProbePlacement.PNG)
+
+__Light Probe Generator [Asset postprocessor]__\
+This is an asset post processor that looks for meshes with the prefix "LPG_" and when found it assigns a Light Probe Group to the object and generates a lightprobe per vertice.
+
+![](Images/LightProbeGenerator.PNG)
+
+## Other
+
+__Lookup asset guid [Utility]__\
+Looks up the GUID for an asset OR looks up the asset for a particular GUID. 
+
+![](Images/LookUpAssetWindow.PNG)
+
+> Hotkey: Ctrl+Alt+L\
+> Menu: FPS Sample > Hotkeys > Lookup asset guid
+
+## Animation
+
+__Update Avatar Masks [Utility]__\
+Updates all Avatar Masks copies in Clips to their latest source
+
+> Menu: FPS Sample > Animation > Update Animation Masks
+
+__Update Avatar References [Utility]__\
+Updates all Avatars copies to their latest source
+
+> Menu: FPS Sample > Animation > Update Avatar References
+
+__Skeleton Pose Interop [Utility]__\
+Saves/Loads the transforms of a hierarchy to disk (TMP folder). Based on root selection. 
+Mainly intended to interop poses between our Maya Character pipeline and Unity. 
+
+> Menu: FPS Sample > Animation > Skeleton Pose Interop > ..
+
+
+--- Documentation/SourceCode.md ---
+# FPS Sample Source Code
+This document gives a brief overview of main areas of the FPS Sample source code.
+
+## Game class
+The Game class (Game.cs) is a MonoBehavior that defines the main loop of the game. 
+All gamecode is run from Game.Update method (with a few exceptions).
+The game class is one of first classes to be instantiated and is always present no matter what state the game is in.
+The Game class instantiates various systems like Audio, Input as well as containing other app level utility functionality.
+
+The game class can be requested to update a specific _GameLoop_.
+Gameloops implements various modes the game can be in.
+They handle initialization and shutdown of required systems along with updating systems in the correct order. 
+Active gameloop can be changed at runtime.
+
+Currently implemented gameloop types are Server, Client and Preview
+
+## ServerGameLoop
+ServerGameLoop (ServerGameLoop.cs) handles connection to a list of clients and updates all the server systems.
+
+## ClientGameLoop
+ClientGameLoop (ClientGameLoop.cs) handles a single connection to a server and updates all client systems.
+
+## PreviewGameLoop   
+PreviewGameLoop (PreviewGameLoop.cs) is a mutation of Server and Client game loops slapped together.
+It uses a mix of server and client systems as a way to preview the game without building bundles or starting up the server and client.
+This becomes the gameloop when a user presses play in the editor with a game scene loaded.  
+
+## Modules
+For organizational purposes some gamecode is grouped into what we call modules. 
+Modules contain components, along with the systems that update these components. The modules may also contain one or more additional specific classes that are instantiated by the gameloop. 
+Modules can have a specific server, client or preview implementations.
+Modules location: Assets/Scripts/Game/Modules
+
+### ReplicatedEntity Module
+Handles replication of gameobjects and ECS entities.   
+
+To replicate a gameobject, it must be a prefab with the ReplicatedEntity component attached. 
+This will ensure the prefab is registered within ReplicatedEntityRegistry (any time build tool runs: "Update Registry"). 
+Server and client have different ReplicatedEntityRegistry allowing for different prefabs to be spawned on the server and client. Each representing the same entity while simultaneously utilizing the same set of serializable components. 
+Components that have data to be replicated must implement the INetworkSerializable interface and be attached to the same gameobject as  ReplicatedEntity component.
+
+To replicate an ECS entity you create a ScriptableObject deriving from ReplicatedEntityFactory. 
+This class is also registered in ReplicatedEntityRegistry. It contains abstract methods that must be implemented in order to create  entities and classes with the serialize or deserialize component.    
+
+### Player Module
+Player module handles server broadcasting of player information. The sampling of user commands on the client and local handling of controlled characters.  
+
+Server creates a *Player* entity for each connected player. 
+Player entities contain data that the server sends to all connected clients (e.g. playername and what character the player is controlling). This data that is sent only to the client that the player represents (e.g. what UI elements to open)       
+
+Each client acontains a *LocalPlayer* instantiation that has local presentation components (e.g camera control and UI).
+Components specific to the type of entity that is being controlled can be added to the LocalPlayer for custom handling.
+E.g. the *LocalPlayerCharacterControl* from the CharacterModule is attached to LocalPlayer to handling player controlling of character.  
+
+### Character Module
+The Character module is responsible for character abilities, animation and UI.
+A character is defined by a prefab with either Character or Character1P MonoBehavior attached.
+Character is used on the server and on the client for 3P characters. Whereas, Character1P is used for first person camera view.
+Characters are setup using the *CharacterTypeDefinition* ScriptableObject. 
+This ScriptableObject has references to the Server and Client versions of the 3P character prefab, and reference to the 1P prefab character that is instantiated in first person camera view.
+
+All character behaviour is handled by *Abilities* (Located: Character/Behaviours/Abilities).
+Abilities are actives and controlled by the *AbilityController*.
+In the current implementation characters always have the movement ability active. Characters are allowed only one other ability to be active at a time (e.g. sprint, melee, shoot)   
+
+HeroTypeAsset (HeroTypeAsset.cs) is used to setup the games hero. (note: in comments and naming the word character is often used for hero)
+The HeroTypeAsset defines the stats of the hero and what character, weapons, abilities should be used.
+
+### Item Module
+Handles character items. 
+Items are replicated but currently only the client versions of the prefab have any logic or visuals.
+When items are updated they read the state of the relevant abilities and use those to trigger the associated effects.   
+
+### Effect Module
+Effect module controls clientside effects (gfx and sound). 
+Effects are "fire and forget" this cannot be cancelled. 
+This module currently supports two kinds of effects: *SpatialEffect* and *HitscanEffect*.
+Effects are created within static pools at startup.  
+Each effect is setup using a ScriptableObject (e.g. SpatialEffectTypeDefinition) that defines what prefab should be used for the effect as well as how large the effect pool should be.
+Effects are requested by gamecode, it creates entities with the requested component (e.g SpatialEffectRequest). These are then added to the effect systems at which time the effect is then triggered.
+
+## Grenade Module
+Grenade module handles the creation and updating of grenades. Grenades are updated on the server and interpolated to the client.
+
+### HitCollision Module
+HitCollision module handles hit collision of all objects that are capable of receiving damage within the game. 
+The server stores position and rotation of moving colliders so that they can be "rolled back". This allows rollingback the collider to any given tick before collision tests have been performed. 
+This is used for server side lag compensation. 
+HitCollision for characters can be setup in a seperate prefab so that it can be shared between the server and client prefabs. 
+
+*RaySphereQueryReciever* can be used to queue collision queries. It first processes a raytest against the environment and then sphere casts against the hit collision. 
+
+When hit collision is hit the *HitCollisionOwner* component is used for adding damage events.
+These events are not used by the HitCollision module. Instead it is used by other systems (e.g. Character or DestructableProp) to read and clear the list and apply damage to whatever health value they have. 
+
+This module also contains a *SplashDamageSystem* that is a fire and forget way of giving splash damage to an area.
+
+### Projectile Module
+This module processes simulation of projectiles and their associated visuals to the client.  
+The server creates *Projectiles* and these are what is replicated to client side. 
+When a client receives a projectile it creates a corresponding *ClientProjectile* with visuals of the projectile.  
+Projectiles can also predicatively be created on the client. 
+When a projectile is received from the server which matches a predicted, the predicted is deleted while the associated clientprojectile is linked to the projectile from the server.
+If no match can be found the predicted is deleted together with the clientprojectile.   
+
+### Ragdoll
+Updates the state of all active ragdolls. Simulation processed by Unity physics system.
+
+### SpectatorCam
+Controls a replicated player camera, that can be controlled by the spectator. This can be used to test control of non-character units and is currently in a pretty hacky state.  
+
+## ECS
+All (almost) game-code is implemented using ECS systems, but in what we call _mixed-mode_.
+As we depend on functionality that is not yet implemented in ECS we still base our code around
+GameObjects and MonoBehaviors - but we try to spice things up with some entities and data components. 
+We also opted for manually updating all systems as it gives us complete control over update order and is 
+required when systems needed to be updated multiple times per frame (as in client side prediction).  
+But expect more and more game code to go _pure_ ECS as we move along.
+
+--- Packages/com.unity.postprocessing/README.md ---
+# Post-processing Stack v2
+
+This branch is under active development and holds the current version of the post-processing stack. 
+
+Instructions
+------------
+
+Documentation is available [on the wiki](https://github.com/Unity-Technologies/PostProcessing/wiki).
+
+The current version requires Unity 5.6.1+. Some effects and features are only available on newer versions of Unity.
+
+License
+-------
+
+Unity Companion License (see [LICENSE](LICENSE.md))
+
+
+## Links discovered
+- [on the wiki](https://github.com/Unity-Technologies/PostProcessing/wiki)
+- [LICENSE](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.postprocessing/LICENSE.md)
+
+--- Packages/com.unity.transport/README.md ---
+## Prerequistes
+
+## External tools or development libraries
+
+## Required installed Software
+
+## Command line examples to build, test, and run your package.
+
+
+
+--- Packages/com.unity.transport/Documentation/index.md ---
+# Welcome to Unity Networking Transport
+
+# About Unity.Networking.Transport
+
+Use the com.unity.transport package to add multiplayer / network features for your project.
+
+# Overview
+
+![Transport Overview](images/layercake.png)
+
+# Installing com.unity.transport
+
+
+# Technical details
+## Requirements
+
+This version of `com.unity.transport` is compatible with the following versions of the Unity Editor:
+
+* 2018.2 and later (recommended)
+
+## Known limitations
+
+Unity.Networking.Transport version 0.1.0 has the following limitations:*
+
+* Currently only supports the platforms
+  * Windows, Linux, Mac OSX, iOS and Android
+
+## Package contents
+
+The following table shows the package folder contents.
+
+|Location|Description|
+|---|---|
+|`Documentation`|Contains manual part of the documentation (script reference is inline using xmldoc).|
+|`Runtime`|Contains the implementation.|
+|`Tests`|Contains all the tests.|
+
+
+## Document revision history
+
+|Date|Reason|
+|---|---|
+|Jul 18, 2018|Document created. Matches package version 0.1.0.|
+
+
+
+[Next: Manual](manual.md)
+
+## Links discovered
+- [Transport Overview](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/layercake.png)
+- [Next: Manual](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/manual.md)
+
+--- Packages/com.unity.postprocessing/CONTRIBUTIONS.md ---
+# Contributions
+
+## If you are interested in contributing, here are some ground rules:
+* Follow naming & style conventions in the project
+* Pull requests must be made against `v2` (not stable, which is the default)
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request in Github
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- Packages/com.unity.transport/QAReport.md ---
+# Quality Report
+Use this file to outline the test strategy for this package.
+
+## Version tested: [*package version*]
+
+## QA Owner: [*Add Name*]
+## UX Owner: [*Add Name*]
+
+## Test strategy
+*Use this section to describe how this feature was tested.*
+* A link to the Test Plan (Test Rails, other)
+* Results from the package's editor and runtime test suite.
+* Link to automated test results (if any)
+* Manual test Results, [here's an example](https://docs.google.com/spreadsheets/d/12A76U5Gf969w10KL4Ik0wC1oFIBDUoRrqIvQgD18TFo/edit#gid=0)
+* Scenario test week outcome
+* etc.
+
+## Package Status
+Use this section to describe:
+* UX status/evaluation results
+* package stability
+* known bugs, issues
+* performance metrics,
+* etc
+
+In other words, a general feeling on the health of this package.
+
+
+## Links discovered
+- [here's an example](https://docs.google.com/spreadsheets/d/12A76U5Gf969w10KL4Ik0wC1oFIBDUoRrqIvQgD18TFo/edit#gid=0)
+
+--- Packages/com.unity.transport/Documentation/connection.md ---
+# Overview
+
+The connection layer encapsulates both the connection and any kind of reliability your packets might need.
+A connection can at most have 1 NetworkDriver driving its update loop.
+
+One fast path for parsing packets might be supplying the driver with a specific `parse` function. This function would be run directly after Driver.Update is called.
+
+
+# Scenarios
+
+> **IMPORTANT** 
+>   Currently the `EndPoint` used is the `System.Net.EndPoint` this might change in the future to become a class inside
+    the `Unity.Multiplayer` namespace.
+
+### Create a connection using the `NetworkDriver`
+
+```c#
+using Experimental.Multiplayer;
+
+using UdpCNetworkDriver = Experimental.Multiplayer.BasicNetworkDriver<Experimental.Multiplayer.IPv4UDPSocket>;
+
+public static class Runner
+{
+    public static void Run()
+    {
+        using (var stream = new BitStream(64, Allocator.Persistent))
+        {
+            var driver = new UdpCNetworkDriver();
+            driver.Initialize(new NetworkParams(stream));
+
+            var connection = new NetworkConnection(driver);
+
+            // `-1` indicates an empty disconnected connection.
+            Assert.That(connection.Id == -1);
+
+            driver.Update();
+            // ... any connection calls should be made after the driver.Update();
+            driver.Destroy();
+        }
+    }
+}
+```
+
+### Create a connection using the `NetworkDriver` and Connect to a remote `EndPoint`
+
+```c#
+using Experimental.Multiplayer;
+
+using UdpCNetworkDriver = Experimental.Multiplayer.BasicNetworkDriver<Experimental.Multiplayer.IPv4UDPSocket>;
+
+public static class Runner
+{
+    public static void Run()
+    {
+        using (var stream = new BitStream(64, Allocator.Persistent))
+        {
+            var driver = new UdpCNetworkDriver();
+            driver.Initialize(new NetworkParams(stream));
+
+            var connection = new NetworkConnection(driver);
+
+            // `-1` indicates an empty disconnected connection.
+            Assert.That(connection.Id == -1);
+
+            // create a endpoint to localhost:1337
+            var endpoint = new IPEndPoint(IPAddress.Loopback, 1337);
+            var id = connection.Connect(endpoint);
+            Assert.That(id != -1);
+
+            driver.Update();
+            // ... any connection calls should be made after the driver.Update();
+            // so you should check your connection.PollEvent() here for a `NetworkDriver.Connect` event;
+            driver.Destroy();
+        }
+    }
+}
+```
+
+### Close a NetworkConnection
+
+```c#
+using Experimental.Multiplayer;
+
+using UdpCNetworkDriver = Experimental.Multiplayer.BasicNetworkDriver<Experimental.Multiplayer.IPv4UDPSocket>;
+
+public static class Runner
+{
+    public static void Run()
+    {
+        using (var stream = new BitStream(64, Allocator.Persistent))
+        {
+            var driver = new UdpCNetworkDriver();
+            driver.Initialize(new NetworkParams(stream));
+
+            var connection = new NetworkConnection(driver);
+
+            // `-1` indicates an empty disconnected connection.
+            Assert.That(connection.Id == -1);
+
+            // create a endpoint to localhost:1337
+            var endpoint = new IPEndPoint(IPAddress.Loopback, 1337);
+            var id = connection.Connect(endpoint);
+            Assert.That(id != -1);
+
+            driver.Update();
+            // ... any connection calls should be made after the driver.Update();
+            // so you should check your connection.PollEvent() here for a `NetworkDriver.Connect` event;
+
+            connection.Close();
+            driver.Destroy();
+        }
+    }
+}
+```
+
+### `NetworkConnection` can call `PopEvent` to get incomming messages or connection events.
+
+```c#
+using system;
+using Experimental.Multiplayer;
+
+using UdpCNetworkDriver = Experimental.Multiplayer.BasicNetworkDriver<Experimental.Multiplayer.IPv4UDPSocket>;
+
+public static class Runner
+{
+    public static void Run()
+    {
+        using (var stream = new BitStream(64, Allocator.Persistent))
+        {
+            var driver = new UdpCNetworkDriver();
+            driver.Initialize(new NetworkParams(stream));
+
+            var connection = new NetworkConnection(driver);
+
+            // `-1` indicates an empty disconnected connection.
+            Assert.That(connection.Id == -1);
+
+            // create a endpoint to localhost:1337
+            var endpoint = new IPEndPoint(IPAddress.Loopback, 1337);
+            var id = connection.Connect(endpoint);
+            Assert.That(id != -1);
+
+            driver.Update();
+
+            BitSlice slice;
+            int receivedEvent = UdpCNetworkDriver.NetworkEvent.Empty;
+            do
+            {
+                receivedEvent = connection.PopEvent(out fromConnectionId, out slice);
+                if (receivedEvent == UdpCNetworkDriver.NetworkEvent.data)
+                {
+                    // handle incomming data
+                    // slice will now be filled with the received data.
+                }
+                if (receivedEvent == UdpCNetworkDriver.NetworkEvent.Connect)
+                {
+                    // handle connections
+                }
+                if (receivedEvent == UdpCNetworkDriver.NetworkEvent.Disconnect)
+                {
+                    // handle disconnections
+                }
+            } while (receivedEvent != UdpCNetworkDriver.NetworkEvent.Empty)
+
+            connection.Disconnect(connectionId);
+            driver.Destroy();
+        }
+    }
+}
+```
+
+### Send data to a remote `EndPoint` on the Connection
+
+```c#
+using system;
+using Experimental.Multiplayer;
+
+using UdpCNetworkDriver = Experimental.Multiplayer.BasicNetworkDriver<Experimental.Multiplayer.IPv4UDPSocket>;
+
+public static class Runner
+{
+    public static void Run()
+    {
+        using (var stream = new BitStream(64, Allocator.Persistent))
+        {
+            var driver = new UdpCNetworkDriver();
+            driver.Initialize(new NetworkParams(stream));
+
+            var connection = new NetworkConnection(driver);
+
+            // `-1` indicates an empty disconnected connection.
+            Assert.That(connection.Id == -1);
+
+            // create a endpoint to localhost:1337
+            var endpoint = new IPEndPoint(IPAddress.Loopback, 1337);
+            var id = connection.Connect(endpoint);
+            Assert.That(id != -1);
+
+            int data = 1337;
+            stream.Write(data);
+            connection.Send(stream);
+
+            connection.Disconnect();
+
+            driver.Update();
+            driver.Destroy();
+        }
+    }
+}
+
+```
+
+--- Packages/com.unity.transport/Documentation/driver.md ---
+# NetworkDriver
+
+The driver layer is the lowest level of interface available for the user. 
+its purpose is to work as a driver for the medium chosen and help manage 
+connections in the connection layer. it has a one to many relationship with the 
+connection layer.
+
+
+> **IMPORTANT** 
+>   Currently the `EndPoint` used is the `System.Net.EndPoint` this might change in the future to become a class inside
+    the `Unity.Multiplayer` namespace.
+
+
+> **IMPORTANT** 
+>    All networkdriver need to have their `ScheduleUpdate` method called in order to process any events.
+>    this should be done once per frame.
+
+> **NOTE** 
+>    All custom drivers should inherit from `INetworkDriver`.
+
+> **NOTE** 
+>    All drivers depend on `NetworkParams`
+
+For more detailed up to date information about the function calls please take a look at the script reference.
+
+--- Packages/com.unity.transport/Documentation/manual.md ---
+# Table of Content
+- [Table of Content](#table-of-content)
+- [Foreword](#foreword)
+- [Introduction](#introduction)
+    - [**1**. Getting Started](#1-getting-started)
+        - [**1.1** Installation](#11-installation)
+        - [**1.2** Build the `com.unity.transport` package.](#12-build-the-comunitytransport-package)
+        - [**1.3** Setup project in Unity](#13-setup-project-in-unity)
+    - [**2**. Creating a Minimal Client - Server](#2-creating-a-minimal-client---server)
+        - [**2.1**. Creating a Server](#21-creating-a-server)
+            - [Boilerplate code.](#boilerplate-code)
+            - [ServerBehaviour.cs](#serverbehaviourcs)
+            - [The Update Loop](#the-update-loop)
+        - [**2.2**. Creating a Client](#22-creating-a-client)
+            - [ClientBehaviour.cs](#clientbehaviourcs)
+            - [Creating and Connecting a Client.](#creating-and-connecting-a-client)
+            - [Updating a Client](#updating-a-client)
+        - [**2.3**. Putting it all together.](#23-putting-it-all-together)
+    - [**3**. Understanding Update Flow](#3-understanding-update-flow)
+        - [Understanding the Connection State Machine](#understanding-the-connection-state-machine)
+        - [Event Consuming](#event-consuming)
+    - [**4**. Jobyfiying our Example](#4-jobyfiying-our-example)
+
+# Foreword
+
+# Introduction
+
+## **1**. Getting Started
+
+### **1.1** Installation
+
+The first thing we need to-do is to download the [`com.unity.networking`](https:\\github.com\unity\com.unity.networking.git) package.
+
+> Note: Before you continue, make sure you have [`git`](https://git-scm.com/) and `Visual Studio 2017` installed and configured.
+
+
+So lets open up a terminal and navigate to where we want to have our samples root folder and run the command  
+> `$ git clone https:\\github.com\unity\com.unity.networking.git unity.networking`
+This makes git clone the repository into a folder called `unity.networking`.
+
+### **1.2** Build the `com.unity.transport` package.
+
+For us to be able to run the project without any hassle we need to build the platform specific binaries. To-do so go into your terminal window agin and navigate into your newly cloned repository, from here you need to go into the `network.bindings` folder and call `build` on windows, ... 
+
+> `$ cd unity.networking\network.bindings`  
+> `$ build.bat`
+
+You should see a message indicating that no errors where encountered. If so you are ready to go on to the next phase, setting up a project in unity.
+
+### **1.3** Setup project in Unity
+
+So lets start up the editor and begin by creating a new project. I put the project in the same root folder as the cloned `com.unity.networking` repository. So my root looks like this:
+
+```
+client-server/
+unity.networking/
+```
+
+The first thing we need to-do is to update the manifest file inside the `Packages` folder, so it points to our new downloaded preview package.  
+
+Simply open up the `Packages\manifest.json` file in your favorite editor and add the line:  
+`"com.unity.transport": "file:../../unity.networking/com.unity.transport",`  
+inside the `{}`, under `"dependencies"`.
+```
+:.                         
+├───client-server           
+│   ├───Assets              
+│   │   ├───Scenes          
+│   │   └───Scripts         
+│   ├───Packages            <- We are here.
+│   │       manifest.json   
+│   │                       
+│   └───ProjectSettings     
+└───unity.networking        
+    ├───com.unity.transport <- We want to point to here.
+    └───network.bindings    
+```
+
+> Note: Im using a relative path here. `"../../unity.networking"` this means that you should walk 2 steps up in the folderstructre and there should be a folder called `unity.networking`.
+
+
+> Note: In some cases you might also need to add the line `"com.unity.mathematics": "0.0.12-preview.19",` to your manifest file. And set the `Scripting Runtime Version` to `.NET 4.x Equivalent`, you can find these settings under `Edit->Project Settings->Player->Configuration`
+
+Your file should now look something like this:  
+
+Filename: `manifest.json`
+```json
+{
+  "dependencies": {
+    "com.unity.transport": "file:../../unity.networking/com.unity.transport",
+    "com.unity.mathematics": "0.0.12-preview.19",
+    "com.unity.ads": "2.0.8",
+    ...
+    "com.unity.modules.xr": "1.0.0"
+  }
+}
+```
+
+Now lets go back to the editor, you should see the editor reloading. When its done reloading you can open up the `Packages` tree inside the `Project` view and find a new package called `com.unity.transport`
+
+![Packages View](images/packages-view.PNG)
+
+Next lets look at a minimal sample using `MonoBehaviours` and the new `unity.networking.transport` package.
+
+## **2**. Creating a Minimal Client - Server
+
+In this chapter we will to create a sample project that shows how to use the `com.unity.networking` api to
+- Configure
+- Connect
+- Send data
+- Receive data
+- Close a connection
+- Disconnect
+- Timeout a connection
+
+When we've done this we have technically touched all moving parts of the `transport`. So lets get started, lets make a remote add function. The flow will be a client connects to the server. And sends a number, this number is then received by the server that now adds another number to it and sends it back to the client. The client upon receiving the number disconnects and quits.
+
+Using the `INetworkDriver` to write client and server code is pretty similar, there are a few suttle differences that i will try to bring up here, but if you want to learn more please read the documentation for the [INetworkDriver][3].
+
+### **2.1**. Creating a Server
+
+We will start by creating a server. A server is a endpoint that listens for incomming connection requests and sends and receives messages.
+
+We can start by creating a C# Script in the editor.
+
+Filename: [`Assets\Scripts\ServerBehaviour.cs`][9]
+```c#
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class ServerBehaviour : MonoBehaviour {
+
+    // Use this for initialization
+    void Start () {
+        
+    }
+
+    // Update is called once per frame
+    void Update () {
+        
+    }
+}
+```
+
+#### Boilerplate code.
+
+Because the `unity.networking.transport` package is a very low level api there is a bit of boiler plate code you might want to setup. This is a architecture design we chose to make sure that you always have full control. As we continue develop on the `unity.networking` package, more and more abstractions might be created to ease your work on a day to day basis. 
+
+So let's clean up the dependencies and add our boiler plate code.
+
+Filename: [`Assets\Scripts\ServerBehaviour.cs`][9]
+```c#
+using System.Net;
+using UnityEngine;
+
+using Unity.Networking.Transport;
+using Unity.Collections;
+
+using NetworkConnection = Unity.Networking.Transport.NetworkConnection;
+using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
+...
+```
+
+> `using System.Net;`  
+
+We add this dependencies because we want easy access to the `IPEndPoint` and `IPAddress`. The networking package does not use these types internally but it can implicitly convert them to its internal representation for ease of use.
+
+> `using Unity.Networking.Transport;`  
+> `using Unity.Collections;`  
+
+Next we then include our package and the new `Unity.Collections` library. We will need `NativeList` for our example on the server to book-keep what active connections we have.
+
+> `using NetworkConnection = Unity.Networking.Transport.NetworkConnection;`  
+> `using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;`  
+
+Here we alias some types for less typing. One thing to note is the `BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;` alias. The `BasicNetworkDriver<T>` takes a `interface` to a `INetworkInterface`[1]. This type is represents the actual interface the driver should use to establish connections, send and receive data and finally disconnect. We could have opted to use the [`IPCSocket`][2] if we wanted to only use a in process interface.
+
+#### ServerBehaviour.cs
+
+Adding members we need.
+
+
+Filename: [`Assets\Scripts\ServerBehaviour.cs`][9]
+```c#
+using ...
+
+public class ServerBehaviour : MonoBehaviour {
+
+    public UdpCNetworkDriver m_Driver;
+    private NativeList<NetworkConnection> m_Connections;
+
+    void Start () {
+    }
+    
+    void OnDestroy() {
+    }
+
+    void Update () {
+    }
+
+```
+
+We need to declare a [`INetworkDriver`][3], in our case we use the [`BasicNetworkDriver`][4]
+
+> `public UdpCNetworkDriver m_Driver;`  
+> `private NativeList<NetworkConnection> m_Connections;`  
+
+Here we also create a [`NativeList`](http://native-list-info) to hold our connections.
+
+Filename: [`Assets\Scripts\ServerBehaviour.cs`][9]
+```c#
+    void Start () {
+        m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
+        if (m_Driver.Bind(new IPEndPoint(IPAddress.Any, 9000)) != 0)
+            Debug.Log("Failed to bind to port 9000");
+        else
+            m_Driver.Listen();
+
+        m_Connections = new NativeList<NetworkConnection>(16, Allocator.Persistent);
+    }
+```
+
+Next in `m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);` we just make sure we are creating our driver without any [parameters][5]. Then we try to bind our driver to a specific network address and port. And if that does not fail we call Listen. One very important detail here is that the `Listen` call sets the `NetworkDriver` in the `Listen` state. This means that the `NetworkDriver` will now activly listen for incomming connections. To learn more about the flow inside the network driver and the statemachine please read up on the [`INetworkDriver`][3].
+
+Finally in our setup we create a `NativeList` to hold our connections.
+
+> Note: Both `UdpCNetworkDriver` and `NativeList` allocate unmanaged memory and need to be disposed. To make sure this happens we can simply call the `.Dispose()` method on both of these when we are done.
+
+So let's just add it to the `OnDestroy()` on our `MonoBehaviour`
+
+```c#
+    public void OnDestroy()
+    {
+        m_Driver.Dispose();
+        m_Connections.Dispose();
+    }
+
+```
+
+#### The Update Loop
+
+Because the `unity.networking.transport` package uses the [JobSystem](https://docs.unity3d.com/Manual/JobSystem.html) internally, the the `m_Driver` has a `SchedueleUpdate` call. So inside our Update loop we need to make sure to call the `Complete` method on the job handle that is returned, in order to know when we are ready to process any updates.
+
+```c#
+    void Update () {
+        
+        m_Driver.ScheduleUpdate().Complete();
+```
+> Note: In this example, we are forcing a synchonization on the main-thread in order to update and handle our data later in the `MonoBehaviour::Update` call. In Chapter 4. We will show how to use the job system.
+
+
+So now when we are sure we have updated our `m_Driver` we can start processing. The first thing we want to-do is to handle our connections. We start by first cleaning up any old stale connections from our list before we process any new ones. We do this so we are sure that when we iterate through the list to check what new events we have gotten we dont have any old connections laying around.
+
+Inside the `CleanUpConnections` block we iterate through our connection list and just simply remove any stale connections.
+
+```c#
+        // CleanUpConnections
+        for (int i = 0; i < m_Connections.Length; i++)
+        {
+            if (!m_Connections[i].IsCreated)
+            {
+                m_Connections.RemoveAtSwapBack(i);
+                --i;
+            }
+        }
+```
+
+For `AcceptNewConnections` we accept and add a connection while there are new connections to accept.
+```c#
+        // AcceptNewConnections
+        NetworkConnection c;
+        while ((c = m_Driver.Accept()) != default(NetworkConnection))
+        {
+            m_Connections.Add(c);
+            Debug.Log("Accepted a connection");
+        }
+```
+
+So now we have an up to date connection list. We can now start querying the driver for events that might have happened since the last update.
+
+```c#
+        DataStreamReader stream;
+        for (int i = 0; i < m_Connections.Length; i++)
+        {
+            if (!m_Connections[i].IsCreated)
+                continue;
+```
+We begin by defining a [`DataStreamReader`][6]. This will be used incase any [`Data`][7] event was received. Then we just start looping through all our connections.
+
+For each connection we want to call `PopEventForConnection` while there are more events still needing to get processed.
+
+```c#
+            NetworkEvent.Type cmd;
+            while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out stream)) !=
+                NetworkEvent.Type.Empty)
+            {
+```
+
+Finally we are ready to process events. Lets start with the `Data` event.
+
+```c#
+                if (cmd == NetworkEvent.Type.Data)
+                {
+                    var readerCtx = default(DataStreamReader.Context);
+```
+
+Inside this block we start by defining a `readerCtx`, this is a [`DataStreamReader.Context`][6] type. You can see this type as a set of indicies into a `DataStreamReader`, to help with knowing where in the stream we are, and how much we have read.
+
+Next we use our context and try to read a `uint` from the stream and output what we have received.
+
+```c#
+                    uint number = stream.ReadUInt(ref readerCtx);
+                    Debug.Log("Got " + number + " from the Client adding + 2 to it.");
+```
+
+When this is done we simply add 2 to the number we received. And send it back. To send anything with the `INetworkDriver` we need a instance of a [`DataStreamWriter`][8]. A `DataStreamWriter` is a new collection that comes with the `unity.networking.transport` package. Its also a type that needs to be disposed. So here we are just using the `using` statement to make sure that we clean up after our selfs.
+
+After we have written our new updated number to our stream we just call the `Send` method on the driver and off it goes.
+
+```c#
+                    number +=2;
+
+                    using (var writer = new DataStreamWriter(4, Allocator.Temp))
+                    {
+                        writer.Write(number);
+                        m_Driver.Send(m_Connections[i], writer);
+                    }
+                }
+```
+
+Finally we need to handle the disconnect case. This is pretty straight forward, if we recieve a disconnect message we just reset that connection to a `default(NetworkConnection)` and as you might remember the next time the update loop will run we will clean up after our selfs.
+
+```c#
+                else if (cmd == NetworkEvent.Type.Disconnect)
+                {
+                    Debug.Log("Client disconnected from server");
+                    m_Connections[i] = default(NetworkConnection);
+                }
+            }
+        }
+    }
+
+```
+
+So thats it. Thats the whole server. Not that much if you look at it. Sure its pretty verbose but have no fear its gonna get better.
+
+And here is the full source code to [`ServerBehaviour.cs`][9].
+
+### **2.2**. Creating a Client
+
+The client code looks pretty similar to the server code at first glance, but there are a few suttle differences. I will talk about the differences and not so much the similarities.
+
+#### ClientBehaviour.cs
+
+We still define a `UdpCNetworkDriver` but instead of having a list of connections we now only have one. I also added a `Done` flag just to be know when we are done or incase we have issues connecting so we can exit out quickly.
+
+Filename: [`Assets\Scripts\ClientBehaviour.cs`][11]
+```c#
+using ...
+
+public class ClientBehaviour : MonoBehaviour {
+
+    public UdpCNetworkDriver m_Driver;
+    public NetworkConnection m_Connection;
+    public bool Done;
+    
+    void Start () { ... }
+    public void OnDestroy() { ... }
+    void Update() { ... }
+}
+```
+
+#### Creating and Connecting a Client.
+
+We start off by creating a driver for the client and a address to the server.
+```c#
+    void Start () {
+        m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
+        m_Connection = default(NetworkConnection);
+
+        var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+        m_Connection = m_Driver.Connect(endpoint);
+    }
+```
+Then we just call `Connect` on our driver.
+
+Cleaning up this time is a bit easier because we now dont need an `NativeList` to hold our connections so it simply just becomes:
+
+```c#
+    public void OnDestroy()
+    {
+        m_Driver.Dispose();
+    }
+```
+
+#### Updating a Client
+
+We start of the same way as we did in the server by calling `m_Driver.ScheduleUpdate().Complete();` And we just want to make sure that connection actually worked.
+
+```c#
+    void Update()
+    {
+        m_Driver.ScheduleUpdate().Complete();
+
+        if (!m_Connection.IsCreated)
+        {
+            if (!Done)
+                Debug.Log("Something went wrong during connect");
+            return;
+        }
+```
+
+By now you should recognize this preamble. But if you look closely you can see that we switched out 
+the call to `m_Driver.PopEventForConnection` with a call to `m_Connection.PopEvent`. This is technically the same call it just makes it a bit clearer that we are handling a single connection.
+
+```c#
+        DataStreamReader stream;
+        NetworkEvent.Type cmd;
+        while ((cmd = m_Connection.PopEvent(m_Driver, out stream)) != 
+            NetworkEvent.Type.Empty)
+        {
+```
+
+We now encounter a new event we have not seen yet a `NetworkEvent.Type.Connect` event.
+This event tells us that we have received a `ConnectionAccept` message and we are now connected to the remote peer. In this case the server that is listening on port `9000` on `IPAddress.Loopback` more commonly known as `127.0.0.1`.
+
+```
+            if (cmd == NetworkEvent.Type.Connect)
+            {
+                Debug.Log("We are now connected to the server");
+                
+                var value = 1;
+                using (var writer = new DataStreamWriter(4, Allocator.Temp))
+                {
+                    writer.Write(value);
+                    m_Connection.Send(m_Driver, writer);
+                }
+            }
+```
+So we said that when we establish a connection between the client and the server. We send a number that we want to have added. So we see here the use of the using pattern together with the `DataStreamWriter`, where we set our value to 1, and write it into the stream and finaly we send it out on the wire.
+
+On Data we read our value back that we received from the server and then call `Disconnect`. A good pattern is to always set your `NetworkConnection` to `default(NetworkConnection)` to avoid stale references.
+
+```c#
+            else if (cmd == NetworkEvent.Type.Data)
+            {
+                var readerCtx = default(DataStreamReader.Context);
+                uint value = stream.ReadUInt(ref readerCtx);
+                Debug.Log("Got the value = " + value + " back from the server");
+                Done = true;
+                m_Connection.Disconnect(m_Driver);
+                m_Connection = default(NetworkConnection);
+            }
+
+```
+Lastly we just want to make sure we handle the case that a server disconnects us for some reason. To read up more about the connect and disconnect flow, please checkout this [page][10].
+
+```c#
+
+            else if (cmd == NetworkEvent.Type.Disconnect)
+            {
+                Debug.Log("Client got disconnected from server");
+                m_Connection = default(NetworkConnection);
+            }
+        }
+    }
+```
+
+The full source code for the `ClientBehaviour.cs` can be found [here][11]
+
+
+### **2.3**. Putting it all together.
+
+To take this for a test run, we can simply just add a new empty `GameObject` to our scene.
+
+![GameObject Added](images/game-object.PNG)  
+
+Add add both of our behaviours to it.  
+![Inspector](images/inspector.PNG)
+
+Now when we press `Play` we should see 5 log messages show up in your Console window. Similar to this:
+
+![Console](images/console-view.PNG)
+
+## **3**. Understanding Update Flow
+
+As we saw in the last chapter, we call `SchedueleUpdate` on every frame. This is so we can update the state of each connection we have active make sure we read all data that we have received and finally produce events that the user can react to using `PopEvent` and `PopEventForConnection`.
+
+So lets get started.
+
+The Update loop of the driver is really simple, it might look daunting at first glance but if you strip out all of the job system dependencies you will see we only do 3 things here:
+
+![FlowchartUpdate](images/com.unity.transport.driver.png)
+
+1. We start by calling our `InternalUpdate`, this call is where we clean up any stale connections, we clear our buffers and we finally check timeouts on our connections.
+2. The second thing in the chain is running the `ReceiveJob` for reading and parsing the data from the socket.
+3. Finally for each new message we receive on the socket we call a `AppendPacket` function that parses each packet received and either creates an event for it or discards it.
+
+Thats it, We clean up, we populate and we push new events. 
+
+You could almost view the `NetworkDriver` as a Control System for the State Machine handling 
+`NetworkConnection`.
+
+This brings us to the next topic. Understanding the Connection State Machine.
+
+### Understanding the Connection State Machine
+
+Its important to at least understand how transitions occur in the connection statemachine so you make decisions depending on what triggered each state. And to understand the suttle differences depending if you are `Connecting` to another host or if you simply want to Listen for incomming connections. As you can see below the state machine for the `NetworkConnection` is pretty simple.
+
+![ConnectionState](images/com.unity.transport.connection.png)
+
+All connections start in `Disconnected` state.
+- Depending what state the `NetworkDriver` is in, the `Listening (Passive)` state might be triggered. This is when the driver acts like a server listening for incomming connections and data requests. And secondly you could try to use the driver to connect to a remove endpoint and then we would invoke another flow of the state machine.
+
+So to give a overview we have 2 standard scenarios. Either you listen for incomming connections or you use and outgoing connection to connect to someone else.
+
+In our previous example we used the ServerBehaviour to `Listen` and the ClientBehaviour to `Connect`.
+
+### Event Consuming
+
+So we have walked through almost the full update loop, its now back to us the users to do something useful with the information the driver has gathered for us.
+
+There are currently 4 types of events supplied by the `NetworkDriver`
+
+```c#
+public enum Type
+{
+    Empty = 0,
+    Data,
+    Connect,
+    Disconnect
+}
+```
+
+As mentioned, there are a few suttle differences running the driver as a host or client. Mainly when it comes to consumation of events. 
+
+Both your client and you server loop will want to consume the events that are produced by the `NetworkDriver`. And you do so by either calling `PopEvent` on each `NetworkConnection` similar to how we did before.
+
+```c#
+DataStreamReader strm;
+NetworkEvent.Type cmd;
+while ((cmd = m_Connection.PopEvent(driver, out strm)) != NetworkEvent.Type.Empty)
+    ; // Handle Event
+```
+
+You can try calling the `PopEventForConnection` on the `NetworkDriver` as we did in the ServerBehaviour example:
+```c#
+DataStreamReader strm;
+NetworkEvent.Type cmd;
+while ((cmd = m_Driver.PopEventForConnection(m_Connections[i], out strm)) != NetworkEvent.Type.Empty)
+    ; // Handle Event
+```
+
+And finally to receive a new `NetworkConnection` on the Driver while Listening you can call `Accept`
+
+```c#
+NetworkConnection c;
+while ((c = m_Driver.Accept()) != default(NetworkConnection))
+    ; // Handle Connection Event.
+```
+
+There is no real difference between these calls, both calls will do the same thing. Its just how you want to phrase your self when writing the code.
+
+| Event | Description |
+|-------|-------------|
+| Empty | The `Empty` event signals that there are no more messages in our event queue to handle this frame. |
+| Data | The `Data` event signals that we have received data from a connected endpoint. |
+| Connect | The `Connect` event signals that a new connection has been established.<br> **Note**: this event is only available if the `NetworkDriver` is **not** in the `Listening` state. |
+| Disconnect | The `Disconnect` event is received if;<br> 1. `Disconnect` packet was received (calling `NetworkConnection::Disconnect` will trigger this.)<br> 2. A *socket timeout* occured.<br> 3. Maximum Attempts on the `NetworkConnection` was hit. <br> **Note:** That if you call `Disconnect` on your `NetworkConnection` this will **NOT** trigger an `Disconnect` event on your local `NetworkDriver`.|
+
+Looking at this table we see that there are 2 things that stand out.
+- The first thing is that the `Connect` event is only availeble if the `NetworkDriver` is **NOT** `Listening`  
+  - In order to receive any `Connect` events on a `NetworkDriver` that is in the `Listening` state we need to call the special function `Accept` just as we did in ***2.1**. Creating a Server*.
+- The second thing to notice is that if you call `Disconnect` on a `NetworkConnection` this will not trigger an event inside your own driver.
+
+## **4**. Jobyfiying our Example
+
+---
+
+[1]: inetworkinterface.md
+[2]: ipcsocket.md
+[3]: inetworkdriver.md
+[4]: basicnetworkdriver.md
+[5]: networkparameters.md
+[6]: datastreamreader.md
+[7]: networkevent.md
+[8]: datastreamwriter.md
+[9]: samples/serverbehaviour.cs.md
+[10]: connectdisconnectflow.md
+[11]: samples/clientbehaviour.cs.md
+
+## Links discovered
+- [`com.unity.networking`](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/https:\\github.com\unity\com.unity.networking.git)
+- [`git`](https://git-scm.com/)
+- [Packages View](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/packages-view.PNG)
+- [`NativeList`](http://native-list-info)
+- [JobSystem](https://docs.unity3d.com/Manual/JobSystem.html)
+- [GameObject Added](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/game-object.PNG)
+- [Inspector](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/inspector.PNG)
+- [Console](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/console-view.PNG)
+- [FlowchartUpdate](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/com.unity.transport.driver.png)
+- [ConnectionState](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/images/com.unity.transport.connection.png)
+
+--- Packages/com.unity.transport/Documentation/TableOfContents.md ---
+* [Unity Multiplayer Manual](index)
+* [Manual](manual)
+ * Transport Layer
+    * [NetworkDriver](driver)
+    * [NetworkConnection](connection)
+
+## Links discovered
+- [Unity Multiplayer Manual](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/index.md)
+- [Manual](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/manual.md)
+- [NetworkDriver](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/driver.md)
+- [NetworkConnection](https://github.com/Unity-Technologies/FPSSample/blob/master/Packages/com.unity.transport/Documentation/connection.md)
+
+--- Packages/com.unity.transport/Documentation/samples/clientbehaviour.cs.md ---
+﻿```c#
+using System.Net;
+using Unity.Collections;
+using UnityEngine;
+
+using Unity.Networking.Transport;
+
+using NetworkConnection = Unity.Networking.Transport.NetworkConnection;
+using UdpCNetworkDriver = Unity.Networking.Transport.BasicNetworkDriver<Unity.Networking.Transport.IPv4UDPSocket>;
+
+public class ClientBehaviour : MonoBehaviour {
+
+    public UdpCNetworkDriver m_Driver;
+    public NetworkConnection m_Connection;
+    public bool Done;
+    
+    void Start () {
+        m_Driver = new UdpCNetworkDriver(new INetworkParameter[0]);
+        m_Connection = default(NetworkConnection);
+        
+        var endpoint = new IPEndPoint(IPAddress.Loopback, 9000);
+        m_Connection = m_Driver.Connect(endpoint);
+    }
+    
+    public void OnDestroy()
+    {
+        m_Driver.Dispose();
+    }
+    
+    void Update()
+    {
+        m_Driver.ScheduleUpdate().Complete();
+
+        if (!m_Connection.IsCreated)
+        {
+            if (!Done)
+                Debug.Log("Something went wrong during connect");
+            return;
+        }
+        
+        DataStreamReader stream;
+        NetworkEvent.Type cmd;
+        
+        while ((cmd = m_Connection.PopEvent(m_Driver, out stream)) != 
+            NetworkEvent.Type.Empty)
+        {
+            if (cmd == NetworkEvent.Type.Connect)
+            {
+                Debug.Log("We are now connected to the server");
+                
+                var value = 1;
+                using (var writer = new DataStreamWriter(4, Allocator.Temp))
+                {
+                    writer.Write(value);
+                    m_Connection.Send(m_Driver, writer);
+                }
+            }
+            else if (cmd == NetworkEvent.Type.Data)
+            {
+                var readerCtx = default(DataStreamReader.Context);
+                uint value = stream.ReadUInt(ref readerCtx);
+                Debug.Log("Got the value = " + value + " back from the server");
+                Done = true;
+                m_Connection.Disconnect(m_Driver);
+                m_Connection = default(NetworkConnection);
+            }
+            else if (cmd == NetworkEvent.Type.Disconnect)
+            {
+                Debug.Log("Client got disconnected from server");
+                m_Connection = default(NetworkConnection);
+            }
+        }
+    }
+    
+}
+```
+
+--- ProjectSettings/HDRPProjectVersion.txt ---
+1
+
+
+--- ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2018.3.8f1

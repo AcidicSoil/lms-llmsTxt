@@ -1278,7 +1278,7 @@ For information about AGENTS.md, see [this documentation](https://developers.ope
 
 ## Hierarchical agents message
 
-When the `hierarchical_agents` feature flag is enabled (via `[features]` in `config.toml`), Codex appends additional guidance about AGENTS.md scope and precedence to the user instructions message and emits that message even when no AGENTS.md is present.
+When the `child_agents_md` feature flag is enabled (via `[features]` in `config.toml`), Codex appends additional guidance about AGENTS.md scope and precedence to the user instructions message and emits that message even when no AGENTS.md is present.
 
 
 ## Links discovered
@@ -2277,6 +2277,7 @@ In the codex-rs folder where the rust code lives:
 - Use method references over closures when possible per https://rust-lang.github.io/rust-clippy/master/index.html#redundant_closure_for_method_calls
 - When writing tests, prefer comparing the equality of entire objects over fields one by one.
 - When making a change that adds or changes an API, ensure that the documentation in the `docs/` folder is up to date if applicable.
+- If you change `ConfigToml` or nested config types, run `just write-config-schema` to update `codex-rs/core/config.schema.json`.
 
 Run `just fmt` (in `codex-rs` directory) automatically after making Rust code changes; do not ask for approval to run it. Before finalizing a change to `codex-rs`, run `just fix -p <project>` (in `codex-rs` directory) to fix any linter issues in the code. Prefer scoping with `-p` to avoid slow workspace‑wide Clippy builds; only run `just fix` without `-p` if you changed shared crates. Additionally, run the tests:
 
@@ -4264,8 +4265,11 @@ Example (from OpenAI's official VSCode extension):
 - `review/start` — kick off Codex’s automated reviewer for a thread; responds like `turn/start` and emits `item/started`/`item/completed` notifications with `enteredReviewMode` and `exitedReviewMode` items, plus a final assistant `agentMessage` containing the review.
 - `command/exec` — run a single command under the server sandbox without starting a thread/turn (handy for utilities and validation).
 - `model/list` — list available models (with reasoning effort options).
+- `collaborationMode/list` — list available collaboration mode presets (experimental, no pagination).
 - `skills/list` — list skills for one or more `cwd` values (optional `forceReload`).
+- `skills/config/write` — write user-level skill config by path.
 - `mcpServer/oauth/login` — start an OAuth login for a configured MCP server; returns an `authorization_url` and later emits `mcpServer/oauthLogin/completed` once the browser flow finishes.
+- `config/mcpServer/reload` — reload MCP server config from disk and queue a refresh for loaded threads (applied on each thread's next active turn); returns `{}`. Use this after editing `config.toml` without restarting the server.
 - `mcpServerStatus/list` — enumerate configured MCP servers with their tools, resources, resource templates, and auth status; supports cursor+limit pagination.
 - `feedback/upload` — submit a feedback report (classification + optional reason/logs and conversation_id); returns the tracking thread id.
 - `command/exec` — run a single command under the server sandbox without starting a thread/turn (handy for utilities and validation).
@@ -4315,10 +4319,11 @@ To branch from a stored session, call `thread/fork` with the `thread.id`. This c
 
 ### Example: List threads (with pagination & filters)
 
-`thread/list` lets you render a history UI. Pass any combination of:
+`thread/list` lets you render a history UI. Results default to `createdAt` (newest first) descending. Pass any combination of:
 
 - `cursor` — opaque string from a prior response; omit for the first page.
 - `limit` — server defaults to a reasonable page size if unset.
+- `sortKey` — `created_at` (default) or `updated_at`.
 - `modelProviders` — restrict results to specific providers; unset, null, or an empty array will include all providers.
 
 Example:
@@ -4327,11 +4332,12 @@ Example:
 { "method": "thread/list", "id": 20, "params": {
     "cursor": null,
     "limit": 25,
+    "sortKey": "created_at"
 } }
 { "id": 20, "result": {
     "data": [
-        { "id": "thr_a", "preview": "Create a TUI", "modelProvider": "openai", "createdAt": 1730831111 },
-        { "id": "thr_b", "preview": "Fix tests", "modelProvider": "openai", "createdAt": 1730750000 }
+        { "id": "thr_a", "preview": "Create a TUI", "modelProvider": "openai", "createdAt": 1730831111, "updatedAt": 1730831111 },
+        { "id": "thr_b", "preview": "Fix tests", "modelProvider": "openai", "createdAt": 1730750000, "updatedAt": 1730750000 }
     ],
     "nextCursor": "opaque-token-or-null"
 } }
@@ -4552,6 +4558,7 @@ Today both notifications carry an empty `items` array even when item events were
 - `commandExecution` — `{id, command, cwd, status, commandActions, aggregatedOutput?, exitCode?, durationMs?}` for sandboxed commands; `status` is `inProgress`, `completed`, `failed`, or `declined`.
 - `fileChange` — `{id, changes, status}` describing proposed edits; `changes` list `{path, kind, diff}` and `status` is `inProgress`, `completed`, `failed`, or `declined`.
 - `mcpToolCall` — `{id, server, tool, status, arguments, result?, error?}` describing MCP calls; `status` is `inProgress`, `completed`, or `failed`.
+- `collabToolCall` — `{id, tool, status, senderThreadId, receiverThreadId?, newThreadId?, prompt?, agentStatus?}` describing collab tool calls (`spawn_agent`, `send_input`, `wait`, `close_agent`); `status` is `inProgress`, `completed`, or `failed`.
 - `webSearch` — `{id, query}` for a web search request issued by the agent.
 - `imageView` — `{id, path}` emitted when the agent invokes the image viewer tool.
 - `enteredReviewMode` — `{id, review}` sent when the reviewer starts; `review` is a short user-facing label such as `"current changes"` or the requested target description.
@@ -4657,17 +4664,30 @@ Example:
 $skill-creator Add a new skill for triaging flaky CI and include step-by-step usage.
 ```
 
-Use `skills/list` to fetch the available skills (optionally scoped by `cwd` and/or with `forceReload`).
+Use `skills/list` to fetch the available skills (optionally scoped by `cwds`, with `forceReload`).
 
 ```json
 { "method": "skills/list", "id": 25, "params": {
-    "cwd": "/Users/me/project",
+    "cwds": ["/Users/me/project"],
     "forceReload": false
 } }
 { "id": 25, "result": {
-    "skills": [
-        { "name": "skill-creator", "description": "Create or update a Codex skill" }
-    ]
+    "data": [{
+        "cwd": "/Users/me/project",
+        "skills": [
+            { "name": "skill-creator", "description": "Create or update a Codex skill", "enabled": true }
+        ],
+        "errors": []
+    }]
+} }
+```
+
+To enable or disable a skill by path:
+
+```json
+{ "method": "skills/config/write", "id": 26, "params": {
+    "path": "/Users/me/.codex/skills/skill-creator/SKILL.md",
+    "enabled": false
 } }
 ```
 
@@ -4816,6 +4836,10 @@ Note that `codex-core` makes some assumptions about certain helper utilities bei
 ### macOS
 
 Expects `/usr/bin/sandbox-exec` to be present.
+
+When using the workspace-write sandbox policy, the Seatbelt profile allows
+writes under the configured writable roots while keeping `.git` (directory or
+pointer file), the resolved `gitdir:` target, and `.codex` read-only.
 
 ### Linux
 
@@ -5168,6 +5192,204 @@ def lint_utf8_ascii(filename: Path, fix: bool) -> bool:
 
 if __name__ == "__main__":
     sys.exit(main())
+
+
+--- scripts/mock_responses_websocket_server.py ---
+#!/usr/bin/env python3
+
+import argparse
+import asyncio
+import datetime as dt
+import json
+import sys
+from typing import Any
+
+import websockets
+
+
+HOST = "127.0.0.1"
+DEFAULT_PORT = 8765
+PATH = "/v1/responses"
+
+CALL_ID = "shell-command-call"
+FUNCTION_NAME = "shell_command"
+FUNCTION_ARGS_JSON = json.dumps({"command": "echo websocket"}, separators=(",", ":"))
+
+ASSISTANT_TEXT = "done"
+
+
+def _utc_iso() -> str:
+    return dt.datetime.now(tz=dt.timezone.utc).isoformat(timespec="milliseconds")
+
+
+def _default_usage() -> dict[str, Any]:
+    return {
+        "input_tokens": 0,
+        "input_tokens_details": None,
+        "output_tokens": 0,
+        "output_tokens_details": None,
+        "total_tokens": 0,
+    }
+
+
+def _event_response_created(response_id: str) -> dict[str, Any]:
+    return {"type": "response.created", "response": {"id": response_id}}
+
+
+def _event_response_done() -> dict[str, Any]:
+    return {"type": "response.done", "response": {"usage": _default_usage()}}
+
+
+def _event_response_completed(response_id: str) -> dict[str, Any]:
+    return {"type": "response.completed", "response": {"id": response_id, "usage": _default_usage()}}
+
+
+def _event_function_call(call_id: str, name: str, arguments_json: str) -> dict[str, Any]:
+    return {
+        "type": "response.output_item.done",
+        "item": {"type": "function_call", "call_id": call_id, "name": name, "arguments": arguments_json},
+    }
+
+
+def _event_assistant_message(message_id: str, text: str) -> dict[str, Any]:
+    return {
+        "type": "response.output_item.done",
+        "item": {
+            "type": "message",
+            "role": "assistant",
+            "id": message_id,
+            "content": [{"type": "output_text", "text": text}],
+        },
+    }
+
+
+def _dump_json(payload: Any) -> str:
+    return json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+
+
+def _print_request(prefix: str, payload: Any) -> None:
+    pretty = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
+    sys.stdout.write(f"{prefix} {_utc_iso()}\n{pretty}\n")
+    sys.stdout.flush()
+
+async def _handle_connection(
+    websocket: Any,
+    *,
+    expected_path: str = PATH,
+) -> None:
+    # websockets v15 exposes the request path here.
+    path = getattr(getattr(websocket, "request", None), "path", None)
+    if path is None:
+        # Older handler signatures could pass `path` separately; accept if unavailable.
+        path = "(unknown)"
+
+    sys.stdout.write(f"[conn] {_utc_iso()} connected path={path}\n")
+    sys.stdout.flush()
+
+    path_no_qs = path.split("?", 1)[0] if path != "(unknown)" else path
+    if path_no_qs != "(unknown)" and path_no_qs != expected_path:
+        sys.stdout.write(f"[conn] {_utc_iso()} rejecting unexpected path (expected {expected_path})\n")
+        sys.stdout.flush()
+        await websocket.close(code=1008, reason="unexpected websocket path")
+        return
+
+    async def recv_json(label: str) -> Any:
+        msg = await websocket.recv()
+        if isinstance(msg, bytes):
+            payload = json.loads(msg.decode("utf-8"))
+        else:
+            payload = json.loads(msg)
+        _print_request(f"[{label}] recv", payload)
+        return payload
+
+    async def send_event(ev: dict[str, Any]) -> None:
+        sys.stdout.write(f"[conn] {_utc_iso()} send {_dump_json(ev)}\n")
+        await websocket.send(_dump_json(ev))
+
+    # Request 1: provoke a function call (mirrors `codex-rs/core/tests/suite/agent_websocket.rs`).
+    await recv_json("req1")
+    await send_event(_event_response_created("resp-1"))
+    await send_event(_event_function_call(CALL_ID, FUNCTION_NAME, FUNCTION_ARGS_JSON))
+    await send_event(_event_response_done())
+
+    # Request 2: expect appended tool output; send final assistant message.
+    await recv_json("req2")
+    await send_event(_event_response_created("resp-2"))
+    await send_event(_event_assistant_message("msg-1", ASSISTANT_TEXT))
+    await send_event(_event_response_completed("resp-2"))
+
+    sys.stdout.write(f"[conn] {_utc_iso()} closing\n")
+    sys.stdout.flush()
+    await websocket.close()
+
+
+async def _serve(port: int) -> int:
+    async def handler(ws: Any) -> None:
+        try:
+            await _handle_connection(ws, expected_path=PATH)
+        except websockets.exceptions.ConnectionClosedOK:
+            return
+
+    try:
+        server = await websockets.serve(handler, HOST, port)
+    except OSError as err:
+        sys.stderr.write(f"[server] failed to bind ws://{HOST}:{port}: {err}\n")
+        return 2
+    bound_port = server.sockets[0].getsockname()[1]
+    ws_uri = f"ws://{HOST}:{bound_port}"
+
+    sys.stdout.write("[server] mock Responses WebSocket server running\n")
+    sys.stdout.write(f"""Add this to your config.toml:
+
+
+[model_providers.localapi_ws]
+base_url = "{ws_uri}/v1"
+name = "localapi_ws"
+wire_api = "responses_websocket"
+env_key = "OPENAI_API_KEY_STAGING"
+
+[profiles.localapi_ws]
+model = "gpt-5.2"
+model_provider = "localapi_ws"
+model_reasoning_effort = "medium"
+
+
+start codex with `codex --profile localapi_ws`
+""")
+    sys.stdout.flush()
+
+    try:
+        await asyncio.Future()
+    finally:
+        server.close()
+        await server.wait_closed()
+    return 0
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Mock a minimal Responses API WebSocket endpoint for the `test_codex` flow.\n"
+            f"Binds to {HOST}:{DEFAULT_PORT} by default and logs incoming JSON requests to stdout."
+        ),
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=DEFAULT_PORT,
+        help=f"Bind port (default: {DEFAULT_PORT}; use 0 for random free port).",
+    )
+    args = parser.parse_args()
+
+    try:
+        return asyncio.run(_serve(args.port))
+    except KeyboardInterrupt:
+        return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
 
 
 --- scripts/stage_npm_packages.py ---

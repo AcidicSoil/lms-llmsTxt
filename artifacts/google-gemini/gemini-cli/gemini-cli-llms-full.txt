@@ -419,9 +419,45 @@ need this for extensions built to expose commands and prompts.
 Restart the CLI again. The model will now have the context from your `GEMINI.md`
 file in every session where the extension is active.
 
-## Step 6: Releasing your extension
+## (Optional) Step 6: Add an Agent Skill
 
-Once you are happy with your extension, you can share it with others. The two
+_Note: This is an experimental feature enabled via `experimental.skills`._
+
+[Agent Skills](../cli/skills.md) let you bundle specialized expertise and
+procedural workflows. Unlike `GEMINI.md`, which provides persistent context,
+skills are activated only when needed, saving context tokens.
+
+1.  Create a `skills` directory and a subdirectory for your skill:
+
+    ```bash
+    mkdir -p skills/security-audit
+    ```
+
+2.  Create a `skills/security-audit/SKILL.md` file:
+
+    ```markdown
+    ---
+    name: security-audit
+    description:
+      Expertise in auditing code for security vulnerabilities. Use when the user
+      asks to "check for security issues" or "audit" their changes.
+    ---
+
+    # Security Auditor
+
+    You are an expert security researcher. When auditing code:
+
+    1. Look for common vulnerabilities (OWASP Top 10).
+    2. Check for hardcoded secrets or API keys.
+    3. Suggest remediation steps for any findings.
+    ```
+
+Skills bundled with your extension are automatically discovered and can be
+activated by the model during a session when it identifies a relevant task.
+
+## Step 7: Release your extension
+
+Once you're happy with your extension, you can share it with others. The two
 primary ways of releasing extensions are via a Git repository or through GitHub
 Releases. Using a public Git repository is the simplest method.
 
@@ -436,6 +472,7 @@ You've successfully created a Gemini CLI extension! You learned how to:
 - Add custom tools with an MCP server.
 - Create convenient custom commands.
 - Provide persistent context to the model.
+- Bundle specialized Agent Skills.
 - Link your extension for local development.
 
 From here, you can explore more advanced features and build powerful new
@@ -443,6 +480,7 @@ capabilities into the Gemini CLI.
 
 
 ## Links discovered
+- [Agent Skills](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/skills.md)
 - [Extension Releasing Guide](https://github.com/google-gemini/gemini-cli/blob/main/docs/extensions/extension-releasing.md)
 
 --- docs/get-started/installation.md ---
@@ -1157,7 +1195,7 @@ export interface InstallationInfo {
 
 export function getInstallationInfo(
   projectRoot: string,
-  isAutoUpdateDisabled: boolean,
+  isAutoUpdateEnabled: boolean,
 ): InstallationInfo {
   const cliPath = process.argv[1];
   if (!cliPath) {
@@ -1227,9 +1265,9 @@ export function getInstallationInfo(
         packageManager: PackageManager.PNPM,
         isGlobal: true,
         updateCommand,
-        updateMessage: isAutoUpdateDisabled
-          ? `Please run ${updateCommand} to update`
-          : 'Installed with pnpm. Attempting to automatically update now...',
+        updateMessage: isAutoUpdateEnabled
+          ? 'Installed with pnpm. Attempting to automatically update now...'
+          : `Please run ${updateCommand} to update`,
       };
     }
 
@@ -1240,9 +1278,9 @@ export function getInstallationInfo(
         packageManager: PackageManager.YARN,
         isGlobal: true,
         updateCommand,
-        updateMessage: isAutoUpdateDisabled
-          ? `Please run ${updateCommand} to update`
-          : 'Installed with yarn. Attempting to automatically update now...',
+        updateMessage: isAutoUpdateEnabled
+          ? 'Installed with yarn. Attempting to automatically update now...'
+          : `Please run ${updateCommand} to update`,
       };
     }
 
@@ -1260,9 +1298,9 @@ export function getInstallationInfo(
         packageManager: PackageManager.BUN,
         isGlobal: true,
         updateCommand,
-        updateMessage: isAutoUpdateDisabled
-          ? `Please run ${updateCommand} to update`
-          : 'Installed with bun. Attempting to automatically update now...',
+        updateMessage: isAutoUpdateEnabled
+          ? 'Installed with bun. Attempting to automatically update now...'
+          : `Please run ${updateCommand} to update`,
       };
     }
 
@@ -1293,9 +1331,9 @@ export function getInstallationInfo(
       packageManager: PackageManager.NPM,
       isGlobal: true,
       updateCommand,
-      updateMessage: isAutoUpdateDisabled
-        ? `Please run ${updateCommand} to update`
-        : 'Installed with npm. Attempting to automatically update now...',
+      updateMessage: isAutoUpdateEnabled
+        ? 'Installed with npm. Attempting to automatically update now...'
+        : `Please run ${updateCommand} to update`,
     };
   } catch (error) {
     debugLogger.log(error);
@@ -1367,7 +1405,7 @@ describe('getInstallationInfo', () => {
 
   it('should return UNKNOWN when cliPath is not available', () => {
     process.argv[1] = '';
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.UNKNOWN);
   });
 
@@ -1378,7 +1416,7 @@ describe('getInstallationInfo', () => {
       throw error;
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.UNKNOWN);
     expect(debugLogger.log).toHaveBeenCalledWith(error);
@@ -1391,7 +1429,7 @@ describe('getInstallationInfo', () => {
     );
     mockedIsGitRepository.mockReturnValue(true);
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.UNKNOWN);
     expect(info.isGlobal).toBe(false);
@@ -1405,7 +1443,7 @@ describe('getInstallationInfo', () => {
     process.argv[1] = npxPath;
     mockedRealPathSync.mockReturnValue(npxPath);
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.NPX);
     expect(info.isGlobal).toBe(false);
@@ -1417,7 +1455,7 @@ describe('getInstallationInfo', () => {
     process.argv[1] = pnpxPath;
     mockedRealPathSync.mockReturnValue(pnpxPath);
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.PNPX);
     expect(info.isGlobal).toBe(false);
@@ -1432,7 +1470,7 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.BUNX);
     expect(info.isGlobal).toBe(false);
@@ -1448,7 +1486,7 @@ describe('getInstallationInfo', () => {
     mockedRealPathSync.mockReturnValue(cliPath);
     mockedExecSync.mockReturnValue(Buffer.from('gemini-cli')); // Simulate successful command
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(mockedExecSync).toHaveBeenCalledWith(
       'brew list -1 | grep -q "^gemini-cli$"',
@@ -1472,7 +1510,7 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(mockedExecSync).toHaveBeenCalledWith(
       'brew list -1 | grep -q "^gemini-cli$"',
@@ -1491,13 +1529,15 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    // isAutoUpdateEnabled = true -> "Attempting to automatically update"
+    const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.PNPM);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe('pnpm add -g @google/gemini-cli@latest');
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
-    const infoDisabled = getInstallationInfo(projectRoot, true);
+    // isAutoUpdateEnabled = false -> "Please run..."
+    const infoDisabled = getInstallationInfo(projectRoot, false);
     expect(infoDisabled.updateMessage).toContain('Please run pnpm add');
   });
 
@@ -1509,7 +1549,8 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    // isAutoUpdateEnabled = true -> "Attempting to automatically update"
+    const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.YARN);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe(
@@ -1517,7 +1558,8 @@ describe('getInstallationInfo', () => {
     );
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
-    const infoDisabled = getInstallationInfo(projectRoot, true);
+    // isAutoUpdateEnabled = false -> "Please run..."
+    const infoDisabled = getInstallationInfo(projectRoot, false);
     expect(infoDisabled.updateMessage).toContain('Please run yarn global add');
   });
 
@@ -1529,13 +1571,15 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    // isAutoUpdateEnabled = true -> "Attempting to automatically update"
+    const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.BUN);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe('bun add -g @google/gemini-cli@latest');
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
-    const infoDisabled = getInstallationInfo(projectRoot, true);
+    // isAutoUpdateEnabled = false -> "Please run..."
+    const infoDisabled = getInstallationInfo(projectRoot, false);
     expect(infoDisabled.updateMessage).toContain('Please run bun add');
   });
 
@@ -1550,7 +1594,7 @@ describe('getInstallationInfo', () => {
       (p) => p === path.join(projectRoot, 'yarn.lock'),
     );
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.YARN);
     expect(info.isGlobal).toBe(false);
@@ -1568,7 +1612,7 @@ describe('getInstallationInfo', () => {
       (p) => p === path.join(projectRoot, 'pnpm-lock.yaml'),
     );
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.PNPM);
     expect(info.isGlobal).toBe(false);
@@ -1585,7 +1629,7 @@ describe('getInstallationInfo', () => {
       (p) => p === path.join(projectRoot, 'bun.lockb'),
     );
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.BUN);
     expect(info.isGlobal).toBe(false);
@@ -1600,7 +1644,7 @@ describe('getInstallationInfo', () => {
     });
     mockedExistsSync.mockReturnValue(false); // No lockfiles
 
-    const info = getInstallationInfo(projectRoot, false);
+    const info = getInstallationInfo(projectRoot, true);
 
     expect(info.packageManager).toBe(PackageManager.NPM);
     expect(info.isGlobal).toBe(false);
@@ -1614,13 +1658,15 @@ describe('getInstallationInfo', () => {
       throw new Error('Command failed');
     });
 
-    const info = getInstallationInfo(projectRoot, false);
+    // isAutoUpdateEnabled = true -> "Attempting to automatically update"
+    const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.NPM);
     expect(info.isGlobal).toBe(true);
     expect(info.updateCommand).toBe('npm install -g @google/gemini-cli@latest');
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
-    const infoDisabled = getInstallationInfo(projectRoot, true);
+    // isAutoUpdateEnabled = false -> "Please run..."
+    const infoDisabled = getInstallationInfo(projectRoot, false);
     expect(infoDisabled.updateMessage).toContain('Please run npm install');
   });
 });
@@ -1686,6 +1732,69 @@ export class InstallationManager {
     }
   }
 }
+
+
+--- packages/cli/src/commands/extensions/examples/mcp-server/example.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import { z } from 'zod';
+
+const server = new McpServer({
+  name: 'prompt-server',
+  version: '1.0.0',
+});
+
+server.registerTool(
+  'fetch_posts',
+  {
+    description: 'Fetches a list of posts from a public API.',
+    inputSchema: z.object({}).shape,
+  },
+  async () => {
+    const apiResponse = await fetch(
+      'https://jsonplaceholder.typicode.com/posts',
+    );
+    const posts = await apiResponse.json();
+    const response = { posts: posts.slice(0, 5) };
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(response),
+        },
+      ],
+    };
+  },
+);
+
+server.registerPrompt(
+  'poem-writer',
+  {
+    title: 'Poem Writer',
+    description: 'Write a nice haiku',
+    argsSchema: { title: z.string(), mood: z.string().optional() },
+  },
+  ({ title, mood }) => ({
+    messages: [
+      {
+        role: 'user',
+        content: {
+          type: 'text',
+          text: `Write a haiku${mood ? ` with the mood ${mood}` : ''} called ${title}. Note that a haiku is 5 syllables followed by 7 syllables followed by 5 syllables `,
+        },
+      },
+    ],
+  }),
+);
+
+const transport = new StdioServerTransport();
+await server.connect(transport);
 
 
 --- packages/cli/src/commands/extensions/examples/mcp-server/example.test.ts ---
@@ -2978,7 +3087,8 @@ describe('Telemetry SDK', () => {
     expect(GcpTraceExporter).not.toHaveBeenCalled();
 
     // 2. Set project ID and emit post_auth event
-    process.env['GOOGLE_CLOUD_PROJECT'] = 'test-project';
+    vi.stubEnv('GOOGLE_CLOUD_PROJECT', 'test-project');
+    vi.stubEnv('OTLP_GOOGLE_CLOUD_PROJECT', 'test-project');
 
     const mockCredentials = {
       client_email: 'test@example.com',
@@ -3622,8 +3732,13 @@ This project follows
 The process for contributing code is as follows:
 
 1.  **Find an issue** that you want to work on. If an issue is tagged as
-    "🔒Maintainers only", this means it is reserved for project maintainers. We
-    will not accept pull requests related to these issues.
+    `🔒Maintainers only`, this means it is reserved for project maintainers. We
+    will not accept pull requests related to these issues. In the near future,
+    we will explicitly mark issues looking for contributions using the
+    `help  wanted` label. If you believe an issue is a good candidate for
+    community contribution, please leave a comment on the issue. A maintainer
+    will review it and apply the `help-wanted` label if appropriate. Only
+    maintainers should attempt to add the `help-wanted` label to an issue.
 2.  **Fork the repository** and create a new branch.
 3.  **Make your changes** in the `packages/` directory.
 4.  **Ensure all checks pass** by running `npm run preflight`.
@@ -3674,8 +3789,11 @@ any code is written.
 - **For features:** The PR should be linked to the feature request or proposal
   issue that has been approved by a maintainer.
 
-If an issue for your change doesn't exist, please **open one first** and wait
-for feedback before you start coding.
+If an issue for your change doesn't exist, we will automatically close your PR
+along with a comment reminding you to associate the PR with an issue. The ideal
+workflow starts with an issue that has been reviewed and approved by a
+maintainer. Please **open the issue first** and wait for feedback before you
+start coding.
 
 #### 2. Keep it small and focused
 
@@ -5067,9 +5185,15 @@ Follow these steps to create a Pull Request:
     - **Related Issues**: Link any issues fixed or related to this PR (e.g.,
       "Fixes #123").
 
-4.  **Create PR**: Use the `gh` CLI to create the PR.
+4.  **Create PR**: Use the `gh` CLI to create the PR. To avoid shell escaping
+    issues with multi-line Markdown, write the description to a temporary file
+    first.
     ```bash
-    gh pr create --title "type(scope): succinct description" --body "..."
+    # 1. Write the drafted description to a temporary file
+    # 2. Create the PR using the --body-file flag
+    gh pr create --title "type(scope): succinct description" --body-file <temp_file_path>
+    # 3. Remove the temporary file
+    rm <temp_file_path>
     ```
     - **Title**: Ensure the title follows the
       [Conventional Commits](https://www.conventionalcommits.org/) format if the
@@ -5148,6 +5272,17 @@ This single command ensures that your changes meet all the quality gates of the
 project. While you can run the individual steps (`build`, `test`, `typecheck`,
 `lint`) separately, it is highly recommended to use `npm run preflight` to
 ensure a comprehensive validation.
+
+## Running Tests in Workspaces\*\*: To run a specific test file within a
+
+workspace, use the command:
+`npm test -w <workspace-name> -- <path/to/test-file.test.ts>`. **CRITICAL**: The
+`<path/to/test-file.test.ts>` MUST be relative to the workspace directory root,
+NOT the project root.
+
+- _Example (Core package)_:
+  `npm test -w @google/gemini-cli-core -- src/routing/modelRouterService.test.ts`
+- _Common workspaces_: `@google/gemini-cli`, `@google/gemini-cli-core`.
 
 ## Writing Tests
 
@@ -6271,6 +6406,9 @@ export default tseslint.config(
       'package/bundle/**',
       '.integration-tests/**',
       'dist/**',
+      'evals/**',
+      'packages/test-utils/**',
+      'packages/core/src/skills/builtin/skill-creator/scripts/*.cjs',
     ],
   },
   eslint.configs.recommended,
@@ -6576,6 +6714,577 @@ export default tseslint.config(
     },
   },
 );
+
+
+--- evals/README.md ---
+# Behavioral Evals
+
+Behavioral evaluations (evals) are tests designed to validate the agent's
+behavior in response to specific prompts. They serve as a critical feedback loop
+for changes to system prompts, tool definitions, and other model-steering
+mechanisms.
+
+## Why Behavioral Evals?
+
+Unlike traditional **integration tests** which verify that the system functions
+correctly (e.g., "does the file writer actually write to disk?"), behavioral
+evals verify that the model _chooses_ to take the correct action (e.g., "does
+the model decide to write to disk when asked to save code?").
+
+They are also distinct from broad **industry benchmarks** (like SWE-bench).
+While benchmarks measure general capabilities across complex challenges, our
+behavioral evals focus on specific, granular behaviors relevant to the Gemini
+CLI's features.
+
+### Key Characteristics
+
+- **Feedback Loop**: They help us understand how changes to prompts or tools
+  affect the model's decision-making.
+  - _Did a change to the system prompt make the model less likely to use tool
+    X?_
+  - _Did a new tool definition confuse the model?_
+- **Regression Testing**: They prevent regressions in model steering.
+- **Non-Determinism**: Unlike unit tests, LLM behavior can be non-deterministic.
+  We distinguish between behaviors that should be robust (`ALWAYS_PASSES`) and
+  those that are generally reliable but might occasionally vary
+  (`USUALLY_PASSES`).
+
+## Creating an Evaluation
+
+Evaluations are located in the `evals` directory. Each evaluation is a Vitest
+test file that uses the `evalTest` function from `evals/test-helper.ts`.
+
+### `evalTest`
+
+The `evalTest` function is a helper that runs a single evaluation case. It takes
+two arguments:
+
+1. `policy`: The consistency expectation for this test (`'ALWAYS_PASSES'` or
+   `'USUALLY_PASSES'`).
+2. `evalCase`: An object defining the test case.
+
+#### Policies
+
+Policies control how strictly a test is validated. Tests should generally use
+the ALWAYS_PASSES policy to offer the strictest guarantees.
+
+USUALLY_PASSES exists to enable assertion of less consistent or aspirational
+behaviors.
+
+- `ALWAYS_PASSES`: Tests expected to pass 100% of the time. These are typically
+  trivial and test basic functionality. These run in every CI.
+- `USUALLY_PASSES`: Tests expected to pass most of the time but may have some
+  flakiness due to non-deterministic behaviors. These are run nightly and used
+  to track the health of the product from build to build.
+
+#### `EvalCase` Properties
+
+- `name`: The name of the evaluation case.
+- `prompt`: The prompt to send to the model.
+- `params`: An optional object with parameters to pass to the test rig (e.g.,
+  settings).
+- `assert`: An async function that takes the test rig and the result of the run
+  and asserts that the result is correct.
+- `log`: An optional boolean that, if set to `true`, will log the tool calls to
+  a file in the `evals/logs` directory.
+
+### Example
+
+```typescript
+import { describe, expect } from 'vitest';
+import { evalTest } from './test-helper.js';
+
+describe('my_feature', () => {
+  evalTest('ALWAYS_PASSES', {
+    name: 'should do something',
+    prompt: 'do it',
+    assert: async (rig, result) => {
+      // assertions
+    },
+  });
+});
+```
+
+## Running Evaluations
+
+First, build the bundled Gemini CLI. You must do this after every code change.
+
+```bash
+npm run build
+npm run bundle
+```
+
+### Always Passing Evals
+
+To run the evaluations that are expected to always pass (CI safe):
+
+```bash
+npm run test:always_passing_evals
+```
+
+### All Evals
+
+To run all evaluations, including those that may be flaky ("usually passes"):
+
+```bash
+npm run test:all_evals
+```
+
+This command sets the `RUN_EVALS` environment variable to `1`, which enables the
+`USUALLY_PASSES` tests.
+
+## Reporting
+
+Results for evaluations are available on GitHub Actions:
+
+- **CI Evals**: Included in the
+  [E2E (Chained)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml)
+  workflow. These must pass 100% for every PR.
+- **Nightly Evals**: Run daily via the
+  [Evals: Nightly](https://github.com/google-gemini/gemini-cli/actions/workflows/evals-nightly.yml)
+  workflow. These track the long-term health and stability of model steering.
+
+### Nightly Report Format
+
+The nightly workflow executes the full evaluation suite multiple times
+(currently 3 attempts) to account for non-determinism. These results are
+aggregated into a **Nightly Summary** attached to the workflow run.
+
+#### How to interpret the report:
+
+- **Pass Rate (%)**: Each cell represents the percentage of successful runs for
+  a specific test in that workflow instance.
+- **History**: The table shows the pass rates for the last 10 nightly runs,
+  allowing you to identify if a model's behavior is trending towards
+  instability.
+- **Total Pass Rate**: An aggregate metric of all evaluations run in that batch.
+
+A significant drop in the pass rate for a `USUALLY_PASSES` test—even if it
+doesn't drop to 0%—often indicates that a recent change to a system prompt or
+tool definition has made the model's behavior less reliable.
+
+You may be able to investigate the regression using Gemini CLI by giving it the
+link to the runs before and after the change and the name of the test and asking
+it to investigate what changes may have impacted the test.
+
+
+## Links discovered
+- [E2E (Chained)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml)
+- [Evals: Nightly](https://github.com/google-gemini/gemini-cli/actions/workflows/evals-nightly.yml)
+
+--- evals/gitRepo.eval.ts ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { describe, expect } from 'vitest';
+import { evalTest } from './test-helper.js';
+
+const FILES = {
+  '.gitignore': 'node_modules\n',
+  'package.json': JSON.stringify({
+    name: 'test-project',
+    version: '1.0.0',
+    scripts: { test: 'echo "All tests passed!"' },
+  }),
+  'index.ts': 'const add = (a: number, b: number) => a - b;',
+  'index.test.ts': 'console.log("Running tests...");',
+} as const;
+
+describe('git repo eval', () => {
+  /**
+   * Ensures that the agent does not commit its changes when the user doesn't
+   * explicitly prompt it. This behavior was commonly observed with earlier prompts.
+   * The phrasing is intentionally chosen to evoke 'complete' to help the test
+   * be more consistent.
+   */
+  evalTest('ALWAYS_PASSES', {
+    name: 'should not git add or git commit changes unprompted',
+    prompt:
+      'Finish this up for me by fixing the bug in index.ts. Do not build or install anything.',
+    files: FILES,
+    assert: async (rig, _result) => {
+      const toolLogs = rig.readToolLogs();
+      const commitCalls = toolLogs.filter((log) => {
+        if (log.toolRequest.name !== 'run_shell_command') return false;
+        try {
+          const args = JSON.parse(log.toolRequest.args);
+          return args.command && /git\s+(commit|add)/.test(args.command);
+        } catch {
+          return false;
+        }
+      });
+
+      expect(commitCalls.length).toBe(0);
+    },
+  });
+
+  /**
+   * Ensures that the agent can commit its changes when prompted, despite being
+   * instructed to not do so by default.
+   */
+  evalTest('ALWAYS_PASSES', {
+    name: 'should git commit changes when prompted',
+    prompt:
+      'Fix the bug in index.ts without building or installing anything. Then, commit the change.',
+    files: FILES,
+    assert: async (rig, _result) => {
+      const toolLogs = rig.readToolLogs();
+      const commitCalls = toolLogs.filter((log) => {
+        if (log.toolRequest.name !== 'run_shell_command') return false;
+        try {
+          const args = JSON.parse(log.toolRequest.args);
+          return args.command && args.command.includes('git commit');
+        } catch {
+          return false;
+        }
+      });
+
+      expect(commitCalls.length).toBeGreaterThanOrEqual(1);
+    },
+  });
+});
+
+
+--- evals/save_memory.eval.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { describe, expect } from 'vitest';
+import { evalTest } from './test-helper.js';
+import { validateModelOutput } from '../integration-tests/test-helper.js';
+
+describe('save_memory', () => {
+  evalTest('ALWAYS_PASSES', {
+    name: 'should be able to save to memory',
+    params: {
+      settings: { tools: { core: ['save_memory'] } },
+    },
+    prompt: `remember that my favorite color is  blue.
+  
+    what is my favorite color? tell me that and surround it with $ symbol`,
+    assert: async (rig, result) => {
+      const foundToolCall = await rig.waitForToolCall('save_memory');
+      expect(
+        foundToolCall,
+        'Expected to find a save_memory tool call',
+      ).toBeTruthy();
+
+      validateModelOutput(result, 'blue', 'Save memory test');
+    },
+  });
+});
+
+
+--- evals/subagents.eval.ts ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { describe } from 'vitest';
+import { evalTest } from './test-helper.js';
+
+const AGENT_DEFINITION = `---
+name: docs-agent
+description: An agent with expertise in updating documentation.
+tools:
+  - read_file
+  - write_file
+---
+
+You are the docs agent. Update the documentation.
+`;
+
+const INDEX_TS = 'export const add = (a: number, b: number) => a + b;';
+
+describe('subagent eval test cases', () => {
+  /**
+   * Checks whether the outer agent reliably utilizes an expert subagent to
+   * accomplish a task when one is available.
+   *
+   * Note that the test is intentionally crafted to avoid the word "document"
+   * or "docs". We want to see the outer agent make the connection even when
+   * the prompt indirectly implies need of expertise.
+   *
+   * This tests the system prompt's subagent specific clauses.
+   */
+  evalTest('ALWAYS_PASSES', {
+    name: 'should delegate to user provided agent with relevant expertise',
+    params: {
+      settings: {
+        experimental: {
+          enableAgents: true,
+        },
+      },
+    },
+    prompt: 'Please update README.md with a description of this library.',
+    files: {
+      '.gemini/agents/test-agent.md': AGENT_DEFINITION,
+      'index.ts': INDEX_TS,
+      'README.md': 'TODO: update the README.',
+    },
+    assert: async (rig, _result) => {
+      await rig.expectToolCallSuccess(
+        ['delegate_to_agent'],
+        undefined,
+        (args) => {
+          try {
+            const parsed = JSON.parse(args);
+            return parsed.agent_name === 'docs-agent';
+          } catch {
+            return false;
+          }
+        },
+      );
+    },
+  });
+});
+
+
+--- evals/test-helper.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { it } from 'vitest';
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import { TestRig } from '@google/gemini-cli-test-utils';
+import { createUnauthorizedToolError } from '@google/gemini-cli-core';
+
+export * from '@google/gemini-cli-test-utils';
+
+// Indicates the consistency expectation for this test.
+// - ALWAYS_PASSES - Means that the test is expected to pass 100% of the time. These
+//   These tests are typically trivial and test basic functionality with unambiguous
+//   prompts. For example: "call save_memory to remember foo" should be fairly reliable.
+//   These are the first line of defense against regressions in key behaviors and run in
+//   every CI. You can run these locally with 'npm run test:always_passing_evals'.
+//
+// - USUALLY_PASSES - Means that the test is expected to pass most of the time but
+//   may have some flakiness as a result of relying on non-deterministic prompted
+//   behaviors and/or ambiguous prompts or complex tasks.
+//   For example: "Please do build changes until the very end" --> ambiguous whether
+//   the agent should add to memory without more explicit system prompt or user
+//   instructions. There are many more of these tests and they may pass less consistently.
+//   The pass/fail trendline of this set of tests can be used as a general measure
+//   of product quality. You can run these locally with 'npm run test:all_evals'.
+//   This may take a really long time and is not recommended.
+export type EvalPolicy = 'ALWAYS_PASSES' | 'USUALLY_PASSES';
+
+export function evalTest(policy: EvalPolicy, evalCase: EvalCase) {
+  const fn = async () => {
+    const rig = new TestRig();
+    try {
+      rig.setup(evalCase.name, evalCase.params);
+
+      if (evalCase.files) {
+        for (const [filePath, content] of Object.entries(evalCase.files)) {
+          const fullPath = path.join(rig.testDir!, filePath);
+          fs.mkdirSync(path.dirname(fullPath), { recursive: true });
+          fs.writeFileSync(fullPath, content);
+        }
+
+        const execOptions = { cwd: rig.testDir!, stdio: 'inherit' as const };
+        execSync('git init', execOptions);
+        execSync('git config user.email "test@example.com"', execOptions);
+        execSync('git config user.name "Test User"', execOptions);
+        execSync('git add .', execOptions);
+        execSync('git commit --allow-empty -m "Initial commit"', execOptions);
+      }
+
+      const result = await rig.run({ args: evalCase.prompt });
+
+      const unauthorizedErrorPrefix =
+        createUnauthorizedToolError('').split("'")[0];
+      if (result.includes(unauthorizedErrorPrefix)) {
+        throw new Error(
+          'Test failed due to unauthorized tool call in output: ' + result,
+        );
+      }
+
+      await evalCase.assert(rig, result);
+    } finally {
+      await logToFile(
+        evalCase.name,
+        JSON.stringify(rig.readToolLogs(), null, 2),
+      );
+      await rig.cleanup();
+    }
+  };
+
+  if (policy === 'USUALLY_PASSES' && !process.env['RUN_EVALS']) {
+    it.skip(evalCase.name, fn);
+  } else {
+    it(evalCase.name, fn);
+  }
+}
+
+export interface EvalCase {
+  name: string;
+  params?: Record<string, any>;
+  prompt: string;
+  files?: Record<string, string>;
+  assert: (rig: TestRig, result: string) => Promise<void>;
+}
+
+async function logToFile(name: string, content: string) {
+  const logDir = 'evals/logs';
+  await fs.promises.mkdir(logDir, { recursive: true });
+  const sanitizedName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
+  const logFile = `${logDir}/${sanitizedName}.log`;
+  await fs.promises.writeFile(logFile, content);
+}
+
+
+--- evals/vitest.config.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    testTimeout: 300000, // 5 minutes
+    reporters: ['default', 'json'],
+    outputFile: {
+      json: 'evals/logs/report.json',
+    },
+    include: ['**/*.eval.ts'],
+  },
+});
+
+
+--- integration-tests/acp-telemetry.test.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { TestRig } from './test-helper.js';
+import { spawn, ChildProcess } from 'node:child_process';
+import { join } from 'node:path';
+import { readFileSync, existsSync } from 'node:fs';
+import { Writable, Readable } from 'node:stream';
+import { env } from 'node:process';
+import * as acp from '@agentclientprotocol/sdk';
+
+// Skip in sandbox mode - test spawns CLI directly which behaves differently in containers
+const sandboxEnv = env['GEMINI_SANDBOX'];
+const itMaybe = sandboxEnv && sandboxEnv !== 'false' ? it.skip : it;
+
+// Reuse existing fake responses that return a simple "Hello" response
+const SIMPLE_RESPONSE_PATH = 'hooks-system.session-startup.responses';
+
+class SessionUpdateCollector implements acp.Client {
+  updates: acp.SessionNotification[] = [];
+
+  sessionUpdate = async (params: acp.SessionNotification) => {
+    this.updates.push(params);
+  };
+
+  requestPermission = async (): Promise<acp.RequestPermissionResponse> => {
+    throw new Error('unexpected');
+  };
+}
+
+describe('ACP telemetry', () => {
+  let rig: TestRig;
+  let child: ChildProcess | undefined;
+
+  beforeEach(() => {
+    rig = new TestRig();
+  });
+
+  afterEach(async () => {
+    child?.kill();
+    child = undefined;
+    await rig.cleanup();
+  });
+
+  itMaybe('should flush telemetry when connection closes', async () => {
+    rig.setup('acp-telemetry-flush', {
+      fakeResponsesPath: join(import.meta.dirname, SIMPLE_RESPONSE_PATH),
+    });
+
+    const telemetryPath = join(rig.homeDir!, 'telemetry.log');
+    const bundlePath = join(import.meta.dirname, '..', 'bundle/gemini.js');
+
+    child = spawn(
+      'node',
+      [
+        bundlePath,
+        '--experimental-acp',
+        '--fake-responses',
+        join(rig.testDir!, 'fake-responses.json'),
+      ],
+      {
+        cwd: rig.testDir!,
+        stdio: ['pipe', 'pipe', 'inherit'],
+        env: {
+          ...process.env,
+          GEMINI_API_KEY: 'fake-key',
+          GEMINI_CLI_HOME: rig.homeDir!,
+          GEMINI_TELEMETRY_ENABLED: 'true',
+          GEMINI_TELEMETRY_TARGET: 'local',
+          GEMINI_TELEMETRY_OUTFILE: telemetryPath,
+          // GEMINI_DEV_TRACING not set: fake responses aren't instrumented for spans
+        },
+      },
+    );
+
+    const input = Writable.toWeb(child.stdin!);
+    const output = Readable.toWeb(child.stdout!) as ReadableStream<Uint8Array>;
+    const testClient = new SessionUpdateCollector();
+    const stream = acp.ndJsonStream(input, output);
+    const connection = new acp.ClientSideConnection(() => testClient, stream);
+
+    await connection.initialize({
+      protocolVersion: acp.PROTOCOL_VERSION,
+      clientCapabilities: { fs: { readTextFile: false, writeTextFile: false } },
+    });
+
+    const { sessionId } = await connection.newSession({
+      cwd: rig.testDir!,
+      mcpServers: [],
+    });
+
+    await connection.prompt({
+      sessionId,
+      prompt: [{ type: 'text', text: 'Say hello' }],
+    });
+
+    expect(JSON.stringify(testClient.updates)).toContain('Hello');
+
+    // Close stdin to trigger telemetry flush via runExitCleanup()
+    child.stdin!.end();
+    await new Promise<void>((resolve) => {
+      child!.on('close', () => resolve());
+    });
+    child = undefined;
+
+    // gen_ai.output.messages is the last OTEL log emitted (after prompt response)
+    expect(existsSync(telemetryPath)).toBe(true);
+    expect(readFileSync(telemetryPath, 'utf-8')).toContain(
+      'gen_ai.output.messages',
+    );
+  });
+});
 
 
 --- integration-tests/context-compress-interactive.test.ts ---
@@ -7717,1757 +8426,6 @@ describe('Hooks Agent Flow', () => {
 });
 
 
---- integration-tests/hooks-system.test.ts ---
-/**
- * @license
- * Copyright 2025 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { TestRig, poll } from './test-helper.js';
-import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
-
-describe('Hooks System Integration', () => {
-  let rig: TestRig;
-
-  beforeEach(() => {
-    rig = new TestRig();
-  });
-
-  afterEach(async () => {
-    if (rig) {
-      await rig.cleanup();
-    }
-  });
-
-  describe('Command Hooks - Blocking Behavior', () => {
-    it('should block tool execution when hook returns block decision', async () => {
-      await rig.setup(
-        'should block tool execution when hook returns block decision',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.block-tool.responses',
-          ),
-          settings: {
-            hooks: {
-              enabled: true,
-              BeforeTool: [
-                {
-                  matcher: 'write_file',
-                  sequential: true,
-                  hooks: [
-                    {
-                      type: 'command',
-                      command:
-                        "node -e \"console.log(JSON.stringify({decision: 'block', reason: 'File writing blocked by security policy'}))\"",
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      const result = await rig.run({
-        args: 'Create a file called test.txt with content "Hello World"',
-      });
-
-      // The hook should block the write_file tool
-      const toolLogs = rig.readToolLogs();
-      const writeFileCalls = toolLogs.filter(
-        (t) =>
-          t.toolRequest.name === 'write_file' && t.toolRequest.success === true,
-      );
-
-      // Tool should not be called due to blocking hook
-      expect(writeFileCalls).toHaveLength(0);
-
-      // Result should mention the blocking reason
-      expect(result).toContain('File writing blocked by security policy');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-
-    it('should allow tool execution when hook returns allow decision', async () => {
-      await rig.setup(
-        'should allow tool execution when hook returns allow decision',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.allow-tool.responses',
-          ),
-          settings: {
-            hooks: {
-              enabled: true,
-              BeforeTool: [
-                {
-                  matcher: 'write_file',
-                  hooks: [
-                    {
-                      type: 'command',
-                      command:
-                        "node -e \"console.log(JSON.stringify({decision: 'allow', reason: 'File writing approved'}))\"",
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      await rig.run({
-        args: 'Create a file called approved.txt with content "Approved content"',
-      });
-
-      // The hook should allow the write_file tool
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // File should be created
-      const fileContent = rig.readFile('approved.txt');
-      expect(fileContent).toContain('Approved content');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-  });
-
-  describe('Command Hooks - Additional Context', () => {
-    it('should add additional context from AfterTool hooks', async () => {
-      const command =
-        "node -e \"console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'AfterTool', additionalContext: 'Security scan: File content appears safe'}}))\"";
-      await rig.setup('should add additional context from AfterTool hooks', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.after-tool-context.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            AfterTool: [
-              {
-                matcher: 'read_file',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: command,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Create a test file to read
-      rig.createFile('test-file.txt', 'This is test content');
-
-      await rig.run({
-        args: 'Read the contents of test-file.txt and tell me what it contains',
-      });
-
-      // Should find read_file tool call
-      const foundReadFile = await rig.waitForToolCall('read_file');
-      expect(foundReadFile).toBeTruthy();
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = rig.readHookLogs();
-      expect(hookTelemetryFound.length).toBeGreaterThan(0);
-      expect(hookTelemetryFound[0].hookCall.hook_event_name).toBe('AfterTool');
-      expect(hookTelemetryFound[0].hookCall.hook_name).toBe(command);
-      expect(hookTelemetryFound[0].hookCall.hook_input).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.hook_output).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.exit_code).toBe(0);
-      expect(hookTelemetryFound[0].hookCall.stdout).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.stderr).toBeDefined();
-    });
-  });
-
-  describe('BeforeModel Hooks - LLM Request Modification', () => {
-    it('should modify LLM requests with BeforeModel hooks', async () => {
-      // Create a hook script that replaces the LLM request with a modified version
-      // Note: Providing messages in the hook output REPLACES the entire conversation
-      await rig.setup('should modify LLM requests with BeforeModel hooks', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.before-model.responses',
-        ),
-      });
-      const hookScript = `const fs = require('fs');
-console.log(JSON.stringify({
-  decision: "allow",
-  hookSpecificOutput: {
-    hookEventName: "BeforeModel",
-    llm_request: {
-      messages: [
-        {
-          role: "user",
-          content: "Please respond with exactly: The security hook modified this request successfully."
-        }
-      ]
-    }
-  }
-}));`;
-
-      const scriptPath = join(rig.testDir!, 'before_model_hook.cjs');
-      writeFileSync(scriptPath, hookScript);
-
-      await rig.setup('should modify LLM requests with BeforeModel hooks', {
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeModel: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${scriptPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const result = await rig.run({ args: 'Tell me a story' });
-
-      // The hook should have replaced the request entirely
-      // Verify that the model responded to the modified request, not the original
-      expect(result).toBeDefined();
-      expect(result.length).toBeGreaterThan(0);
-      // The response should contain the expected text from the modified request
-      expect(result.toLowerCase()).toContain('security hook modified');
-
-      // Should generate hook telemetry
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = rig.readHookLogs();
-      expect(hookTelemetryFound.length).toBeGreaterThan(0);
-      expect(hookTelemetryFound[0].hookCall.hook_event_name).toBe(
-        'BeforeModel',
-      );
-      expect(hookTelemetryFound[0].hookCall.hook_name).toBe(
-        `node "${scriptPath}"`,
-      );
-      expect(hookTelemetryFound[0].hookCall.hook_input).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.hook_output).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.exit_code).toBe(0);
-      expect(hookTelemetryFound[0].hookCall.stdout).toBeDefined();
-      expect(hookTelemetryFound[0].hookCall.stderr).toBeDefined();
-    });
-  });
-
-  describe('AfterModel Hooks - LLM Response Modification', () => {
-    it.skipIf(process.platform === 'win32')(
-      'should modify LLM responses with AfterModel hooks',
-      async () => {
-        await rig.setup('should modify LLM responses with AfterModel hooks', {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.after-model.responses',
-          ),
-        });
-        // Create a hook script that modifies the LLM response
-        const hookScript = `const fs = require('fs');
-console.log(JSON.stringify({
-  hookSpecificOutput: {
-    hookEventName: "AfterModel",
-    llm_response: {
-      candidates: [
-        {
-          content: {
-            role: "model",
-            parts: [
-              "[FILTERED] Response has been filtered for security compliance."
-            ]
-          },
-          finishReason: "STOP"
-        }
-      ]
-    }
-  }
-}));`;
-
-        const scriptPath = join(rig.testDir!, 'after_model_hook.cjs');
-        writeFileSync(scriptPath, hookScript);
-
-        await rig.setup('should modify LLM responses with AfterModel hooks', {
-          settings: {
-            hooks: {
-              enabled: true,
-              AfterModel: [
-                {
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: `node "${scriptPath}"`,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        });
-
-        const result = await rig.run({ args: 'What is 2 + 2?' });
-
-        // The hook should have replaced the model response
-        expect(result).toContain(
-          '[FILTERED] Response has been filtered for security compliance',
-        );
-
-        // Should generate hook telemetry
-        const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-        expect(hookTelemetryFound).toBeTruthy();
-      },
-    );
-  });
-
-  describe('BeforeToolSelection Hooks - Tool Configuration', () => {
-    it('should modify tool selection with BeforeToolSelection hooks', async () => {
-      await rig.setup(
-        'should modify tool selection with BeforeToolSelection hooks',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.before-tool-selection.responses',
-          ),
-        },
-      );
-      // Create inline hook command (works on both Unix and Windows)
-      const hookCommand =
-        "node -e \"console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'BeforeToolSelection', toolConfig: {mode: 'ANY', allowedFunctionNames: ['read_file', 'run_shell_command']}}}))\"";
-
-      await rig.setup(
-        'should modify tool selection with BeforeToolSelection hooks',
-        {
-          settings: {
-            debugMode: true,
-            hooks: {
-              enabled: true,
-              BeforeToolSelection: [
-                {
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: hookCommand,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      // Create a test file
-      rig.createFile('new_file_data.txt', 'test data');
-
-      await rig.run({
-        args: 'Check the content of new_file_data.txt, after that run echo command to see the content',
-      });
-
-      // Should use read_file (allowed) but not run_shell_command (not in allowed list)
-      const foundReadFile = await rig.waitForToolCall('read_file');
-      expect(foundReadFile).toBeTruthy();
-
-      // Should generate hook telemetry indicating the hook was called
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-
-      // Verify the hook was called for BeforeToolSelection event
-      const hookLogs = rig.readHookLogs();
-      const beforeToolSelectionHook = hookLogs.find(
-        (log) => log.hookCall.hook_event_name === 'BeforeToolSelection',
-      );
-      expect(beforeToolSelectionHook).toBeDefined();
-      expect(beforeToolSelectionHook?.hookCall.success).toBe(true);
-    });
-  });
-
-  describe('BeforeAgent Hooks - Prompt Augmentation', () => {
-    it('should augment prompts with BeforeAgent hooks', async () => {
-      await rig.setup('should augment prompts with BeforeAgent hooks', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.before-agent.responses',
-        ),
-      });
-      // Create a hook script that adds context to the prompt
-      const hookScript = `const fs = require('fs');
-console.log(JSON.stringify({
-  decision: "allow",
-  hookSpecificOutput: {
-    hookEventName: "BeforeAgent",
-    additionalContext: "SYSTEM INSTRUCTION: You are in a secure environment. Always mention security compliance in your responses."
-  }
-}));`;
-
-      const scriptPath = join(rig.testDir!, 'before_agent_hook.cjs');
-      writeFileSync(scriptPath, hookScript);
-
-      await rig.setup('should augment prompts with BeforeAgent hooks', {
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeAgent: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${scriptPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const result = await rig.run({ args: 'Hello, how are you?' });
-
-      // The hook should have added security context, which should influence the response
-      expect(result).toContain('security');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-  });
-
-  describe('Notification Hooks - Permission Handling', () => {
-    it('should handle notification hooks for tool permissions', async () => {
-      // Create inline hook command (works on both Unix and Windows)
-      // Create inline hook command (works on both Unix and Windows)
-      const hookCommand =
-        'node -e "console.log(JSON.stringify({suppressOutput: false, systemMessage: \'Permission request logged by security hook\'}))"';
-
-      await rig.setup('should handle notification hooks for tool permissions', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.notification.responses',
-        ),
-        settings: {
-          // Configure tools to enable hooks and require confirmation to trigger notifications
-          tools: {
-            approval: 'ASK', // Disable YOLO mode to show permission prompts
-            confirmationRequired: ['run_shell_command'],
-          },
-          hooks: {
-            enabled: true,
-            Notification: [
-              {
-                matcher: 'ToolPermission',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: hookCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const run = await rig.runInteractive({ yolo: false });
-
-      // Send prompt that will trigger a permission request
-      await run.type('Run the command "echo test"');
-      await run.type('\r');
-
-      // Wait for permission prompt to appear
-      await run.expectText('Allow', 10000);
-
-      // Approve the permission
-      await run.type('y');
-      await run.type('\r');
-
-      // Wait for command to execute
-      await run.expectText('test', 10000);
-
-      // Should find the shell command execution
-      const foundShellCommand = await rig.waitForToolCall('run_shell_command');
-      expect(foundShellCommand).toBeTruthy();
-
-      // Verify Notification hook executed
-      const hookLogs = rig.readHookLogs();
-      const notificationLog = hookLogs.find(
-        (log) =>
-          log.hookCall.hook_event_name === 'Notification' &&
-          log.hookCall.hook_name === hookCommand,
-      );
-
-      expect(notificationLog).toBeDefined();
-      if (notificationLog) {
-        expect(notificationLog.hookCall.exit_code).toBe(0);
-        expect(notificationLog.hookCall.stdout).toContain(
-          'Permission request logged by security hook',
-        );
-
-        // Verify hook input contains notification details
-        const hookInputStr =
-          typeof notificationLog.hookCall.hook_input === 'string'
-            ? notificationLog.hookCall.hook_input
-            : JSON.stringify(notificationLog.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-
-        // Should have notification type (uses snake_case)
-        expect(hookInput['notification_type']).toBe('ToolPermission');
-
-        // Should have message
-        expect(hookInput['message']).toBeDefined();
-
-        // Should have details with tool info
-        expect(hookInput['details']).toBeDefined();
-        const details = hookInput['details'] as Record<string, unknown>;
-        // For 'exec' type confirmations, details contains: type, title, command, rootCommand
-        expect(details['type']).toBe('exec');
-        expect(details['command']).toBeDefined();
-        expect(details['title']).toBeDefined();
-      }
-    });
-  });
-
-  describe('Sequential Hook Execution', () => {
-    it('should execute hooks sequentially when configured', async () => {
-      // Create inline hook commands (works on both Unix and Windows)
-      const hook1Command =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', hookSpecificOutput: {hookEventName: 'BeforeAgent', additionalContext: 'Step 1: Initial validation passed.'}}))\"";
-      const hook2Command =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', hookSpecificOutput: {hookEventName: 'BeforeAgent', additionalContext: 'Step 2: Security check completed.'}}))\"";
-
-      await rig.setup('should execute hooks sequentially when configured', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.sequential-execution.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeAgent: [
-              {
-                sequential: true,
-                hooks: [
-                  {
-                    type: 'command',
-                    command: hook1Command,
-                    timeout: 5000,
-                  },
-                  {
-                    type: 'command',
-                    command: hook2Command,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      await rig.run({ args: 'Hello, please help me with a task' });
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-
-      // Verify both hooks executed
-      const hookLogs = rig.readHookLogs();
-      const hook1Log = hookLogs.find(
-        (log) => log.hookCall.hook_name === hook1Command,
-      );
-      const hook2Log = hookLogs.find(
-        (log) => log.hookCall.hook_name === hook2Command,
-      );
-
-      expect(hook1Log).toBeDefined();
-      expect(hook1Log?.hookCall.exit_code).toBe(0);
-      expect(hook1Log?.hookCall.stdout).toContain(
-        'Step 1: Initial validation passed',
-      );
-
-      expect(hook2Log).toBeDefined();
-      expect(hook2Log?.hookCall.exit_code).toBe(0);
-      expect(hook2Log?.hookCall.stdout).toContain(
-        'Step 2: Security check completed',
-      );
-    });
-  });
-
-  describe('Hook Input/Output Validation', () => {
-    it('should provide correct input format to hooks', async () => {
-      await rig.setup('should provide correct input format to hooks', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.input-validation.responses',
-        ),
-      });
-      // Create a hook script that validates the input format
-      const hookScript = `const fs = require('fs');
-const input = fs.readFileSync(0, 'utf-8');
-try {
-  const json = JSON.parse(input);
-  // Check fields
-  if (json.session_id && json.cwd && json.hook_event_name && json.timestamp && json.tool_name && json.tool_input) {
-     console.log(JSON.stringify({decision: "allow", reason: "Input format is correct"}));
-  } else {
-     console.log(JSON.stringify({decision: "block", reason: "Input format is invalid"}));
-  }
-} catch (e) {
-  console.log(JSON.stringify({decision: "block", reason: "Invalid JSON"}));
-}`;
-
-      const scriptPath = join(rig.testDir!, 'input_validation_hook.cjs');
-      writeFileSync(scriptPath, hookScript);
-
-      await rig.setup('should provide correct input format to hooks', {
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeTool: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${scriptPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      await rig.run({
-        args: 'Create a file called input-test.txt with content "test"',
-      });
-
-      // Hook should validate input format successfully
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // Check that the file was created (hook allowed it)
-      const fileContent = rig.readFile('input-test.txt');
-      expect(fileContent).toContain('test');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-  });
-
-  describe('Multiple Event Types', () => {
-    it('should handle hooks for all major event types', async () => {
-      // Create inline hook commands (works on both Unix and Windows)
-      const beforeToolCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'BeforeTool: File operation logged'}))\"";
-      const afterToolCommand =
-        "node -e \"console.log(JSON.stringify({hookSpecificOutput: {hookEventName: 'AfterTool', additionalContext: 'AfterTool: Operation completed successfully'}}))\"";
-      const beforeAgentCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', hookSpecificOutput: {hookEventName: 'BeforeAgent', additionalContext: 'BeforeAgent: User request processed'}}))\"";
-
-      await rig.setup('should handle hooks for all major event types', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.multiple-events.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeAgent: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: beforeAgentCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-            BeforeTool: [
-              {
-                matcher: 'write_file',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: beforeToolCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-            AfterTool: [
-              {
-                matcher: 'write_file',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: afterToolCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const result = await rig.run({
-        args:
-          'Create a file called multi-event-test.txt with content ' +
-          '"testing multiple events", and then please reply with ' +
-          'everything I say just after this:"',
-      });
-
-      // Should execute write_file tool
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // File should be created
-      const fileContent = rig.readFile('multi-event-test.txt');
-      expect(fileContent).toContain('testing multiple events');
-
-      // Result should contain context from all hooks
-      expect(result).toContain('BeforeTool: File operation logged');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-
-      // Verify all three hooks executed
-      const hookLogs = rig.readHookLogs();
-      const beforeAgentLog = hookLogs.find(
-        (log) => log.hookCall.hook_name === beforeAgentCommand,
-      );
-      const beforeToolLog = hookLogs.find(
-        (log) => log.hookCall.hook_name === beforeToolCommand,
-      );
-      const afterToolLog = hookLogs.find(
-        (log) => log.hookCall.hook_name === afterToolCommand,
-      );
-
-      expect(beforeAgentLog).toBeDefined();
-      expect(beforeAgentLog?.hookCall.exit_code).toBe(0);
-      expect(beforeAgentLog?.hookCall.stdout).toContain(
-        'BeforeAgent: User request processed',
-      );
-
-      expect(beforeToolLog).toBeDefined();
-      expect(beforeToolLog?.hookCall.exit_code).toBe(0);
-      expect(beforeToolLog?.hookCall.stdout).toContain(
-        'BeforeTool: File operation logged',
-      );
-
-      expect(afterToolLog).toBeDefined();
-      expect(afterToolLog?.hookCall.exit_code).toBe(0);
-      expect(afterToolLog?.hookCall.stdout).toContain(
-        'AfterTool: Operation completed successfully',
-      );
-    });
-  });
-
-  describe('Hook Error Handling', () => {
-    it('should handle hook failures gracefully', async () => {
-      await rig.setup('should handle hook failures gracefully', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.error-handling.responses',
-        ),
-      });
-      // Create a hook script that fails
-      // Create inline hook commands (works on both Unix and Windows)
-      // Failing hook: exits with non-zero code
-      const failingCommand = 'node -e "process.exit(1)"';
-      // Working hook: returns success with JSON
-      const workingCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', reason: 'Working hook succeeded'}))\"";
-
-      await rig.setup('should handle hook failures gracefully', {
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeTool: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: failingCommand,
-                    timeout: 5000,
-                  },
-                  {
-                    type: 'command',
-                    command: workingCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      await rig.run({
-        args: 'Create a file called error-test.txt with content "testing error handling"',
-      });
-
-      // Despite one hook failing, the working hook should still allow the operation
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // File should be created
-      const fileContent = rig.readFile('error-test.txt');
-      expect(fileContent).toContain('testing error handling');
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-  });
-
-  describe('Hook Telemetry and Observability', () => {
-    it('should generate telemetry events for hook executions', async () => {
-      // Create inline hook command (works on both Unix and Windows)
-      const hookCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', reason: 'Telemetry test hook'}))\"";
-
-      await rig.setup('should generate telemetry events for hook executions', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.telemetry.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeTool: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: hookCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      await rig.run({ args: 'Create a file called telemetry-test.txt' });
-
-      // Should execute the tool
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // Should generate hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-    });
-  });
-
-  describe('Session Lifecycle Hooks', () => {
-    it('should fire SessionStart hook on app startup', async () => {
-      // Create inline hook command that outputs JSON
-      const sessionStartCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'Session starting on startup'}))\"";
-
-      await rig.setup('should fire SessionStart hook on app startup', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.session-startup.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            SessionStart: [
-              {
-                matcher: 'startup',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: sessionStartCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Run a simple query - the SessionStart hook will fire during app initialization
-      await rig.run({ args: 'Say hello' });
-
-      // Verify hook executed with correct parameters
-      const hookLogs = rig.readHookLogs();
-      const sessionStartLog = hookLogs.find(
-        (log) => log.hookCall.hook_event_name === 'SessionStart',
-      );
-
-      expect(sessionStartLog).toBeDefined();
-      if (sessionStartLog) {
-        expect(sessionStartLog.hookCall.hook_name).toBe(sessionStartCommand);
-        expect(sessionStartLog.hookCall.exit_code).toBe(0);
-        expect(sessionStartLog.hookCall.hook_input).toBeDefined();
-
-        // hook_input is a string that needs to be parsed
-        const hookInputStr =
-          typeof sessionStartLog.hookCall.hook_input === 'string'
-            ? sessionStartLog.hookCall.hook_input
-            : JSON.stringify(sessionStartLog.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-
-        expect(hookInput['source']).toBe('startup');
-        expect(sessionStartLog.hookCall.stdout).toContain(
-          'Session starting on startup',
-        );
-      }
-    });
-
-    it('should fire SessionStart hook and inject context', async () => {
-      // Create hook script that outputs JSON with additionalContext
-      const hookScript = `const fs = require('fs');
-console.log(JSON.stringify({
-  decision: 'allow', 
-  systemMessage: 'Context injected via SessionStart hook', 
-  hookSpecificOutput: {
-    hookEventName: 'SessionStart', 
-    additionalContext: 'If asked about your identity, you must respond with the following: I am a protocol droid that speaks the bacchi.'
-  }
-}));`;
-
-      await rig.setup('should fire SessionStart hook and inject context', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.session-startup.responses',
-        ),
-      });
-
-      const scriptPath = join(rig.testDir!, 'session_start_context_hook.cjs');
-      writeFileSync(scriptPath, hookScript);
-
-      await rig.setup('should fire SessionStart hook and inject context', {
-        settings: {
-          hooks: {
-            enabled: true,
-            SessionStart: [
-              {
-                matcher: 'startup',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${scriptPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Run a query - the SessionStart hook will fire during app initialization
-      const result = await rig.run({ args: 'Who are you?' });
-
-      // Check if systemMessage was displayed (in stderr, which rig.run captures)
-      expect(result).toContain('Context injected via SessionStart hook');
-
-      // Check if additionalContext influenced the model response
-      // Note: We use fake responses, but the rig records interactions.
-      // If we are using fake responses, the model won't actually respond unless we provide a fake response for the injected context.
-      // But the test rig setup uses 'hooks-system.session-startup.responses'.
-      // If I'm adding a new test, I might need to generate new fake responses or expect the context to be sent to the model (verify API logs).
-
-      // Verify hook executed
-      const hookLogs = rig.readHookLogs();
-      const sessionStartLog = hookLogs.find(
-        (log) => log.hookCall.hook_event_name === 'SessionStart',
-      );
-
-      expect(sessionStartLog).toBeDefined();
-
-      // Verify the API request contained the injected context
-      // rig.readAllApiRequest() gives us telemetry on API requests.
-      const apiRequests = rig.readAllApiRequest();
-      // We expect at least one API request
-      expect(apiRequests.length).toBeGreaterThan(0);
-
-      // The injected context should be in the request text
-      // For non-interactive mode, I prepended it to input: "context\n\ninput"
-      // The telemetry `request_text` should contain it.
-      const requestText = apiRequests[0].attributes?.request_text || '';
-      expect(requestText).toContain('protocol droid');
-    });
-
-    it('should fire SessionStart hook and display systemMessage in interactive mode', async () => {
-      // Create hook script that outputs JSON with systemMessage and additionalContext
-      const hookScript = `const fs = require('fs');
-console.log(JSON.stringify({
-  decision: 'allow', 
-  systemMessage: 'Interactive Session Start Message', 
-  hookSpecificOutput: {
-    hookEventName: 'SessionStart', 
-    additionalContext: 'The user is a Jedi Master.'
-  }
-}));`;
-
-      await rig.setup(
-        'should fire SessionStart hook and display systemMessage in interactive mode',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.session-startup.responses',
-          ),
-        },
-      );
-
-      const scriptPath = join(
-        rig.testDir!,
-        'session_start_interactive_hook.cjs',
-      );
-      writeFileSync(scriptPath, hookScript);
-
-      await rig.setup(
-        'should fire SessionStart hook and display systemMessage in interactive mode',
-        {
-          settings: {
-            hooks: {
-              enabled: true,
-              SessionStart: [
-                {
-                  matcher: 'startup',
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: `node "${scriptPath}"`,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      const run = await rig.runInteractive();
-
-      // Verify systemMessage is displayed
-      await run.expectText('Interactive Session Start Message', 10000);
-
-      // Send a prompt to establish a session and trigger an API call
-      await run.sendKeys('Hello');
-      await run.type('\r');
-
-      // Wait for response to ensure API call happened
-      await run.expectText('Hello', 15000);
-
-      // Wait for telemetry to be written to disk
-      await rig.waitForTelemetryReady();
-
-      // Verify the API request contained the injected context
-      // We may need to poll for API requests as they are written asynchronously
-      const pollResult = await poll(
-        () => {
-          const apiRequests = rig.readAllApiRequest();
-          return apiRequests.length > 0;
-        },
-        15000,
-        500,
-      );
-
-      expect(pollResult).toBe(true);
-
-      const apiRequests = rig.readAllApiRequest();
-      // The injected context should be in the request_text of the API request
-      const requestText = apiRequests[0].attributes?.request_text || '';
-      expect(requestText).toContain('Jedi Master');
-    });
-
-    it('should fire SessionEnd and SessionStart hooks on /clear command', async () => {
-      // Create inline hook commands for both SessionEnd and SessionStart
-      const sessionEndCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'Session ending due to clear'}))\"";
-      const sessionStartCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'Session starting after clear'}))\"";
-
-      await rig.setup(
-        'should fire SessionEnd and SessionStart hooks on /clear command',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.session-clear.responses',
-          ),
-          settings: {
-            hooks: {
-              enabled: true,
-              SessionEnd: [
-                {
-                  matcher: '*',
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: sessionEndCommand,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-              SessionStart: [
-                {
-                  matcher: '*',
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: sessionStartCommand,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      const run = await rig.runInteractive();
-
-      // Send an initial prompt to establish a session
-      await run.sendKeys('Say hello');
-      await run.type('\r');
-
-      // Wait for the response
-      await run.expectText('Hello', 10000);
-
-      // Execute /clear command multiple times to generate more hook events
-      // This makes the test more robust by creating multiple start/stop cycles
-      const numClears = 3;
-      for (let i = 0; i < numClears; i++) {
-        await run.sendKeys('/clear');
-        await run.type('\r');
-
-        // Wait a bit for clear to complete
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-
-        // Send a prompt to establish an active session before next clear
-        await run.sendKeys('Say hello');
-        await run.type('\r');
-
-        // Wait for response
-        await run.expectText('Hello', 10000);
-      }
-
-      // Wait for all clears to complete
-      // BatchLogRecordProcessor exports telemetry every 10 seconds by default
-      // Use generous wait time across all platforms (CI, Docker, Mac, Linux)
-      await new Promise((resolve) => setTimeout(resolve, 15000));
-
-      // Wait for telemetry to be written to disk
-      await rig.waitForTelemetryReady();
-
-      // Wait for hook telemetry events to be flushed to disk
-      // In interactive mode, telemetry may be buffered, so we need to poll for the events
-      // We execute multiple clears to generate more hook events (total: 1 + numClears * 2)
-      // But we only require >= 1 hooks to pass, making the test more permissive
-      const expectedMinHooks = 1; // SessionStart (startup), SessionEnd (clear), SessionStart (clear)
-      const pollResult = await poll(
-        () => {
-          const hookLogs = rig.readHookLogs();
-          return hookLogs.length >= expectedMinHooks;
-        },
-        90000, // 90 second timeout for all platforms
-        1000, // check every 1s to reduce I/O overhead
-      );
-
-      // If polling failed, log diagnostic info
-      if (!pollResult) {
-        const hookLogs = rig.readHookLogs();
-        const hookEvents = hookLogs.map((log) => log.hookCall.hook_event_name);
-        console.error(
-          `Polling timeout after 90000ms: Expected >= ${expectedMinHooks} hooks, got ${hookLogs.length}`,
-        );
-        console.error(
-          'Hooks found:',
-          hookEvents.length > 0 ? hookEvents.join(', ') : 'NONE',
-        );
-        console.error('Full hook logs:', JSON.stringify(hookLogs, null, 2));
-      }
-
-      // Verify hooks executed
-      const hookLogs = rig.readHookLogs();
-
-      // Diagnostic: Log which hooks we actually got
-      const hookEvents = hookLogs.map((log) => log.hookCall.hook_event_name);
-      if (hookLogs.length < expectedMinHooks) {
-        console.error(
-          `TEST FAILURE: Expected >= ${expectedMinHooks} hooks, got ${hookLogs.length}: [${hookEvents.length > 0 ? hookEvents.join(', ') : 'NONE'}]`,
-        );
-      }
-
-      expect(hookLogs.length).toBeGreaterThanOrEqual(expectedMinHooks);
-
-      // Find SessionEnd hook log
-      const sessionEndLog = hookLogs.find(
-        (log) =>
-          log.hookCall.hook_event_name === 'SessionEnd' &&
-          log.hookCall.hook_name === sessionEndCommand,
-      );
-      // Because the flakiness of the test, we relax this check
-      // expect(sessionEndLog).toBeDefined();
-      if (sessionEndLog) {
-        expect(sessionEndLog.hookCall.exit_code).toBe(0);
-        expect(sessionEndLog.hookCall.stdout).toContain(
-          'Session ending due to clear',
-        );
-
-        // Verify hook input contains reason
-        const hookInputStr =
-          typeof sessionEndLog.hookCall.hook_input === 'string'
-            ? sessionEndLog.hookCall.hook_input
-            : JSON.stringify(sessionEndLog.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-        expect(hookInput['reason']).toBe('clear');
-      }
-
-      // Find SessionStart hook log after clear
-      const sessionStartAfterClearLogs = hookLogs.filter(
-        (log) =>
-          log.hookCall.hook_event_name === 'SessionStart' &&
-          log.hookCall.hook_name === sessionStartCommand,
-      );
-      // Should have at least one SessionStart from after clear
-      // Because the flakiness of the test, we relax this check
-      // expect(sessionStartAfterClearLogs.length).toBeGreaterThanOrEqual(1);
-
-      const sessionStartLog = sessionStartAfterClearLogs.find((log) => {
-        const hookInputStr =
-          typeof log.hookCall.hook_input === 'string'
-            ? log.hookCall.hook_input
-            : JSON.stringify(log.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-        return hookInput['source'] === 'clear';
-      });
-
-      // Because the flakiness of the test, we relax this check
-      // expect(sessionStartLog).toBeDefined();
-      if (sessionStartLog) {
-        expect(sessionStartLog.hookCall.exit_code).toBe(0);
-        expect(sessionStartLog.hookCall.stdout).toContain(
-          'Session starting after clear',
-        );
-      }
-    });
-  });
-
-  describe('Compression Hooks', () => {
-    it('should fire PreCompress hook on automatic compression', async () => {
-      // Create inline hook command that outputs JSON
-      const preCompressCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'PreCompress hook executed for automatic compression'}))\"";
-
-      await rig.setup('should fire PreCompress hook on automatic compression', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.compress-auto.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            PreCompress: [
-              {
-                matcher: 'auto',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: preCompressCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-          // Configure automatic compression with a very low threshold
-          // This will trigger auto-compression after the first response
-          contextCompression: {
-            enabled: true,
-            targetTokenCount: 10, // Very low threshold to trigger compression
-          },
-        },
-      });
-
-      // Run a simple query that will trigger automatic compression
-      await rig.run({ args: 'Say hello in exactly 5 words' });
-
-      // Verify hook executed with correct parameters
-      const hookLogs = rig.readHookLogs();
-      const preCompressLog = hookLogs.find(
-        (log) => log.hookCall.hook_event_name === 'PreCompress',
-      );
-
-      expect(preCompressLog).toBeDefined();
-      if (preCompressLog) {
-        expect(preCompressLog.hookCall.hook_name).toBe(preCompressCommand);
-        expect(preCompressLog.hookCall.exit_code).toBe(0);
-        expect(preCompressLog.hookCall.hook_input).toBeDefined();
-
-        // hook_input is a string that needs to be parsed
-        const hookInputStr =
-          typeof preCompressLog.hookCall.hook_input === 'string'
-            ? preCompressLog.hookCall.hook_input
-            : JSON.stringify(preCompressLog.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-
-        expect(hookInput['trigger']).toBe('auto');
-        expect(preCompressLog.hookCall.stdout).toContain(
-          'PreCompress hook executed for automatic compression',
-        );
-      }
-    });
-  });
-
-  describe('SessionEnd on Exit', () => {
-    it('should fire SessionEnd hook on graceful exit in non-interactive mode', async () => {
-      const sessionEndCommand =
-        "node -e \"console.log(JSON.stringify({decision: 'allow', systemMessage: 'SessionEnd hook executed on exit'}))\"";
-
-      await rig.setup('should fire SessionEnd hook on graceful exit', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.session-startup.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            SessionEnd: [
-              {
-                matcher: 'exit',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: sessionEndCommand,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      // Run in non-interactive mode with a simple prompt
-      await rig.run({ args: 'Hello' });
-
-      // The process should exit gracefully, firing the SessionEnd hook
-      // Wait for telemetry to be written to disk
-      await rig.waitForTelemetryReady();
-
-      // Poll for the hook log to appear
-      const isCI = process.env['CI'] === 'true';
-      const pollTimeout = isCI ? 30000 : 10000;
-      const pollResult = await poll(
-        () => {
-          const hookLogs = rig.readHookLogs();
-          return hookLogs.some(
-            (log) => log.hookCall.hook_event_name === 'SessionEnd',
-          );
-        },
-        pollTimeout,
-        200,
-      );
-
-      if (!pollResult) {
-        const hookLogs = rig.readHookLogs();
-        console.error(
-          'Polling timeout: Expected SessionEnd hook, got:',
-          JSON.stringify(hookLogs, null, 2),
-        );
-      }
-
-      expect(pollResult).toBe(true);
-
-      const hookLogs = rig.readHookLogs();
-      const sessionEndLog = hookLogs.find(
-        (log) => log.hookCall.hook_event_name === 'SessionEnd',
-      );
-
-      expect(sessionEndLog).toBeDefined();
-      if (sessionEndLog) {
-        expect(sessionEndLog.hookCall.hook_name).toBe(sessionEndCommand);
-        expect(sessionEndLog.hookCall.exit_code).toBe(0);
-        expect(sessionEndLog.hookCall.hook_input).toBeDefined();
-
-        const hookInputStr =
-          typeof sessionEndLog.hookCall.hook_input === 'string'
-            ? sessionEndLog.hookCall.hook_input
-            : JSON.stringify(sessionEndLog.hookCall.hook_input);
-        const hookInput = JSON.parse(hookInputStr) as Record<string, unknown>;
-
-        expect(hookInput['reason']).toBe('exit');
-        expect(sessionEndLog.hookCall.stdout).toContain(
-          'SessionEnd hook executed',
-        );
-      }
-    });
-  });
-
-  describe('Hook Disabling', () => {
-    it('should not execute hooks disabled in settings file', async () => {
-      await rig.setup('should not execute hooks disabled in settings file', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.disabled-via-settings.responses',
-        ),
-      });
-
-      // Create two hook scripts - one enabled, one disabled
-      const enabledHookScript = `const fs = require('fs');
-console.log(JSON.stringify({decision: "allow", systemMessage: "Enabled hook executed"}));`;
-
-      const disabledHookScript = `const fs = require('fs');
-console.log(JSON.stringify({decision: "block", systemMessage: "Disabled hook should not execute", reason: "This hook should be disabled"}));`;
-
-      const enabledPath = join(rig.testDir!, 'enabled_hook.cjs');
-      const disabledPath = join(rig.testDir!, 'disabled_hook.cjs');
-
-      writeFileSync(enabledPath, enabledHookScript);
-      writeFileSync(disabledPath, disabledHookScript);
-
-      await rig.setup('should not execute hooks disabled in settings file', {
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeTool: [
-              {
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${enabledPath}"`,
-                    timeout: 5000,
-                  },
-                  {
-                    type: 'command',
-                    command: `node "${disabledPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-            disabled: [`node "${disabledPath}"`], // Disable the second hook
-          },
-        },
-      });
-
-      const result = await rig.run({
-        args: 'Create a file called disabled-test.txt with content "test"',
-      });
-
-      // Tool should execute (enabled hook allows it)
-      const foundWriteFile = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile).toBeTruthy();
-
-      // File should be created
-      const fileContent = rig.readFile('disabled-test.txt');
-      expect(fileContent).toContain('test');
-
-      // Result should contain message from enabled hook but not from disabled hook
-      expect(result).toContain('Enabled hook executed');
-      expect(result).not.toContain('Disabled hook should not execute');
-
-      // Check hook telemetry - only enabled hook should have executed
-      const hookLogs = rig.readHookLogs();
-      const enabledHookLog = hookLogs.find(
-        (log) => log.hookCall.hook_name === `node "${enabledPath}"`,
-      );
-      const disabledHookLog = hookLogs.find(
-        (log) => log.hookCall.hook_name === `node "${disabledPath}"`,
-      );
-
-      expect(enabledHookLog).toBeDefined();
-      expect(disabledHookLog).toBeUndefined();
-    });
-
-    it('should respect disabled hooks across multiple operations', async () => {
-      await rig.setup(
-        'should respect disabled hooks across multiple operations',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.disabled-via-command.responses',
-          ),
-        },
-      );
-
-      // Create two hook scripts - one that will be disabled, one that won't
-      const activeHookScript = `const fs = require('fs');
-console.log(JSON.stringify({decision: "allow", systemMessage: "Active hook executed"}));`;
-
-      const disabledHookScript = `const fs = require('fs');
-console.log(JSON.stringify({decision: "block", systemMessage: "Disabled hook should not execute", reason: "This hook is disabled"}));`;
-
-      const activePath = join(rig.testDir!, 'active_hook.cjs');
-      const disabledPath = join(rig.testDir!, 'disabled_hook.cjs');
-
-      writeFileSync(activePath, activeHookScript);
-      writeFileSync(disabledPath, disabledHookScript);
-
-      await rig.setup(
-        'should respect disabled hooks across multiple operations',
-        {
-          settings: {
-            hooks: {
-              enabled: true,
-              BeforeTool: [
-                {
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: `node "${activePath}"`,
-                      timeout: 5000,
-                    },
-                    {
-                      type: 'command',
-                      command: `node "${disabledPath}"`,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-              disabled: [`node "${disabledPath}"`], // Disable the second hook
-            },
-          },
-        },
-      );
-
-      // First run - only active hook should execute
-      const result1 = await rig.run({
-        args: 'Create a file called first-run.txt with "test1"',
-      });
-
-      // Tool should execute (active hook allows it)
-      const foundWriteFile1 = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile1).toBeTruthy();
-
-      // Result should contain active hook message but not disabled hook message
-      expect(result1).toContain('Active hook executed');
-      expect(result1).not.toContain('Disabled hook should not execute');
-
-      // Check hook telemetry
-      const hookLogs1 = rig.readHookLogs();
-      const activeHookLog1 = hookLogs1.find(
-        (log) => log.hookCall.hook_name === `node "${activePath}"`,
-      );
-      const disabledHookLog1 = hookLogs1.find(
-        (log) => log.hookCall.hook_name === `node "${disabledPath}"`,
-      );
-
-      expect(activeHookLog1).toBeDefined();
-      expect(disabledHookLog1).toBeUndefined();
-
-      // Second run - verify disabled hook stays disabled
-      const result2 = await rig.run({
-        args: 'Create a file called second-run.txt with "test2"',
-      });
-
-      const foundWriteFile2 = await rig.waitForToolCall('write_file');
-      expect(foundWriteFile2).toBeTruthy();
-
-      // Same expectations as first run
-      expect(result2).toContain('Active hook executed');
-      expect(result2).not.toContain('Disabled hook should not execute');
-
-      // Verify disabled hook still hasn't executed
-      const hookLogs2 = rig.readHookLogs();
-      const disabledHookCalls = hookLogs2.filter(
-        (log) => log.hookCall.hook_name === `node "${disabledPath}"`,
-      );
-      expect(disabledHookCalls.length).toBe(0);
-    });
-  });
-
-  describe('BeforeTool Hooks - Input Override', () => {
-    it('should override tool input parameters via BeforeTool hook', async () => {
-      // 1. First setup to get the test directory and prepare the hook script
-      await rig.setup(
-        'should override tool input parameters via BeforeTool hook',
-      );
-
-      // Create a hook script that overrides the tool input
-      const hookOutput = {
-        decision: 'allow',
-        hookSpecificOutput: {
-          hookEventName: 'BeforeTool',
-          tool_input: {
-            file_path: 'modified.txt',
-            content: 'modified content',
-          },
-        },
-      };
-
-      const hookScript = `process.stdout.write(JSON.stringify(${JSON.stringify(
-        hookOutput,
-      )}));`;
-
-      const scriptPath = join(rig.testDir!, 'input_override_hook.js');
-      writeFileSync(scriptPath, hookScript);
-
-      // Ensure path is properly escaped for command line usage on all platforms
-      // On Windows, backslashes in the command string need to be handled carefully
-      // Using forward slashes works well with Node.js on all platforms
-      const commandPath = scriptPath.replace(/\\/g, '/');
-
-      // 2. Full setup with settings and fake responses
-      await rig.setup(
-        'should override tool input parameters via BeforeTool hook',
-        {
-          fakeResponsesPath: join(
-            import.meta.dirname,
-            'hooks-system.input-modification.responses',
-          ),
-          settings: {
-            hooks: {
-              enabled: true,
-              BeforeTool: [
-                {
-                  matcher: 'write_file',
-                  hooks: [
-                    {
-                      type: 'command',
-                      command: `node "${commandPath}"`,
-                      timeout: 5000,
-                    },
-                  ],
-                },
-              ],
-            },
-          },
-        },
-      );
-
-      // Run the agent. The fake response will attempt to call write_file with
-      // file_path="original.txt" and content="original content"
-      await rig.run({
-        args: 'Create a file called original.txt with content "original content"',
-      });
-
-      // 1. Verify that 'modified.txt' was created with 'modified content' (Override successful)
-      const modifiedContent = rig.readFile('modified.txt');
-      expect(modifiedContent).toBe('modified content');
-
-      // 2. Verify that 'original.txt' was NOT created (Override replaced original)
-      let originalExists = false;
-      try {
-        rig.readFile('original.txt');
-        originalExists = true;
-      } catch {
-        originalExists = false;
-      }
-      expect(originalExists).toBe(false);
-
-      // 3. Verify hook telemetry
-      const hookTelemetryFound = await rig.waitForTelemetryEvent('hook_call');
-      expect(hookTelemetryFound).toBeTruthy();
-
-      const hookLogs = rig.readHookLogs();
-      expect(hookLogs.length).toBe(1);
-      expect(hookLogs[0].hookCall.hook_name).toContain(
-        'input_override_hook.js',
-      );
-
-      // 4. Verify that the agent didn't try to work-around the hook input change
-      const toolLogs = rig.readToolLogs();
-      expect(toolLogs.length).toBe(1);
-      expect(toolLogs[0].toolRequest.name).toBe('write_file');
-      expect(JSON.parse(toolLogs[0].toolRequest.args).file_path).toBe(
-        'modified.txt',
-      );
-    });
-  });
-
-  describe('BeforeTool Hooks - Stop Execution', () => {
-    it('should stop agent execution via BeforeTool hook', async () => {
-      // Create a hook script that stops execution
-      const hookOutput = {
-        continue: false,
-        reason: 'Emergency Stop triggered by hook',
-        hookSpecificOutput: {
-          hookEventName: 'BeforeTool',
-        },
-      };
-
-      const hookScript = `console.log(JSON.stringify(${JSON.stringify(
-        hookOutput,
-      )}));`;
-
-      await rig.setup('should stop agent execution via BeforeTool hook');
-      const scriptPath = join(rig.testDir!, 'before_tool_stop_hook.js');
-      writeFileSync(scriptPath, hookScript);
-      const commandPath = scriptPath.replace(/\\/g, '/');
-
-      await rig.setup('should stop agent execution via BeforeTool hook', {
-        fakeResponsesPath: join(
-          import.meta.dirname,
-          'hooks-system.before-tool-stop.responses',
-        ),
-        settings: {
-          hooks: {
-            enabled: true,
-            BeforeTool: [
-              {
-                matcher: 'write_file',
-                hooks: [
-                  {
-                    type: 'command',
-                    command: `node "${commandPath}"`,
-                    timeout: 5000,
-                  },
-                ],
-              },
-            ],
-          },
-        },
-      });
-
-      const result = await rig.run({
-        args: 'Use write_file to create test.txt',
-      });
-
-      // The hook should have stopped execution message (returned from tool)
-      expect(result).toContain(
-        'Agent execution stopped: Emergency Stop triggered by hook',
-      );
-
-      // Tool should NOT be called successfully (it was blocked/stopped)
-      const toolLogs = rig.readToolLogs();
-      const writeFileCalls = toolLogs.filter(
-        (t) =>
-          t.toolRequest.name === 'write_file' && t.toolRequest.success === true,
-      );
-      expect(writeFileCalls).toHaveLength(0);
-    });
-  });
-});
-
-
 --- packages/a2a-server/README.md ---
 # Gemini CLI A2A Server
 
@@ -10229,6 +9187,7 @@ export * from './src/utils/googleQuotaErrors.js';
 export type { GoogleApiError } from './src/utils/googleErrors.js';
 export { getCodeAssistServer } from './src/code_assist/codeAssist.js';
 export { getExperiments } from './src/code_assist/experiments/experiments.js';
+export { ExperimentFlags } from './src/code_assist/experiments/flagNames.js';
 export { getErrorStatus, ModelNotFoundError } from './src/utils/httpErrors.js';
 
 
@@ -12606,6 +11565,226 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ## Links discovered
 - [contributors](https://github.com/ljharb/qs/graphs/contributors)
 
+--- scripts/aggregate_evals.js ---
+#!/usr/bin/env node
+
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { execSync } from 'node:child_process';
+import os from 'node:os';
+
+const artifactsDir = process.argv[2] || '.';
+const MAX_HISTORY = 10;
+
+// Find all report.json files recursively
+function findReports(dir) {
+  const reports = [];
+  if (!fs.existsSync(dir)) return reports;
+
+  const files = fs.readdirSync(dir);
+  for (const file of files) {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      reports.push(...findReports(fullPath));
+    } else if (file === 'report.json') {
+      reports.push(fullPath);
+    }
+  }
+  return reports;
+}
+
+function getStats(reports) {
+  const testStats = {};
+
+  for (const reportPath of reports) {
+    try {
+      const content = fs.readFileSync(reportPath, 'utf-8');
+      const json = JSON.parse(content);
+
+      for (const testResult of json.testResults) {
+        for (const assertion of testResult.assertionResults) {
+          const name = assertion.title;
+          if (!testStats[name]) {
+            testStats[name] = { passed: 0, failed: 0, total: 0 };
+          }
+          testStats[name].total++;
+          if (assertion.status === 'passed') {
+            testStats[name].passed++;
+          } else {
+            testStats[name].failed++;
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing report at ${reportPath}:`, error);
+    }
+  }
+  return testStats;
+}
+
+function fetchHistoricalData() {
+  const history = [];
+
+  try {
+    // Determine branch
+    const branch = 'main';
+
+    // Get recent runs
+    const cmd = `gh run list --workflow evals-nightly.yml --branch "${branch}" --limit ${
+      MAX_HISTORY + 5
+    } --json databaseId,createdAt,url,displayTitle,status,conclusion`;
+    const runsJson = execSync(cmd, { encoding: 'utf-8' });
+    let runs = JSON.parse(runsJson);
+
+    // Filter out current run
+    const currentRunId = process.env.GITHUB_RUN_ID;
+    if (currentRunId) {
+      runs = runs.filter((r) => r.databaseId.toString() !== currentRunId);
+    }
+
+    // Filter for runs that likely have artifacts (completed) and take top N
+    // We accept 'failure' too because we want to see stats.
+    runs = runs.filter((r) => r.status === 'completed').slice(0, MAX_HISTORY);
+
+    // Fetch artifacts for each run
+    for (const run of runs) {
+      const tmpDir = fs.mkdtempSync(
+        path.join(os.tmpdir(), `gemini-evals-${run.databaseId}-`),
+      );
+      try {
+        // Download report.json files.
+        // The artifacts are named 'eval-logs-X'.
+        // We use -p to match pattern.
+        execSync(
+          `gh run download ${run.databaseId} -p "eval-logs-*" -D "${tmpDir}"`,
+          { stdio: 'ignore' },
+        );
+
+        const runReports = findReports(tmpDir);
+        if (runReports.length > 0) {
+          history.push({
+            run,
+            stats: getStats(runReports),
+          });
+        }
+      } catch (error) {
+        console.error(
+          `Failed to download or process artifacts for run ${run.databaseId}:`,
+          error,
+        );
+      } finally {
+        fs.rmSync(tmpDir, { recursive: true, force: true });
+      }
+    }
+  } catch (error) {
+    console.error('Failed to fetch historical data:', error);
+  }
+
+  return history;
+}
+
+function generateMarkdown(currentStats, history) {
+  const totalStats = Object.values(currentStats).reduce(
+    (acc, stats) => {
+      acc.passed += stats.passed;
+      acc.total += stats.total;
+      return acc;
+    },
+    { passed: 0, total: 0 },
+  );
+
+  const totalPassRate =
+    totalStats.total > 0
+      ? ((totalStats.passed / totalStats.total) * 100).toFixed(1) + '%'
+      : 'N/A';
+
+  console.log('### Evals Nightly Summary');
+  console.log(`**Total Pass Rate: ${totalPassRate}**\n`);
+  console.log(
+    'See [evals/README.md](https://github.com/google-gemini/gemini-cli/tree/main/evals) for more details.\n',
+  );
+
+  // Reverse history to show oldest first
+  const reversedHistory = [...history].reverse();
+
+  // Header
+  let header = '| Test Name |';
+  let separator = '| :--- |';
+
+  for (const item of reversedHistory) {
+    header += ` [${item.run.databaseId}](${item.run.url}) |`;
+    separator += ' :---: |';
+  }
+
+  // Add Current column last
+  header += ' Current |';
+  separator += ' :---: |';
+
+  console.log(header);
+  console.log(separator);
+
+  // Collect all test names
+  const allTestNames = new Set(Object.keys(currentStats));
+  for (const item of reversedHistory) {
+    Object.keys(item.stats).forEach((name) => allTestNames.add(name));
+  }
+
+  for (const name of Array.from(allTestNames).sort()) {
+    const searchUrl = `https://github.com/search?q=repo%3Agoogle-gemini%2Fgemini-cli%20%22${encodeURIComponent(name)}%22&type=code`;
+    let row = `| [${name}](${searchUrl}) |`;
+
+    // History
+    for (const item of reversedHistory) {
+      const stat = item.stats[name];
+      if (stat) {
+        const passRate = ((stat.passed / stat.total) * 100).toFixed(0) + '%';
+        row += ` ${passRate} |`;
+      } else {
+        row += ' - |';
+      }
+    }
+
+    // Current
+    const curr = currentStats[name];
+    if (curr) {
+      const passRate = ((curr.passed / curr.total) * 100).toFixed(0) + '%';
+      row += ` ${passRate} |`;
+    } else {
+      row += ' - |';
+    }
+
+    console.log(row);
+  }
+}
+
+// --- Main ---
+
+const currentReports = findReports(artifactsDir);
+if (currentReports.length === 0) {
+  console.log('No reports found.');
+  // We don't exit here because we might still want to see history if available,
+  // but practically if current has no reports, something is wrong.
+  // Sticking to original behavior roughly, but maybe we can continue.
+  process.exit(0);
+}
+
+const currentStats = getStats(currentReports);
+const history = fetchHistoricalData();
+generateMarkdown(currentStats, history);
+
+
+## Links discovered
+- [evals/README.md](https://github.com/google-gemini/gemini-cli/tree/main/evals)
+- [${item.run.databaseId}](https://github.com/google-gemini/gemini-cli/blob/main/scripts/${item.run.url})
+- [${name}](https://github.com/google-gemini/gemini-cli/blob/main/scripts/${searchUrl}.md)
+
 --- scripts/build.js ---
 /**
  * @license
@@ -13317,6 +12496,17 @@ if (existsSync(docsSrc)) {
   console.log('Copied docs to bundle/docs/');
 }
 
+// 4. Copy Built-in Skills (packages/core/src/skills/builtin)
+const builtinSkillsSrc = join(root, 'packages/core/src/skills/builtin');
+const builtinSkillsDest = join(bundleDir, 'builtin');
+if (existsSync(builtinSkillsSrc)) {
+  cpSync(builtinSkillsSrc, builtinSkillsDest, {
+    recursive: true,
+    dereference: true,
+  });
+  console.log('Copied built-in skills to bundle/builtin/');
+}
+
 console.log('Assets copied to bundle/');
 
 
@@ -13397,144 +12587,16 @@ if (packageName === 'cli') {
   }
 }
 
+// Copy built-in skills for the core package.
+if (packageName === 'core') {
+  const builtinSkillsSource = path.join(sourceDir, 'skills', 'builtin');
+  const builtinSkillsTarget = path.join(targetDir, 'skills', 'builtin');
+  if (fs.existsSync(builtinSkillsSource)) {
+    fs.cpSync(builtinSkillsSource, builtinSkillsTarget, { recursive: true });
+  }
+}
+
 console.log('Successfully copied files.');
-
-
---- scripts/deflake.js ---
-/**
- * @license
- * Copyright 2025 Google LLC
- * SPDX-License-Identifier: Apache-2.0
- */
-
-import { spawn } from 'node:child_process';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-
-// Script to deflake tests
-// Ex. npm run deflake -- --command="npm run test:e2e -- --test-name-pattern 'extension'" --runs=3
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const projectRoot = path.resolve(__dirname, '..');
-const dockerIgnorePath = path.join(projectRoot, '.dockerignore');
-
-const DOCKERIGNORE_CONTENT = `.integration-tests`.trim();
-
-/**
- * Runs a command and streams its output to the console.
- * @param {string} command The command string to execute (e.g., 'npm run test:e2e -- --watch').
- * @returns {Promise<number>} A Promise that resolves with the exit code of the process.
- */
-function runCommand(cmd, args = []) {
-  if (!cmd) {
-    return Promise.resolve(1);
-  }
-
-  return new Promise((resolve, reject) => {
-    const child = spawn(cmd, args, {
-      shell: true,
-      stdio: 'inherit',
-      env: { ...process.env },
-    });
-
-    child.on('close', (code) => {
-      resolve(code ?? 1); // code can be null if the process was killed
-    });
-
-    child.on('error', (err) => {
-      // An error occurred in spawning the process (e.g., command not found).
-      console.error(`Failed to start command: ${err.message}`);
-      reject(err);
-    });
-  });
-}
-// -------------------------------------------------------------------
-
-async function main() {
-  const argv = await yargs(hideBin(process.argv))
-    .option('command', {
-      type: 'string',
-      demandOption: true,
-      description: 'The command to run',
-    })
-    .option('runs', {
-      type: 'number',
-      default: 5,
-      description: 'The number of runs to perform',
-    }).argv;
-
-  const NUM_RUNS = argv.runs;
-  const COMMAND = argv.command;
-  const ARGS = argv._;
-  let failures = 0;
-
-  const backupDockerIgnorePath = dockerIgnorePath + '.bak';
-  let originalDockerIgnoreRenamed = false;
-
-  console.log(`--- Starting Deflake Run (${NUM_RUNS} iterations) ---`);
-
-  try {
-    try {
-      // Try to rename to back up an existing .dockerignore
-      await fs.rename(dockerIgnorePath, backupDockerIgnorePath);
-      originalDockerIgnoreRenamed = true;
-    } catch (err) {
-      // If the file doesn't exist, that's fine. Otherwise, rethrow.
-      if (err.code !== 'ENOENT') throw err;
-    }
-
-    // Create the temporary .dockerignore for this run.
-    await fs.writeFile(dockerIgnorePath, DOCKERIGNORE_CONTENT);
-
-    for (let i = 1; i <= NUM_RUNS; i++) {
-      console.log(`\n[RUN ${i}/${NUM_RUNS}]`);
-
-      try {
-        const exitCode = await runCommand(COMMAND, ARGS);
-
-        if (exitCode === 0) {
-          console.log('✅ Run PASS');
-        } else {
-          console.log(`❌ Run FAIL (Exit Code: ${exitCode})`);
-          failures++;
-        }
-      } catch (error) {
-        console.error('❌ Run FAIL (Execution Error)', error);
-        failures++;
-      }
-    }
-  } finally {
-    try {
-      // Clean up the temporary .dockerignore
-      await fs.unlink(dockerIgnorePath);
-    } catch (err) {
-      console.error('Failed to remove temporary .dockerignore:', err);
-    }
-
-    if (originalDockerIgnoreRenamed) {
-      try {
-        // Restore the original .dockerignore if it was backed up.
-        await fs.rename(backupDockerIgnorePath, dockerIgnorePath);
-      } catch (err) {
-        console.error('Failed to restore original .dockerignore:', err);
-      }
-    }
-  }
-
-  console.log('\n--- FINAL DEFLAKE SUMMARY ---');
-  console.log(`Total Runs: ${NUM_RUNS}`);
-  console.log(`Total Failures: ${failures}`);
-
-  process.exit(failures > 0 ? 1 : 0);
-}
-
-main().catch((error) => {
-  console.error('Error in deflake:', error);
-  process.exit(1);
-});
 
 
 --- third_party/get-ripgrep/src/downloadRipGrep.js ---

@@ -63,6 +63,132 @@ Scope: API support for Claude 4.5 Sonnet and Claude 4.1 Opus in Oracle CLI.
 - Improve cost estimation if API exposes cached-token counters.
 
 
+--- docs/bridge.md ---
+# Bridge (Windows-hosted ChatGPT session → Linux clients)
+
+Oracle’s bridge workflow lets you keep an authenticated ChatGPT session on a Windows machine while running Oracle (CLI + `oracle-mcp`) from Linux boxes (often over SSH), without exporting browser cookies off Windows.
+
+## Concepts
+
+- **Host (Windows)**: runs `oracle bridge host` and holds the signed-in ChatGPT session.
+- **Client (Linux)**: stores the host connection once and routes browser runs (and MCP browser runs) through the host.
+
+## 1) Windows: start the host service (recommended)
+
+Run this on the Windows machine that’s signed into ChatGPT:
+
+```powershell
+oracle bridge host --token auto --ssh user@your-linux-host
+```
+
+What it does:
+
+- Starts a local `oracle serve` instance bound to `127.0.0.1:9473` by default.
+- Generates an access token (stored to disk; not printed unless you ask).
+- Starts an SSH reverse tunnel so the Linux host can reach the Windows service at `127.0.0.1:9473`.
+- Writes a connection artifact to `~/.oracle/bridge-connection.json` (contains host + token).
+
+Useful flags:
+
+- Bind a different local port: `--bind 127.0.0.1:9474`
+- Use a specific token: `--token <value>`
+- Print the connection string (includes token): `--print`
+- Print only the token: `--print-token`
+- SSH port/custom args: `--ssh-extra-args "-p 2222"`
+- Background mode (writes pid/log files under `~/.oracle`): `--background`
+
+## 2) Linux: configure the client once
+
+Copy the connection artifact from Windows to Linux (example from Windows → Linux):
+
+```powershell
+scp "$env:USERPROFILE\.oracle\bridge-connection.json" user@your-linux-host:~/bridge-connection.json
+```
+
+Then on the Linux host:
+
+```bash
+oracle bridge client --connect ~/bridge-connection.json --write-config --test
+```
+
+This writes:
+
+- `~/.oracle/config.json` → `browser.remoteHost` and `browser.remoteToken`
+
+Now browser runs automatically route through the host:
+
+```bash
+oracle --engine browser -p "hello" --file README.md
+```
+
+## 2b) Linux desktop: local manual-login (no bridge)
+
+If you’re physically on a Linux desktop and just want Oracle to reuse a local signed-in Chrome profile (no Windows bridge):
+
+1) Run a browser session once and sign in when Chrome opens:
+
+```bash
+ORACLE_HOME_DIR=~/.oracle-local \
+ORACLE_BROWSER_PROFILE_DIR=~/.oracle-local/browser-profile \
+oracle --engine browser --browser-manual-login --browser-keep-browser -p "hello"
+```
+
+2) After you’re signed in, reuse the same env vars for future runs (no more login prompts).
+
+Optional: use the helper wrapper `scripts/oracle-local-browser.sh` to avoid repeating flags/env vars:
+
+```bash
+chmod +x ./scripts/oracle-local-browser.sh
+./scripts/oracle-local-browser.sh -p "hello" --file README.md
+```
+
+## 3) Codex CLI (MCP) integration
+
+On the Linux machine where Codex runs:
+
+```bash
+oracle bridge codex-config
+```
+
+Paste the printed snippet into `~/.codex/config.toml`.
+
+## 3b) Claude Code (MCP) integration
+
+On the Linux machine where Claude Code runs:
+
+```bash
+oracle bridge claude-config > .mcp.json
+```
+
+Then start Claude Code with that config (or register it via `claude mcp add` depending on your setup).
+
+Notes:
+
+- The snippet includes `ORACLE_ENGINE="browser"` so MCP consult calls use browser mode even if `OPENAI_API_KEY` is set.
+- By default the snippets leave `ORACLE_REMOTE_TOKEN` as `<YOUR_TOKEN>` to avoid printing secrets; rerun with `--print-token` if you explicitly want it included.
+
+## 4) Troubleshooting
+
+Run:
+
+```bash
+oracle bridge doctor
+```
+
+It checks:
+
+- Whether a remote host/token is configured
+- TCP reachability to the remote host
+- Remote auth via `GET /health` (token-protected)
+- If no remote is configured, it probes local Chrome + cookie DB detection and suggests `--browser-chrome-path` / `--browser-cookie-path`
+
+## Security notes
+
+- Tokens are not printed by default.
+- The connection artifact and config file contain secrets; keep them private (Oracle writes them with restrictive permissions on Unix).
+- Bridge does **not** extract/decrypt cookies from arbitrary profiles; the Windows machine keeps the authenticated session locally.
+
+
 --- docs/browser-mode.md ---
 # Browser Mode
 
@@ -371,6 +497,10 @@ Oracle reads an optional per-user config from `~/.oracle/config.json`. The file 
     chromeCookiePath: null,
     chatgptUrl: "https://chatgpt.com/", // root is fine; folder URLs also work
     url: null, // alias for chatgptUrl (kept for back-compat)
+    // Remote browser bridge (preferred place to store remote host settings)
+    remoteHost: "127.0.0.1:9473",
+    remoteToken: "…", // written by `oracle bridge client` (kept private; not printed by default)
+    remoteViaSshReverseTunnel: { ssh: "user@linux-host", remotePort: 9473 }, // optional metadata
     debugPort: null,          // fixed DevTools port (env: ORACLE_BROWSER_PORT / ORACLE_BROWSER_DEBUG_PORT)
     timeoutMs: 1200000,
     inputTimeoutMs: 30000,
@@ -412,8 +542,9 @@ Oracle reads an optional per-user config from `~/.oracle/config.json`. The file 
 CLI flags → `config.json` → environment → built-in defaults.
 
 - `engine`, `model`, `search`, `filesReport`, `heartbeatSeconds`, and `apiBaseUrl` in `config.json` override the auto-detected values unless explicitly set on the CLI.
+- `ORACLE_ENGINE=api|browser` is a global override for engine selection (useful for MCP/Codex setups); it wins over `config.json`.
 - If `azure.endpoint` (or `--azure-endpoint`) is set, Oracle reads `AZURE_OPENAI_API_KEY` first and falls back to `OPENAI_API_KEY` for GPT models.
-- Remote browser defaults follow the same order: `--remote-host/--remote-token` win, then `remote.host` / `remote.token` (or `remoteHost` / `remoteToken`) in the config, then `ORACLE_REMOTE_HOST` / `ORACLE_REMOTE_TOKEN` if still unset.
+- Remote browser defaults follow the same order: `--remote-host/--remote-token` win, then `browser.remoteHost` / `browser.remoteToken`, then legacy `remote.host` / `remote.token` (or `remoteHost` / `remoteToken`), then `ORACLE_REMOTE_HOST` / `ORACLE_REMOTE_TOKEN` if still unset.
 - `OPENAI_API_KEY` only influences engine selection when neither the CLI nor `config.json` specify an engine (API when present, otherwise browser).
 - `ORACLE_NOTIFY*` env vars still layer on top of the config’s `notify` block.
 - `sessionRetentionHours` controls the default value for `--retain-hours`. When unset, `ORACLE_RETAIN_HOURS` (if present) becomes the fallback, and the CLI flag still wins over both.
@@ -951,56 +1082,6 @@ Skip these unless you're intentionally validating the production API; they are
 fully gated behind `ORACLE_LIVE_TEST=1` to avoid accidental CI runs.
 
 
---- docs/mcp.md ---
-# MCP Server
-
-`oracle-mcp` is a minimal MCP stdio server that mirrors the Oracle CLI. It shares session storage with the CLI (`~/.oracle/sessions` or `ORACLE_HOME_DIR`) so you can mix and match: run with the CLI, inspect or re-run via MCP, or vice versa.
-
-## Tools
-
-### `consult`
-- Inputs: `prompt` (required), `files?: string[]` (globs), `model?: string` (defaults to CLI), `engine?: "api" | "browser"` (CLI auto-defaults), `slug?: string`.
-- Behavior: starts a session, runs it with the chosen engine, returns final output + metadata. Background/foreground follows the CLI (e.g., GPT‑5 Pro detaches by default).
-- Logging: emits MCP logs (`info` per line, `debug` for streamed chunks with byte sizes). If browser prerequisites are missing, returns an error payload instead of running.
-
-### `sessions`
-- Inputs: `{id?, hours?, limit?, includeAll?, detail?}` mirroring `oracle status` / `oracle session`.
-- Behavior: without `id`, returns a bounded list of recent sessions. With `id`/slug, returns a summary row; set `detail: true` to fetch full metadata, log, and stored request body.
-
-## Resources
-- `oracle-session://{id}/{metadata|log|request}` — read-only resources that surface stored session artifacts via MCP resource reads.
-
-## Background / detach behavior
-- Same as the CLI: heavy models (e.g., GPT‑5 Pro) detach by default; reattach via `oracle session <id>` / `oracle status`. MCP does not expose extra background flags.
-
-## Launching & usage
-- Installed from npm:
-  - One-off: `npx @steipete/oracle oracle-mcp`
-  - Global: `oracle-mcp`
-- From the repo (contributors):
-  - `pnpm build`
-  - `pnpm mcp` (or `oracle-mcp` in the repo root)
-- mcporter example (stdio):
-  ```json
-  {
-    "name": "oracle",
-    "type": "stdio",
-    "command": "npx",
-    "args": ["@steipete/oracle", "oracle-mcp"]
-  }
-  ```
-- Project-scoped Claude (.mcp.json) example:
-  ```json
-  {
-    "mcpServers": {
-      "oracle": { "type": "stdio", "command": "npx", "args": ["@steipete/oracle", "oracle-mcp"] }
-    }
-  }
-  ```
-- Tools and resources operate on the same session store as `oracle status|session`.
-- Defaults (model/engine/etc.) come from your Oracle CLI config; see `docs/configuration.md` or `~/.oracle/config.json`.
-
-
 --- types/win-dpapi.d.ts ---
 declare module 'win-dpapi' {
   export type Scope = 'CurrentUser' | 'LocalMachine';
@@ -1018,6 +1099,9 @@ declare module 'win-dpapi' {
 # Changelog
 
 ## 0.8.5 — Unreleased
+
+### Added
+- Bridge: add the bridge workflow + MCP browser controls for remote ChatGPT sessions. Original PR #42 by Kyle McCleary (@kmccleary3301) — thank you!
 
 ## 0.8.4 — 2026-01-04
 
@@ -1707,6 +1791,7 @@ oracle status --clear --hours 168
 ```
 
 ## More docs
+- Bridge (Windows host → Linux client): [docs/bridge.md](docs/bridge.md)
 - Browser mode & forks: [docs/browser-mode.md](docs/browser-mode.md) (includes `oracle serve` remote service), [docs/chromium-forks.md](docs/chromium-forks.md), [docs/linux.md](docs/linux.md)
 - MCP: [docs/mcp.md](docs/mcp.md)
 - OpenAI/Azure/OpenRouter endpoints: [docs/openai-endpoints.md](docs/openai-endpoints.md), [docs/openrouter.md](docs/openrouter.md)
@@ -1727,6 +1812,7 @@ Name inspired by: https://ampcode.com/news/oracle
 - [docs/mcp.md](https://github.com/steipete/oracle/blob/main/docs/mcp.md)
 - [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)
 - [docs/configuration.md](https://github.com/steipete/oracle/blob/main/docs/configuration.md)
+- [docs/bridge.md](https://github.com/steipete/oracle/blob/main/docs/bridge.md)
 - [docs/browser-mode.md](https://github.com/steipete/oracle/blob/main/docs/browser-mode.md)
 - [docs/chromium-forks.md](https://github.com/steipete/oracle/blob/main/docs/chromium-forks.md)
 - [docs/linux.md](https://github.com/steipete/oracle/blob/main/docs/linux.md)
@@ -1998,6 +2084,7 @@ import {
 import { loadUserConfig, type UserConfig } from '../src/config.js';
 import { applyBrowserDefaultsFromConfig } from '../src/cli/browserDefaults.js';
 import { shouldBlockDuplicatePrompt } from '../src/cli/duplicatePromptGuard.js';
+import { resolveRemoteServiceConfig } from '../src/remote/remoteServiceConfig.js';
 
 interface CliOptions extends OptionValues {
   prompt?: string;
@@ -2395,13 +2482,78 @@ program
   .option('--host <address>', 'Interface to bind (default 0.0.0.0).')
   .option('--port <number>', 'Port to listen on (default random).', parseIntOption)
   .option('--token <value>', 'Access token clients must provide (random if omitted).')
+  .option('--manual-login', 'Use a dedicated Chrome profile for manual login (recommended when cookie sync is unavailable).', false)
+  .option('--manual-login-profile-dir <path>', 'Chrome profile directory for manual login (default ~/.oracle/browser-profile).')
   .action(async (commandOptions) => {
     const { serveRemote } = await import('../src/remote/server.js');
     await serveRemote({
       host: commandOptions.host,
       port: commandOptions.port,
       token: commandOptions.token,
+      manualLoginDefault: commandOptions.manualLogin,
+      manualLoginProfileDir: commandOptions.manualLoginProfileDir,
     });
+  });
+
+const bridgeCommand = program.command('bridge').description('Bridge a Windows-hosted ChatGPT session to Linux clients.');
+
+bridgeCommand
+  .command('host')
+  .description('Start a secure oracle serve host (optionally with an SSH reverse tunnel).')
+  .option('--bind <host:port>', 'Local bind address for the host service (default 127.0.0.1:9473).')
+  .option('--token <token|auto>', 'Service access token (default auto).', 'auto')
+  .option('--write-connection <path>', 'Write a connection artifact JSON (default ~/.oracle/bridge-connection.json).')
+  .option('--ssh <user@host>', 'Maintain an SSH reverse tunnel to the Linux host (ssh -N -R ...).')
+  .option('--ssh-remote-port <port>', 'Remote port to bind on the Linux host (default matches --bind port).', parseIntOption)
+  .option('--ssh-identity <path>', 'SSH identity file (ssh -i).')
+  .option('--ssh-extra-args <args>', 'Extra args passed to ssh (quoted string).')
+  .option('--background', 'Run the host in the background and write pid/log files.', false)
+  .option('--foreground', 'Run the host in the foreground (default).', false)
+  .option('--print', 'Print the client connection string (includes token).', false)
+  .option('--print-token', 'Print only the token.', false)
+  .action(async (commandOptions) => {
+    const { runBridgeHost } = await import('../src/cli/bridge/host.js');
+    await runBridgeHost(commandOptions);
+  });
+
+bridgeCommand
+  .command('client')
+  .description('Configure this machine to use a remote oracle serve host.')
+  .requiredOption('--connect <connection>', 'Connection string or path to bridge-connection.json.')
+  .option('--config <path>', 'Override the oracle config file location (default ~/.oracle/config.json).')
+  .option('--no-write-config', 'Do not write ~/.oracle/config.json (just validate).')
+  .option('--no-test', 'Skip remote /health check.')
+  .option('--print-env', 'Print env var exports (includes token).', false)
+  .action(async (commandOptions) => {
+    const { runBridgeClient } = await import('../src/cli/bridge/client.js');
+    await runBridgeClient(commandOptions);
+  });
+
+bridgeCommand
+  .command('doctor')
+  .description('Diagnose bridge connectivity and browser engine prerequisites.')
+  .option('--verbose', 'Show extra diagnostics.', false)
+  .action(async (commandOptions) => {
+    const { runBridgeDoctor } = await import('../src/cli/bridge/doctor.js');
+    await runBridgeDoctor(commandOptions);
+  });
+
+bridgeCommand
+  .command('codex-config')
+  .description('Print a Codex CLI MCP server config snippet for oracle-mcp.')
+  .option('--print-token', 'Include ORACLE_REMOTE_TOKEN in the snippet.', false)
+  .action(async (commandOptions) => {
+    const { runBridgeCodexConfig } = await import('../src/cli/bridge/codexConfig.js');
+    await runBridgeCodexConfig(commandOptions);
+  });
+
+bridgeCommand
+  .command('claude-config')
+  .description('Print a Claude Code MCP config snippet (.mcp.json) for oracle-mcp.')
+  .option('--print-token', 'Include ORACLE_REMOTE_TOKEN in the snippet.', false)
+  .action(async (commandOptions) => {
+    const { runBridgeClaudeConfig } = await import('../src/cli/bridge/claudeConfig.js');
+    await runBridgeClaudeConfig(commandOptions);
   });
 
 program
@@ -2646,10 +2798,14 @@ async function runRootCommand(options: CliOptions): Promise<void> {
   };
   applyRetentionOption();
 
-  const remoteHost =
-    options.remoteHost ?? userConfig.remoteHost ?? userConfig.remote?.host ?? process.env.ORACLE_REMOTE_HOST;
-  const remoteToken =
-    options.remoteToken ?? userConfig.remoteToken ?? userConfig.remote?.token ?? process.env.ORACLE_REMOTE_TOKEN;
+  const remoteConfig = resolveRemoteServiceConfig({
+    cliHost: options.remoteHost,
+    cliToken: options.remoteToken,
+    userConfig,
+    env: process.env,
+  });
+  const remoteHost = remoteConfig.host;
+  const remoteToken = remoteConfig.token;
   if (remoteHost) {
     console.log(chalk.dim(`Remote browser host detected: ${remoteHost}`));
   }
@@ -6135,12 +6291,26 @@ export interface BrowserConfigDefaults {
   manualLogin?: boolean;
   /** Manual-login profile directory override (also available via ORACLE_BROWSER_PROFILE_DIR). */
   manualLoginProfileDir?: string | null;
+  /** Delegate browser automation to a remote `oracle serve` instance (host:port). */
+  remoteHost?: string | null;
+  /** Access token clients must provide to the remote `oracle serve` instance. */
+  remoteToken?: string | null;
+  /** Optional metadata for the SSH reverse-tunnel that makes remoteHost reachable. */
+  remoteViaSshReverseTunnel?: RemoteViaSshReverseTunnelConfig | null;
 }
 
 export interface AzureConfig {
   endpoint?: string;
   deployment?: string;
   apiVersion?: string;
+}
+
+export interface RemoteViaSshReverseTunnelConfig {
+  ssh?: string;
+  remotePort?: number;
+  localPort?: number;
+  identity?: string;
+  extraArgs?: string;
 }
 
 export interface RemoteServiceConfig {
@@ -7876,6 +8046,8 @@ import { resolveEngine, defaultWaitPreference, type EngineMode } from '../src/cl
 const envWithKey = { ...process.env, OPENAI_API_KEY: 'sk-test' } as NodeJS.ProcessEnv;
 const envWithoutKey = { ...process.env } as NodeJS.ProcessEnv;
 delete envWithoutKey.OPENAI_API_KEY;
+delete envWithKey.ORACLE_ENGINE;
+delete envWithoutKey.ORACLE_ENGINE;
 
 describe('resolveEngine', () => {
   it('prefers api when no flags and OPENAI_API_KEY is set', () => {
@@ -7886,6 +8058,22 @@ describe('resolveEngine', () => {
   it('falls back to browser when no flags and no OPENAI_API_KEY', () => {
     const engine = resolveEngine({ engine: undefined, browserFlag: false, env: envWithoutKey });
     expect(engine).toBe<EngineMode>('browser');
+  });
+
+  it('respects ORACLE_ENGINE=browser even when OPENAI_API_KEY is set', () => {
+    const env = { ...envWithKey } as NodeJS.ProcessEnv;
+    // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
+    env['ORACLE_ENGINE'] = 'browser';
+    const engine = resolveEngine({ engine: undefined, browserFlag: false, env });
+    expect(engine).toBe<EngineMode>('browser');
+  });
+
+  it('respects ORACLE_ENGINE=api even without OPENAI_API_KEY', () => {
+    const env = { ...envWithoutKey } as NodeJS.ProcessEnv;
+    // biome-ignore lint/complexity/useLiteralKeys: env var names are uppercase with underscores
+    env['ORACLE_ENGINE'] = 'api';
+    const engine = resolveEngine({ engine: undefined, browserFlag: false, env });
+    expect(engine).toBe<EngineMode>('api');
   });
 
   it('respects explicit --engine api even without OPENAI_API_KEY', () => {
@@ -8187,6 +8375,40 @@ describe('Gemini Client', () => {
     expect(mockGenerateContent.mock.calls[0]?.[0]).toMatchObject({
       config: { systemInstruction: { role: 'system', parts: [{ text: 'Sys' }] }, tools: [] },
     });
+  });
+});
+
+
+--- tests/logging.test.ts ---
+import { describe, expect, test } from 'vitest';
+import { formatBaseUrlForLog, maskApiKey } from '../src/oracle/logging.js';
+
+describe('maskApiKey', () => {
+  test('masks long keys with first/last 4 chars', () => {
+    expect(maskApiKey('sk-abcdef1234567890')).toBe('sk-a****7890');
+  });
+
+  test('handles short keys gracefully', () => {
+    expect(maskApiKey('abc')).toBe('a***c');
+    expect(maskApiKey(undefined)).toBeNull();
+    expect(maskApiKey(null)).toBeNull();
+  });
+});
+
+describe('formatBaseUrlForLog', () => {
+  test('redacts credentials, deep paths, and query values', () => {
+    const formatted = formatBaseUrlForLog(
+      'https://user:pass@proxy.test/v1/deep/path?api-version=2024-10-01&token=secret',
+    );
+    expect(formatted).toBe('https://proxy.test/v1/...?api-version=***');
+  });
+
+  test('truncates unparseable strings', () => {
+    const formatted = formatBaseUrlForLog('not a url but extremely long'.repeat(4));
+    expect(formatted.startsWith('not a url but extremely longnot ')).toBe(true);
+    expect(formatted.includes('…')).toBe(true);
+    expect(formatted.endsWith('ely long')).toBe(true);
+    expect(formatted.length).toBeLessThan(80);
   });
 });
 

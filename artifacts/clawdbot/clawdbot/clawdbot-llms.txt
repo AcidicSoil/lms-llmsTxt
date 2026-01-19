@@ -1,52 +1,58 @@
 # Clawdbot
 
-> Clawdbot is an AI assistant platform built for Clawd — a space lobster AI assistant — that enables users to interact with AI agents across multiple platforms (macOS, iOS, Android, Linux, Windows) via chat interfaces (WhatsApp, Telegram, Slack, Discord, iMessage, WebChat), remote access over Tailscale or SSH tunnels, and device-local actions (screen recording, camera, notifications, system commands). It supports secure, sandboxed execution of tools, agent coordination across sessions, and extensibility through skills, prompts, and configuration. The platform aims to provide a flexible, secure, and multi-platform AI assistant experience with deep integration into user workflows.
+> The purpose of this HTML is to visually represent the contributors to a project, likely enhancing transparency and recognition for team members involved in development, maintenance, or collaboration on a GitHub repository. It may serve as a “Contributors” section in a README file or as part of a public-facing page for the project.
 
 **Remember:**
-- Gateway: Central hub that handles client connections and orchestrates device actions
-- Tailscale Serve/Funnel: Secure remote access for clients to connect to the Gateway
-- Nodes: Device-local agents (iOS, Android, macOS) that execute local commands like screen recording or notifications
-- Sessions: Isolated agent workspaces that can be coordinated across platforms and users
-- Sandboxing: Docker-based isolation for non-main sessions to ensure security and separation
-- Skills Registry: ClawdHub allows dynamic loading of AI skills for extensibility
+- GitHub contributors
+- Team recognition
+- Open-source collaboration
+- Avatar display
+- Contributor visibility
+- Placeholder avatars
 
 ## Docs
+- [Install](https://github.com/clawdbot/clawdbot/blob/main/docs/install/index.md): install & quickstart.
 - [Postinstall](https://github.com/clawdbot/clawdbot/blob/main/scripts/postinstall.js): install & quickstart.
+- [Postinstall Patcher.Test](https://github.com/clawdbot/clawdbot/blob/main/src/postinstall-patcher.test.ts): install & quickstart.
+- [Ansible](https://github.com/clawdbot/clawdbot/blob/main/docs/install/ansible.md): install & quickstart.
+- [Bot.Create Telegram Bot.Installs Grammy Throttler.Test](https://github.com/clawdbot/clawdbot/blob/main/src/telegram/bot.create-telegram-bot.installs-grammy-throttler.test.ts): install & quickstart.
 - [Bun](https://github.com/clawdbot/clawdbot/blob/main/docs/install/bun.md): install & quickstart.
+- [Daemon Install Helpers](https://github.com/clawdbot/clawdbot/blob/main/src/commands/daemon-install-helpers.ts): install & quickstart.
+- [Daemon Install Helpers.Test](https://github.com/clawdbot/clawdbot/blob/main/src/commands/daemon-install-helpers.test.ts): install & quickstart.
 - [Docker](https://github.com/clawdbot/clawdbot/blob/main/docs/install/docker.md): install & quickstart.
-- [Getting Started](https://github.com/clawdbot/clawdbot/blob/main/docs/start/getting-started.md): install & quickstart.
-- [Nix](https://github.com/clawdbot/clawdbot/blob/main/docs/install/nix.md): install & quickstart.
-- [Signal Install](https://github.com/clawdbot/clawdbot/blob/main/src/commands/signal-install.ts): install & quickstart.
-- [Skills Install](https://github.com/clawdbot/clawdbot/blob/main/src/agents/skills-install.ts): install & quickstart.
-- [Updating](https://github.com/clawdbot/clawdbot/blob/main/docs/install/updating.md): install & quickstart.
-- [Overview](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/views/overview.ts): install & quickstart.
-- [Docs](https://github.com/clawdbot/clawdbot/blob/main/docs/index.md): docs page.
+- [Doctor Install](https://github.com/clawdbot/clawdbot/blob/main/src/commands/doctor-install.ts): install & quickstart.
 
 ## Tutorials
 - [Browser Cli Examples](https://github.com/clawdbot/clawdbot/blob/main/src/cli/browser-cli-examples.ts): worked example.
 - [Cli Examples](https://github.com/clawdbot/clawdbot/blob/main/skills/1password/references/cli-examples.md): API reference.
 
 ## API
-- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/openai-whisper-api/SKILL.md): docs page.
-- [Codexbar Cli](https://github.com/clawdbot/clawdbot/blob/main/skills/model-usage/references/codexbar-cli.md): API reference.
-- [Configuration](https://github.com/clawdbot/clawdbot/blob/main/skills/himalaya/references/configuration.md): API reference.
-- [Get Started](https://github.com/clawdbot/clawdbot/blob/main/skills/1password/references/get-started.md): API reference.
-- [Message Composition](https://github.com/clawdbot/clawdbot/blob/main/skills/himalaya/references/message-composition.md): API reference.
-- [Public Api](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/renderers/angular/src/public-api.ts): docs page.
+- [Auth Choice.Api Key](https://github.com/clawdbot/clawdbot/blob/main/src/commands/auth-choice.api-key.ts): docs page.
+- [Auth Choice.Apply.Api Providers](https://github.com/clawdbot/clawdbot/blob/main/src/commands/auth-choice.apply.api-providers.ts): docs page.
+- [Auth Profiles.External Cli Credential Sync.Does Not Overwrite Api Keys Syncing External.Test](https://github.com/clawdbot/clawdbot/blob/main/src/agents/auth-profiles.external-cli-credential-sync.does-not-overwrite-api-keys-syncing-external.test.ts): docs page.
+- [Config.Talk Api Key Fallback.Test](https://github.com/clawdbot/clawdbot/blob/main/src/config/config.talk-api-key-fallback.test.ts): docs page.
+- [Index](https://github.com/clawdbot/clawdbot/blob/main/src/plugin-sdk/index.ts): docs page.
+- [Index.Test](https://github.com/clawdbot/clawdbot/blob/main/src/plugin-sdk/index.test.ts): docs page.
+- [Models Config.Fills Missing Provider Apikey From Env Var.Test](https://github.com/clawdbot/clawdbot/blob/main/src/agents/models-config.fills-missing-provider-apikey-from-env-var.test.ts): docs page.
+- [Pi Embedded Helpers.Classifyfailoverreason.Test](https://github.com/clawdbot/clawdbot/blob/main/src/agents/pi-embedded-helpers.classifyfailoverreason.test.ts): docs page.
+- [Pi Embedded Runner.Splitsdktools.Test](https://github.com/clawdbot/clawdbot/blob/main/src/agents/pi-embedded-runner.splitsdktools.test.ts): docs page.
+- [Pi Embedded Subscribe.Subscribe Embedded Pi Session.Streams Soft Chunks Paragraph Preference.Test](https://github.com/clawdbot/clawdbot/blob/main/src/agents/pi-embedded-subscribe.subscribe-embedded-pi-session.streams-soft-chunks-paragraph-preference.test.ts): API reference.
 
 ## Optional
 - [Changelog](https://github.com/clawdbot/clawdbot/blob/main/CHANGELOG.md): version history.
 - [Contributing](https://github.com/clawdbot/clawdbot/blob/main/CONTRIBUTING.md): docs page.
+- [Security](https://github.com/clawdbot/clawdbot/blob/main/SECURITY.md): security policy.
 - [Changelog](https://github.com/clawdbot/clawdbot/blob/main/Swabble/CHANGELOG.md): version history.
 - [Release Check](https://github.com/clawdbot/clawdbot/blob/main/scripts/release-check.ts): version history.
-- [Contributing](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/CONTRIBUTING.md): docs page.
-- [Doctor Security](https://github.com/clawdbot/clawdbot/blob/main/src/commands/doctor-security.ts): security policy.
-- [License.Apple Device Identifiers](https://github.com/clawdbot/clawdbot/blob/main/apps/macos/Sources/Clawdbot/Resources/DeviceModels/LICENSE.apple-device-identifiers.txt): usage terms.
+- [Audit](https://github.com/clawdbot/clawdbot/blob/main/src/security/audit.ts): security policy.
+- [Audit Extra](https://github.com/clawdbot/clawdbot/blob/main/src/security/audit-extra.ts): security policy.
+- [Audit Fs](https://github.com/clawdbot/clawdbot/blob/main/src/security/audit-fs.ts): security policy.
+- [Audit.Test](https://github.com/clawdbot/clawdbot/blob/main/src/security/audit.test.ts): security policy.
+- [Changelog](https://github.com/clawdbot/clawdbot/blob/main/extensions/matrix/CHANGELOG.md): version history.
 - [Agents](https://github.com/clawdbot/clawdbot/blob/main/AGENTS.md): docs page.
 - [Claude](https://github.com/clawdbot/clawdbot/blob/main/CLAUDE.md): docs page.
 - [README](https://github.com/clawdbot/clawdbot/blob/main/README.md): docs page.
 - [README](https://github.com/clawdbot/clawdbot/blob/main/Swabble/README.md): install & quickstart.
-- [Showcase](https://github.com/clawdbot/clawdbot/blob/main/showcase.md): docs page.
 - [Vitest.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.config.ts): docs page.
 - [Vitest.E2E.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.e2e.config.ts): docs page.
 - [Vitest.Live.Config](https://github.com/clawdbot/clawdbot/blob/main/vitest.live.config.ts): docs page.
@@ -63,13 +69,35 @@
 - [Notice](https://github.com/clawdbot/clawdbot/blob/main/apps/macos/Sources/Clawdbot/Resources/DeviceModels/NOTICE.md): docs page.
 - [Scaffold](https://github.com/clawdbot/clawdbot/blob/main/apps/shared/ClawdbotKit/Sources/ClawdbotKit/Resources/CanvasScaffold/scaffold.html): docs page.
 
+## Assets
+- [README](https://github.com/clawdbot/clawdbot/blob/main/assets/chrome-extension/README.md): install & quickstart.
+- [Background](https://github.com/clawdbot/clawdbot/blob/main/assets/chrome-extension/background.js): docs page.
+- [Options](https://github.com/clawdbot/clawdbot/blob/main/assets/chrome-extension/options.html): docs page.
+- [Options](https://github.com/clawdbot/clawdbot/blob/main/assets/chrome-extension/options.js): docs page.
+
+## Extensions
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/copilot-proxy/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/google-antigravity-auth/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/google-gemini-cli-auth/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/qwen-portal-auth/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/voice-call/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/zalo/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/extensions/zalouser/README.md): install & quickstart.
+- [Config](https://github.com/clawdbot/clawdbot/blob/main/extensions/memory/config.ts): docs page.
+- [Index](https://github.com/clawdbot/clawdbot/blob/main/extensions/bluebubbles/index.ts): docs page.
+- [Index](https://github.com/clawdbot/clawdbot/blob/main/extensions/copilot-proxy/index.ts): docs page.
+
 ## Scripts
 - [Bench Model](https://github.com/clawdbot/clawdbot/blob/main/scripts/bench-model.ts): docs page.
 - [Canvas A2Ui Copy](https://github.com/clawdbot/clawdbot/blob/main/scripts/canvas-a2ui-copy.ts): docs page.
+- [Check Ts Max Loc](https://github.com/clawdbot/clawdbot/blob/main/scripts/check-ts-max-loc.ts): docs page.
+- [Copy Hook Metadata](https://github.com/clawdbot/clawdbot/blob/main/scripts/copy-hook-metadata.ts): docs page.
+- [Debug Claude Usage](https://github.com/clawdbot/clawdbot/blob/main/scripts/debug-claude-usage.ts): docs page.
+- [Firecrawl Compare](https://github.com/clawdbot/clawdbot/blob/main/scripts/firecrawl-compare.ts): docs page.
 - [Protocol Gen](https://github.com/clawdbot/clawdbot/blob/main/scripts/protocol-gen.ts): docs page.
 - [Protocol Gen Swift](https://github.com/clawdbot/clawdbot/blob/main/scripts/protocol-gen-swift.ts): docs page.
-- [Test Force](https://github.com/clawdbot/clawdbot/blob/main/scripts/test-force.ts): docs page.
-- [Ui](https://github.com/clawdbot/clawdbot/blob/main/scripts/ui.js): docs page.
+- [Readability Basic Compare](https://github.com/clawdbot/clawdbot/blob/main/scripts/readability-basic-compare.ts): docs page.
+- [Sync Plugin Versions](https://github.com/clawdbot/clawdbot/blob/main/scripts/sync-plugin-versions.ts): docs page.
 
 ## Skills
 - [Server Readme](https://github.com/clawdbot/clawdbot/blob/main/skills/local-places/SERVER_README.md): docs page.
@@ -80,26 +108,32 @@
 - [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/bird/SKILL.md): docs page.
 - [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/blogwatcher/SKILL.md): docs page.
 - [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/blucli/SKILL.md): docs page.
-- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/brave-search/SKILL.md): docs page.
+- [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/bluebubbles/SKILL.md): docs page.
 - [Skill](https://github.com/clawdbot/clawdbot/blob/main/skills/camsnap/SKILL.md): docs page.
 
 ## Src
+- [README](https://github.com/clawdbot/clawdbot/blob/main/src/hooks/bundled/README.md): install & quickstart.
+- [README](https://github.com/clawdbot/clawdbot/blob/main/src/hooks/bundled/soul-evil/README.md): install & quickstart.
 - [A2Ui](https://github.com/clawdbot/clawdbot/blob/main/src/canvas-host/a2ui/index.html): docs page.
+- [Channel Web](https://github.com/clawdbot/clawdbot/blob/main/src/channel-web.ts): docs page.
+- [Channel Web.Barrel.Test](https://github.com/clawdbot/clawdbot/blob/main/src/channel-web.barrel.test.ts): docs page.
+- [Docker Setup.Test](https://github.com/clawdbot/clawdbot/blob/main/src/docker-setup.test.ts): docs page.
 - [Entry](https://github.com/clawdbot/clawdbot/blob/main/src/entry.ts): docs page.
 - [Globals](https://github.com/clawdbot/clawdbot/blob/main/src/globals.ts): docs page.
 - [Globals.Test](https://github.com/clawdbot/clawdbot/blob/main/src/globals.test.ts): docs page.
 - [Index](https://github.com/clawdbot/clawdbot/blob/main/src/index.ts): docs page.
-- [Index.Test](https://github.com/clawdbot/clawdbot/blob/main/src/index.test.ts): docs page.
-- [Logger](https://github.com/clawdbot/clawdbot/blob/main/src/logger.ts): docs page.
-- [Logger.Test](https://github.com/clawdbot/clawdbot/blob/main/src/logger.test.ts): docs page.
-- [Logging](https://github.com/clawdbot/clawdbot/blob/main/src/logging.ts): docs page.
-- [Polls](https://github.com/clawdbot/clawdbot/blob/main/src/polls.ts): docs page.
 
 ## Test
 - [Auto Reply.Retry.Test](https://github.com/clawdbot/clawdbot/blob/main/test/auto-reply.retry.test.ts): docs page.
 - [Gateway.Multi.E2E.Test](https://github.com/clawdbot/clawdbot/blob/main/test/gateway.multi.e2e.test.ts): docs page.
+- [Inbound Contract.Providers.Test](https://github.com/clawdbot/clawdbot/blob/main/test/inbound-contract.providers.test.ts): docs page.
 - [Setup](https://github.com/clawdbot/clawdbot/blob/main/test/setup.ts): docs page.
+- [Test Env](https://github.com/clawdbot/clawdbot/blob/main/test/test-env.ts): docs page.
 - [Baileys](https://github.com/clawdbot/clawdbot/blob/main/test/mocks/baileys.ts): docs page.
+- [Inbound Contract](https://github.com/clawdbot/clawdbot/blob/main/test/helpers/inbound-contract.ts): docs page.
+- [Normalize Text](https://github.com/clawdbot/clawdbot/blob/main/test/helpers/normalize-text.ts): docs page.
+- [Paths](https://github.com/clawdbot/clawdbot/blob/main/test/helpers/paths.ts): docs page.
+- [Poll](https://github.com/clawdbot/clawdbot/blob/main/test/helpers/poll.ts): docs page.
 
 ## Ui
 - [Ui](https://github.com/clawdbot/clawdbot/blob/main/ui/index.html): docs page.
@@ -107,11 +141,11 @@
 - [Vitest.Config](https://github.com/clawdbot/clawdbot/blob/main/ui/vitest.config.ts): docs page.
 - [Main](https://github.com/clawdbot/clawdbot/blob/main/ui/src/main.ts): docs page.
 - [App](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app.ts): docs page.
-- [App Render](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-render.ts): docs page.
-- [Chat Markdown.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/chat-markdown.browser.test.ts): docs page.
-- [Config Form.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/config-form.browser.test.ts): docs page.
-- [Focus Mode.Browser.Test](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/focus-mode.browser.test.ts): docs page.
-- [Format](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/format.ts): docs page.
+- [App Channels](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-channels.ts): docs page.
+- [App Chat](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-chat.ts): docs page.
+- [App Defaults](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-defaults.ts): docs page.
+- [App Events](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-events.ts): docs page.
+- [App Gateway](https://github.com/clawdbot/clawdbot/blob/main/ui/src/ui/app-gateway.ts): docs page.
 
 ## Vendor
 - [README](https://github.com/clawdbot/clawdbot/blob/main/vendor/a2ui/README.md): install & quickstart.

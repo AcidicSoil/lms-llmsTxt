@@ -1,0 +1,2952 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- com.unity.toonshader/Documentation~/installation.md ---
+# Installation
+
+The **Unity Toon Shader** is a preview/experimental package.
+Installing the package requires the following steps:
+
+1. Make sure Git is installed on your system.
+1. Open the [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html).
+1. Click the **+** button and choose **Add package by name**.
+1. Type `com.unity.toonshader` and click the **Add** button.
+
+You can also specify a particular version, for example: `com.unity.toonshader@0.9.4-preview`
+
+
+## Links discovered
+- [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html)
+
+--- com.unity.toonshader/Documentation~/SampleInstallation.md ---
+# Installing the sample scenes
+
+The **Unity Toon Shader (UTS)** package provides 
+sample scenes for every supported render pipeline. 
+Import the sample set that matches the render pipeline currently assigned to your project.
+
+## Before you import
+
+- Confirm that the [render pipeline](https://docs.unity3d.com/6000.0/Documentation/Manual/render-pipelines.html) you intend to use is installed and active.
+
+## Import samples through Package Manager
+
+1. Open the [Package Manager](https://docs.unity3d.com/6000.0/Documentation/Manual/Packages.html).
+2. Select **Unity Toon Shader** from the package list.
+3. In the **Samples** section, choose the collection that matches your render pipeline.
+4. Click **Import**. Unity creates an `Assets/Samples/Unity Toon Shader/<version>/...` folder containing the selected samples.
+
+> Tip: You can re-import the samples at any time. Unity prompts you before overwriting existing files.
+
+## Sample scene overview
+
+### Universal Render Pipeline
+
+`Assets/Samples/Unity Toon Shader/<version>/URP`
+
+- `AngelRing/AngelRing.unity` &mdash; Setup for the [Angel Ring](AngelRing.md) feature.
+- `Cube_HardEdge/Cube_HardEdge.unity` &mdash; Reference for baked normals.
+- `BoxProjection/BoxProjection.unity` &mdash; Dark room lighting with box projection probes.
+- `EmissiveAnimation/EmissiveAnimation.unity` &mdash; Animated [Emission](Emission.md) sequences.
+- `LightAndShadows/LightAndShadows.unity` &mdash; Comparison between the PBR shader and UTS.
+- `MatCapMask/MatCapMask.unity` &mdash; Using [MatCap](MatCap.md) masks.
+- `Mirror/MirrorTest.unity` &mdash; Mirror material setup and testing.
+- `NormalMap/NormalMap.unity` &mdash; Normal map techniques tuned with UTS.
+- `PointLightTest/PointLightTest.unity` &mdash; Cel-shading examples using point lights.
+- `KageBall/KageBall.unity` &mdash; The basics.
+- `UnityChan/UnityChan.unity` &mdash; SD Unity-chan model showcasing illustration-style shading.
+- `UnityChan_CelLook/UnityChan_CelLook.unity` &mdash; SD Unity-chan model with classic cel-look settings for characters.
+- `UnityChan_Emissive/UnityChan_Emissive.unity` &mdash; SD Unity-chan model showing the [Emission](Emission.md) feature.
+- `UnityChan_Firefly/UnityChan_Firefly.unity` &mdash; SD Unity-chan model with multiple point lights.
+
+> Unity-chan assets are licensed under the [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)
+
+### Built-in Render Pipeline
+
+`Assets/Samples/Unity Toon Shader/<version>/Built-In RP`
+
+- Mirrors the URP scenes but configured for built-in render pipeline.
+
+### High Definition Render Pipeline
+
+`Assets/Samples/Unity Toon Shader/<version>/HDRP`
+
+- Mirrors the URP scenes but configured for HDRP.
+
+
+
+## Links discovered
+- [render pipeline](https://docs.unity3d.com/6000.0/Documentation/Manual/render-pipelines.html)
+- [Package Manager](https://docs.unity3d.com/6000.0/Documentation/Manual/Packages.html)
+- [Angel Ring](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/AngelRing.md)
+- [Emission](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Emission.md)
+- [MatCap](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MatCap.md)
+- [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)
+
+--- com.unity.toonshader/Documentation~/GettingStarted.md ---
+# Getting Started with Unity Toon Shader
+
+The **Unity Toon Shader (UTS)** provides extensive controls 
+for professional cel-shading across the Built-in Render Pipeline, URP, and HDRP. 
+This page walks through the key concepts of cel-shading step by step.
+
+Follow these steps for simple cel-shading:
+1. [Put a directional light in the scene](#put-a-directional-light-in-the-scene).
+2. [Create materials for cel-shading and set the appropriate shader](#creating-a-new-material-and-applying-unity-toon-shader).
+3. [Set up three basic colors](#setting-up-three-basic-colors).
+4. [Determine the character's visual style](#adjusting-the-edges-of-the-three-basic-color-regions).
+5. [Set up the outline](#set-up-the-outline).
+
+After mastering the basics, explore:
+
+- [Advanced techniques](#advanced-techniques) such as:
+    * [Eliminating outlines around eyes](#eliminating-outlines-around-eyes).
+    * [Adding luster to hair](#adding-luster-to-hair).
+- [More options for stunning professional cel-shading](#more-options-for-stunning-professional-cel-shading) to push the look further.
+
+## Put a directional light in the scene
+
+To make cel-shading work, you need to place at least one [directional light](https://docs.unity3d.com/2022.2/Documentation/Manual/Lighting.html) in the scene. 
+Start with a neutral white light so you can see how UTS-specific settings influence the shading 
+without additional color shifts.
+
+## Creating a new material and applying Unity Toon Shader
+
+Start by [creating a material](https://docs.unity3d.com/6000.0/Documentation/Manual/materials-introduction.html) for your mesh and then assign the UTS shader:
+
+1. Create a new material and assign it to the mesh you plan to shade.
+2. In the Inspector, choose **Toon > Toon** or **Toon > Toon (Tessellation)** from the Shader drop-down. 
+   These shaders work on all supported render pipelines: Built-in Render Pipeline, URP, and HDRP.
+3. Once assigned, the model will render as a flat silhouette until 
+   you provide the texture maps that define the cel-shaded look.
+
+![The same character model with the Toon shader selected in the Inspector window. The model is now a flat white silhouette.](images/AppliedUTS.png)
+
+The directional light will no longer control shading in the usual way because UTS overrides the lighting response according to artist-driven parameters. UTS also allows you to decide whether and how the directional light color influences materials. See [Scene Light Effectiveness Settings](SceneLight.md) for guidance.
+
+## Setting up three basic colors
+
+UTS renders meshes in three conceptual regions: 
+1. **Base Map** for lit areas
+2. **1st Shading Map** for lighter shadows, and
+3. **2nd Shading Map** for the darkest tones. 
+
+For basic cel-shading you can focus on the Base Map and 1st Shading Map. 
+The [Three Color Map and Control Map Settings](Basic.md) page explains the controls in depth.
+
+![The same character model with the same shader selected. The Base Map property and the 1st Shading Map properties in the Inspector window are set to UV texture maps that have the shapes and colors for the model. The character is now fully textured.](images/AppliedTextures.png)
+
+Follow these steps:
+1. Author or import textures for the Base Map and 1st Shading Map. They can be separate textures or the same texture colored differently.
+2. Assign the Base Map to define the fully lit colors.
+3. Assign the 1st Shading Map to introduce a darker tone that UTS will show based on your shading step settings.
+
+
+![UV map textures of a chibi-style model for lit and lighter shadows areas](images/UnityChanTextures.png)<br/>
+Left: an example Base Map. Right: an example 1st Shading Map.
+
+
+## Adjusting the edges of the three basic color regions
+
+The borders between your color regions drive the perceived style of the character. 
+[Shading Steps and Feather Settings](ShadingStepAndFeather.md) let you adjust the position of those borders 
+and whether they are sharp or blended.
+
+Follow these steps:
+1. Increase **Base Color Step** so the **1st Shading Map** becomes visible and the contrast between lit and shadowed regions matches your intent.
+2. Use **Base Shading Feather** to control how crisply the regions transition. Lower values create graphic, posterized shading, while higher values blend the regions.
+
+![The same character model. In the Inspector window of the Toon shader, the Base Color Step property is set to 0.609. The shadows on the model are more prominent.](images/WithoutOutline.png)
+
+![The same character model. In the Inspector window of the Toon shader, the Base Shading Feather property is set to 0.279. The shadows on the model are more blended.](images/AdjustingFeather.png)
+
+## Set up the outline
+
+Outline is another important factor that determines the animation style.
+Consider the outline color relative to your background and adjust the thickness to reinforce the style. 
+The [Outline Settings](Outline.md) page details every property.
+
+<canvas class="image-comparison" role="img" aria-label="The same character model. In the Inspector window of the Toon shader, the Outline Color property is set to gray, and the Outline Width property is set to 4, then 6.44.">
+    <img src="images/ThinOutline2.png" title="Outline Width: 4">
+    <img src="images/BoldOutline2.png" title="Outline Width: 6.44">
+</canvas>
+<br />Drag the slider to compare the images.
+
+## Advanced techniques
+
+Now that you've learned basic cel-shading, you can refine specific features of the character. 
+The following examples illustrate how UTS helps solve common cel-shading challenges.
+
+### Eliminating outlines around eyes
+
+Outlines around delicate facial features can be distracting. 
+Apply an [Outline Width Map](Outline.md#outline-width-map) to control outline thickness per texel so you can taper or remove the stroke where needed.
+
+![The same character model. In the Inspector window of the Toon shader, the Outline Width Map property is set to a texture. There's no longer an outline around the eyes of the character.](images/OutlineWidthMap3.png)
+
+### Adding luster to hair
+
+Flat lighting can make hair feel lifeless. 
+Combine the [Highlight](Highlight.md), [Angel Ring](AngelRing.md), and [Material Capture (MatCap)](MatCap.md) features to add dimensionality. 
+In this example, we'll apply a [MatCap map](MatCap.md#matcap-map) onto the hair.
+
+![The same character model. In the Inspector window of the Toon shader, the MatCap Map property is set to a texture. The shadows and outlines on the hair look more three-dimensional.](images/Luster3.png)
+
+## More options for stunning professional cel-shading
+
+Once you're comfortable with the steps above, experiment with these additional features to push the look even further:
+
+- [Emission](Emission.md) for glowing elements such as eyes, screens, or weapons.
+- [Normal Map](NormalMap.md) to control the bumpiness of the material.
+- [Rim Light](Rimlight.md) to highlight the edges of meshes.
+
+
+## Links discovered
+- [directional light](https://docs.unity3d.com/2022.2/Documentation/Manual/Lighting.html)
+- [creating a material](https://docs.unity3d.com/6000.0/Documentation/Manual/materials-introduction.html)
+- [The same character model with the Toon shader selected in the Inspector window. The model is now a flat white silhouette.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/AppliedUTS.png)
+- [Scene Light Effectiveness Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/SceneLight.md)
+- [Three Color Map and Control Map Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Basic.md)
+- [The same character model with the same shader selected. The Base Map property and the 1st Shading Map properties in the Inspector window are set to UV texture maps that have the shapes and colors for the model. The character is now fully textured.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/AppliedTextures.png)
+- [UV map textures of a chibi-style model for lit and lighter shadows areas](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/UnityChanTextures.png)
+- [Shading Steps and Feather Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/ShadingStepAndFeather.md)
+- [The same character model. In the Inspector window of the Toon shader, the Base Color Step property is set to 0.609. The shadows on the model are more prominent.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/WithoutOutline.png)
+- [The same character model. In the Inspector window of the Toon shader, the Base Shading Feather property is set to 0.279. The shadows on the model are more blended.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/AdjustingFeather.png)
+- [Outline Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md)
+- [Outline Width Map](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md#outline-width-map)
+- [The same character model. In the Inspector window of the Toon shader, the Outline Width Map property is set to a texture. There's no longer an outline around the eyes of the character.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/OutlineWidthMap3.png)
+- [Highlight](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Highlight.md)
+- [Angel Ring](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/AngelRing.md)
+- [Material Capture (MatCap)](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MatCap.md)
+- [MatCap map](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MatCap.md#matcap-map)
+- [The same character model. In the Inspector window of the Toon shader, the MatCap Map property is set to a texture. The shadows and outlines on the hair look more three-dimensional.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/Luster3.png)
+- [Emission](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Emission.md)
+- [Normal Map](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/NormalMap.md)
+- [Rim Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Rimlight.md)
+
+--- com.unity.toon-reference-images/CHANGELOG.md ---
+# Changelog
+
+## [0.1.0] - 2025-05-08
+
+Initial
+
+
+--- com.unity.toon-reference-images/CONTRIBUTING.md ---
+# Contributing
+
+## If you are interested in contributing, here are some ground rules:
+* ... Define guidelines & rules for what contributors need to know to successfully make Pull requests against your repo ...
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- com.unity.toon-reference-images/LICENSE.md ---
+Unity Toon Shader copyright © 2021 Unity Technologies.
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+## If you are interested in contributing, here are some ground rules:
+* Talk to us before doing the work -- we love contributions, but we might already be working on the same thing, or we might have different opinions on how it should be implemented.
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- LICENSE.md ---
+# Unity Toon Shader
+copyright © 2021 Unity Technologies.
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- com.unity.toonshader/CHANGELOG.md ---
+# Changelog
+
+## [0.13.1-preview] - 2025-12-22
+
+* fix: shader compile error when screen space shadow is enabled in URP
+* fix: check property existence before when converting materials
+
+## [0.13.0-preview] - 2025-12-04
+
+## Added
+* feat: add Toon 3D as 2D shader
+* feat: assign material props when switching a material to Toon3Das2D
+* license: add explicit reference to the Unity-chan license
+* doc: add rendering paths section in the feature model doc
+
+## Changed
+* package: raise minimum Unity version requirement to 6.0
+* deps: use com.unity.film-internal-utilities@0.20.0-preview
+* sample: replace Unity-chan assets package-wide
+* sample: mention Unity-chan license inside sample description
+* sample: rename "Sample" scene to KageBall
+* sample: move UVCheckGrid texture into the common folder
+* sample: rename ToonShader scenes to UnityChan
+* sample: rename sample description and displayName strings
+* sample: update Built-in RP / URP / HDRP scenes
+* sample: disable CameraController while running tests
+* sample: reorganize floor materials grouping
+* sample: stop auto-generating materials for the Unity-chan model
+* doc: clean up Getting Started guide
+* doc: clean up Highlight documentation
+* doc: clean up Outline documentation
+* doc: clean up AngelRing documentation
+* doc: clean up Matcap documentation
+* doc: tidy the Samples documentation
+* doc: clean up Feature Difference documentation
+* doc: move MaterialConverter lower in the TOC
+* doc: put Render Pipeline Compatibility on the index page
+* doc: use "With Additional Control Maps" term in Modes page
+* doc: drop the word "Settings" from TOC entries
+* doc: lower Outline doc heading levels
+* doc: use emoji markers for feature availability
+* doc: improve grammar and clarity
+* doc: relocate HDRP box light entry under HDRP features
+
+## Fixed
+* fix: share the same cbuffer for the Universal2D pass
+* fix: workaround to prevent Built-in RP code from being executed in URP/HDRP
+* fix: correct inspector documentation URLs
+* fix: drop duplicate/unused Toon and Toon(Tessellation) shader properties
+* fix: resolve deprecated UxmlFactory warnings
+* fix: warnings - FindFirstObjectByType(), GetScriptingDefineSymbols(), SetScriptingDefineSymbols() 
+
+## Removed
+* sample: delete unused materials
+* sample: remove unnecessary meta files
+* sample: delete unused Unity-chan materials for URP
+* doc: remove unused images
+* doc: remove the “What’s New” documentation pages
+* remove: strip all Raytraced Hard Shadow references
+
+## [0.12.0-preview] - 2025-07-28
+
+### Added
+* feat: make toon URP work show basic colors/texture and outline in 2D light environment
+
+### Changed
+* doc: improve documentation accessibility
+
+### Fixed
+* fix: errors when unlit mode is selected in the SceneView
+* fix: undefined punctual shadow keywords for HDRP in Unity 6000.0 or later
+* fix: dark areas instead of outlines in WebGL and OpenGL
+
+
+## [0.11.1-preview] - 2025-06-12
+
+### Added
+* sample: add metaverse materials and prefabs of Unity-chan in the HDRP sample
+
+### Fixed
+* fix: calling InitializeBakedGIData() is necessary for Unity newer than 6000.0.12
+* doc: fix incorrect table layout documentation in sections under Inspector Window Settings
+
+## [0.11.0-preview] - 2024-12-11
+
+### Changed:
+* api: change the accessor of internal test classes to internal
+* api: change the accessor of UTS3MaterialHeaderScope to internal
+* api: change the accessor of UTS3MaterialHeaderScopeList to internal
+* api: change the accessor of UTS3MaterialEditorExtension and MaterialEditorExtension to internal
+* docs: update Unity Editor Compatibility
+* deps:  use com.unity.film-internal-utilities@0.19.2-preview
+
+### Removed:
+* api: remove unused empty UniversalToonShaderInfo class
+
+## [0.10.2-preview] - 2024-08-20
+### Fixed:
+* Plane objects can not be chosen from their front face in SceneViews.
+* Wrong include path for Linux systems.
+
+## [0.10.1-preview] - 2024-07-08
+### Fixed:
+* URP Shader Eroors on newer then Unity 6000.0.9.
+* HDRP Shder Erorrs on Unity 6. (Thanks to riina)
+* SceneView Flickers when Light probe on HDRP shaders.
+
+
+## [0.10.0-preview] - 2024-04-14
+### Updated:
+* URP shader is compatible with DOTS instancing. (Thanks to Hum9183)
+### Fixed:
+* Base Map/1st Shade Map/2nd Shade Map missing Tiling & Offset values are applied to Clipping Masks.
+* Undoing/Redoing Tiling & Offset won't be reflected on the screen until slection is changed.(Thanks to Hum9183)
+
+## [0.9.7-preview] - 2024-03-20
+### Updated
+* URP Shader is comaptible with Light Layer.   (Thanks to Hum9183)
+* Fixed:Base Map/1st Shade Map/2nd Shade Map missing Tiling & Offset controls for all the render pipelines. (Thanks to Hum9183)
+
+## [0.9.6-preview] - 2023-09-24
+### Updated
+* URP Shader is comaptible with DECAL.    (Thanks to Hum9183Hum9183)
+* Installation manual is suitable for new than Unity 2021.
+### Fixed:
+* A invalid reqnder queue when when Clipping is "On" or "Clip Transparency". (Thanks to TakeshiMiyakawaCR)
+
+## [0.9.5-preview] - 2023-08-25
+### Fixed
+* A URP Shader error when using newer than 2023.1.3.
+* A Null Reference Exception error with HDRP tesslation shader.
+
+## [0.9.4-preview] - 2023-05-01
+* Added a exlanation for URP line issue  into Kown Issues.
+
+## [0.9.3-preview] - 2023-04-18
+* Deleted warnings when creating materials with URP and Built-in shaders.
+
+## [0.9.2-preview] - 2023-04-12
+### Fixed
+* URP shader doesn't recieve shadows in player builds.
+
+## [0.9.1-preview] - 2023-03-30
+### Fixed
+* Some wrong information for shader path in docs.
+* Errors caused by mishandling for analytics.
+
+## [0.9.0-preview] - 2023-03-16
+### Updated
+* Minimum Unity version is 2020.3.45, 2021.3.19,2022.2.11.
+* Compatiblity with Universal RP Forward+.
+
+## [0.8.5-preview] - 2023-02-13
+### Fixed:
+* Some wrong information in docs.
+
+
+## [0.8.4-preview] - 2023-01-19
+### Updated:
+* Shaders are compatible with some console platforms.
+
+## [0.8.3-preview] - 2023-01-11
+### Fixed:
+* URP Shader doesn't work with Unity 2022.2.2f1.
+* Warrnings in HDRP shaders.
+
+## [0.8.2-preview] - 2022-09-09
+### Updated:
+* Updated some documents.
+
+### Fixed:
+* Deleted some warinings.
+* The converter ignores custom render queue in Unitychan Toon Shader ver 2 materials.
+* The converter sometimes misidentified materials older than 0.7.x in Built-in UTS3 as older materials in Unitychan Toon Shader Ver 2.0.7.
+* URP shader was not working for WebGL/GLES 3.0.
+
+
+## [0.8.1-preview] - 2022-08-24
+### Updated:
+* Updated some docs.
+
+### Fixed:
+* TOC didn't include the link to Material Converter page.
+* A image in index.md wasn't displayed in doc web site.
+
+## [0.8.0-preview] - 2022-08-02
+### Updated:
+* All the render pipeline shaders are integrated.
+* Added material converter to above which is capable of Unity-Chan Toon Shader V2, Universal Toon and UTS3 older than 0.7.x.
+* The package is compatible with 2020.3, 2021.3, 2022.1 and 2022.2. 2019.4 is no longer supported.
+
+
+## [0.7.5-preview] - 2022-06-27
+* Improved the logic for blending outlines into a scene when there are no directional lights in the scene.
+
+## [0.7.4-preview] - 2022-06-25
+### Fixed:
+* HDRP:Metaverse light was not working properly.
+
+### Updated:
+* Added `Getting Started` to the documentation.
+* Added more description to Outline doc.
+* Added more description to RimLight doc.
+* Mended Meteverse doc to use property, insted of indented menus.
+* Mended SceneLightSetting doc to use property instead of indented menus.
+* Re-wrote the doc to install samples.
+* Updated some images in docs.
+* Improved some wording in documentation.
+
+## [0.7.3-preview] - 2022-06-15
+### Updated:
+* HDRP shader is compatible with 2022.2.0 a16.
+* Attribute class for Mono-behaviors for UTS3.
+* Mac Graphics Tests use rsync instead of scp.
+* New retry count to several commands in Mac graphics tests.
+* 3 basic color is now Three basic colors.
+* `NormalMap Settings` is now an independent block.
+* Updated docs.
+
+## [0.7.2-preview] - 2022-05-30
+### Fixed:
+* Dead links for Toon EV adjustment HELP URL Buttons.
+* Some classes are accessible from outside.
+
+## [0.7.1-preview] - 2022-05-26
+### Updated:
+* Polished docs.
+
+## [0.7.0-preview] - 2022-05-23
+### Updated:
+* Shader version properties in all the render pipeline shaders.
+* Updated installation.md.
+* The inspector window is significantly reorganized.
+* Renamed `Double Shade with Feather` to `Standard`.
+* Renamed `Shading Grade map` to `With Additional Control Maps`.
+* Replaced toggle buttons Off/Active UI to Unity standard toggles.
+* Renamed `Basic Shader Settings` to `Shader Setting`.
+* Replaced some toggle buttons, such as `Emissive UV Coord`, `Specular Mode`, to dropdown menus
+* Specular mode name are not just `Off`/`On` but `Soft`/`Hard`.
+* Made everything in the inspector hidden when disabled to be shown but grayed out.
+* Folder headers use Unity standard style in the inspector window when SRP core newer than 12 is not installed.
+* Folder headers use SRP style in the inspector window when SRP core newer than 12 is installed.
+* Renamed `【DX11 Phong Tessellation Settings】` to `Legacy Pipeline: Phong Tessellation Settings` as it works on Mac too.
+* Renamed term, `Technique`, to `Mode`.
+* Renamed term, `Contribution`, to `Effectiveness`.
+* Renamed foldout name `Light Color Contribution` to `Scene Light Effectiveness Settings`
+* Moved `Gi Intensity` and `Scene Light hi cut filter` to bellow it.
+* Renamed `Scene  Hi-cut filter` to  `Limit Light Intensity` .
+* Renamed term, `High Color`, to `Highlight`.
+* Renamed `Settings for PointLights in ForwardAdd Pass` to `Point Light Settings`.
+* Renamed `Point Light High Cut Filter` to `Filter Point Light Hight Light`.
+* Re-organized Stencil and Clipping settings in the inspector window.
+* Renamed `Stencil Out` to `Draw If Not Equal to`.
+* Renamed `Stencil Mask` to `Replace Stencil Buffer with`.
+* Renamed `Stencil No.` to `Stencil Value`.
+* The above used to be a number field. Now it is editable with IntSlider.
+* Renamed `Inverse MatCap Mask` to `Invert MatCap Mask`.
+* Renamed `Trans Clipping Mode` to `Clip Transparency`.
+* Renamed `Unlit Intensity` to `Metaverse Light Intensity` and `Buiilt-in light settings` are moved into `Metaverse Settings` foldout header in the inspector so that users can understand  setting them is not necessary for usual uses.The setting works only when no directional lights are on the scenes like some VRChat ones.
+* _Unlit_Intensity ranges defined in all the shaders are from 0 to 4. originally they were from 0.001 to 4.
+* Changed built-in light default brightness from 1 to 0.
+* Renamed `Basic Look Dev` to `Shading Step and Feather Settings`.
+* `Advanced settings` in Outline foldout header are always shown.
+* Renamed `Outline Sampler` in Ontline foldout header to `Outline Width Map`.
+* Renamed `Outline-tex` in Ontline foldout header to `Outline Color Map`.
+* Renamed Culling mode itemes from `CullingOff`, `FrontCulling` and `BackCulling` to `Off`, `Frontface` and `Backface`.
+* Renamed `Receive System Shadows` to `Receive Shadows`.
+* Renamed `Shadow Mask on High Color` to `Highlight Blending on Shadows`.
+* Renamed `Highlight Power on Shadows` to `Blending Level`.
+* Renamed `Camera Rolling Stabilizer` to `Stabilize Camera Rolling`.
+* Renamed `ViewShift of Color` to `Color Shifting with View Angle`.
+* Renamed `ViewShift` to `Shifting Target Color`.
+* Renamed `Use Outline Texture` to `Outline Color Map`.
+* Renamed `Use Baked Normal for Outline` to `Baked Normalmap`.
+* Renamed `HighColor Power on Shadow` to `Brightness on Shadows`.
+* Renamed `MatCap Power on Shadow` to `MatCap Blending on Shadows`.
+* Renamed `Color Shift Speed` to `Color Shifting Speed`.
+* Renamed `Blur Level of ShadingGradeMap` to `ShadingGradeMap Blur Level`.
+* Renamed `MatCap Sampler` to `MatCap Map`.
+* Renamed `Blur Level of MatCap Sampler` to `MatCap Blur Level`.
+* Renamed `Rim Light Power` to `Rim Light Level`.
+* Renamed `RimLight Inside Mask` to `Adjust Rim Light Area`.
+* Renamed `Light Direction Mask` under Rim Light Settings to `Light Dreiction Mode`.
+* Renamed `Light Direction Mask Level` to `Light Direction Rim Light Level`.
+* Renamed `Antipodean(Ap)_RimLight` to `Inversed Direciton Rim Light`.
+* Renamed `AP_RimLgiht Power` to `Inversed Rim Light Level`.
+* Renamed `Color Blend Mode` to `Color Bleinding Mode`.
+* Renamed `GI Intesity` to `Light Probe Intensity`
+.
+### Added:
+* Legacy: Compatibility with Single Pass Stereo Rendering.
+* Legacy: Graphics Test 2022.2.
+* Universal RP: Graphics Test 2022.2.
+* HDRP: Graphics Test 2022.2.
+* Project Settings, but quite simple yet.
+* Help buttons to foldout headers in the inspector window, which work newer than Unity 2021.1.
+* Unity-Chan Toon Shader 2 Converter window opens when old shaders are in projects on start up or right after the package is installed.
+* Dependency to srp core take advantege of its help system.
+* Added Tips to Culling Mode popup menu in the inspector window.
+* Added Tips to GUI Toggles in the inspector window.
+* Added Tips to Range Properties in the inspector window.
+
+### Removed:
+* Removed   `● Additional Settings` in the Inspector window.
+* Removed Simple UI.
+* Removed Japanese and English manual link buttons.
+* Removed Game Recommendation window and changed the default values of shader variables.
+* Removed 【】in the Inspector window.
+* Removed  ● in the Inspector window.
+* Removed unnecessary labels in the inspector such as `System Shadows:`
+* `RTHS(Realtime Hard Shadow` is deprecated now as it will not be Unity official package.
+* RTHS is not shown unless `Show deprecated features in the inspector` is checked in the `Project Settings Window`.
+
+### Fixed:
+* Undo/Redo was not working on some items in the inspector window.
+* Fixed Indent in NoramMap Settings in the inspector window.
+* `Point Light High Cut Filter` Side Effects. It just shows or hides the point lights' highlight.
+* Unify the notation in the converter with Unity-Chan Toon Shader 2.
+* Fixed some popups in the inspector window not to use connected names without spaces. Each name is separated by a space.
+* `Rimlight Mask` on URP and HDRP version were not working well.
+* Single pass stereo rendering was not working with legacy(built-in) tessellation shaders.
+* URP shader errors when used with Unity 2022.2.
+
+## [0.6.1-preview] - 2022-02-24
+### Fixed:
+* typo in inspector.
+* removed .sample.json under Samples~ folder
+* Some unnecessary classes were public.
+* Unnatural expression `Multiply or Additive` to `Multiply or Add`.
+
+## [0.6.0-preview] - 2022-02-22
+### Updated:
+* Replaced test VM to use gtx1080
+* Updated README.md
+* Added LICENSE.md under the project folder.
+* Shader version properties in all the render pipeline shaders.
+
+### Fixed:
+* Some unnecessary classes were public.
+* URP: a depth output issue later then 10.0.x. (Thanks to riina)
+* Typos in README.md
+* promotion test issues.
+* no .sample.json files under each render-pileline sample folder.
+
+## [0.5.0-preview] - 2022-01-20
+### Updated:
+* Updated documentation and folder structure in order to make the package structure friendly to Unity official package.
+* Tentatively deleted Japanese documentation before making the package ready for Unity standard translation system.
+* HDRP: made UTS compatible with HDRP AOV. Capable of outputting Albedo, Normal and so on using AOV Image Sequence Recorder newer than 3.0.
+* More effective and strict internal tests.
+
+### Fixed:
+* HDRP:reduced shader variants by disabling some debug pragmas.
+* URP:UTS materials don't receive shadows when using newer than Unity 2021.1.
+* Legacy:Unable to disable Outline.
+* AutoRenderQueue is disabled when material inspector is unfocused.
+
+
+### Known Issues:
+* HDRP: When outputting AOV images, UTS Outline is also put into the images. In such cases, please disable OUTLINE in Material Inspectors.
+
+## [0.4.1-preview] - 2021-10-20
+### Added
+* HDRP:Something similar to HDRP exposure compensation.
+
+### Fixed:
+* typo in documents.
+* missing mono behaviors in sample scenes.
+* HDRP:BoxLightAdjustment script. some flags are not updated properly when some checkboxes are clicked.
+* HDRP:Shader compile errors when used with HDRP 12.1
+
+## [0.4.0-preview] - 2021-10-13
+### Added
+* HDRP: Compatibility with Box Light, a spot light variation, as main lights.
+* HDRP: BoxLightAdjustment mono-behavior
+
+### Fixed:
+* URP: Unstable SRP Compatibility. Thanks to tangx246.
+* URP: Outline pass is not compatible with VR when  Single Pass Instanced rendering is chosen. Thanks to tangx246 again.
+* URP: Some warnings.
+
+### Updated:
+* Documentation~/en/FeatureModel_en.md. Thanks to riina.
+* Platforms in documentation.
+
+## [0.3.2-preview] - 2021-09-28
+### Added
+* doc: HDRP: description for ray-trace shadow.
+
+### Fixed
+* HDRP: fix Gaps between self-shadow and ray-trace shadow.
+
+## [0.3.1-preview] - 2021-09-27
+* description is above.
+
+## [0.3.0-preview] - 2021-09-16
+* HDRP: Fixed weird steps when more than 3 point lights are in a scene.
+* HDRP: Added Toon EV Adjustment per Model.
+* HDRP: Compatible with Raytraced Hardshadow when DX12 is chosen as API.
+* Legacy: Applied a fix for outline flicker in VR chat.
+
+## [0.2.2-preview] - 2021-08-24
+* Modified Toon EV Adjustment Curve inspector.
+* Excluded unnecessary files from release zip.
+* Improved folder structure in order not to cause long file name errors when included in other packages.
+* Added documentation for Toon EV Adjustment Curve.
+
+## [0.2.1-preview] - 2021-08-18
+* HDRP: Fixed: Multiple instances of Toon EV adjustment curve can exist in one scene.
+
+## [0.2.0-preview] - 2021-08-17
+* HDRP: Toon EV adjustment curve as a Mono-behavior.
+* Legacy, Universal and HDRP: Some texture samplers,such as  _MainTex,  _NormalMap, _1st_ShadeMap and  _2nd_ShadeMap, are shared by 1 sampler, sampler_MainTex, in order to avoid sampler number exceeding errors.
+* Integrated Textures feature is removed from all the render pipeline versions instead of above.
+* HDRP and URP are compatible with SRP Batcher.
+* Legacy, Universal and HDRP: Added image comparison tests for Windows Vulkan API.
+* HDRP: Added light probe compatibility.
+* Added a material converter from Unity-chan Toon Shader newer than 2.0.7  to Unity Toon Shader. (Experimental)
+
+## [0.1.0-preview] - 2021-07-07
+* HDRP: Emission started to work.
+* HDRP: Improved exposure.
+* HDRP: Implemented tessellation to the outline pass.
+* deleted ValidationConfig.json.
+
+## [0.0.7-preview] - 2021-06-14
+* Made samples installable.
+
+## [0.0.6-preview] - 2021-06-04
+* Modified documents
+
+## [0.0.5-preview] - 2021-05-12
+* Channel Mask rendering feature put the results into alpha channel.
+
+## [0.0.4-preview] - 2021-05-09
+* Universal RP shaders are compatible with SRP 12.
+
+## [0.0.3-preview] - 2021-05-05
+* Universal RP and HDRP shaders are compatible with SRP 10.
+* HDRP shaders' DepthOnly path is replaced to DepthForwardOnly path.
+* Internal tests are compatible with not only 2019.4 but also 2020.x now.
+
+## [0.0.2-preview] - 2021-03-30
+* Legacy shaders are integrated into two shaders.
+* The number of textures is reduced experimental
+* Added Clipping Matte feature for HDRP.
+* Removed almost all the warnings when compiling shaders.
+* Grafted graphics tests from Scriptable Render Pipelines.
+* Reorganized documents.
+* Reorganized repository folder structure.
+* Added feature model list FeatureModel_en.md
+
+## [0.0.1-preview] - 2021-03-11
+
+* Reorganized Unity-chan/Universal Toon Shader as Unity Toon shader.
+
+
+
+--- com.unity.toonshader/CONTRIBUTING.md ---
+# Contributing
+
+## If you are interested in contributing, here are some ground rules:
+* ... Define guidelines & rules for what contributors need to know to successfully make Pull requests against your repo ...
+
+## All contributions are subject to the [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+By making a pull request, you are confirming agreement to the terms and conditions of the UCA, including that your Contributions are your original creation and that you have complete right and authority to make your Contributions.
+
+## Once you have a change ready following these ground rules. Simply make a pull request
+
+
+## Links discovered
+- [Unity Contribution Agreement(UCA)](https://unity3d.com/legal/licenses/Unity_Contribution_Agreement)
+
+--- com.unity.toonshader/LICENSE.md ---
+Unity Toon Shader copyright © 2021 Unity Technologies.
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- TestProjects/ToonHDRPTest-6000.0/Packages/com.unity.render-pipelines.high-definition-config/CHANGELOG.md ---
+# Changelog
+
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.3] - 2025-02-13
+
+This version is compatible with Unity 6000.0.39f1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.2] - 2024-04-02
+
+This version is compatible with Unity 6000.0.0b15.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.1] - 2023-12-21
+
+This version is compatible with Unity 2023.3.0b2.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.0] - 2023-09-26
+
+This version is compatible with Unity 2023.3.0a8.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.3] - 2023-07-04
+
+This version is compatible with Unity 2023.3.0a1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.2] - 2023-06-28
+
+This version is compatible with Unity 2023.2.0a22.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.1] - 2023-05-23
+
+This version is compatible with Unity 2023.2.0a17.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.0] - 2023-03-22
+
+This version is compatible with Unity 2023.2.0a9.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.3] - 2022-12-02
+
+This version is compatible with Unity 2023.2.0a1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.2] - 2022-11-04
+
+This version is compatible with Unity 2023.1.0a23.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.1] - 2022-08-04
+
+This version is compatible with Unity 2023.1.0a19.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.0] - 2022-06-13
+
+This version is compatible with Unity 2023.1.0a6.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.3] - 2021-05-09
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.2] - 2021-02-04
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.1] - 2021-12-07
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.0] - 2021-11-17
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.2] - 2021-11-05
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.1] - 2021-10-04
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.0] - 2021-09-24
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.0.0] - 2021-09-01
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [12.0.0] - 2021-01-11
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [11.0.0] - 2020-10-21
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.2.0] - 2020-10-19
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.1.0] - 2020-10-12
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.0.0] - 2019-06-10
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [7.1.1] - 2019-09-05
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [7.0.1] - 2019-07-25
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+Started Changelog
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+
+--- TestProjects/ToonHDRPTestDX12-6000.0/Packages/com.unity.render-pipelines.high-definition-config/CHANGELOG.md ---
+# Changelog
+
+All notable changes to this package will be documented in this file.
+
+The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.3] - 2025-02-13
+
+This version is compatible with Unity 6000.0.39f1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.2] - 2024-04-02
+
+This version is compatible with Unity 6000.0.0b15.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.1] - 2023-12-21
+
+This version is compatible with Unity 2023.3.0b2.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [17.0.0] - 2023-09-26
+
+This version is compatible with Unity 2023.3.0a8.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.3] - 2023-07-04
+
+This version is compatible with Unity 2023.3.0a1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.2] - 2023-06-28
+
+This version is compatible with Unity 2023.2.0a22.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.1] - 2023-05-23
+
+This version is compatible with Unity 2023.2.0a17.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [16.0.0] - 2023-03-22
+
+This version is compatible with Unity 2023.2.0a9.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.3] - 2022-12-02
+
+This version is compatible with Unity 2023.2.0a1.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.2] - 2022-11-04
+
+This version is compatible with Unity 2023.1.0a23.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.1] - 2022-08-04
+
+This version is compatible with Unity 2023.1.0a19.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [15.0.0] - 2022-06-13
+
+This version is compatible with Unity 2023.1.0a6.
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.3] - 2021-05-09
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.2] - 2021-02-04
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.1] - 2021-12-07
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [14.0.0] - 2021-11-17
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.2] - 2021-11-05
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.1] - 2021-10-04
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.1.0] - 2021-09-24
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [13.0.0] - 2021-09-01
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [12.0.0] - 2021-01-11
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [11.0.0] - 2020-10-21
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.2.0] - 2020-10-19
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.1.0] - 2020-10-12
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [10.0.0] - 2019-06-10
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [7.1.1] - 2019-09-05
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+## [7.0.1] - 2019-07-25
+
+Version Updated
+The version number for this package has increased due to a version update of a related graphics package.
+
+Started Changelog
+
+
+## Links discovered
+- [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
+- [Semantic Versioning](http://semver.org/spec/v2.0.0.html)
+
+--- TestProjects/ToonHDRPTest-6000.0/Packages/com.unity.render-pipelines.high-definition-config/LICENSE.md ---
+com.unity.render-pipelines.high-definition-config copyright © 2020 Unity Technologies ApS
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- TestProjects/ToonHDRPTestDX12-6000.0/Packages/com.unity.render-pipelines.high-definition-config/LICENSE.md ---
+com.unity.render-pipelines.high-definition-config copyright © 2020 Unity Technologies ApS
+
+Licensed under the Unity Companion License for Unity-dependent projects--see [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License).
+
+Unless expressly provided otherwise, the Software under this license is made available strictly on an “AS IS” BASIS WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED. Please review the license for details on these and other terms and conditions.
+
+
+## Links discovered
+- [Unity Companion License](http://www.unity3d.com/legal/licenses/Unity_Companion_License)
+
+--- com.unity.toonshader/Samples~/Built-In_RP/UnityChan/UnityChanLicense.txt ---
+SD Unity-Chan 3D Model Data
+Unity Technologies Japan
+
+This digital asset data is released based on the "Unity-Chan License Agreement (UCL)" (the latest version at the time of distribution is UCL 3.0).
+
+Please refer to the following for the latest version of the "Unity-Chan License Agreement".
+* Guidelines: https://unity-chan.com/contents/guideline_en/
+* License Terms: https://unity-chan.com/contents/license_en/
+
+The FAQ provides detailed guidance on what creators can and cannot do under this license, with specific examples.
+Please read the FAQ before using the content or code.
+
+
+
+--- .github/ISSUE_TEMPLATE/bug_report.md ---
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Desktop (please complete the following information):**
+ - OS: [e.g. iOS]
+ - Browser [e.g. chrome, safari]
+ - Version [e.g. 22]
+
+**Smartphone (please complete the following information):**
+ - Device: [e.g. iPhone6]
+ - OS: [e.g. iOS8.1]
+ - Browser [e.g. stock browser, safari]
+ - Version [e.g. 22]
+
+**Additional context**
+Add any other context about the problem here.
+
+
+--- HDRP-DefaultVolumeProject-2020.3/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2020.3.45f1
+m_EditorVersionWithRevision: 2020.3.45f1 (660cd1701bd5)
+
+
+--- README.md ---
+# Latest official docs
+- [English](https://docs.unity3d.com/Packages/com.unity.toonshader@latest)
+- [日本語](https://docs.unity3d.com/ja/Packages/com.unity.toonshader@latest)
+# Unity Toon Shader overview
+
+![An image from the toon-shaded film The Phantom Knowledge in the Scene view of the Unity Editor. A close-up of a girl raising a weapon with a ruined cityscape in the background.](com.unity.toonshader/Documentation~/images/TPK_04.png)
+
+The **Unity Toon Shader** (UTS3) is a set of toon shaders designed to meet the needs of creators working on cel-shaded 3D-CG animations.
+
+The **Unity Toon Shader** is compatible with all render pipelines: the **Built-in Render Pipeline**, the **Universal Render Pipeline (URP)**, and the **High Definition Render Pipeline (HDRP)**. However, there are some differences in the features supported by different render pipelines. Please refer to [Feature Difference](com.unity.toonshader/Documentation~/FeatureModel_en.md) for details about each render pipeline.
+
+**Unity Toon Shader** is the successor to **Unity-chan Toon Shader ver 2.0 (UTS2)**, which was popular for years in games and animations. However, UTS2 was designed solely for the **Built-in Render Pipeline**, consisted of many different shaders, could not be installed through the [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html), and had a different license from other Unity software.
+
+## Features of Unity Toon Shader
+
+In animation production, color specialists specify detailed color designs for every scene. UTS can apply these color specifications as written in the design instructions. UTS allows users to apply specific colors for light and shadow areas regardless of the actual light colors in the scene. This feature is essential for cel-shaded character designs. UTS provides detailed control over whether the directional light color affects materials.
+
+Typical color design instruction example:
+
+![A stylized girl in a sailor uniform. A: White highlights on the hair. B: The main blonde hair color. C: Hair in shadow, with a tan color. D: Hair in darker shadow, with a darker tan color.](com.unity.toonshader/Documentation~/images/UTS4Color2.png)
+
+- A: Highlight Color
+- B: Base Color
+- C: 1st Shading Color
+- D: 2nd Shading Color
+
+Three basic colors—**base color**, **1st shading color**, and **2nd shading color**—play key roles in character design with the **Unity Toon Shader**. Please refer to [Three Color Map and Control Map Settings](com.unity.toonshader/Documentation~/Basic.md) for more information.
+
+Besides the three basic colors, the **Unity Toon Shader** provides a wide variety of features such as [Highlight](Highlight.md), [Rim Light](Rimlight.md), [Emission](Emission.md), [Angel Ring](AngelRing.md), [Material Capture (MatCap)](com.unity.toonshader/Documentation~/MatCap.md), and some special maps.
+
+To get started with cel-shading, see [Getting Started](com.unity.toonshader/Documentation~/GettingStarted.md).
+
+## Render Pipeline Compatibility
+The **Unity Toon Shader** supports 3D projects across the **Built-in Render Pipeline**,
+**Universal Render Pipeline (URP)**, and **High Definition Render Pipeline (HDRP)**.
+
+For 2D projects, starting with Unity 6.3, the **Unity Toon Shader** partially supports URP 
+by rendering 3D GameObjects in 2D URP scenes.
+
+Feature availability varies between pipelines and between 3D/2D projects.   
+Please review the [feature differences](com.unity.toonshader/Documentation~/FeatureModel_en.md) to confirm which features are supported in your target pipeline:
+
+> The use of linear color space is strongly recommended.
+
+# Table of Contents
+
+* [Unity Toon Shader](com.unity.toonshader/Documentation~/index.md)
+* [Installation](com.unity.toonshader/Documentation~/installation.md)
+* [Getting started](com.unity.toonshader/Documentation~/GettingStarted.md)
+* [Inspector Window Settings](com.unity.toonshader/Documentation~/Parameter-Settings.md)
+  * [Modes](com.unity.toonshader/Documentation~/Modes.md)
+  * [Shader](com.unity.toonshader/Documentation~/Shader.md)
+  * [Three Color Map and Control Map](com.unity.toonshader/Documentation~/Basic.md)
+  * [Shading Step and Feather](com.unity.toonshader/Documentation~/ShadingStepAndFeather.md)
+  * [Normal Map](com.unity.toonshader/Documentation~/NormalMap.md)
+  * [Highlight](com.unity.toonshader/Documentation~/Highlight.md)
+  * [Rim Light](com.unity.toonshader/Documentation~/Rimlight.md)
+  * [Material Capture (MatCap)](com.unity.toonshader/Documentation~/MatCap.md)
+  * [Angel Ring Projection](com.unity.toonshader/Documentation~/AngelRing.md)
+  * [Emission](com.unity.toonshader/Documentation~/Emission.md)
+  * [Outline](com.unity.toonshader/Documentation~/Outline.md)
+  * Tessellation
+    * [HDRP](com.unity.toonshader/Documentation~/TessellationHDRP.md)
+    * [Built-in Render Pipeline](com.unity.toonshader/Documentation~/TessellationLegacy.md)
+  * [Tessellation (HDRP)](com.unity.toonshader/Documentation~/TessellationHDRP.md)
+  * [Scene Light Effectiveness](com.unity.toonshader/Documentation~/SceneLight.md)
+  * [Metaverse (Experimental)](com.unity.toonshader/Documentation~/Metaverse.md)
+* Additional features for HDRP
+  * [Box Light](com.unity.toonshader/Documentation~/HDRPBoxLight.md)
+  * [Toon EV Adjustment](com.unity.toonshader/Documentation~/ToonEVAdjustment.md)
+* [Material Converter](com.unity.toonshader/Documentation~/MaterialConverter.md)
+* [Samples](com.unity.toonshader/Documentation~/SampleInstallation.md)
+* [Feature Difference](com.unity.toonshader/Documentation~/FeatureModel_en.md)
+* [Known Issues](com.unity.toonshader/Documentation~/Known-issue.md)
+
+
+# Post-Cloning Setup on Windows
+
+This repository utilizes symbolic links to share code across multiple projects.
+On Windows 10 or later, symbolic link creation is restricted by default for regular users,
+which can lead to issues when working with this repository.
+
+To resolve this, follow the steps below to enable symbolic link creation and configure Git appropriately.
+
+1. Open **Local Security Policy** by typing `secpol.msc` on Windows Command Prompt
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_LocalSecurityPolicy.jpg)
+
+
+2. Under **User Rights Assignment**, find a policy called **Create symbolic links** and open it.
+  - Click **Add User or Group**
+  - Click **Object Types**
+  - Make sure **Groups** is checked and click **OK**.
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_Properties.jpg)
+
+3. Type **USERS** inside the textbox and click on **Check Names** to verify it, then click **OK**.
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_SelectUsers.jpg)
+
+4. Configure git to allow symbolic links. For example, by typing the following in Git Bash:
+
+```
+git config --local core.symlinks true
+git config --global core.symlinks true
+```
+
+## License
+* Source Code: [Unity Companion License](com.unity.toonshader/Documentation~/com.unity.toonshader/LICENSE.md)
+* Unity-chan Assets: [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)  
+  These assets can be located under, but not limited to, the following folder:
+    - `com.unity.toonshader/Samples~`
+
+
+
+*Auto-generated on Thu Dec 25 09:14:38 UTC 2025*
+
+
+## Links discovered
+- [English](https://docs.unity3d.com/Packages/com.unity.toonshader@latest)
+- [日本語](https://docs.unity3d.com/ja/Packages/com.unity.toonshader@latest)
+- [An image from the toon-shaded film The Phantom Knowledge in the Scene view of the Unity Editor. A close-up of a girl raising a weapon with a ruined cityscape in the background.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/TPK_04.png)
+- [Feature Difference](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/FeatureModel_en.md)
+- [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html)
+- [A stylized girl in a sailor uniform. A: White highlights on the hair. B: The main blonde hair color. C: Hair in shadow, with a tan color. D: Hair in darker shadow, with a darker tan color.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/UTS4Color2.png)
+- [Three Color Map and Control Map Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Basic.md)
+- [Highlight](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/Highlight.md)
+- [Rim Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/Rimlight.md)
+- [Emission](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/Emission.md)
+- [Angel Ring](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/AngelRing.md)
+- [Material Capture (MatCap)](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MatCap.md)
+- [Getting Started](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/GettingStarted.md)
+- [feature differences](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/FeatureModel_en.md)
+- [Unity Toon Shader](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/index.md)
+- [Installation](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/installation.md)
+- [Getting started](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/GettingStarted.md)
+- [Inspector Window Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Parameter-Settings.md)
+- [Modes](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Modes.md)
+- [Shader](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Shader.md)
+- [Three Color Map and Control Map](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Basic.md)
+- [Shading Step and Feather](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/ShadingStepAndFeather.md)
+- [Normal Map](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/NormalMap.md)
+- [Highlight](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Highlight.md)
+- [Rim Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Rimlight.md)
+- [Angel Ring Projection](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/AngelRing.md)
+- [Emission](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Emission.md)
+- [Outline](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md)
+- [HDRP](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/TessellationHDRP.md)
+- [Built-in Render Pipeline](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/TessellationLegacy.md)
+- [Tessellation (HDRP)](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/TessellationHDRP.md)
+- [Scene Light Effectiveness](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/SceneLight.md)
+- [Metaverse (Experimental)](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Metaverse.md)
+- [Box Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/HDRPBoxLight.md)
+- [Toon EV Adjustment](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/ToonEVAdjustment.md)
+- [Material Converter](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MaterialConverter.md)
+- [Samples](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/SampleInstallation.md)
+- [Known Issues](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Known-issue.md)
+- [Unity Companion License](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/com.unity.toonshader/LICENSE.md)
+- [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)
+
+--- ToonShaderMeta.txt ---
+new UTS2GUID(  "96d4d9f975e6c8849bd1a5c06acfae84", "ToonColor_DoubleShadeWithFeather"),
+new UTS2GUID(  "ccd13b7f8710b264ea8bd3bc4f51f9e4", "ToonColor_DoubleShadeWithFeather_Clipping"),
+new UTS2GUID(  "9c3978743d5db18448a8b945c723a6eb", "ToonColor_DoubleShadeWithFeather_Clipping_StencilMask"),
+new UTS2GUID(  "d7da29588857e774bb0650f1fae494c6", "ToonColor_DoubleShadeWithFeather_Clipping_StencilOut"),
+new UTS2GUID(  "315897103223dab42a0746aa65ec251a", "ToonColor_DoubleShadeWithFeather_StencilMask"),
+new UTS2GUID(  "2e5cc2da6af713844956264245e092e4", "ToonColor_DoubleShadeWithFeather_StencilOut"),
+new UTS2GUID(  "369d674ae1ba36249bb00e2f73b0cd10", "ToonColor_DoubleShadeWithFeather_TransClipping"),
+new UTS2GUID(  "8600b2bec3ae31145afa80084df20c61", "ToonColor_DoubleShadeWithFeather_TransClipping_StencilMask"),
+new UTS2GUID(  "43d0eeb4c46f52841b0941e99ac9b16b", "ToonColor_DoubleShadeWithFeather_TransClipping_StencilOut"),
+new UTS2GUID(  "97b7edb5fc0f5744c9b264c2224a0b1e", "ToonColor_DoubleShadeWithFeather_Transparent"),
+new UTS2GUID(  "3b20fc0febd34f94baf0304bf47841d8", "ToonColor_DoubleShadeWithFeather_Transparent_StencilOut"),
+new UTS2GUID(  "af8454e09b3a41448a4140e792059446", "ToonColor_ShadingGradeMap"),
+new UTS2GUID(  "295fec4a7029edd4eb9522bef07f41ce", "ToonColor_ShadingGradeMap_AngelRing"),
+new UTS2GUID(  "e32270aa38f4b664b90f04cc475fdb81", "ToonColor_ShadingGradeMap_AngelRing_StencilOut"),
+new UTS2GUID(  "29a860a3f3c4cec43ab821338e28eac8", "ToonColor_ShadingGradeMap_AngelRing_TransClipping"),
+new UTS2GUID(  "d5d9c1f4718235248ad37448b0c74c68", "ToonColor_ShadingGradeMap_AngelRing_TransClipping_StencilOut"),
+new UTS2GUID(  "6439813c08a1f8947bb0ca6599499dd7", "ToonColor_ShadingGradeMap_StencilMask"),
+new UTS2GUID(  "b39692f1382224b4cbe21c12ae51c639", "ToonColor_ShadingGradeMap_StencilOut"),
+new UTS2GUID(  "cd7e85b59edbb7740841003baeb510b5", "ToonColor_ShadingGradeMap_TransClipping"),
+new UTS2GUID(  "6b4b6d07944415f44b1fc2f0fc24535f", "ToonColor_ShadingGradeMap_TransClipping_StencilMask"),
+new UTS2GUID(  "31c75b34739dfc64fb57bf49005e942d", "ToonColor_ShadingGradeMap_TransClipping_StencilOut"),
+new UTS2GUID(  "7737ca8c4e3939f4086a6e08f93c2ebd", "ToonColor_ShadingGradeMap_Transparent"),
+new UTS2GUID(  "be27d4be45de7dd4ab2e69c992876edb", "ToonColor_ShadingGradeMap_Transparent_StencilOut"),
+new UTS2GUID(  "9baf30ce95c751649b14d96da3a4b4d5", "Toon_DoubleShadeWithFeather"),
+new UTS2GUID(  "345def18d0906d544b7d12b050937392", "Toon_DoubleShadeWithFeather_Clipping"),
+new UTS2GUID(  "7a735f9b121d96349b6da0a077299424", "Toon_DoubleShadeWithFeather_Clipping_StencilMask"),
+new UTS2GUID(  "ed7fba947f3bccb4cbc78f55d7a56a70", "Toon_DoubleShadeWithFeather_Clipping_StencilOut"),
+new UTS2GUID(  "1d10c7840eb6ba74c889a27f14ba6081", "Toon_DoubleShadeWithFeather_Mobile"),
+new UTS2GUID(  "88791c14394118d42a5e176b433af322", "Toon_DoubleShadeWithFeather_Mobile_Clipping"),
+new UTS2GUID(  "41f4ee183cb66ad40bc74a9f8f944974", "Toon_DoubleShadeWithFeather_Mobile_Clipping_StencilMask"),
+new UTS2GUID(  "dec01cbdbc5b8da4ca8671815cda1557", "Toon_DoubleShadeWithFeather_Mobile_StencilMask"),
+new UTS2GUID(  "55e8b9eeaaff205469365133fe7bc744", "Toon_DoubleShadeWithFeather_Mobile_StencilOut"),
+new UTS2GUID(  "d4c592285a93c3844aafdaafffc07ec7", "Toon_DoubleShadeWithFeather_Mobile_TransClipping"),
+new UTS2GUID(  "100d373b596f44d49ac9bb944d671d32", "Toon_DoubleShadeWithFeather_Mobile_TransClipping_StencilMask"),
+new UTS2GUID(  "036bc90bfe3475b4c9fadb85d0520621", "Toon_DoubleShadeWithFeather_StencilMask"),
+new UTS2GUID(  "0a1e4c9dcc0e9ea4db38ae9cb5059608", "Toon_DoubleShadeWithFeather_StencilOut"),
+new UTS2GUID(  "e8e7d781c3155254b9ea8956c5bd1218", "Toon_DoubleShadeWithFeather_TransClipping"),
+new UTS2GUID(  "79add09e32e5c4541980118f6c4045b6", "Toon_DoubleShadeWithFeather_TransClipping_StencilMask"),
+new UTS2GUID(  "fb47be5a840097b45bac228446468ef3", "Toon_DoubleShadeWithFeather_TransClipping_StencilOut"),
+new UTS2GUID(  "42a47eda2ed77084c9136507eadb8641", "Toon_OutlineObject"),
+new UTS2GUID(  "2e2edd12fbf6bcb4ea1f34c17ee42df5", "Toon_OutlineObject_StencilOut"),
+new UTS2GUID(  "ca035891872022e4f80c952b3916e450", "Toon_ShadingGradeMap"),
+new UTS2GUID(  "9aadc53d7cdc63f4898ea042aa9d853b", "Toon_ShadingGradeMap_AngelRing"),
+new UTS2GUID(  "23e399973d807464fb195291a44a614c", "Toon_ShadingGradeMap_AngelRing_Mobile"),
+new UTS2GUID(  "8d33e4e4084e5af449f3e762fecce3c9", "Toon_ShadingGradeMap_AngelRing_Mobile_StencilOut"),
+new UTS2GUID(  "415f07ab6fd766048ac6f8c2f2b406a9", "Toon_ShadingGradeMap_AngelRing_StencilOut"),
+new UTS2GUID(  "b2a70923168ea0c40a3051a013c93a8a", "Toon_ShadingGradeMap_AngelRing_TransClipping"),
+new UTS2GUID(  "d1e11a558d143f14c864edf263332764", "Toon_ShadingGradeMap_AngelRing_TransClipping_StencilOut"),
+new UTS2GUID(  "f90e11a40dcf4f745ae6b21b857943fa", "Toon_ShadingGradeMap_Mobile"),
+new UTS2GUID(  "206c554c8b0c60041a9d242385f543d3", "Toon_ShadingGradeMap_Mobile_StencilMask"),
+new UTS2GUID(  "cfc201757f2519c4bb6ef9265a046582", "Toon_ShadingGradeMap_Mobile_StencilOut"),
+new UTS2GUID(  "cce1da34c52aff745adf0222f56a356c", "Toon_ShadingGradeMap_Mobile_TransClipping"),
+new UTS2GUID(  "e88039bab21b7894e918126e8fce5d1b", "Toon_ShadingGradeMap_Mobile_TransClipping_StencilMask"),
+new UTS2GUID(  "aa2e05ed58ca15441bd0989f008da78b", "Toon_ShadingGradeMap_StencilMask"),
+new UTS2GUID(  "923058fda1b61544b93d91eeee772086", "Toon_ShadingGradeMap_StencilOut"),
+new UTS2GUID(  "aebd33b74ef849a4882b4a8d55f0f0c9", "Toon_ShadingGradeMap_TransClipping"),
+new UTS2GUID(  "0a05dd221bacbb448afac3d63e6bd833", "Toon_ShadingGradeMap_TransClipping_StencilMask"),
+new UTS2GUID(  "67212ac11ff43b04a833d3986b997a9f", "Toon_ShadingGradeMap_TransClipping_StencilOut"),
+
+
+--- ToonShaderTessMeta.txt ---
+new UTS2GUID(  "5b8a1502578ed764c9880a7be65c9672", "ToonColor_DoubleShadeWithFeather_Clipping_Tess"),
+new UTS2GUID(  "682e6e6cf60a51040ade19437a3f53e2", "ToonColor_DoubleShadeWithFeather_Clipping_Tess_StencilMask"),
+new UTS2GUID(  "148d1eca2cf299e4eb949d15c4cf95ee", "ToonColor_DoubleShadeWithFeather_Clipping_Tess_StencilOut"),
+new UTS2GUID(  "e987cf9cca0941042aa68d1dd51ee20f", "ToonColor_DoubleShadeWithFeather_Tess"),
+new UTS2GUID(  "97df86a7afe06ef41b2a2c242b10593e", "ToonColor_DoubleShadeWithFeather_Tess_StencilMask"),
+new UTS2GUID(  "b179fb8a87955a347b5f594a18b43475", "ToonColor_DoubleShadeWithFeather_Tess_StencilOut"),
+new UTS2GUID(  "60fe384b76fb67d40bc7e38411073dd6", "ToonColor_DoubleShadeWithFeather_TransClipping_Tess"),
+new UTS2GUID(  "4a20b66d106d3f5409f759b5193ecdc2", "ToonColor_DoubleShadeWithFeather_TransClipping_Tess_StencilMask"),
+new UTS2GUID(  "a7842aa9522c7584cae2169b8e1ddb86", "ToonColor_DoubleShadeWithFeather_TransClipping_Tess_StencilOut"),
+new UTS2GUID(  "0cb6c9e6216a91e4a9d38cd2acb4ccb6", "ToonColor_DoubleShadeWithFeather_Transparent_Tess"),
+new UTS2GUID(  "f28bba8b2f259bb40b697d91849c8794", "ToonColor_DoubleShadeWithFeather_Transparent_Tess_StencilOut"),
+new UTS2GUID(  "4876871966ca2344793e439d7391d7b0", "ToonColor_ShadingGradeMap_AngelRing_Tess"),
+new UTS2GUID(  "7c48bdc9fed28c14b8ad0748673b1369", "ToonColor_ShadingGradeMap_AngelRing_Tess_StencilOut"),
+new UTS2GUID(  "d3fb22770ec830b43bdb5ccb973e6f76", "ToonColor_ShadingGradeMap_AngelRing_Tess_TransClipping"),
+new UTS2GUID(  "11e8f1e181e558a47a387492d3ecdb88", "ToonColor_ShadingGradeMap_AngelRing_TransClipping_Tess_StencilOut"),
+new UTS2GUID(  "01494e58d87212f44ab51d29caea84e4", "ToonColor_ShadingGradeMap_Tess"),
+new UTS2GUID(  "24c20b8ed5be113499b40f4e3b6b03e6", "ToonColor_ShadingGradeMap_Tess_StencilMask"),
+new UTS2GUID(  "9cf7e8eb46e9128438d50adf7a841de6", "ToonColor_ShadingGradeMap_Tess_StencilOut"),
+new UTS2GUID(  "3c39a77fda28b5043a7a17c7877cf7b2", "ToonColor_ShadingGradeMap_TransClipping_Tess"),
+new UTS2GUID(  "bf840a439c33c8b4a99d52e6c3d8511f", "ToonColor_ShadingGradeMap_TransClipping_Tess_StencilMask"),
+new UTS2GUID(  "8eff803eae89c994fae3acf2f686fafa", "ToonColor_ShadingGradeMap_TransClipping_Tess_StencilOut"),
+new UTS2GUID(  "0959cb8822a344c4da890457e668fdc9", "ToonColor_ShadingGradeMap_Transparent_Tess"),
+new UTS2GUID(  "6d115cf94d14d1842a56dfff76b57f42", "ToonColor_ShadingGradeMap_Transparent_Tess_StencilOut"),
+new UTS2GUID(  "f0b2fc9b8a189134da9c7d24f361caf4", "Toon_DoubleShadeWithFeather_Clipping_Tess"),
+new UTS2GUID(  "8c94ee3046ef0574f87f6b658b4e4691", "Toon_DoubleShadeWithFeather_Clipping_Tess_StencilMask"),
+new UTS2GUID(  "c4aed8662ca0f194284f3ab649e66d23", "Toon_DoubleShadeWithFeather_Clipping_Tess_StencilOut"),
+new UTS2GUID(  "1f248db3b28fc5f44aabd7aca618bd1e", "Toon_DoubleShadeWithFeather_Tess"),
+new UTS2GUID(  "a3214384442742648aa664ef0039d397", "Toon_DoubleShadeWithFeather_Tess_Light"),
+new UTS2GUID(  "3073cd2564e4cde45a19c05e0012d22a", "Toon_DoubleShadeWithFeather_Tess_Light_StencilMask"),
+new UTS2GUID(  "7e7690a767a07da4f943439680e70db8", "Toon_DoubleShadeWithFeather_Tess_Light_StencilOut"),
+new UTS2GUID(  "08c65988dc25d9f44b791fcc18fb543a", "Toon_DoubleShadeWithFeather_Tess_StencilMask"),
+new UTS2GUID(  "f937ea4ce96dfbe448afc0fb671198e5", "Toon_DoubleShadeWithFeather_Tess_StencilOut"),
+new UTS2GUID(  "3fb99ac3775edeb4aa9530db5a614c92", "Toon_DoubleShadeWithFeather_TransClipping_Tess"),
+new UTS2GUID(  "9855f226cd8152d4e99085272aceede6", "Toon_DoubleShadeWithFeather_TransClipping_Tess_StencilMask"),
+new UTS2GUID(  "2a0d4af863770404faee6488b86fe3c9", "Toon_DoubleShadeWithFeather_TransClipping_Tess_StencilOut"),
+new UTS2GUID(  "1847c44f729b68e49ba63610abdf9132", "Toon_OutlineObject_Tess"),
+new UTS2GUID(  "06cae78b869a3234bab02eeb52197e1c", "Toon_OutlineObject_Tess_StencilOut"),
+new UTS2GUID(  "3a1af221400a61a4b94bae19aa79da2b", "Toon_ShadingGradeMap_AngelRing_Tess"),
+new UTS2GUID(  "a1449ab672051624ca3160737b630f5e", "Toon_ShadingGradeMap_AngelRing_Tess_Light"),
+new UTS2GUID(  "79d3dc54c32b69b42be17c48d33575f2", "Toon_ShadingGradeMap_AngelRing_Tess_Light_StencilOut"),
+new UTS2GUID(  "18c9172cdf36a344f9aca9bbc0e7002d", "Toon_ShadingGradeMap_AngelRing_Tess_StencilOut"),
+new UTS2GUID(  "54a94f776a43a074c8c2d205bb934005", "Toon_ShadingGradeMap_AngelRing_TransClipping_Tess"),
+new UTS2GUID(  "d496a1c70c797ad43836d5bfff575b5f", "Toon_ShadingGradeMap_AngelRing_TransClipping_Tess_StencilOut"),
+new UTS2GUID(  "183ea557143786346b1bfc862ad22636", "Toon_ShadingGradeMap_Tess"),
+new UTS2GUID(  "356dd5af8f0d40e41b647d3d0a0555c1", "Toon_ShadingGradeMap_Tess_Light"),
+new UTS2GUID(  "ffadecfbd9e31f840ba4109fea0f0436", "Toon_ShadingGradeMap_Tess_Light_StencilMask"),
+new UTS2GUID(  "98ac5d198a471494da681b7b8d1e1727", "Toon_ShadingGradeMap_Tess_Light_StencilOut"),
+new UTS2GUID(  "0d799eb857c0e2c45bbdfb2c033d33e6", "Toon_ShadingGradeMap_Tess_StencilMask"),
+new UTS2GUID(  "e667137c8b6fd3d4390fc364b2e5c70b", "Toon_ShadingGradeMap_Tess_StencilOut"),
+new UTS2GUID(  "feba437d8ff93f745a78828529e9a272", "Toon_ShadingGradeMap_TransClipping_Tess"),
+new UTS2GUID(  "8d1395a9f4bfad44d8fddd0f2af19b1e", "Toon_ShadingGradeMap_TransClipping_Tess_StencilMask"),
+new UTS2GUID(  "08c6bb334aed21c4198cf46b71ebca2d", "Toon_ShadingGradeMap_TransClipping_Tess_StencilOut"),
+
+
+--- Toonshader_ProjectHDRP/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2020.3.45f1
+m_EditorVersionWithRevision: 2020.3.45f1 (660cd1701bd5)
+
+
+--- Toonshader_ProjectHDRP_DX12/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2020.3.45f1
+m_EditorVersionWithRevision: 2020.3.45f1 (660cd1701bd5)
+
+
+--- Toonshader_ProjectLegacy/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2020.3.45f1
+m_EditorVersionWithRevision: 2020.3.45f1 (660cd1701bd5)
+
+
+--- Toonshader_ProjectURP/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.3.0b6
+m_EditorVersionWithRevision: 6000.3.0b6 (211490bb75a6)
+
+
+--- com.unity.toon-graphics-test/Editor/README_UnityToonShaderGenerator.md ---
+# Unity Toon Shader Generator
+
+This tool helps maintain consistency between `UnityToon.shader` and `UnityToonTessellation.shader` by using a single source of truth for shared properties.
+
+## Files
+
+- **CommonProperties.shaderblock**: Plain text list of shared property definitions (no Shader wrapper) with original comments preserved (`Packages/com.unity.toonshader/Runtime/Shaders/Common/Parts/`)
+- **TessellationProperties.shaderblock**: Plain text list of tessellation-only property definitions (no Shader wrapper) (`Packages/com.unity.toonshader/Runtime/Shaders/Common/Parts/`)
+- **ShaderGenerator.cs**: Unity Editor script (now located in the graphics test package) that generates the shader files from the property assets
+
+## How to Use
+
+1. **Edit Properties**:
+   - Modify the plain-text part files under `Packages/com.unity.toonshader/Runtime/Shaders/Common/Parts/`
+   - The files contain only property declarations, so standard ShaderLab property syntax applies
+
+2. **Generate Shader Files**:
+   - In Unity, choose `Toon Shader > Generate Shader Files`
+   - The tool will automatically:
+     - Replace the Properties blocks in both shader files
+     - Preserve all other shader content (HLSLINCLUDE, SubShaders, etc.)
+
+## Property File Format
+
+Each property file is plain text containing only property declarations, e.g.
+
+```
+// Comments are preserved
+[HideInInspector] _simpleUI ("SimpleUI", Int ) = 0
+[Enum(OFF, 0, ON, 1)] _isUnityToonshader("Material is touched by Unity Toon Shader", Int) = 1
+_BaseColor ("BaseColor", Color) = (1,1,1,1)
+```
+
+You can use the usual ShaderLab property syntax, including comments and blank lines. The generator indents/layers them into the target shaders automatically.
+
+## Benefits
+
+- **Single Source of Truth**: All shared properties are defined in one place
+- **Consistency**: Ensures both shader files have identical shared properties
+- **Maintainability**: Easy to add, remove, or modify properties across both shaders
+- **Preservation**: All non-Properties content and comments are preserved during generation
+- **Comment Preservation**: All original comments from the Properties blocks are maintained
+- **Traceability**: Each generated shader receives an `//Auto-generated on ...` timestamp banner at the top
+
+## Manual Generation (Alternative)
+
+If you prefer to generate shaders manually, you can run the Python helper from the repository root:
+
+```bash
+cd /workspace
+python3 generate_UnityToon.py
+```
+
+Convenience launchers are provided as `generate_UnityToon.sh` and `generate_UnityToon.bat`.
+
+## Troubleshooting
+
+- **Properties block not found**: Ensure the shader files have a valid `Properties { }` block
+- **File not found errors**: Check that the property files exist in the correct paths
+- **Generation fails**: Check the Unity Console for detailed error messages
+
+## File Structure
+
+```
+com.unity.toon-graphics-test/
+└── Editor/
+    ├── UnityToonShaderGenerator.cs          # Unity Editor script
+    ├── UnityToonShaderGeneratorTest.cs      # Editor test harness
+    └── README_UnityToonShaderGenerator.md   # This file
+
+com.unity.toonshader/Runtime/Shaders/Common/Parts/
+├── CommonProperties.shaderblock          # Shared properties (plain text)
+└── TessellationProperties.shaderblock    # Tessellation-specific properties (plain text)
+
+com.unity.toonshader/Runtime/Integrated/Shaders/
+├── UnityToon.shader                # Generated shader (regular)
+└── UnityToonTessellation.shader    # Generated shader (tessellation)
+
+generate_UnityToon.py                 # Python generator (root)
+test_generate_UnityToon.py            # Python smoke test (root)
+test_shader_generation.cs             # .NET console smoke test (root)
+generate_UnityToon.sh / .bat          # Platform launchers for the Python generator
+```
+
+--- generate_UnityToon.py ---
+#!/usr/bin/env python3
+
+import os
+import re
+from datetime import datetime, timezone
+
+PROPERTY_NAME_PATTERN = re.compile(r'(?:\]\s*|^)([A-Za-z_][A-Za-z0-9_]*)\s*\(')
+
+
+def extract_properties_from_shader_content(content):
+    properties_match = re.search(r"Properties\s*\{", content)
+    if not properties_match:
+        return content.strip()
+
+    open_brace_index = content.find('{', properties_match.start())
+    if open_brace_index == -1:
+        return content.strip()
+
+    brace_count = 1
+    close_brace_index = -1
+
+    for index in range(open_brace_index + 1, len(content)):
+        char = content[index]
+        if char == '{':
+            brace_count += 1
+        elif char == '}':
+            brace_count -= 1
+            if brace_count == 0:
+                close_brace_index = index
+                break
+
+    if close_brace_index == -1:
+        return content.strip()
+
+    block = content[open_brace_index + 1:close_brace_index]
+    lines = block.split('\n')
+    cleaned_lines = [line.strip() for line in lines]
+
+    while cleaned_lines and cleaned_lines[0] == "":
+        cleaned_lines.pop(0)
+    while cleaned_lines and cleaned_lines[-1] == "":
+        cleaned_lines.pop()
+
+    return '\n'.join(cleaned_lines)
+
+
+def get_property_name(line: str):
+    if not line or line.startswith("//"):
+        return None
+    matches = PROPERTY_NAME_PATTERN.findall(line)
+    if not matches:
+        return None
+    candidate = matches[-1]
+    if candidate.startswith('['):
+        return None
+    return candidate
+
+
+def cleanup_lines(lines):
+    lines = list(lines)
+    while lines and lines[0] == "":
+        lines.pop(0)
+    while lines and lines[-1] == "":
+        lines.pop()
+    cleaned = []
+    for line in lines:
+        if line == "" and cleaned and cleaned[-1] == "":
+            continue
+        cleaned.append(line)
+    return cleaned
+
+
+def build_property_sections(common_properties, tessellation_properties, indent):
+    entries = []
+    name_to_index = {}
+
+    def add_lines(raw_text, source):
+        if not raw_text:
+            return
+        for raw_line in raw_text.splitlines():
+            stripped = raw_line.strip()
+            entry = {
+                "line": stripped,
+                "source": source,
+                "is_hidden": "[HideInInspector]" in stripped,
+            }
+            if stripped == "":
+                entry["name"] = None
+                entries.append(entry)
+                continue
+            name = get_property_name(stripped)
+            entry["name"] = name
+            source_map = name_to_index.setdefault(source, {})
+            if name and name in source_map:
+                existing_index = source_map[name]
+                existing_entry = entries[existing_index]
+
+                def should_replace(existing, new):
+                    if existing["is_hidden"] and not new["is_hidden"]:
+                        return True
+                    if not existing["is_hidden"] and new["is_hidden"]:
+                        return False
+                    return True
+
+                if should_replace(existing_entry, entry):
+                    entries[existing_index] = entry
+            else:
+                entries.append(entry)
+                if name:
+                    source_map[name] = len(entries) - 1
+
+    add_lines(common_properties, "common")
+    add_lines(tessellation_properties, "tess")
+
+    seen_pairs = set()
+    property_count = 0
+    tess_override_names = set(name_to_index.get("tess", {}).keys())
+    for entry in entries:
+        entry["skip_for_tess"] = entry["source"] == "common" and entry.get("name") in tess_override_names
+    for entry in entries:
+        name = entry.get("name")
+        if not name:
+            continue
+        key = (entry["source"], name)
+        if key in seen_pairs:
+            continue
+        seen_pairs.add(key)
+        property_count += 1
+
+    def render(section_source, skip_overrides=False):
+        lines = []
+        for entry in entries:
+            if entry["source"] != section_source:
+                continue
+            if skip_overrides and entry.get("skip_for_tess"):
+                continue
+            if entry["line"]:
+                lines.append(indent + entry["line"])
+            else:
+                lines.append("")
+        return "\n".join(cleanup_lines(lines))
+
+    common_block = render("common")
+    common_block_for_tess = render("common", skip_overrides=True)
+    tess_block = render("tess")
+
+    return property_count, common_block, tess_block, common_block_for_tess
+
+
+def load_properties_from_shader(shader_path, descriptor):
+    with open(shader_path, 'r', encoding='utf-8') as f:
+        shader_content = f.read()
+
+    if not shader_content:
+        print(f"ERROR: {descriptor} shader file is empty or could not be read")
+        return None
+
+    shader_content = shader_content.lstrip('\ufeff')
+
+    properties = extract_properties_from_shader_content(shader_content)
+    if not properties:
+        print(f"ERROR: Could not extract {descriptor} properties from {shader_path}")
+        return None
+
+    print(f"Successfully extracted {descriptor} properties. Length: {len(properties)} characters")
+    return properties
+
+
+def generate_shader_files():
+    try:
+        # Read the common properties shader
+        common_properties_path = "com.unity.toonshader/Runtime/Shaders/Common/Parts/CommonProperties.shaderblock"
+        common_properties = load_properties_from_shader(common_properties_path, "common")
+        if not common_properties:
+            return False
+
+        # Read the tessellation properties shader
+        tessellation_properties_path = "com.unity.toonshader/Runtime/Shaders/Common/Parts/TessellationProperties.shaderblock"
+        tessellation_properties = load_properties_from_shader(tessellation_properties_path, "tessellation")
+        if tessellation_properties is None:
+            return False
+
+        timestamp = datetime.now(timezone.utc).strftime("%a %b %d %H:%M:%S UTC %Y")
+        auto_comment_line = f"//Auto-generated on {timestamp}"
+
+        # Generate UnityToon.shader
+        print("\nGenerating UnityToon.shader...")
+        success1 = generate_shader(
+            "com.unity.toonshader/Runtime/Integrated/Shaders/UnityToon.shader",
+            "com.unity.toonshader/Runtime/Shaders/Common/Parts/UnityToon.shadertemplate",
+            common_properties,
+            "",
+            auto_comment_line,
+        )
+
+        # Generate UnityToonTessellation.shader
+        print("\nGenerating UnityToonTessellation.shader...")
+        success2 = generate_shader(
+            "com.unity.toonshader/Runtime/Integrated/Shaders/UnityToonTessellation.shader",
+            "com.unity.toonshader/Runtime/Shaders/Common/Parts/UnityToonTessellation.shadertemplate",
+            common_properties,
+            tessellation_properties,
+            auto_comment_line,
+        )
+
+        if success1 and success2:
+            print("\nBoth shader files generated successfully!")
+            return True
+        else:
+            print("\nSome shader files failed to generate.")
+            return False
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return False
+
+
+def generate_shader(shader_path, template_path, common_properties, tessellation_properties, auto_comment_line):
+    try:
+        # Read the template or existing shader file
+        if template_path and os.path.exists(template_path):
+            with open(template_path, 'r', encoding='utf-8') as f:
+                original_content = f.read()
+            source_path = template_path
+        elif os.path.exists(shader_path):
+            with open(shader_path, 'r', encoding='utf-8') as f:
+                original_content = f.read()
+            source_path = shader_path
+        else:
+            print(f"ERROR: Could not locate shader or template for {shader_path}")
+            return False
+
+        if not original_content:
+            print(f"ERROR: {shader_path} file is empty or could not be read")
+            return False
+
+        original_content = original_content.lstrip('\ufeff')
+
+        print(f"Successfully read {source_path}. Length: {len(original_content)} characters")
+
+        property_count, common_block, tess_block, common_block_for_tess = build_property_sections(common_properties, tessellation_properties, "        ")
+
+        use_common_block = common_block_for_tess if tessellation_properties else common_block
+
+        new_content = original_content
+
+        if "        [COMMON_PROPERTIES]" in new_content:
+            new_content = new_content.replace("        [COMMON_PROPERTIES]", use_common_block or "", 1)
+        elif "[COMMON_PROPERTIES]" in new_content:
+            new_content = new_content.replace("[COMMON_PROPERTIES]", use_common_block or "", 1)
+        else:
+            print(f"ERROR: Common properties placeholder not found in template for {shader_path}")
+            return False
+
+        if "[TESSELLATION_PROPERTIES]" in new_content:
+            replacement = tess_block or ""
+            new_content = new_content.replace("        [TESSELLATION_PROPERTIES]", replacement, 1)
+            new_content = new_content.replace("[TESSELLATION_PROPERTIES]", replacement, 1)
+
+        print(f"Generated properties with {property_count} entries. Common length: {len(common_block)}, Tess length: {len(tess_block)}")
+
+        new_content = apply_auto_generated_comment(new_content, auto_comment_line)
+
+        print(f"Generated new shader content. Original length: {len(original_content)}, New length: {len(new_content)}")
+
+        # Write the new shader file
+        new_content = new_content.lstrip('\ufeff')
+        new_content = new_content.replace('\r\n', '\n').replace('\r', '\n')
+        if not new_content.endswith('\n'):
+            new_content += '\n'
+        os.makedirs(os.path.dirname(shader_path), exist_ok=True)
+        with open(shader_path, 'w', encoding='utf-8') as f:
+            f.write(new_content)
+
+        print(f"Successfully wrote {shader_path}")
+        return True
+
+    except Exception as e:
+        print(f"ERROR generating {shader_path}: {e}")
+        return False
+
+
+def apply_auto_generated_comment(content, comment_line):
+    auto_prefix = "//Auto-generated on "
+    lines = content.splitlines()
+
+    if lines and lines[0].startswith(auto_prefix):
+        lines[0] = comment_line
+    else:
+        lines.insert(0, comment_line)
+
+    joined = "\n".join(lines)
+    if not joined.endswith("\n"):
+        joined += "\n"
+    return joined
+
+
+if __name__ == "__main__":
+    success = generate_shader_files()
+    if success:
+        print("\nAll shader files generated successfully!")
+    else:
+        print("\nShader generation failed!")
+
+
+--- test_generate_UnityToon.py ---
+#!/usr/bin/env python3
+
+import os
+import re
+
+from generate_UnityToon import (
+    extract_properties_from_shader_content,
+    apply_auto_generated_comment,
+)
+
+
+def test_shader_generation():
+    try:
+        # Test reading the common properties shader
+        common_properties_path = "com.unity.toonshader/Runtime/Shaders/Common/Parts/CommonProperties.shaderblock"
+        with open(common_properties_path, 'r') as f:
+            common_properties_shader = f.read()
+
+        if not common_properties_shader:
+            print("ERROR: Common properties shader file is empty or could not be read")
+            return
+
+        common_properties = extract_properties_from_shader_content(common_properties_shader)
+        if not common_properties:
+            print("ERROR: Failed to extract common properties from shader")
+            return
+
+        print(f"Successfully extracted common properties. Length: {len(common_properties)} characters")
+
+        # Test reading the tessellation properties shader
+        tessellation_properties_path = "com.unity.toonshader/Runtime/Shaders/Common/Parts/TessellationProperties.shaderblock"
+        with open(tessellation_properties_path, 'r') as f:
+            tessellation_properties_shader = f.read()
+
+        if not tessellation_properties_shader:
+            print("ERROR: Tessellation properties shader file is empty or could not be read")
+            return
+
+        tessellation_properties = extract_properties_from_shader_content(tessellation_properties_shader)
+        if not tessellation_properties:
+            print("ERROR: Failed to extract tessellation properties from shader")
+            return
+
+        print(f"Successfully extracted tessellation properties. Length: {len(tessellation_properties)} characters")
+
+        # Test reading the original shader files
+        unity_toon_path = "com.unity.toonshader/Runtime/Integrated/Shaders/UnityToon.shader"
+        with open(unity_toon_path, 'r') as f:
+            unity_toon_content = f.read()
+
+        if not unity_toon_content:
+            print("ERROR: UnityToon.shader file is empty or could not be read")
+            return
+
+        print(f"Successfully read UnityToon.shader. Length: {len(unity_toon_content)} characters")
+
+        # Test the Properties block replacement
+        properties_pattern = r"Properties\s*\{"
+        start_match = re.search(properties_pattern, unity_toon_content)
+
+        if not start_match:
+            print("ERROR: Could not find Properties block start in shader file")
+            return
+
+        print(f"Found Properties block start at position {start_match.start()}")
+
+        # Find the matching closing brace
+        start_index = start_match.start()
+        brace_count = 0
+        end_index = start_index
+        found_start = False
+
+        for i in range(start_index, len(unity_toon_content)):
+            if unity_toon_content[i] == '{':
+                brace_count += 1
+                found_start = True
+            elif unity_toon_content[i] == '}':
+                brace_count -= 1
+                if found_start and brace_count == 0:
+                    end_index = i
+                    break
+
+        if brace_count != 0:
+            print("ERROR: Could not find matching closing brace for Properties block")
+            return
+
+        print(f"Found Properties block end at position {end_index}")
+
+        # Build new Properties block
+        new_properties = []
+        new_properties.append("    Properties {")
+
+        # Add common properties
+        common_lines = common_properties.split('\n')
+        property_count = 0
+        for line in common_lines:
+            if line.strip() and not line.strip().startswith("//"):
+                new_properties.append(f"        {line.strip()}")
+                property_count += 1
+
+        new_properties.append("    }")
+
+        new_properties_text = '\n'.join(new_properties)
+
+        print(f"Generated new Properties block with {property_count} properties. Length: {len(new_properties_text)} characters")
+
+        # Test the replacement
+        new_content = unity_toon_content[:start_index] + new_properties_text + unity_toon_content[end_index + 1:]
+        new_content = apply_auto_generated_comment(new_content, "//Auto-generated (test output)")
+
+        print(f"Generated new shader content. Original length: {len(unity_toon_content)}, New length: {len(new_content)}")
+
+        # Write test file
+        test_path = "UnityToon_Generated_Test.shader"
+        with open(test_path, 'w') as f:
+            f.write(new_content)
+
+        print(f"Test shader written to {test_path}")
+        print("Shader generation test completed successfully!")
+
+        try:
+            import os
+            os.remove(test_path)
+        except OSError:
+            pass
+
+    except Exception as e:
+        print(f"ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+if __name__ == "__main__":
+    test_shader_generation()
+
+
+--- AutoGenerateParts/ReadmeFooter.md ---
+
+
+# Post-Cloning Setup on Windows
+
+This repository utilizes symbolic links to share code across multiple projects.
+On Windows 10 or later, symbolic link creation is restricted by default for regular users,
+which can lead to issues when working with this repository.
+
+To resolve this, follow the steps below to enable symbolic link creation and configure Git appropriately.
+
+1. Open **Local Security Policy** by typing `secpol.msc` on Windows Command Prompt
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_LocalSecurityPolicy.jpg)
+
+
+2. Under **User Rights Assignment**, find a policy called **Create symbolic links** and open it.
+  - Click **Add User or Group**
+  - Click **Object Types**
+  - Make sure **Groups** is checked and click **OK**.
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_Properties.jpg)
+
+3. Type **USERS** inside the textbox and click on **Check Names** to verify it, then click **OK**.
+
+![](https://raw.githubusercontent.com/Unity-Technologies/com.unity.toonshader/master/Images/CreateSymbolicLinks_SelectUsers.jpg)
+
+4. Configure git to allow symbolic links. For example, by typing the following in Git Bash:
+
+```
+git config --local core.symlinks true
+git config --global core.symlinks true
+```
+
+## License
+* Source Code: [Unity Companion License](com.unity.toonshader/LICENSE.md)
+* Unity-chan Assets: [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)  
+  These assets can be located under, but not limited to, the following folder:
+    - `com.unity.toonshader/Samples~`
+
+
+## Links discovered
+- [Unity Companion License](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/AutoGenerateParts/com.unity.toonshader/LICENSE.md)
+- [Unity-Chan License](http://unity-chan.com/contents/guideline_en/)
+
+--- AutoGenerateParts/ReadmeHeader.md ---
+# Latest official docs
+- [English](https://docs.unity3d.com/Packages/com.unity.toonshader@latest)
+- [日本語](https://docs.unity3d.com/ja/Packages/com.unity.toonshader@latest)
+
+
+
+
+## Links discovered
+- [English](https://docs.unity3d.com/Packages/com.unity.toonshader@latest)
+- [日本語](https://docs.unity3d.com/ja/Packages/com.unity.toonshader@latest)
+
+--- com.unity.toonshader/Documentation~/index.md ---
+# Unity Toon Shader overview
+
+![An image from the toon-shaded film The Phantom Knowledge in the Scene view of the Unity Editor. A close-up of a girl raising a weapon with a ruined cityscape in the background.](images/TPK_04.png)
+
+The **Unity Toon Shader** (UTS3) is a set of toon shaders designed to meet the needs of creators working on cel-shaded 3D-CG animations.
+
+The **Unity Toon Shader** is compatible with all render pipelines: the **Built-in Render Pipeline**, the **Universal Render Pipeline (URP)**, and the **High Definition Render Pipeline (HDRP)**. However, there are some differences in the features supported by different render pipelines. Please refer to [Feature Difference](FeatureModel_en.md) for details about each render pipeline.
+
+**Unity Toon Shader** is the successor to **Unity-chan Toon Shader ver 2.0 (UTS2)**, which was popular for years in games and animations. However, UTS2 was designed solely for the **Built-in Render Pipeline**, consisted of many different shaders, could not be installed through the [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html), and had a different license from other Unity software.
+
+## Features of Unity Toon Shader
+
+In animation production, color specialists specify detailed color designs for every scene. UTS can apply these color specifications as written in the design instructions. UTS allows users to apply specific colors for light and shadow areas regardless of the actual light colors in the scene. This feature is essential for cel-shaded character designs. UTS provides detailed control over whether the directional light color affects materials.
+
+Typical color design instruction example:
+
+![A stylized girl in a sailor uniform. A: White highlights on the hair. B: The main blonde hair color. C: Hair in shadow, with a tan color. D: Hair in darker shadow, with a darker tan color.](images/UTS4Color2.png)
+
+- A: Highlight Color
+- B: Base Color
+- C: 1st Shading Color
+- D: 2nd Shading Color
+
+Three basic colors—**base color**, **1st shading color**, and **2nd shading color**—play key roles in character design with the **Unity Toon Shader**. Please refer to [Three Color Map and Control Map Settings](Basic.md) for more information.
+
+Besides the three basic colors, the **Unity Toon Shader** provides a wide variety of features such as [Highlight](Highlight.md), [Rim Light](Rimlight.md), [Emission](Emission.md), [Angel Ring](AngelRing.md), [Material Capture (MatCap)](MatCap.md), and some special maps.
+
+To get started with cel-shading, see [Getting Started](GettingStarted.md).
+
+## Render Pipeline Compatibility
+The **Unity Toon Shader** supports 3D projects across the **Built-in Render Pipeline**,
+**Universal Render Pipeline (URP)**, and **High Definition Render Pipeline (HDRP)**.
+
+For 2D projects, starting with Unity 6.3, the **Unity Toon Shader** partially supports URP 
+by rendering 3D GameObjects in 2D URP scenes.
+
+Feature availability varies between pipelines and between 3D/2D projects.   
+Please review the [feature differences](FeatureModel_en.md) to confirm which features are supported in your target pipeline:
+
+> The use of linear color space is strongly recommended.
+
+
+
+## Links discovered
+- [An image from the toon-shaded film The Phantom Knowledge in the Scene view of the Unity Editor. A close-up of a girl raising a weapon with a ruined cityscape in the background.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/TPK_04.png)
+- [Feature Difference](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/FeatureModel_en.md)
+- [Package Manager window](https://docs.unity3d.com/Manual/upm-ui.html)
+- [A stylized girl in a sailor uniform. A: White highlights on the hair. B: The main blonde hair color. C: Hair in shadow, with a tan color. D: Hair in darker shadow, with a darker tan color.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/UTS4Color2.png)
+- [Three Color Map and Control Map Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Basic.md)
+- [Highlight](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Highlight.md)
+- [Rim Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Rimlight.md)
+- [Emission](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Emission.md)
+- [Angel Ring](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/AngelRing.md)
+- [Material Capture (MatCap)](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/MatCap.md)
+- [Getting Started](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/GettingStarted.md)
+- [feature differences](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/FeatureModel_en.md)
+
+--- com.unity.toonshader/Documentation~/AngelRing.md ---
+# Angel Ring Projection Settings
+
+The Angel Ring effect for UTS expresses shine or luster in hair. 
+This effect always appears in a fixed position as seen from the camera.
+
+Angel Ring requires:
+1. [Unity Toon Shader mode](Modes.md) set to **With Additional Control Maps**.
+2. 2nd UV in the model.
+
+
+![The head of a chibi-style character with feathered hair and cat ears. The head is oriented from three angles: side, front, and back. In each angle, two bright highlights appear in the same place on the left and right.](images/AR_Image.png)
+
+- [Angel Ring Projection](#angel-ring-projection)
+  - [Angel Ring](#angel-ring)
+  - [Offset U and V](#offset-u-and-v)
+  - [Alpha Channel as Clipping Mask](#alpha-channel-as-clipping-mask)
+
+## Angel Ring Projection
+Enable the Angel Ring effect for UTS, which expresses shine or luster in hair.
+
+### Angel Ring
+Angel Ring: Texture(sRGB) × Color(RGB). Default: Black.
+
+**Unity Toon Shader** adds the color to the lighting results, and 
+you can also clip the effect using the alpha of the texture.
+See [Alpha Channel as Clipping Mask](#alpha-channel-as-clipping-mask) for details.
+
+
+![A dark square texture, with lighter v-shaped areas at the left and right edges.](images/para_height2.png)<br/>
+Angel Ring Texture Example
+
+### Offset U and V
+
+* Offset U: Adjusts the Angel Ring's shape in the horizontal direction.
+* Offset V: Adjusts the Angel Ring’s shape in the vertical direction.
+
+<video title="The head of a chibi-style character, oriented face-on. The v-shaped highlights in the hair grow and shrink vertically, and move up and down." src="images/AngelRingOffsetUV_1.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Alpha Channel as Clipping Mask
+
+The texture's alpha channel acts as a clipping mask. When disabled, alpha has no effect.
+
+![The head of a chibi-style character, with the v-shaped highlights on the left and right of their hair. This uses a 1024 x 1024 RGBA Compressed DXT5|BC3 Norm transparent square texture with white v-shaped areas at the left and right edges.](images/AngelRingWithAlpha_Output.png)<br/>
+Left: The alpha of the Angel Ring texture. Right: Output with **Alpha Channel as Clipping Mask** enabled. 
+
+## Links discovered
+- [Unity Toon Shader mode](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Modes.md)
+- [The head of a chibi-style character with feathered hair and cat ears. The head is oriented from three angles: side, front, and back. In each angle, two bright highlights appear in the same place on the left and right.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/AR_Image.png)
+- [A dark square texture, with lighter v-shaped areas at the left and right edges.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/para_height2.png)
+- [The head of a chibi-style character, with the v-shaped highlights on the left and right of their hair. This uses a 1024 x 1024 RGBA Compressed DXT5|BC3 Norm transparent square texture with white v-shaped areas at the left and right edges.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/AngelRingWithAlpha_Output.png)
+
+--- com.unity.toonshader/Documentation~/Basic.md ---
+# Three Color Map and Control Map Settings
+
+**Three Color Map and Control Map Settings** provide basic cel-shading settings in the **Unity Toon Shader**. These settings allow you to control the rendering of light and shadow areas independently from the actual light color. UTS provides detailed control over whether the directional light color affects materials. Please refer to [Scene Light Effectiveness Settings](SceneLight.md) for more information.
+
+* [Three Basic Color Maps](#Three-basic-color-maps)
+  * [Base Map](#base-map)
+    * [Apply to 1st Shading Map](#apply-to-1st-shading-map)
+  * [1st Shading map](#1st-shading-map)
+    * [Apply to 2nd Shading Map](#apply-to-2nd-shading-map)
+  * [2nd Shading Map](#2nd-shading-map)
+  * [Example of Three Color Map Operation](#example-of-Three-color-map-operation)
+<br><br>
+
+
+* [Shadow Control Maps](#shadow-control-maps)
+  * [1st Shading Position Map](#1st-shading-map)
+  * [2nd Shading Position Map](#2nd-shading-map)
+  * [Example of Shadow Control Map Application](#example-of-shadow-control-map-application)
+<br><br>
+
+## Three Basic Color Maps
+
+## Base Map
+Base Color: Texture(sRGB) × Color(RGB). The default color is white. The base color represents the color of the unshaded areas of objects or characters.
+
+|  Base Color Map (Face) | (Hair) | Result  |
+| ---- | ---- |---- |
+| <img alt="A yellow texture map with different-colored areas for skin, ears, eyes, cheeks, and other parts of a face." src="images/yuko_face3_main.png" height="256">  | <img alt="A grey texture map with two brown areas for cat-like ears, and lighter grey brushstrokes for parts of the hair." src="images/yuko_hair.png" height="256"> |<img alt="A chibi-style face with yellow skin, grey hair, brown cat ears, large eyes, and rosy cheeks." src="images/YukoFace.png" height="256">  |
+
+
+### Apply to 1st Shading Map
+Apply **Base Map** to the **1st Shading Map**. When you check **Apply to 1st Shading Map**, the texture map in **1st Shading Map** is not applied for rendering and the Inspector window disables its texture UI.
+
+
+## 1st Shading Map
+The map used for the brighter portions of the shadow. Texture(sRGB) × Color(RGB). The default color is white.
+
+|   **1st Shading Map** (Face) | (Hair) | Result  |
+| ---- | ---- | ---- |
+| <img alt="A similar texture map to the base map, but the background is now tan." src="images/yuko_face3_B.png" height="256">   | <img alt="A similar hair map to the base map, but the background is darker, and the brushstrokes have a blue gradient." src="images/yuko_hairB.png" height="256"> |<img alt="The chibi-style face, now with shadows at the bottom of the hair and face, and over the eyes." src="images/YukoFace1stShadingMap.png" height="256">  |
+
+
+### Apply to 2nd Shading Map
+Apply **Base Map** or the **1st Shading Map** to the **2nd Shading Map**. When you check **Apply to 2nd Shading Map**, the texture map in **2nd Shading Map** is not applied for rendering and the Inspector window disables its texture UI.
+
+
+### 2nd Shading Map
+The map used for the darker portions of the shadow. Texture(sRGB) × Color(RGB). The default color is white.
+
+|  **2nd Shading Map** (Face)  | (Hair) | Result  |
+| ---- | ---- | ---- |
+| <img alt="A similar texture map to the base map, but the background is now a dark orange." src="images/yuko_face3_C.png" height="256">   | <img alt="A similar hair map to the base map, but the background is even darker." src="images/yuko_hairC.png" height="256"> |<img alt="The chibi-style face, now with darker shadows at the edges of the hair." src="images/YukoFace2ndShadingMap.png" height="256">  |
+
+
+## Shadow Control Maps
+Textures that dictate the fixed shadows of the material.
+
+### 1st Shading Position Map
+Specifies the position of fixed shadows that fall in 1st shade color areas in UV coordinates. **1st Position Map**: Texture(linear).
+
+### 2nd Shading Position Map
+Specifies the position of fixed shadows that fall in 2nd shade color areas in UV coordinates. **2nd Position Map**: Texture(linear).
+
+
+<br><br>
+## Example of Shadow Control Map Application
+| Base Map | 1st Shading Map | Shading Position Map |
+| ---- | ---- | ---- |
+| <img alt="A UV map texture that contains all the parts of a chibi-style character model." src="images/utc_all2_light.png" height="256"> |<img alt="The same UV map but some areas have a darker color." src="images/utc_all2_dark.png" height="256"> |<img alt="A mostly white texture, with 3 black hair shapes." src="images/utc_all2_offsetdark.png" height="256"> |
+
+No Shadow Control Maps:
+![A chibi-style character model with rabbit ears. In the Inspector window, the 1st Shading Position Map and 2nd Shading Position Map properties are empty.](images/ShadowControlMap0.png)
+
+1st Shading Position Map:
+![The same model. In the Inspector window, the 1st Shading Position Map property is set to the shading position map texture.](images/ShadowControlMap1.png)
+
+2nd Shading Position Map:
+![The same model. In the Inspector window, the 2nd Shading Position Map property is set to the shading position map texture.](images/ShadowControlMap2.png)
+
+Both:
+![The same model. In the Inspector window, both the 1st Shading Position Map and 2nd Shading Position Map properties are set to the shading position map texture. ](images/ShadowControlMap3.png)
+
+
+## Links discovered
+- [Scene Light Effectiveness Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/SceneLight.md)
+- [A chibi-style character model with rabbit ears. In the Inspector window, the 1st Shading Position Map and 2nd Shading Position Map properties are empty.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ShadowControlMap0.png)
+- [The same model. In the Inspector window, the 1st Shading Position Map property is set to the shading position map texture.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ShadowControlMap1.png)
+- [The same model. In the Inspector window, the 2nd Shading Position Map property is set to the shading position map texture.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ShadowControlMap2.png)
+- [The same model. In the Inspector window, both the 1st Shading Position Map and 2nd Shading Position Map properties are set to the shading position map texture.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ShadowControlMap3.png)
+
+--- com.unity.toonshader/Documentation~/Emission.md ---
+# Emission Settings
+
+Emission controls the color and intensity of light emitted from the surface. When you use an emissive material in your scene, it appears as a visible source of light. The meshes appear to be self-illuminated.
+
+[A chibi-style model standing between two red cubes, which light the model with emissive light.](images/EmissiveAnimation.png)
+
+* [Emission Map](#emission-map)
+* [Emission Map Animation](#emission-map-animation)
+  * [Base Speed (Time)](#base-speed-time)
+  * [Animation Mode](#animation-mode)
+  * [Scroll U/X direction](#scroll-ux-direction)
+  * [Scroll V/Y direction](#scroll-vy-direction)
+  * [Rotate around UV center](#rotate-around-uv-center)
+  * [Ping-pong moves for base](#ping-pong-moves-for-base)
+
+  * [Color Shifting with Time](#color-shifting-speed-time)
+    * [Destination Color](#destination-color)
+    * [Color Shifting Speed (Time)](#color-shifting-speed-time)
+
+  * [Color Shifting with View Angle](#color-shifting-with-view-angle)
+    * [Shifting Target Color](#shifting-target-color)
+
+
+## Emission Map
+Primarily used with the Bloom Post Effect and represents luminous objects.
+
+![The Unity logo against a transparent background. The color fades from bright white at the center to black at the edges. The texture dimensions are 1024 x 1024, the texture size is 1.3MB, and the texture type is RBGA Compressed DXT5|BC3 UNorm.](images/EmissionMapSample.png)
+
+## Emission Map Animation
+When enabled, the UV and color of the **Emission Map** animate.
+
+<video title="A cube with the Unity logo on each face. The logo loops through the color spectrum, and vertical black bars scroll horizontally across the face." src="images/EmissionAnimation.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+### Base Speed (Time)
+Specifies the base update speed of scroll animation. If the value is 1, it will scroll in 1 second. Specifying a value of 2 results in twice the speed of a value of 1, so it will scroll in 0.5 seconds.
+
+Base Speed = 0.5:
+
+<video title="A cube with a pink Unity logo on each face. Vertical black bars scroll horizontally across each face." src="images/EmissionMapBaseSpeedHalf.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+Base Speed = 1.5:
+
+<video title="The same cube. The black bars scroll faster." src="images/EmissionMapBaseSpeedOneAndHalf.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Animation Mode
+Controls the animated scrolling of the emissive texture.
+
+UV Coordinate Scroll:
+
+<video title="A cube with a pink Unity logo on each face. Vertical black bars scroll horizontally across each face." src="images/EmissionMapBaseSpeedHalf.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+View Coordinate Scroll:
+
+<video title="The same cube. A black horizontal wipe effect occurs across the left and front faces." src="images/EmissionMapViewCoordinateScroll.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Scroll U/X direction
+Specifies how much the Emissive texture should scroll in the U-direction (x-axis direction) when updating the animation. Base Speed (Time) x Scroll U Direction x Scroll V Direction determine the animation speed.
+
+### Scroll V/Y direction
+Specifies how much the Emissive texture should scroll in the V-direction (y-axis direction) when updating the animation. Base Speed (Time) x Scroll U Direction x Scroll V Direction determine the animation speed.
+
+### Rotate around UV center
+When Base Speed=1, the Emissive texture will rotate clockwise by 1. When combined with scrolling, rotation will occur after scrolling.
+
+<video title="A cube with the Unity logo on each face. The logo is visible through black bars that rotate." src="images/RotateAroundUVCenter3.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Ping-pong moves for base
+When enabled, you can set PingPong (back and forth) in the direction of the animation.
+
+<video title="A cube with a pink Unity logo on each face. Vertical black bars scroll back-and-forth horizontally across each face." src="images/PingPongMove.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Color Shifting with Time
+The color multiplied by the Emissive texture changes by linear interpolation (Lerp) toward the Destination Color.
+
+#### Destination Color
+Target color for [Color Shifting with Time](#color-shifting-with-time), must be in HDR.
+
+#### Color Shifting Speed (Time)
+Sets the reference speed for color shift. When the value is 1, one cycle should take around 6 seconds.
+
+<video title="A cube with the Unity logo on each face. The logo loops through the color spectrum, and vertical black bars scroll horizontally across the face." src="images/ColorShiftingWithTime.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+### Color Shifting with View Angle
+Emissive color shifts consistent with view angle. The further out from the front of the camera, the more it changes to [Shifting Target Color](#shifting-target-color).
+
+#### Shifting Target Color
+Target color for [Color Shifting with View Angle](#color-shifting-with-view-angle) which must be in HDR.
+
+<video title="A cube with the Unity logo on each face. Vertical black bars scroll horizontally across the face. The front face is pink and the left and lower faces are purple." src="images/ColorShiftingWithView.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+
+## Links discovered
+- [A chibi-style model standing between two red cubes, which light the model with emissive light.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/EmissiveAnimation.png)
+- [The Unity logo against a transparent background. The color fades from bright white at the center to black at the edges. The texture dimensions are 1024 x 1024, the texture size is 1.3MB, and the texture type is RBGA Compressed DXT5|BC3 UNorm.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/EmissionMapSample.png)
+
+--- com.unity.toonshader/Documentation~/FeatureModel_en.md ---
+## Feature Differences in Each Render Pipeline
+
+| Function                                                                                   | Built-In               | URP                | URP 3D as 2D (Unity6.3+) | HDRP                   |
+|--------------------------------------------------------------------------------------------|------------------------|--------------------|--------------------------|------------------------|
+| ***1. Modes***                                                                             |                        |                    |                       |                        |
+| &ensp; Standard                                                                            | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; With Advanced Control Map                                                           | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***2. Shader Settings***                                                                   |                        |                    |                       |                        |
+| &ensp; Culling                                                                             | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Stencil                                                                             | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :x:                    |
+| &ensp; Stencil Value                                                                       | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :x:                    |
+| &ensp; Clipping                                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Clipping Mask                                                                       | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Invert  Clipping Mask                                                               | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Use Base Map Alpha as Clipping Mask                                                 | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***3. Three Color Map and Control Map Settings***                                          |                        |                    |                       |                        |
+| &ensp; Base Map                                                                            | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; 1st Shading Map                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; 2nd Shading Map                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Normal Map                                                                          | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Shadow Control Maps                                                                 | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***4. Shading Steps and Feather Settings***                                                |                        |                    |                       |                        |
+| &ensp; Base Color Step                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Base Shading Feather                                                                | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Shading Color Step                                                                  | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Point Light Step Offset                                                             | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Filter Point Light Highlights                                                       | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***5. Highlight Settings***                                                                |                        |                    |                       |                        |
+| &ensp; Highlight Power                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Specular Mode                                                                       | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Color Blending Mode                                                                 | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Highlight Blending on Shadows                                                       | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Highlight Mask                                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Highlight Mask Level                                                                | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***6. Rim Light Settings***                                                                |                        |                    |                       |                        |
+| &ensp; Rim Light Color                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Rim Light Level                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Adjust Rim Light Area                                                               | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Inverted Light Direction Rim Light                                                  | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Rim Light Mask                                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***7. Material Capture(MatCap) Settings***                                                 |                        |                    |                       |                        |
+| &ensp; MatCap Map                                                                          | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; MatCap Blur Level                                                                   | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Color Blending Mode                                                                 | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Scale MatCap UV                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Rotate MatCap UV                                                                    | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Stabilize Camera Rolling                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Normal Map                                                                          | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Rotate Normal Map UV                                                                | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; MatCap Blending on Shadows                                                          | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; MatCap Camera Mode                                                                  | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; MatCap Mask                                                                         | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; MatCap Mask Level                                                                   | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Invert MatCap Mask                                                                  | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***8. Emission Settings***                                                                 |                        |                    |                       |                        |
+| &ensp; Emission Map                                                                        | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Use the alpha channel of Emissive Map as a Clipping mask                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Emission Map Animation                                                              | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Base Speed (Time)                                                                   | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Animation Mode                                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Scroll U/X direction                                                                | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Scroll V/Y direction                                                                | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Rotate around UV center                                                             | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Ping-pong moves for base                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Color Shifting with Time                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Color Shifting with View Angle                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***9. Angel Ring Projection Settings***                                                    |                        |                    |                       |                        |
+| &ensp; Angel Ring                                                                          | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Offset U/V                                                                          | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Alpha Channel as Clipping Mask                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***10. [Scene Light Effectiveness Settings](SceneLight.md) for all UTS color properties*** | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***11. Metaverse Settings***                                                               |                        |                    |                       |                        |
+| &ensp; Metaverse Light                                                                     | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :x:                    |
+| &ensp; Metaverse Light Intensity                                                           | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :x:                    |
+| &ensp; Metaverse Light Direction                                                           | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :x:                    |
+| ***12. Outline Settings***                                                                 |                        |                    |                       |                        |
+| &ensp; Outline Mode                                                                        | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Outline Width                                                                       | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Outline Color                                                                       | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Blend Base Color to Outline                                                         | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Offset Outline with Camera Z-axis                                                   | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Camera Distance for Outline Width                                                   | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Outline Color Map                                                                   | :heavy_check_mark:     | :heavy_check_mark: | :heavy_check_mark:    | :heavy_check_mark:     |
+| &ensp; Rotate around UV center                                                             | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Ping-pong moves for base                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Color Shifting with Time                                                            | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| &ensp; Color Shifting with View Angle                                                      | :heavy_check_mark:     | :heavy_check_mark: | :x:                   | :heavy_check_mark:     |
+| ***13.Tessellation Settings***                                                             | DX11/DX12/Vulkan/Metal | :no_entry_sign:    | :no_entry_sign:       | DX11/DX12/Vulkan/Metal |
+| ***14. EV Adjustment in high intensity light scenes***                                     | :no_entry_sign:        | :no_entry_sign:    | :no_entry_sign:       | :heavy_check_mark:     |
+| ***15. DXR (ray-traced) shadows***                                                         | :no_entry_sign:        | :no_entry_sign:    | :no_entry_sign:       | :heavy_check_mark:     |
+| ***16. [Box Light](HDRPBoxLight.md)***                                                     | :no_entry_sign:        | :no_entry_sign:    | :no_entry_sign:       | :heavy_check_mark:     |
+| ***17. Rendering Paths***                                                                  |                        |                    |                       |                        |
+| &ensp; Forward                                                                             | :heavy_check_mark:     | :heavy_check_mark: | :no_entry_sign:       | :heavy_check_mark:     |
+| &ensp; Forward+                                                                            | :no_entry_sign:        | :heavy_check_mark: | :no_entry_sign:       | :no_entry_sign:        |
+| &ensp; Deferred                                                                            | :x:                    | :x:                | :no_entry_sign:       | :heavy_check_mark:     |
+| &ensp; Deferred+                                                                           | :no_entry_sign:        | :x:                | :no_entry_sign:       | :no_entry_sign:        |
+| &ensp; 2D                                                                                  | :no_entry_sign:        | :no_entry_sign:    | :heavy_check_mark:    | :no_entry_sign:        |
+
+Notes:
+* :heavy_check_mark: : Supported
+* :no_entry_sign: : Not supported (e.g. limitations in the render pipeline, etc)
+* :x: : Currently not available
+
+
+## Links discovered
+- [Scene Light Effectiveness Settings](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/SceneLight.md)
+- [Box Light](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/HDRPBoxLight.md)
+
+--- com.unity.toonshader/Documentation~/HDRPBoxLight.md ---
+<a id="BoxLight"></a>
+## HDRP Box Light
+
+In HDRP, [only one directional light can cast shadow at a time](https://docs.unity3d.com/Manual/render-pipelines-feature-comparison.html).
+This can be undesirable when we need lighting that differs from the scene's main directional light,
+such as brightening a character's face or adding idealized shadows.
+
+The [Box Light](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@14.0/manual/Light-Component.html#Shape)
+offers a practical workaround, and Unity Toon Shader supports it.
+<canvas class="image-comparison" role="img" aria-label="The Scene view with a cube representing a box light, and the Game view with a chibi-style character model. When the box light is rotated, the shadows on the face of the model change.">
+    <img src="images/BoxLight0.png" title="Box light">
+    <img src="images/BoxLight1.png" title="Box light rotated">
+</canvas>
+<br />
+Drag the slider to compare the images.
+
+<small>Box light applied to a character's face. Note that editing the angle of the box changes the shadows falling on the face, but not on the body and the ground.</small>
+
+
+## Links discovered
+- [only one directional light can cast shadow at a time](https://docs.unity3d.com/Manual/render-pipelines-feature-comparison.html)
+- [Box Light](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@14.0/manual/Light-Component.html#Shape)
+
+--- com.unity.toonshader/Documentation~/Highlight.md ---
+# Highlight Settings
+
+The ability to display specular highlights in a cel-animation-like manner is essential for toon shaders. The **Unity Toon Shader** provides a wide variety of expressions with controllable illumination that works independently of light color and intensity for impressive cel-shading.
+
+Settings:
+* [Highlight](#highlight)
+* [Highlight Power](#highlight-power)
+* [Specular Mode](#specular-mode)
+  * [Color Blending Mode](#color-blending-mode)
+* [Highlight Blending on Shadows](#highlight-blending-on-shadows)
+  * [Blending Level](#blending-level)
+* [Highlight Mask](#highlight-mask)
+* [Highlight Mask Level](#highlight-mask-level)
+
+
+## Highlight
+Highlight: Texture(sRGB) × Color(RGB). Defines the pattern and tint of the specular highlight.
+
+Default: white.
+
+<canvas class="image-comparison" role="img" aria-label="A toon-shaded sphere in a room textured with graphs. The sphere has green and purple bands of color, and a bright white specular highlight. Then the same sphere, with the color picker window open and the color #FF0000 selected. The specular highlight on the sphere is now orange and yellow.">
+    <img src="images/Highlight0.png" title="The default color.">
+    <img src="images/Highlight1.png" title="A different light color applied.">
+</canvas>
+<br />Drag the slider to compare the images.
+
+## Highlight Power
+
+The highlight size is controlled by the **Highlight Power** slider. 
+
+<video title="Tweaking the highlight power." src="images/SpecularPower.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+## Specular Mode
+
+UTS provides two modes for the highlight for different occasions and effect. The hard mode provides a crisp and solid edge to the highlight while the soft mode provides a blended blurred effect.
+
+<canvas class="image-comparison" role="img" aria-label="A close-up of a white specular highlight on a green sphere. The highlight is a clear white disc with a hard edge. Then the same close-up. The specular highlight is now a blurred white disc.">
+    <img src="images/SpecularHard.png" title="Mode: Hard.">
+    <img src="images/SpecularSoft.png" title="Mode: Soft.">
+</canvas>
+<br />Drag the slider to compare the images.
+
+<br><br>
+
+### Color Blending Mode
+Specular color blending mode allows the user to control the hardness of the colour applied to the highlight. 
+Users have two options: Multiply or Add.
+
+Note that **Color Blending Mode** is disabled when **Specular** Mode is set to **Soft**.
+
+<canvas class="image-comparison" role="img" aria-label="A close-up of a yellow specular highlight on a green sphere. The highlight is a clear yellow disc with a hard edge. Then the same close-up. The specular highlight is now a blurred yellow disc.">
+    <img src="images/SpecularMultiply.png" title="Multiply">
+    <img src="images/SpecularAdd.png" title="Add">
+</canvas>
+<br />Drag the slider to compare the images.
+
+## Highlight Blending on Shadows
+Control the blending for the highlights in shadows. Please refer to the image at [Blending Level](#blending-level).
+
+### Blending Level
+Adjusts the intensity of highlight applied to shadow areas.
+
+<video title="A specular highlight on a green sphere. Part of the highlight is in shadow, and fades in and out." src="images/HighlightBlendingLevel.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+## Highlight Mask
+A gray scale texture which utilises its brightness to control highlight intensity. Applying the highlight mask allows to fine-tune the reflectivity on the material.
+
+![A square texture with a black and grey checkerboard pattern. Each square has a small plus symbol in its center.](images/UVCheckGrid.png)<br/>
+An example of a grayscale texture highlight mask.
+
+<canvas class="image-comparison" role="img" aria-label="A toon-shaded sphere in a room textured with graphs. The sphere has green and purple bands of color, and circular green, white, and purple specular highlights. Then the same sphere. The specular highlights now reflect the checkerboard pattern.">
+    <img src="images/HighlightMaskOff.png" title="Highlight Mask disabled">
+    <img src="images/HighlightMaskOn.png" title="Highlight Mask enabled">
+</canvas>
+<br />Drag the slider to compare the images.
+
+## Highlight Mask Level
+Highlight mask texture blending level to highlights.
+
+<video title="A toon-shaded sphere in a room textured with graphs. The specular highlights fade in and out." src="images/HighlightMaskLevel.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+## Links discovered
+- [A square texture with a black and grey checkerboard pattern. Each square has a small plus symbol in its center.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/UVCheckGrid.png)
+
+--- com.unity.toonshader/Documentation~/Known-issue.md ---
+# Known Issues
+## When using AOV Image Sequence Recorder
+
+The **Unity Toon Shader** [Outline](Outline.md) is not automatically disabled when recording with the [AOV Image Sequence Recorder](https://docs.unity3d.com/Packages/com.unity.recorder@4.0/manual/RecorderAOV.html). Please disable [Outline](Outline.md#outline) in the Material Inspector when outputting AOV images.
+
+## When using Universal Render Pipeline
+
+When using the [Universal Render Pipeline](https://docs.unity3d.com/Manual/com.unity.render-pipelines.universal.html), you need to set [Depth Priming Mode](https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@16.0/manual/urp-universal-renderer.html#rendering) to **Disabled** to show the [outline](Outline.md).
+
+<canvas class="image-comparison" role="img" aria-label="A chibi-style character model, and the Inspector window for the Univeral Renderer Data asset. On the left, Depth Priming is set to Auto and the model has no outline. When Depth Priming is set to Disabled, the model has an outline.">
+    <img src="images/DepthPrimingModeAuto.png" title="Depth Priming Mode set to Auto">
+    <img src="images/DepthPrimingModeDisabled.png" title="Depth Priming Mode set to Disabled">
+</canvas>
+<br />Drag the slider to compare the images.
+
+
+## Links discovered
+- [Outline](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md)
+- [AOV Image Sequence Recorder](https://docs.unity3d.com/Packages/com.unity.recorder@4.0/manual/RecorderAOV.html)
+- [Outline](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md#outline)
+- [Universal Render Pipeline](https://docs.unity3d.com/Manual/com.unity.render-pipelines.universal.html)
+- [Depth Priming Mode](https://docs.unity3d.com/Packages/com.unity.render-pipelines.universal@16.0/manual/urp-universal-renderer.html#rendering)
+- [outline](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/Outline.md)
+
+--- com.unity.toonshader/Documentation~/MatCap.md ---
+# Material Capture (MatCap) Settings
+
+MatCap is a method of light expression using pre-rendered images. 
+This technique uses a image of a sphere that represents the material and light to simulate lighting.
+
+<video title="A camera pan over the head of a chibi-style character model with long hair and rabbit ears. The specular highlights on the ears and hair move with the camera." src="images/MatCap.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+* [MatCap Map](#matcap-map)
+* [MatCap Blur Level](#matcap-blur-level)
+* [Color Blending Mode](#color-blending-mode)
+* [Scale MatCap UV](#scale-matcap-uv)
+* [Rotate MatCap UV](#rotate-matcap-uv)
+* [Stabilize Camera rolling](#stabilize-camera-rolling)
+* [Normal Map Specular Mask for MatCap](#normal-map-specular-mask-for-matcap)
+  * [Normal Map](#normal-map)
+  * [Rotate Normal Map UV](#rotate-normal-map-uv)
+* [MatCap Blending on Shadows](#matcap-blending-on-shadows)
+  * [Blending Level](#blending-level)
+* [MatCap Camera Mode](#matcap-camera-mode)
+* [MatCap Mask](#matcap-mask)
+  * [MatCap Mask Level](#matcap-mask-level)
+  * [Invert MatCap Mask](#invert-matcap-mask)
+
+## MatCap Map
+MatCap Color: Texture(sRGB) × Color(RGB). 
+
+Default: White
+
+![A square black texture, with an upwards-curving yellow shape with soft edges.](images/HiLight_Matcap.png)<br/>
+An example of a MatCap Map texture.
+
+<video title="A camera pan over the head of a chibi-style character model with long hair and rabbit ears." src="images/WithOutMatCap.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video><br/>
+MatCap Map disabled.
+
+<video title="The same camera pan, but the blonde hair of the model now has a brighter yellow specular highlight." src="images/WithMatCap.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video><br/>
+MatCap Map enabled.
+
+## MatCap Blur Level
+Blur MatCap Map using the Mip Map feature. 
+
+To enable Mip Map, activate Advanced > Generate Mip Maps in the [Texture Import Settings](https://docs.unity3d.com/Manual/class-TextureImporter.html). 
+
+<video title="A close-up on the blonde hair of a chibi-style character model. The brighter yellow specular highlight changes from sharp to blurred." src="images/MatCapBlurLebel.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+## Color Blending Mode
+MatCap color blending mode. Multiply or Add.
+
+
+
+## Scale MatCap UV
+Scaling UV of MatCap Map.
+
+<video title="A close-up on the blonde hair of a chibi-style character model. The brighter yellow specular highlight changes from a thin line to a wider highlight." src="images/ScaleMatCapUV.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+## Rotate MatCap UV
+Rotating UV of MatCap Map.
+
+<video title="A close-up on the blonde hair of a chibi-style character model. The yellow specular highlight rotates from left to right and back." src="images/RotateMatCapUV.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+## Stabilize Camera Rolling
+Stabilize Camera rolling when capturing materials with camera.
+
+<video title="A close-up on the face of a chibi-style character model. When the camera rotates, the specular highlights stay in the same place in the camera view." src="images/StabilizerOff.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video><br/>
+Stabilize Camera Rolling disabled.
+
+<video title="The same close-up. When the camera rotates, the specular highlights stay in the same place on the hair." src="images/StabilizerOn.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video><br/>
+Stabilize Camera Rolling enabled.
+
+
+## Normal Map Specular Mask for MatCap
+
+When enabled, uses a dedicated normal map for MatCap.
+If MatCap is used as specular lighting, this normal map can serve as a specular mask.
+
+<canvas class="image-comparison" role="img" aria-label="A view from above a chibi-style character model with blonde hair and brighter yellow specular highlights. Then the same view. The individual hairs now have highlights. ">
+    <img src="images/MatCapNormalMapOff.png" title="Normal Map Specular Mask disabled.">
+    <img src="images/MatCapNormalMapOn.png" title="Normal Map Specular Mask enabled">
+</canvas>
+<br />Drag the slider to compare the images.
+
+### Normal Map
+A texture that dictates the bumpiness of the material.
+
+
+![A grayscale texture of fine hair.](images/HairNormalMask.png)<br/>
+An example of a Normal Map texture.
+
+
+### Rotate Normal Map UV
+Rotates the MatCap normal map UV based on its center.
+
+<video title="A view from above a chibi-style character model with blonde hair and brighter yellow specular highlights on individual hairs. The highlights rotate." src="images/RotateMatCapNormalMapUV.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+## MatCap Blending on Shadows
+Enables the blending rate of the MatCap range in shadows.
+
+<canvas class="image-comparison" role="img" aria-label="A view from above a chibi-style character model with blonde hair. With MatCap Blending on Shadows on, the bright highlights on individual hairs are less visible.">
+    <img src="images/MatCapBlendingOnShadowOff.png" title="MatCap Blending on Shadows disabled.">
+    <img src="images/MatCapBlendingOnShadowOn.png" title="MapCap Blending on Shadows enabled.">
+</canvas>
+<br />Drag the slider to compare the images.
+
+
+## Blending Level
+Adjusts the intensity of MatCap applied to shadow areas.
+
+<video title="Adjusts the intensity of MatCap applied to shadow areas." src="images/MatCapOnShadowLevel.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video><br/>
+
+
+## MatCap Camera Mode
+Control how the MatCap Map is rendered based on the camera type.
+
+## MatCap Mask
+
+The MatCap mask aligns with the mesh’s UVs used for the MatCap projection. 
+Pixels in black (0) regions of the mask are fully hidden.
+
+![A view from above a chibi-style character model with blonde hair. Her hair has yellow highlights in the shape of the Unity logo.](images/MatCapMaskSample.png)
+
+
+## MatCap Mask Level
+Adjusts the level of the MatCap Mask. When the value is: 
+* 1: MatCap represents 100% irrespective of mask. 
+* -1: MatCap won't be displayed at all and MatCap will be the same as in the off state.
+
+<video title="Specular highlights on hair fade in and out." src="images/MatCapMaskLevel.mp4" width="auto" height="auto" autoplay="true" loop="true" controls></video>
+
+
+## Invert MatCap Mask
+When enabled, inverts **MatCap Mask** Texture colors.
+
+![A view from above a chibi-style character model with blonde hair. Her hair has a bow-shaped brighter yellow specular highlight, with Unity logos cut out in the unlit hair color.](images/InvertMatCapMask.png)
+
+
+
+
+## Links discovered
+- [A square black texture, with an upwards-curving yellow shape with soft edges.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/HiLight_Matcap.png)
+- [Texture Import Settings](https://docs.unity3d.com/Manual/class-TextureImporter.html)
+- [A grayscale texture of fine hair.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/HairNormalMask.png)
+- [A view from above a chibi-style character model with blonde hair. Her hair has yellow highlights in the shape of the Unity logo.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/MatCapMaskSample.png)
+- [A view from above a chibi-style character model with blonde hair. Her hair has a bow-shaped brighter yellow specular highlight, with Unity logos cut out in the unlit hair color.](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/InvertMatCapMask.png)
+
+--- com.unity.toonshader/Documentation~/MaterialConverter.md ---
+# Material Converter
+
+## Capability
+
+**Unity Toon Shader Material Converter** handles not only the **Unity Toon Shader** materials, but also [Unity-chan Toon Shader materials](https://github.com/unity3d-jp/UnityChanToonShaderVer2_Project) and [Univeral Toon Shader materials](https://github.com/unity3d-jp/UnityChanToonShaderVer2_Project/tree/release/urp/2.5.1).
+
+
+Note: Unity-Chan Toon Shader materials saved with older than 2.0.6 have to be re-saved using 2.0.7 or newer.
+
+## How to convert
+All you have to do to convert toon shader materials to the **Unity Toon Shader materials** are:
+* [Launch converter](#launching-converter)
+* [Select render pipeline and shaders in your project](#selecting-the-converter)
+* [Press **Scan** button](#pressing-scan-button).
+* [Press **Convert** button](#pressing-convert-button).
+
+Please make sure to back up the project since this converting process is irreversible.
+
+## Launching Converter
+Launch the converter from menu.
+Window -> Rendering -> Unity Toon Shader Converter
+
+   ![MaterialConverterMenu](images/MaterialConverterMenu.png)
+
+Here is the converter screen.
+
+   ![ConverterScreen](images/ConverterScreen.png)
+
+## Selecting the converter
+You see five options to convert materials in the project. Choose the shader used in the project.
+
+   ![MaterialConverterMenu](images/ConverterWindowOption.png)
+
+
+## Pressing Scan Button
+
+   ![MaterialConverterScanButton](images/ConverterScanButton.png)
+
+If you choose **Unity-chan Toon Shader 2** and the materials are saved with older than 2.0.6. The converter shows errors. In such case, you should save the materials using **Unity-chan Toon Shader** 2.0.7 or later.
+
+   ![MaterialConverterScanButton](images/ConverterError.png)
+
+## Pressing Convert Button
+
+If there is no error, just press convert button.
+
+
+
+## Links discovered
+- [Unity-chan Toon Shader materials](https://github.com/unity3d-jp/UnityChanToonShaderVer2_Project)
+- [Univeral Toon Shader materials](https://github.com/unity3d-jp/UnityChanToonShaderVer2_Project/tree/release/urp/2.5.1)
+- [MaterialConverterMenu](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/MaterialConverterMenu.png)
+- [ConverterScreen](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ConverterScreen.png)
+- [MaterialConverterMenu](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ConverterWindowOption.png)
+- [MaterialConverterScanButton](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ConverterScanButton.png)
+- [MaterialConverterScanButton](https://github.com/Unity-Technologies/com.unity.toonshader/blob/master/com.unity.toonshader/Documentation~/images/ConverterError.png)
+
+--- ECS_ProjectURP/README.md ---
+# Entities Graphics URP Samples Project
+This Project includes feature sample Scenes for URP Entities Graphics.
+
+## Feature sample Scenes
+The feature sample Scenes are in the _SampleScenes_ folder split into different folders depending on topic. Most of these Scenes include GameObjects in a SubScene.
+
+Unity renders GameObjects with Entities Graphics when a corresponding entity exists, and without Entities Graphics when a corresponding entity does not exist. For the GameObjects in the SubScene, this means that Unity renders them with Entities Graphics at all times; in Edit Mode, in Play Mode, and in the built player.
+
+### Scene List
+
+| Scene | Description | Screenshot |
+| --- | --- | - |
+| AmbientAndBlendProbes | Demonstrate how to use light probes | ![](READMEimages/AmbientAndBlendProbes.PNG) |
+| Lightmaps | Demonstrates lightmap support for Entities | ![](READMEimages/Lightmaps.PNG) |
+| Lightprobes | Demonstrates lightprobe support for Entities | ![](READMEimages/Lightprobes.PNG) |
+| BuiltInMaterialSHProperties | Demonstrates override of the built-in material SH property values | ![](READMEimages/BuiltInMaterialSHProperties.PNG) |
+| MaterialOverridesSample | Demonstrates the setup of overriding a material's properties without having to write code | ![](READMEimages/MaterialOverridesSample.PNG) |
+| ShaderGraphProperties | Demonstrates material property overrides for Shader Graph shaders on Entities | ![](READMEimages/ShaderGraphProperties.PNG) |
+| URPLitProperties | Demonstrates material property overrides for different URP Lit material properties on Entities | ![](READMEimages/URPLitProperties.PNG) |
+| HybridEntitiesConversion | Demonstrates the graphics related companion components that you can put in a Subscene | ![](READMEimages/HybridEntitiesConversion.PNG) |
+| TriggerParticles | Demonstrates how to play a ParticleSystem from an ECS System | ![](READMEimages/TriggerParticles.PNG) |
+| EntityCreation | Demonstrates how to efficiently create entities at run time that are rendered via Entities Graphics | ![](READMEimages/EntityCreation.PNG) |
+| MaterialMeshChange | Demonstrates how to change a Material and Mesh on Entities at runtime | ![](READMEimages/MaterialMeshChange.PNG) |
+| RenderMeshUtilityExample | Demonstrates the new RenderMeshUtility.AddComponents API | ![](READMEimages/RenderMeshUtilityExample.PNG) |
+| MeshDeformations | Demonstrates BlendShape and SkinWeight entities | ![](READMEimages/MeshDeformations.PNG) |
+| SkinnedCharacter | Demonstrates SkinnedMeshRenderer entities | ![](READMEimages/SkinnedCharacter.PNG) |
+| DisabledEntities |  Demonstrates disabled entities | ![](READMEimages/DisabledEntities.PNG) |
+| LODs | Demonstrates LODs in Entities Graphics | ![](READMEimages/LODs.PNG) |
+| SimpleDotsInstancingShader | Demonstrates a simple unlit shader which renders using DOTS instancing | ![](READMEimages/SimpleDotsInstancingShader.PNG) |
+| Submesh | Demonstrates using a Mesh with multiple sub-meshes with Entities Graphics | ![](READMEimages/Submesh.png) |
+| TransparencyOrdering | Demonstrates transparent entities ordering | ![](READMEimages/TransparencyOrdering.PNG) |
+
+
+--- TestProjects/ToonHDRPTest-6000.0/Packages/com.unity.render-pipelines.high-definition-config/Documentation~/index.md ---
+# High Definition Render Pipeline Configuration Package
+
+The High Definition Render Pipeline (HDRP) uses this package to control the availability of some of its features. If you want to use this package to configure HDRP, you must link it as a local package.
+
+* For information on how to set up and use the HDRP Config package, see [HDRP Config](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html?subfolder=/manual/HDRP-Config-Package.html).
+* For documentation on HDRP itself, see [HDRP documentation](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html).
+
+
+## Links discovered
+- [HDRP Config](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html?subfolder=/manual/HDRP-Config-Package.html)
+- [HDRP documentation](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html)
+
+--- TestProjects/ToonHDRPTestDX12-6000.0/Packages/com.unity.render-pipelines.high-definition-config/Documentation~/index.md ---
+# High Definition Render Pipeline Configuration Package
+
+The High Definition Render Pipeline (HDRP) uses this package to control the availability of some of its features. If you want to use this package to configure HDRP, you must link it as a local package.
+
+* For information on how to set up and use the HDRP Config package, see [HDRP Config](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html?subfolder=/manual/HDRP-Config-Package.html).
+* For documentation on HDRP itself, see [HDRP documentation](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html).
+
+
+## Links discovered
+- [HDRP Config](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html?subfolder=/manual/HDRP-Config-Package.html)
+- [HDRP documentation](https://docs.unity3d.com/Packages/com.unity.render-pipelines.high-definition@latest/index.html)
+
+--- TestProjects/ToonBuiltInRPTest-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- TestProjects/ToonHDRPTest-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- TestProjects/ToonHDRPTestDX12-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- TestProjects/ToonURPResidentDrawerGraphicsTest-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- TestProjects/ToonURPTest-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- TestProjects/ToonURPTestECS-6000.0/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 6000.0.64f1
+m_EditorVersionWithRevision: 6000.0.64f1 (5360b7cd7953)
+
+
+--- ToonShader_ProjectForwardPlus/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2022.3.60f1
+m_EditorVersionWithRevision: 2022.3.60f1 (5f63fdee6d95)
+
+
+--- Toonshader_ProjectURP_ECS/ProjectSettings/ProjectVersion.txt ---
+m_EditorVersion: 2022.3.23f1
+m_EditorVersionWithRevision: 2022.3.23f1 (dbb3f7c5b5c6)
+
+
+--- Toonshader_ProjectURP_ECS/Assets/Scenes/Mirror/Specification.txt ---
+Mirrorオブジェクトに関する仕様について　　　　2020/03/11
+
+Scriptable Render Pipeline版の仕様として、MirrorReflection.csは、ゲームビューもしくはシーンビューのどちらかでしか正しく動作しません。
+
+1. ゲームビュー内のMirrorオブジェクトを動作させたい時には、MirrorReflectionコンポーネントのSet Mirror Forを"Game View"にして、プレイボタンを押してください。
+2. シーンビュー内のMirrorオブジェクトを動作させたい時には、MirrorReflectionコンポーネントのSet Mirror Forを"Scene View"にして、プレイボタンを押してください。
