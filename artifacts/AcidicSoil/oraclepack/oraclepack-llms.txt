@@ -1,47 +1,57 @@
-<!-- Generated via fallback path (no LM). -->
-
 # Oraclepack
 
-> <p align="center"> <a href="https://github.com/acidicsoil/oraclepack/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/acidicsoil/oraclepack/actions/workflows/ci.yml/badge.svg" /></a> <a href="https://github.com/acidicsoil/oraclepack/actions/workflows/release.yml"><img alt="Release" src="https://github.com/acidicsoil/oraclepack/actions/workflows/release.yml/badge.svg" /></a>
+> Oraclepack enables teams to create, validate, and execute self-documenting operational workflows embedded in Markdown files. It supports reproducible runs, real-time feedback via a TUI, state persistence, and integration with LLM evaluation pipelines. The tool aims to make complex multi-step operations (like audits, migrations, or LLM testing) manageable, auditable, and repeatable — turning documentation into executable runbooks.
 
 **Remember:**
-- Start with Docs for install & onboarding
-- Check Tutorials for end-to-end workflows
-- Review API references before integrating
+- Oracle Packs: Markdown files containing bash code blocks for operational workflows
+- TUI (Text User Interface): Interactive shell-based interface for browsing, resuming, and managing workflow steps
+- ROI (Return on Investment): A filtering mechanism to prioritize steps based on their value or complexity
+- Artifact Gates: Validation mechanisms that check expected outputs from LLM executions
+- State & Report Files: Persistent JSON files tracking execution status and metadata
+- ChatGPT Project URLs: Global or project-scoped storage for managing prompts or contexts used in workflows
 
 ## Docs
 - [Build Install Oraclepack](https://github.com/AcidicSoil/oraclepack/blob/main/scripts/build_install_oraclepack.md): install & quickstart.
-- [Oraclepack Issues Overview.Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/Oraclepack Issues Overview.prd.md): install & quickstart.
-- [Oracle Pack 2026 01 09](https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle-pack-2026-01-09.md): docs page.
-- [Action Pack Artifact Gates Headless Steps Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/action-pack-artifact-gates-headless-steps_prd.md): docs page.
-- [Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/PRD.md): docs page.
-- [Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/_PRD.md): docs page.
-- [Prd 2026 01 09](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/docs/prd-2026-01-09.md): docs page.
-- [01 Contracts Interfaces Ticket Surface Direct Answer](https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle-questions-2026-01-09-030000/actions/01-contracts-interfaces-ticket-surface-direct-answer.md): docs page.
-- [01 Contracts Interfaces Ticket Surface Missing Evidence](https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle-questions-2026-01-09-030000/actions/01-contracts-interfaces-ticket-surface-missing-evidence.md): docs page.
-- [01 Contracts Interfaces Ticket Surface Next Experiment](https://github.com/AcidicSoil/oraclepack/blob/main/docs/oracle-questions-2026-01-09-030000/actions/01-contracts-interfaces-ticket-surface-next-experiment.md): docs page.
+- [Oracle Configuration Overview](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/.tickets/Oracle Configuration Overview.md): install & quickstart.
+- [Oraclepack Issues Overview.Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/Oraclepack Issues Overview.prd.md): install & quickstart.
+- [Oraclepack Valid Examples](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/docs/oraclepack_valid_examples.md): worked example.
+- [Op1](https://github.com/AcidicSoil/oraclepack/blob/main/docs/op1.md): docs page.
+- [Prompt Snippets Import](https://github.com/AcidicSoil/oraclepack/blob/main/docs/prompt_snippets_import.md): docs page.
+- [Agent Browser Llms](https://github.com/AcidicSoil/oraclepack/blob/main/docs/_llms.txt/agent-browser-llms.txt): docs page.
+- [Agent Browser Llms Full](https://github.com/AcidicSoil/oraclepack/blob/main/docs/_llms.txt/agent-browser-llms-full.txt): docs page.
+- [Clarity Engine Infographic](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/docs/Clarity Engine Infographic.html): docs page.
+- [Oracle Commands For Chatgpt](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/docs/Oracle commands for ChatGPT.md): docs page.
 
 ## Tutorials
 - [Example Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/templates/example_prd.txt): worked example.
 - [Example Prd Rpg](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/templates/example_prd_rpg.txt): worked example.
+- [Agent Polling And Messaging Demo Pinned Chat](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/.gemini_UI_Designs/_Agent Polling and Messaging Demo Pinned chat.md): worked example.
 
 ## API
-- [Attachment Minimization](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/references/attachment-minimization.md): API reference.
-- [Attachment Minimization](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/references/attachment-minimization.md): API reference.
-- [Codebase Grouping](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/references/codebase-grouping.md): API reference.
-- [Codebase Pack Template](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/references/codebase-pack-template.md): API reference.
-- [Ticket Grouping](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/references/ticket-grouping.md): API reference.
-- [Tickets Pack Template](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/references/tickets-pack-template.md): API reference.
-- [Tickets Pack Template Bundle](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/references/tickets-pack-template-bundle.md): API reference.
+- [References.Templates.Constraints.Etc](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/.tickets/references.templates.constraints.etc.md): API reference.
+
+## Concepts
+- [Best Frameworks For Oraclepack](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/Best frameworks for oraclepack.md): docs page.
+- [(Oraclepack)Tui To React Spa Conversion Pinned Chat](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/.gemini_UI_Designs/_(oraclepack)TUI to React SPA Conversion Pinned chat.md): docs page.
+- [Clarity Engine Spa Generation Pinned Chat](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/.gemini_UI_Designs/_Clarity Engine SPA Generation Pinned chat.md): docs page.
+- [Oracle Agent Browser Integration Design Pinned Chat](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/.gemini_UI_Designs/_Oracle Agent-Browser Integration Design Pinned chat.md): docs page.
+- [Oracle Pack Prompt Iteration](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/project-url-op_prompt_matrix_testing/Oracle_Pack_Prompt_Iteration.md): docs page.
+- [Oraclepack Prompt Pack Design](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/project-url-op_prompt_matrix_testing/Oraclepack_Prompt-Pack_Design.md): docs page.
+- [User Prompts For Ai Agent](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/.UI-Design-Consolidation_and_ROADMAP/project-url-op_prompt_matrix_testing/User_Prompts_for_AI-Agent.md): docs page.
 
 ## Optional
 - [Security](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/oraclepack_mcp_server/security.py): security policy.
 - [Test Security](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/tests/test_security.py): security policy.
+- [Planner Executor Workflow](https://github.com/AcidicSoil/oraclepack/blob/main/Planner_Executor_Workflow.md): docs page.
+- [Promptsnippets Snippets 26](https://github.com/AcidicSoil/oraclepack/blob/main/PromptSnippets-snippets-26.md): docs page.
 - [README](https://github.com/AcidicSoil/oraclepack/blob/main/README.md): docs page.
-- [Ticket Driven Surface Changes](https://github.com/AcidicSoil/oraclepack/blob/main/Ticket-driven Surface Changes.md): docs page.
+- [Deterministic Analyst Project System Prompt](https://github.com/AcidicSoil/oraclepack/blob/main/assets/expected/deterministic_analyst_project_system_prompt.md): docs page.
 - [Ticket Action Pack](https://github.com/AcidicSoil/oraclepack/blob/main/internal/templates/ticket-action-pack.md): docs page.
+- [Prd](https://github.com/AcidicSoil/oraclepack/blob/main/prd.md): docs page.
+- [Scratchpad](https://github.com/AcidicSoil/oraclepack/blob/main/scripts/scratchpad.md): docs page.
 
 ## .Ruler
+- [Agent Skills Selection](https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/Agent_Skills_Selection.md): docs page.
 - [Agents](https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/AGENTS.md): docs page.
 - [Skill Usage](https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/skill-usage.md): docs page.
 - [Tm Agents](https://github.com/AcidicSoil/oraclepack/blob/main/.ruler/tm-AGENTS.md): docs page.
@@ -56,24 +66,47 @@
 - [Agents](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/AGENTS.md): docs page.
 - [Tm Help](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/tm_help.txt): docs page.
 - [Tm Tags Help](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/tm_tags-help.txt): docs page.
+- [Action Pack Artifact Gates Headless Steps Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/action-pack-artifact-gates-headless-steps_prd.md): docs page.
+- [Missing Context Checklist](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/Missing-context-checklist.md): docs page.
+- [Oraclepack Roadmap Infographic](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/frontend/OraclePack_Roadmap_Infographic.html): docs page.
+- [Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/PRD.md): docs page.
+- [Prd](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/_PRD.md): docs page.
+- [Prd 2026 01 09](https://github.com/AcidicSoil/oraclepack/blob/main/.taskmaster/.archived_prds/prd-2026-01-09.md): docs page.
 
 ## .Tickets
 - [Formalize Llm Decision Points](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Formalize LLM Decision Points.md): docs page.
 - [Oraclepack Bash Fix](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack bash fix.md): docs page.
 - [Oraclepack Cli Agents](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack-CLI-agents.md): docs page.
 - [Oraclepack Cli Mcp Parity](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack CLI MCP Parity.md): docs page.
+- [Oraclepack Cli Stabilization](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack CLI Stabilization.md): docs page.
 - [Oraclepack File Storage](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack File Storage.md): docs page.
 - [Oraclepack Output Verification Issues](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack output verification issues.md): docs page.
 - [Oraclepack Parity Automation](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack Parity Automation.md): docs page.
 - [Oraclepack Schema Approach](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack Schema Approach.md): docs page.
-- [Publish Oraclepack Mcp](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Publish OraclePack MCP.md): docs page.
-- [Enable Action Packs Dispatch](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/actions/Enable Action Packs Dispatch.md): docs page.
+- [Oraclepack Skills Integration](https://github.com/AcidicSoil/oraclepack/blob/main/.tickets/Oraclepack Skills Integration.md): docs page.
 
 ## Codefetch
+- [.Consolidation Strategy](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/.consolidation-strategy.md): docs page.
+- [Agents Browser](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/agents-browser.md): docs page.
 - [Oraclepack Op Mcp](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-op-mcp.md): docs page.
 - [Oraclepack Question Responses](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-question-responses.md): docs page.
 - [Oraclepack Tickets](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-tickets.md): docs page.
-- [Oraclepack Tui](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-tui.md): docs page.
+- [Oraclepack Tui Mcp](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-tui-mcp.md): docs page.
+- [Oraclepack Tui Mcp Frontend](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/oraclepack-tui-mcp-frontend.md): docs page.
+- [Project Prompts](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/project-prompts.md): docs page.
+- [Project Scripts](https://github.com/AcidicSoil/oraclepack/blob/main/codefetch/project-scripts.md): docs page.
+
+## Frontend
+- [README](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/README.md): install & quickstart.
+- [Frontend](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/index.html): docs page.
+- [Eslint.Config](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/eslint.config.js): docs page.
+- [Oracle Packs Infographic](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/Oracle_Packs_Infographic.html): docs page.
+- [Oraclepack Dashboard](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/oraclepack_dashboard.html): docs page.
+- [Oraclepack Roadmap Infographic](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/OraclePack_Roadmap_Infographic.html): docs page.
+- [Roadmap](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/ROADMAP.md): docs page.
+- [Skill Recommendations And Links](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/Skill Recommendations and Links.md): docs page.
+- [Vite.Config](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/vite.config.ts): docs page.
+- [Agent Browser Oracle Integration Ticket](https://github.com/AcidicSoil/oraclepack/blob/main/frontend/.tickets/Agent-browser Oracle Integration_ticket.md): docs page.
 
 ## Oraclepack Mcp Server
 - [README](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/README.md): install & quickstart.
@@ -86,15 +119,3 @@
 - [Oraclepack Cli](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/oraclepack_mcp_server/oraclepack_cli.py): docs page.
 - [Requires](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/oraclepack_mcp_server.egg-info/requires.txt): docs page.
 - [Server](https://github.com/AcidicSoil/oraclepack/blob/main/oraclepack-mcp-server/oraclepack_mcp_server/server.py): docs page.
-
-## Skills
-- [Oraclepack Codebase Pack Grouped Skill](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped_skill.md): docs page.
-- [Oraclepack Codebase Pack Grouped Skill Usage Summary](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped_skill_usage_summary.md): docs page.
-- [Oraclepack Tickets Pack Grouped Skill](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped_skill.md): docs page.
-- [Oraclepack Tickets Pack Grouped Skill Usage Summary](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped_skill_usage_summary.md): docs page.
-- [Skill](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/SKILL.md): docs page.
-- [Skill](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/SKILL.md): docs page.
-- [Generate Grouped Packs](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/scripts/generate_grouped_packs.py): docs page.
-- [Generate Grouped Packs](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/scripts/generate_grouped_packs.py): docs page.
-- [Lint Attachments](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-codebase-pack-grouped/scripts/lint_attachments.py): docs page.
-- [Lint Attachments](https://github.com/AcidicSoil/oraclepack/blob/main/skills/oraclepack-tickets-pack-grouped/scripts/lint_attachments.py): docs page.

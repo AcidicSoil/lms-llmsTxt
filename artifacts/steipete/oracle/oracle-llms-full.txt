@@ -371,7 +371,7 @@ Prefer to keep Chrome entirely on the remote Mac (no DevTools tunneling, no manu
 
    - `--remote-host` points the CLI at the VM.
    - `--remote-token` matches the token printed by `oracle serve` (set `ORACLE_REMOTE_TOKEN` to avoid repeating it).
-   - You can also set defaults in `~/.oracle/config.json` (`remote.host`, `remote.token`) so you don’t need the flags; env vars still override those when present.
+   - You can also set defaults in `~/.oracle/config.json` (`browser.remoteHost`, `browser.remoteToken`) so you don’t need the flags; env vars still override those when present.
    - Cookies are **not** transferred from your laptop. The service requires the host Chrome profile to be signed in; if not, it opens chatgpt.com and exits so you can log in, then restart `oracle serve`.
 
 3. **What happens**
@@ -515,12 +515,6 @@ Oracle reads an optional per-user config from `~/.oracle/config.json`. The file 
     manualLoginCookieSync: false, // allow cookie sync even in manual-login mode
   },
 
-  // Default target for `oracle serve` remote browser runs
-  remote: {
-    host: "192.168.64.2:9473",
-    token: "c4e5f9...", // printed by `oracle serve`
-  },
-
   // Azure OpenAI defaults (only used when endpoint is set)
   azure: {
     endpoint: "https://your-resource-name.openai.azure.com/",
@@ -544,7 +538,7 @@ CLI flags → `config.json` → environment → built-in defaults.
 - `engine`, `model`, `search`, `filesReport`, `heartbeatSeconds`, and `apiBaseUrl` in `config.json` override the auto-detected values unless explicitly set on the CLI.
 - `ORACLE_ENGINE=api|browser` is a global override for engine selection (useful for MCP/Codex setups); it wins over `config.json`.
 - If `azure.endpoint` (or `--azure-endpoint`) is set, Oracle reads `AZURE_OPENAI_API_KEY` first and falls back to `OPENAI_API_KEY` for GPT models.
-- Remote browser defaults follow the same order: `--remote-host/--remote-token` win, then `browser.remoteHost` / `browser.remoteToken`, then legacy `remote.host` / `remote.token` (or `remoteHost` / `remoteToken`), then `ORACLE_REMOTE_HOST` / `ORACLE_REMOTE_TOKEN` if still unset.
+- Remote browser defaults follow the same order: `--remote-host/--remote-token` win, then `browser.remoteHost` / `browser.remoteToken` in the config, then `ORACLE_REMOTE_HOST` / `ORACLE_REMOTE_TOKEN` if still unset.
 - `OPENAI_API_KEY` only influences engine selection when neither the CLI nor `config.json` specify an engine (API when present, otherwise browser).
 - `ORACLE_NOTIFY*` env vars still layer on top of the config’s `notify` block.
 - `sessionRetentionHours` controls the default value for `--retain-hours`. When unset, `ORACLE_RETAIN_HOURS` (if present) becomes the fallback, and the CLI flag still wins over both.
@@ -568,8 +562,14 @@ Under the hood, pruning removes entire session directories (metadata + logs). Th
 ## API timeouts
 
 - `--timeout <seconds|auto>` controls the overall API deadline for a run.
+- `--http-timeout <ms|s|m|h>` overrides the HTTP client timeout for API requests (default 20m).
 - Defaults: `auto` = 60 m for `gpt-5.1-pro`; non-pro API models use `120s` if you don’t set a value.
 - Heartbeat messages print the live remaining time so you can see when the client-side deadline will fire.
+
+## Zombie/session staleness
+
+- `--zombie-timeout <ms|s|m|h>` overrides the stale-session cutoff used by `oracle status`.
+- `--zombie-last-activity` uses last log activity instead of start time to detect stale sessions.
 
 
 ## Links discovered
@@ -907,6 +907,8 @@ pnpm tsx scripts/browser-tools.ts kill --all --force   # tear down straggler Dev
 
 This mirrors Mario Zechner’s “What if you don’t need MCP?” technique and is handy when you just need a few quick interactions without spinning up additional tooling.
 
+Debug note: when you have a live ChatGPT tab open under a DevTools port and need a quick DOM dump of the last assistant turn, run `pnpm tsx scripts/debug/extract-chatgpt-response.ts <port>`.
+
 1. **Prompt Submission & Model Switching**
    - With Chrome signed in and cookie sync enabled, run  
      ```bash
@@ -1098,10 +1100,20 @@ declare module 'win-dpapi' {
 --- CHANGELOG.md ---
 # Changelog
 
-## 0.8.5 — Unreleased
+## 0.8.5 — 2026-01-19
 
 ### Added
 - Bridge: add the bridge workflow + MCP browser controls for remote ChatGPT sessions. Original PR #42 by Kyle McCleary (@kmccleary3301) — thank you!
+- CLI: add `--background`/`--no-background`, `--http-timeout`, `--zombie-timeout`, and `--zombie-last-activity` to support long-running API sessions.
+
+### Fixed
+- CLI: restore legacy `--[no-]notify`, `--[no-]notify-sound`, and `--[no-]background` flags as hidden aliases (Commander no longer accepts `[no-]` in `new Option()`).
+- Sessions: zombie detection now respects explicit timeouts and can optionally use last log activity to avoid false “zombie” status on long runs.
+- Browser: fall back to the default DevTools target if an isolated tab fails, and keep the run tab open when `--keep-browser` is set.
+- Browser: refresh long assistant responses without clobbering captured Markdown.
+
+### Changed
+- Config: remove legacy `remote.host`/`remote.token` and top-level `remoteHost`/`remoteToken`; use `browser.remoteHost`/`browser.remoteToken` or env vars.
 
 ## 0.8.4 — 2026-01-04
 
@@ -1739,6 +1751,11 @@ npx -y @steipete/oracle oracle-mcp
 | `--browser-timeout`, `--browser-input-timeout` | Control overall/browser input timeouts (supports h/m/s/ms). |
 | `--render`, `--copy` | Print and/or copy the assembled markdown bundle. |
 | `--wait` | Block for background API runs (e.g., GPT‑5.1 Pro) instead of detaching. |
+| `--timeout <seconds\|auto>` | Overall API deadline (auto = 60m for pro, 120s otherwise). |
+| `--background`, `--no-background` | Force Responses API background mode (create + retrieve) for API runs. |
+| `--http-timeout <ms\|s\|m\|h>` | HTTP client timeout (default 20m). |
+| `--zombie-timeout <ms\|s\|m\|h>` | Override stale-session cutoff used by `oracle status`. |
+| `--zombie-last-activity` | Use last log activity to detect stale sessions. |
 | `--write-output <path>` | Save only the final answer (multi-model adds `.<model>`). |
 | `--files-report` | Print per-file token usage. |
 | `--dry-run [summary\|json\|full]` | Preview without sending. |
@@ -1770,6 +1787,7 @@ Advanced flags
 | Area | Flags |
 | --- | --- |
 | Browser | `--browser-manual-login`, `--browser-thinking-time`, `--browser-timeout`, `--browser-input-timeout`, `--browser-cookie-wait`, `--browser-inline-cookies[(-file)]`, `--browser-attachments`, `--browser-inline-files`, `--browser-bundle-files`, `--browser-keep-browser`, `--browser-headless`, `--browser-hide-window`, `--browser-no-cookie-sync`, `--browser-allow-cookie-errors`, `--browser-chrome-path`, `--browser-cookie-path`, `--chatgpt-url` |
+| Run control | `--background`, `--no-background`, `--http-timeout`, `--zombie-timeout`, `--zombie-last-activity` |
 | Azure/OpenAI | `--azure-endpoint`, `--azure-deployment`, `--azure-api-version`, `--base-url` |
 
 Remote browser example
@@ -2050,6 +2068,7 @@ import {
   inferModelFromLabel,
   parseHeartbeatOption,
   parseTimeoutOption,
+  parseDurationOption,
   mergePathLikeOptions,
   dedupePathInputs,
 } from '../src/cli/options.js';
@@ -2117,6 +2136,10 @@ interface CliOptions extends OptionValues {
   engine?: EngineMode;
   browser?: boolean;
   timeout?: number | 'auto';
+  background?: boolean;
+  httpTimeout?: number;
+  zombieTimeout?: number;
+  zombieLastActivity?: boolean;
   browserChromeProfile?: string;
   browserChromePath?: string;
   browserCookiePath?: string;
@@ -2173,7 +2196,16 @@ type ResolvedCliOptions = Omit<CliOptions, 'model'> & {
 
 const VERSION = getCliVersion();
 const CLI_ENTRYPOINT = fileURLToPath(import.meta.url);
-const rawCliArgs = process.argv.slice(2);
+const LEGACY_FLAG_ALIASES = new Map<string, string>([
+  ['--[no-]notify', '--notify'],
+  ['--[no-]notify-sound', '--notify-sound'],
+  ['--[no-]background', '--background'],
+]);
+const normalizedArgv = process.argv.map((arg, index) => {
+  if (index < 2) return arg;
+  return LEGACY_FLAG_ALIASES.get(arg) ?? arg;
+});
+const rawCliArgs = normalizedArgv.slice(2);
 const userCliArgs = rawCliArgs[0] === CLI_ENTRYPOINT ? rawCliArgs.slice(1) : rawCliArgs;
 const isTty = process.stdout.isTTY;
 
@@ -2280,12 +2312,13 @@ program
   .option('--files-report', 'Show token usage per attached file (also prints automatically when files exceed the token budget).', false)
   .option('-v, --verbose', 'Enable verbose logging for all operations.', false)
   .addOption(
-    new Option('--[no-]notify', 'Desktop notification when a session finishes (default on unless CI/SSH).')
-      .default(undefined),
+    new Option('--notify', 'Desktop notification when a session finishes (default on unless CI/SSH).').default(undefined),
   )
+  .addOption(new Option('--no-notify', 'Disable desktop notifications.').default(undefined))
   .addOption(
-    new Option('--[no-]notify-sound', 'Play a notification sound on completion (default off).').default(undefined),
+    new Option('--notify-sound', 'Play a notification sound on completion (default off).').default(undefined),
   )
+  .addOption(new Option('--no-notify-sound', 'Disable notification sounds.').default(undefined))
   .addOption(
     new Option(
       '--timeout <seconds|auto>',
@@ -2293,6 +2326,26 @@ program
     )
       .argParser(parseTimeoutOption)
       .default('auto'),
+  )
+  .addOption(new Option('--background', 'Use Responses API background mode (create + retrieve) for API runs.').default(undefined))
+  .addOption(new Option('--no-background', 'Disable Responses API background mode.').default(undefined))
+  .addOption(
+    new Option('--http-timeout <ms|s|m|h>', 'HTTP client timeout for API requests (default 20m).')
+      .argParser((value) => parseDurationOption(value, 'HTTP timeout'))
+      .default(undefined),
+  )
+  .addOption(
+    new Option(
+      '--zombie-timeout <ms|s|m|h>',
+      'Override stale-session cutoff used by `oracle status` (default 60m).',
+    )
+      .argParser((value) => parseDurationOption(value, 'Zombie timeout'))
+      .default(undefined),
+  )
+  .option(
+    '--zombie-last-activity',
+    'Base stale-session detection on last log activity instead of start time.',
+    false,
   )
   .addOption(
     new Option(
@@ -2657,6 +2710,9 @@ function buildRunOptions(options: ResolvedCliOptions, overrides: Partial<RunOrac
     maxOutput: overrides.maxOutput ?? options.maxOutput,
     system: overrides.system ?? options.system,
     timeoutSeconds: overrides.timeoutSeconds ?? (options.timeout as number | 'auto' | undefined),
+    httpTimeoutMs: overrides.httpTimeoutMs ?? options.httpTimeout,
+    zombieTimeoutMs: overrides.zombieTimeoutMs ?? options.zombieTimeout,
+    zombieUseLastActivity: overrides.zombieUseLastActivity ?? options.zombieLastActivity,
     silent: overrides.silent ?? options.silent,
     search: overrides.search ?? options.search,
     preview: overrides.preview ?? undefined,
@@ -2714,6 +2770,10 @@ function buildRunOptionsFromMetadata(metadata: SessionMetadata): RunOracleOption
     apiKey: undefined,
     baseUrl: normalizeBaseUrl(stored.baseUrl),
     azure: stored.azure,
+    timeoutSeconds: stored.timeoutSeconds,
+    httpTimeoutMs: stored.httpTimeoutMs,
+    zombieTimeoutMs: stored.zombieTimeoutMs,
+    zombieUseLastActivity: stored.zombieUseLastActivity,
     sessionId: metadata.id,
     verbose: stored.verbose,
     heartbeatIntervalMs: stored.heartbeatIntervalMs,
@@ -3154,7 +3214,7 @@ async function runRootCommand(options: CliOptions): Promise<void> {
   const baseRunOptions = buildRunOptions(resolvedOptions, {
     preview: false,
     previewMode: undefined,
-    background: userConfig.background ?? resolvedOptions.background,
+    background: resolvedOptions.background ?? userConfig.background,
     baseUrl: resolvedBaseUrl,
   });
   enforceBrowserSearchFlag(baseRunOptions, sessionMode, console.log);
@@ -3397,7 +3457,7 @@ program.action(async function (this: Command) {
 });
 
 async function main(): Promise<void> {
-  const parsePromise = program.parseAsync(process.argv);
+  const parsePromise = program.parseAsync(normalizedArgv);
   const sigintPromise = once(process, 'SIGINT').then(() => 'sigint' as const);
   const result = await Promise.race([parsePromise.then(() => 'parsed' as const), sigintPromise]);
   if (result === 'sigint') {
@@ -6237,6 +6297,78 @@ async function main() {
 void main();
 
 
+--- scripts/debug/extract-chatgpt-response.ts ---
+import puppeteer from 'puppeteer-core';
+
+const port = parseInt(process.argv[2] || '52990', 10);
+
+type ExtractedMessage =
+  | { selector: string; count: number; text: string }
+  | { error: string; bodyLength: number; sample: string };
+
+async function main() {
+  const browser = await puppeteer.connect({
+    browserURL: `http://127.0.0.1:${port}`,
+    defaultViewport: null,
+  });
+
+  const pages = await browser.pages();
+  let targetPage: (typeof pages)[number] | null = null;
+
+  for (const page of pages) {
+    const url = page.url();
+    if (url.includes('chatgpt.com/c/')) {
+      targetPage = page;
+      break;
+    }
+  }
+
+  if (!targetPage) {
+    console.error('ChatGPT conversation page not found');
+    process.exit(1);
+  }
+
+  console.error('Found page:', await targetPage.url());
+
+  // Extract the last assistant message
+  const content = (await targetPage.evaluate(() => {
+    // Try multiple selectors for ChatGPT's assistant messages
+    const selectors = [
+      '[data-message-author-role="assistant"] .markdown',
+      '[data-message-author-role="assistant"]',
+      '.agent-turn .markdown',
+      '.agent-turn',
+    ];
+
+    for (const selector of selectors) {
+      const elements = document.querySelectorAll(selector);
+      if (elements.length > 0) {
+        const lastEl = elements[elements.length - 1] as HTMLElement;
+        return {
+          selector,
+          count: elements.length,
+          text: lastEl.innerText,
+        };
+      }
+    }
+
+    // Debug: show what's on the page
+    const body = document.body.innerHTML;
+    return { error: 'No messages found', bodyLength: body.length, sample: body.slice(0, 2000) };
+  })) as ExtractedMessage;
+
+  if ('error' in content) {
+    console.error('Error:', JSON.stringify(content, null, 2));
+    process.exit(1);
+  }
+
+  console.log(content.text);
+  browser.disconnect();
+}
+
+main().catch(console.error);
+
+
 --- src/browserMode.ts ---
 export type {
   BrowserAutomationConfig,
@@ -6277,6 +6409,12 @@ export interface BrowserConfigDefaults {
   chromeCookiePath?: string | null;
   chatgptUrl?: string | null;
   url?: string;
+  /** Delegate browser automation to a remote `oracle serve` instance (host:port). */
+  remoteHost?: string | null;
+  /** Access token clients must provide to the remote `oracle serve` instance. */
+  remoteToken?: string | null;
+  /** Optional metadata for the SSH reverse-tunnel that makes remoteHost reachable. */
+  remoteViaSshReverseTunnel?: RemoteViaSshReverseTunnelConfig | null;
   timeoutMs?: number;
   debugPort?: number | null;
   inputTimeoutMs?: number;
@@ -6291,12 +6429,6 @@ export interface BrowserConfigDefaults {
   manualLogin?: boolean;
   /** Manual-login profile directory override (also available via ORACLE_BROWSER_PROFILE_DIR). */
   manualLoginProfileDir?: string | null;
-  /** Delegate browser automation to a remote `oracle serve` instance (host:port). */
-  remoteHost?: string | null;
-  /** Access token clients must provide to the remote `oracle serve` instance. */
-  remoteToken?: string | null;
-  /** Optional metadata for the SSH reverse-tunnel that makes remoteHost reachable. */
-  remoteViaSshReverseTunnel?: RemoteViaSshReverseTunnelConfig | null;
 }
 
 export interface AzureConfig {
@@ -6313,11 +6445,6 @@ export interface RemoteViaSshReverseTunnelConfig {
   extraArgs?: string;
 }
 
-export interface RemoteServiceConfig {
-  host?: string;
-  token?: string;
-}
-
 export interface UserConfig {
   engine?: EnginePreference;
   model?: string;
@@ -6331,9 +6458,6 @@ export interface UserConfig {
   apiBaseUrl?: string;
   azure?: AzureConfig;
   sessionRetentionHours?: number;
-  remote?: RemoteServiceConfig;
-  remoteHost?: string;
-  remoteToken?: string;
 }
 
 function resolveConfigPath(): string {
@@ -6477,7 +6601,7 @@ import type { WriteStream } from 'node:fs';
 import net from 'node:net';
 import type { BrowserModelStrategy, CookieParam } from './browser/types.js';
 import type { TransportFailureReason, AzureOptions, ModelName, ThinkingTimeLevel } from './oracle.js';
-import { DEFAULT_MODEL } from './oracle.js';
+import { DEFAULT_MODEL, formatElapsed } from './oracle.js';
 import { safeModelSlug } from './oracle/modelResolver.js';
 import { getOracleHomeDir } from './oracleHome.js';
 
@@ -6571,6 +6695,10 @@ export interface StoredRunOptions {
   effectiveModelId?: string;
   renderPlain?: boolean;
   writeOutputPath?: string;
+  timeoutSeconds?: number | 'auto';
+  httpTimeoutMs?: number;
+  zombieTimeoutMs?: number;
+  zombieUseLastActivity?: boolean;
 }
 
 export interface SessionMetadata {
@@ -6868,6 +6996,10 @@ export async function initializeSession(
       search: options.search,
       baseUrl: options.baseUrl,
       azure: options.azure,
+      timeoutSeconds: options.timeoutSeconds,
+      httpTimeoutMs: options.httpTimeoutMs,
+      zombieTimeoutMs: options.zombieTimeoutMs,
+      zombieUseLastActivity: options.zombieUseLastActivity,
       writeOutputPath: options.writeOutputPath,
     },
   };
@@ -7140,7 +7272,7 @@ export async function getSessionPaths(sessionId: string): Promise<{
 }
 
 async function markZombie(meta: SessionMetadata, { persist }: { persist: boolean }): Promise<SessionMetadata> {
-  if (!isZombie(meta)) {
+  if (!(await isZombie(meta))) {
     return meta;
   }
   if (meta.mode === 'browser') {
@@ -7159,10 +7291,11 @@ async function markZombie(meta: SessionMetadata, { persist }: { persist: boolean
       }
     }
   }
+  const maxAgeMs = resolveZombieMaxAgeMs(meta);
   const updated: SessionMetadata = {
     ...meta,
     status: 'error',
-    errorMessage: 'Session marked as zombie (>60m stale)',
+    errorMessage: `Session marked as zombie (> ${formatElapsed(maxAgeMs)} stale)`,
     completedAt: new Date().toISOString(),
   };
   if (persist) {
@@ -7210,7 +7343,7 @@ async function markDeadBrowser(meta: SessionMetadata, { persist }: { persist: bo
   return updated;
 }
 
-function isZombie(meta: SessionMetadata): boolean {
+async function isZombie(meta: SessionMetadata): Promise<boolean> {
   if (meta.status !== 'running') {
     return false;
   }
@@ -7222,7 +7355,61 @@ function isZombie(meta: SessionMetadata): boolean {
   if (Number.isNaN(startedMs)) {
     return false;
   }
-  return Date.now() - startedMs > ZOMBIE_MAX_AGE_MS;
+  const useLastActivity = meta.options?.zombieUseLastActivity === true;
+  const lastActivityMs = useLastActivity ? await getLastActivityMs(meta) : null;
+  const anchorMs = lastActivityMs ?? startedMs;
+  const maxAgeMs = resolveZombieMaxAgeMs(meta);
+  return Date.now() - anchorMs > maxAgeMs;
+}
+
+function resolveZombieMaxAgeMs(meta: SessionMetadata): number {
+  const explicit = meta.options?.zombieTimeoutMs;
+  const hasExplicit = typeof explicit === 'number' && Number.isFinite(explicit) && explicit > 0;
+  let maxAgeMs = hasExplicit ? explicit : ZOMBIE_MAX_AGE_MS;
+  if (!hasExplicit) {
+    const timeoutSeconds = meta.options?.timeoutSeconds;
+    if (typeof timeoutSeconds === 'number' && Number.isFinite(timeoutSeconds) && timeoutSeconds > 0) {
+      const timeoutMs = timeoutSeconds * 1000;
+      if (timeoutMs > maxAgeMs) {
+        maxAgeMs = timeoutMs;
+      }
+    }
+  }
+  return maxAgeMs;
+}
+
+async function getLastActivityMs(meta: SessionMetadata): Promise<number | null> {
+  const candidates = new Set<string>();
+  candidates.add(logPath(meta.id));
+  const modelNames = new Set<string>();
+  if (typeof meta.model === 'string' && meta.model.length > 0) {
+    modelNames.add(meta.model);
+  }
+  if (Array.isArray(meta.models)) {
+    for (const entry of meta.models) {
+      if (entry?.model) {
+        modelNames.add(entry.model);
+      }
+    }
+  }
+  for (const modelName of modelNames) {
+    candidates.add(modelLogPath(meta.id, modelName));
+  }
+  let latest = 0;
+  let sawStat = false;
+  for (const candidate of candidates) {
+    try {
+      const stats = await fs.stat(candidate);
+      const mtimeMs = Number.isFinite(stats.mtimeMs) ? stats.mtimeMs : stats.mtime.getTime();
+      if (Number.isFinite(mtimeMs)) {
+        latest = Math.max(latest, mtimeMs);
+        sawStat = true;
+      }
+    } catch {
+      // ignore missing logs; fallback to startedAt
+    }
+  }
+  return sawStat ? latest : null;
 }
 
 function isProcessAlive(pid?: number): boolean {
@@ -7466,7 +7653,6 @@ import {
 } from './errors.js';
 import type { ClientLike, OracleResponse, OracleRequestBody } from './types.js';
 
-const BACKGROUND_MAX_WAIT_MS = 30 * 60 * 1000;
 const BACKGROUND_POLL_INTERVAL_MS = 5000;
 const BACKGROUND_RETRY_BASE_MS = 3000;
 const BACKGROUND_RETRY_MAX_MS = 15000;
@@ -7498,7 +7684,7 @@ export async function executeBackgroundResponse(params: BackgroundExecutionParam
   log(
     chalk.dim(
       `API scheduled background response ${responseId} (status=${initialResponse.status ?? 'unknown'}). Monitoring up to ${Math.round(
-        BACKGROUND_MAX_WAIT_MS / 60000,
+        maxWaitMs / 60000,
       )} minutes for completion...`,
     ),
   );
@@ -7995,7 +8181,7 @@ describe('loadUserConfig', () => {
         engine: "browser",
         notify: { sound: true },
         heartbeatSeconds: 15,
-        remote: { host: "host:1234", token: "abc" },
+        browser: { remoteHost: "host:1234", remoteToken: "abc" },
       }`,
       'utf8',
     );
@@ -8005,25 +8191,24 @@ describe('loadUserConfig', () => {
     expect(result.config.engine).toBe('browser');
     expect(result.config.notify?.sound).toBe(true);
     expect(result.config.heartbeatSeconds).toBe(15);
-    expect(result.config.remote?.host).toBe('host:1234');
-    expect(result.config.remote?.token).toBe('abc');
+    expect(result.config.browser?.remoteHost).toBe('host:1234');
+    expect(result.config.browser?.remoteToken).toBe('abc');
   });
 
-  it('supports top-level remoteHost/remoteToken aliases', async () => {
+  it('supports browser remote defaults', async () => {
     const configPath = path.join(tempDir, 'config.json');
     await fs.writeFile(
       configPath,
       `{
-        remoteHost: "alias:9999",
-        remoteToken: "secret"
+        browser: { remoteHost: "alias:9999", remoteToken: "secret" }
       }`,
       'utf8',
     );
 
     const result = await loadUserConfig();
     expect(result.loaded).toBe(true);
-    expect(result.config.remoteHost).toBe('alias:9999');
-    expect(result.config.remoteToken).toBe('secret');
+    expect(result.config.browser?.remoteHost).toBe('alias:9999');
+    expect(result.config.browser?.remoteToken).toBe('secret');
   });
 
   it('returns empty config when file is missing', async () => {

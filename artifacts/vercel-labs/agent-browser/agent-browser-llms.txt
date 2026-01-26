@@ -1,24 +1,32 @@
 # Agent Browser
 
-> The primary purpose of agent-browser is to provide AI agents with a fast, reliable, and deterministic interface for web automation. It enables agents to navigate, interact with, and extract data from web pages using semantic selectors and snapshot-based element references, which are optimized for LLM-driven workflows. The tool also supports advanced features like session isolation, streaming previews, and CDP connections, making it suitable for complex automation tasks including API testing, login flows, and real-time browser interactions.
+> The project aims to empower AI agents with reliable, fast, and scalable browser automation capabilities. By providing a native Rust CLI with rich command support (including semantic selectors, session management, and cloud providers), it enables agents to navigate, interact, and extract data from websites programmatically — especially suited for tasks like form automation, UI testing, or agent-driven web browsing. It also supports persistent state across sessions and integrates with cloud browser infrastructure for serverless or CI environments.
 
 **Remember:**
-- Agent Browser Automation
-- Semantic Locators (role, text, label, testid)
-- Snapshot-based Element References (@e1, @e2)
-- Rust CLI + Node.js Daemon Architecture
-- Headless vs Headed Mode
-- CDP (Chrome DevTools Protocol) Mode
+- Agent Mode
+- Semantic Locators (refs)
+- Snapshot Tree
+- Session Isolation
+- Persistent Profiles
+- CDP Connection
 
 ## Docs
 - [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.
 - [Next.Config](https://github.com/vercel-labs/agent-browser/blob/main/docs/next.config.ts): docs page.
 
+## API
+- [Authentication](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/authentication.md): API reference.
+- [Proxy Support](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/proxy-support.md): API reference.
+- [Session Management](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/session-management.md): API reference.
+- [Snapshot Refs](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/snapshot-refs.md): API reference.
+- [Video Recording](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/video-recording.md): API reference.
+
 ## Optional
+- [Changelog](https://github.com/vercel-labs/agent-browser/blob/main/CHANGELOG.md): version history.
+- [README](https://github.com/vercel-labs/agent-browser/blob/main/.changeset/README.md): install & quickstart.
 - [Agents](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md): docs page.
 - [README](https://github.com/vercel-labs/agent-browser/blob/main/README.md): docs page.
 - [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
-- [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.
 - [Vitest.Config](https://github.com/vercel-labs/agent-browser/blob/main/vitest.config.ts): docs page.
 
 ## Scripts
@@ -31,8 +39,12 @@
 - [Browser](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.ts): docs page.
 - [Browser.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.test.ts): docs page.
 - [Daemon](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.ts): docs page.
+- [Daemon.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.test.ts): docs page.
 - [Protocol](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.ts): docs page.
 - [Protocol.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.test.ts): docs page.
 - [Snapshot](https://github.com/vercel-labs/agent-browser/blob/main/src/snapshot.ts): docs page.
 - [Stream Server](https://github.com/vercel-labs/agent-browser/blob/main/src/stream-server.ts): docs page.
-- [Types](https://github.com/vercel-labs/agent-browser/blob/main/src/types.ts): docs page.
+
+## Test
+- [Launch Options.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/launch-options.test.ts): docs page.
+- [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.

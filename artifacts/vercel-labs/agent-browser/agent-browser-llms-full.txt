@@ -34,7 +34,7 @@ const packageJson = JSON.parse(
 const version = packageJson.version;
 
 // GitHub release URL
-const GITHUB_REPO = 'anthropics/agent-browser'; // Update this to your actual repo
+const GITHUB_REPO = 'vercel-labs/agent-browser';
 const DOWNLOAD_URL = `https://github.com/${GITHUB_REPO}/releases/download/v${version}/${binaryName}`;
 
 async function downloadFile(url, dest) {
@@ -72,7 +72,11 @@ async function downloadFile(url, dest) {
 async function main() {
   // Check if binary already exists
   if (existsSync(binaryPath)) {
-    console.log(`✓ Native binary already exists: ${binaryName}`);
+    // Ensure binary is executable (npm doesn't preserve execute bit)
+    if (platform() !== 'win32') {
+      chmodSync(binaryPath, 0o755);
+    }
+    console.log(`✓ Native binary ready: ${binaryName}`);
     return;
   }
 
@@ -128,6 +132,1008 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 
+
+--- skills/agent-browser/references/authentication.md ---
+# Authentication Patterns
+
+Patterns for handling login flows, session persistence, and authenticated browsing.
+
+## Basic Login Flow
+
+```bash
+# Navigate to login page
+agent-browser open https://app.example.com/login
+agent-browser wait --load networkidle
+
+# Get form elements
+agent-browser snapshot -i
+# Output: @e1 [input type="email"], @e2 [input type="password"], @e3 [button] "Sign In"
+
+# Fill credentials
+agent-browser fill @e1 "user@example.com"
+agent-browser fill @e2 "password123"
+
+# Submit
+agent-browser click @e3
+agent-browser wait --load networkidle
+
+# Verify login succeeded
+agent-browser get url  # Should be dashboard, not login
+```
+
+## Saving Authentication State
+
+After logging in, save state for reuse:
+
+```bash
+# Login first (see above)
+agent-browser open https://app.example.com/login
+agent-browser snapshot -i
+agent-browser fill @e1 "user@example.com"
+agent-browser fill @e2 "password123"
+agent-browser click @e3
+agent-browser wait --url "**/dashboard"
+
+# Save authenticated state
+agent-browser state save ./auth-state.json
+```
+
+## Restoring Authentication
+
+Skip login by loading saved state:
+
+```bash
+# Load saved auth state
+agent-browser state load ./auth-state.json
+
+# Navigate directly to protected page
+agent-browser open https://app.example.com/dashboard
+
+# Verify authenticated
+agent-browser snapshot -i
+```
+
+## OAuth / SSO Flows
+
+For OAuth redirects:
+
+```bash
+# Start OAuth flow
+agent-browser open https://app.example.com/auth/google
+
+# Handle redirects automatically
+agent-browser wait --url "**/accounts.google.com**"
+agent-browser snapshot -i
+
+# Fill Google credentials
+agent-browser fill @e1 "user@gmail.com"
+agent-browser click @e2  # Next button
+agent-browser wait 2000
+agent-browser snapshot -i
+agent-browser fill @e3 "password"
+agent-browser click @e4  # Sign in
+
+# Wait for redirect back
+agent-browser wait --url "**/app.example.com**"
+agent-browser state save ./oauth-state.json
+```
+
+## Two-Factor Authentication
+
+Handle 2FA with manual intervention:
+
+```bash
+# Login with credentials
+agent-browser open https://app.example.com/login --headed  # Show browser
+agent-browser snapshot -i
+agent-browser fill @e1 "user@example.com"
+agent-browser fill @e2 "password123"
+agent-browser click @e3
+
+# Wait for user to complete 2FA manually
+echo "Complete 2FA in the browser window..."
+agent-browser wait --url "**/dashboard" --timeout 120000
+
+# Save state after 2FA
+agent-browser state save ./2fa-state.json
+```
+
+## HTTP Basic Auth
+
+For sites using HTTP Basic Authentication:
+
+```bash
+# Set credentials before navigation
+agent-browser set credentials username password
+
+# Navigate to protected resource
+agent-browser open https://protected.example.com/api
+```
+
+## Cookie-Based Auth
+
+Manually set authentication cookies:
+
+```bash
+# Set auth cookie
+agent-browser cookies set session_token "abc123xyz"
+
+# Navigate to protected page
+agent-browser open https://app.example.com/dashboard
+```
+
+## Token Refresh Handling
+
+For sessions with expiring tokens:
+
+```bash
+#!/bin/bash
+# Wrapper that handles token refresh
+
+STATE_FILE="./auth-state.json"
+
+# Try loading existing state
+if [[ -f "$STATE_FILE" ]]; then
+    agent-browser state load "$STATE_FILE"
+    agent-browser open https://app.example.com/dashboard
+
+    # Check if session is still valid
+    URL=$(agent-browser get url)
+    if [[ "$URL" == *"/login"* ]]; then
+        echo "Session expired, re-authenticating..."
+        # Perform fresh login
+        agent-browser snapshot -i
+        agent-browser fill @e1 "$USERNAME"
+        agent-browser fill @e2 "$PASSWORD"
+        agent-browser click @e3
+        agent-browser wait --url "**/dashboard"
+        agent-browser state save "$STATE_FILE"
+    fi
+else
+    # First-time login
+    agent-browser open https://app.example.com/login
+    # ... login flow ...
+fi
+```
+
+## Security Best Practices
+
+1. **Never commit state files** - They contain session tokens
+   ```bash
+   echo "*.auth-state.json" >> .gitignore
+   ```
+
+2. **Use environment variables for credentials**
+   ```bash
+   agent-browser fill @e1 "$APP_USERNAME"
+   agent-browser fill @e2 "$APP_PASSWORD"
+   ```
+
+3. **Clean up after automation**
+   ```bash
+   agent-browser cookies clear
+   rm -f ./auth-state.json
+   ```
+
+4. **Use short-lived sessions for CI/CD**
+   ```bash
+   # Don't persist state in CI
+   agent-browser open https://app.example.com/login
+   # ... login and perform actions ...
+   agent-browser close  # Session ends, nothing persisted
+   ```
+
+
+--- skills/agent-browser/references/proxy-support.md ---
+# Proxy Support
+
+Configure proxy servers for browser automation, useful for geo-testing, rate limiting avoidance, and corporate environments.
+
+## Basic Proxy Configuration
+
+Set proxy via environment variable before starting:
+
+```bash
+# HTTP proxy
+export HTTP_PROXY="http://proxy.example.com:8080"
+agent-browser open https://example.com
+
+# HTTPS proxy
+export HTTPS_PROXY="https://proxy.example.com:8080"
+agent-browser open https://example.com
+
+# Both
+export HTTP_PROXY="http://proxy.example.com:8080"
+export HTTPS_PROXY="http://proxy.example.com:8080"
+agent-browser open https://example.com
+```
+
+## Authenticated Proxy
+
+For proxies requiring authentication:
+
+```bash
+# Include credentials in URL
+export HTTP_PROXY="http://username:password@proxy.example.com:8080"
+agent-browser open https://example.com
+```
+
+## SOCKS Proxy
+
+```bash
+# SOCKS5 proxy
+export ALL_PROXY="socks5://proxy.example.com:1080"
+agent-browser open https://example.com
+
+# SOCKS5 with auth
+export ALL_PROXY="socks5://user:pass@proxy.example.com:1080"
+agent-browser open https://example.com
+```
+
+## Proxy Bypass
+
+Skip proxy for specific domains:
+
+```bash
+# Bypass proxy for local addresses
+export NO_PROXY="localhost,127.0.0.1,.internal.company.com"
+agent-browser open https://internal.company.com  # Direct connection
+agent-browser open https://external.com          # Via proxy
+```
+
+## Common Use Cases
+
+### Geo-Location Testing
+
+```bash
+#!/bin/bash
+# Test site from different regions using geo-located proxies
+
+PROXIES=(
+    "http://us-proxy.example.com:8080"
+    "http://eu-proxy.example.com:8080"
+    "http://asia-proxy.example.com:8080"
+)
+
+for proxy in "${PROXIES[@]}"; do
+    export HTTP_PROXY="$proxy"
+    export HTTPS_PROXY="$proxy"
+
+    region=$(echo "$proxy" | grep -oP '^\w+-\w+')
+    echo "Testing from: $region"
+
+    agent-browser --session "$region" open https://example.com
+    agent-browser --session "$region" screenshot "./screenshots/$region.png"
+    agent-browser --session "$region" close
+done
+```
+
+### Rotating Proxies for Scraping
+
+```bash
+#!/bin/bash
+# Rotate through proxy list to avoid rate limiting
+
+PROXY_LIST=(
+    "http://proxy1.example.com:8080"
+    "http://proxy2.example.com:8080"
+    "http://proxy3.example.com:8080"
+)
+
+URLS=(
+    "https://site.com/page1"
+    "https://site.com/page2"
+    "https://site.com/page3"
+)
+
+for i in "${!URLS[@]}"; do
+    proxy_index=$((i % ${#PROXY_LIST[@]}))
+    export HTTP_PROXY="${PROXY_LIST[$proxy_index]}"
+    export HTTPS_PROXY="${PROXY_LIST[$proxy_index]}"
+
+    agent-browser open "${URLS[$i]}"
+    agent-browser get text body > "output-$i.txt"
+    agent-browser close
+
+    sleep 1  # Polite delay
+done
+```
+
+### Corporate Network Access
+
+```bash
+#!/bin/bash
+# Access internal sites via corporate proxy
+
+export HTTP_PROXY="http://corpproxy.company.com:8080"
+export HTTPS_PROXY="http://corpproxy.company.com:8080"
+export NO_PROXY="localhost,127.0.0.1,.company.com"
+
+# External sites go through proxy
+agent-browser open https://external-vendor.com
+
+# Internal sites bypass proxy
+agent-browser open https://intranet.company.com
+```
+
+## Verifying Proxy Connection
+
+```bash
+# Check your apparent IP
+agent-browser open https://httpbin.org/ip
+agent-browser get text body
+# Should show proxy's IP, not your real IP
+```
+
+## Troubleshooting
+
+### Proxy Connection Failed
+
+```bash
+# Test proxy connectivity first
+curl -x http://proxy.example.com:8080 https://httpbin.org/ip
+
+# Check if proxy requires auth
+export HTTP_PROXY="http://user:pass@proxy.example.com:8080"
+```
+
+### SSL/TLS Errors Through Proxy
+
+Some proxies perform SSL inspection. If you encounter certificate errors:
+
+```bash
+# For testing only - not recommended for production
+agent-browser open https://example.com --ignore-https-errors
+```
+
+### Slow Performance
+
+```bash
+# Use proxy only when necessary
+export NO_PROXY="*.cdn.com,*.static.com"  # Direct CDN access
+```
+
+## Best Practices
+
+1. **Use environment variables** - Don't hardcode proxy credentials
+2. **Set NO_PROXY appropriately** - Avoid routing local traffic through proxy
+3. **Test proxy before automation** - Verify connectivity with simple requests
+4. **Handle proxy failures gracefully** - Implement retry logic for unstable proxies
+5. **Rotate proxies for large scraping jobs** - Distribute load and avoid bans
+
+
+--- skills/agent-browser/references/session-management.md ---
+# Session Management
+
+Run multiple isolated browser sessions concurrently with state persistence.
+
+## Named Sessions
+
+Use `--session` flag to isolate browser contexts:
+
+```bash
+# Session 1: Authentication flow
+agent-browser --session auth open https://app.example.com/login
+
+# Session 2: Public browsing (separate cookies, storage)
+agent-browser --session public open https://example.com
+
+# Commands are isolated by session
+agent-browser --session auth fill @e1 "user@example.com"
+agent-browser --session public get text body
+```
+
+## Session Isolation Properties
+
+Each session has independent:
+- Cookies
+- LocalStorage / SessionStorage
+- IndexedDB
+- Cache
+- Browsing history
+- Open tabs
+
+## Session State Persistence
+
+### Save Session State
+
+```bash
+# Save cookies, storage, and auth state
+agent-browser state save /path/to/auth-state.json
+```
+
+### Load Session State
+
+```bash
+# Restore saved state
+agent-browser state load /path/to/auth-state.json
+
+# Continue with authenticated session
+agent-browser open https://app.example.com/dashboard
+```
+
+### State File Contents
+
+```json
+{
+  "cookies": [...],
+  "localStorage": {...},
+  "sessionStorage": {...},
+  "origins": [...]
+}
+```
+
+## Common Patterns
+
+### Authenticated Session Reuse
+
+```bash
+#!/bin/bash
+# Save login state once, reuse many times
+
+STATE_FILE="/tmp/auth-state.json"
+
+# Check if we have saved state
+if [[ -f "$STATE_FILE" ]]; then
+    agent-browser state load "$STATE_FILE"
+    agent-browser open https://app.example.com/dashboard
+else
+    # Perform login
+    agent-browser open https://app.example.com/login
+    agent-browser snapshot -i
+    agent-browser fill @e1 "$USERNAME"
+    agent-browser fill @e2 "$PASSWORD"
+    agent-browser click @e3
+    agent-browser wait --load networkidle
+
+    # Save for future use
+    agent-browser state save "$STATE_FILE"
+fi
+```
+
+### Concurrent Scraping
+
+```bash
+#!/bin/bash
+# Scrape multiple sites concurrently
+
+# Start all sessions
+agent-browser --session site1 open https://site1.com &
+agent-browser --session site2 open https://site2.com &
+agent-browser --session site3 open https://site3.com &
+wait
+
+# Extract from each
+agent-browser --session site1 get text body > site1.txt
+agent-browser --session site2 get text body > site2.txt
+agent-browser --session site3 get text body > site3.txt
+
+# Cleanup
+agent-browser --session site1 close
+agent-browser --session site2 close
+agent-browser --session site3 close
+```
+
+### A/B Testing Sessions
+
+```bash
+# Test different user experiences
+agent-browser --session variant-a open "https://app.com?variant=a"
+agent-browser --session variant-b open "https://app.com?variant=b"
+
+# Compare
+agent-browser --session variant-a screenshot /tmp/variant-a.png
+agent-browser --session variant-b screenshot /tmp/variant-b.png
+```
+
+## Default Session
+
+When `--session` is omitted, commands use the default session:
+
+```bash
+# These use the same default session
+agent-browser open https://example.com
+agent-browser snapshot -i
+agent-browser close  # Closes default session
+```
+
+## Session Cleanup
+
+```bash
+# Close specific session
+agent-browser --session auth close
+
+# List active sessions
+agent-browser session list
+```
+
+## Best Practices
+
+### 1. Name Sessions Semantically
+
+```bash
+# GOOD: Clear purpose
+agent-browser --session github-auth open https://github.com
+agent-browser --session docs-scrape open https://docs.example.com
+
+# AVOID: Generic names
+agent-browser --session s1 open https://github.com
+```
+
+### 2. Always Clean Up
+
+```bash
+# Close sessions when done
+agent-browser --session auth close
+agent-browser --session scrape close
+```
+
+### 3. Handle State Files Securely
+
+```bash
+# Don't commit state files (contain auth tokens!)
+echo "*.auth-state.json" >> .gitignore
+
+# Delete after use
+rm /tmp/auth-state.json
+```
+
+### 4. Timeout Long Sessions
+
+```bash
+# Set timeout for automated scripts
+timeout 60 agent-browser --session long-task get text body
+```
+
+
+--- skills/agent-browser/references/snapshot-refs.md ---
+# Snapshot + Refs Workflow
+
+The core innovation of agent-browser: compact element references that reduce context usage dramatically for AI agents.
+
+## How It Works
+
+### The Problem
+Traditional browser automation sends full DOM to AI agents:
+```
+Full DOM/HTML sent → AI parses → Generates CSS selector → Executes action
+~3000-5000 tokens per interaction
+```
+
+### The Solution
+agent-browser uses compact snapshots with refs:
+```
+Compact snapshot → @refs assigned → Direct ref interaction
+~200-400 tokens per interaction
+```
+
+## The Snapshot Command
+
+```bash
+# Basic snapshot (shows page structure)
+agent-browser snapshot
+
+# Interactive snapshot (-i flag) - RECOMMENDED
+agent-browser snapshot -i
+```
+
+### Snapshot Output Format
+
+```
+Page: Example Site - Home
+URL: https://example.com
+
+@e1 [header]
+  @e2 [nav]
+    @e3 [a] "Home"
+    @e4 [a] "Products"
+    @e5 [a] "About"
+  @e6 [button] "Sign In"
+
+@e7 [main]
+  @e8 [h1] "Welcome"
+  @e9 [form]
+    @e10 [input type="email"] placeholder="Email"
+    @e11 [input type="password"] placeholder="Password"
+    @e12 [button type="submit"] "Log In"
+
+@e13 [footer]
+  @e14 [a] "Privacy Policy"
+```
+
+## Using Refs
+
+Once you have refs, interact directly:
+
+```bash
+# Click the "Sign In" button
+agent-browser click @e6
+
+# Fill email input
+agent-browser fill @e10 "user@example.com"
+
+# Fill password
+agent-browser fill @e11 "password123"
+
+# Submit the form
+agent-browser click @e12
+```
+
+## Ref Lifecycle
+
+**IMPORTANT**: Refs are invalidated when the page changes!
+
+```bash
+# Get initial snapshot
+agent-browser snapshot -i
+# @e1 [button] "Next"
+
+# Click triggers page change
+agent-browser click @e1
+
+# MUST re-snapshot to get new refs!
+agent-browser snapshot -i
+# @e1 [h1] "Page 2"  ← Different element now!
+```
+
+## Best Practices
+
+### 1. Always Snapshot Before Interacting
+
+```bash
+# CORRECT
+agent-browser open https://example.com
+agent-browser snapshot -i          # Get refs first
+agent-browser click @e1            # Use ref
+
+# WRONG
+agent-browser open https://example.com
+agent-browser click @e1            # Ref doesn't exist yet!
+```
+
+### 2. Re-Snapshot After Navigation
+
+```bash
+agent-browser click @e5            # Navigates to new page
+agent-browser snapshot -i          # Get new refs
+agent-browser click @e1            # Use new refs
+```
+
+### 3. Re-Snapshot After Dynamic Changes
+
+```bash
+agent-browser click @e1            # Opens dropdown
+agent-browser snapshot -i          # See dropdown items
+agent-browser click @e7            # Select item
+```
+
+### 4. Snapshot Specific Regions
+
+For complex pages, snapshot specific areas:
+
+```bash
+# Snapshot just the form
+agent-browser snapshot @e9
+```
+
+## Ref Notation Details
+
+```
+@e1 [tag type="value"] "text content" placeholder="hint"
+│    │   │             │               │
+│    │   │             │               └─ Additional attributes
+│    │   │             └─ Visible text
+│    │   └─ Key attributes shown
+│    └─ HTML tag name
+└─ Unique ref ID
+```
+
+### Common Patterns
+
+```
+@e1 [button] "Submit"                    # Button with text
+@e2 [input type="email"]                 # Email input
+@e3 [input type="password"]              # Password input
+@e4 [a href="/page"] "Link Text"         # Anchor link
+@e5 [select]                             # Dropdown
+@e6 [textarea] placeholder="Message"     # Text area
+@e7 [div class="modal"]                  # Container (when relevant)
+@e8 [img alt="Logo"]                     # Image
+@e9 [checkbox] checked                   # Checked checkbox
+@e10 [radio] selected                    # Selected radio
+```
+
+## Troubleshooting
+
+### "Ref not found" Error
+
+```bash
+# Ref may have changed - re-snapshot
+agent-browser snapshot -i
+```
+
+### Element Not Visible in Snapshot
+
+```bash
+# Scroll to reveal element
+agent-browser scroll --bottom
+agent-browser snapshot -i
+
+# Or wait for dynamic content
+agent-browser wait 1000
+agent-browser snapshot -i
+```
+
+### Too Many Elements
+
+```bash
+# Snapshot specific container
+agent-browser snapshot @e5
+
+# Or use get text for content-only extraction
+agent-browser get text @e5
+```
+
+
+--- skills/agent-browser/references/video-recording.md ---
+# Video Recording
+
+Capture browser automation sessions as video for debugging, documentation, or verification.
+
+## Basic Recording
+
+```bash
+# Start recording
+agent-browser record start ./demo.webm
+
+# Perform actions
+agent-browser open https://example.com
+agent-browser snapshot -i
+agent-browser click @e1
+agent-browser fill @e2 "test input"
+
+# Stop and save
+agent-browser record stop
+```
+
+## Recording Commands
+
+```bash
+# Start recording to file
+agent-browser record start ./output.webm
+
+# Stop current recording
+agent-browser record stop
+
+# Restart with new file (stops current + starts new)
+agent-browser record restart ./take2.webm
+```
+
+## Use Cases
+
+### Debugging Failed Automation
+
+```bash
+#!/bin/bash
+# Record automation for debugging
+
+agent-browser record start ./debug-$(date +%Y%m%d-%H%M%S).webm
+
+# Run your automation
+agent-browser open https://app.example.com
+agent-browser snapshot -i
+agent-browser click @e1 || {
+    echo "Click failed - check recording"
+    agent-browser record stop
+    exit 1
+}
+
+agent-browser record stop
+```
+
+### Documentation Generation
+
+```bash
+#!/bin/bash
+# Record workflow for documentation
+
+agent-browser record start ./docs/how-to-login.webm
+
+agent-browser open https://app.example.com/login
+agent-browser wait 1000  # Pause for visibility
+
+agent-browser snapshot -i
+agent-browser fill @e1 "demo@example.com"
+agent-browser wait 500
+
+agent-browser fill @e2 "password"
+agent-browser wait 500
+
+agent-browser click @e3
+agent-browser wait --load networkidle
+agent-browser wait 1000  # Show result
+
+agent-browser record stop
+```
+
+### CI/CD Test Evidence
+
+```bash
+#!/bin/bash
+# Record E2E test runs for CI artifacts
+
+TEST_NAME="${1:-e2e-test}"
+RECORDING_DIR="./test-recordings"
+mkdir -p "$RECORDING_DIR"
+
+agent-browser record start "$RECORDING_DIR/$TEST_NAME-$(date +%s).webm"
+
+# Run test
+if run_e2e_test; then
+    echo "Test passed"
+else
+    echo "Test failed - recording saved"
+fi
+
+agent-browser record stop
+```
+
+## Best Practices
+
+### 1. Add Pauses for Clarity
+
+```bash
+# Slow down for human viewing
+agent-browser click @e1
+agent-browser wait 500  # Let viewer see result
+```
+
+### 2. Use Descriptive Filenames
+
+```bash
+# Include context in filename
+agent-browser record start ./recordings/login-flow-2024-01-15.webm
+agent-browser record start ./recordings/checkout-test-run-42.webm
+```
+
+### 3. Handle Recording in Error Cases
+
+```bash
+#!/bin/bash
+set -e
+
+cleanup() {
+    agent-browser record stop 2>/dev/null || true
+    agent-browser close 2>/dev/null || true
+}
+trap cleanup EXIT
+
+agent-browser record start ./automation.webm
+# ... automation steps ...
+```
+
+### 4. Combine with Screenshots
+
+```bash
+# Record video AND capture key frames
+agent-browser record start ./flow.webm
+
+agent-browser open https://example.com
+agent-browser screenshot ./screenshots/step1-homepage.png
+
+agent-browser click @e1
+agent-browser screenshot ./screenshots/step2-after-click.png
+
+agent-browser record stop
+```
+
+## Output Format
+
+- Default format: WebM (VP8/VP9 codec)
+- Compatible with all modern browsers and video players
+- Compressed but high quality
+
+## Limitations
+
+- Recording adds slight overhead to automation
+- Large recordings can consume significant disk space
+- Some headless environments may have codec limitations
+
+
+--- CHANGELOG.md ---
+# agent-browser
+
+## 0.7.6
+
+### Patch Changes
+
+- a4d0c26: Allow null values for the screenshot selector field. Previously, passing a null selector would fail validation, but now it is properly handled as an optional value.
+
+## 0.7.5
+
+### Patch Changes
+
+- 8c2a6ec: Fix GitHub release workflow to handle existing releases. If a release already exists, binaries are uploaded to it instead of failing.
+
+## 0.7.4
+
+### Patch Changes
+
+- 957b5e5: Fix binary permissions on install. npm doesn't preserve execute bits, so postinstall now ensures the native binary is executable.
+
+## 0.7.3
+
+### Patch Changes
+
+- 161d8f5: Fix native binary distribution in npm package. Native binaries for all platforms (Linux x64/arm64, macOS x64/arm64, Windows x64) are now correctly included when publishing.
+
+## 0.7.2
+
+### Patch Changes
+
+- 6afede2: Fix native binary distribution in npm package
+
+  Native binaries for all platforms (Linux x64/arm64, macOS x64/arm64, Windows x64) are now included in the npm package. Previously, the release workflow published to npm before building binaries, causing "No binary found" errors on installation.
+
+## 0.7.1
+
+### Patch Changes
+
+- Fix native binary distribution in npm package. Native binaries for all platforms (Linux x64/arm64, macOS x64/arm64, Windows x64) are now included in the npm package. Previously, the release workflow published to npm before building binaries, causing "No binary found" errors on installation.
+
+## 0.7.0
+
+### Minor Changes
+
+- 316e649: ## New Features
+  - **Cloud browser providers** - Connect to Browserbase or Browser Use for remote browser infrastructure via `-p` flag or `AGENT_BROWSER_PROVIDER` env var
+  - **Persistent browser profiles** - Store cookies, localStorage, and login sessions across browser restarts with `--profile`
+  - **Remote CDP WebSocket URLs** - Connect to remote browser services via WebSocket URL (e.g., `--cdp "wss://..."`)
+  - **Download commands** - New `download` command and `wait --download` for file downloads with ref support
+  - **Browser launch configuration** - New `--args`, `--user-agent`, and `--proxy-bypass` flags for fine-grained browser control
+  - **Enhanced skills** - Hierarchical structure with references and templates for Claude Code
+
+  ## Bug Fixes
+  - Screenshot command now supports refs and has improved error messages
+  - WebSocket URLs work in `connect` command
+  - Fixed socket file location (uses `~/.agent-browser` instead of TMPDIR)
+  - Windows binary path fix (.exe extension)
+  - State load and path-based actions now show correct output messages
+
+  ## Documentation
+  - Added Claude Code marketplace plugin installation instructions
+  - Updated skill documentation with references and templates
+  - Improved error documentation
+
+
+--- .changeset/README.md ---
+# Changesets
+
+This project uses [Changesets](https://github.com/changesets/changesets) for versioning and changelog generation.
+
+## Adding a changeset
+
+When you make a change that should be released, run:
+
+```bash
+pnpm changeset
+```
+
+This will prompt you to:
+1. Select the type of change (patch, minor, major)
+2. Write a summary of your changes
+
+The changeset file will be committed with your PR.
+
+## Release process
+
+When changesets are merged to `main`, the release workflow will:
+1. Create a "Version Packages" PR that updates version numbers and changelogs
+2. When that PR is merged, packages are automatically published to npm
+
+
+## Links discovered
+- [Changesets](https://github.com/changesets/changesets)
 
 --- AGENTS.md ---
 # AGENTS.md
@@ -244,6 +1250,7 @@ agent-browser screenshot [path]       # Take screenshot (--full for full page, b
 agent-browser pdf <path>              # Save as PDF
 agent-browser snapshot                # Accessibility tree with refs (best for AI)
 agent-browser eval <js>               # Run JavaScript
+agent-browser connect <port>          # Connect to browser via CDP
 agent-browser close                   # Close browser (aliases: quit, exit)
 ```
 
@@ -383,9 +1390,9 @@ agent-browser dialog dismiss          # Dismiss
 ```bash
 agent-browser trace start [path]      # Start recording trace
 agent-browser trace stop [path]       # Stop and save trace
-agent-browser console                 # View console messages
+agent-browser console                 # View console messages (log, error, warn, info)
 agent-browser console --clear         # Clear console
-agent-browser errors                  # View page errors
+agent-browser errors                  # View page errors (uncaught JavaScript exceptions)
 agent-browser errors --clear          # Clear errors
 agent-browser highlight <sel>         # Highlight element
 agent-browser state save <path>       # Save auth state
@@ -436,6 +1443,30 @@ Each session has its own:
 - Navigation history
 - Authentication state
 
+## Persistent Profiles
+
+By default, browser state (cookies, localStorage, login sessions) is ephemeral and lost when the browser closes. Use `--profile` to persist state across browser restarts:
+
+```bash
+# Use a persistent profile directory
+agent-browser --profile ~/.myapp-profile open myapp.com
+
+# Login once, then reuse the authenticated session
+agent-browser --profile ~/.myapp-profile open myapp.com/dashboard
+
+# Or via environment variable
+AGENT_BROWSER_PROFILE=~/.myapp-profile agent-browser open myapp.com
+```
+
+The profile directory stores:
+- Cookies and localStorage
+- IndexedDB data
+- Service workers
+- Browser cache
+- Login sessions
+
+**Tip**: Use different profile paths for different projects to keep their browser state isolated.
+
 ## Snapshot Options
 
 The `snapshot` command supports filtering to reduce output size:
@@ -461,14 +1492,21 @@ agent-browser snapshot -i -c -d 5         # Combine options
 | Option | Description |
 |--------|-------------|
 | `--session <name>` | Use isolated session (or `AGENT_BROWSER_SESSION` env) |
+| `--profile <path>` | Persistent browser profile directory (or `AGENT_BROWSER_PROFILE` env) |
 | `--headers <json>` | Set HTTP headers scoped to the URL's origin |
 | `--executable-path <path>` | Custom browser executable (or `AGENT_BROWSER_EXECUTABLE_PATH` env) |
+| `--args <args>` | Browser launch args, comma or newline separated (or `AGENT_BROWSER_ARGS` env) |
+| `--user-agent <ua>` | Custom User-Agent string (or `AGENT_BROWSER_USER_AGENT` env) |
+| `--proxy <url>` | Proxy server URL with optional auth (or `AGENT_BROWSER_PROXY` env) |
+| `--proxy-bypass <hosts>` | Hosts to bypass proxy (or `AGENT_BROWSER_PROXY_BYPASS` env) |
+| `-p, --provider <name>` | Cloud browser provider (or `AGENT_BROWSER_PROVIDER` env) |
 | `--json` | JSON output (for agents) |
 | `--full, -f` | Full page screenshot |
 | `--name, -n` | Locator name filter |
 | `--exact` | Exact text match |
 | `--headed` | Show browser window (not headless) |
 | `--cdp <port>` | Connect via Chrome DevTools Protocol |
+| `--ignore-https-errors` | Ignore HTTPS certificate errors (useful for self-signed certs) |
 | `--debug` | Debug output |
 
 ## Selectors
@@ -631,13 +1669,24 @@ export async function handler() {
 Connect to an existing browser via Chrome DevTools Protocol:
 
 ```bash
-# Connect to Electron app
+# Start Chrome with: google-chrome --remote-debugging-port=9222
+
+# Connect once, then run commands without --cdp
+agent-browser connect 9222
+agent-browser snapshot
+agent-browser tab
+agent-browser close
+
+# Or pass --cdp on each command
 agent-browser --cdp 9222 snapshot
 
-# Connect to Chrome with remote debugging
-# (Start Chrome with: google-chrome --remote-debugging-port=9222)
-agent-browser --cdp 9222 open about:blank
+# Connect to remote browser via WebSocket URL
+agent-browser --cdp "wss://your-browser-service.com/cdp?token=..." snapshot
 ```
+
+The `--cdp` flag accepts either:
+- A port number (e.g., `9222`) for local connections via `http://localhost:{port}`
+- A full WebSocket URL (e.g., `wss://...` or `ws://...`) for remote browser services
 
 This enables control of:
 - Electron apps
@@ -786,6 +1835,16 @@ Use agent-browser to test the login flow. Run agent-browser --help to see availa
 
 The `--help` output is comprehensive and most agents can figure it out from there.
 
+### AI Coding Assistants
+
+Add the skill to your AI coding assistant for richer context:
+
+```bash
+npx skills add vercel-labs/agent-browser
+```
+
+This works with Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot, Goose, OpenCode, and Windsurf.
+
 ### AGENTS.md / CLAUDE.md
 
 For more consistent results, add to your project or global instructions file:
@@ -802,21 +1861,89 @@ Core workflow:
 4. Re-snapshot after page changes
 ```
 
-### Claude Code Skill
+## Integrations
 
-For Claude Code, a [skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) provides richer context:
+### Browserbase
 
-```bash
-cp -r node_modules/agent-browser/skills/agent-browser .claude/skills/
-```
+[Browserbase](https://browserbase.com) provides remote browser infrastructure to make deployment of agentic browsing agents easy. Use it when running the agent-browser CLI in an environment where a local browser isn't feasible.
 
-Or download:
+To enable Browserbase, use the `-p` flag:
 
 ```bash
-mkdir -p .claude/skills/agent-browser
-curl -o .claude/skills/agent-browser/SKILL.md \
-  https://raw.githubusercontent.com/vercel-labs/agent-browser/main/skills/agent-browser/SKILL.md
+export BROWSERBASE_API_KEY="your-api-key"
+export BROWSERBASE_PROJECT_ID="your-project-id"
+agent-browser -p browserbase open https://example.com
 ```
+
+Or use environment variables for CI/scripts:
+
+```bash
+export AGENT_BROWSER_PROVIDER=browserbase
+export BROWSERBASE_API_KEY="your-api-key"
+export BROWSERBASE_PROJECT_ID="your-project-id"
+agent-browser open https://example.com
+```
+
+When enabled, agent-browser connects to a Browserbase session instead of launching a local browser. All commands work identically.
+
+Get your API key and project ID from the [Browserbase Dashboard](https://browserbase.com/overview).
+
+### Browser Use
+
+[Browser Use](https://browser-use.com) provides cloud browser infrastructure for AI agents. Use it when running agent-browser in environments where a local browser isn't available (serverless, CI/CD, etc.).
+
+To enable Browser Use, use the `-p` flag:
+
+```bash
+export BROWSER_USE_API_KEY="your-api-key"
+agent-browser -p browseruse open https://example.com
+```
+
+Or use environment variables for CI/scripts:
+
+```bash
+export AGENT_BROWSER_PROVIDER=browseruse
+export BROWSER_USE_API_KEY="your-api-key"
+agent-browser open https://example.com
+```
+
+When enabled, agent-browser connects to a Browser Use cloud session instead of launching a local browser. All commands work identically.
+
+Get your API key from the [Browser Use Cloud Dashboard](https://cloud.browser-use.com/settings?tab=api-keys). Free credits are available to get started, with pay-as-you-go pricing after.
+
+### Kernel
+
+[Kernel](https://www.kernel.sh) provides cloud browser infrastructure for AI agents with features like stealth mode and persistent profiles.
+
+To enable Kernel, use the `-p` flag:
+
+```bash
+export KERNEL_API_KEY="your-api-key"
+agent-browser -p kernel open https://example.com
+```
+
+Or use environment variables for CI/scripts:
+
+```bash
+export AGENT_BROWSER_PROVIDER=kernel
+export KERNEL_API_KEY="your-api-key"
+agent-browser open https://example.com
+```
+
+Optional configuration via environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `KERNEL_HEADLESS` | Run browser in headless mode (`true`/`false`) | `false` |
+| `KERNEL_STEALTH` | Enable stealth mode to avoid bot detection (`true`/`false`) | `true` |
+| `KERNEL_TIMEOUT_SECONDS` | Session timeout in seconds | `300` |
+| `KERNEL_PROFILE_NAME` | Browser profile name for persistent cookies/logins (created if it doesn't exist) | (none) |
+
+When enabled, agent-browser connects to a Kernel cloud session instead of launching a local browser. All commands work identically.
+
+**Profile Persistence:** When `KERNEL_PROFILE_NAME` is set, the profile will be created if it doesn't already exist. Cookies, logins, and session data are automatically saved back to the profile when the browser session ends, making them available for future sessions.
+
+Get your API key from the [Kernel Dashboard](https://dashboard.onkernel.com).
 
 ## License
 
@@ -824,7 +1951,12 @@ Apache-2.0
 
 
 ## Links discovered
-- [skill](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices)
+- [Browserbase](https://browserbase.com)
+- [Browserbase Dashboard](https://browserbase.com/overview)
+- [Browser Use](https://browser-use.com)
+- [Browser Use Cloud Dashboard](https://cloud.browser-use.com/settings?tab=api-keys)
+- [Kernel](https://www.kernel.sh)
+- [Kernel Dashboard](https://dashboard.onkernel.com)
 
 --- skills/agent-browser/SKILL.md ---
 ---
@@ -855,15 +1987,20 @@ agent-browser close             # Close browser
 ## Commands
 
 ### Navigation
+
 ```bash
-agent-browser open <url>      # Navigate to URL
+agent-browser open <url>      # Navigate to URL (aliases: goto, navigate)
+                              # Supports: https://, http://, file://, about:, data://
+                              # Auto-prepends https:// if no protocol given
 agent-browser back            # Go back
 agent-browser forward         # Go forward
 agent-browser reload          # Reload page
-agent-browser close           # Close browser
+agent-browser close           # Close browser (aliases: quit, exit)
+agent-browser connect 9222    # Connect to browser via CDP port
 ```
 
 ### Snapshot (page analysis)
+
 ```bash
 agent-browser snapshot            # Full accessibility tree
 agent-browser snapshot -i         # Interactive elements only (recommended)
@@ -873,27 +2010,30 @@ agent-browser snapshot -s "#main" # Scope to CSS selector
 ```
 
 ### Interactions (use @refs from snapshot)
+
 ```bash
 agent-browser click @e1           # Click
 agent-browser dblclick @e1        # Double-click
 agent-browser focus @e1           # Focus element
 agent-browser fill @e2 "text"     # Clear and type
 agent-browser type @e2 "text"     # Type without clearing
-agent-browser press Enter         # Press key
+agent-browser press Enter         # Press key (alias: key)
 agent-browser press Control+a     # Key combination
 agent-browser keydown Shift       # Hold key down
 agent-browser keyup Shift         # Release key
 agent-browser hover @e1           # Hover
 agent-browser check @e1           # Check checkbox
 agent-browser uncheck @e1         # Uncheck checkbox
-agent-browser select @e1 "value"  # Select dropdown
-agent-browser scroll down 500     # Scroll page
-agent-browser scrollintoview @e1  # Scroll element into view
+agent-browser select @e1 "value"  # Select dropdown option
+agent-browser select @e1 "a" "b"  # Select multiple options
+agent-browser scroll down 500     # Scroll page (default: down 300px)
+agent-browser scrollintoview @e1  # Scroll element into view (alias: scrollinto)
 agent-browser drag @e1 @e2        # Drag and drop
 agent-browser upload @e1 file.pdf # Upload files
 ```
 
 ### Get information
+
 ```bash
 agent-browser get text @e1        # Get element text
 agent-browser get html @e1        # Get innerHTML
@@ -903,9 +2043,11 @@ agent-browser get title           # Get page title
 agent-browser get url             # Get current URL
 agent-browser get count ".item"   # Count matching elements
 agent-browser get box @e1         # Get bounding box
+agent-browser get styles @e1      # Get computed styles (font, color, bg, etc.)
 ```
 
 ### Check state
+
 ```bash
 agent-browser is visible @e1      # Check if visible
 agent-browser is enabled @e1      # Check if enabled
@@ -913,6 +2055,7 @@ agent-browser is checked @e1      # Check if checked
 ```
 
 ### Screenshots & PDF
+
 ```bash
 agent-browser screenshot          # Screenshot to stdout
 agent-browser screenshot path.png # Save to file
@@ -921,25 +2064,30 @@ agent-browser pdf output.pdf      # Save as PDF
 ```
 
 ### Video recording
+
 ```bash
 agent-browser record start ./demo.webm    # Start recording (uses current URL + state)
 agent-browser click @e1                   # Perform actions
 agent-browser record stop                 # Stop and save video
 agent-browser record restart ./take2.webm # Stop current + start new recording
 ```
-Recording creates a fresh context but preserves cookies/storage from your session. If no URL is provided, it automatically returns to your current page. For smooth demos, explore first, then start recording.
+
+Recording creates a fresh context but preserves cookies/storage from your session. If no URL is provided, it
+automatically returns to your current page. For smooth demos, explore first, then start recording.
 
 ### Wait
+
 ```bash
 agent-browser wait @e1                     # Wait for element
 agent-browser wait 2000                    # Wait milliseconds
-agent-browser wait --text "Success"        # Wait for text
-agent-browser wait --url "**/dashboard"    # Wait for URL pattern
-agent-browser wait --load networkidle      # Wait for network idle
-agent-browser wait --fn "window.ready"     # Wait for JS condition
+agent-browser wait --text "Success"        # Wait for text (or -t)
+agent-browser wait --url "**/dashboard"    # Wait for URL pattern (or -u)
+agent-browser wait --load networkidle      # Wait for network idle (or -l)
+agent-browser wait --fn "window.ready"     # Wait for JS condition (or -f)
 ```
 
 ### Mouse control
+
 ```bash
 agent-browser mouse move 100 200      # Move mouse
 agent-browser mouse down left         # Press button
@@ -948,26 +2096,36 @@ agent-browser mouse wheel 100         # Scroll wheel
 ```
 
 ### Semantic locators (alternative to refs)
+
 ```bash
 agent-browser find role button click --name "Submit"
 agent-browser find text "Sign In" click
+agent-browser find text "Sign In" click --exact      # Exact match only
 agent-browser find label "Email" fill "user@test.com"
+agent-browser find placeholder "Search" type "query"
+agent-browser find alt "Logo" click
+agent-browser find title "Close" click
+agent-browser find testid "submit-btn" click
 agent-browser find first ".item" click
-agent-browser find nth 2 "a" text
+agent-browser find last ".item" click
+agent-browser find nth 2 "a" hover
 ```
 
 ### Browser settings
+
 ```bash
-agent-browser set viewport 1920 1080      # Set viewport size
-agent-browser set device "iPhone 14"      # Emulate device
-agent-browser set geo 37.7749 -122.4194   # Set geolocation
-agent-browser set offline on              # Toggle offline mode
-agent-browser set headers '{"X-Key":"v"}' # Extra HTTP headers
-agent-browser set credentials user pass   # HTTP basic auth
-agent-browser set media dark              # Emulate color scheme
+agent-browser set viewport 1920 1080          # Set viewport size
+agent-browser set device "iPhone 14"          # Emulate device
+agent-browser set geo 37.7749 -122.4194       # Set geolocation (alias: geolocation)
+agent-browser set offline on                  # Toggle offline mode
+agent-browser set headers '{"X-Key":"v"}'     # Extra HTTP headers
+agent-browser set credentials user pass       # HTTP basic auth (alias: auth)
+agent-browser set media dark                  # Emulate color scheme
+agent-browser set media light reduced-motion  # Light mode + reduced motion
 ```
 
 ### Cookies & Storage
+
 ```bash
 agent-browser cookies                     # Get all cookies
 agent-browser cookies set name value      # Set cookie
@@ -979,6 +2137,7 @@ agent-browser storage local clear         # Clear all
 ```
 
 ### Network
+
 ```bash
 agent-browser network route <url>              # Intercept requests
 agent-browser network route <url> --abort      # Block requests
@@ -989,29 +2148,71 @@ agent-browser network requests --filter api    # Filter requests
 ```
 
 ### Tabs & Windows
+
 ```bash
 agent-browser tab                 # List tabs
 agent-browser tab new [url]       # New tab
-agent-browser tab 2               # Switch to tab
-agent-browser tab close           # Close tab
+agent-browser tab 2               # Switch to tab by index
+agent-browser tab close           # Close current tab
+agent-browser tab close 2         # Close tab by index
 agent-browser window new          # New window
 ```
 
 ### Frames
+
 ```bash
 agent-browser frame "#iframe"     # Switch to iframe
 agent-browser frame main          # Back to main frame
 ```
 
 ### Dialogs
+
 ```bash
 agent-browser dialog accept [text]  # Accept dialog
 agent-browser dialog dismiss        # Dismiss dialog
 ```
 
 ### JavaScript
+
 ```bash
 agent-browser eval "document.title"   # Run JavaScript
+```
+
+## Global options
+
+```bash
+agent-browser --session <name> ...    # Isolated browser session
+agent-browser --json ...              # JSON output for parsing
+agent-browser --headed ...            # Show browser window (not headless)
+agent-browser --full ...              # Full page screenshot (-f)
+agent-browser --cdp <port> ...        # Connect via Chrome DevTools Protocol
+agent-browser -p <provider> ...       # Cloud browser provider (--provider)
+agent-browser --proxy <url> ...       # Use proxy server
+agent-browser --headers <json> ...    # HTTP headers scoped to URL's origin
+agent-browser --executable-path <p>   # Custom browser executable
+agent-browser --extension <path> ...  # Load browser extension (repeatable)
+agent-browser --help                  # Show help (-h)
+agent-browser --version               # Show version (-V)
+agent-browser <command> --help        # Show detailed help for a command
+```
+
+### Proxy support
+
+```bash
+agent-browser --proxy http://proxy.com:8080 open example.com
+agent-browser --proxy http://user:pass@proxy.com:8080 open example.com
+agent-browser --proxy socks5://proxy.com:1080 open example.com
+```
+
+## Environment variables
+
+```bash
+AGENT_BROWSER_SESSION="mysession"            # Default session name
+AGENT_BROWSER_EXECUTABLE_PATH="/path/chrome" # Custom browser path
+AGENT_BROWSER_EXTENSIONS="/ext1,/ext2"       # Comma-separated extension paths
+AGENT_BROWSER_PROVIDER="your-cloud-browser-provider"  # Cloud browser provider (select browseruse or browserbase)
+AGENT_BROWSER_STREAM_PORT="9223"             # WebSocket streaming port
+AGENT_BROWSER_HOME="/path/to/agent-browser"  # Custom install location (for daemon.js)
 ```
 
 ## Example: Form submission
@@ -1056,6 +2257,7 @@ agent-browser session list
 ## JSON output (for parsing)
 
 Add `--json` for machine-readable output:
+
 ```bash
 agent-browser snapshot -i --json
 agent-browser get text @e1 --json
@@ -1064,110 +2266,66 @@ agent-browser get text @e1 --json
 ## Debugging
 
 ```bash
-agent-browser open example.com --headed              # Show browser window
-agent-browser console                                # View console messages
-agent-browser errors                                 # View page errors
-agent-browser record start ./debug.webm   # Record from current page
-agent-browser record stop                            # Save recording
-agent-browser open example.com --headed  # Show browser window
-agent-browser --cdp 9222 snapshot        # Connect via CDP
-agent-browser console                    # View console messages
-agent-browser console --clear            # Clear console
-agent-browser errors                     # View page errors
-agent-browser errors --clear             # Clear errors
-agent-browser highlight @e1              # Highlight element
-agent-browser trace start                # Start recording trace
-agent-browser trace stop trace.zip       # Stop and save trace
+agent-browser --headed open example.com   # Show browser window
+agent-browser --cdp 9222 snapshot         # Connect via CDP port
+agent-browser connect 9222                # Alternative: connect command
+agent-browser console                     # View console messages
+agent-browser console --clear             # Clear console
+agent-browser errors                      # View page errors
+agent-browser errors --clear              # Clear errors
+agent-browser highlight @e1               # Highlight element
+agent-browser trace start                 # Start recording trace
+agent-browser trace stop trace.zip        # Stop and save trace
+agent-browser record start ./debug.webm   # Record video from current page
+agent-browser record stop                 # Save recording
+```
+
+## Deep-dive documentation
+
+For detailed patterns and best practices, see:
+
+| Reference | Description |
+|-----------|-------------|
+| [references/snapshot-refs.md](references/snapshot-refs.md) | Ref lifecycle, invalidation rules, troubleshooting |
+| [references/session-management.md](references/session-management.md) | Parallel sessions, state persistence, concurrent scraping |
+| [references/authentication.md](references/authentication.md) | Login flows, OAuth, 2FA handling, state reuse |
+| [references/video-recording.md](references/video-recording.md) | Recording workflows for debugging and documentation |
+| [references/proxy-support.md](references/proxy-support.md) | Proxy configuration, geo-testing, rotating proxies |
+
+## Ready-to-use templates
+
+Executable workflow scripts for common patterns:
+
+| Template | Description |
+|----------|-------------|
+| [templates/form-automation.sh](templates/form-automation.sh) | Form filling with validation |
+| [templates/authenticated-session.sh](templates/authenticated-session.sh) | Login once, reuse state |
+| [templates/capture-workflow.sh](templates/capture-workflow.sh) | Content extraction with screenshots |
+
+Usage:
+```bash
+./templates/form-automation.sh https://example.com/form
+./templates/authenticated-session.sh https://app.example.com/login
+./templates/capture-workflow.sh https://example.com ./output
+```
+
+## HTTPS Certificate Errors
+
+For sites with self-signed or invalid certificates:
+```bash
+agent-browser open https://localhost:8443 --ignore-https-errors
 ```
 
 
---- test/serverless.test.ts ---
-/**
- * Integration test for @sparticuz/chromium compatibility
- * This tests the executablePath option with a serverless-optimized Chromium build
- *
- * Note: @sparticuz/chromium only works on Linux (designed for AWS Lambda).
- * This test will skip on non-Linux platforms.
- */
-import { describe, it, expect, afterAll } from 'vitest';
-import { BrowserManager } from '../src/browser.js';
-import * as os from 'os';
-
-const isLinux = os.platform() === 'linux';
-
-// Only run if @sparticuz/chromium is available AND we're on Linux
-const canRunTest = await (async () => {
-  if (!isLinux) {
-    console.log('Skipping @sparticuz/chromium test: only runs on Linux');
-    return false;
-  }
-  try {
-    await import('@sparticuz/chromium');
-    return true;
-  } catch {
-    console.log('Skipping @sparticuz/chromium test: package not installed');
-    return false;
-  }
-})();
-
-describe.skipIf(!canRunTest)('Serverless Chromium Integration', () => {
-  let browser: BrowserManager;
-  let chromiumPath: string;
-
-  it('should get executable path from @sparticuz/chromium', async () => {
-    const chromium = await import('@sparticuz/chromium');
-    chromiumPath = await chromium.default.executablePath();
-    expect(chromiumPath).toBeTruthy();
-    expect(typeof chromiumPath).toBe('string');
-    console.log('Chromium executable path:', chromiumPath);
-  });
-
-  it('should launch browser with custom executablePath', async () => {
-    const chromium = await import('@sparticuz/chromium');
-    chromiumPath = await chromium.default.executablePath();
-
-    browser = new BrowserManager();
-    await browser.launch({
-      headless: true,
-      executablePath: chromiumPath,
-    });
-
-    expect(browser.isLaunched()).toBe(true);
-  });
-
-  it('should navigate to a page', async () => {
-    const page = browser.getPage();
-    await page.goto('https://example.com');
-    expect(page.url()).toBe('https://example.com/');
-  });
-
-  it('should get page title', async () => {
-    const page = browser.getPage();
-    const title = await page.title();
-    expect(title).toBe('Example Domain');
-  });
-
-  it('should take snapshot with refs', async () => {
-    const { tree, refs } = await browser.getSnapshot();
-    expect(tree).toContain('Example Domain');
-    expect(typeof refs).toBe('object');
-    expect(Object.keys(refs).length).toBeGreaterThan(0);
-  });
-
-  it('should take screenshot', async () => {
-    const page = browser.getPage();
-    const buffer = await page.screenshot();
-    expect(buffer).toBeInstanceOf(Buffer);
-    expect(buffer.length).toBeGreaterThan(0);
-  });
-
-  afterAll(async () => {
-    if (browser?.isLaunched()) {
-      await browser.close();
-    }
-  });
-});
-
+## Links discovered
+- [references/snapshot-refs.md](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/snapshot-refs.md)
+- [references/session-management.md](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/session-management.md)
+- [references/authentication.md](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/authentication.md)
+- [references/video-recording.md](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/video-recording.md)
+- [references/proxy-support.md](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/proxy-support.md)
+- [templates/form-automation.sh](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/templates/form-automation.sh)
+- [templates/authenticated-session.sh](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/templates/authenticated-session.sh)
+- [templates/capture-workflow.sh](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/templates/capture-workflow.sh)
 
 --- vitest.config.ts ---
 import { defineConfig } from 'vitest/config';
@@ -1196,7 +2354,8 @@ import { platform, arch } from 'os';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 
-const sourcePath = join(projectRoot, 'cli/target/release/agent-browser');
+const sourceExt = platform() === 'win32' ? '.exe' : '';
+const sourcePath = join(projectRoot, `cli/target/release/agent-browser${sourceExt}`);
 const binDir = join(projectRoot, 'bin');
 
 // Determine platform suffix
@@ -1442,6 +2601,14 @@ export function toAIFriendlyError(error: unknown, selector: string): Error {
     return new Error(
       `Element "${selector}" is not visible. ` +
         `Try scrolling it into view or check if it's hidden.`
+    );
+  }
+
+  // Handle general timeout (element exists but action couldn't complete)
+  if (message.includes('Timeout') && message.includes('exceeded')) {
+    return new Error(
+      `Action on "${selector}" timed out. The element may be blocked, still loading, or not interactable. ` +
+        `Run 'snapshot' to check the current page state.`
     );
   }
 
@@ -1817,15 +2984,22 @@ async function handleScreenshot(
 
   let target: Page | ReturnType<Page['locator']> = page;
   if (command.selector) {
-    target = page.locator(command.selector);
+    target = browser.getLocator(command.selector);
   }
 
-  if (command.path) {
-    await target.screenshot({ ...options, path: command.path });
-    return successResponse(command.id, { path: command.path });
-  } else {
-    const buffer = await target.screenshot(options);
-    return successResponse(command.id, { base64: buffer.toString('base64') });
+  try {
+    if (command.path) {
+      await target.screenshot({ ...options, path: command.path });
+      return successResponse(command.id, { path: command.path });
+    } else {
+      const buffer = await target.screenshot(options);
+      return successResponse(command.id, { base64: buffer.toString('base64') });
+    }
+  } catch (error) {
+    if (command.selector) {
+      throw toAIFriendlyError(error, command.selector);
+    }
+    throw error;
   }
 }
 
@@ -2342,11 +3516,9 @@ async function handleDownload(
   browser: BrowserManager
 ): Promise<Response> {
   const page = browser.getPage();
+  const locator = browser.getLocator(command.selector);
 
-  const [download] = await Promise.all([
-    page.waitForEvent('download'),
-    page.click(command.selector),
-  ]);
+  const [download] = await Promise.all([page.waitForEvent('download'), locator.click()]);
 
   await download.saveAs(command.path);
   return successResponse(command.id, {
@@ -2410,10 +3582,29 @@ async function handleDevice(command: DeviceCommand, browser: BrowserManager): Pr
   // Apply device viewport
   await browser.setViewport(device.viewport.width, device.viewport.height);
 
+  // Apply or clear device scale factor
+  if (device.deviceScaleFactor && device.deviceScaleFactor !== 1) {
+    // Apply device scale factor for HiDPI/retina displays
+    await browser.setDeviceScaleFactor(
+      device.deviceScaleFactor,
+      device.viewport.width,
+      device.viewport.height,
+      device.isMobile ?? false
+    );
+  } else {
+    // Clear device scale factor override to restore default (1x)
+    try {
+      await browser.clearDeviceMetricsOverride();
+    } catch {
+      // Ignore error if override was never set
+    }
+  }
+
   return successResponse(command.id, {
     device: command.device,
     viewport: device.viewport,
     userAgent: device.userAgent,
+    deviceScaleFactor: device.deviceScaleFactor,
   });
 }
 
@@ -2554,13 +3745,10 @@ async function handleStyles(
   // Check if it's a ref - single element
   if (browser.isRef(command.selector)) {
     const locator = browser.getLocator(command.selector);
-    const element = (await locator.evaluate(
-      (el, script) => {
-        const fn = eval(script);
-        return fn(el);
-      },
-      extractStylesScript
-    )) as StylesData['elements'][0];
+    const element = (await locator.evaluate((el, script) => {
+      const fn = eval(script);
+      return fn(el);
+    }, extractStylesScript)) as StylesData['elements'][0];
     return successResponse(command.id, { elements: [element] });
   }
 
@@ -3389,8 +4577,14 @@ interface PageError {
  */
 export class BrowserManager {
   private browser: Browser | null = null;
-  private cdpPort: number | null = null;
+  private cdpEndpoint: string | null = null; // stores port number or full URL
   private isPersistentContext: boolean = false;
+  private browserbaseSessionId: string | null = null;
+  private browserbaseApiKey: string | null = null;
+  private browserUseSessionId: string | null = null;
+  private browserUseApiKey: string | null = null;
+  private kernelSessionId: string | null = null;
+  private kernelApiKey: string | null = null;
   private contexts: BrowserContext[] = [];
   private pages: Page[] = [];
   private activePageIndex: number = 0;
@@ -3711,6 +4905,40 @@ export class BrowserManager {
   }
 
   /**
+   * Set device scale factor (devicePixelRatio) via CDP
+   * This sets window.devicePixelRatio which affects how the page renders and responds to media queries
+   *
+   * Note: When using CDP to set deviceScaleFactor, screenshots will be at logical pixel dimensions
+   * (viewport size), not physical pixel dimensions (viewport × scale). This is a Playwright limitation
+   * when using CDP emulation on existing contexts. For true HiDPI screenshots with physical pixels,
+   * deviceScaleFactor must be set at context creation time.
+   *
+   * Must be called after setViewport to work correctly
+   */
+  async setDeviceScaleFactor(
+    deviceScaleFactor: number,
+    width: number,
+    height: number,
+    mobile: boolean = false
+  ): Promise<void> {
+    const cdp = await this.getCDPSession();
+    await cdp.send('Emulation.setDeviceMetricsOverride', {
+      width,
+      height,
+      deviceScaleFactor,
+      mobile,
+    });
+  }
+
+  /**
+   * Clear device metrics override to restore default devicePixelRatio
+   */
+  async clearDeviceMetricsOverride(): Promise<void> {
+    const cdp = await this.getCDPSession();
+    await cdp.send('Emulation.clearDeviceMetricsOverride');
+  }
+
+  /**
    * Get device descriptor
    */
   getDevice(deviceName: string): (typeof devices)[keyof typeof devices] | undefined {
@@ -3956,11 +5184,333 @@ export class BrowserManager {
   /**
    * Check if CDP connection needs to be re-established
    */
-  private needsCdpReconnect(cdpPort: number): boolean {
+  private needsCdpReconnect(cdpEndpoint: string): boolean {
     if (!this.browser?.isConnected()) return true;
-    if (this.cdpPort !== cdpPort) return true;
+    if (this.cdpEndpoint !== cdpEndpoint) return true;
     if (!this.isCdpConnectionAlive()) return true;
     return false;
+  }
+
+  /**
+   * Close a Browserbase session via API
+   */
+  private async closeBrowserbaseSession(sessionId: string, apiKey: string): Promise<void> {
+    await fetch(`https://api.browserbase.com/v1/sessions/${sessionId}`, {
+      method: 'DELETE',
+      headers: {
+        'X-BB-API-Key': apiKey,
+      },
+    });
+  }
+
+  /**
+   * Close a Browser Use session via API
+   */
+  private async closeBrowserUseSession(sessionId: string, apiKey: string): Promise<void> {
+    const response = await fetch(`https://api.browser-use.com/api/v2/browsers/${sessionId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Browser-Use-API-Key': apiKey,
+      },
+      body: JSON.stringify({ action: 'stop' }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to close Browser Use session: ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Close a Kernel session via API
+   */
+  private async closeKernelSession(sessionId: string, apiKey: string): Promise<void> {
+    const response = await fetch(`https://api.onkernel.com/browsers/${sessionId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to close Kernel session: ${response.statusText}`);
+    }
+  }
+
+  /**
+   * Connect to Browserbase remote browser via CDP.
+   * Requires BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID environment variables.
+   */
+  private async connectToBrowserbase(): Promise<void> {
+    const browserbaseApiKey = process.env.BROWSERBASE_API_KEY;
+    const browserbaseProjectId = process.env.BROWSERBASE_PROJECT_ID;
+
+    if (!browserbaseApiKey || !browserbaseProjectId) {
+      throw new Error(
+        'BROWSERBASE_API_KEY and BROWSERBASE_PROJECT_ID are required when using browserbase as a provider'
+      );
+    }
+
+    const response = await fetch('https://api.browserbase.com/v1/sessions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-BB-API-Key': browserbaseApiKey,
+      },
+      body: JSON.stringify({
+        projectId: browserbaseProjectId,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create Browserbase session: ${response.statusText}`);
+    }
+
+    const session = (await response.json()) as { id: string; connectUrl: string };
+
+    const browser = await chromium.connectOverCDP(session.connectUrl).catch(() => {
+      throw new Error('Failed to connect to Browserbase session via CDP');
+    });
+
+    try {
+      const contexts = browser.contexts();
+      if (contexts.length === 0) {
+        throw new Error('No browser context found in Browserbase session');
+      }
+
+      const context = contexts[0];
+      const pages = context.pages();
+      const page = pages[0] ?? (await context.newPage());
+
+      this.browserbaseSessionId = session.id;
+      this.browserbaseApiKey = browserbaseApiKey;
+      this.browser = browser;
+      context.setDefaultTimeout(10000);
+      this.contexts.push(context);
+      this.setupContextTracking(context);
+      this.pages.push(page);
+      this.activePageIndex = 0;
+      this.setupPageTracking(page);
+    } catch (error) {
+      await this.closeBrowserbaseSession(session.id, browserbaseApiKey).catch((sessionError) => {
+        console.error('Failed to close Browserbase session during cleanup:', sessionError);
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Find or create a Kernel profile by name.
+   * Returns the profile object if successful.
+   */
+  private async findOrCreateKernelProfile(
+    profileName: string,
+    apiKey: string
+  ): Promise<{ name: string }> {
+    // First, try to get the existing profile
+    const getResponse = await fetch(
+      `https://api.onkernel.com/profiles/${encodeURIComponent(profileName)}`,
+      {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
+      }
+    );
+
+    if (getResponse.ok) {
+      // Profile exists, return it
+      return { name: profileName };
+    }
+
+    if (getResponse.status !== 404) {
+      throw new Error(`Failed to check Kernel profile: ${getResponse.statusText}`);
+    }
+
+    // Profile doesn't exist, create it
+    const createResponse = await fetch('https://api.onkernel.com/profiles', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({ name: profileName }),
+    });
+
+    if (!createResponse.ok) {
+      throw new Error(`Failed to create Kernel profile: ${createResponse.statusText}`);
+    }
+
+    return { name: profileName };
+  }
+
+  /**
+   * Connect to Kernel remote browser via CDP.
+   * Requires KERNEL_API_KEY environment variable.
+   */
+  private async connectToKernel(): Promise<void> {
+    const kernelApiKey = process.env.KERNEL_API_KEY;
+    if (!kernelApiKey) {
+      throw new Error('KERNEL_API_KEY is required when using kernel as a provider');
+    }
+
+    // Find or create profile if KERNEL_PROFILE_NAME is set
+    const profileName = process.env.KERNEL_PROFILE_NAME;
+    let profileConfig: { profile: { name: string; save_changes: boolean } } | undefined;
+
+    if (profileName) {
+      await this.findOrCreateKernelProfile(profileName, kernelApiKey);
+      profileConfig = {
+        profile: {
+          name: profileName,
+          save_changes: true, // Save cookies/state back to the profile when session ends
+        },
+      };
+    }
+
+    const response = await fetch('https://api.onkernel.com/browsers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${kernelApiKey}`,
+      },
+      body: JSON.stringify({
+        // Kernel browsers are headful by default with stealth mode available
+        // The user can configure these via environment variables if needed
+        headless: process.env.KERNEL_HEADLESS?.toLowerCase() === 'true',
+        stealth: process.env.KERNEL_STEALTH?.toLowerCase() !== 'false', // Default to stealth mode
+        timeout_seconds: parseInt(process.env.KERNEL_TIMEOUT_SECONDS || '300', 10),
+        // Load and save to a profile if specified
+        ...profileConfig,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create Kernel session: ${response.statusText}`);
+    }
+
+    let session: { session_id: string; cdp_ws_url: string };
+    try {
+      session = (await response.json()) as { session_id: string; cdp_ws_url: string };
+    } catch (error) {
+      throw new Error(
+        `Failed to parse Kernel session response: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    if (!session.session_id || !session.cdp_ws_url) {
+      throw new Error(
+        `Invalid Kernel session response: missing ${!session.session_id ? 'session_id' : 'cdp_ws_url'}`
+      );
+    }
+
+    const browser = await chromium.connectOverCDP(session.cdp_ws_url).catch(() => {
+      throw new Error('Failed to connect to Kernel session via CDP');
+    });
+
+    try {
+      const contexts = browser.contexts();
+      let context: BrowserContext;
+      let page: Page;
+
+      // Kernel browsers launch with a default context and page
+      if (contexts.length === 0) {
+        context = await browser.newContext();
+        page = await context.newPage();
+      } else {
+        context = contexts[0];
+        const pages = context.pages();
+        page = pages[0] ?? (await context.newPage());
+      }
+
+      this.kernelSessionId = session.session_id;
+      this.kernelApiKey = kernelApiKey;
+      this.browser = browser;
+      context.setDefaultTimeout(60000);
+      this.contexts.push(context);
+      this.pages.push(page);
+      this.activePageIndex = 0;
+      this.setupPageTracking(page);
+      this.setupContextTracking(context);
+    } catch (error) {
+      await this.closeKernelSession(session.session_id, kernelApiKey).catch((sessionError) => {
+        console.error('Failed to close Kernel session during cleanup:', sessionError);
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Connect to Browser Use remote browser via CDP.
+   * Requires BROWSER_USE_API_KEY environment variable.
+   */
+  private async connectToBrowserUse(): Promise<void> {
+    const browserUseApiKey = process.env.BROWSER_USE_API_KEY;
+    if (!browserUseApiKey) {
+      throw new Error('BROWSER_USE_API_KEY is required when using browseruse as a provider');
+    }
+
+    const response = await fetch('https://api.browser-use.com/api/v2/browsers', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Browser-Use-API-Key': browserUseApiKey,
+      },
+      body: JSON.stringify({}),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to create Browser Use session: ${response.statusText}`);
+    }
+
+    let session: { id: string; cdpUrl: string };
+    try {
+      session = (await response.json()) as { id: string; cdpUrl: string };
+    } catch (error) {
+      throw new Error(
+        `Failed to parse Browser Use session response: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+
+    if (!session.id || !session.cdpUrl) {
+      throw new Error(
+        `Invalid Browser Use session response: missing ${!session.id ? 'id' : 'cdpUrl'}`
+      );
+    }
+
+    const browser = await chromium.connectOverCDP(session.cdpUrl).catch(() => {
+      throw new Error('Failed to connect to Browser Use session via CDP');
+    });
+
+    try {
+      const contexts = browser.contexts();
+      let context: BrowserContext;
+      let page: Page;
+
+      if (contexts.length === 0) {
+        context = await browser.newContext();
+        page = await context.newPage();
+      } else {
+        context = contexts[0];
+        const pages = context.pages();
+        page = pages[0] ?? (await context.newPage());
+      }
+
+      this.browserUseSessionId = session.id;
+      this.browserUseApiKey = browserUseApiKey;
+      this.browser = browser;
+      context.setDefaultTimeout(60000);
+      this.contexts.push(context);
+      this.pages.push(page);
+      this.activePageIndex = 0;
+      this.setupPageTracking(page);
+      this.setupContextTracking(context);
+    } catch (error) {
+      await this.closeBrowserUseSession(session.id, browserUseApiKey).catch((sessionError) => {
+        console.error('Failed to close Browser Use session during cleanup:', sessionError);
+      });
+      throw error;
+    }
   }
 
   /**
@@ -3968,16 +5518,36 @@ export class BrowserManager {
    * If already launched, this is a no-op (browser stays open)
    */
   async launch(options: LaunchCommand): Promise<void> {
-    const cdpPort = options.cdpPort;
+    // Determine CDP endpoint: prefer cdpUrl over cdpPort for flexibility
+    const cdpEndpoint = options.cdpUrl ?? (options.cdpPort ? String(options.cdpPort) : undefined);
     const hasExtensions = !!options.extensions?.length;
+    const hasProfile = !!options.profile;
+    const hasStorageState = !!options.storageState;
 
-    if (hasExtensions && cdpPort) {
+    if (hasExtensions && cdpEndpoint) {
       throw new Error('Extensions cannot be used with CDP connection');
+    }
+
+    if (hasProfile && cdpEndpoint) {
+      throw new Error('Profile cannot be used with CDP connection');
+    }
+
+    if (hasStorageState && hasProfile) {
+      throw new Error(
+        'Storage state cannot be used with profile (profile is already persistent storage)'
+      );
+    }
+
+    if (hasStorageState && hasExtensions) {
+      throw new Error(
+        'Storage state cannot be used with extensions (extensions require persistent context)'
+      );
     }
 
     if (this.isLaunched()) {
       const needsRelaunch =
-        (!cdpPort && this.cdpPort !== null) || (!!cdpPort && this.needsCdpReconnect(cdpPort));
+        (!cdpEndpoint && this.cdpEndpoint !== null) ||
+        (!!cdpEndpoint && this.needsCdpReconnect(cdpEndpoint));
       if (needsRelaunch) {
         await this.close();
       } else {
@@ -3985,8 +5555,26 @@ export class BrowserManager {
       }
     }
 
-    if (cdpPort) {
-      await this.connectViaCDP(cdpPort);
+    if (cdpEndpoint) {
+      await this.connectViaCDP(cdpEndpoint);
+      return;
+    }
+
+    // Cloud browser providers require explicit opt-in via -p flag or AGENT_BROWSER_PROVIDER env var
+    // -p flag takes precedence over env var
+    const provider = options.provider ?? process.env.AGENT_BROWSER_PROVIDER;
+    if (provider === 'browserbase') {
+      await this.connectToBrowserbase();
+      return;
+    }
+    if (provider === 'browseruse') {
+      await this.connectToBrowserUse();
+      return;
+    }
+
+    // Kernel: requires explicit opt-in via -p kernel flag or AGENT_BROWSER_PROVIDER=kernel
+    if (provider === 'kernel') {
+      await this.connectToKernel();
       return;
     }
 
@@ -4001,54 +5589,103 @@ export class BrowserManager {
 
     let context: BrowserContext;
     if (hasExtensions) {
+      // Extensions require persistent context in a temp directory
       const extPaths = options.extensions!.join(',');
       const session = process.env.AGENT_BROWSER_SESSION || 'default';
+      // Combine extension args with custom args
+      const extArgs = [`--disable-extensions-except=${extPaths}`, `--load-extension=${extPaths}`];
+      const allArgs = options.args ? [...extArgs, ...options.args] : extArgs;
       context = await launcher.launchPersistentContext(
         path.join(os.tmpdir(), `agent-browser-ext-${session}`),
         {
           headless: false,
           executablePath: options.executablePath,
-          args: [`--disable-extensions-except=${extPaths}`, `--load-extension=${extPaths}`],
+          args: allArgs,
           viewport,
           extraHTTPHeaders: options.headers,
+          userAgent: options.userAgent,
           ...(options.proxy && { proxy: options.proxy }),
+          ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false,
         }
       );
       this.isPersistentContext = true;
+    } else if (hasProfile) {
+      // Profile uses persistent context for durable cookies/storage
+      // Expand ~ to home directory since it won't be shell-expanded
+      const profilePath = options.profile!.replace(/^~\//, os.homedir() + '/');
+      context = await launcher.launchPersistentContext(profilePath, {
+        headless: options.headless ?? true,
+        executablePath: options.executablePath,
+        viewport,
+        extraHTTPHeaders: options.headers,
+      });
+      this.isPersistentContext = true;
     } else {
+      // Regular ephemeral browser
       this.browser = await launcher.launch({
         headless: options.headless ?? true,
         executablePath: options.executablePath,
+        args: options.args,
       });
-      this.cdpPort = null;
+      this.cdpEndpoint = null;
       context = await this.browser.newContext({
         viewport,
         extraHTTPHeaders: options.headers,
+        userAgent: options.userAgent,
         ...(options.proxy && { proxy: options.proxy }),
+        ignoreHTTPSErrors: options.ignoreHTTPSErrors ?? false,
+        ...(options.storageState && { storageState: options.storageState }),
       });
     }
 
     context.setDefaultTimeout(60000);
     this.contexts.push(context);
+    this.setupContextTracking(context);
 
     const page = context.pages()[0] ?? (await context.newPage());
-    this.pages.push(page);
-    this.activePageIndex = 0;
-    this.setupPageTracking(page);
+    // Only add if not already tracked (setupContextTracking may have already added it via 'page' event)
+    if (!this.pages.includes(page)) {
+      this.pages.push(page);
+      this.setupPageTracking(page);
+    }
+    this.activePageIndex = this.pages.length > 0 ? this.pages.length - 1 : 0;
   }
 
   /**
    * Connect to a running browser via CDP (Chrome DevTools Protocol)
+   * @param cdpEndpoint Either a port number (as string) or a full WebSocket URL (ws:// or wss://)
    */
-  private async connectViaCDP(cdpPort: number | undefined): Promise<void> {
-    if (!cdpPort) {
-      throw new Error('cdpPort is required for CDP connection');
+  private async connectViaCDP(cdpEndpoint: string | undefined): Promise<void> {
+    if (!cdpEndpoint) {
+      throw new Error('CDP endpoint is required for CDP connection');
     }
 
-    const browser = await chromium.connectOverCDP(`http://localhost:${cdpPort}`).catch(() => {
+    // Determine the connection URL:
+    // - If it starts with ws://, wss://, http://, or https://, use it directly
+    // - If it's a numeric string (e.g., "9222"), treat as port for localhost
+    // - Otherwise, treat it as a port number for localhost
+    let cdpUrl: string;
+    if (
+      cdpEndpoint.startsWith('ws://') ||
+      cdpEndpoint.startsWith('wss://') ||
+      cdpEndpoint.startsWith('http://') ||
+      cdpEndpoint.startsWith('https://')
+    ) {
+      cdpUrl = cdpEndpoint;
+    } else if (/^\d+$/.test(cdpEndpoint)) {
+      // Numeric string - treat as port number (handles JSON serialization quirks)
+      cdpUrl = `http://localhost:${cdpEndpoint}`;
+    } else {
+      // Unknown format - still try as port for backward compatibility
+      cdpUrl = `http://localhost:${cdpEndpoint}`;
+    }
+
+    const browser = await chromium.connectOverCDP(cdpUrl).catch(() => {
       throw new Error(
-        `Failed to connect via CDP on port ${cdpPort}. ` +
-          `Make sure the app is running with --remote-debugging-port=${cdpPort}`
+        `Failed to connect via CDP to ${cdpUrl}. ` +
+          (cdpUrl.includes('localhost')
+            ? `Make sure the app is running with --remote-debugging-port=${cdpEndpoint}`
+            : 'Make sure the remote browser is accessible and the URL is correct.')
       );
     });
 
@@ -4060,9 +5697,7 @@ export class BrowserManager {
       }
 
       // Filter out pages with empty URLs, which can cause Playwright to hang
-      const allPages = contexts
-        .flatMap((context) => context.pages())
-        .filter((page) => page.url());
+      const allPages = contexts.flatMap((context) => context.pages()).filter((page) => page.url());
 
       if (allPages.length === 0) {
         throw new Error('No page found. Make sure the app has loaded content.');
@@ -4070,9 +5705,10 @@ export class BrowserManager {
 
       // All validation passed - commit state
       this.browser = browser;
-      this.cdpPort = cdpPort;
+      this.cdpEndpoint = cdpEndpoint;
 
       for (const context of contexts) {
+        context.setDefaultTimeout(10000);
         this.contexts.push(context);
         this.setupContextTracking(context);
       }
@@ -4121,12 +5757,16 @@ export class BrowserManager {
   }
 
   /**
-   * Set up tracking for new pages in a context (for CDP connections)
+   * Set up tracking for new pages in a context (for CDP connections and popups/new tabs)
+   * This handles pages created externally (e.g., via target="_blank" links)
    */
   private setupContextTracking(context: BrowserContext): void {
     context.on('page', (page) => {
-      this.pages.push(page);
-      this.setupPageTracking(page);
+      // Only add if not already tracked (avoids duplicates when newTab() creates pages)
+      if (!this.pages.includes(page)) {
+        this.pages.push(page);
+        this.setupPageTracking(page);
+      }
     });
   }
 
@@ -4143,11 +5783,12 @@ export class BrowserManager {
 
     const context = this.contexts[0]; // Use first context for tabs
     const page = await context.newPage();
-    this.pages.push(page);
+    // Only add if not already tracked (setupContextTracking may have already added it via 'page' event)
+    if (!this.pages.includes(page)) {
+      this.pages.push(page);
+      this.setupPageTracking(page);
+    }
     this.activePageIndex = this.pages.length - 1;
-
-    // Set up tracking for the new page
-    this.setupPageTracking(page);
 
     return { index: this.activePageIndex, total: this.pages.length };
   }
@@ -4168,13 +5809,15 @@ export class BrowserManager {
     });
     context.setDefaultTimeout(60000);
     this.contexts.push(context);
+    this.setupContextTracking(context);
 
     const page = await context.newPage();
-    this.pages.push(page);
+    // Only add if not already tracked (setupContextTracking may have already added it via 'page' event)
+    if (!this.pages.includes(page)) {
+      this.pages.push(page);
+      this.setupPageTracking(page);
+    }
     this.activePageIndex = this.pages.length - 1;
-
-    // Set up tracking for the new page
-    this.setupPageTracking(page);
 
     return { index: this.activePageIndex, total: this.pages.length };
   }
@@ -4682,8 +6325,27 @@ export class BrowserManager {
       this.cdpSession = null;
     }
 
-    // CDP: only disconnect, don't close external app's pages
-    if (this.cdpPort !== null) {
+    if (this.browserbaseSessionId && this.browserbaseApiKey) {
+      await this.closeBrowserbaseSession(this.browserbaseSessionId, this.browserbaseApiKey).catch(
+        (error) => {
+          console.error('Failed to close Browserbase session:', error);
+        }
+      );
+      this.browser = null;
+    } else if (this.browserUseSessionId && this.browserUseApiKey) {
+      await this.closeBrowserUseSession(this.browserUseSessionId, this.browserUseApiKey).catch(
+        (error) => {
+          console.error('Failed to close Browser Use session:', error);
+        }
+      );
+      this.browser = null;
+    } else if (this.kernelSessionId && this.kernelApiKey) {
+      await this.closeKernelSession(this.kernelSessionId, this.kernelApiKey).catch((error) => {
+        console.error('Failed to close Kernel session:', error);
+      });
+      this.browser = null;
+    } else if (this.cdpEndpoint !== null) {
+      // CDP: only disconnect, don't close external app's pages
       if (this.browser) {
         await this.browser.close().catch(() => {});
         this.browser = null;
@@ -4704,7 +6366,13 @@ export class BrowserManager {
 
     this.pages = [];
     this.contexts = [];
-    this.cdpPort = null;
+    this.cdpEndpoint = null;
+    this.browserbaseSessionId = null;
+    this.browserbaseApiKey = null;
+    this.browserUseSessionId = null;
+    this.browserUseApiKey = null;
+    this.kernelSessionId = null;
+    this.kernelApiKey = null;
     this.isPersistentContext = false;
     this.activePageIndex = 0;
     this.refMap = {};
@@ -5119,6 +6787,7 @@ describe('BrowserManager', () => {
               { url: () => 'http://anothersite.com', on: vi.fn() },
             ],
             on: vi.fn(),
+            setDefaultTimeout: vi.fn(),
           },
         ],
         close: vi.fn(),
@@ -5431,6 +7100,31 @@ function getPortForSession(session: string): number {
 }
 
 /**
+ * Get the base directory for socket/pid files.
+ * Priority: AGENT_BROWSER_SOCKET_DIR > XDG_RUNTIME_DIR > ~/.agent-browser > tmpdir
+ */
+export function getSocketDir(): string {
+  // 1. Explicit override
+  if (process.env.AGENT_BROWSER_SOCKET_DIR) {
+    return process.env.AGENT_BROWSER_SOCKET_DIR;
+  }
+
+  // 2. XDG_RUNTIME_DIR (Linux standard)
+  if (process.env.XDG_RUNTIME_DIR) {
+    return path.join(process.env.XDG_RUNTIME_DIR, 'agent-browser');
+  }
+
+  // 3. Home directory fallback (like Docker Desktop's ~/.docker/run/)
+  const homeDir = os.homedir();
+  if (homeDir) {
+    return path.join(homeDir, '.agent-browser');
+  }
+
+  // 4. Last resort: temp dir
+  return path.join(os.tmpdir(), 'agent-browser');
+}
+
+/**
  * Get the socket path for the current session (Unix) or port (Windows)
  */
 export function getSocketPath(session?: string): string {
@@ -5438,7 +7132,7 @@ export function getSocketPath(session?: string): string {
   if (isWindows) {
     return String(getPortForSession(sess));
   }
-  return path.join(os.tmpdir(), `agent-browser-${sess}.sock`);
+  return path.join(getSocketDir(), `${sess}.sock`);
 }
 
 /**
@@ -5446,7 +7140,7 @@ export function getSocketPath(session?: string): string {
  */
 export function getPortFile(session?: string): string {
   const sess = session ?? currentSession;
-  return path.join(os.tmpdir(), `agent-browser-${sess}.port`);
+  return path.join(getSocketDir(), `${sess}.port`);
 }
 
 /**
@@ -5454,7 +7148,7 @@ export function getPortFile(session?: string): string {
  */
 export function getPidFile(session?: string): string {
   const sess = session ?? currentSession;
-  return path.join(os.tmpdir(), `agent-browser-${sess}.pid`);
+  return path.join(getSocketDir(), `${sess}.pid`);
 }
 
 /**
@@ -5487,7 +7181,7 @@ export function getConnectionInfo(
   if (isWindows) {
     return { type: 'tcp', port: getPortForSession(sess) };
   }
-  return { type: 'unix', path: path.join(os.tmpdir(), `agent-browser-${sess}.sock`) };
+  return { type: 'unix', path: path.join(getSocketDir(), `${sess}.sock`) };
 }
 
 /**
@@ -5516,7 +7210,7 @@ export function cleanupSocket(session?: string): void {
  */
 export function getStreamPortFile(session?: string): string {
   const sess = session ?? currentSession;
-  return path.join(os.tmpdir(), `agent-browser-${sess}.stream`);
+  return path.join(getSocketDir(), `${sess}.stream`);
 }
 
 /**
@@ -5524,6 +7218,12 @@ export function getStreamPortFile(session?: string): string {
  * @param options.streamPort Port for WebSocket stream server (0 to disable)
  */
 export async function startDaemon(options?: { streamPort?: number }): Promise<void> {
+  // Ensure socket directory exists
+  const socketDir = getSocketDir();
+  if (!fs.existsSync(socketDir)) {
+    fs.mkdirSync(socketDir, { recursive: true });
+  }
+
   // Clean up any stale socket
   cleanupSocket();
 
@@ -5548,9 +7248,22 @@ export async function startDaemon(options?: { streamPort?: number }): Promise<vo
 
   const server = net.createServer((socket) => {
     let buffer = '';
+    let httpChecked = false;
 
     socket.on('data', async (data) => {
       buffer += data.toString();
+
+      // Security: Detect and reject HTTP requests to prevent cross-origin attacks.
+      // Browsers using fetch() must send HTTP headers (e.g., "POST / HTTP/1.1"),
+      // while legitimate clients send raw JSON starting with "{".
+      if (!httpChecked) {
+        httpChecked = true;
+        const trimmed = buffer.trimStart();
+        if (/^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE)\s/i.test(trimmed)) {
+          socket.destroy();
+          return;
+        }
+      }
 
       // Process complete lines
       while (buffer.includes('\n')) {
@@ -5580,12 +7293,39 @@ export async function startDaemon(options?: { streamPort?: number }): Promise<vo
                   .map((p) => p.trim())
                   .filter(Boolean)
               : undefined;
+
+            // Parse args from env (comma or newline separated)
+            const argsEnv = process.env.AGENT_BROWSER_ARGS;
+            const args = argsEnv
+              ? argsEnv
+                  .split(/[,\n]/)
+                  .map((a) => a.trim())
+                  .filter((a) => a.length > 0)
+              : undefined;
+
+            // Parse proxy from env
+            const proxyServer = process.env.AGENT_BROWSER_PROXY;
+            const proxyBypass = process.env.AGENT_BROWSER_PROXY_BYPASS;
+            const proxy = proxyServer
+              ? {
+                  server: proxyServer,
+                  ...(proxyBypass && { bypass: proxyBypass }),
+                }
+              : undefined;
+
+            const ignoreHTTPSErrors = process.env.AGENT_BROWSER_IGNORE_HTTPS_ERRORS === '1';
             await browser.launch({
               id: 'auto',
-              action: 'launch',
+              action: 'launch' as const,
               headless: process.env.AGENT_BROWSER_HEADED !== '1',
               executablePath: process.env.AGENT_BROWSER_EXECUTABLE_PATH,
               extensions: extensions,
+              profile: process.env.AGENT_BROWSER_PROFILE,
+              storageState: process.env.AGENT_BROWSER_STATE,
+              args,
+              userAgent: process.env.AGENT_BROWSER_USER_AGENT,
+              proxy,
+              ignoreHTTPSErrors: ignoreHTTPSErrors,
             });
           }
 
@@ -5706,6 +7446,105 @@ if (process.argv[1]?.endsWith('daemon.js') || process.env.AGENT_BROWSER_DAEMON =
 }
 
 
+--- src/daemon.test.ts ---
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as os from 'os';
+import * as path from 'path';
+import { getSocketDir } from './daemon.js';
+
+/**
+ * HTTP request detection pattern used in daemon.ts to prevent cross-origin attacks.
+ * This pattern detects HTTP method prefixes that browsers must send when using fetch().
+ */
+const HTTP_REQUEST_PATTERN = /^(GET|POST|PUT|DELETE|HEAD|OPTIONS|PATCH|CONNECT|TRACE)\s/i;
+
+describe('HTTP request detection (security)', () => {
+  it('should detect POST requests from fetch()', () => {
+    const httpRequest = 'POST / HTTP/1.1\r\nHost: 127.0.0.1:51234\r\n';
+    expect(HTTP_REQUEST_PATTERN.test(httpRequest.trimStart())).toBe(true);
+  });
+
+  it('should detect GET requests', () => {
+    expect(HTTP_REQUEST_PATTERN.test('GET / HTTP/1.1')).toBe(true);
+  });
+
+  it('should detect OPTIONS preflight requests', () => {
+    expect(HTTP_REQUEST_PATTERN.test('OPTIONS / HTTP/1.1')).toBe(true);
+  });
+
+  it('should NOT detect valid JSON commands', () => {
+    const jsonCommand = '{"id":"1","action":"navigate","url":"https://example.com"}';
+    expect(HTTP_REQUEST_PATTERN.test(jsonCommand.trimStart())).toBe(false);
+  });
+
+  it('should NOT detect JSON with leading whitespace', () => {
+    const jsonCommand = '  {"id":"1","action":"click","selector":"button"}';
+    expect(HTTP_REQUEST_PATTERN.test(jsonCommand.trimStart())).toBe(false);
+  });
+
+  it('should be case insensitive for HTTP methods', () => {
+    expect(HTTP_REQUEST_PATTERN.test('post / HTTP/1.1')).toBe(true);
+    expect(HTTP_REQUEST_PATTERN.test('Post / HTTP/1.1')).toBe(true);
+  });
+});
+
+describe('getSocketDir', () => {
+  const originalEnv = { ...process.env };
+
+  beforeEach(() => {
+    // Clear relevant env vars before each test
+    delete process.env.AGENT_BROWSER_SOCKET_DIR;
+    delete process.env.XDG_RUNTIME_DIR;
+  });
+
+  afterEach(() => {
+    // Restore original env
+    process.env = { ...originalEnv };
+  });
+
+  describe('AGENT_BROWSER_SOCKET_DIR', () => {
+    it('should use custom path when set', () => {
+      process.env.AGENT_BROWSER_SOCKET_DIR = '/custom/socket/path';
+      expect(getSocketDir()).toBe('/custom/socket/path');
+    });
+
+    it('should ignore empty string', () => {
+      process.env.AGENT_BROWSER_SOCKET_DIR = '';
+      const result = getSocketDir();
+      expect(result).toContain('.agent-browser');
+    });
+
+    it('should take priority over XDG_RUNTIME_DIR', () => {
+      process.env.AGENT_BROWSER_SOCKET_DIR = '/custom/path';
+      process.env.XDG_RUNTIME_DIR = '/run/user/1000';
+      expect(getSocketDir()).toBe('/custom/path');
+    });
+  });
+
+  describe('XDG_RUNTIME_DIR', () => {
+    it('should use when AGENT_BROWSER_SOCKET_DIR is not set', () => {
+      process.env.XDG_RUNTIME_DIR = '/run/user/1000';
+      expect(getSocketDir()).toBe('/run/user/1000/agent-browser');
+    });
+
+    it('should ignore empty string', () => {
+      process.env.AGENT_BROWSER_SOCKET_DIR = '';
+      process.env.XDG_RUNTIME_DIR = '';
+      const result = getSocketDir();
+      expect(result).toContain('.agent-browser');
+    });
+  });
+
+  describe('fallback', () => {
+    it('should use home directory when env vars are not set', () => {
+      const result = getSocketDir();
+      const expected = path.join(os.homedir(), '.agent-browser');
+      expect(result).toBe(expected);
+    });
+  });
+});
+
+
 --- src/protocol.ts ---
 import { z } from 'zod';
 import type { Command, Response } from './types.js';
@@ -5728,6 +7567,18 @@ const launchSchema = baseCommandSchema.extend({
     .optional(),
   browser: z.enum(['chromium', 'firefox', 'webkit']).optional(),
   cdpPort: z.number().positive().optional(),
+  cdpUrl: z
+    .string()
+    .url()
+    .refine(
+      (url) =>
+        url.startsWith('ws://') ||
+        url.startsWith('wss://') ||
+        url.startsWith('http://') ||
+        url.startsWith('https://'),
+      { message: 'CDP URL must start with ws://, wss://, http://, or https://' }
+    )
+    .optional(),
   executablePath: z.string().optional(),
   extensions: z.array(z.string()).optional(),
   headers: z.record(z.string()).optional(),
@@ -5739,6 +7590,12 @@ const launchSchema = baseCommandSchema.extend({
       password: z.string().optional(),
     })
     .optional(),
+  args: z.array(z.string()).optional(),
+  userAgent: z.string().optional(),
+  provider: z.string().optional(),
+  ignoreHTTPSErrors: z.boolean().optional(),
+  profile: z.string().optional(),
+  storageState: z.string().optional(),
 });
 
 const navigateSchema = baseCommandSchema.extend({
@@ -6387,7 +8244,7 @@ const screenshotSchema = baseCommandSchema.extend({
   action: z.literal('screenshot'),
   path: z.string().nullable().optional(),
   fullPage: z.boolean().optional(),
-  selector: z.string().min(1).optional(),
+  selector: z.string().min(1).nullish(),
   format: z.enum(['png', 'jpeg']).optional(),
   quality: z.number().min(0).max(100).optional(),
 });
@@ -6780,6 +8637,13 @@ describe('parseCommand', () => {
       const result = parseCommand(cmd({ id: '1', action: 'screenshot', fullPage: true }));
       expect(result.success).toBe(true);
     });
+
+    it('should parse screenshot with null selector', () => {
+      const result = parseCommand(
+        cmd({ id: '1', action: 'screenshot', path: 'test.png', selector: null })
+      );
+      expect(result.success).toBe(true);
+    });
   });
 
   describe('cookies', () => {
@@ -7159,6 +9023,27 @@ describe('parseCommand', () => {
 
     it('should reject launch with non-numeric cdpPort', () => {
       const result = parseCommand(cmd({ id: '1', action: 'launch', cdpPort: 'invalid' }));
+      expect(result.success).toBe(false);
+    });
+
+    it('should parse launch with ignoreHTTPSErrors true', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', ignoreHTTPSErrors: true }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.ignoreHTTPSErrors).toBe(true);
+      }
+    });
+
+    it('should parse launch with ignoreHTTPSErrors false', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', ignoreHTTPSErrors: false }));
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.command.ignoreHTTPSErrors).toBe(false);
+      }
+    });
+
+    it('should reject launch with non-boolean ignoreHTTPSErrors', () => {
+      const result = parseCommand(cmd({ id: '1', action: 'launch', ignoreHTTPSErrors: 'true' }));
       expect(result.success).toBe(false);
     });
   });
@@ -8264,7 +10149,25 @@ export class StreamServer {
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.wss = new WebSocketServer({ port: this.port });
+        this.wss = new WebSocketServer({
+          port: this.port,
+          // Security: Reject cross-origin WebSocket connections from browsers.
+          // This prevents malicious web pages from connecting and injecting input events.
+          verifyClient: (info: {
+            origin: string;
+            secure: boolean;
+            req: import('http').IncomingMessage;
+          }) => {
+            const origin = info.origin;
+            // Allow connections with no origin (non-browser clients like CLI tools)
+            // Reject connections from web pages (which always have an origin)
+            if (origin && !origin.startsWith('file://')) {
+              console.log(`[StreamServer] Rejected connection from origin: ${origin}`);
+              return false;
+            }
+            return true;
+          },
+        });
 
         this.wss.on('connection', (ws) => {
           this.handleConnection(ws);
@@ -8541,1058 +10444,250 @@ export class StreamServer {
 }
 
 
---- src/types.ts ---
-import type { Page, Browser, BrowserContext } from 'playwright-core';
-
-// Base command structure
-export interface BaseCommand {
-  id: string;
-  action: string;
-}
-
-// Action-specific command types
-export interface LaunchCommand extends BaseCommand {
-  action: 'launch';
-  headless?: boolean;
-  viewport?: { width: number; height: number };
-  browser?: 'chromium' | 'firefox' | 'webkit';
-  headers?: Record<string, string>;
-  executablePath?: string;
-  cdpPort?: number;
-  extensions?: string[];
-  proxy?: {
-    server: string;
-    bypass?: string;
-    username?: string;
-    password?: string;
-  };
-}
-
-export interface NavigateCommand extends BaseCommand {
-  action: 'navigate';
-  url: string;
-  waitUntil?: 'load' | 'domcontentloaded' | 'networkidle';
-  headers?: Record<string, string>;
-}
-
-export interface ClickCommand extends BaseCommand {
-  action: 'click';
-  selector: string;
-  button?: 'left' | 'right' | 'middle';
-  clickCount?: number;
-  delay?: number;
-}
-
-export interface TypeCommand extends BaseCommand {
-  action: 'type';
-  selector: string;
-  text: string;
-  delay?: number;
-  clear?: boolean;
-}
-
-export interface FillCommand extends BaseCommand {
-  action: 'fill';
-  selector: string;
-  value: string;
-}
-
-export interface CheckCommand extends BaseCommand {
-  action: 'check';
-  selector: string;
-}
-
-export interface UncheckCommand extends BaseCommand {
-  action: 'uncheck';
-  selector: string;
-}
-
-export interface UploadCommand extends BaseCommand {
-  action: 'upload';
-  selector: string;
-  files: string | string[];
-}
-
-export interface DoubleClickCommand extends BaseCommand {
-  action: 'dblclick';
-  selector: string;
-}
-
-export interface FocusCommand extends BaseCommand {
-  action: 'focus';
-  selector: string;
-}
-
-export interface DragCommand extends BaseCommand {
-  action: 'drag';
-  source: string;
-  target: string;
-}
-
-export interface FrameCommand extends BaseCommand {
-  action: 'frame';
-  selector?: string;
-  name?: string;
-  url?: string;
-}
-
-export interface MainFrameCommand extends BaseCommand {
-  action: 'mainframe';
-}
-
-export interface GetByRoleCommand extends BaseCommand {
-  action: 'getbyrole';
-  role: string;
-  name?: string;
-  subaction: 'click' | 'fill' | 'check' | 'hover';
-  value?: string;
-}
-
-export interface GetByTextCommand extends BaseCommand {
-  action: 'getbytext';
-  text: string;
-  exact?: boolean;
-  subaction: 'click' | 'hover';
-}
-
-export interface GetByLabelCommand extends BaseCommand {
-  action: 'getbylabel';
-  label: string;
-  subaction: 'click' | 'fill' | 'check';
-  value?: string;
-}
-
-export interface GetByPlaceholderCommand extends BaseCommand {
-  action: 'getbyplaceholder';
-  placeholder: string;
-  subaction: 'click' | 'fill';
-  value?: string;
-}
-
-export interface CookiesGetCommand extends BaseCommand {
-  action: 'cookies_get';
-  urls?: string[];
-}
-
-export interface CookiesSetCommand extends BaseCommand {
-  action: 'cookies_set';
-  cookies: Array<{
-    name: string;
-    value: string;
-    url?: string;
-    domain?: string;
-    path?: string;
-    expires?: number;
-    httpOnly?: boolean;
-    secure?: boolean;
-    sameSite?: 'Strict' | 'Lax' | 'None';
-  }>;
-}
-
-export interface CookiesClearCommand extends BaseCommand {
-  action: 'cookies_clear';
-}
-
-export interface StorageGetCommand extends BaseCommand {
-  action: 'storage_get';
-  key?: string;
-  type: 'local' | 'session';
-}
-
-export interface StorageSetCommand extends BaseCommand {
-  action: 'storage_set';
-  key: string;
-  value: string;
-  type: 'local' | 'session';
-}
-
-export interface StorageClearCommand extends BaseCommand {
-  action: 'storage_clear';
-  type: 'local' | 'session';
-}
-
-export interface DialogCommand extends BaseCommand {
-  action: 'dialog';
-  response: 'accept' | 'dismiss';
-  promptText?: string;
-}
-
-export interface PdfCommand extends BaseCommand {
-  action: 'pdf';
-  path: string;
-  format?:
-    | 'Letter'
-    | 'Legal'
-    | 'Tabloid'
-    | 'Ledger'
-    | 'A0'
-    | 'A1'
-    | 'A2'
-    | 'A3'
-    | 'A4'
-    | 'A5'
-    | 'A6';
-}
-
-// Network interception
-export interface RouteCommand extends BaseCommand {
-  action: 'route';
-  url: string;
-  response?: {
-    status?: number;
-    body?: string;
-    contentType?: string;
-    headers?: Record<string, string>;
-  };
-  abort?: boolean;
-}
-
-export interface UnrouteCommand extends BaseCommand {
-  action: 'unroute';
-  url?: string; // If not provided, remove all routes
-}
-
-// Request inspection
-export interface RequestsCommand extends BaseCommand {
-  action: 'requests';
-  filter?: string; // URL pattern to filter
-  clear?: boolean;
-}
-
-// Download handling
-export interface DownloadCommand extends BaseCommand {
-  action: 'download';
-  selector: string;
-  path: string;
-}
-
-// Geolocation
-export interface GeolocationCommand extends BaseCommand {
-  action: 'geolocation';
-  latitude: number;
-  longitude: number;
-  accuracy?: number;
-}
-
-// Permissions
-export interface PermissionsCommand extends BaseCommand {
-  action: 'permissions';
-  permissions: string[];
-  grant: boolean;
-}
-
-// Viewport
-export interface ViewportCommand extends BaseCommand {
-  action: 'viewport';
-  width: number;
-  height: number;
-}
-
-// User agent
-export interface UserAgentCommand extends BaseCommand {
-  action: 'useragent';
-  userAgent: string;
-}
-
-// Emulate device
-export interface DeviceCommand extends BaseCommand {
-  action: 'device';
-  device: string;
-}
-
-// Go back/forward
-export interface BackCommand extends BaseCommand {
-  action: 'back';
-}
-
-export interface ForwardCommand extends BaseCommand {
-  action: 'forward';
-}
-
-export interface ReloadCommand extends BaseCommand {
-  action: 'reload';
-}
-
-// Get URL/Title
-export interface UrlCommand extends BaseCommand {
-  action: 'url';
-}
-
-export interface TitleCommand extends BaseCommand {
-  action: 'title';
-}
-
-// Attribute/Property/Text
-export interface GetAttributeCommand extends BaseCommand {
-  action: 'getattribute';
-  selector: string;
-  attribute: string;
-}
-
-export interface GetTextCommand extends BaseCommand {
-  action: 'gettext';
-  selector: string;
-}
-
-export interface IsVisibleCommand extends BaseCommand {
-  action: 'isvisible';
-  selector: string;
-}
-
-export interface IsEnabledCommand extends BaseCommand {
-  action: 'isenabled';
-  selector: string;
-}
-
-export interface IsCheckedCommand extends BaseCommand {
-  action: 'ischecked';
-  selector: string;
-}
-
-export interface CountCommand extends BaseCommand {
-  action: 'count';
-  selector: string;
-}
-
-// Bounding box
-export interface BoundingBoxCommand extends BaseCommand {
-  action: 'boundingbox';
-  selector: string;
-}
-
-// Computed styles
-export interface StylesCommand extends BaseCommand {
-  action: 'styles';
-  selector: string;
-}
-
-// More semantic locators
-export interface GetByAltTextCommand extends BaseCommand {
-  action: 'getbyalttext';
-  text: string;
-  exact?: boolean;
-  subaction: 'click' | 'hover';
-}
-
-export interface GetByTitleCommand extends BaseCommand {
-  action: 'getbytitle';
-  text: string;
-  exact?: boolean;
-  subaction: 'click' | 'hover';
-}
-
-export interface GetByTestIdCommand extends BaseCommand {
-  action: 'getbytestid';
-  testId: string;
-  subaction: 'click' | 'fill' | 'check' | 'hover';
-  value?: string;
-}
-
-// Nth element selection
-export interface NthCommand extends BaseCommand {
-  action: 'nth';
-  selector: string;
-  index: number; // 0-based, or -1 for last
-  subaction: 'click' | 'fill' | 'check' | 'hover' | 'text';
-  value?: string;
-}
-
-// Wait for URL
-export interface WaitForUrlCommand extends BaseCommand {
-  action: 'waitforurl';
-  url: string;
-  timeout?: number;
-}
-
-// Wait for load state
-export interface WaitForLoadStateCommand extends BaseCommand {
-  action: 'waitforloadstate';
-  state: 'load' | 'domcontentloaded' | 'networkidle';
-  timeout?: number;
-}
-
-// Set HTML content
-export interface SetContentCommand extends BaseCommand {
-  action: 'setcontent';
-  html: string;
-}
-
-// Timezone emulation
-export interface TimezoneCommand extends BaseCommand {
-  action: 'timezone';
-  timezone: string;
-}
-
-// Locale emulation
-export interface LocaleCommand extends BaseCommand {
-  action: 'locale';
-  locale: string;
-}
-
-// HTTP basic auth
-export interface HttpCredentialsCommand extends BaseCommand {
-  action: 'credentials';
-  username: string;
-  password: string;
-}
-
-// Fine-grained mouse control
-export interface MouseMoveCommand extends BaseCommand {
-  action: 'mousemove';
-  x: number;
-  y: number;
-}
-
-export interface MouseDownCommand extends BaseCommand {
-  action: 'mousedown';
-  button?: 'left' | 'right' | 'middle';
-}
-
-export interface MouseUpCommand extends BaseCommand {
-  action: 'mouseup';
-  button?: 'left' | 'right' | 'middle';
-}
-
-// Bring to front
-export interface BringToFrontCommand extends BaseCommand {
-  action: 'bringtofront';
-}
-
-// Wait for JS function to return truthy
-export interface WaitForFunctionCommand extends BaseCommand {
-  action: 'waitforfunction';
-  expression: string;
-  timeout?: number;
-}
-
-// Scroll element into view
-export interface ScrollIntoViewCommand extends BaseCommand {
-  action: 'scrollintoview';
-  selector: string;
-}
-
-// Add init script (runs on every navigation)
-export interface AddInitScriptCommand extends BaseCommand {
-  action: 'addinitscript';
-  script: string;
-}
-
-// Keyboard down/up (hold keys)
-export interface KeyDownCommand extends BaseCommand {
-  action: 'keydown';
-  key: string;
-}
-
-export interface KeyUpCommand extends BaseCommand {
-  action: 'keyup';
-  key: string;
-}
-
-// Insert text (without key events)
-export interface InsertTextCommand extends BaseCommand {
-  action: 'inserttext';
-  text: string;
-}
-
-// Multi-select dropdown
-export interface MultiSelectCommand extends BaseCommand {
-  action: 'multiselect';
-  selector: string;
-  values: string[];
-}
-
-// Wait for download
-export interface WaitForDownloadCommand extends BaseCommand {
-  action: 'waitfordownload';
-  path?: string;
-  timeout?: number;
-}
-
-// Get response body from intercepted request
-export interface ResponseBodyCommand extends BaseCommand {
-  action: 'responsebody';
-  url: string;
-  timeout?: number;
-}
-
-// Screencast commands for streaming browser viewport
-export interface ScreencastStartCommand extends BaseCommand {
-  action: 'screencast_start';
-  format?: 'jpeg' | 'png';
-  quality?: number; // 0-100, jpeg only
-  maxWidth?: number;
-  maxHeight?: number;
-  everyNthFrame?: number;
-}
-
-export interface ScreencastStopCommand extends BaseCommand {
-  action: 'screencast_stop';
-}
-
-// Input injection commands for pair browsing
-export interface InputMouseCommand extends BaseCommand {
-  action: 'input_mouse';
-  type: 'mousePressed' | 'mouseReleased' | 'mouseMoved' | 'mouseWheel';
-  x: number;
-  y: number;
-  button?: 'left' | 'right' | 'middle' | 'none';
-  clickCount?: number;
-  deltaX?: number;
-  deltaY?: number;
-  modifiers?: number;
-}
-
-export interface InputKeyboardCommand extends BaseCommand {
-  action: 'input_keyboard';
-  type: 'keyDown' | 'keyUp' | 'char';
-  key?: string;
-  code?: string;
-  text?: string;
-  modifiers?: number;
-}
-
-export interface InputTouchCommand extends BaseCommand {
-  action: 'input_touch';
-  type: 'touchStart' | 'touchEnd' | 'touchMove' | 'touchCancel';
-  touchPoints: Array<{ x: number; y: number; id?: number }>;
-  modifiers?: number;
-}
-
-// Video recording (Playwright native - requires launch-time setup)
-export interface VideoStartCommand extends BaseCommand {
-  action: 'video_start';
-  path: string;
-}
-
-export interface VideoStopCommand extends BaseCommand {
-  action: 'video_stop';
-}
-
-// Screen recording (Playwright native - creates fresh recording context)
-export interface RecordingStartCommand extends BaseCommand {
-  action: 'recording_start';
-  path: string;
-  url?: string;
-}
-
-export interface RecordingStopCommand extends BaseCommand {
-  action: 'recording_stop';
-}
-
-export interface RecordingRestartCommand extends BaseCommand {
-  action: 'recording_restart';
-  path: string;
-  url?: string;
-}
-
-// Tracing
-export interface TraceStartCommand extends BaseCommand {
-  action: 'trace_start';
-  screenshots?: boolean;
-  snapshots?: boolean;
-}
-
-export interface TraceStopCommand extends BaseCommand {
-  action: 'trace_stop';
-  path: string;
-}
-
-// HAR recording
-export interface HarStartCommand extends BaseCommand {
-  action: 'har_start';
-}
-
-export interface HarStopCommand extends BaseCommand {
-  action: 'har_stop';
-  path: string;
-}
-
-// Storage state (auth persistence)
-export interface StorageStateSaveCommand extends BaseCommand {
-  action: 'state_save';
-  path: string;
-}
-
-export interface StorageStateLoadCommand extends BaseCommand {
-  action: 'state_load';
-  path: string;
-}
-
-// Console logs
-export interface ConsoleCommand extends BaseCommand {
-  action: 'console';
-  clear?: boolean;
-}
-
-// Page errors
-export interface ErrorsCommand extends BaseCommand {
-  action: 'errors';
-  clear?: boolean;
-}
-
-// Keyboard shortcuts
-export interface KeyboardCommand extends BaseCommand {
-  action: 'keyboard';
-  keys: string; // e.g., "Control+a", "Shift+Tab"
-}
-
-// Mouse wheel
-export interface WheelCommand extends BaseCommand {
-  action: 'wheel';
-  deltaX?: number;
-  deltaY?: number;
-  selector?: string;
-}
-
-// Touch events
-export interface TapCommand extends BaseCommand {
-  action: 'tap';
-  selector: string;
-}
-
-// Clipboard
-export interface ClipboardCommand extends BaseCommand {
-  action: 'clipboard';
-  operation: 'copy' | 'paste' | 'read';
-  text?: string;
-}
-
-// Highlight element (for debugging)
-export interface HighlightCommand extends BaseCommand {
-  action: 'highlight';
-  selector: string;
-}
-
-// Clear input
-export interface ClearCommand extends BaseCommand {
-  action: 'clear';
-  selector: string;
-}
-
-// Select all text
-export interface SelectAllCommand extends BaseCommand {
-  action: 'selectall';
-  selector: string;
-}
-
-// Inner text vs text content
-export interface InnerTextCommand extends BaseCommand {
-  action: 'innertext';
-  selector: string;
-}
-
-export interface InnerHtmlCommand extends BaseCommand {
-  action: 'innerhtml';
-  selector: string;
-}
-
-// Input value
-export interface InputValueCommand extends BaseCommand {
-  action: 'inputvalue';
-  selector: string;
-}
-
-// Set input value directly (without events)
-export interface SetValueCommand extends BaseCommand {
-  action: 'setvalue';
-  selector: string;
-  value: string;
-}
-
-// Dispatch event
-export interface DispatchEventCommand extends BaseCommand {
-  action: 'dispatch';
-  selector: string;
-  event: string;
-  eventInit?: Record<string, unknown>;
-}
-
-// Evaluate handle (for complex JS)
-export interface EvaluateHandleCommand extends BaseCommand {
-  action: 'evalhandle';
-  script: string;
-}
-
-// Expose function
-export interface ExposeFunctionCommand extends BaseCommand {
-  action: 'expose';
-  name: string;
-}
-
-// Add script/style tag
-export interface AddScriptCommand extends BaseCommand {
-  action: 'addscript';
-  content?: string;
-  url?: string;
-}
-
-export interface AddStyleCommand extends BaseCommand {
-  action: 'addstyle';
-  content?: string;
-  url?: string;
-}
-
-// Emulate media
-export interface EmulateMediaCommand extends BaseCommand {
-  action: 'emulatemedia';
-  media?: 'screen' | 'print' | null;
-  colorScheme?: 'light' | 'dark' | 'no-preference' | null;
-  reducedMotion?: 'reduce' | 'no-preference' | null;
-  forcedColors?: 'active' | 'none' | null;
-}
-
-// Set offline mode
-export interface OfflineCommand extends BaseCommand {
-  action: 'offline';
-  offline: boolean;
-}
-
-// Set extra HTTP headers
-export interface HeadersCommand extends BaseCommand {
-  action: 'headers';
-  headers: Record<string, string>;
-}
-
-// Pause execution (for debugging)
-export interface PauseCommand extends BaseCommand {
-  action: 'pause';
-}
-
-export interface PressCommand extends BaseCommand {
-  action: 'press';
-  key: string;
-  selector?: string;
-}
-
-export interface ScreenshotCommand extends BaseCommand {
-  action: 'screenshot';
-  path?: string;
-  fullPage?: boolean;
-  selector?: string;
-  format?: 'png' | 'jpeg';
-  quality?: number;
-}
-
-export interface SnapshotCommand extends BaseCommand {
-  action: 'snapshot';
-}
-
-export interface EvaluateCommand extends BaseCommand {
-  action: 'evaluate';
-  script: string;
-  args?: unknown[];
-}
-
-export interface WaitCommand extends BaseCommand {
-  action: 'wait';
-  selector?: string;
-  timeout?: number;
-  state?: 'attached' | 'detached' | 'visible' | 'hidden';
-}
-
-export interface ScrollCommand extends BaseCommand {
-  action: 'scroll';
-  selector?: string;
-  x?: number;
-  y?: number;
-  direction?: 'up' | 'down' | 'left' | 'right';
-  amount?: number;
-}
-
-export interface SelectCommand extends BaseCommand {
-  action: 'select';
-  selector: string;
-  values: string | string[];
-}
-
-export interface HoverCommand extends BaseCommand {
-  action: 'hover';
-  selector: string;
-}
-
-export interface ContentCommand extends BaseCommand {
-  action: 'content';
-  selector?: string;
-}
-
-export interface CloseCommand extends BaseCommand {
-  action: 'close';
-}
-
-// Tab/Window commands
-export interface TabNewCommand extends BaseCommand {
-  action: 'tab_new';
-  url?: string;
-}
-
-export interface TabListCommand extends BaseCommand {
-  action: 'tab_list';
-}
-
-export interface TabSwitchCommand extends BaseCommand {
-  action: 'tab_switch';
-  index: number;
-}
-
-export interface TabCloseCommand extends BaseCommand {
-  action: 'tab_close';
-  index?: number;
-}
-
-export interface WindowNewCommand extends BaseCommand {
-  action: 'window_new';
-  viewport?: { width: number; height: number };
-}
-
-// Union of all command types
-export type Command =
-  | LaunchCommand
-  | NavigateCommand
-  | ClickCommand
-  | TypeCommand
-  | FillCommand
-  | CheckCommand
-  | UncheckCommand
-  | UploadCommand
-  | DoubleClickCommand
-  | FocusCommand
-  | DragCommand
-  | FrameCommand
-  | MainFrameCommand
-  | GetByRoleCommand
-  | GetByTextCommand
-  | GetByLabelCommand
-  | GetByPlaceholderCommand
-  | PressCommand
-  | ScreenshotCommand
-  | SnapshotCommand
-  | EvaluateCommand
-  | WaitCommand
-  | ScrollCommand
-  | SelectCommand
-  | HoverCommand
-  | ContentCommand
-  | CloseCommand
-  | TabNewCommand
-  | TabListCommand
-  | TabSwitchCommand
-  | TabCloseCommand
-  | WindowNewCommand
-  | CookiesGetCommand
-  | CookiesSetCommand
-  | CookiesClearCommand
-  | StorageGetCommand
-  | StorageSetCommand
-  | StorageClearCommand
-  | DialogCommand
-  | PdfCommand
-  | RouteCommand
-  | UnrouteCommand
-  | RequestsCommand
-  | DownloadCommand
-  | GeolocationCommand
-  | PermissionsCommand
-  | ViewportCommand
-  | UserAgentCommand
-  | DeviceCommand
-  | BackCommand
-  | ForwardCommand
-  | ReloadCommand
-  | UrlCommand
-  | TitleCommand
-  | GetAttributeCommand
-  | GetTextCommand
-  | IsVisibleCommand
-  | IsEnabledCommand
-  | IsCheckedCommand
-  | CountCommand
-  | BoundingBoxCommand
-  | StylesCommand
-  | VideoStartCommand
-  | VideoStopCommand
-  | RecordingStartCommand
-  | RecordingStopCommand
-  | RecordingRestartCommand
-  | TraceStartCommand
-  | TraceStopCommand
-  | HarStartCommand
-  | HarStopCommand
-  | StorageStateSaveCommand
-  | StorageStateLoadCommand
-  | ConsoleCommand
-  | ErrorsCommand
-  | KeyboardCommand
-  | WheelCommand
-  | TapCommand
-  | ClipboardCommand
-  | HighlightCommand
-  | ClearCommand
-  | SelectAllCommand
-  | InnerTextCommand
-  | InnerHtmlCommand
-  | InputValueCommand
-  | SetValueCommand
-  | DispatchEventCommand
-  | EvaluateHandleCommand
-  | ExposeFunctionCommand
-  | AddScriptCommand
-  | AddStyleCommand
-  | EmulateMediaCommand
-  | OfflineCommand
-  | HeadersCommand
-  | PauseCommand
-  | GetByAltTextCommand
-  | GetByTitleCommand
-  | GetByTestIdCommand
-  | NthCommand
-  | WaitForUrlCommand
-  | WaitForLoadStateCommand
-  | SetContentCommand
-  | TimezoneCommand
-  | LocaleCommand
-  | HttpCredentialsCommand
-  | MouseMoveCommand
-  | MouseDownCommand
-  | MouseUpCommand
-  | BringToFrontCommand
-  | WaitForFunctionCommand
-  | ScrollIntoViewCommand
-  | AddInitScriptCommand
-  | KeyDownCommand
-  | KeyUpCommand
-  | InsertTextCommand
-  | MultiSelectCommand
-  | WaitForDownloadCommand
-  | ResponseBodyCommand
-  | ScreencastStartCommand
-  | ScreencastStopCommand
-  | InputMouseCommand
-  | InputKeyboardCommand
-  | InputTouchCommand;
-
-// Response types
-export interface SuccessResponse<T = unknown> {
-  id: string;
-  success: true;
-  data: T;
-}
-
-export interface ErrorResponse {
-  id: string;
-  success: false;
-  error: string;
-}
-
-export type Response<T = unknown> = SuccessResponse<T> | ErrorResponse;
-
-// Data types for specific responses
-export interface NavigateData {
-  url: string;
-  title: string;
-}
-
-export interface ScreenshotData {
-  path?: string;
-  base64?: string;
-}
-
-export interface SnapshotData {
-  snapshot: string;
-}
-
-export interface EvaluateData {
-  result: unknown;
-}
-
-export interface ContentData {
-  html: string;
-}
-
-export interface TabInfo {
-  index: number;
-  url: string;
-  title: string;
-  active: boolean;
-}
-
-export interface TabListData {
-  tabs: TabInfo[];
-  active: number;
-}
-
-export interface TabNewData {
-  index: number;
-  total: number;
-}
-
-export interface TabSwitchData {
-  index: number;
-  url: string;
-  title: string;
-}
-
-export interface TabCloseData {
-  closed: number;
-  remaining: number;
-}
-
-export interface ScreencastStartData {
-  started: boolean;
-  format: string;
-  quality: number;
-}
-
-export interface ScreencastStopData {
-  stopped: boolean;
-}
-
-export interface RecordingStartData {
-  started: boolean;
-  path: string;
-}
-
-export interface RecordingStopData {
-  path: string;
-  frames: number;
-  error?: string;
-}
-
-export interface RecordingRestartData {
-  started: boolean;
-  path: string;
-  previousPath?: string;
-  stopped: boolean;
-}
-
-export interface InputEventData {
-  injected: boolean;
-}
-
-// Element styles data
-export interface ElementStyleInfo {
-  tag: string;
-  text: string | null;
-  box: { x: number; y: number; width: number; height: number };
-  styles: {
-    fontSize: string;
-    fontWeight: string;
-    fontFamily: string;
-    color: string;
-    backgroundColor: string;
-    borderRadius: string;
-    border: string | null;
-    boxShadow: string | null;
-    padding: string;
-  };
-}
-
-export interface StylesData {
-  elements: ElementStyleInfo[];
-}
-
-// Browser state
-export interface BrowserState {
-  browser: Browser | null;
-  context: BrowserContext | null;
-  page: Page | null;
-}
+--- test/launch-options.test.ts ---
+import { describe, it, expect, afterEach } from 'vitest';
+import { BrowserManager } from '../src/browser.js';
+
+describe('Launch Options', () => {
+  let browser: BrowserManager;
+
+  afterEach(async () => {
+    if (browser?.isLaunched()) {
+      await browser.close();
+    }
+  });
+
+  describe('browser args', () => {
+    it('should launch with custom args to disable webdriver detection', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        args: ['--disable-blink-features=AutomationControlled'],
+      });
+
+      const page = browser.getPage();
+      await page.goto('about:blank');
+
+      // Check that navigator.webdriver is false
+      const webdriver = await page.evaluate(() => navigator.webdriver);
+      expect(webdriver).toBe(false);
+    });
+
+    it('should launch with multiple args', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        args: [
+          '--disable-blink-features=AutomationControlled',
+          '--disable-dev-shm-usage',
+        ],
+      });
+
+      expect(browser.isLaunched()).toBe(true);
+    });
+
+    it('should launch without args (default behavior)', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+      });
+
+      const page = browser.getPage();
+      await page.goto('about:blank');
+
+      // Default Playwright behavior - webdriver is true
+      const webdriver = await page.evaluate(() => navigator.webdriver);
+      expect(webdriver).toBe(true);
+    });
+  });
+
+  describe('custom user-agent', () => {
+    it('should launch with custom user-agent', async () => {
+      const customUA = 'CustomTestBot/1.0';
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        userAgent: customUA,
+      });
+
+      const page = browser.getPage();
+      await page.goto('about:blank');
+
+      const ua = await page.evaluate(() => navigator.userAgent);
+      expect(ua).toBe(customUA);
+    });
+
+    it('should use default user-agent when not specified', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+      });
+
+      const page = browser.getPage();
+      await page.goto('about:blank');
+
+      const ua = await page.evaluate(() => navigator.userAgent);
+      // Default UA should contain Chrome/Chromium
+      expect(ua).toContain('Chrome');
+    });
+  });
+
+  describe('proxy configuration', () => {
+    it('should accept proxy configuration', async () => {
+      browser = new BrowserManager();
+      // Note: This test just verifies the proxy option is accepted without error
+      // Actual proxy testing requires a running proxy server
+      await browser.launch({
+        headless: true,
+        proxy: {
+          server: 'http://localhost:8080',
+        },
+      });
+
+      expect(browser.isLaunched()).toBe(true);
+    });
+
+    it('should accept proxy with bypass list', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        proxy: {
+          server: 'http://localhost:8080',
+          bypass: 'localhost,*.internal.com',
+        },
+      });
+
+      expect(browser.isLaunched()).toBe(true);
+    });
+
+    it('should fail connection when proxy is unreachable (proves proxy is being used)', async () => {
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        proxy: {
+          server: 'http://127.0.0.1:59999', // Non-existent proxy
+        },
+      });
+
+      const page = browser.getPage();
+      // Navigation should fail because proxy is unreachable
+      // This proves the proxy setting is actually being used
+      await expect(page.goto('https://example.com', { timeout: 5000 })).rejects.toThrow();
+    });
+  });
+
+  describe('combined options', () => {
+    it('should launch with args, user-agent, and proxy combined', async () => {
+      const customUA = 'CombinedTestBot/2.0';
+      browser = new BrowserManager();
+      await browser.launch({
+        headless: true,
+        args: ['--disable-blink-features=AutomationControlled'],
+        userAgent: customUA,
+        proxy: {
+          server: 'http://localhost:8080',
+          bypass: 'localhost',
+        },
+      });
+
+      const page = browser.getPage();
+      await page.goto('about:blank');
+
+      // Verify user-agent
+      const ua = await page.evaluate(() => navigator.userAgent);
+      expect(ua).toBe(customUA);
+
+      // Verify webdriver is hidden
+      const webdriver = await page.evaluate(() => navigator.webdriver);
+      expect(webdriver).toBe(false);
+    });
+  });
+});
+
+
+--- test/serverless.test.ts ---
+/**
+ * Integration test for @sparticuz/chromium compatibility
+ * This tests the executablePath option with a serverless-optimized Chromium build
+ *
+ * Note: @sparticuz/chromium only works on Linux (designed for AWS Lambda).
+ * This test will skip on non-Linux platforms.
+ */
+import { describe, it, expect, afterAll } from 'vitest';
+import { BrowserManager } from '../src/browser.js';
+import * as os from 'os';
+
+const isLinux = os.platform() === 'linux';
+
+// Only run if @sparticuz/chromium is available AND we're on Linux
+const canRunTest = await (async () => {
+  if (!isLinux) {
+    console.log('Skipping @sparticuz/chromium test: only runs on Linux');
+    return false;
+  }
+  try {
+    await import('@sparticuz/chromium');
+    return true;
+  } catch {
+    console.log('Skipping @sparticuz/chromium test: package not installed');
+    return false;
+  }
+})();
+
+describe.skipIf(!canRunTest)('Serverless Chromium Integration', () => {
+  let browser: BrowserManager;
+  let chromiumPath: string;
+
+  it('should get executable path from @sparticuz/chromium', async () => {
+    const chromium = await import('@sparticuz/chromium');
+    chromiumPath = await chromium.default.executablePath();
+    expect(chromiumPath).toBeTruthy();
+    expect(typeof chromiumPath).toBe('string');
+    console.log('Chromium executable path:', chromiumPath);
+  });
+
+  it('should launch browser with custom executablePath', async () => {
+    const chromium = await import('@sparticuz/chromium');
+    chromiumPath = await chromium.default.executablePath();
+
+    browser = new BrowserManager();
+    await browser.launch({
+      headless: true,
+      executablePath: chromiumPath,
+    });
+
+    expect(browser.isLaunched()).toBe(true);
+  });
+
+  it('should navigate to a page', async () => {
+    const page = browser.getPage();
+    await page.goto('https://example.com');
+    expect(page.url()).toBe('https://example.com/');
+  });
+
+  it('should get page title', async () => {
+    const page = browser.getPage();
+    const title = await page.title();
+    expect(title).toBe('Example Domain');
+  });
+
+  it('should take snapshot with refs', async () => {
+    const { tree, refs } = await browser.getSnapshot();
+    expect(tree).toContain('Example Domain');
+    expect(typeof refs).toBe('object');
+    expect(Object.keys(refs).length).toBeGreaterThan(0);
+  });
+
+  it('should take screenshot', async () => {
+    const page = browser.getPage();
+    const buffer = await page.screenshot();
+    expect(buffer).toBeInstanceOf(Buffer);
+    expect(buffer.length).toBeGreaterThan(0);
+  });
+
+  afterAll(async () => {
+    if (browser?.isLaunched()) {
+      await browser.close();
+    }
+  });
+});

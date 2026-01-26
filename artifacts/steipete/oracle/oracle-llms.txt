@@ -1,14 +1,14 @@
 # Oracle
 
-> Oracle enables developers to generate context-aware AI responses by bundling prompts and files, then sending them to multiple or single AI models via API or browser automation. It supports multi-model runs, file safety controls, session persistence, and cross-platform compatibility (macOS, Linux, Windows). The tool aims to streamline AI-assisted development workflows—especially for review, debugging, and automation—by abstracting the complexity of model selection, token estimation, and environment setup. Its browser mode offers experimental automation without requiring API keys, while its integration with tools like Cursor and Codex enhances developer productivity.
+> Oracle enables developers to bundle their prompts and files for analysis by multiple AI models—whether via API or browser automation—making it ideal for code reviews, debugging, and cross-model validation. It supports advanced features like multi-model runs with aggregated cost tracking, session replay, remote browser hosting, and configuration-driven defaults. The tool is designed for productivity in AI-assisted development workflows, especially when working across platforms (macOS, Linux, Windows) or integrating with external tools like Cursor and Codex.
 
 **Remember:**
-- CLI tool for AI context bundling
 - Multi-model API runs
-- Browser automation via Chrome
-- Session management (replay, pruning)
-- Model selection strategy (API vs. browser)
-- Token estimation and usage reporting
+- Browser automation with Chrome
+- Session management and replay
+- Prompt bundling and file attachment
+- Model strategy selection (API vs browser)
+- Remote browser service (oracle serve)
 
 ## Docs
 - [Anthropic](https://github.com/steipete/oracle/blob/main/docs/anthropic.md): docs page.
@@ -47,6 +47,7 @@
 - [Runner](https://github.com/steipete/oracle/blob/main/scripts/runner.ts): docs page.
 - [Test Browser](https://github.com/steipete/oracle/blob/main/scripts/test-browser.ts): docs page.
 - [Test Remote Chrome](https://github.com/steipete/oracle/blob/main/scripts/test-remote-chrome.ts): docs page.
+- [Extract Chatgpt Response](https://github.com/steipete/oracle/blob/main/scripts/debug/extract-chatgpt-response.ts): docs page.
 
 ## Src
 - [Browsermode](https://github.com/steipete/oracle/blob/main/src/browserMode.ts): docs page.
