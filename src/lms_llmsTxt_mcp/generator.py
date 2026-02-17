@@ -18,6 +18,7 @@ from .security import validate_output_dir
 
 _lock = threading.Lock()
 logger = logging.getLogger(__name__)
+_SOURCE_MARKER_PREFIX = "<!-- llmstxt:source="
 
 def _base_name_from_llms_path(path: Path) -> str:
     name = path.name
@@ -39,8 +40,19 @@ def _upsert_artifact_list(artifacts: list[ArtifactRef], ref: ArtifactRef) -> Non
     artifacts.append(ref)
 
 
-def _write_text(path: Path, content: str) -> None:
-    path.write_text(content.rstrip() + "\n", encoding="utf-8")
+def _detect_source_from_text(text: str) -> str:
+    for line in text.splitlines()[:3]:
+        line = line.strip()
+        if line.startswith(_SOURCE_MARKER_PREFIX) and line.endswith("-->"):
+            return line[len(_SOURCE_MARKER_PREFIX):-3].strip()
+    return "unknown"
+
+
+def _write_text(path: Path, content: str, *, source: str | None = None) -> None:
+    text = content.rstrip()
+    if source and not text.startswith(_SOURCE_MARKER_PREFIX):
+        text = f"{_SOURCE_MARKER_PREFIX}{source} -->\n{text}"
+    path.write_text(text + "\n", encoding="utf-8")
 
 
 def _artifact_ref_from_path(name: str, path: Path) -> Optional[ArtifactRef]:
@@ -242,6 +254,7 @@ def safe_generate_llms_full(
                 raise FileNotFoundError(f"llms.txt not found at {llms_path}")
 
             llms_text = llms_path.read_text(encoding="utf-8")
+            llms_source = _detect_source_from_text(llms_text)
             repo_root = llms_path.parent
             config = AppConfig(output_dir=validated_dir)
 
@@ -260,7 +273,7 @@ def safe_generate_llms_full(
 
             base_name = _base_name_from_llms_path(llms_path)
             llms_full_path = repo_root / f"{base_name}-llms-full.txt"
-            _write_text(llms_full_path, llms_full_text)
+            _write_text(llms_full_path, llms_full_text, source=llms_source)
             logger.info("Wrote llms-full.txt to %s", llms_full_path)
 
             ref = ArtifactRef(
@@ -338,6 +351,7 @@ def safe_generate_llms_ctx(
             if not llms_ref:
                 raise FileNotFoundError(f"llms.txt not found at {llms_path}")
             llms_text = llms_path.read_text(encoding="utf-8")
+            llms_source = _detect_source_from_text(llms_text)
 
             try:
                 from llms_txt import create_ctx  # type: ignore
@@ -348,7 +362,7 @@ def safe_generate_llms_ctx(
             repo_root = llms_path.parent
             base_name = _base_name_from_llms_path(llms_path)
             ctx_path = repo_root / f"{base_name}-llms-ctx.txt"
-            _write_text(ctx_path, ctx_text)
+            _write_text(ctx_path, ctx_text, source=llms_source)
             logger.info("Wrote llms-ctx.txt to %s", ctx_path)
 
             ref = ArtifactRef(

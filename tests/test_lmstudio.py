@@ -139,9 +139,14 @@ def test_pipeline_fallback(tmp_path, monkeypatch):
     artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
 
     assert artifacts.used_fallback is True
+    assert artifacts.llms_source == "heuristic"
+    assert artifacts.fallback_reason
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
     assert Path(artifacts.json_path).exists()
+    assert Path(artifacts.llms_txt_path).read_text(encoding="utf-8").startswith(
+        "<!-- llmstxt:source=heuristic -->"
+    )
 
 
 def test_pipeline_unloads_model(tmp_path, monkeypatch):
@@ -190,6 +195,11 @@ def test_pipeline_unloads_model(tmp_path, monkeypatch):
     assert unload_called.get("done") is True
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
+    assert artifacts.llms_source == "dspy"
+    assert artifacts.used_fallback is False
+    assert Path(artifacts.llms_txt_path).read_text(encoding="utf-8").startswith(
+        "<!-- llmstxt:source=dspy -->"
+    )
 
 
 def test_unload_prefers_sdk(monkeypatch):

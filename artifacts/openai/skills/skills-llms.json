@@ -1,0 +1,384 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Skills",
+    "summary": "Agent Skills are folders of instructions, scripts, and resources that AI agents can discover and use to perform at specific tasks. Write once, use everywhere. Codex uses skills to help package capabilities that teams and individuals can use to complete specific tasks in a repeatable way. This repository catalogs skills for use and distribution with Codex."
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.system/skill-installer/LICENSE.txt",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.system/skill-installer/SKILL.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Github Utils",
+          "url": "https://github.com/openai/skills/blob/main/skills/.system/skill-installer/scripts/github_utils.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install Skill From Github",
+          "url": "https://github.com/openai/skills/blob/main/skills/.system/skill-installer/scripts/install-skill-from-github.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "List Skills",
+          "url": "https://github.com/openai/skills/blob/main/skills/.system/skill-installer/scripts/list-skills.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "How To Guide",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-knowledge-capture/examples/how-to-guide.md",
+          "note": "worked example"
+        },
+        {
+          "title": "How To Guide Database",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-knowledge-capture/reference/how-to-guide-database.md",
+          "note": "API reference"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/openai-docs/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/openai-docs/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Configuration Guide",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/render-deploy/references/configuration-guide.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Api Feature",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-spec-to-implementation/examples/api-feature.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Competitor Analysis",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-research-documentation/examples/competitor-analysis.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Conversation To Faq",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-knowledge-capture/examples/conversation-to-faq.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Customer Meeting",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-meeting-intelligence/examples/customer-meeting.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Database Migration",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-spec-to-implementation/examples/database-migration.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Decision Capture",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-knowledge-capture/examples/decision-capture.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Executive Review",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-meeting-intelligence/examples/executive-review.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Market Research",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-research-documentation/examples/market-research.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Project Decision",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-meeting-intelligence/examples/project-decision.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Sprint Planning",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-meeting-intelligence/examples/sprint-planning.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/agents-sdk/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/ai-gateway/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/ai-search/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/analytics-engine/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/api-shield/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/api/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/argo-smart-routing/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/bindings/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/bot-management/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/references/browser-rendering/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Concepts",
+      "links": [
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/figma-implement-design/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/figma-implement-design/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/openai/skills/blob/main/contributing.md",
+          "note": "docs page"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/develop-web-game/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/doc/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/figma/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/gh-address-comments/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/gh-fix-ci/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/imagegen/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/jupyter-notebook/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/linear/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/README.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Skills",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-knowledge-capture/evaluations/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-meeting-intelligence/evaluations/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-research-documentation/evaluations/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/notion-spec-to-implementation/evaluations/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Notice",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/playwright/NOTICE.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/cloudflare-deploy/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/develop-web-game/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/doc/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/figma/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/skills/blob/main/skills/.curated/gh-address-comments/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

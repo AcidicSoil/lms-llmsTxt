@@ -37,14 +37,20 @@ except Exception:  # pragma: no cover
 
 logger = logging.getLogger(__name__)
 
+_SOURCE_MARKER_PREFIX = "<!-- llmstxt:source="
+
 
 def _timestamp_comment(prefix: str = "# Generated") -> str:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     return f"{prefix}: {now} UTC"
 
 
-def _write_text(path: Path, content: str, stamp: bool) -> None:
+def _write_text(path: Path, content: str, stamp: bool, *, source: str | None = None) -> None:
     text = content.rstrip()
+    if source:
+        marker = f"{_SOURCE_MARKER_PREFIX}{source} -->"
+        if not text.startswith(_SOURCE_MARKER_PREFIX):
+            text = marker + "\n" + text
     if stamp:
         text += "\n\n" + _timestamp_comment()
     path.write_text(text + "\n", encoding="utf-8")
@@ -73,6 +79,8 @@ def run_generation(
 
     fallback_payload = None
     used_fallback = False
+    llms_source = "dspy"
+    fallback_reason: str | None = None
     project_name = repo.replace("-", " ").replace("_", " ").title()
 
     model_loaded = False
@@ -93,6 +101,25 @@ def run_generation(
             link_style=config.link_style,
         )
         llms_text = result.llms_txt_content
+        generation_mode = getattr(result, "generation_mode", "dspy")
+        if generation_mode != "dspy":
+            used_fallback = True
+            llms_source = "heuristic"
+            fallback_reason = getattr(result, "fallback_reason", None)
+            logger.warning(
+                "Analyzer returned non-DSPy output mode '%s'; treating as fallback path.",
+                generation_mode,
+            )
+            fallback_payload = fallback_llms_payload(
+                repo_name=project_name,
+                repo_url=repo_url,
+                file_tree=material.file_tree,
+                readme_content=material.readme_content,
+                default_branch=material.default_branch,
+                is_private=material.is_private,
+                github_token=config.github_token,
+                link_style=config.link_style,
+            )
     except (
         LiteLLMBadRequestError,
         LiteLLMRateLimitError,
@@ -101,6 +128,8 @@ def run_generation(
         LMStudioConnectivityError,
     ) as exc:
         used_fallback = True
+        llms_source = "heuristic"
+        fallback_reason = str(exc)
         fallback_payload = fallback_llms_payload(
             repo_name=project_name,
             repo_url=repo_url,
@@ -114,6 +143,8 @@ def run_generation(
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
     except Exception as exc:  # pragma: no cover - defensive fallback
         used_fallback = True
+        llms_source = "heuristic"
+        fallback_reason = str(exc)
         logger.exception("Unexpected error during DSPy generation: %s", exc)
         logger.warning("Falling back to heuristic llms.txt generation using %s.", LLMS_JSON_SCHEMA["title"])
         fallback_payload = fallback_llms_payload(
@@ -133,7 +164,7 @@ def run_generation(
 
     llms_txt_path = repo_root / f"{base_name}-llms.txt"
     logger.info("Writing llms.txt to %s", llms_txt_path)
-    _write_text(llms_txt_path, llms_text, stamp)
+    _write_text(llms_txt_path, llms_text, stamp, source=llms_source)
 
     ctx_path: Optional[Path] = None
     should_build_ctx = config.enable_ctx if build_ctx is None else build_ctx
@@ -146,7 +177,7 @@ def run_generation(
             ctx_text = create_ctx(llms_text, optional=False)
             ctx_path = repo_root / f"{base_name}-llms-ctx.txt"
             logger.debug("Writing llms-ctx to %s", ctx_path)
-            _write_text(ctx_path, ctx_text, stamp)
+            _write_text(ctx_path, ctx_text, stamp, source=llms_source)
 
     llms_full_path: Optional[Path] = None
     if build_full:
@@ -159,7 +190,7 @@ def run_generation(
         )
         llms_full_path = repo_root / f"{base_name}-llms-full.txt"
         logger.debug("Writing llms-full to %s", llms_full_path)
-        _write_text(llms_full_path, llms_full_text, stamp)
+        _write_text(llms_full_path, llms_full_text, stamp, source=llms_source)
 
     json_path: Optional[Path] = None
     if fallback_payload:
@@ -173,4 +204,6 @@ def run_generation(
         ctx_path=str(ctx_path) if ctx_path else None,
         json_path=str(json_path) if json_path else None,
         used_fallback=used_fallback,
+        llms_source=llms_source,
+        fallback_reason=fallback_reason,
     )

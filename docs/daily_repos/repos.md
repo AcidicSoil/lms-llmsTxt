@@ -5,9 +5,5 @@ https://github.com/steipete/oracle
 https://github.com/openai/skills
 https://github.com/vercel-labs/agent-browser
 https://github.com/lmstudio-ai/docs
-https://github.com/daytonaio/daytona
 https://github.com/cline/cline
 https://github.com/prefecthq/marvin
-https://github.com/google/adk-python
-https://github.com/vladm3105/aidoc-flow-framework
-https://github.com/elder-plinius/CL4R1T4S

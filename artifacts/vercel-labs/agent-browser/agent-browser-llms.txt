@@ -1,71 +1,59 @@
-# Agent Browser
+<!-- llmstxt:source=dspy -->
+# agent-browser: AI-First Web Automation CLI
 
-> The purpose of agent-browser is to empower AI agents with a fast, reliable, and extensible browser automation tool that operates in headless mode while supporting persistent sessions, authentication, and cloud-based execution. It enables agents to navigate websites, interact with elements using semantic locators or deterministic refs, manage cookies and storage, and even stream browser views for human-AI collaboration. The tool is optimized for AI workflows — such as parsing snapshots, identifying interactive elements, and executing actions — while offering fallbacks for environments without native binaries.
+## Project Purpose
+The purpose of `agent-browser` is to enable fast, reliable, and scalable web automation for AI agents, particularly those running in serverless or headless environments. It provides a rich CLI interface with semantic selectors, persistent sessions, encryption support, and cloud browser integrations (iOS, Browserbase, Browser Use, Kernel). The tool is designed to be used by developers and AI assistants for testing, interaction, and automation tasks — especially those requiring deterministic element selection via snapshots and refs.
 
-**Remember:**
-- Ref-based element selection
-- Semantic locators (role, text, label, etc.)
-- Session persistence with profiles and encryption
-- Snapshot accessibility tree for AI interpretation
+## Key Concepts
+- Headless browser automation
+- Rust CLI with Node.js fallback
+- Semantic selectors (role, text, label, testid)
+- Snapshot-based ref interactions
+- Session persistence and encryption
+- Cloud browser providers (iOS, Browserbase, Browser Use, Kernel)
 - CDP mode for remote browser control
-- Streaming for live preview or pair browsing
+- Streaming for live preview/pair browsing
+- Authenticated sessions via HTTP headers
+- AI-friendly workflow with snapshot → ref → action
 
-## Docs
-- [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.
-- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/installation/page.mdx): install & quickstart.
-- [Docs Navigation](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/docs-navigation.ts): docs page.
-- [Mdx To Markdown](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/mdx-to-markdown.ts): docs page.
-- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/page.mdx): docs page.
-- [Rate Limit](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/rate-limit.ts): docs page.
-- [Utils](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/utils.ts): docs page.
-- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/cdp-mode/page.mdx): docs page.
-- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/changelog/page.mdx): version history.
-- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/commands/page.mdx): docs page.
+## Architecture Overview
+`agent-browser` employs a client-daemon architecture: the Rust CLI acts as a fast, native command interface that communicates with a Node.js daemon managing the Playwright browser instance. The daemon handles browser lifecycle, session state persistence, and protocol translation between CLI commands and browser actions. It supports multiple browser engines (Chromium, Firefox, WebKit) via Playwright, and offers fallback mechanisms for environments without Rust binaries. The architecture enables high performance, session isolation, and seamless integration with cloud providers via provider flags (`-p`), while also supporting advanced features like streaming, CDP connections, and mobile iOS testing through Appium.
 
-## API
-- [Authentication](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/authentication.md): API reference.
-- [Commands](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/commands.md): API reference.
-- [Proxy Support](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/proxy-support.md): API reference.
-- [Session Management](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/session-management.md): API reference.
-- [Snapshot Refs](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/snapshot-refs.md): API reference.
-- [Video Recording](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/video-recording.md): API reference.
-- [Output Patterns](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/references/output-patterns.md): API reference.
-- [Workflows](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/references/workflows.md): API reference.
+## Important Directories
+- `cli/` — CLI command implementation
+- `src/` — Rust source code for core logic
+- `docs/` — Project documentation and guides
+- `skills/` — Skill modules for agent interaction
+- `agents/skills/skill-creator/` — Agent skill creation tooling
+- `scripts/` — Build, test, and deployment scripts
 
-## Optional
-- [Changelog](https://github.com/vercel-labs/agent-browser/blob/main/CHANGELOG.md): version history.
-- [License](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/LICENSE.txt): usage terms.
-- [README](https://github.com/vercel-labs/agent-browser/blob/main/.changeset/README.md): install & quickstart.
-- [Agents](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md): docs page.
-- [README](https://github.com/vercel-labs/agent-browser/blob/main/README.md): docs page.
-- [Agent Browser](https://github.com/vercel-labs/agent-browser/blob/main/bin/agent-browser.js): docs page.
-- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
-- [Vitest.Config](https://github.com/vercel-labs/agent-browser/blob/main/vitest.config.ts): docs page.
+## Entry Points
+- `bin/agent-browser.js` — Node.js daemon entry point
+- `cli/src/main.rs` — Rust CLI binary entry point
 
-## .Agents
-- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/SKILL.md): docs page.
-- [Init Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/init_skill.py): docs page.
-- [Package Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/package_skill.py): docs page.
-- [Quick Validate](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/quick_validate.py): docs page.
+## Development Info
+The project uses TypeScript with `tsx` for transpilation and Vitest for unit testing. It has a complex build pipeline involving Cargo (for native CLI binaries), Docker, and cross-platform builds via shell scripts. The `package.json` includes CI/CD scripts like `build:all-platforms`, `release`, and `ci:publish`. Dependencies include Playwright Core, WebdriverIO, and Node-Simctl for iOS automation. Linting is handled by Prettier with Husky pre-commit hooks. Version sync and publishing are managed via Changeset and custom scripts.
 
-## Scripts
-- [Check Version Sync](https://github.com/vercel-labs/agent-browser/blob/main/scripts/check-version-sync.js): docs page.
-- [Copy Native](https://github.com/vercel-labs/agent-browser/blob/main/scripts/copy-native.js): docs page.
-- [Sync Version](https://github.com/vercel-labs/agent-browser/blob/main/scripts/sync-version.js): docs page.
+## Usage Examples
+```bash
+# Start a session with persistent encryption
+agent-browser --session my-session --encrypt --browser browserbase
 
-## Src
-- [Actions](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.ts): docs page.
-- [Actions.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.test.ts): docs page.
-- [Browser](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.ts): docs page.
-- [Browser.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.test.ts): docs page.
-- [Daemon](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.ts): docs page.
-- [Daemon.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.test.ts): docs page.
-- [Encryption](https://github.com/vercel-labs/agent-browser/blob/main/src/encryption.ts): docs page.
-- [Encryption.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/encryption.test.ts): docs page.
-- [Ios Actions](https://github.com/vercel-labs/agent-browser/blob/main/src/ios-actions.ts): docs page.
-- [Ios Manager](https://github.com/vercel-labs/agent-browser/blob/main/src/ios-manager.ts): docs page.
+# Use semantic selector to click "Login" button (role=button, text="Login")
+agent-browser --action click --selector role=button:text="Login"
 
-## Test
-- [File Access.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/file-access.test.ts): docs page.
-- [Launch Options.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/launch-options.test.ts): docs page.
-- [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.
+# Take a snapshot and reference it for later use
+agent-browser --action snapshot --ref login-ref --selector role=button:text="Login"
+
+# Perform action using the saved ref (e.g., click)
+agent-browser --action click --ref login-ref
+
+# Use streaming for live preview (pair browsing with another agent)
+agent-browser --stream --partner http://localhost:3000
+
+# Authenticate with custom headers
+agent-browser --auth "Authorization: Bearer <token>" --browser kernel
+
+# Switch to iOS browser (cloud provider)
+agent-browser --browser ios --session my-ios-session
+```

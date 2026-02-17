@@ -24,3 +24,5 @@ class GenerationArtifacts:
     ctx_path: str | None = None
     json_path: str | None = None
     used_fallback: bool = False
+    llms_source: str = "dspy"
+    fallback_reason: str | None = None

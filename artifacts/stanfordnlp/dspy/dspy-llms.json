@@ -1,0 +1,339 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Dspy",
+    "summary": "<p align=\"center\"> <img align=\"center\" src=\"docs/docs/static/img/dspy_logo.png\" width=\"460px\" /> </p> <p align=\"left\">"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Tutorials",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Ai Text Game",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/ai_text_game/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Async",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/async/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Build Ai Program",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/build_ai_program/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Cache",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/cache/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Classification",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/classification/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Conversation History",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/conversation_history/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Core Development",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/core_development/index.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Deployment",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/deployment/index.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Example",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/example.py",
+          "note": "worked example"
+        },
+        {
+          "title": "Test Baleen",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/examples/test_baleen.py",
+          "note": "worked example"
+        },
+        {
+          "title": "Test Example",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_example.py",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Base Module",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/base_module.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Module",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/module.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Base Module",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_base_module.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Module",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_module.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Build And Release",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/.github/.internal_dspyai/internals/build-and-release.md",
+          "note": "version history"
+        },
+        {
+          "title": "Release Checklist",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/.github/.internal_dspyai/internals/release-checklist.md",
+          "note": "version history"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/README.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/.github/PULL_REQUEST_TEMPLATE/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Version",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/.github/workflows/build_utils/test_version.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Dspy",
+      "links": [
+        {
+          "title": "Init",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Metadata",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/__metadata__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Aggregation",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/predict/aggregation.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Annotation",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/utils/annotation.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Asyncify",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/utils/asyncify.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Auto Evaluation",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/evaluate/auto_evaluation.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Avatar Optimizer",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/avatar_optimizer.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Baml Adapter",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/adapters/baml_adapter.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Base",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/adapters/base.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Base Lm",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/dspy/clients/base_lm.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Conftest",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/conftest.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Mock Interpreter",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/mock_interpreter.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Conftest",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/conftest.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/test_utils/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/utils/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Adapter File",
+          "url": "https://github.com/stanfordnlp/dspy/blob/main/tests/signatures/test_adapter_file.py",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

@@ -1,81 +1,89 @@
-# Marvin
+<!-- llmstxt:source=dspy -->
+# Marvin: Structured Agentic AI Framework
 
-> Marvin aims to empower developers to build intelligent, structured, and observable AI workflows by abstracting away the complexity of managing LLM interactions. It enables the creation of reusable agents, composable tasks, and thread-based orchestration, all while ensuring type-safe outputs and rich observability. The framework is designed for both simplicity in rapid prototyping and scalability in complex agentic systems, targeting modern AI development with clean APIs and extensibility.
+## Project Purpose
+Marvin aims to empower developers to build structured, agentic AI applications by simplifying the orchestration of LLM tasks, agent coordination, and data transformation. It enables users to define workflows using tasks with clear objectives, assign specialized agents to execute them, and compose these into threads for multi-step reasoning. The framework supports type-safe outputs, tool integration, observability, and seamless compatibility with major LLM providers — all while maintaining developer-friendly syntax and extensibility.
 
-**Remember:**
+## Key Concepts
 - Task-Centric Architecture
-- Agents (specialized LLM configurations)
-- Threads (context managers for multi-task orchestration)
-- Structured Output Utilities (extract, cast, classify, generate)
-- Pydantic AI Integration
+- Agents
+- Threads
+- Structured Output Utilities (cast, extract, classify, generate)
 - Type-Safe Results
+- Multi-Agent Orchestration
+- Memory Providers (Chroma, Lance, Postgres, Qdrant)
+- Pydantic AI Integration
+- Observability and Logging
+- Tool-Enabled Tasks
 
-## Docs
-- [Installation](https://github.com/prefecthq/marvin/blob/main/docs/installation.mdx): install & quickstart.
-- [Quickstart](https://github.com/prefecthq/marvin/blob/main/docs/quickstart.mdx): install & quickstart.
-- [README](https://github.com/prefecthq/marvin/blob/main/docs/README.md): install & quickstart.
-- [Community](https://github.com/prefecthq/marvin/blob/main/docs/community.mdx): docs page.
-- [Welcome](https://github.com/prefecthq/marvin/blob/main/docs/welcome.mdx): docs page.
-- [Agents](https://github.com/prefecthq/marvin/blob/main/docs/concepts/agents.mdx): core concept.
-- [Building A Chatbot](https://github.com/prefecthq/marvin/blob/main/docs/guides/building-a-chatbot.mdx): docs page.
-- [Cast](https://github.com/prefecthq/marvin/blob/main/docs/functions/cast.mdx): docs page.
-- [Classify](https://github.com/prefecthq/marvin/blob/main/docs/functions/classify.mdx): docs page.
-- [Cli](https://github.com/prefecthq/marvin/blob/main/docs/guides/cli.mdx): docs page.
+## Architecture Overview
+Marvin is structured around a modular, composable architecture centered on three core abstractions: **Tasks**, **Agents**, and **Threads**. Tasks represent atomic objectives with defined instructions and result types, while Agents are specialized LLM configurations that execute tasks using configurable models, tools, and instructions. Threads manage context and history across interconnected tasks, enabling complex workflows to be composed and executed in sequence or parallel. The framework integrates with Pydantic AI for LLM interactions and supports multiple memory providers for persistent state. Its architecture is built for extensibility — with clear separation between core logic (src/marvin/), utilities (utilities/), database layer (database.py), and agent/task implementations (agents/, tasks/). Documentation and examples are deeply integrated into the codebase, emphasizing developer onboarding and practical use.
 
-## Tutorials
-- [README](https://github.com/prefecthq/marvin/blob/main/examples/prefect_observability/README.md): install & quickstart.
-- [README](https://github.com/prefecthq/marvin/blob/main/examples/slackbot/README.md): install & quickstart.
-- [README](https://github.com/prefecthq/marvin/blob/main/examples/you_have_been_goosed/README.md): install & quickstart.
-- [Agent Mcp](https://github.com/prefecthq/marvin/blob/main/examples/agent_mcp.py): worked example.
-- [Custom Handler](https://github.com/prefecthq/marvin/blob/main/examples/custom_handler.py): worked example.
-- [Custom Prompt](https://github.com/prefecthq/marvin/blob/main/examples/custom_prompt.py): worked example.
-- [Deepseek Chat](https://github.com/prefecthq/marvin/blob/main/examples/deepseek_chat.py): worked example.
-- [English To Schema](https://github.com/prefecthq/marvin/blob/main/examples/english_to_schema.py): worked example.
-- [Hello Agent](https://github.com/prefecthq/marvin/blob/main/examples/hello_agent.py): worked example.
-- [Hello Cast](https://github.com/prefecthq/marvin/blob/main/examples/hello_cast.py): worked example.
+## Important Directories
+- `src/marvin/` — Core Marvin logic, agents, tasks, and thread orchestration.
+- `docs/` — Project documentation and API references.
+- `examples/` — Real-world usage examples (e.g., Slackbot, database workflows).
+- `tests/` — Unit and integration tests with async support.
+- `migrations/` — Schema migrations for memory providers.
+- `.github/workflows/` — CI/CD pipelines for building and deploying.
+- `examples/slackbot/` — Example agent-based bot application.
+- `alembic.ini` — Database migration configuration.
+- `pyproject.toml` — Project metadata, dependencies, and build configuration.
 
-## API
-- [Create Mintlify Api Ref](https://github.com/prefecthq/marvin/blob/main/scripts/create_mintlify_api_ref.py): docs page.
-- [Classify](https://github.com/prefecthq/marvin/blob/main/src/marvin/fns/classify.py): docs page.
-- [Test Classify](https://github.com/prefecthq/marvin/blob/main/tests/ai/fns/test_classify.py): docs page.
+## Entry Points
+```python
+marvin = marvin.cli.main:app
+```
 
-## Optional
-- [Claude](https://github.com/prefecthq/marvin/blob/main/CLAUDE.md): docs page.
-- [README](https://github.com/prefecthq/marvin/blob/main/README.md): docs page.
+## Development Info
+The project uses modern Python tooling with `hatch` as the build system, managing dependencies via `pyproject.toml`. It includes:
 
-## Migrations
-- [README](https://github.com/prefecthq/marvin/blob/main/migrations/README.md): install & quickstart.
-- [Env](https://github.com/prefecthq/marvin/blob/main/migrations/env.py): docs page.
-- [20250301 141903 Initial Schema](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250301_141903_initial_schema.py): docs page.
-- [20250302 123716 Improve Message Tracking](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250302_123716_improve_message_tracking.py): docs page.
-- [20250302 135101 Add Llmcall Message Tracking](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250302_135101_add_llmcall_message_tracking.py): docs page.
+- Development dependencies in `[dependency-groups]` (e.g., pytest, ruff, pre-commit).
+- Optional dependencies for features: `audio`, `slackbot`, `mcp`, `prefect`.
+- CLI entry point defined via `scripts.marvin = "marvin.cli.main:app"`.
+- Testing infrastructure with `pytest`, async support, and environment variables for testing.
+- Linting with `ruff` configured per-file ignores.
+- CI/CD workflows for building images and deploying to Cloud Run (internal/community).
+- Pre-commit hooks via `.pre-commit-config.yaml`.
+- Workspace configuration for `uv.lock` and external dependencies like `fastmcp` from GitHub.
+- Environment variables set for testing and development, including model, memory provider, and logging levels.
 
-## Scripts
-- [Analyze Threads](https://github.com/prefecthq/marvin/blob/main/scripts/analyze_threads.py): docs page.
-- [Backfill Asset Embeddings](https://github.com/prefecthq/marvin/blob/main/scripts/backfill_asset_embeddings.py): docs page.
-- [Check For Breakpoints](https://github.com/prefecthq/marvin/blob/main/scripts/check_for_breakpoints.py): docs page.
-- [Index Assets](https://github.com/prefecthq/marvin/blob/main/scripts/index_assets.py): docs page.
+## Usage Examples
+```python
+from marvin import Marvin
 
-## Src
-- [README](https://github.com/prefecthq/marvin/blob/main/src/marvin/_internal/integrations/README.md): install & quickstart.
-- [Database](https://github.com/prefecthq/marvin/blob/main/src/marvin/database.py): docs page.
-- [Defaults](https://github.com/prefecthq/marvin/blob/main/src/marvin/defaults.py): docs page.
-- [Init](https://github.com/prefecthq/marvin/blob/main/src/marvin/__init__.py): docs page.
-- [Instructions](https://github.com/prefecthq/marvin/blob/main/src/marvin/instructions.md): docs page.
-- [Instructions](https://github.com/prefecthq/marvin/blob/main/src/marvin/instructions.py): docs page.
-- [Prompts](https://github.com/prefecthq/marvin/blob/main/src/marvin/prompts.py): docs page.
-- [Settings](https://github.com/prefecthq/marvin/blob/main/src/marvin/settings.py): docs page.
-- [Thread](https://github.com/prefecthq/marvin/blob/main/src/marvin/thread.py): docs page.
-- [Actor](https://github.com/prefecthq/marvin/blob/main/src/marvin/agents/actor.py): docs page.
+# Initialize Marvin with LLM provider (e.g., OpenAI)
+marvin = Marvin(llm="openai")
 
-## Tests
-- [README](https://github.com/prefecthq/marvin/blob/main/tests/ai/README.md): install & quickstart.
-- [README](https://github.com/prefecthq/marvin/blob/main/tests/basic/README.md): install & quickstart.
-- [Conftest](https://github.com/prefecthq/marvin/blob/main/tests/conftest.py): docs page.
-- [Init](https://github.com/prefecthq/marvin/blob/main/tests/__init__.py): docs page.
-- [Test Concurrent Execution](https://github.com/prefecthq/marvin/blob/main/tests/test_concurrent_execution.py): docs page.
-- [Conftest](https://github.com/prefecthq/marvin/blob/main/tests/basic/conftest.py): docs page.
-- [Init](https://github.com/prefecthq/marvin/blob/main/tests/ai/__init__.py): docs page.
-- [Init](https://github.com/prefecthq/marvin/blob/main/tests/basic/__init__.py): docs page.
-- [Init](https://github.com/prefecthq/marvin/blob/main/tests/beta/__init__.py): docs page.
-- [Test Instructions](https://github.com/prefecthq/marvin/blob/main/tests/basic/test_instructions.py): docs page.
+# Define a task with structured output expectations
+task = marvin.task(
+    name="fetch_user_data",
+    description="Retrieve user data from a database",
+    output_schema=UserProfile,
+    tools=["database_query"]
+)
+
+# Assign an agent to execute the task
+agent = marvin.agent(
+    name="db_agent",
+    tools=["database_query"],
+    memory_provider="chroma"
+)
+
+# Run the task with the assigned agent
+result = agent.execute(task)
+
+# Extract structured output
+user_data = result.cast(UserProfile)
+print(user_data.name)  # e.g., "Alice Smith"
+
+# Chain multiple tasks into a thread for multi-step reasoning
+thread = marvin.thread([
+    task1,
+    task2,
+    task3
+])
+
+# Observe execution logs and metrics
+thread.observe()  # Logs and observability features enabled
+```

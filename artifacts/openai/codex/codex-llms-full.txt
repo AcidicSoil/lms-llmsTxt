@@ -2603,6 +2603,7 @@ These guidelines apply to app-server protocol work in `codex-rs`, especially:
 </p>
 </br>
 If you want Codex in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE.</a>
+</br>If you want the desktop app experience, run <code>codex app</code> or visit <a href="https://chatgpt.com/codex?app-landing-page=true">the Codex App page</a>.
 </br>If you are looking for the <em>cloud-based agent</em> from OpenAI, <strong>Codex Web</strong>, go to <a href="https://chatgpt.com/codex">chatgpt.com/codex</a>.</p>
 
 ---
@@ -2666,6 +2667,7 @@ This repository is licensed under the [Apache-2.0 License](LICENSE).
 - [**Open source fund**](https://github.com/openai/codex/blob/main/docs/open-source-fund.md)
 - [Apache-2.0 License](https://github.com/openai/codex/blob/main/LICENSE.md)
 - [install in your IDE.](https://developers.openai.com/codex/ide)
+- [the Codex App page](https://chatgpt.com/codex?app-landing-page=true)
 - [chatgpt.com/codex](https://chatgpt.com/codex)
 - [latest GitHub Release](https://github.com/openai/codex/releases/latest)
 
@@ -5100,7 +5102,7 @@ Today both notifications carry an empty `items` array even when item events were
 
 `ThreadItem` is the tagged union carried in turn responses and `item/*` notifications. Currently we support events for the following items:
 
-- `userMessage` — `{id, content}` where `content` is a list of user inputs (`text`, `image`, or `localImage`).
+- `userMessage` — `{id, content}` where `content` is a list of user inputs (`text`, `image`, or `localImage`). Cyber model-routing warnings are surfaced as synthetic `userMessage` items with `text` prefixed by `Warning:`.
 - `agentMessage` — `{id, text}` containing the accumulated agent reply.
 - `plan` — `{id, text}` emitted for plan-mode turns; plan text can stream via `item/plan/delta` (experimental).
 - `reasoning` — `{id, summary, content}` where `summary` holds streamed reasoning summaries (applicable for most OpenAI models) and `content` holds raw reasoning blocks (applicable for e.g. open source models).

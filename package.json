@@ -7,7 +7,8 @@
     "code:art": "node scripts/codefetch-artifacts.mjs",
     "code:b": "bash scripts/codefetch-artifacts.sh",
     "code": "pnpm code:s && pnpm code:d && pnpm code:t",
-    "code:t": "codefetch -t 5 --include-dir tests --exclude-dirs __pycache__ -o tests.md"
+    "code:t": "codefetch -t 5 --include-dir tests --exclude-dirs __pycache__ -o tests.md",
+    "build": "rm -rf dist/ && uv build && uv pip install --force-reinstall dist/*.whl"
   },
   "devDependencies": {
     "codefetch": "^2.2.0"

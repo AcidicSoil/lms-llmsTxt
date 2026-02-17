@@ -27,6 +27,14 @@ _URL_SESSION = requests.Session()
 _URL_HEADERS = {"User-Agent": "lms-lmstxt"}
 
 
+def _valid_llms_text(value: object) -> bool:
+    if not isinstance(value, str):
+        return False
+    text = value.strip()
+    # Keep validation conservative while avoiding false negatives for model variation.
+    return bool(text) and text.startswith("#") and len(text) >= 40
+
+
 def _nicify_title(path: str) -> str:
     base = path.rsplit("/", 1)[-1]
     base = re.sub(r"\.(md|rst|txt|py|ipynb|js|ts|html|mdx)$", "", base, flags=re.I)
@@ -288,39 +296,62 @@ class RepositoryAnalyzer(dspy.Module):
             file_tree=file_tree, package_files=package_files
         )
 
-        self.generate_examples(
+        generation_mode = "dspy"
+        fallback_reason = None
+
+        examples = self.generate_examples(
             repo_info=(
                 f"Purpose: {repo_analysis.project_purpose}\n\n"
                 f"Concepts: {', '.join(repo_analysis.key_concepts or [])}\n\n"
                 f"Entry points: {', '.join(structure_analysis.entry_points or [])}\n"
             )
         )
+        usage_examples = getattr(examples, "usage_examples", "") or ""
 
-        try:
-            _, repo = owner_repo_from_url(repo_url)
-            project_name = repo.replace("-", " ").replace("_", " ").title()
-        except Exception:
-            project_name = "Project"
-
-        buckets = build_dynamic_buckets(
-            repo_url,
-            file_tree,
-            default_ref=default_branch,
-            validate_urls=True,
-            is_private=is_private,
-            github_token=github_token,
-            link_style=link_style,
-        )
-
-        llms_txt_content = render_llms_markdown(
-            project_name=project_name,
+        llms_result = self.generate_llms_txt(
             project_purpose=repo_analysis.project_purpose or "",
-            remember_bullets=repo_analysis.key_concepts or [],
-            buckets=buckets,
+            key_concepts=repo_analysis.key_concepts or [],
+            architecture_overview=repo_analysis.architecture_overview or "",
+            important_directories=structure_analysis.important_directories or [],
+            entry_points=structure_analysis.entry_points or [],
+            development_info=structure_analysis.development_info or "",
+            usage_examples=usage_examples,
         )
+        llms_txt_content = getattr(llms_result, "llms_txt_content", "")
+
+        if not _valid_llms_text(llms_txt_content):
+            generation_mode = "heuristic"
+            fallback_reason = "invalid_or_empty_dspy_output"
+            logger.warning(
+                "DSPy llms.txt output failed validation; falling back to heuristic renderer."
+            )
+            try:
+                _, repo = owner_repo_from_url(repo_url)
+                project_name = repo.replace("-", " ").replace("_", " ").title()
+            except Exception:
+                project_name = "Project"
+
+            buckets = build_dynamic_buckets(
+                repo_url,
+                file_tree,
+                default_ref=default_branch,
+                validate_urls=True,
+                is_private=is_private,
+                github_token=github_token,
+                link_style=link_style,
+            )
+
+            llms_txt_content = render_llms_markdown(
+                project_name=project_name,
+                project_purpose=repo_analysis.project_purpose or "",
+                remember_bullets=repo_analysis.key_concepts or [],
+                buckets=buckets,
+            )
 
         return dspy.Prediction(
             llms_txt_content=llms_txt_content,
+            generation_mode=generation_mode,
+            fallback_reason=fallback_reason,
             analysis=repo_analysis,
             structure=structure_analysis,
         )

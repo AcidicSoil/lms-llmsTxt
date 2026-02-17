@@ -135,7 +135,7 @@ If you run the MCP server, the same env vars must be present in the process envi
 
 | Artifact | Purpose |
 |----------|---------|
-| `*-llms.txt` | Primary documentation synthesized by DSPy or the fallback heuristic |
+| `*-llms.txt` | Primary documentation synthesized by DSPy (heuristic path is last-resort fallback) |
 | `*-llms-full.txt` | Expanded content fetched from curated GitHub links with 404 filtering |
 | `*-llms.json` | Fallback JSON following `LLMS_JSON_SCHEMA` (only when LM fallback triggers) |
 | `*-llms-ctx.txt` | Optional context file created when `ENABLE_CTX=1` and `llms_txt` is installed |
@@ -205,7 +205,7 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 
 1. **Collect repository material** – the GitHub client gathers the file tree, README, package files, repository visibility, and default branch.
 2. **Prepare LM Studio** – the manager confirms the requested model is loaded, auto-loading if necessary.
-3. **Generate documentation** – DSPy produces curated content; on LM failures the fallback serializer builds markdown and JSON directly.
+3. **Generate documentation** – DSPy-first generation produces `llms.txt`; if DSPy output is unavailable/invalid, the heuristic fallback serializer emits markdown + JSON.
 4. **Assemble `llms-full`** – curated links are re-fetched via raw GitHub URLs for public repos or authenticated API calls for private ones, with validation to remove dead links.
 5. **Unload models safely** – the workflow first uses the official `lmstudio` SDK (`model.unload()` or `list_loaded_models`), then falls back to HTTP and CLI unload requests.
 

@@ -99,8 +99,11 @@ def main(argv: list[str] | None = None) -> int:
         summary += f"\n  - {artifacts.ctx_path}"
     if artifacts.json_path:
         summary += f"\n  - {artifacts.json_path}"
+    summary += f"\nsource: {artifacts.llms_source}"
     if artifacts.used_fallback:
-        summary += "\n(note) LM call failed; fallback JSON/schema output was used."
+        summary += "\n(note) DSPy path unavailable/invalid; heuristic fallback output was used."
+        if artifacts.fallback_reason:
+            summary += f"\n(reason) {artifacts.fallback_reason}"
 
     print(summary)
     return 0
