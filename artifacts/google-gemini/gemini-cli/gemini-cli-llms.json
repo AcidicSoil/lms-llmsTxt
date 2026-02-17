@@ -1,0 +1,544 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Gemini Cli",
+    "summary": "[![Gemini CLI CI](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/ci.yml) [![Gemini CLI E2E (Chained)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml/badge.svg)](https://github.com/google-gemini/gemini-cli/actions/workflows/chained_e2e.yml)"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Skills Getting Started",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/tutorials/skills-getting-started.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Extensions Install.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/extensions-install.test.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installation",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/docs/get-started/installation.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Uninstall",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/uninstall.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Ide Installer",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/ide/ide-installer.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Ide Installer.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/ide/ide-installer.test.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installationinfo",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/utils/installationInfo.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installationinfo.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/utils/installationInfo.test.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installationmanager",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/installationManager.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installationmanager.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/installationManager.test.ts",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/themes-example/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Example",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/mcp-server/example.js",
+          "note": "worked example"
+        },
+        {
+          "title": "On Start",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/hooks/scripts/on-start.js",
+          "note": "worked example"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/src/commands/extensions/examples/skills/skills/greeter/SKILL.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Apiconversionutils",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/apiConversionUtils.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Apiconversionutils.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/apiConversionUtils.test.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Apikeycredentialstorage",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Apikeycredentialstorage.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/core/apiKeyCredentialStorage.test.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Errorclassification",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/availability/errorClassification.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sdk",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/telemetry/sdk.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sdk.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/telemetry/sdk.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Classifierstrategy",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/routing/strategies/classifierStrategy.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Classifierstrategy.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/routing/strategies/classifierStrategy.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Numericalclassifierstrategy",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/routing/strategies/numericalClassifierStrategy.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Security",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/SECURITY.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Get Release Version",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/get-release-version.js",
+          "note": "version history"
+        },
+        {
+          "title": "Prepare Github Release",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/prepare-github-release.js",
+          "note": "version history"
+        },
+        {
+          "title": "Get Release Version.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/tests/get-release-version.test.js",
+          "note": "version history"
+        },
+        {
+          "title": "Check Vscode Release",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/scripts/check-vscode-release.js",
+          "note": "version history"
+        },
+        {
+          "title": "Security",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/security.ts",
+          "note": "security policy"
+        },
+        {
+          "title": "Security.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/src/utils/security.test.ts",
+          "note": "security policy"
+        },
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Gemini",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/GEMINI.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Roadmap",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/ROADMAP.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Esbuild.Config",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/esbuild.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Eslint.Config",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/eslint.config.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Gemini",
+      "links": [
+        {
+          "title": "Skill",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/.gemini/skills/code-reviewer/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/.gemini/skills/pr-creator/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Evals",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Answer Vs Act.Eval",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/answer-vs-act.eval.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Generalist Agent.Eval",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/generalist_agent.eval.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Gitrepo.Eval",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/gitRepo.eval.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Save Memory.Eval",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/save_memory.eval.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Subagents.Eval",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/subagents.eval.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Helper",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/test-helper.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Config",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/evals/vitest.config.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Integration Tests",
+      "links": [
+        {
+          "title": "Acp Telemetry.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/acp-telemetry.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Checkpointing.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/checkpointing.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Clipboard Linux.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/clipboard-linux.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Context Compress Interactive.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/context-compress-interactive.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Ctrl C Exit.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/ctrl-c-exit.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Extensions Reload.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/extensions-reload.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "File System Interactive.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/file-system-interactive.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "File System.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/file-system.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Flicker.Test",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/flicker.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Globalsetup",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/integration-tests/globalSetup.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Development",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/development.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Development Extension Rfc",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/development-extension-rfc.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Esbuild",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/vscode-ide-companion/esbuild.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Gemini",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/GEMINI.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/a2a-server/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/cli/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/core/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/packages/test-utils/index.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Aggregate Evals",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/aggregate_evals.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Build",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/build.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Package",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_package.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Sandbox",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_sandbox.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Vscode Companion",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/build_vscode_companion.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Check Build Status",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/check-build-status.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Check Lockfile",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/check-lockfile.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Clean",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/clean.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Close Duplicate Issues",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/close_duplicate_issues.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Copy Bundle Assets",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/scripts/copy_bundle_assets.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Third Party",
+      "links": [
+        {
+          "title": "Downloadripgrep",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/third_party/get-ripgrep/src/downloadRipGrep.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/google-gemini/gemini-cli/blob/main/third_party/get-ripgrep/src/index.js",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

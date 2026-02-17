@@ -1,0 +1,3179 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/lm-studio-provider.md ---
+---
+title: "LM Studio Provider Integration"
+description: "Configure dspyteach to use LM Studio's OpenAI-compatible API and verify the connection across macOS, Windows, and WSL."
+---
+
+# LM Studio Provider Integration Notes
+
+<Steps>
+<Step title="Start the LM Studio API server">
+Run the server from the Developer tab or with the CLI (`npx lmstudio install-cli && lms server start`). This exposes the OpenAI-compatible endpoints on `http://localhost:1234/v1`.
+
+<Check>LM Studio shows the model as `Loaded` and the server status indicator is green.</Check>
+</Step>
+
+<Step title="Configure dspyteach to target LM Studio">
+Use CLI flags or environment variables to point the analyzer at the LM Studio endpoint.
+
+```bash
+dspyteach ./notes \
+  --provider lmstudio \
+  --model qwen3-4b-instruct-2507@q6_k_xl \
+  --api-base http://localhost:1234/v1
+```
+
+Alternatively, copy `.env.example` to `.env` and set `DSPYTEACH_PROVIDER`, `DSPYTEACH_MODEL`, and `DSPYTEACH_API_BASE`.
+
+<Tip>OpenAI SDKs work unchanged when you pass `base_url="http://localhost:1234/v1"` and a placeholder key such as `"lm-studio"`.</Tip>
+</Step>
+
+<Step title="Verify the connection">
+Confirm the API responds before running a long batch.
+
+```bash
+curl http://localhost:1234/v1/models
+```
+
+<Check>The response lists the models you have loaded in LM Studio.</Check>
+</Step>
+</Steps>
+
+## Troubleshooting and advanced usage
+
+<Warning>
+When LM Studio runs on Windows but you execute `dspyteach` inside WSL, enable **Serve on local network** so the server binds to `0.0.0.0`, then target the Windows host IP (e.g., `http://192.168.0.10:1234/v1`).
+</Warning>
+
+- The CLI accepts additional flags such as `--cors`, `--port`, and `--host` via `lms server start` to expose the API on different interfaces.
+- REST endpoints `/v1/models`, `/v1/chat/completions`, `/v1/completions`, `/v1/responses`, and `/v1/embeddings` mirror OpenAI behavior. A beta surface at `/api/v0/*` adds model metadata (TTFT, tokens/sec, quantization).
+- For the Python OpenAI client, set `from openai import OpenAI; client = OpenAI(base_url="http://localhost:1234/v1", api_key="lm-studio")` to reuse existing structured-output code.
+
+### Capture verbose logs during debugging
+
+```bash
+{ yes "" | dspyteach ./prompts \
+    --provider lmstudio \
+    --model qwen3-4b-thinking-2507 \
+    --api-base http://localhost:1234/v1 \
+    --confirm-each; } |& tee "dspyteach.$(date +%Y%m%d-%H%M%S).log"
+```
+
+<Tip>Expect the log file to contain both the CLI progress output and any HTTP errors from LM Studio for later review.</Tip>
+
+### Spot-check the chat completion endpoint
+
+```bash
+curl http://localhost:1234/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "qwen3-4b-thinking-2507",
+    "messages": [
+      { "role": "system", "content": "Always answer in rhymes." },
+      { "role": "user", "content": "Name one benefit of dspyteach." }
+    ]
+  }'
+```
+
+<Check>A JSON response containing a rhymed assistant message confirms the endpoint is healthy.</Check>
+
+
+--- docs/RELEASING.md ---
+---
+title: "Releasing dspyteach"
+description: "Checklist for packaging, verifying, and publishing new dspyteach builds to PyPI and TestPyPI."
+---
+
+# Releasing dspyteach
+
+This guide captures the maintainer workflow for packaging and publishing new versions of `dspyteach`.
+
+## Package & Publish
+
+```bash
+# (optional) bump the version before you publish
+uv version --bump patch
+
+# build the source distribution and wheel; artifacts land in dist/
+uv build --no-sources
+
+# publish to PyPI (or TestPyPI) once you have an API token
+UV_PUBLISH_TOKEN=... uv publish
+```
+
+Expected result: `dist/` contains both a wheel and sdist stamped with the new version, and `uv publish` completes without error.
+
+To install the package from a freshly built artifact:
+
+```bash
+pip install dist/dspyteach-<version>-py3-none-any.whl
+```
+
+Once the project is on PyPI, users can install it directly:
+
+```bash
+pip install dspyteach
+```
+
+The `dspyteach` console script (plus the legacy `dspy-file-teaching` alias) will be available after installation.
+
+<Check>Importing `dspyteach` and running `dspyteach --help` should show the CLI version you just published.</Check>
+
+## CI Publishing
+
+GitHub Actions workflows can automate publishing to TestPyPI. The repo ships with `.github/workflows/publish-testpypi.yml`, which:
+
+1. Checks out the repository (ensuring `pyproject.toml` is present as required by `uv publish`).
+2. Installs `uv` with Python 3.12.
+3. Runs `uv build --no-sources` from the repository root.
+4. Publishes with `uv publish --index testpypi dist/*` using the `TEST_PYPI_TOKEN` secret.
+
+Review the [uv publishing guide](https://docs.astral.sh/uv/guides/package/#publishing-your-package) for official details about required files and authentication.
+
+
+## Links discovered
+- [uv publishing guide](https://docs.astral.sh/uv/guides/package/#publishing-your-package)
+
+--- example-data/.dspy-file-refactor/analyze_file_cli.refactor.md ---
+# DSPy file analyzer CLI - command line entry point for DSPy file analysis
+
+This tool analyzes a file using DSPy and generates a report or refactor template based on the selected mode.
+
+To use this tool, provide the following parameters:
+
+- $1: Path to the file to analyze
+- $2: Provider (OLLAMA, LMSTUDIO, OPENAI)
+- $3: Model name
+- $4: API base URL
+- $5: API key
+- $6: Analysis mode (TEACH or REFACTOR)
+- $7: Output directory
+
+Example usage:
+python analyze_file_cli.py $1 --provider $2 --model $3 --api-base $4 --api-key $5 --mode $6 --output-dir $7
+
+
+--- example-data/.dspy-file-teachings/analyze_file_cli.teaching.md ---
+# Teaching Brief: `analyze_file_cli.py` - Code Analysis with DSPy
+
+## Context & Purpose
+
+This command-line tool (`/home/user/projects/archive/dspy-file/dspy_file/analyze_file_cli.py`) enables educators and developers to generate human-readable teaching materials from source code using DSPy's language model framework. Designed specifically for pedagogical use cases, it transforms technical code into structured learning content while prioritizing user safety through interactive confirmation steps - a critical pattern when analyzing sensitive or production systems.
+
+## Overview
+
+The script implements a clean separation of concerns: input handling via `argparse`, path resolution with recursive scanning capabilities, model integration using local Ollama servers, and output management for de-duplicated Markdown reports. Its workflow begins by resolving file paths through helper functions like `collect_source_paths`, then passes each target to the `FileTeachingAnalyzer` class which generates structured teaching content via DSPy's language modeling pipeline. Crucially, it includes an interactive confirmation step (`_confirm_analyze`) before processing any files - a safeguard against accidental analysis of confidential codebases or large repositories.
+
+## Key Concepts
+
+- **Pedagogical Code Analysis**: The script transforms code structure into teachable concepts using DSPy's framework for generating human-understandable explanations from technical artifacts.
+- **Local Model Integration**: Ollama provides lightweight, secure model inference without cloud dependencies - ideal for classroom environments with restricted internet access.
+- **Path Safety Patterns**: Special character handling in filenames prevents output corruption through systematic sanitization (e.g., converting slashes to underscores).
+- **User-Centric Design**: Mandatory confirmation prompts respect ethical boundaries when analyzing potentially sensitive code, aligning with responsible AI practices.
+
+## Practical Workflows
+
+1. Analyze a single Python file: `python analyze_file_cli.py path/to/file.py`
+2. Process recursive files while excluding subdirectories: `--non-recursive` flag
+3. Target specific file types using glob patterns (e.g., `--glob '*.py'`)
+4. Generate raw model outputs for debugging with the `--raw` option
+5. Customize output storage via `--output-dir /custom/path`
+6. Enable interactive confirmation for each file through `--interactive`
+
+## Critical Pitfalls to Avoid
+
+- **Ollama dependency failures**: Always verify Ollama server is running at `http://localhost:11434` before execution
+- **Path corruption risks**: Special characters in paths (e.g., spaces, slashes) can break de-duplication logic - use sanitization functions
+- **Resource leaks**: Forgetting to stop the Ollama model after analysis wastes server resources and may cause connection errors
+- **Overly broad patterns**: Glob expressions like `*` should be restricted to specific file types (e.g., `.py`) to prevent unintended processing
+
+## Integration Requirements
+
+This tool requires:
+
+1. A running Ollama server at default port 11434
+2. Python environment with DSPy installed (`pip install dspy`)
+3. Write permissions in the specified output directory
+4. Proper model configuration through DSPy's `configure` method pointing to local Ollama
+
+## Testing Focus Areas
+
+Instructors should validate:
+
+- Ollama connection stability before analysis begins
+- Filename sanitization for edge cases (e.g., paths with `/`, spaces)
+- Confirmation prompts working correctly across different input responses
+- Error handling during file access, encoding issues, and permission failures
+- Model cleanup procedures even when exceptions occur
+
+## References
+
+1. [DSPy Documentation](https://dspy.readthedocs.io/en/latest/)
+2. [Ollama Installation Guide](https://ollama.com/download)
+3. DSPy File Analysis Examples: [GitHub Repository](https://github.com/dspylab/dspy/blob/main/examples/file_analyzer.py)
+
+---
+
+This teaching brief provides instructors with actionable knowledge to safely implement code analysis tools while emphasizing ethical AI practices and system reliability - critical considerations for modern programming education.
+
+
+## Links discovered
+- [DSPy Documentation](https://dspy.readthedocs.io/en/latest/)
+- [Ollama Installation Guide](https://ollama.com/download)
+- [GitHub Repository](https://github.com/dspylab/dspy/blob/main/examples/file_analyzer.py)
+
+--- example-data/.dspy-file-refactor/file_analyzer.refactor.md ---
+<!-- $1=File path, $2=File content, $3=Overview text, $4=Section notes, $5=Key concepts, $6=Practical steps, $7=Pitfalls -->
+
+**Teaching Brief Analysis Template**
+
+Input:
+- $1 = File path
+- $2 = File content
+
+Output:
+- Overview text: $3
+- Section notes: $4
+- Key concepts: $5
+- Practical steps: $6
+- Pitfalls: $7
+
+Affected files: $1
+Root cause: $2
+Proposed fix: $3
+Tests: $4
+Docs gaps: $5
+Open questions: $6
+
+
+--- example-data/.dspy-file-teachings/file_analyzer.teaching.md ---
+# DSPy File Analysis Teaching Assistant: Comprehensive Guide for Senior Developers
+
+## Context
+
+This teaching assistant module (`/home/user/projects/archive/dspy-file/dspy_file/file_analyzer.py`) automates the creation of structured learning resources specifically designed for senior developers working with DSPy framework code. Its core purpose is to transform technical source files into pedagogically optimized materials that highlight critical concepts while avoiding common pitfalls in automated educational content generation. Unlike traditional documentation tools, this system employs a three-stage reasoning process that ensures outputs maintain appropriate depth and relevance without becoming overly verbose or fragmented—addressing the fundamental challenge of creating meaningful learning resources for advanced learners.
+
+## Section Walkthrough
+
+The module operates through carefully engineered configuration parameters including token limits, temperature settings, and report refinement strategies. It includes utility functions for text cleaning and list coercion from diverse input formats such as JSON objects or raw strings, ensuring consistent output handling across different data types. The system's architecture defines three distinct reasoning chains: first generating a concise multi-paragraph overview of the file's purpose and architecture; second extracting actionable insights into concepts, workflows, and pitfalls through structured bullet points; third synthesizing these elements into a comprehensive Markdown report with intentional section organization. A dynamic word count reward function iteratively refines outputs to ensure final teaching briefs comfortably exceed 400 words when source material allows—preventing the common issue where automated summaries lack sufficient depth for advanced learners.
+
+## Key Concepts
+
+This tool leverages DSPy's Chain-of-Thought methodology to systematically extract educational components from code files, creating materials that bridge technical implementation with pedagogical effectiveness. It identifies specific teaching elements like core concepts, practical workflows, and integration considerations through iterative analysis rather than superficial observations. The dynamic word count adjustment mechanism is particularly valuable—it ensures outputs maintain appropriate length based on source file complexity while avoiding the "concise but shallow" problem prevalent in many automated educational tools. Helper functions guarantee consistent formatting of extracted content (e.g., standardized bullet point prefixes), creating materials that instructors can immediately use without additional processing.
+
+## Workflows for Instructors
+
+When implementing this tool, instructors should first define precise prompt instructions to guide the model's output structure and focus areas. Next, they must implement validation functions that ensure consistent formatting across different input types—critical when working with ambiguous or incomplete source data. The system dynamically adjusts report length based on source file size through a reward function during refinement cycles, which helps maintain appropriate depth without overwhelming learners. For optimal results, instructors should structure outputs into clearly defined sections (overview, key concepts, pitfalls) that align with established teaching frameworks.
+
+## Pitfalls to Avoid
+
+Instructors must be vigilant about overly verbose or fragmented outputs that don't serve educational goals—this often occurs when the model overemphasizes technical details without connecting them to learning outcomes. Inconsistent bullet point formatting remains a common issue when input data contains ambiguities, requiring careful prompt engineering to maintain structural integrity. The system may struggle with capturing nuanced dependencies between code components if instructions aren't sufficiently specific about relationships within the source file. Additionally, vague prompts can lead to content generation outside the model's training scope—particularly for highly specialized DSPy implementations that require domain-specific knowledge.
+
+## Integration and Validation
+
+This tool integrates seamlessly into developer onboarding workflows by providing quick insights into critical file components without requiring full code review. Instructors should validate output structure against expected sections, confirm reports meet minimum/maximum word count requirements based on source size, verify consistent bullet point formatting with prefixes, and ensure no content exceeds the model's training scope or domain knowledge. When incorporating this tool into educational pipelines, it works best alongside documentation generators to create cohesive learning experiences.
+
+## References
+
+- DSPy documentation for Chain-of-Thought and Refine modules
+- Best practices for generating educational code summaries using LLMs
+- Guidelines for structuring technical teaching materials with Markdown
+- Common pitfalls in automated
+
+
+--- example-data/.dspy-file-refactor/file_helpers.refactor.md ---
+<!-- $1 = file path, $2 = module description, $3 = function signature, $4 = error message, $5 = test case, $6 = documentation gap, $7 = open question -->
+
+**DSPy File Refactoring Prompt**
+
+Given a Python file at $1:
+
+$2
+
+The file contains the following key functions:
+
+1. $3
+
+**Issues to address:**
+- $4
+- $5
+
+**Documentation gaps:**
+- $6
+
+**Open questions:**
+- $7
+
+Please refactor the file to resolve these issues while maintaining DSPy compatibility.
+
+
+--- example-data/.dspy-file-teachings/file_helpers.teaching.md ---
+# Teaching Brief: File Processing Utilities for DSPy Pipelines
+
+## Context
+
+This teaching brief documents the foundational `file_helpers.py` module (`/home/user/projects/archive/dspy-file/dspy_file/file_helpers.py`) designed specifically to prepare source documentation files for DSPy-based teaching systems. Its purpose is to systematically extract clean, structured content from project directories while eliminating development artifacts that would otherwise disrupt learning workflows.
+
+## Overview
+
+This utility provides a robust pipeline for collecting and processing relevant source documents in DSPy environments. It handles path normalization across operating systems, implements hierarchical exclusion rules (e.g., skipping `.git` repositories and virtual environments), and processes markdown files to produce standardized teaching content by removing front matter and trimming text to the first heading. The module ensures only properly formatted documentation reaches DSPy's prediction stage through a validated workflow: path resolution → exclusion filtering → recursive collection → content cleaning.
+
+## Section Walkthrough
+
+When instructors demonstrate this module, emphasize how it handles real-world file complexities:
+
+- **Path normalization** converts inconsistent paths (e.g., Windows `C:\Users\user\file.txt` vs. Unix `/home/user/file.txt`) into uniform segment structures for reliable comparison
+- **Exclusion rules** work recursively: when collecting files from a project directory, `.git` is skipped at the root level *and* all nested directories are excluded without affecting visible source files
+- **Text processing** removes front matter (YAML headers starting with `---`) and trims content to the first heading—critical for generating clean teaching materials from documentation files
+
+## Key Concepts in Practice
+
+1. Path normalization enables consistent cross-platform file comparisons by standardizing separators
+2. Hierarchical exclusion rules prevent accidental inclusion of virtual environments or build artifacts
+3. Front matter stripping ensures only instructional content reaches DSPy's prediction pipeline
+4. Text trimming to first heading creates uniform document structures for model training
+
+## Practical Workflows
+
+Instructors should guide students through these steps when implementing this module:
+
+- Normalize relative paths using `_normalize_relative_parts` before comparing across OSes
+- Collect source files via `collect_source_paths` with custom patterns (e.g., `.md` files) and exclusions (`exclude_dirs=[".git", "__pycache__"]`)
+- Process each file's content by first stripping front matter then trimming to the first heading
+- Render DSPy predictions into clean markdown using `render_prediction` with proper error handling
+
+## Critical Pitfalls & Mitigation
+
+Students commonly encounter these issues when teaching:
+⚠️ **Misunderstood exclusion scope**: Excluding a parent directory (e.g., `.git`) may still include child files if patterns aren't applied recursively
+⚠️ **Path normalization failures**: Forgetting to handle empty paths or invalid segments during OS-specific path conversion
+⚠️ **Front matter assumptions**: Assuming all markdown uses standard YAML front matter without verifying content structure
+
+## Integration Notes for DSPy
+
+This module integrates seamlessly with DSPy prediction pipelines through:
+
+- Explicit handling of `result.report.report_markdown` outputs
+- UTF-8 encoding fallback to Latin-1 during file reading (critical for non-ASCII documents)
+- Built-in error tolerance when converting predictions into teaching briefs
+
+## Testing Focus Areas
+
+Instructors should emphasize these validation scenarios in labs:
+
+- Path normalization consistency across Windows vs. Linux systems
+- Edge cases where exclusion rules match multiple patterns at different directory levels
+- Hidden file handling (e.g., `.DS_Store` on macOS) without affecting visible documentation
+
+> **Why this matters**: Properly processed source files directly impact model training quality—clean, structured content prevents DSPy from generating inaccurate teaching materials. By mastering these utilities, instructors ensure their pipelines consistently produce high-fidelity learning resources.
+
+
+--- example-data/.dspy-file-refactor/__init__.refactor.md ---
+<!-- $1=Module title, $2=File path, $3=Key imports -->
+
+**File Refactor Analysis Template**
+
+This template analyzes Python modules for refactoring opportunities.
+
+1. **Module Title**: $1
+2. **File Path**: $2
+3. **Key Imports**: $3
+
+*For comprehensive analysis, include these sections:*
+- **Root Cause**: [Describe]
+- **Proposed Fix**: [Describe]
+- **Tests**: [Describe]
+- **Documentation Gaps**: [Describe]
+- **Open Questions**: [Describe]
+
+
+--- example-data/.dspy-file-refactor/refactor_analyzer.refactor.md ---
+<!-- $1 = Path to source file for context
+$2 = Full raw text of file
+$3 = Affected files
+$4 = Root cause
+$5 = Proposed fix
+$6 = Tests
+$7 = Documentation gaps
+-->
+
+**Refactor Analysis Template**
+
+This template analyzes a source file and generates a reusable refactor prompt.
+
+1. **Affected files**: $1
+2. **Root cause**: $2
+3. **Proposed fix**: $3
+4. **Tests**: $4
+5. **Documentation gaps**: $5
+6. **Open questions**: $6
+
+
+--- example-data/.dspy-file-refactor/signatures.refactor.md ---
+<!-- 
+$1 = File path (e.g., "/home/user/projects/archive/dspy-file/dspy_file/signatures.py")
+$2 = Full raw text of the file
+$3 = Detailed multi-section overview (4-6 paragraphs capturing scope, intent, and flow)
+$4 = Comprehensive bullet list of sections
+$5 = Key concepts list
+$6 = Practical steps list
+$7 = Pitfalls list
+-->
+
+**Teaching Analysis Template**
+
+**Input Data**:
+- File path: `$1`
+- File content: `$2`
+
+**Analysis**:
+- Overview: `$3`
+- Section notes: `$4`
+- Key concepts: `$5`
+- Practical steps: `$6`
+- Pitfalls: `$7`
+
+**Missing sections**:
+- Affected files: `$1`
+- Root cause: "N/A"
+- Proposed fix: "N/A"
+- Tests: "Unit tests for extraction pipeline"
+- Docs gaps: "Examples for edge cases"
+- Open questions: "How to handle large files?"
+
+
+--- example-data/.dspy-file-teachings/signatures.teaching.md ---
+# DSPy Teaching Pipeline: Transforming Code into Pedagogical Resources
+
+## Context & Purpose
+This teaching pipeline (`/home/user/projects/archive/dspy-file/dspy_file/signatures.py`) transforms source code files into structured learning materials by systematically decomposing technical content into teachable units with explicit educational context. Unlike standard documentation tools, it focuses on *what learners need to know* rather than *how the code functions*. The system operates through a three-stage workflow: (1) **FileOverview** analyzes file structure and narrative flow; (2) **TeachingPoints** extracts actionable knowledge components like key concepts, workflows, pitfalls, and references; (3) **TeachingReport** synthesizes all elements into a concise markdown document optimized for educational consumption.
+
+## Core Teaching Workflow
+The pipeline follows these steps:
+1. Start with `FileOverview` to generate a 4–6 paragraph structural analysis of the source file's scope, intent, and narrative flow.
+2. Use `TeachingPoints` to extract granular components from raw text inputs—such as key concepts, practical workflows, common pitfalls, usage patterns, and integration notes—ensuring each element is contextualized for learners.
+3. Combine outputs via `TeachingReport` into a cohesive markdown document with clear sections: conceptual understanding (overview), actionable guidance (practical steps), implementation caveats (pitfalls), and references to support further learning.
+
+## Pedagogical Design Principles
+- **Scaffolded Learning**: Outputs are structured to build from high-level concepts down to specific actions, mirroring how learners progress through knowledge acquisition.
+- **Contextual Awareness**: The system explicitly identifies domain-specific jargon or ambiguous language that requires explanation, preventing misunderstandings.
+- **Modular Reusability**: Each stage (FileOverview, TeachingPoints, TeachingReport) can be reused across different files without reprocessing entire pipelines.
+- **Critical Reflection**: By highlighting pitfalls and testing focus areas, the system encourages learners to anticipate common errors rather than just memorizing code.
+
+## Key Considerations for Implementation
+| Component | Purpose | Critical Checks |
+|-----------|---------|------------------|
+| FileOverview | High-level structural analysis | Ensure 4–6 paragraphs capture scope without technical jargon |
+| TeachingPoints | Extraction of teachable elements | Verify all extracted items (e.g., pitfalls) are contextually relevant |
+| TeachingReport | Final markdown synthesis | Confirm formatting matches educational best practices |
+
+## Common Pitfalls & Mitigation Strategies
+- **Overlooking nuanced language**: Use iterative refinement with human oversight for ambiguous text.
+- **Inconsistent inputs**: Validate file paths and content formats before processing to avoid misaligned outputs.
+- **Assuming all technical content is equally teachable**: Prioritize core concepts over peripheral details based on learner objectives.
+
+## Integration & Validation
+This pipeline integrates seamlessly with DSPy’s signature-based reasoning framework. To ensure robustness:
+1. Test edge cases (e.g., empty files, non-text inputs) using the `testing_focus` checklist.
+2. Validate output structures against expected data types (e.g., lists of strings for section notes).
+3. Monitor performance when processing large files by chunking text where necessary.
+
+## References & Further Exploration
+- DSPy Documentation: [https://dspy.readthedocs.io/](https://dspy.readthedocs.io/)  
+- Research on Pedagogical Scaffolding: *Designing Effective Learning Systems* (2023)
+- GitHub Examples: `dspy-teaching-pipeline` repository for implementation templates
+
+This pipeline empowers educators to turn complex technical artifacts into accessible learning resources while maintaining alignment with educational best practices.
+
+
+## Links discovered
+- [https://dspy.readthedocs.io/](https://dspy.readthedocs.io/)
+
+--- README.md ---
+# DSPyTeach – DSPy File Teaching Analyzer
+
+---
+
+[![PyPI](https://img.shields.io/pypi/v/dspyteach.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/dspyteach/)
+[![Downloads](https://img.shields.io/pypi/dm/dspyteach.svg?cacheSeconds=300)](https://pypi.org/project/dspyteach/)
+[![TestPyPI](https://img.shields.io/badge/TestPyPI-dspyteach-informational?cacheSeconds=300)](https://test.pypi.org/project/dspyteach/)
+[![CI](https://github.com/AcidicSoil/dspy-file/actions/workflows/release.yml/badge.svg)](https://github.com/AcidicSoil/DSPyTeach/actions/workflows/release.yml)
+[![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2FDSPyTeach-181717?logo=github)](https://github.com/AcidicSoil/DSPyTeach)
+
+---
+
+## DSPy-powered CLI that analyzes source files (one or many) and produces teaching briefs
+
+**Each run captures:**
+
+- an overview of the file and its major sections
+- key teaching points, workflows, and pitfalls highlighted in the material
+- a polished markdown brief suitable for sharing with learners
+
+The implementation mirrors the multi-file tutorial (`tutorials/multi-llmtxt_generator`) but focuses on per-file inference. The program is split into:
+
+- `dspy_file/signatures.py` – DSPy signatures that define inputs/outputs for each step
+- `dspy_file/file_analyzer.py` – the main DSPy module that orchestrates overview, teaching extraction, and report composition. It now wraps the final report stage with `dspy.Refine`, pushing for 450–650+ word briefs.
+- `dspy_file/file_helpers.py` – utilities for loading files and rendering the markdown brief
+- `dspy_file/analyze_file_cli.py` – command line entry point that configures the local model and prints results. It can walk directories, apply glob filters, and batch-generate briefs.
+
+---
+
+## Quick start
+
+1. Confirm Python 3.10–3.12 is available and pull at least one OpenAI-compatible model (Ollama, LM Studio, or a hosted provider).
+2. From the repository root, create an isolated environment and install dependencies:
+
+### Linux
+
+  ```shell
+  uv build
+  uv sync
+  source .venv/bin/activate
+  ```
+
+### Windows
+
+  ```shell
+  uv build
+  uv sync
+  .venv/scripts/activate
+  ```
+
+3. Run a smoke test to confirm the CLI is wired up:
+
+  ```bash
+  dspyteach --help
+  ```
+
+  Expected result: the help output lists available flags and displays the active version string.
+
+4. Analyze a sample file to confirm end-to-end output:
+
+   ```bash
+   dspyteach path/to/example.py
+   ```
+
+   Expected result: the command prints a teaching brief to stdout and writes a `.teaching.md` file under `dspy_file/data/`.
+
+---
+
+## Requirements
+
+- Python 3.10-3.12+
+- DSPy installed in the environment
+- A language-model backend. You can choose between:
+  - **Ollama** (default): run it locally with the model `hf.co/unsloth/Qwen3-4B-Instruct-2507-GGUF:Q6_K_XL` pulled.
+  - **LM Studio** (OpenAI-compatible): start the LM Studio server (`lms server start`) and download a model such as `qwen3-4b-instruct-2507@q6_k_xl`.
+  - **Any other OpenAI-compatible endpoint**: point the CLI at a hosted provider by supplying an API base URL and key (defaults to `gpt-5`).
+- (Optional) `.env` file for DSPy configuration. `dotenv` loads variables such as `DSPYTEACH_PROVIDER`, `DSPYTEACH_MODEL`, `DSPYTEACH_API_BASE`, `DSPYTEACH_API_KEY`, and `OPENAI_API_KEY`.
+
+---
+
+## Example output
+
+[example-data after running a few passes](https://github.com/AcidicSoil/DSPyTeach/tree/main/example-data)
+
+---
+
+## Installation
+
+### Install with uv (recommended for local development)
+
+<https://github.com/astral-sh/uv>
+
+### Install from PyPI
+
+```bash
+uv pip install dspyteach
+```
+
+Expected result: running `dspyteach --help` prints the CLI usage banner from the installed package.
+
+### Configure the language model
+
+The CLI supports configurable OpenAI-compatible providers in addition to the default Ollama runtime. You can override the backend via CLI options or environment variables:
+
+```bash
+# Use LM Studio's OpenAI-compatible server with its default port
+dspyteach path/to/project \
+  --provider lmstudio \
+  --model osmosis-mcp-4b@q8_0 \
+  --api-base http://localhost:1234/v1
+```
+
+```bash
+# Environment variable alternative (e.g. inside .env)
+export DSPYTEACH_PROVIDER=lmstudio
+export DSPYTEACH_MODEL=osmosis-mcp-4b@q8_0
+export DSPYTEACH_API_BASE=http://localhost:1234/v1
+dspyteach path/to/project
+```
+
+### LM-Studio Usage Notes
+
+[LM Studio configuration guide](https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/lm-studio-provider.md)
+
+LM Studio must expose its local server before you run the CLI. Start it from the Developer tab inside the LM Studio app or via `lms server start` details in the [LM Studio configuration guide](https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/lm-studio-provider.md); otherwise the CLI will exit early with a connection warning.
+
+### OpenAI-compatible others usage
+
+For hosted OpenAI-compatible services, set `--provider openai`, supply `--api-base` if needed, and pass an API key either through `--api-key`, `DSPYTEACH_API_KEY`, or the standard `OPENAI_API_KEY`. To keep a local Ollama model running after the CLI finishes, add `--keep-provider-alive`.
+
+## Usage
+
+Run the CLI to extract a teaching brief from a single file:
+
+```bash
+dspyteach path/to/your_file
+```
+
+Expected result: the CLI prints a markdown teaching brief to stdout and saves a copy under `dspy_file/data/`.
+
+You can also point the CLI at a directory. The tool will recurse by default:
+
+```bash
+dspyteach path/to/project --glob "**/*.py" --glob "**/*.md"
+```
+
+Expected result: each matched file produces its own `.teaching.md` report in the output directory.
+
+Use `--non-recursive` to stay in the top-level directory, add `--glob` repeatedly to narrow the target set, and pass `--raw` to print the raw DSPy prediction object instead of the formatted report.
+
+### Command examples
+
+- **Analyze a single markdown file**
+
+  ```bash
+  dspyteach docs/example.md
+  ```
+
+  Expected result: the CLI prints a teaching brief and stores `docs__example.teaching.md` in the output directory.
+
+- **Process a repository while skipping generated assets**
+
+  ```bash
+  dspyteach ./repo \
+    --glob "**/*.py" \
+    --glob "**/*.md" \
+    --exclude-dirs "build/,dist/,data/"
+  ```
+
+  Expected result: only `.py` and `.md` files outside the excluded directories are analyzed.
+
+- **Generate refactor templates instead of teaching briefs**
+
+  ```bash
+  dspyteach --mode refactor ./repo
+  ```
+
+- **Refactoring prompts easily**
+
+  ```bash
+  dt -m refactor C:\Users\user\projects\WIP\.__pre-temp-prompts\temp-prompts-organized\ --provider lmstudio --api-base http://127.0.0.1:1234/v1 -ed prompt-front-matter/ -o ..\dspyteach\data -i
+  ```
+
+  Expected result: `.refactor.md` files appear alongside the teaching outputs with guidance tailored to the selected prompt.
+
+Need to double-check files before the model runs? Add `--confirm-each` (alias `--interactive`) to prompt before every file, accepting with Enter or skipping with `n`.
+
+To omit specific subdirectories entirely, pass one or more `--exclude-dirs` options. Each value can list comma-separated relative paths (for example `--exclude-dirs "build/,venv/" --exclude-dirs data/raw`). The analyzer ignores any files whose path begins with the provided prefixes.
+
+Prefer short flags? The common options include `-r` (`--raw`), `-m` (`--mode`), `-nr` (`--non-recursive`), `-g` (`--glob`), `-i` (`--confirm-each`), `-ed` (`--exclude-dirs`), and `-o` (`--output-dir`). Mix and match them as needed.
+
+## Adding Custom Prompts
+
+The application can be extended with custom prompts for different analysis modes. When more than one prompt template (`.md` file) exists in the `dspy_file/prompts/` directory, the CLI will display a picker, allowing you to choose which prompt to use for the analysis.
+
+To add a new prompt:
+
+1. Create a new Markdown file (e.g., `my_custom_prompt.md`) inside the `dspy_file/prompts/` directory.
+2. The name of the file (without the `.md` extension) will be used to identify the prompt in the picker.
+3. Write your prompt content inside this new file.
+
+For example, to add a prompt for summarizing code, you could create `dspy_file/prompts/summarize_code.md` with your desired instructions. The next time you run in a mode that uses prompts, `summarize_code` will appear as an option.
+
+## Refactor files/dirs
+
+Want to scaffold refactor prompt templates instead of teaching briefs? Switch the mode:
+
+```bash
+dspyteach --mode refactor path/to/project --glob "**/*.md"
+```
+
+---
+
+---
+
+## **clarity on what happens when in teaching mode**
+
+### both of these commands shown below would create new directories in the path outside the cwd that you ran the commands from and the directories would be the following: so in this case it would be exactly ["C:\Users\user\projects\WIP\NAME-OF-CWD + (the new files it creates which will be...)dspyteach\teach\data\00-ideation\architecture\adr-new.architecture.md"]
+
+#### "00-ideation\architecture\adr-new.architecture.md" are unique to my personal setup so your output would be a mirrored version of the target path recursively
+
+directory analyzed --> "~\projects\WIP\ .__pre-temp-prompts\temp-prompts-organized" so all under temp-prompts-organized are analyzed unless flag is passed to do otherwise, ie., non-recursive or -i AKA --interactive (file by file of target path).
+
+---
+
+```bash
+dt -m refactor C:\Users\user\projects\WIP\.__pre-temp-prompts\temp-prompts-organized\ --provider lmstudio --api-base <http://127.0.0.1:1234/v1> -ed prompt-front-matter/ -o ..\dspyteach\data -i
+```
+
+```bash
+dt C:\Users\user\projects\WIP\.__pre-temp-prompts\temp-prompts-organized\ --provider lmstudio --api-base <http://127.0.0.1:1234/v1> -ed prompt-front-matter/ -o ..\dspyteach\teach\data -i
+```
+
+---
+
+## Additional Information
+
+The CLI reuses the same file resolution pipeline but feeds each document through the bundled `dspy-file_refactor-prompt_template.md` instructions (packaged under `dspy_file/prompts/`), saving `.refactor.md` files alongside the teaching reports. Teaching briefs remain the default (`--mode teach`), so existing workflows continue to work unchanged.
+
+When multiple templates live in `dspy_file/prompts/`, the refactor mode surfaces a picker so you can choose which one to use. You can also point at a specific template explicitly with `-p/--prompt`, passing either a bundled name (`-p refactor_prompt_template`) or an absolute path to your own Markdown prompt.
+
+Each run only executes the analyzer for the chosen mode. When you pass `--mode refactor` the teaching inference pipeline stays idle, and you can alias the command (for example `alias dspyrefactor='dspyteach --mode refactor'`) if you prefer refactor templates to be the default in your shell.
+
+To change where reports land, supply `--output-dir /path/to/reports`. When omitted the CLI writes to `dspy_file/data/` next to the module. Every run prints the active model name and the resolved output directory before analysis begins so you can confirm the environment at a glance. For backwards compatibility the installer also registers `dspy-file-teaching` as an alias.
+
+Each analyzed file is saved under the chosen directory with a slugged name (e.g. `src__main.teaching.md` or `src__main.refactor.md`). If a file already exists, the CLI appends a numeric suffix to avoid overwriting previous runs.
+
+The generated brief is markdown that mirrors the source material:
+
+- Overview paragraphs for quick orientation
+- Section-by-section bullets capturing the narrative
+- Key concepts, workflows, pitfalls, and references learners should review
+- A `dspy.Refine` wrapper keeps retrying until the report clears a length reward (defaults scale to ~50% of the source word count, with min/max clamps), so the content tends to be substantially longer than a single LM call.
+- If a model cannot honour DSPy's structured-output schema, the CLI prints a `Structured output fallback` notice and heuristically parses the textual response so you still get usable bullets.
+
+Behind the scenes the CLI:
+
+1. Loads environment variables via `python-dotenv`.
+2. Configures DSPy with the provider selected via CLI or environment variables (Ollama by default).
+3. Resolves all requested files, reads contents, runs the DSPy `FileTeachingAnalyzer` module, and prints a human-friendly report for each.
+4. Persists each report to the configured output directory so results are easy to revisit.
+5. Stops the Ollama model when appropriate so local resources are returned to the pool.
+
+### Extending
+
+- Adjust the `TeachingReport` signature or add new chains in `dspy_file/file_analyzer.py` to capture additional teaching metadata.
+- Customize the render logic in `dspy_file.file_helpers.render_prediction` if you want richer CLI output or structured JSON.
+- Tune `TeachingConfig` inside `file_analyzer.py` to raise `max_tokens`, adjust the `Refine` word-count reward, or add extra LM kwargs.
+- Add more signatures and module stages to capture additional metadata (e.g., security checks) and wire them into `FileAnalyzer`.
+
+---
+
+## Releasing
+
+Maintainer release steps live in [RELEASING.md](https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/RELEASING.md).
+
+## Troubleshooting
+
+- If the program cannot connect to Ollama, verify that the server is running on `http://localhost:11434` and the requested model has been pulled.
+- When you see `ollama command not found`, ensure the `ollama` binary is on your `PATH`.
+- For encoding errors, the helper already falls back to `latin-1`, but you can add more fallbacks in `file_helpers.read_file_content` if needed.
+
+
+## Links discovered
+- [![PyPI](https://img.shields.io/pypi/v/dspyteach.svg?include_prereleases&cacheSeconds=60&t=1)
+- [![Downloads](https://img.shields.io/pypi/dm/dspyteach.svg?cacheSeconds=300)
+- [![TestPyPI](https://img.shields.io/badge/TestPyPI-dspyteach-informational?cacheSeconds=300)
+- [![CI](https://github.com/AcidicSoil/dspy-file/actions/workflows/release.yml/badge.svg)
+- [![Repo](https://img.shields.io/badge/GitHub-AcidicSoil%2FDSPyTeach-181717?logo=github)
+- [example-data after running a few passes](https://github.com/AcidicSoil/DSPyTeach/tree/main/example-data)
+- [LM Studio configuration guide](https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/lm-studio-provider.md)
+- [RELEASING.md](https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/RELEASING.md)
+
+--- scripts/verify_fences.py ---
+#!/usr/bin/env python3
+import argparse
+import sys
+from pathlib import Path
+from dataclasses import dataclass
+from typing import Iterable, List, Tuple, Optional, Set
+
+TEXT_EXTS_DEFAULT = {
+    "md","txt","py","js","ts","tsx","jsx","json","yml","yaml","toml","sh","bash",
+    "css","scss","html","xml","rs","go","rb","php","java","kt","swift","c","h",
+    "cpp","hpp","cs","sql","ini","conf","cfg"
+}
+IGNORES_DEFAULT = {".git","node_modules",".venv","venv",".mypy_cache","dist","build","target",".idea",".vscode","__pycache__"}
+
+@dataclass
+class CheckResult:
+    root: Path
+    root_name: str
+    path: Path
+    rel: Path
+    status: str            # pass | warn | fail
+    reason: str
+    fix_preview: Optional[str]
+    changed: bool = False
+
+def read_lines(path: Path) -> List[str]:
+    text = path.read_text(encoding="utf-8", errors="replace")
+    return text.splitlines()
+
+def write_lines(dest: Path, lines: List[str]) -> None:
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    dest.write_text("\n".join(lines) + ("\n" if lines and not lines[-1].endswith("\n") else ""), encoding="utf-8")
+
+def infer_fence_language(path: Path) -> str:
+    return (path.suffix[1:].lower() if path.suffix else "").strip()
+
+def analyze_file(root: Path, path: Path) -> CheckResult:
+    try:
+        lines = read_lines(path)
+    except Exception as e:
+        return CheckResult(root, root.name, path, path.relative_to(root), "fail", f"read-error: {e}", None, False)
+
+    if not lines:
+        return CheckResult(root, root.name, path, path.relative_to(root), "fail", "empty-file", None, False)
+
+    first = lines[0].strip()
+    # find last non-blank
+    last_nonblank = None
+    for ln in reversed(lines):
+        if ln.strip():
+            last_nonblank = ln.strip()
+            break
+    if last_nonblank is None:
+        last_nonblank = ""
+
+    ext = infer_fence_language(path)
+    expected_first = f"```{ext}" if ext else "```"
+    expected_last = "```"
+
+    ok_start = first.startswith("```")
+    ok_end = last_nonblank == "```"
+
+    status = "pass" if (ok_start and ok_end) else ("warn" if ok_start or ok_end else "fail")
+
+    reason_bits = []
+    if not ok_start:
+        reason_bits.append(f"missing-start:{expected_first}")
+    if not ok_end:
+        reason_bits.append("missing-end:```")
+    reason = ",".join(reason_bits) if reason_bits else "ok"
+
+    # preview fix
+    fixed = list(lines)
+    if not ok_start:
+        fixed.insert(0, expected_first)
+    if not ok_end:
+        fixed.append("```")
+
+    preview = None
+    if fixed != lines:
+        # only show the first and last two lines in preview
+        head = fixed[:3]
+        tail = fixed[-3:] if len(fixed) > 3 else []
+        preview = "\n".join(head + (["..."] if tail else []) + tail)
+
+    return CheckResult(root, root.name, path, path.relative_to(root), status, reason, preview, False)
+
+def scan_tree(root: Path, include_exts: Set[str], ignore_dirs: Set[str]) -> List[CheckResult]:
+    results: List[CheckResult] = []
+    for p in root.rglob("*"):
+        if p.is_dir():
+            if p.name in ignore_dirs:
+                # skip traversing into ignored dirs
+                # rglob still iterates into them so we guard by not processing children files since we check on files only
+                pass
+            continue
+        if not p.is_file():
+            continue
+        ext = p.suffix[1:].lower()
+        if include_exts and ext not in include_exts:
+            continue
+        results.append(analyze_file(root, p))
+    return results
+
+def apply_fix(res: CheckResult, out_dir: Optional[Path], dry_run: bool, mirror: bool, out_parent: Optional[Path]) -> Tuple[bool, str, Optional[Path]]:
+    try:
+        lines = read_lines(res.path)
+    except Exception as e:
+        return False, f"read-error:{e}", None
+
+    first = lines[0].strip() if lines else ""
+    last_nonblank_idx = None
+    for i in range(len(lines)-1, -1, -1):
+        if lines[i].strip():
+            last_nonblank_idx = i
+            break
+    last_is_fence = (last_nonblank_idx is not None and lines[last_nonblank_idx].strip() == "```")
+    start_is_fence = first.startswith("```")
+
+    ext = infer_fence_language(res.path)
+    expected_first = f"```{ext}" if ext else "```"
+
+    new_lines = list(lines)
+    changed = False
+    if not start_is_fence:
+        new_lines.insert(0, expected_first)
+        changed = True
+    if not last_is_fence:
+        new_lines.append("```")
+        changed = True
+
+    if not changed:
+        return True, "no-change", res.path
+
+    # Destination resolution
+    # Mirror preserves the full folder structure under <out-parent>/<target-name>/<relative-path>
+    if mirror and out_parent:
+        dest = out_parent / res.root_name / res.rel
+    elif out_dir:
+        dest = out_dir / res.rel
+    else:
+        dest = res.path
+
+    if dry_run:
+        return True, f"dry-run would write:{dest}", dest
+
+    try:
+        write_lines(dest, new_lines)
+        return True, "written", dest
+    except Exception as e:
+        return False, f"write-error:{e}", None
+
+def summarize(results: List[CheckResult]) -> Tuple[int,int,int,int]:
+    checked = len(results)
+    passed = sum(1 for r in results if r.status == "pass")
+    warned = sum(1 for r in results if r.status == "warn")
+    failed = sum(1 for r in results if r.status == "fail")
+    return checked, passed, warned, failed
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description="Verify code fences and optionally fix them.")
+    ap.add_argument("targets", nargs="+", help="Files or directories to scan")
+    ap.add_argument("-e","--ext", action="append", default=[], help="File extensions to include. Repeatable. Default is a broad set.")
+    ap.add_argument("-x","--ignore-dir", action="append", default=[], help="Directory names to ignore. Repeatable.")
+    ap.add_argument("-A","--apply", action="store_true", help="Apply automatic fixes")
+    ap.add_argument("-n","--dry-run", action="store_true", help="Do not write. Report only.")
+    ap.add_argument("-M","--mirror", action="store_true", help="Mirror folder structure under out parent")
+    ap.add_argument("-P","--out-parent", type=Path, help="Parent directory to write into when mirroring with -M")
+    ap.add_argument("-o","--out-dir", type=Path, help="Output directory keeping relative paths (no project prefix)")
+    args = ap.parse_args()
+
+    include_exts = set(e.lower().lstrip(".") for e in (args.ext or [])) or set(TEXT_EXTS_DEFAULT)
+    ignore_dirs = set(args.ignore_dir or []) or set(IGNORES_DEFAULT)
+
+    targets = [Path(t).resolve() for t in args.targets]
+
+    results: List[CheckResult] = []
+    for t in targets:
+        if t.is_dir():
+            results.extend(scan_tree(t, include_exts, ignore_dirs))
+        elif t.is_file():
+            root = t.parent
+            res = analyze_file(root, t)
+            results.append(res)
+        else:
+            print(f"skip: not found {t}", file=sys.stderr)
+
+    checked, passed, warned, failed = summarize(results)
+    print(f"checked={checked} passed={passed} warned={warned} failed={failed}")
+
+    if not args.apply:
+        # simple report
+        for r in results:
+            if r.status != "pass":
+                print(f"{r.path}: {r.status} {r.reason}")
+        return 0 if failed == 0 else 1
+
+    # apply
+    fixed_ok = 0
+    fixed_err = 0
+    for r in results:
+        ok, msg, dest = apply_fix(r, args.out_dir, args.dry_run, args.mirror, args.out_parent)
+        if ok:
+            fixed_ok += 1
+        else:
+            fixed_err += 1
+        print(f"{r.rel} -> {dest if dest else 'N/A'} : {msg}")
+
+    # re-scan written outputs if they are in a different tree
+    if args.dry_run:
+        return 0 if failed == 0 else 1
+
+    # If writing to a different location, we do not reanalyze.
+    return 0 if fixed_err == 0 else 1
+
+if __name__ == "__main__":
+    raise SystemExit(main())
+
+
+--- dspy_file/analyze_file_cli.py ---
+# path: analyze_file_cli.py
+# analyze_file_cli.py - command line entry point for DSPy file analyzer with MLflow tracking + tracing
+from __future__ import annotations
+
+import argparse
+import os
+import subprocess
+import sys
+import time
+from enum import Enum
+from urllib import error as urlerror
+from urllib import request
+from pathlib import Path
+from typing import Any, Final
+
+import dspy
+from dotenv import load_dotenv
+
+from .file_analyzer import FileTeachingAnalyzer
+from .file_helpers import collect_source_paths, read_file_content, render_prediction
+from .prompts import PromptTemplate, list_bundled_prompts, load_prompt_text
+from .refactor_analyzer import FileRefactorAnalyzer
+
+try:  # dspy depends on litellm; guard in case import path changes.
+    from litellm.exceptions import InternalServerError as LiteLLMInternalServerError
+except Exception:  # pragma: no cover - defensive fallback if litellm API shifts
+    LiteLLMInternalServerError = None  # type: ignore[assignment]
+
+# Optional MLflow import. Enabled only with --mlflow to ensure no behavior change by default.
+try:  # pragma: no cover - optional dependency
+    import mlflow  # type: ignore
+except Exception:  # pragma: no cover - keep CLI usable without MLflow installed
+    mlflow = None  # type: ignore
+
+class Provider(str, Enum):
+    """Supported language model providers."""
+
+    OLLAMA = "ollama"
+    OPENAI = "openai"
+    LMSTUDIO = "lmstudio"
+
+    @property
+    def is_openai_compatible(self) -> bool:
+        return self in {Provider.OPENAI, Provider.LMSTUDIO}
+
+
+DEFAULT_PROVIDER: Final[Provider] = Provider.OLLAMA
+DEFAULT_OUTPUT_DIR = Path(__file__).parent / "data"
+DEFAULT_OLLAMA_MODEL = "hf.co/Mungert/osmosis-mcp-4b-GGUF:Q5_K_M"
+DEFAULT_LMSTUDIO_MODEL = "osmosis-mcp-4b@q8_0"
+DEFAULT_OPENAI_MODEL = "gpt-5"
+OLLAMA_BASE_URL = "http://localhost:11434"
+LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
+
+PROVIDER_DEFAULTS: Final[dict[Provider, dict[str, Any]]] = {
+    Provider.OLLAMA: {"model": DEFAULT_OLLAMA_MODEL, "api_base": OLLAMA_BASE_URL},
+    Provider.LMSTUDIO: {"model": DEFAULT_LMSTUDIO_MODEL, "api_base": LMSTUDIO_BASE_URL},
+    Provider.OPENAI: {"model": DEFAULT_OPENAI_MODEL, "api_base": None},
+}
+
+
+def _resolve_option(
+    cli_value: str | None, env_var: str, default: str | None = None
+) -> str | None:
+    """Return the CLI value if provided, otherwise fall back to env or default."""
+
+    if cli_value is not None:
+        return cli_value
+    env_value = os.getenv(env_var)
+    if env_value not in ("", None):
+        return env_value
+    return default
+
+
+def _normalize_model_name(provider: Provider, raw_model: str) -> str:
+    """Attach the appropriate provider prefix to the model identifier."""
+
+    if provider is Provider.OLLAMA:
+        return (
+            raw_model
+            if raw_model.startswith("ollama_chat/")
+            else f"ollama_chat/{raw_model}"
+        )
+
+    if raw_model.startswith("openai/"):
+        return raw_model
+    return f"openai/{raw_model}"
+
+
+def configure_model(
+    provider: Provider,
+    model_name: str,
+    *,
+    api_base: str | None,
+    api_key: str | None,
+) -> None:
+    """Configure DSPy with the selected provider and model."""
+
+    lm_kwargs: dict[str, Any] = {"streaming": False, "cache": False}
+    if provider is Provider.OLLAMA:
+        lm_kwargs["api_base"] = api_base or OLLAMA_BASE_URL
+        # Ollama's OpenAI compatibility ignores api_key, so pass an empty string.
+        lm_kwargs["api_key"] = ""
+    else:
+        if api_base:
+            lm_kwargs["api_base"] = api_base
+        if api_key:
+            lm_kwargs["api_key"] = api_key
+
+    identifier = _normalize_model_name(provider, model_name)
+    lm = dspy.LM(identifier, **lm_kwargs)
+    dspy.configure(lm=lm)
+    provider_label = "LM Studio" if provider is Provider.LMSTUDIO else provider.value
+    suffix = f" via {api_base}" if provider.is_openai_compatible and api_base else ""
+    print(f"Configured DSPy LM ({provider_label}): {model_name}{suffix}")
+
+
+class ProviderConnectivityError(RuntimeError):
+    """Raised when a provider cannot be reached before running analysis."""
+
+
+def _probe_openai_provider(
+    api_base: str, api_key: str | None, *, timeout: float = 3.0
+) -> None:
+    """Make a lightweight request against an OpenAI-compatible endpoint."""
+
+    endpoint = api_base.rstrip("/") + "/models"
+    headers = {"Authorization": f"Bearer {api_key or ''}"}
+    request_obj = request.Request(endpoint, headers=headers, method="GET")
+
+    try:
+        with request.urlopen(request_obj, timeout=timeout):
+            return
+    except urlerror.HTTPError as exc:
+        raise ProviderConnectivityError(
+            f"Endpoint {endpoint} responded with HTTP {exc.code}: {exc.reason}"
+        ) from exc
+    except urlerror.URLError as exc:
+        reason = getattr(exc, "reason", exc)
+        raise ProviderConnectivityError(
+            f"Failed to reach {endpoint}: {reason}"
+        ) from exc
+
+
+def stop_ollama_model(model_name: str) -> None:
+    """Stop the Ollama model to free server resources."""
+
+    try:
+        subprocess.run(
+            ["ollama", "stop", model_name],
+            check=True,
+            capture_output=True,
+        )
+    except subprocess.CalledProcessError as exc:  # pragma: no cover - warn only
+        print(f"Warning: Failed to stop model {model_name}: {exc}")
+    except FileNotFoundError:
+        print("Warning: ollama command not found while attempting to stop the model.")
+
+
+class AnalysisMode(str, Enum):
+    TEACH = "teach"
+    REFACTOR = "refactor"
+
+    @property
+    def render_key(self) -> str:
+        return self.value
+
+    @property
+    def output_description(self) -> str:
+        return "teaching report" if self is AnalysisMode.TEACH else "refactor template"
+
+    @property
+    def file_suffix(self) -> str:
+        # No suffixing. Preserve original filename.
+        return ""
+
+
+def _prompt_for_template_selection(prompts: list[PromptTemplate]) -> PromptTemplate:
+    while True:
+        print("Available prompt templates:")
+        for idx, template in enumerate(prompts, 1):
+            print(f"  [{idx}] {template.name} ({template.path.name})")
+        try:
+            choice = input(f"Select a template [1-{len(prompts)}] (default 1): ")
+        except EOFError:
+            print("No selection provided; using first template.")
+            return prompts[0]
+
+        stripped = choice.strip()
+        if not stripped:
+            return prompts[0]
+        if stripped.isdigit():
+            idx = int(stripped)
+            if 1 <= idx <= len(prompts):
+                return prompts[idx - 1]
+        print(f"Please enter a number between 1 and {len(prompts)}.")
+
+
+def _resolve_prompt_text(prompt_arg: str | None) -> str:
+    if prompt_arg:
+        return load_prompt_text(prompt_arg)
+
+    prompts = list_bundled_prompts()
+    if not prompts:
+        raise FileNotFoundError("No prompt templates found in prompts directory.")
+    if len(prompts) == 1:
+        return prompts[0].path.read_text(encoding="utf-8")
+
+    selected = _prompt_for_template_selection(prompts)
+    return selected.path.read_text(encoding="utf-8")
+
+
+def _write_output(
+    source_path: Path,
+    content: str,
+    *,
+    root: Path | None = None,
+    output_dir: Path | None = None,
+    suffix: str = "",
+) -> Path:
+    """Write output to the same filename and directory layout as the analyzed path."""
+
+    try:
+        relative_path = (
+            source_path.relative_to(root) if root else Path(source_path.name)
+        )
+    except ValueError:
+        relative_path = Path(source_path.name)
+
+    if output_dir:
+        dest_path = (output_dir / relative_path).resolve()
+        dest_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        dest_path = source_path
+
+    if not content.endswith("\n"):
+        content = content + "\n"
+
+    dest_path.write_text(content, encoding="utf-8")
+    return dest_path
+
+
+def _confirm_analyze(path: Path) -> bool:
+    prompt = f"Analyze {path}? [Y/n]: "
+    while True:
+        try:
+            response = input(prompt)
+        except EOFError:
+            print("No input received; skipping.")
+            return False
+
+        normalized = response.strip().lower()
+        if normalized in {"", "y", "yes"}:
+            return True
+        if normalized in {"n", "no"}:
+            return False
+        print("Please answer 'y' or 'n'.")
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        description="Analyze a single file using DSPy signatures and modules",
+    )
+    parser.add_argument("path", help="Path to the file to analyze")
+    parser.add_argument(
+        "--provider",
+        choices=[provider.value for provider in Provider],
+        default=None,
+        help=(
+            "Language model provider to use (env: DSPYTEACH_PROVIDER). "
+            "Choose from 'ollama', 'lmstudio', or 'openai'."
+        ),
+    )
+    parser.add_argument(
+        "--model",
+        dest="model_name",
+        default=None,
+        help=(
+            "Override the model identifier for the selected provider "
+            "(env: DSPYTEACH_MODEL)."
+        ),
+    )
+    parser.add_argument(
+        "--api-base",
+        dest="api_base",
+        default=None,
+        help=("Override the OpenAI-compatible API base URL (env: DSPYTEACH_API_BASE)."),
+    )
+    parser.add_argument(
+        "--api-key",
+        dest="api_key",
+        default=None,
+        help=(
+            "API key for OpenAI-compatible providers (env: DSPYTEACH_API_KEY). "
+            "Falls back to OPENAI_API_KEY for the OpenAI provider."
+        ),
+    )
+    parser.add_argument(
+        "--keep-provider-alive",
+        action="store_true",
+        dest="keep_provider_alive",
+        help="Skip stopping the local Ollama model when execution completes.",
+    )
+    parser.add_argument(
+        "-r",
+        "--raw",
+        action="store_true",
+        help="Print raw DSPy prediction repr instead of formatted text",
+    )
+    parser.add_argument(
+        "-m",
+        "--mode",
+        choices=[mode.value for mode in AnalysisMode],
+        default=AnalysisMode.TEACH.value,
+        help="Select output mode: teaching report (default) or refactor prompt template.",
+    )
+    parser.add_argument(
+        "-nr",
+        "--non-recursive",
+        action="store_true",
+        help="When path is a directory, only analyze files in the top-level directory",
+    )
+    parser.add_argument(
+        "-g",
+        "--glob",
+        action="append",
+        dest="include_globs",
+        default=None,
+        help=(
+            "Optional glob pattern(s) applied relative to the directory. Repeat to combine."
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--prompt",
+        dest="prompt",
+        default=None,
+        help=(
+            "Prompt template to use in refactor mode. Provide a name, bundled filename, or path."
+        ),
+    )
+    parser.add_argument(
+        "-i",
+        "--confirm-each",
+        "--interactive",
+        action="store_true",
+        dest="confirm_each",
+        help="Prompt for confirmation before analyzing each file.",
+    )
+    parser.add_argument(
+        "-ed",
+        "--exclude-dirs",
+        action="append",
+        dest="exclude_dirs",
+        default=None,
+        help=(
+            "Comma-separated relative directory paths to skip entirely when scanning."
+        ),
+    )
+    parser.add_argument(
+        "-o",
+        "--output-dir",
+        dest="output_dir",
+        default=None,
+        help=("Directory to write outputs. If omitted, overwrite files in place."),
+    )
+    # --- MLflow options ---
+    parser.add_argument(
+        "--mlflow",
+        action="store_true",
+        help="Enable MLflow tracking of params, metrics, artifacts, and traces.",
+    )
+    parser.add_argument(
+        "--mlflow-experiment",
+        dest="mlflow_experiment",
+        default=None,
+        help="Name of the MLflow experiment to use or create when --mlflow is set.",
+    )
+    return parser
+
+
+def analyze_path(
+    path: str,
+    *,
+    raw: bool,
+    recursive: bool,
+    include_globs: list[str] | None,
+    confirm_each: bool,
+    exclude_dirs: list[str] | None,
+    output_dir: Path | None,
+    mode: AnalysisMode,
+    prompt_text: str | None = None,
+    mlflow_enabled: bool = False,
+    root_hint: Path | None = None,
+) -> int:
+    """Run the DSPy pipeline and render results to stdout for one or many files."""
+
+    resolved = Path(path).expanduser().resolve()
+    targets = collect_source_paths(
+        path,
+        recursive=recursive,
+        include_globs=include_globs,
+        exclude_dirs=exclude_dirs,
+    )
+
+    if not targets:
+        print(f"No files found under {resolved}")
+        return 0
+
+    analyzer: dspy.Module
+    if mode is AnalysisMode.TEACH:
+        analyzer = FileTeachingAnalyzer()
+    else:
+        analyzer = FileRefactorAnalyzer(template_text=prompt_text)
+
+    root: Path | None = (
+        root_hint if root_hint else (resolved if resolved.is_dir() else None)
+    )
+
+    exit_code = 0
+    for target in targets:
+        if confirm_each and not _confirm_analyze(target):
+            print(f"Skipping {target} at user request.")
+            continue
+
+        try:
+            # --- trace: read file ---
+            if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+                with mlflow.start_span(
+                    name="read_file", attributes={"path": str(target)}
+                ):
+                    content = read_file_content(target)
+            else:
+                content = read_file_content(target)
+        except (FileNotFoundError, UnicodeDecodeError) as exc:
+            print(f"Skipping {target}: {exc}")
+            exit_code = 1
+            continue
+
+        # Compute relative path for logging.
+        try:
+            relative = target.relative_to(root) if root else Path(target.name)
+        except Exception:
+            relative = Path(target.name)
+
+        print(f"\n=== Analyzing {target} ===")
+        t0 = time.perf_counter()
+        # --- trace: model inference ---
+        if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+            with mlflow.start_span(
+                name="dspy_inference",
+                attributes={
+                    "file": str(relative),
+                    "mode": mode.value,
+                    "bytes_in": len(content.encode("utf-8", errors="ignore")),
+                },
+            ):
+                prediction = analyzer(file_path=str(target), file_content=content)
+        else:
+            prediction = analyzer(file_path=str(target), file_content=content)
+        dt_ms = int((time.perf_counter() - t0) * 1000)
+
+        if raw:
+            output_text = repr(prediction)
+            print(output_text)
+        else:
+            output_text = render_prediction(prediction, mode=mode.render_key)
+            print(output_text, end="")
+
+        # --- trace: write output ---
+        if mlflow_enabled and mlflow is not None and hasattr(mlflow, "start_span"):
+            with mlflow.start_span(
+                name="write_output", attributes={"file": str(relative)}
+            ):
+                output_path = _write_output(
+                    target,
+                    output_text,
+                    root=root,
+                    output_dir=output_dir,
+                    suffix=mode.file_suffix,
+                )
+        else:
+            output_path = _write_output(
+                target,
+                output_text,
+                root=root,
+                output_dir=output_dir,
+                suffix=mode.file_suffix,
+            )
+        print(f"Saved {mode.output_description} to {output_path}")
+
+        if mlflow_enabled and mlflow is not None:
+            # Nested run per analyzed file
+            run_name = str(relative)
+            with mlflow.start_run(nested=True, run_name=run_name):  # type: ignore[attr-defined]
+                mlflow.log_params(  # type: ignore[attr-defined]
+                    {
+                        "path": str(relative),
+                        "raw": str(raw),
+                        "confirm_each": str(confirm_each),
+                        "recursive": str(recursive),
+                        "globs": ",".join(include_globs or []),
+                        "excluded_dirs": ",".join(exclude_dirs or []),
+                    }
+                )
+                in_bytes = len(content.encode("utf-8", errors="ignore"))
+                out_chars = len(output_text)
+                mlflow.log_metrics(  # type: ignore[attr-defined]
+                    {
+                        "input_bytes": float(in_bytes),
+                        "output_chars": float(out_chars),
+                        "duration_ms": float(dt_ms),
+                    }
+                )
+                mlflow.set_tags({"analysis_mode": mode.value})  # type: ignore[attr-defined]
+                mlflow.log_artifact(str(output_path))  # type: ignore[attr-defined]
+
+                if hasattr(mlflow, "update_current_trace"):
+                    try:
+                        mlflow.update_current_trace(
+                            tags={"file": str(relative), "analysis_mode": mode.value}
+                        )
+                    except Exception:
+                        pass
+
+    return exit_code
+
+
+def main(argv: list[str] | None = None) -> int:
+    load_dotenv()
+
+    parser = build_parser()
+    args = parser.parse_args(argv)
+
+    provider_value = _resolve_option(
+        args.provider, "DSPYTEACH_PROVIDER", DEFAULT_PROVIDER.value
+    )
+    try:
+        provider = Provider(provider_value)
+    except ValueError:  # pragma: no cover - argparse handles this
+        valid = ", ".join(p.value for p in Provider)
+        parser.error(f"Unsupported provider '{provider_value}'. Choose from: {valid}.")
+
+    defaults = PROVIDER_DEFAULTS[provider]
+    model_name = _resolve_option(args.model_name, "DSPYTEACH_MODEL", defaults["model"])
+    api_base_default = defaults.get("api_base")
+    api_base = _resolve_option(args.api_base, "DSPYTEACH_API_BASE", api_base_default)
+    api_key = _resolve_option(args.api_key, "DSPYTEACH_API_KEY", None)
+    if provider is Provider.OPENAI and not api_key:
+        api_key = os.getenv("OPENAI_API_KEY")
+    if provider is Provider.LMSTUDIO and not api_key:
+        api_key = "lm-studio"
+
+    if provider is Provider.LMSTUDIO and api_base:
+        try:
+            _probe_openai_provider(api_base, api_key)
+        except ProviderConnectivityError as exc:
+            print("Unable to reach the LM Studio server before starting analysis.")
+            print(f"Details: {exc}")
+            print(
+                "Start LM Studio's local API server (Developer tab → Start Server or `lms server start`) and re-run, or pass --api-base to match the running port."
+            )
+            return 1
+
+    configure_model(provider, model_name, api_base=api_base, api_key=api_key)
+    stop_model: str | None = model_name if provider is Provider.OLLAMA else None
+
+    # Evaluate MLflow configuration
+    mlflow_enabled = bool(args.mlflow)
+    if mlflow_enabled and mlflow is None:  # type: no cover
+        print(
+            "Warning: --mlflow requested but MLflow is not installed. Disabling MLflow."
+        )
+        mlflow_enabled = False
+
+    exit_code = 0
+    try:
+        analysis_mode = AnalysisMode(args.mode)
+        prompt_text: str | None = None
+        if analysis_mode is AnalysisMode.REFACTOR:
+            try:
+                prompt_text = _resolve_prompt_text(args.prompt)
+            except (FileNotFoundError, ValueError) as exc:
+                print(f"Error resolving prompt: {exc}")
+                return 2
+        elif args.prompt:
+            print("Warning: --prompt is ignored outside refactor mode.")
+        output_dir = (
+            Path(args.output_dir).expanduser().resolve() if args.output_dir else None
+        )
+        if output_dir:
+            print(f"Writing {analysis_mode.output_description}s to {output_dir}")
+        else:
+            print(f"Writing {analysis_mode.output_description}s in place")
+        exclude_dirs = None
+        if args.exclude_dirs:
+            parsed: list[str] = []
+            for entry in args.exclude_dirs:
+                parsed.extend(
+                    segment.strip() for segment in entry.split(",") if segment.strip()
+                )
+            exclude_dirs = parsed or None
+
+        # --- MLflow parent run + root span for the whole invocation ---
+        if mlflow_enabled and mlflow is not None:
+            if args.mlflow_experiment:
+                try:
+                    mlflow.set_experiment(args.mlflow_experiment)  # type: ignore[attr-defined]
+                except Exception as exc:
+                    print(f"Warning: failed to set MLflow experiment: {exc}")
+
+            tracing_supported = hasattr(mlflow, "start_span") and hasattr(
+                mlflow, "update_current_trace"
+            )
+            run_name = f"analyze:{Path(args.path).name}"
+
+            if tracing_supported:
+                with mlflow.start_span(name="analyze_file_cli") as root_span:
+                    # inputs on the root span when API exists
+                    try:
+                        if hasattr(root_span, "set_inputs"):
+                            root_span.set_inputs({
+                                "path": args.path,
+                                "mode": analysis_mode.value,
+                            })
+                    except Exception:
+                        pass
+
+                    try:
+                        mlflow.update_current_trace(
+                            tags={
+                                "provider": provider.value,
+                                "api_base_set": str(bool(api_base)),
+                            }
+                        )
+                    except Exception:
+                        pass
+
+                    with mlflow.start_run(run_name=run_name):  # type: ignore[attr-defined]
+                        mlflow.set_tags(  # type: ignore[attr-defined]
+                            {
+                                "provider": provider.value,
+                                "mode": analysis_mode.value,
+                                "api_base": str(bool(api_base)),
+                            }
+                        )
+                        mlflow.log_params(  # type: ignore[attr-defined]
+                            {
+                                "provider": provider.value,
+                                "model": model_name,
+                                "api_base": api_base or "",
+                                "path": args.path,
+                                "output_dir": str(output_dir) if output_dir else "",
+                                "recursive": str(not args.non_recursive),
+                            }
+                        )
+                        exit_code = analyze_path(
+                            args.path,
+                            raw=args.raw,
+                            recursive=not args.non_recursive,
+                            include_globs=args.include_globs,
+                            confirm_each=args.confirm_each,
+                            exclude_dirs=exclude_dirs,
+                            output_dir=output_dir,
+                            mode=analysis_mode,
+                            prompt_text=prompt_text,
+                            mlflow_enabled=True,
+                            root_hint=Path(args.path).expanduser().resolve(),
+                        )
+            else:
+                with mlflow.start_run(run_name=run_name):  # type: ignore[attr-defined]
+                    mlflow.set_tags(  # type: ignore[attr-defined]
+                        {
+                            "provider": provider.value,
+                            "mode": analysis_mode.value,
+                            "api_base": str(bool(api_base)),
+                        }
+                    )
+                    mlflow.log_params(  # type: ignore[attr-defined]
+                        {
+                            "provider": provider.value,
+                            "model": model_name,
+                            "api_base": api_base or "",
+                            "path": args.path,
+                            "output_dir": str(output_dir) if output_dir else "",
+                            "recursive": str(not args.non_recursive),
+                        }
+                    )
+                    exit_code = analyze_path(
+                        args.path,
+                        raw=args.raw,
+                        recursive=not args.non_recursive,
+                        include_globs=args.include_globs,
+                        confirm_each=args.confirm_each,
+                        exclude_dirs=exclude_dirs,
+                        output_dir=output_dir,
+                        mode=analysis_mode,
+                        prompt_text=prompt_text,
+                        mlflow_enabled=True,
+                        root_hint=Path(args.path).expanduser().resolve(),
+                    )
+        else:
+            exit_code = analyze_path(
+                args.path,
+                raw=args.raw,
+                recursive=not args.non_recursive,
+                include_globs=args.include_globs,
+                confirm_each=args.confirm_each,
+                exclude_dirs=exclude_dirs,
+                output_dir=output_dir,
+                mode=analysis_mode,
+                prompt_text=prompt_text,
+                mlflow_enabled=False,
+                root_hint=Path(args.path).expanduser().resolve(),
+            )
+    except Exception as exc:
+        if LiteLLMInternalServerError and isinstance(exc, LiteLLMInternalServerError):
+            message = str(exc)
+            if exc.__cause__:
+                message = f"{message} (cause: {exc.__cause__})"
+            print("Model request failed while generating the report.")
+            print(f"Details: {message}")
+            if provider is Provider.LMSTUDIO:
+                print(
+                    f"Confirm the LM Studio server is running and reachable at {api_base}."
+                )
+            return 1
+        raise
+    except (FileNotFoundError, IsADirectoryError) as exc:
+        parser.print_usage(sys.stderr)
+        print(f"{parser.prog}: error: {exc}", file=sys.stderr)
+        exit_code = 2
+    except KeyboardInterrupt:
+        exit_code = 1
+    finally:
+        if provider is Provider.OLLAMA and not args.keep_provider_alive and stop_model:
+            stop_ollama_model(stop_model)
+
+    return exit_code
+
+if __name__ == "__main__":  # pragma: no cover - CLI entry point
+    sys.exit(main())
+
+
+--- dspy_file/file_analyzer.py ---
+# file_analyzer.py - DSPy module deriving a learning brief from a single file
+from __future__ import annotations
+
+import json
+import re
+from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
+from typing import Any
+
+import dspy
+
+from .signatures import FileOverview, TeachingPoints, TeachingReport
+
+
+@dataclass
+class TeachingConfig:
+    section_bullet_prefix: str = "- "
+    overview_max_tokens: int = 40960
+    teachings_max_tokens: int = 40960
+    report_max_tokens: int = 40960
+    temperature: float | None = 0.6
+    top_p: float | None = 0.95
+    n_completions: int | None = None
+    extra_lm_kwargs: dict[str, Any] = field(default_factory=dict)
+    report_refine_attempts: int = 3
+    report_reward_threshold: float = 0.8
+    report_min_word_count: int = 4000
+    report_max_word_count: int = 40960
+    report_target_ratio: float = 0.5
+    report_soft_cap_ratio: float = 0.8
+
+    def lm_args_for(self, scope: str) -> dict[str, Any]:
+        """Return per-module LM kwargs without mutating shared config."""
+        scope_tokens = {
+            "overview": self.overview_max_tokens,
+            "teachings": self.teachings_max_tokens,
+            "report": self.report_max_tokens,
+        }
+
+        kwargs: dict[str, Any] = {**self.extra_lm_kwargs}
+        kwargs["max_tokens"] = scope_tokens.get(scope, self.report_max_tokens)
+
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
+        if self.top_p is not None:
+            kwargs["top_p"] = self.top_p
+        if self.n_completions is not None:
+            kwargs["n"] = self.n_completions
+
+        return kwargs
+
+
+def _fallback_list(message: str) -> list[str]:
+    return [message]
+
+
+def _ensure_text(value: str | None, fallback: str) -> str:
+    if value and value.strip():
+        return value
+    return fallback
+
+
+def _ensure_list(
+    values: Iterable[str] | None,
+    fallback: str,
+    *,
+    strip_entries: bool = True,
+    field_name: str | None = None,
+) -> list[str]:
+    coerced, used_fallback = _coerce_iterable(values, strip_entries=strip_entries)
+
+    if coerced:
+        if used_fallback and field_name:
+            _structured_output_notice(field_name)
+        return coerced
+
+    if used_fallback and field_name:
+        _structured_output_notice(field_name)
+
+    return _fallback_list(fallback)
+
+
+def _clean_list(
+    values: Iterable[str] | None,
+    *,
+    strip_entries: bool = True,
+    field_name: str | None = None,
+) -> list[str]:
+    if not values:
+        return []
+
+    coerced, used_fallback = _coerce_iterable(values, strip_entries=strip_entries)
+
+    if used_fallback and field_name:
+        _structured_output_notice(field_name)
+
+    return coerced
+
+
+_STRUCTURED_NOTICE_CACHE: set[str] = set()
+
+
+def _structured_output_notice(field: str) -> None:
+    if field in _STRUCTURED_NOTICE_CACHE:
+        return
+    _STRUCTURED_NOTICE_CACHE.add(field)
+    print(
+        f"Structured output fallback applied for '{field}'. Parsed textual response."
+    )
+
+
+_LEADING_MARKER_PATTERN = re.compile(r"^[\s\-\*•·\u2022\d\.\)\(]+")
+
+
+def _coerce_iterable(
+    values: Iterable[str] | None,
+    *,
+    strip_entries: bool,
+) -> tuple[list[str], bool]:
+    if values is None:
+        return [], False
+
+    if isinstance(values, str):
+        return _coerce_string(values, strip_entries=strip_entries), True
+
+    if isinstance(values, Mapping):
+        items: list[str] = []
+        for key, val in values.items():
+            key_text = str(key).strip()
+            val_text = str(val).strip()
+            combined = f"{key_text}: {val_text}" if val_text else key_text
+            candidate = combined.rstrip() if not strip_entries else combined.strip()
+            if candidate:
+                items.append(candidate if strip_entries else candidate.rstrip())
+        return items, True
+
+    if isinstance(values, Iterable):
+        cleaned: list[str] = []
+        used_fallback = not isinstance(values, (list, tuple, set))
+        for entry in values:
+            if entry is None:
+                continue
+            if isinstance(entry, str):
+                candidate = entry.rstrip() if not strip_entries else entry.strip()
+            else:
+                candidate = str(entry).strip()
+            if strip_entries:
+                candidate = _LEADING_MARKER_PATTERN.sub("", candidate).strip()
+            if candidate:
+                cleaned.append(candidate if strip_entries else candidate.rstrip())
+        return cleaned, used_fallback
+
+    return _coerce_string(str(values), strip_entries=strip_entries), True
+
+
+def _coerce_string(value: str, *, strip_entries: bool) -> list[str]:
+    text = value.strip()
+    if not text:
+        return []
+
+    try:
+        parsed = json.loads(text)
+    except json.JSONDecodeError:
+        parsed = None
+
+    if isinstance(parsed, list):
+        coerced: list[str] = []
+        for item in parsed:
+            candidate = str(item)
+            candidate = candidate.rstrip() if not strip_entries else candidate.strip()
+            if strip_entries:
+                candidate = _LEADING_MARKER_PATTERN.sub("", candidate).strip()
+            if candidate:
+                coerced.append(candidate if strip_entries else candidate.rstrip())
+        if coerced:
+            return coerced
+    elif isinstance(parsed, Mapping):
+        mapped: list[str] = []
+        for key, val in parsed.items():
+            key_text = str(key).strip()
+            val_text = str(val).strip()
+            candidate = f"{key_text}: {val_text}" if val_text else key_text
+            candidate = candidate.rstrip() if not strip_entries else candidate.strip()
+            if candidate:
+                mapped.append(candidate if strip_entries else candidate.rstrip())
+        if mapped:
+            return mapped
+
+    lines = value.replace("\r", "\n").split("\n")
+    normalized: list[str] = []
+    for raw_line in lines:
+        candidate = raw_line.rstrip() if not strip_entries else raw_line.strip()
+        if strip_entries:
+            candidate = _LEADING_MARKER_PATTERN.sub("", candidate).strip()
+        if candidate:
+            normalized.append(candidate if strip_entries else candidate.rstrip())
+
+    if len(normalized) <= 1:
+        delimiters = [";", "•", "·", " | "]
+        for delimiter in delimiters:
+            if delimiter in value:
+                parts = [part.strip() for part in value.split(delimiter) if part.strip()]
+                if parts:
+                    return [
+                        _LEADING_MARKER_PATTERN.sub("", part).strip()
+                        if strip_entries
+                        else part.rstrip()
+                    ]
+
+    return normalized
+
+
+def _with_prefix(items: Iterable[str], prefix: str) -> list[str]:
+    if not prefix:
+        return [item for item in items if item.strip()]
+
+    prefix_char = prefix.strip()[:1] if prefix.strip() else ""
+    prefixed: list[str] = []
+
+    for item in items:
+        stripped = item.strip()
+        if not stripped:
+            continue
+        if prefix_char and stripped.startswith(prefix_char):
+            prefixed.append(stripped)
+        else:
+            prefixed.append(f"{prefix}{stripped}")
+
+    return prefixed
+
+
+def _word_count(text: str) -> int:
+    return len(text.split())
+
+
+class FileTeachingAnalyzer(dspy.Module):
+    """Generate a teaching-focused summary using DSPy chains of thought."""
+
+    def __init__(self, config: TeachingConfig | None = None) -> None:
+        super().__init__()
+        self.config = config or TeachingConfig()
+
+        overview_signature = FileOverview.with_instructions(
+            """
+            Craft a thorough multi-section narrative that orients a senior learner.
+            Describe the file's purpose, high-level architecture, main responsibilities,
+            how data flows through each part, and any noteworthy patterns or dependencies.
+            Aim for around five paragraphs that highlight why each section exists and
+            how it contributes to the overall behavior.
+            """
+        )
+
+        teachings_signature = TeachingPoints.with_instructions(
+            """
+            Extract every insight the learner would need for deep comprehension.
+            Provide generous bullet lists (>=6 items when possible) covering concepts,
+            workflows, pitfalls, integration guidance, and areas needing validation.
+            When referencing identifiers, include the role they play.
+            Prefer complete sentences that can stand alone in teaching materials.
+            """
+        )
+
+        report_signature = TeachingReport.with_instructions(
+            """
+            Assemble a long-form teaching brief in Markdown. Include:
+            - An opening context block with file path and intent.
+            - Headed sections for overview, section walkthrough, key concepts, workflows,
+              pitfalls, integration notes, tests/validation, and references.
+            - Expand each bullet into full sentences or sub-bullets to help instructors
+              speak to the content without the source file open.
+            Ensure the report comfortably exceeds 400 words when source material allows.
+            """
+        )
+
+        self.overview = dspy.ChainOfThought(
+            overview_signature, **self.config.lm_args_for("overview")
+        )
+        self.teachings = dspy.ChainOfThought(
+            teachings_signature, **self.config.lm_args_for("teachings")
+        )
+
+        base_report = dspy.ChainOfThought(
+            report_signature, **self.config.lm_args_for("report")
+        )
+
+        if self.config.report_refine_attempts > 1:
+
+            def report_length_reward(args: dict[str, Any], pred: dspy.Prediction) -> float:
+                text = getattr(pred, "report_markdown", "") or ""
+                words = _word_count(text)
+                source_words = max(int(args.get("source_word_count", 0)), 0)
+
+                dynamic_target = max(
+                    self.config.report_min_word_count,
+                    int(source_words * self.config.report_target_ratio),
+                )
+
+                soft_cap = max(
+                    dynamic_target + 150,
+                    int(source_words * self.config.report_soft_cap_ratio),
+                )
+
+                dynamic_cap = min(self.config.report_max_word_count, soft_cap)
+
+                if words < dynamic_target:
+                    return 0.0
+
+                if words >= dynamic_cap:
+                    return 1.0
+
+                span = max(dynamic_cap - dynamic_target, 1)
+                progress = (words - dynamic_target) / span
+                return min(1.0, 0.6 + 0.4 * progress)
+
+            self.report = dspy.Refine(
+                module=base_report,
+                N=self.config.report_refine_attempts,
+                reward_fn=report_length_reward,
+                threshold=self.config.report_reward_threshold,
+            )
+        else:
+            self.report = base_report
+
+    def forward(self, *, file_path: str, file_content: str) -> dspy.Prediction:
+        overview_pred = self.overview(
+            file_path=file_path,
+            file_content=file_content,
+        )
+
+        teaching_pred = self.teachings(
+            file_content=file_content,
+        )
+
+        overview_text = _ensure_text(
+            getattr(overview_pred, "overview", None),
+            "Overview unavailable.",
+        )
+
+        section_notes = _with_prefix(
+            _ensure_list(
+                getattr(overview_pred, "section_notes", None),
+                "Section-level breakdown unavailable.",
+                field_name="section_notes",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        key_concepts = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "key_concepts", None),
+                "Clarify core concepts manually.",
+                field_name="key_concepts",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        practical_steps = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "practical_steps", None),
+                "Document workflow steps explicitly.",
+                field_name="practical_steps",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        pitfalls = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "pitfalls", None),
+                "No pitfalls identified; review source for potential caveats.",
+                field_name="pitfalls",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        references = _with_prefix(
+            _clean_list(
+                getattr(teaching_pred, "references", None),
+                field_name="references",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        usage_patterns = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "usage_patterns", None),
+                "Document how this file is applied in real flows.",
+                field_name="usage_patterns",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        key_functions = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "key_functions", None),
+                "Identify primary interfaces and responsibilities manually.",
+                field_name="key_functions",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        code_walkthroughs = _ensure_list(
+            getattr(teaching_pred, "code_walkthroughs", None),
+            "Prepare short code walkthroughs for learners.",
+            strip_entries=False,
+            field_name="code_walkthroughs",
+        )
+
+        integration_notes = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "integration_notes", None),
+                "Outline integration touchpoints manually.",
+                field_name="integration_notes",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        testing_focus = _with_prefix(
+            _ensure_list(
+                getattr(teaching_pred, "testing_focus", None),
+                "Highlight testing priorities in a follow-up review.",
+                field_name="testing_focus",
+            ),
+            self.config.section_bullet_prefix,
+        )
+
+        source_word_count = _word_count(file_content)
+
+        report_pred = self.report(
+            file_path=file_path,
+            overview=overview_text,
+            section_notes=section_notes,
+            key_concepts=key_concepts,
+            practical_steps=practical_steps,
+            pitfalls=pitfalls,
+            references=references,
+            usage_patterns=usage_patterns,
+            key_functions=key_functions,
+            code_walkthroughs=code_walkthroughs,
+            integration_notes=integration_notes,
+            testing_focus=testing_focus,
+            source_word_count=source_word_count,
+        )
+
+        return dspy.Prediction(
+            overview=overview_pred,
+            teachings=teaching_pred,
+            report=report_pred,
+            structured={
+                "overview_text": overview_text,
+                "section_notes": section_notes,
+                "key_concepts": key_concepts,
+                "practical_steps": practical_steps,
+                "pitfalls": pitfalls,
+                "references": references,
+                "usage_patterns": usage_patterns,
+                "key_functions": key_functions,
+                "code_walkthroughs": code_walkthroughs,
+                "integration_notes": integration_notes,
+                "testing_focus": testing_focus,
+            },
+        )
+
+
+--- dspy_file/file_helpers.py ---
+# file_helpers.py - utilities for loading files and presenting DSPy results
+from __future__ import annotations
+
+import os
+from pathlib import Path
+from typing import Iterable
+
+import dspy
+
+
+# Directories that should never be traversed when collecting source files.
+ALWAYS_IGNORED_DIRS: set[str] = {
+    "__pycache__",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    ".vscode",
+    ".idea",
+    "venv",
+    ".github",
+    ".taskmaster",
+    ".gemini"
+    ".clinerules",
+    ".cursor",
+    "dist",
+    ".pytest_cache",
+    "codefetch",
+    "tests",
+    "logs",
+    "scripts"
+}
+
+# Individual files or suffixes that should never be analyzed.
+ALWAYS_IGNORED_FILES: set[str] = {".DS_Store"}
+ALWAYS_IGNORED_SUFFIXES: set[str] = {".pyc", ".pyo"}
+
+
+def _normalize_relative_parts(value: Path | str) -> tuple[str, ...]:
+    """Return normalized path segments for relative comparisons."""
+
+    text = str(value).replace("\\", "/").strip()
+    if not text:
+        return ()
+    text = text.strip("/")
+    if not text or text in {"", "."}:
+        return ()
+
+    parts: list[str] = []
+    for segment in text.split("/"):
+        if not segment or segment == ".":
+            continue
+        if segment == "..":
+            if parts:
+                parts.pop()
+            continue
+        parts.append(segment)
+    return tuple(parts)
+
+
+def _matches_excluded_parts(
+    parts: tuple[str, ...],
+    excluded_parts: set[tuple[str, ...]],
+) -> bool:
+    for excluded in excluded_parts:
+        if len(parts) < len(excluded):
+            continue
+        if parts[: len(excluded)] == excluded:
+            return True
+    return False
+
+
+def _normalize_excluded_dirs(exclude_dirs: Iterable[str] | None) -> set[tuple[str, ...]]:
+    """Normalize raw exclude strings into comparable path segments."""
+
+    normalized: set[tuple[str, ...]] = set()
+    if not exclude_dirs:
+        return normalized
+
+    for raw in exclude_dirs:
+        cleaned = raw.strip()
+        if not cleaned:
+            continue
+        parts = _normalize_relative_parts(cleaned)
+        if parts:
+            normalized.add(parts)
+    return normalized
+
+
+def _relative_path_is_excluded(
+    relative_path: Path,
+    excluded_parts: set[tuple[str, ...]],
+) -> bool:
+    if not excluded_parts:
+        return False
+    parts = _normalize_relative_parts(relative_path)
+    if not parts:
+        return False
+    return _matches_excluded_parts(parts, excluded_parts)
+
+
+def resolve_file_path(raw_path: str) -> Path:
+    """Expand user shortcuts and validate that the target file exists."""
+
+    path = Path(raw_path).expanduser().resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"File not found: {path}")
+    if not path.is_file():
+        raise IsADirectoryError(f"Expected a file path but received: {path}")
+    return path
+
+
+def _pattern_targets_hidden(pattern: str) -> bool:
+    pattern = pattern.strip()
+    if not pattern:
+        return False
+    normalized = pattern[2:] if pattern.startswith("./") else pattern
+    return normalized.startswith(".") or "/." in normalized
+
+
+def _should_skip_dir(name: str, *, ignore_hidden: bool) -> bool:
+    if name in ALWAYS_IGNORED_DIRS:
+        return True
+    if ignore_hidden and name.startswith("."):
+        return True
+    return False
+
+
+def _should_skip_file(name: str, *, ignore_hidden: bool) -> bool:
+    if name in ALWAYS_IGNORED_FILES:
+        return True
+    if any(name.endswith(suffix) for suffix in ALWAYS_IGNORED_SUFFIXES):
+        return True
+    if ignore_hidden and name.startswith("."):
+        return True
+    return False
+
+
+def _should_skip_relative_path(
+    relative_path: Path,
+    *,
+    ignore_hidden: bool,
+    excluded_parts: set[tuple[str, ...]] | None = None,
+) -> bool:
+    parts = _normalize_relative_parts(relative_path)
+    if not parts:
+        return False
+
+    if excluded_parts and _matches_excluded_parts(parts, excluded_parts):
+        return True
+
+    # Check intermediate directories for ignore rules.
+    for segment in parts[:-1]:
+        if segment in ALWAYS_IGNORED_DIRS:
+            return True
+        if ignore_hidden and segment.startswith("."):
+            return True
+
+    return _should_skip_file(parts[-1], ignore_hidden=ignore_hidden)
+
+
+def collect_source_paths(
+    raw_path: str,
+    *,
+    recursive: bool = True,
+    include_globs: Iterable[str] | None = None,
+    exclude_dirs: Iterable[str] | None = None,
+) -> list[Path]:
+    """Resolve a single file or directory into an ordered list of file paths."""
+
+    path = Path(raw_path).expanduser().resolve()
+    if not path.exists():
+        raise FileNotFoundError(f"Target not found: {path}")
+
+    if path.is_file():
+        return [path]
+
+    if not path.is_dir():
+        raise IsADirectoryError(f"Expected file or directory path but received: {path}")
+
+    candidates: set[Path] = set()
+    patterns = list(include_globs) if include_globs else None
+    allow_hidden = any(_pattern_targets_hidden(pattern) for pattern in patterns) if patterns else False
+    ignore_hidden = not allow_hidden
+    excluded_parts = _normalize_excluded_dirs(exclude_dirs)
+
+    if patterns:
+        for pattern in patterns:
+            for candidate in path.glob(pattern):
+                if not candidate.is_file():
+                    continue
+
+                relative_candidate = candidate.relative_to(path)
+                if _should_skip_relative_path(
+                    relative_candidate,
+                    ignore_hidden=ignore_hidden,
+                    excluded_parts=excluded_parts,
+                ):
+                    continue
+
+                candidates.add(candidate.resolve())
+    else:
+        for root_dir, dirnames, filenames in os.walk(path):
+            root_path = Path(root_dir)
+            relative_root = Path(".") if root_path == path else root_path.relative_to(path)
+
+            if not recursive and root_path != path:
+                dirnames[:] = []
+                continue
+
+            if _relative_path_is_excluded(relative_root, excluded_parts):
+                dirnames[:] = []
+                continue
+
+            dirnames[:] = sorted(
+                name
+                for name in dirnames
+                if not _should_skip_dir(name, ignore_hidden=ignore_hidden)
+                and not _relative_path_is_excluded(relative_root / name, excluded_parts)
+            )
+
+            for filename in filenames:
+                candidate = root_path / filename
+                relative_candidate = candidate.relative_to(path)
+
+                if _should_skip_relative_path(
+                    relative_candidate,
+                    ignore_hidden=ignore_hidden,
+                    excluded_parts=excluded_parts,
+                ):
+                    continue
+
+                candidates.add(candidate.resolve())
+
+    return sorted(candidates)
+
+
+def _strip_front_matter(text: str) -> str:
+    if not text.startswith("---"):
+        return text
+    end_idx = text.find("\n---", 3)
+    if end_idx == -1:
+        return text
+    return text[end_idx + 4 :]
+
+
+def _trim_to_first_heading(text: str) -> str:
+    lines = text.splitlines()
+    for idx, line in enumerate(lines):
+        if line.lstrip().startswith("#"):
+            return "\n".join(lines[idx:])
+    return text
+
+
+def read_file_content(path: Path) -> str:
+    """Read file contents using utf-8 and fall back to latin-1 if needed."""
+
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except UnicodeDecodeError:
+        raw = path.read_text(encoding="latin-1")
+
+    cleaned = _strip_front_matter(raw)
+    cleaned = _trim_to_first_heading(cleaned)
+    return cleaned
+
+
+def _ensure_trailing_newline(text: str) -> str:
+    return text if text.endswith("\n") else text + "\n"
+
+
+def _teaching_output(result: dspy.Prediction) -> str:
+    try:
+        report = result.report.report_markdown  # type: ignore[attr-defined]
+    except AttributeError:
+        report = "# Teaching Brief\n\nThe DSPy pipeline did not produce a report."
+    return _ensure_trailing_newline(report)
+
+
+def _refactor_output(result: dspy.Prediction) -> str:
+    template = getattr(result, "template_markdown", None)
+    if not template:
+        template = getattr(getattr(result, "template", None), "template_markdown", None)
+    text = str(template).strip() if template else ""
+    if not text:
+        text = "# Refactor Template\n\nTemplate generation failed."
+    return _ensure_trailing_newline(text)
+
+
+def render_prediction(result: dspy.Prediction, *, mode: str = "teach") -> str:
+    """Return the generated markdown for the selected analysis mode."""
+
+    if mode == "refactor":
+        return _refactor_output(result)
+    return _teaching_output(result)
+
+
+--- dspy_file/__init__.py ---
+"""DSPy file teaching analyzer package."""
+
+from .file_analyzer import FileTeachingAnalyzer, TeachingConfig
+from .refactor_analyzer import FileRefactorAnalyzer, RefactorTeachingConfig
+
+__all__ = [
+    "FileTeachingAnalyzer",
+    "TeachingConfig",
+    "FileRefactorAnalyzer",
+    "RefactorTeachingConfig",
+]
+
+
+--- dspy_file/refactor_analyzer.py ---
+# refactor_analyzer.py - DSPy module that prepares per-file refactor prompt templates
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from functools import lru_cache
+from typing import Any
+
+import dspy
+
+from .prompts import load_prompt_text
+
+
+class RefactorTemplateSignature(dspy.Signature):
+    """Generate a reusable refactor prompt template from a source document."""
+
+    file_path: str = dspy.InputField(desc="Path to the source file for context")
+    file_content: str = dspy.InputField(desc="Full raw text of the file")
+
+    template_markdown: str = dspy.OutputField(
+        desc="Markdown template with numbered placeholders and section scaffolding"
+    )
+
+
+@dataclass
+class RefactorTeachingConfig:
+    """Configuration for the refactor template generator."""
+
+    max_tokens: int = 40960
+    temperature: float | None = 0.7
+    top_p: float | None = 0.9
+    n_completions: int | None = 5
+    extra_lm_kwargs: dict[str, Any] = field(default_factory=dict)
+
+    def lm_kwargs(self) -> dict[str, Any]:
+        """Return the language model arguments for DSPy modules."""
+
+        kwargs: dict[str, Any] = {**self.extra_lm_kwargs, "max_tokens": self.max_tokens}
+        if self.temperature is not None:
+            kwargs["temperature"] = self.temperature
+        if self.top_p is not None:
+            kwargs["top_p"] = self.top_p
+        if self.n_completions is not None:
+            kwargs["n"] = self.n_completions
+        return kwargs
+
+
+@lru_cache(maxsize=1)
+def _load_default_template() -> str:
+    """Load the bundled refactor prompt template text."""
+
+    return load_prompt_text(None).strip()
+
+
+def _ensure_template_text(value: str | None) -> str:
+    if value and value.strip():
+        text = value.rstrip()
+    else:
+        text = "# Refactor Template\n\nTemplate generation failed."
+    return text if text.endswith("\n") else text + "\n"
+
+
+class FileRefactorAnalyzer(dspy.Module):
+    """Generate a refactor-focused prompt template for a single file."""
+
+    def __init__(
+        self,
+        *,
+        template_text: str | None = None,
+        config: RefactorTeachingConfig | None = None,
+    ) -> None:
+        super().__init__()
+        self.config = config or RefactorTeachingConfig()
+        instructions = template_text.strip() if template_text else _load_default_template()
+        signature = RefactorTemplateSignature.with_instructions(instructions)
+        self.generator = dspy.ChainOfThought(signature, **self.config.lm_kwargs())
+
+    def forward(self, *, file_path: str, file_content: str) -> dspy.Prediction:
+        raw_prediction = self.generator(
+            file_path=file_path,
+            file_content=file_content,
+        )
+
+        template_markdown = _ensure_template_text(
+            getattr(raw_prediction, "template_markdown", None)
+        )
+
+        return dspy.Prediction(
+            template=raw_prediction,
+            template_markdown=template_markdown,
+        )
+
+
+--- dspy_file/signatures.py ---
+# signatures.py - DSPy signatures focused on extracting teachings from a single file
+from typing import List
+
+import dspy
+
+
+class FileOverview(dspy.Signature):
+    """Summarize the file structure and core narrative with room for depth."""
+
+    file_path: str = dspy.InputField(desc="Path to the source file")
+    file_content: str = dspy.InputField(desc="Full raw text of the file")
+
+    overview: str = dspy.OutputField(
+        desc="Detailed multi-section overview (aim for 4-6 paragraphs capturing scope, intent, and flow)"
+    )
+    section_notes: List[str] = dspy.OutputField(
+        desc="Comprehensive bullet list summarizing each major section, include headings when possible"
+    )
+
+
+class TeachingPoints(dspy.Signature):
+    """Extract teachable concepts, workflows, and cautions."""
+
+    file_content: str = dspy.InputField(desc="Full raw text of the file")
+
+    key_concepts: List[str] = dspy.OutputField(desc="Essential ideas learners must retain")
+    practical_steps: List[str] = dspy.OutputField(desc="Actionable steps or workflows described")
+    pitfalls: List[str] = dspy.OutputField(desc="Warnings, gotchas, or misconceptions to avoid")
+    references: List[str] = dspy.OutputField(desc="Follow-up links, exercises, or related material")
+    usage_patterns: List[str] = dspy.OutputField(
+        desc="Common usage patterns, scenarios, or recipes that appear"
+    )
+    key_functions: List[str] = dspy.OutputField(
+        desc="Important functions, classes, or hooks with quick rationale"
+    )
+    code_walkthroughs: List[str] = dspy.OutputField(
+        desc="Short code snippets or walkthroughs learners should discuss"
+    )
+    integration_notes: List[str] = dspy.OutputField(
+        desc="Guidance for connecting this file with the rest of the system"
+    )
+    testing_focus: List[str] = dspy.OutputField(
+        desc="Areas that need tests, validations, or monitoring"
+    )
+
+
+class TeachingReport(dspy.Signature):
+    """Compose a concise but comprehensive markdown teaching brief."""
+
+    file_path: str = dspy.InputField(desc="Original file path for context header")
+    overview: str = dspy.InputField()
+    section_notes: List[str] = dspy.InputField()
+    key_concepts: List[str] = dspy.InputField()
+    practical_steps: List[str] = dspy.InputField()
+    pitfalls: List[str] = dspy.InputField()
+    references: List[str] = dspy.InputField()
+    usage_patterns: List[str] = dspy.InputField()
+    key_functions: List[str] = dspy.InputField()
+    code_walkthroughs: List[str] = dspy.InputField()
+    integration_notes: List[str] = dspy.InputField()
+    testing_focus: List[str] = dspy.InputField()
+
+    report_markdown: str = dspy.OutputField(desc="Final markdown document capturing key teachings")
+
+
+--- dspy_file/prompts/__init__.py ---
+"""Bundled prompt templates for dspyteach."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from pathlib import Path
+from typing import List
+
+try:  # Python 3.9+
+    from importlib import resources
+except ImportError:  # pragma: no cover
+    import importlib_resources as resources  # type: ignore[assignment]
+
+PROMPT_SUFFIXES = (".md", ".txt")
+
+
+@dataclass(frozen=True)
+class PromptTemplate:
+    name: str
+    path: Path
+
+
+def _bundled_directory() -> Path:
+    return Path(resources.files("dspy_file.prompts"))
+
+
+def list_bundled_prompts() -> List[PromptTemplate]:
+    directory = _bundled_directory()
+    prompts: List[PromptTemplate] = []
+    for entry in sorted(directory.iterdir()):
+        if entry.is_file() and entry.suffix.lower() in PROMPT_SUFFIXES:
+            prompts.append(PromptTemplate(name=entry.stem, path=entry))
+    return prompts
+
+
+def resolve_prompt_path(prompt_arg: str | None) -> Path:
+    if not prompt_arg:
+        prompts = list_bundled_prompts()
+        if not prompts:
+            raise FileNotFoundError("No bundled prompt templates found.")
+        return prompts[0].path
+
+    provided = Path(prompt_arg).expanduser()
+    if provided.is_file():
+        return provided.resolve()
+
+    directory = _bundled_directory()
+    bundle_path = directory / prompt_arg
+    if bundle_path.is_file():
+        return bundle_path.resolve()
+
+    for suffix in PROMPT_SUFFIXES:
+        candidate = directory / f"{prompt_arg}{suffix}"
+        if candidate.is_file():
+            return candidate.resolve()
+
+    for template in list_bundled_prompts():
+        if template.name == prompt_arg:
+            return template.path.resolve()
+
+    raise FileNotFoundError(f"Prompt template not found: {prompt_arg}")
+
+
+def load_prompt_text(prompt_arg: str | None) -> str:
+    path = resolve_prompt_path(prompt_arg)
+    text = path.read_text(encoding="utf-8")
+    if not text.strip():
+        raise ValueError(f"Prompt template is empty: {path}")
+    return text
+
+
+__all__ = [
+    "PromptTemplate",
+    "list_bundled_prompts",
+    "resolve_prompt_path",
+    "load_prompt_text",
+]
+
+
+--- dspy_file/prompts/refactor_prompt_template.md ---
+# dspy-file_refactor-prompt_template
+
+Task: From the given Markdown ($1), output a reusable prompt template that:
+
+- Mirrors the section/layout structure.
+- Replaces every instance-specific span with numbered placeholders `$1..$N` (verbatim).
+- Includes a top comment mapping of placeholder semantics.
+- Introduces missing, commonly expected sections when context implies them (e.g., analysis → Affected files, Root cause, Proposed fix, Tests, Docs gaps, Open questions).
+- Contains no copied facts from $1.
+
+Inputs
+
+- $1 = source Markdown text
+- $2 = template name to embed (optional; defaults to inferred genre)
+- $3 = maximum placeholders (1–9; default 7)
+
+## **Algorithm**
+
+1) Classify genre (analysis/planning/summary/how-to/other) from headings + verbs.
+2) Extract candidate fields (title, summary, bullets, code, paths, IDs, dates, metrics). Rank by importance; cap to $3.
+3) Emit:
+   <!-- $1=..., $2=..., ... -->
+   **{$2 or Inferred Name}**
+
+   (preserved headings/lists with leaves replaced by $1..$N)
+   Optional “Output format” block if genre=analysis or planning.
+4) Validation pass:
+    **ensure**
+   - ≤$3 placeholders
+   - no verbatim sentences from input
+   - and literal `$` tokens remain.
+
+Output only the final template Markdown.
+
+
+--- tests/conftest.py ---
+from __future__ import annotations
+
+import os
+from pathlib import Path
+
+
+_CACHE_DIR = Path(__file__).parent / ".dspy-cache"
+_CACHE_DIR.mkdir(exist_ok=True)
+
+os.environ.setdefault("DISKCACHE_DEFAULT_DIRECTORY", str(_CACHE_DIR))
+os.environ.setdefault("DSPY_CACHE_DIR", str(_CACHE_DIR))
+os.environ.setdefault("DSPY_CACHEDIR", str(_CACHE_DIR))
+
+
+--- tests/smoke_test.py ---
+from __future__ import annotations
+
+from pathlib import Path
+from types import SimpleNamespace
+from unittest import mock
+
+from dspy_file import analyze_file_cli
+
+
+class DummyAnalyzer:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, str]] = []
+
+    def __call__(self, *, file_path: str, file_content: str):  # type: ignore[override]
+        self.calls.append((file_path, file_content))
+        return SimpleNamespace(
+            report=SimpleNamespace(
+                report_markdown="# Teaching Brief\n\n- Generated by DummyAnalyzer."
+            )
+        )
+
+
+def test_analyze_path_writes_markdown(tmp_path: Path) -> None:
+    source = tmp_path / "example.md"
+    source.write_text("# Title\n\nSome content", encoding="utf-8")
+
+    output_dir = tmp_path / "reports"
+    dummy = DummyAnalyzer()
+
+    with mock.patch.object(
+        analyze_file_cli, "FileTeachingAnalyzer", return_value=dummy
+    ):
+        exit_code = analyze_file_cli.analyze_path(
+            str(source),
+            raw=False,
+            recursive=True,
+            include_globs=None,
+            confirm_each=False,
+            exclude_dirs=None,
+            output_dir=output_dir,
+            mode=analyze_file_cli.AnalysisMode.TEACH,
+            prompt_text=None,
+        )
+
+    assert exit_code == 0
+    assert dummy.calls == [(str(source), "# Title\n\nSome content")]
+
+    generated_files = list(output_dir.glob("*.md"))
+    assert len(generated_files) == 1
+    generated_text = generated_files[0].read_text(encoding="utf-8")
+    assert generated_text.startswith("# Teaching Brief\n")
+    assert generated_text.endswith("\n")
+
+
+@mock.patch.object(analyze_file_cli, "_confirm_analyze", return_value=False)
+def test_analyze_path_confirm_each_skips_when_declined(confirm_mock: mock.Mock, tmp_path: Path) -> None:
+    source = tmp_path / "example.md"
+    source.write_text("# Title\n\nSome content", encoding="utf-8")
+
+    output_dir = tmp_path / "reports"
+    dummy = DummyAnalyzer()
+
+    with mock.patch.object(
+        analyze_file_cli, "FileTeachingAnalyzer", return_value=dummy
+    ):
+        exit_code = analyze_file_cli.analyze_path(
+            str(source),
+            raw=False,
+            recursive=True,
+            include_globs=None,
+            confirm_each=True,
+            exclude_dirs=None,
+            output_dir=output_dir,
+            mode=analyze_file_cli.AnalysisMode.TEACH,
+            prompt_text=None,
+        )
+
+    assert exit_code == 0
+    assert dummy.calls == []
+    assert list(output_dir.glob("*.md")) == []
+    confirm_mock.assert_called_once()
+
+
+def test_analyze_path_respects_exclude_dirs(tmp_path: Path) -> None:
+    project_root = tmp_path / "project"
+    include_dir = project_root / "include"
+    skip_dir = project_root / "skip"
+    include_dir.mkdir(parents=True)
+    skip_dir.mkdir(parents=True)
+
+    include_file = include_dir / "keep.py"
+    skip_file = skip_dir / "ignore.py"
+    include_file.write_text("print('keep')\n", encoding="utf-8")
+    skip_file.write_text("print('ignore')\n", encoding="utf-8")
+
+    output_dir = tmp_path / "reports"
+    dummy = DummyAnalyzer()
+
+    with mock.patch.object(
+        analyze_file_cli, "FileTeachingAnalyzer", return_value=dummy
+    ):
+        exit_code = analyze_file_cli.analyze_path(
+            str(project_root),
+            raw=False,
+            recursive=True,
+            include_globs=None,
+            confirm_each=False,
+            exclude_dirs=["skip"],
+            output_dir=output_dir,
+            mode=analyze_file_cli.AnalysisMode.TEACH,
+            prompt_text=None,
+        )
+
+    assert exit_code == 0
+    assert dummy.calls == [(str(include_file), "print('keep')\n")]
+    output_files = [p for p in output_dir.rglob("*") if p.is_file()]
+    assert {p.relative_to(output_dir) for p in output_files} == {Path("include") / "keep.py"}
+    generated_file = output_dir / "include" / "keep.py"
+    assert "ignore" not in generated_file.read_text(encoding="utf-8")
+
+
+def test_analyze_path_refactor_mode_uses_refactor_analyzer(tmp_path: Path) -> None:
+    source = tmp_path / "example.md"
+    source.write_text("# Title\n\nSome content", encoding="utf-8")
+
+    output_dir = tmp_path / "reports"
+
+    class DummyRefactorAnalyzer:
+        def __init__(self) -> None:
+            self.calls: list[tuple[str, str]] = []
+
+        def __call__(self, *, file_path: str, file_content: str):  # type: ignore[override]
+            self.calls.append((file_path, file_content))
+            return SimpleNamespace(template_markdown="# Template\n\nValue.")
+
+    dummy = DummyRefactorAnalyzer()
+
+    with mock.patch.object(
+        analyze_file_cli, "FileRefactorAnalyzer", return_value=dummy
+    ) as refactor_cls:
+        exit_code = analyze_file_cli.analyze_path(
+            str(source),
+            raw=False,
+            recursive=True,
+            include_globs=None,
+            confirm_each=False,
+            exclude_dirs=None,
+            output_dir=output_dir,
+            mode=analyze_file_cli.AnalysisMode.REFACTOR,
+            prompt_text="Custom prompt",
+        )
+
+    assert exit_code == 0
+    assert dummy.calls == [(str(source), "# Title\n\nSome content")]
+    generated_file = output_dir / "example.md"
+    assert generated_file.exists()
+    assert generated_file.read_text(encoding="utf-8").endswith("Value.\n")
+    refactor_cls.assert_called_once()
+    assert refactor_cls.call_args.kwargs["template_text"] == "Custom prompt"
+
+
+def test_resolve_prompt_text_with_menu(tmp_path: Path) -> None:
+    prompt_one = tmp_path / "first.md"
+    prompt_two = tmp_path / "second.md"
+    prompt_one.write_text("First template", encoding="utf-8")
+    prompt_two.write_text("Second template", encoding="utf-8")
+
+    options = [
+        analyze_file_cli.PromptTemplate(name="first", path=prompt_one),
+        analyze_file_cli.PromptTemplate(name="second", path=prompt_two),
+    ]
+
+    with mock.patch.object(
+        analyze_file_cli, "list_bundled_prompts", return_value=options
+    ), mock.patch("builtins.input", side_effect=["2"]):
+        text = analyze_file_cli._resolve_prompt_text(None)
+
+    assert text == "Second template"
+
+
+def test_resolve_prompt_text_with_explicit_path(tmp_path: Path) -> None:
+    prompt_path = tmp_path / "custom.md"
+    prompt_path.write_text("Custom prompt text", encoding="utf-8")
+
+    text = analyze_file_cli._resolve_prompt_text(str(prompt_path))
+
+    assert text == "Custom prompt text"
+
+
+def test_parser_short_options_are_supported() -> None:
+    parser = analyze_file_cli.build_parser()
+    args = parser.parse_args(
+        [
+            "sample.md",
+            "-r",
+            "-m",
+            "refactor",
+            "-nr",
+            "-g",
+            "**/*.py",
+            "-g",
+            "**/*.md",
+            "-i",
+            "-ed",
+            "skip,temp",
+            "-o",
+            "reports",
+            "-p",
+            "custom-prompt",
+        ]
+    )
+
+    assert args.path == "sample.md"
+    assert args.raw is True
+    assert args.mode == "refactor"
+    assert args.non_recursive is True
+    assert args.include_globs == ["**/*.py", "**/*.md"]
+    assert args.confirm_each is True
+    assert args.exclude_dirs == ["skip,temp"]
+    assert args.output_dir == "reports"
+    assert args.prompt == "custom-prompt"
+
+
+--- tests/test_cli_connectivity.py ---
+from __future__ import annotations
+
+from pathlib import Path
+from unittest import mock
+
+import pytest
+
+from dspy_file import analyze_file_cli
+
+
+def test_probe_openai_provider_success() -> None:
+    mock_response = mock.MagicMock()
+    urlopen_mock = mock.MagicMock()
+    urlopen_mock.return_value.__enter__.return_value = mock_response
+
+    with mock.patch(
+        "dspy_file.analyze_file_cli.request.urlopen", urlopen_mock
+    ):
+        analyze_file_cli._probe_openai_provider("http://localhost:1234/v1", "token")
+
+    urlopen_mock.assert_called_once()
+
+
+def test_probe_openai_provider_raises_on_failure() -> None:
+    with mock.patch(
+        "dspy_file.analyze_file_cli.request.urlopen",
+        side_effect=analyze_file_cli.urlerror.URLError("connection refused"),
+    ):
+        with pytest.raises(analyze_file_cli.ProviderConnectivityError):
+            analyze_file_cli._probe_openai_provider("http://localhost:1234/v1", "token")
+
+
+def test_main_exits_early_when_lmstudio_unreachable(tmp_path: Path) -> None:
+    source = tmp_path / "example.md"
+    source.write_text("content", encoding="utf-8")
+
+    with mock.patch.object(
+        analyze_file_cli,
+        "_probe_openai_provider",
+        side_effect=analyze_file_cli.ProviderConnectivityError("unreachable"),
+    ), mock.patch.object(analyze_file_cli, "configure_model") as configure_mock:
+        exit_code = analyze_file_cli.main(
+            ["--provider", "lmstudio", str(source)]
+        )
+
+    assert exit_code == 1
+    configure_mock.assert_not_called()
+
+
+--- tests/test_file_helpers.py ---
+from __future__ import annotations
+
+from pathlib import Path
+from types import SimpleNamespace
+
+from dspy_file.file_helpers import collect_source_paths, render_prediction
+
+
+def _touch(path: Path, content: str = "") -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(content, encoding="utf-8")
+
+
+def test_collect_source_paths_skips_hidden_and_config_files(tmp_path: Path) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+
+    allowed_file = project_root / "main.py"
+    _touch(allowed_file, "print('ok')\n")
+
+    _touch(project_root / ".env", "SECRET=1\n")
+    _touch(project_root / ".venv" / "lib" / "ignore.py", "print('ignored')\n")
+    _touch(project_root / "nested" / ".secrets", "hidden\n")
+
+    collected = collect_source_paths(str(project_root))
+
+    assert collected == [allowed_file.resolve()]
+
+
+def test_hidden_files_can_be_included_with_explicit_glob(tmp_path: Path) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+
+    hidden_file = project_root / ".config" / "ci.yml"
+    _touch(hidden_file, "name: ci\n")
+
+    collected = collect_source_paths(
+        str(project_root),
+        include_globs=[".config/**/*.yml"],
+    )
+
+    assert collected == [hidden_file.resolve()]
+
+
+def test_collect_source_paths_honors_exclude_dirs(tmp_path: Path) -> None:
+    project_root = tmp_path / "project"
+    project_root.mkdir()
+
+    kept = project_root / "keep" / "file.py"
+    skipped = project_root / "skip" / "ignored.py"
+    nested_skip = project_root / "nested" / "deep" / "hidden.py"
+    _touch(kept, "print('keep')\n")
+    _touch(skipped, "print('ignore')\n")
+    _touch(nested_skip, "print('nested ignore')\n")
+
+    collected = collect_source_paths(
+        str(project_root),
+        exclude_dirs=["skip", "nested/deep"],
+    )
+    collected_glob = collect_source_paths(
+        str(project_root),
+        include_globs=["**/*.py"],
+        exclude_dirs=["skip", "nested/deep"],
+    )
+
+    assert collected == [kept.resolve()]
+    assert collected_glob == [kept.resolve()]
+
+
+def test_render_prediction_teach_mode_uses_report() -> None:
+    prediction = SimpleNamespace(
+        report=SimpleNamespace(report_markdown="# Brief\n\nContent."),
+    )
+    output = render_prediction(prediction, mode="teach")
+    assert output.endswith("Content.\n")
+
+
+def test_render_prediction_refactor_mode_prefers_template_markdown() -> None:
+    prediction = SimpleNamespace(template_markdown="# Template\n\nValue.")
+    output = render_prediction(prediction, mode="refactor")
+    assert output.endswith("Value.\n")

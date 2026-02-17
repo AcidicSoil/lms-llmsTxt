@@ -245,7 +245,12 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
 - `--browser-chrome-profile`, `--browser-chrome-path`: cookie source + binary override (defaults to the standard `"Default"` Chrome profile so existing ChatGPT logins carry over).
 - `--browser-cookie-path`: explicit path to the Chrome/Chromium/Edge `Cookies` SQLite DB. Handy when you launch a fork via `--browser-chrome-path` and want to copy its session cookies; see [docs/chromium-forks.md](chromium-forks.md) for examples.
 - `--chatgpt-url`: override the ChatGPT base URL. Works with the root homepage (`https://chatgpt.com/`) **or** a specific workspace/folder link such as `https://chatgpt.com/g/.../project`. `--browser-url` stays as a hidden alias.
-- `--browser-timeout`, `--browser-input-timeout`: `1200s (20m)`/`30s` defaults. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`).
+- `--browser-timeout`, `--browser-input-timeout`: `1200s (20m)`/`60s` defaults. Durations accept `ms`, `s`, `m`, or `h` and can be chained (`1h2m10s`).
+- `--browser-recheck-delay`, `--browser-recheck-timeout`: after an assistant timeout, wait the delay, revisit the conversation, and retry capture (default recheck timeout 120s). Useful for Pro runs that finish later.
+- `--browser-reuse-wait`: wait for a shared Chrome profile (DevToolsActivePort) to appear before launching a new Chrome. Helps multiple parallel runs reuse the same Chromium instance.
+- `--browser-profile-lock-timeout`: wait for the shared manual-login profile lock before sending, serializing parallel runs that share a Chrome profile.
+- `--browser-auto-reattach-delay`, `--browser-auto-reattach-interval`, `--browser-auto-reattach-timeout`: after a timeout, start periodic auto-reattach attempts (delay before first attempt, repeat interval, per-attempt timeout). This lets Oracle keep polling a finished Pro response without manual `oracle session` runs.
+- If an assistant response still times out (common with long Pro runs), the session stays running for reattach. Use `oracle session <id>` later to collect the final answer or increase `--browser-timeout`.
 - `--browser-model-strategy <select|current|ignore>`: control ChatGPT model selection. `select` (default) switches to the requested model; `current` keeps the active model and logs its label; `ignore` skips the picker entirely. (Ignored for Gemini web runs.)
 - `--browser-thinking-time <light|standard|extended|heavy>`: set the ChatGPT thinking-time intensity (Thinking/Pro models only). You can also set a default in `~/.oracle/config.json` via `browser.thinkingTime`.
 - `--browser-port <port>` (alias: `--browser-debug-port`; env: `ORACLE_BROWSER_PORT`/`ORACLE_BROWSER_DEBUG_PORT`): pin the DevTools port (handy on WSL/Windows firewalls). When omitted, a random open port is chosen.
@@ -271,7 +276,7 @@ You can pass the same payload inline (`--browser-inline-cookies '<json or base64
     ]
     ```
 
-All options are persisted with the session so reruns (`oracle exec <id>`) reuse the same automation settings.
+All options are persisted with the session so restarts (`oracle restart <id>`) reuse the same automation settings.
 
 ### Manual login mode (persistent profile, no cookie copy)
 
@@ -505,6 +510,13 @@ Oracle reads an optional per-user config from `~/.oracle/config.json`. The file 
     timeoutMs: 1200000,
     inputTimeoutMs: 30000,
     cookieSyncWaitMs: 0,      // wait (ms) before retrying cookie sync when Chrome cookies are empty/locked
+    assistantRecheckDelayMs: 0,     // wait this long after timeout, then retry capture (0 = disabled)
+    assistantRecheckTimeoutMs: 120000, // time budget for the recheck attempt (default: 2m)
+    reuseChromeWaitMs: 10000, // wait for a shared Chrome profile to appear before launching (parallel runs)
+    profileLockTimeoutMs: 300000, // wait for the manual-login profile lock before sending (parallel runs)
+    autoReattachDelayMs: 0,     // delay before starting periodic auto-reattach attempts (0 = disabled)
+    autoReattachIntervalMs: 0,  // interval between auto-reattach attempts (0 = disabled)
+    autoReattachTimeoutMs: 120000, // time budget per auto-reattach attempt (default: 2m)
     modelStrategy: "select", // select | current | ignore (ChatGPT only; ignored for Gemini web)
     thinkingTime: "extended", // light | standard | extended | heavy (ChatGPT Thinking/Pro models)
     manualLogin: false,        // set true to reuse a persistent automation profile and sign in once (Windows defaults to true when unset)
@@ -1100,17 +1112,39 @@ declare module 'win-dpapi' {
 --- CHANGELOG.md ---
 # Changelog
 
+## Unreleased
+
+## 0.8.7 — Unreleased
+
+## 0.8.6 — 2026-02-09
+
+### Added
+- Sessions: add `oracle restart <id>` to re-run a stored session as a new session (clones options) (#84, thanks @enki).
+- Browser: optional periodic auto-reattach attempts after assistant timeouts (`--browser-auto-reattach-delay` / `--browser-auto-reattach-interval` / `--browser-auto-reattach-timeout`). Original PR #87 by Felix Huber (@felix-huber) — thank you!
+
+### Fixed
+- Browser: fix memory leaks in browser mode and model resolver cache (#77, thanks @bindscha).
+- Browser: fix markdown fallback extractor TDZ crash in browser mode (#90, thanks @julianknutsen).
+- CLI: honor `--no-wait` for Commander `--no-` flags (fixes restart wait preference) (#91).
+
+### Changed
+- Deps: update dependencies.
+
 ## 0.8.5 — 2026-01-19
 
 ### Added
 - Bridge: add the bridge workflow + MCP browser controls for remote ChatGPT sessions. Original PR #42 by Kyle McCleary (@kmccleary3301) — thank you!
 - CLI: add `--background`/`--no-background`, `--http-timeout`, `--zombie-timeout`, and `--zombie-last-activity` to support long-running API sessions.
+- Browser: optional delayed recheck after assistant timeouts (`--browser-recheck-delay` / `--browser-recheck-timeout`).
+- Browser: add `--browser-profile-lock-timeout` to serialize manual-login runs that share a Chrome profile.
 
 ### Fixed
 - CLI: restore legacy `--[no-]notify`, `--[no-]notify-sound`, and `--[no-]background` flags as hidden aliases (Commander no longer accepts `[no-]` in `new Option()`).
 - Sessions: zombie detection now respects explicit timeouts and can optionally use last log activity to avoid false “zombie” status on long runs.
 - Browser: fall back to the default DevTools target if an isolated tab fails, and keep the run tab open when `--keep-browser` is set.
 - Browser: refresh long assistant responses without clobbering captured Markdown.
+- Browser: keep sessions reattachable when assistant responses time out (e.g., long Pro runs) and log a reattach hint.
+- Browser: avoid attaching to the default tab when reusing a shared manual-login Chrome (reduces cross-run interference).
 
 ### Changed
 - Config: remove legacy `remote.host`/`remote.token` and top-level `remoteHost`/`remoteToken`; use `browser.remoteHost`/`browser.remoteToken` or env vars.
@@ -1674,6 +1708,7 @@ npx -y @steipete/oracle --engine browser --model gemini-3-pro --prompt "a cute r
 # Sessions (list and replay)
 npx -y @steipete/oracle status --hours 72
 npx -y @steipete/oracle session <id> --render
+npx -y @steipete/oracle restart <id>
 
 # TUI (interactive, only for humans)
 npx -y @steipete/oracle tui
@@ -1732,6 +1767,24 @@ npx -y @steipete/oracle oracle-mcp
 - Sessions you can replay (`oracle status`, `oracle session <id> --render`).
 - Session logs and bundles live in `~/.oracle/sessions` (override with `ORACLE_HOME_DIR`).
 
+## Browser auto-reattach (long Pro runs)
+
+When browser runs time out (common with long GPT‑5.x Pro responses), Oracle can keep polling the existing ChatGPT tab and capture the final answer without manual `oracle session <id>` commands.
+
+Enable auto-reattach by setting a non-zero interval:
+- `--browser-auto-reattach-delay` — wait before the first retry (e.g. `30s`)
+- `--browser-auto-reattach-interval` — how often to retry (e.g. `2m`)
+- `--browser-auto-reattach-timeout` — per-attempt budget (default `2m`)
+
+```bash
+oracle --engine browser \
+  --browser-timeout 6m \
+  --browser-auto-reattach-delay 30s \
+  --browser-auto-reattach-interval 2m \
+  --browser-auto-reattach-timeout 2m \
+  -p "Run the long UI audit" --file "src/**/*.ts"
+```
+
 ## Flags you’ll actually use
 
 | Flag | Purpose |
@@ -1749,6 +1802,9 @@ npx -y @steipete/oracle oracle-mcp
 | `--browser-port <port>` | Pin the Chrome DevTools port (WSL/Windows firewall helper). |
 | `--browser-inline-cookies[(-file)] <payload|path>` | Supply cookies without Chrome/Keychain (browser). |
 | `--browser-timeout`, `--browser-input-timeout` | Control overall/browser input timeouts (supports h/m/s/ms). |
+| `--browser-recheck-delay`, `--browser-recheck-timeout` | Delayed recheck for long Pro runs: wait then retry capture after timeout (supports h/m/s/ms). |
+| `--browser-reuse-wait` | Wait for a shared Chrome profile before launching (parallel browser runs). |
+| `--browser-profile-lock-timeout` | Wait for the shared manual-login profile lock before sending (serializes parallel runs). |
 | `--render`, `--copy` | Print and/or copy the assembled markdown bundle. |
 | `--wait` | Block for background API runs (e.g., GPT‑5.1 Pro) instead of detaching. |
 | `--timeout <seconds\|auto>` | Overall API deadline (auto = 60m for pro, 120s otherwise). |
@@ -1786,7 +1842,7 @@ Advanced flags
 
 | Area | Flags |
 | --- | --- |
-| Browser | `--browser-manual-login`, `--browser-thinking-time`, `--browser-timeout`, `--browser-input-timeout`, `--browser-cookie-wait`, `--browser-inline-cookies[(-file)]`, `--browser-attachments`, `--browser-inline-files`, `--browser-bundle-files`, `--browser-keep-browser`, `--browser-headless`, `--browser-hide-window`, `--browser-no-cookie-sync`, `--browser-allow-cookie-errors`, `--browser-chrome-path`, `--browser-cookie-path`, `--chatgpt-url` |
+| Browser | `--browser-manual-login`, `--browser-thinking-time`, `--browser-timeout`, `--browser-input-timeout`, `--browser-recheck-delay`, `--browser-recheck-timeout`, `--browser-reuse-wait`, `--browser-profile-lock-timeout`, `--browser-auto-reattach-delay`, `--browser-auto-reattach-interval`, `--browser-auto-reattach-timeout`, `--browser-cookie-wait`, `--browser-inline-cookies[(-file)]`, `--browser-attachments`, `--browser-inline-files`, `--browser-bundle-files`, `--browser-keep-browser`, `--browser-headless`, `--browser-hide-window`, `--browser-no-cookie-sync`, `--browser-allow-cookie-errors`, `--browser-chrome-path`, `--browser-cookie-path`, `--chatgpt-url` |
 | Run control | `--background`, `--no-background`, `--http-timeout`, `--zombie-timeout`, `--zombie-last-activity` |
 | Azure/OpenAI | `--azure-endpoint`, `--azure-deployment`, `--azure-api-version`, `--base-url` |
 
@@ -2147,6 +2203,7 @@ interface CliOptions extends OptionValues {
   browserUrl?: string;
   browserTimeout?: string;
   browserInputTimeout?: string;
+  browserProfileLockTimeout?: string;
   browserCookieWait?: string;
   browserNoCookieSync?: boolean;
   browserInlineCookiesFile?: string;
@@ -2168,6 +2225,12 @@ interface CliOptions extends OptionValues {
   browserDebugPort?: number;
   remoteHost?: string;
   remoteToken?: string;
+  youtube?: string;
+  generateImage?: string;
+  editImage?: string;
+  output?: string;
+  aspect?: string;
+  geminiShowThoughts?: boolean;
   copyMarkdown?: boolean;
   copy?: boolean;
   verbose?: boolean;
@@ -2175,8 +2238,8 @@ interface CliOptions extends OptionValues {
   heartbeat?: number;
   status?: boolean;
   dryRun?: boolean;
+  // tri-state: `true` (forced wait), `false` (forced detach), `undefined` (auto)
   wait?: boolean;
-  noWait?: boolean;
   baseUrl?: string;
   azureEndpoint?: string;
   azureDeployment?: string;
@@ -2193,6 +2256,13 @@ type ResolvedCliOptions = Omit<CliOptions, 'model'> & {
   effectiveModelId?: string;
   writeOutputPath?: string;
 };
+
+interface RestartCommandOptions {
+  // tri-state: `true` (forced wait), `false` (forced detach), `undefined` (auto)
+  wait?: boolean;
+  remoteHost?: string;
+  remoteToken?: string;
+}
 
 const VERSION = getCliVersion();
 const CLI_ENTRYPOINT = fileURLToPath(import.meta.url);
@@ -2414,7 +2484,49 @@ program
   .addOption(new Option('--browser-url <url>', `Alias for --chatgpt-url (default ${CHATGPT_URL}).`).hideHelp())
   .addOption(new Option('--browser-timeout <ms|s|m>', 'Maximum time to wait for an answer (default 1200s / 20m).').hideHelp())
   .addOption(
-    new Option('--browser-input-timeout <ms|s|m>', 'Maximum time to wait for the prompt textarea (default 30s).').hideHelp(),
+    new Option('--browser-input-timeout <ms|s|m>', 'Maximum time to wait for the prompt textarea (default 60s).').hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-recheck-delay <ms|s|m|h>',
+      'After an assistant timeout, wait this long then revisit the conversation to retry capture.',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-recheck-timeout <ms|s|m|h>',
+      'Time budget for the delayed recheck attempt (default 120s).',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-reuse-wait <ms|s|m|h>',
+      'Wait for a shared Chrome profile to appear before launching a new one (helps parallel runs).',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-profile-lock-timeout <ms|s|m|h>',
+      'Wait for the shared manual-login profile lock before sending (serializes parallel runs).',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-auto-reattach-delay <ms|s|m|h>',
+      'Delay before starting periodic auto-reattach attempts after a timeout.',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-auto-reattach-interval <ms|s|m|h>',
+      'Interval between auto-reattach attempts (0 disables).',
+    ).hideHelp(),
+  )
+  .addOption(
+    new Option(
+      '--browser-auto-reattach-timeout <ms|s|m|h>',
+      'Time budget for each auto-reattach attempt (default 120s).',
+    ).hideHelp(),
   )
   .addOption(
     new Option(
@@ -2682,6 +2794,18 @@ const statusCommand = program
       limit: statusOptions.limit,
       showExamples,
     });
+  });
+
+program
+  .command('restart <id>')
+  .description('Re-run a stored session as a new session (clones options).')
+  .addOption(new Option('--wait').default(undefined))
+  .addOption(new Option('--no-wait').default(undefined).hideHelp())
+  .option('--remote-host <host:port>', 'Delegate browser runs to a remote `oracle serve` instance.')
+  .option('--remote-token <token>', 'Access token for the remote `oracle serve` instance.')
+  .action(async (sessionId: string, _options: RestartCommandOptions, cmd: Command) => {
+    const restartOptions = cmd.opts<RestartCommandOptions>();
+    await restartSession(sessionId, restartOptions);
   });
 
 function buildRunOptions(options: ResolvedCliOptions, overrides: Partial<RunOracleOptions> = {}): RunOracleOptions {
@@ -3000,11 +3124,10 @@ async function runRootCommand(options: CliOptions): Promise<void> {
   // - otherwise block for fast models (gpt-5.1, browser) and detach by default for pro API runs
   let waitPreference = resolveWaitFlag({
     waitFlag: options.wait,
-    noWaitFlag: options.noWait,
     model: resolvedModel,
     engine,
   });
-  if (remoteHost && !waitPreference) {
+  if (remoteHost && waitPreference === false) {
     console.log(chalk.dim('Remote browser runs require --wait; ignoring --no-wait.'));
     waitPreference = true;
   }
@@ -3227,6 +3350,13 @@ async function runRootCommand(options: CliOptions): Promise<void> {
       ...baseRunOptions,
       mode: sessionMode,
       browserConfig,
+      waitPreference,
+      youtube: options.youtube,
+      generateImage: options.generateImage,
+      editImage: options.editImage,
+      outputPath: options.output,
+      aspectRatio: options.aspect,
+      geminiShowThoughts: options.geminiShowThoughts,
     },
     process.cwd(),
     notifications,
@@ -3296,6 +3426,7 @@ async function runInteractiveSession(
   userConfig?: UserConfig,
   suppressSummary = false,
   browserDeps?: BrowserSessionRunnerDeps,
+  cwd: string = process.cwd(),
 ): Promise<void> {
   const { logLine, writeChunk, stream } = sessionStore.createLogWriter(sessionMeta.id);
   let headerAugmented = false;
@@ -3324,7 +3455,7 @@ async function runInteractiveSession(
       runOptions,
       mode,
       browserConfig,
-      cwd: process.cwd(),
+      cwd,
       log: combinedLog,
       write: combinedWrite,
       version: VERSION,
@@ -3365,6 +3496,169 @@ async function launchDetachedSession(sessionId: string): Promise<boolean> {
       reject(error);
     }
   });
+}
+
+async function restartSession(sessionId: string, options: RestartCommandOptions): Promise<void> {
+  const metadata = await sessionStore.readSession(sessionId);
+  if (!metadata) {
+    console.error(chalk.red(`No session found with ID ${sessionId}`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const runOptions = buildRunOptionsFromMetadata(metadata);
+  if (!runOptions.prompt) {
+    console.error(chalk.red(`Session ${sessionId} has no stored prompt; cannot restart.`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const sessionMode = getSessionMode(metadata);
+  const engine: EngineMode = sessionMode === 'browser' ? 'browser' : 'api';
+  const browserConfig = getBrowserConfigFromMetadata(metadata);
+  if (sessionMode === 'browser' && !browserConfig) {
+    console.error(chalk.red(`Session ${sessionId} is missing browser config; cannot restart.`));
+    process.exitCode = 1;
+    return;
+  }
+
+  const userConfig = (await loadUserConfig()).config;
+  const cwd = metadata.cwd ?? process.cwd();
+  const storedOptions = metadata.options ?? {};
+
+  if (runOptions.file && runOptions.file.length > 0) {
+    const isBrowserMode = engine === 'browser';
+    const filesToValidate = isBrowserMode ? runOptions.file.filter((f) => !isMediaFile(f)) : runOptions.file;
+    if (filesToValidate.length > 0) {
+      await readFiles(filesToValidate, { cwd });
+    }
+  }
+
+  enforceBrowserSearchFlag(runOptions, sessionMode, console.log);
+
+  let waitPreference = resolveRestartWaitPreference({
+    waitFlag: options.wait,
+    storedPreference: storedOptions.waitPreference,
+    model: runOptions.model,
+    engine,
+  });
+
+  const remoteConfig = resolveRemoteServiceConfig({
+    cliHost: options.remoteHost,
+    cliToken: options.remoteToken,
+    userConfig,
+    env: process.env,
+  });
+  const remoteHost = remoteConfig.host;
+  const remoteToken = remoteConfig.token;
+  if (remoteHost && engine !== 'browser') {
+    throw new Error('--remote-host requires a browser session.');
+  }
+  if (remoteHost) {
+    console.log(chalk.dim(`Remote browser host detected: ${remoteHost}`));
+  }
+  if (remoteHost && waitPreference === false) {
+    console.log(chalk.dim('Remote browser runs require --wait; ignoring --no-wait.'));
+    waitPreference = true;
+  }
+
+  let browserDeps: BrowserSessionRunnerDeps | undefined;
+  if (browserConfig && remoteHost) {
+    browserDeps = {
+      executeBrowser: createRemoteBrowserExecutor({ host: remoteHost, token: remoteToken }),
+    };
+    console.log(chalk.dim(`Routing browser automation to remote host ${remoteHost}`));
+  } else if (browserConfig && runOptions.model.startsWith('gemini')) {
+    browserDeps = {
+      executeBrowser: createGeminiWebExecutor({
+        youtube: storedOptions.youtube,
+        generateImage: storedOptions.generateImage,
+        editImage: storedOptions.editImage,
+        outputPath: storedOptions.outputPath,
+        aspectRatio: storedOptions.aspectRatio,
+        showThoughts: storedOptions.geminiShowThoughts,
+      }),
+    };
+    console.log(chalk.dim('Using Gemini web client for browser automation'));
+    if (browserConfig.modelStrategy && browserConfig.modelStrategy !== 'select') {
+      console.log(chalk.dim('Browser model strategy is ignored for Gemini web runs.'));
+    }
+  }
+  const remoteExecutionActive = Boolean(browserDeps);
+
+  await sessionStore.ensureStorage();
+  const notifications = deriveNotificationSettingsFromMetadata(metadata, process.env, userConfig.notify);
+  const sessionMeta = await sessionStore.createSession(
+    {
+      ...runOptions,
+      mode: sessionMode,
+      browserConfig,
+      waitPreference,
+      youtube: storedOptions.youtube,
+      generateImage: storedOptions.generateImage,
+      editImage: storedOptions.editImage,
+      outputPath: storedOptions.outputPath,
+      aspectRatio: storedOptions.aspectRatio,
+      geminiShowThoughts: storedOptions.geminiShowThoughts,
+    },
+    cwd,
+    notifications,
+    sessionId,
+  );
+
+  const liveRunOptions: RunOracleOptions = {
+    ...runOptions,
+    sessionId: sessionMeta.id,
+    effectiveModelId: resolveEffectiveModelIdForRun(runOptions.model, runOptions.effectiveModelId),
+  };
+
+  const disableDetachEnv = process.env.ORACLE_NO_DETACH === '1';
+  const detachAllowed = remoteExecutionActive
+    ? false
+    : shouldDetachSession({
+        engine,
+        model: runOptions.model,
+        waitPreference,
+        disableDetachEnv,
+      });
+  const detached = !detachAllowed
+    ? false
+    : await launchDetachedSession(sessionMeta.id).catch((error) => {
+        const message = error instanceof Error ? error.message : String(error);
+        console.log(chalk.yellow(`Unable to detach session runner (${message}). Running inline...`));
+        return false;
+      });
+
+  if (!waitPreference) {
+    if (!detached) {
+      console.log(chalk.red('Unable to start in background; use --wait to run inline.'));
+      process.exitCode = 1;
+      return;
+    }
+    console.log(chalk.blue(`Session running in background. Reattach via: oracle session ${sessionMeta.id}`));
+    console.log(chalk.dim('Pro runs can take up to 60 minutes (usually 10-15). Add --wait to stay attached.'));
+    return;
+  }
+
+  if (detached === false) {
+    await runInteractiveSession(
+      sessionMeta,
+      liveRunOptions,
+      sessionMode,
+      browserConfig,
+      false,
+      notifications,
+      userConfig,
+      true,
+      browserDeps,
+      cwd,
+    );
+    return;
+  }
+  if (detached) {
+    console.log(chalk.blue(`Reattach via: oracle session ${sessionMeta.id}`));
+    await attachSession(sessionMeta.id, { suppressMetadata: true });
+  }
 }
 
 async function executeSession(sessionId: string) {
@@ -3416,6 +3710,13 @@ function printDebugHelp(cliName: string): void {
     ['--browser-url <url>', 'Alias for --chatgpt-url.'],
     ['--browser-timeout <ms|s|m>', 'Cap total wait time for the assistant response.'],
     ['--browser-input-timeout <ms|s|m>', 'Cap how long we wait for the composer textarea.'],
+    ['--browser-recheck-delay <ms|s|m|h>', 'After timeout, wait then revisit the conversation to retry capture.'],
+    ['--browser-recheck-timeout <ms|s|m|h>', 'Time budget for the delayed recheck attempt.'],
+    ['--browser-reuse-wait <ms|s|m|h>', 'Wait for a shared Chrome profile before launching (parallel runs).'],
+    ['--browser-profile-lock-timeout <ms|s|m|h>', 'Wait for the manual-login profile lock before sending.'],
+    ['--browser-auto-reattach-delay <ms|s|m|h>', 'Delay before periodic auto-reattach attempts after a timeout.'],
+    ['--browser-auto-reattach-interval <ms|s|m|h>', 'Interval between auto-reattach attempts (0 disables).'],
+    ['--browser-auto-reattach-timeout <ms|s|m|h>', 'Time budget for each auto-reattach attempt.'],
     ['--browser-cookie-wait <ms|s|m>', 'Wait before retrying cookie sync when Chrome cookies are empty or locked.'],
     ['--browser-no-cookie-sync', 'Skip copying cookies from your main profile.'],
     ['--browser-manual-login', 'Skip cookie copy; reuse a persistent automation profile and log in manually.'],
@@ -3437,18 +3738,41 @@ function printDebugOptionGroup(entries: Array<[string, string]>): void {
 
 function resolveWaitFlag({
   waitFlag,
-  noWaitFlag,
   model,
   engine,
 }: {
   waitFlag?: boolean;
-  noWaitFlag?: boolean;
   model: ModelName;
   engine: EngineMode;
 }): boolean {
   if (waitFlag === true) return true;
-  if (noWaitFlag === true) return false;
+  if (waitFlag === false) return false;
   return defaultWaitPreference(model, engine);
+}
+
+function resolveRestartWaitPreference({
+  waitFlag,
+  storedPreference,
+  model,
+  engine,
+}: {
+  waitFlag?: boolean;
+  storedPreference?: boolean;
+  model: ModelName;
+  engine: EngineMode;
+}): boolean {
+  if (waitFlag === true) return true;
+  if (waitFlag === false) return false;
+  if (typeof storedPreference === 'boolean') return storedPreference;
+  return defaultWaitPreference(model, engine);
+}
+
+function resolveEffectiveModelIdForRun(model: ModelName, stored?: string): string {
+  if (stored) return stored;
+  if (model.startsWith('gemini')) {
+    return resolveGeminiModelId(model);
+  }
+  return isKnownModel(model) ? MODEL_CONFIGS[model].apiModel ?? model : model;
 }
 
 program.action(async function (this: Command) {
@@ -6418,6 +6742,20 @@ export interface BrowserConfigDefaults {
   timeoutMs?: number;
   debugPort?: number | null;
   inputTimeoutMs?: number;
+  /** Delay before rechecking the conversation after an assistant timeout. */
+  assistantRecheckDelayMs?: number;
+  /** Time budget for the delayed recheck attempt. */
+  assistantRecheckTimeoutMs?: number;
+  /** Wait for an existing shared Chrome to appear before launching a new one. */
+  reuseChromeWaitMs?: number;
+  /** Max time to wait for a shared manual-login profile lock (serializes parallel runs). */
+  profileLockTimeoutMs?: number;
+  /** Delay before starting periodic auto-reattach attempts after a timeout. */
+  autoReattachDelayMs?: number;
+  /** Interval between auto-reattach attempts (0 disables). */
+  autoReattachIntervalMs?: number;
+  /** Time budget for each auto-reattach attempt. */
+  autoReattachTimeoutMs?: number;
   cookieSyncWaitMs?: number;
   headless?: boolean;
   hideWindow?: boolean;
@@ -6616,6 +6954,20 @@ export interface BrowserSessionConfig {
   timeoutMs?: number;
   debugPort?: number | null;
   inputTimeoutMs?: number;
+  /** Delay before rechecking the conversation after an assistant timeout. */
+  assistantRecheckDelayMs?: number;
+  /** Time budget for the delayed recheck attempt. */
+  assistantRecheckTimeoutMs?: number;
+  /** Wait for an existing shared Chrome to appear before launching a new one. */
+  reuseChromeWaitMs?: number;
+  /** Max time to wait for a shared manual-login profile lock (serializes parallel runs). */
+  profileLockTimeoutMs?: number;
+  /** Delay before starting periodic auto-reattach attempts after a timeout. */
+  autoReattachDelayMs?: number;
+  /** Interval between auto-reattach attempts (0 disables). */
+  autoReattachIntervalMs?: number;
+  /** Time budget for each auto-reattach attempt. */
+  autoReattachTimeoutMs?: number;
   cookieSync?: boolean;
   cookieNames?: string[] | null;
   cookieSyncWaitMs?: number;
@@ -6699,6 +7051,14 @@ export interface StoredRunOptions {
   httpTimeoutMs?: number;
   zombieTimeoutMs?: number;
   zombieUseLastActivity?: boolean;
+  /** Whether the run preferred to stay attached (true) or detach (false). */
+  waitPreference?: boolean;
+  youtube?: string;
+  generateImage?: string;
+  editImage?: string;
+  outputPath?: string;
+  aspectRatio?: string;
+  geminiShowThoughts?: boolean;
 }
 
 export interface SessionMetadata {
@@ -6944,9 +7304,10 @@ export async function initializeSession(
   options: InitializeSessionOptions,
   cwd: string,
   notifications?: SessionNotifications,
+  baseSlugOverride?: string,
 ): Promise<SessionMetadata> {
   await ensureSessionStorage();
-  const baseSlug = createSessionId(options.prompt || DEFAULT_SLUG, options.slug);
+  const baseSlug = baseSlugOverride || createSessionId(options.prompt || DEFAULT_SLUG, options.slug);
   const sessionId = await ensureUniqueSessionId(baseSlug);
   const dir = sessionDir(sessionId);
   await ensureDir(dir);
@@ -7001,6 +7362,13 @@ export async function initializeSession(
       zombieTimeoutMs: options.zombieTimeoutMs,
       zombieUseLastActivity: options.zombieUseLastActivity,
       writeOutputPath: options.writeOutputPath,
+      waitPreference: options.waitPreference,
+      youtube: options.youtube,
+      generateImage: options.generateImage,
+      editImage: options.editImage,
+      outputPath: options.outputPath,
+      aspectRatio: options.aspectRatio,
+      geminiShowThoughts: options.geminiShowThoughts,
     },
   };
   await ensureDir(modelsDir(sessionId));
@@ -7484,6 +7852,7 @@ export interface SessionStore {
     options: InitializeSessionOptionsType,
     cwd: string,
     notifications?: SessionNotifications,
+    baseSlugOverride?: string,
   ): Promise<SessionMetadata>;
   readSession(sessionId: string): Promise<SessionMetadata | null>;
   updateSession(sessionId: string, updates: Partial<SessionMetadata>): Promise<SessionMetadata>;
@@ -7511,8 +7880,9 @@ class FileSessionStore implements SessionStore {
     options: InitializeSessionOptionsType,
     cwd: string,
     notifications?: SessionNotifications,
+    baseSlugOverride?: string,
   ): Promise<SessionMetadata> {
-    return initializeSession(options, cwd, notifications);
+    return initializeSession(options, cwd, notifications, baseSlugOverride);
   }
 
   readSession(sessionId: string): Promise<SessionMetadata | null> {
@@ -7843,6 +8213,8 @@ import { getOracleHomeDir } from '../oracleHome.js';
 
 const DEFAULT_BROWSER_TIMEOUT_MS = 1_200_000;
 const DEFAULT_BROWSER_INPUT_TIMEOUT_MS = 60_000;
+const DEFAULT_BROWSER_RECHECK_TIMEOUT_MS = 120_000;
+const DEFAULT_BROWSER_AUTO_REATTACH_TIMEOUT_MS = 120_000;
 const DEFAULT_CHROME_PROFILE = 'Default';
 
 // Ordered array: most specific models first to ensure correct selection.
@@ -7868,6 +8240,13 @@ export interface BrowserFlagOptions {
   browserUrl?: string;
   browserTimeout?: string;
   browserInputTimeout?: string;
+  browserRecheckDelay?: string;
+  browserRecheckTimeout?: string;
+  browserReuseWait?: string;
+  browserProfileLockTimeout?: string;
+  browserAutoReattachDelay?: string;
+  browserAutoReattachInterval?: string;
+  browserAutoReattachTimeout?: string;
   browserCookieWait?: string;
   browserNoCookieSync?: boolean;
   browserInlineCookiesFile?: string;
@@ -7963,6 +8342,25 @@ export async function buildBrowserConfig(options: BrowserFlagOptions): Promise<B
     timeoutMs: options.browserTimeout ? parseDuration(options.browserTimeout, DEFAULT_BROWSER_TIMEOUT_MS) : undefined,
     inputTimeoutMs: options.browserInputTimeout
       ? parseDuration(options.browserInputTimeout, DEFAULT_BROWSER_INPUT_TIMEOUT_MS)
+      : undefined,
+    assistantRecheckDelayMs: options.browserRecheckDelay
+      ? parseDuration(options.browserRecheckDelay, 0)
+      : undefined,
+    assistantRecheckTimeoutMs: options.browserRecheckTimeout
+      ? parseDuration(options.browserRecheckTimeout, DEFAULT_BROWSER_RECHECK_TIMEOUT_MS)
+      : undefined,
+    reuseChromeWaitMs: options.browserReuseWait ? parseDuration(options.browserReuseWait, 0) : undefined,
+    profileLockTimeoutMs: options.browserProfileLockTimeout
+      ? parseDuration(options.browserProfileLockTimeout, 0)
+      : undefined,
+    autoReattachDelayMs: options.browserAutoReattachDelay
+      ? parseDuration(options.browserAutoReattachDelay, 0)
+      : undefined,
+    autoReattachIntervalMs: options.browserAutoReattachInterval
+      ? parseDuration(options.browserAutoReattachInterval, 0)
+      : undefined,
+    autoReattachTimeoutMs: options.browserAutoReattachTimeout
+      ? parseDuration(options.browserAutoReattachTimeout, DEFAULT_BROWSER_AUTO_REATTACH_TIMEOUT_MS)
       : undefined,
     cookieSyncWaitMs: options.browserCookieWait ? parseDuration(options.browserCookieWait, 0) : undefined,
     cookieSync: options.browserNoCookieSync ? false : undefined,

@@ -1,0 +1,136 @@
+# Vllm
+
+> The primary purpose of vLLM is to provide a fast, efficient, and easy-to-deploy LLM serving solution that can handle high-throughput inference with minimal memory overhead. It targets developers and organizations looking to deploy large language models quickly and cost-effectively, whether for research, enterprise applications, or real-time conversational AI. By abstracting away the complexity of model loading, attention memory management, and GPU scheduling, vLLM allows users to focus on their application logic while achieving state-of-the-art performance.
+
+**Remember:**
+- PagedAttention
+- Speculative Decoding
+- Chunked Prefill
+- Quantized Models (GPTQ, AWQ, INT4, INT8, FP8)
+- FlashAttention & FlashInfer Integration
+- Multi-LoRA Support
+
+## Docs
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/examples/README.md): install & quickstart.
+- [Install Nixl From Source Ubuntu](https://github.com/vllm-project/vllm/blob/main/tools/install_nixl_from_source_ubuntu.py): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/README.md): install & quickstart.
+- [Arch Overview](https://github.com/vllm-project/vllm/blob/main/docs/design/arch_overview.md): install & quickstart.
+- [Quickstart](https://github.com/vllm-project/vllm/blob/main/docs/getting_started/quickstart.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/api/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/benchmarking/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/cli/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/configuration/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/docs/contributing/README.md): install & quickstart.
+
+## Tutorials
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference/basic/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference/disaggregated-prefill-v1/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference/kv_load_failure_recovery/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference/openai_batch/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/offline_inference/qwen2_5_omni/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/chart-helm/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/dashboards/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/disaggregated_encoder/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/disaggregated_serving/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/examples/online_serving/opentelemetry/README.md): install & quickstart.
+
+## API
+- [Api Server](https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/api_server.py): API reference.
+- [Dynamic Module](https://github.com/vllm-project/vllm/blob/main/vllm/transformers_utils/dynamic_module.py): docs page.
+- [Reference Mxfp4](https://github.com/vllm-project/vllm/blob/main/tests/quantization/reference_mxfp4.py): API reference.
+- [Test Api Server Process Manager](https://github.com/vllm-project/vllm/blob/main/tests/entrypoints/test_api_server_process_manager.py): docs page.
+- [Api Router](https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/anthropic/api_router.py): API reference.
+- [Api Router](https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/sagemaker/api_router.py): API reference.
+- [Api Server](https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/api_server.py): API reference.
+- [Module Mapping](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/models/module_mapping.py): docs page.
+- [Test Engine Logger Apis](https://github.com/vllm-project/vllm/blob/main/tests/v1/metrics/test_engine_logger_apis.py): docs page.
+- [Api Router](https://github.com/vllm-project/vllm/blob/main/vllm/entrypoints/openai/chat_completion/api_router.py): API reference.
+
+## Optional
+- [README](https://github.com/vllm-project/vllm/blob/main/benchmarks/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/.buildkite/performance-benchmarks/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/benchmarks/attention_benchmarks/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/benchmarks/auto_tune/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/benchmarks/multi_turn/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/benchmarks/kernels/deepgemm/README.md): install & quickstart.
+- [Contributing](https://github.com/vllm-project/vllm/blob/main/CONTRIBUTING.md): docs page.
+- [Release](https://github.com/vllm-project/vllm/blob/main/RELEASE.md): version history.
+- [Security](https://github.com/vllm-project/vllm/blob/main/SECURITY.md): security policy.
+- [Backend Request Func](https://github.com/vllm-project/vllm/blob/main/benchmarks/backend_request_func.py): docs page.
+- [Pull Request Template](https://github.com/vllm-project/vllm/blob/main/.github/PULL_REQUEST_TEMPLATE.md): docs page.
+- [Cmakelists](https://github.com/vllm-project/vllm/blob/main/CMakeLists.txt): docs page.
+- [Code Of Conduct](https://github.com/vllm-project/vllm/blob/main/CODE_OF_CONDUCT.md): docs page.
+- [README](https://github.com/vllm-project/vllm/blob/main/README.md): docs page.
+- [Hipify](https://github.com/vllm-project/vllm/blob/main/cmake/hipify.py): docs page.
+- [Autotune Helion Kernels](https://github.com/vllm-project/vllm/blob/main/scripts/autotune_helion_kernels.py): docs page.
+- [Setup](https://github.com/vllm-project/vllm/blob/main/setup.py): docs page.
+- [Use Existing Torch](https://github.com/vllm-project/vllm/blob/main/use_existing_torch.py): docs page.
+
+## .Buildkite
+- [Check Wheel Size](https://github.com/vllm-project/vllm/blob/main/.buildkite/check-wheel-size.py): docs page.
+- [Conftest](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/conftest.py): docs page.
+- [Generate Nightly Index](https://github.com/vllm-project/vllm/blob/main/.buildkite/scripts/generate-nightly-index.py): docs page.
+- [Test Lm Eval Correctness](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/test_lm_eval_correctness.py): docs page.
+- [Models Large](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-large.txt): docs page.
+- [Models Large Hopper](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-large-hopper.txt): docs page.
+- [Models Large Rocm](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-large-rocm.txt): docs page.
+- [Models Mm Large H100](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-mm-large-h100.txt): docs page.
+- [Models Mm Small](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-mm-small.txt): docs page.
+- [Models Small](https://github.com/vllm-project/vllm/blob/main/.buildkite/lm-eval-harness/configs/models-small.txt): docs page.
+
+## Csrc
+- [README](https://github.com/vllm-project/vllm/blob/main/csrc/quantization/machete/Readme.md): install & quickstart.
+- [Generate Cpu Attn Dispatch](https://github.com/vllm-project/vllm/blob/main/csrc/cpu/generate_cpu_attn_dispatch.py): docs page.
+- [Vllm Cutlass Library Extension](https://github.com/vllm-project/vllm/blob/main/csrc/cutlass_extensions/vllm_cutlass_library_extension.py): docs page.
+- [Generate](https://github.com/vllm-project/vllm/blob/main/csrc/quantization/machete/generate.py): docs page.
+- [Generate Kernels](https://github.com/vllm-project/vllm/blob/main/csrc/moe/marlin_moe_wna16/generate_kernels.py): docs page.
+- [Generate Kernels](https://github.com/vllm-project/vllm/blob/main/csrc/quantization/marlin/generate_kernels.py): docs page.
+- [Epilogues](https://github.com/vllm-project/vllm/blob/main/csrc/quantization/w8a8/cutlass/Epilogues.md): docs page.
+
+## Requirements
+- [Build](https://github.com/vllm-project/vllm/blob/main/requirements/build.txt): docs page.
+- [Common](https://github.com/vllm-project/vllm/blob/main/requirements/common.txt): docs page.
+- [Cpu](https://github.com/vllm-project/vllm/blob/main/requirements/cpu.txt): docs page.
+- [Cpu Build](https://github.com/vllm-project/vllm/blob/main/requirements/cpu-build.txt): docs page.
+- [Cuda](https://github.com/vllm-project/vllm/blob/main/requirements/cuda.txt): docs page.
+- [Dev](https://github.com/vllm-project/vllm/blob/main/requirements/dev.txt): docs page.
+- [Kv Connectors](https://github.com/vllm-project/vllm/blob/main/requirements/kv_connectors.txt): docs page.
+- [Kv Connectors Rocm](https://github.com/vllm-project/vllm/blob/main/requirements/kv_connectors_rocm.txt): docs page.
+- [Lint](https://github.com/vllm-project/vllm/blob/main/requirements/lint.txt): docs page.
+- [Nightly Torch Test](https://github.com/vllm-project/vllm/blob/main/requirements/nightly_torch_test.txt): docs page.
+
+## Tests
+- [README](https://github.com/vllm-project/vllm/blob/main/tests/compile/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/tests/evals/gsm8k/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/tests/v1/ec_connector/integration/README.md): install & quickstart.
+- [Ci Envs](https://github.com/vllm-project/vllm/blob/main/tests/ci_envs.py): docs page.
+- [Conftest](https://github.com/vllm-project/vllm/blob/main/tests/conftest.py): docs page.
+- [Init](https://github.com/vllm-project/vllm/blob/main/tests/__init__.py): docs page.
+- [Test Access Log Filter](https://github.com/vllm-project/vllm/blob/main/tests/test_access_log_filter.py): docs page.
+- [Test Attention Backend Registry](https://github.com/vllm-project/vllm/blob/main/tests/test_attention_backend_registry.py): docs page.
+- [Test Config](https://github.com/vllm-project/vllm/blob/main/tests/test_config.py): docs page.
+- [Test Embedded Commit](https://github.com/vllm-project/vllm/blob/main/tests/test_embedded_commit.py): docs page.
+
+## Tools
+- [README](https://github.com/vllm-project/vllm/blob/main/tools/ep_kernels/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/tools/profiler/nsys_profile_tools/README.md): install & quickstart.
+- [Generate Cmake Presets](https://github.com/vllm-project/vllm/blob/main/tools/generate_cmake_presets.py): docs page.
+- [Generate Versions Json](https://github.com/vllm-project/vllm/blob/main/tools/generate_versions_json.py): docs page.
+- [Report Build Time Ninja](https://github.com/vllm-project/vllm/blob/main/tools/report_build_time_ninja.py): docs page.
+- [Check Boolean Context Manager](https://github.com/vllm-project/vllm/blob/main/tools/pre_commit/check_boolean_context_manager.py): docs page.
+- [Check Forbidden Imports](https://github.com/vllm-project/vllm/blob/main/tools/pre_commit/check_forbidden_imports.py): docs page.
+- [Check Init Lazy Imports](https://github.com/vllm-project/vllm/blob/main/tools/pre_commit/check_init_lazy_imports.py): docs page.
+- [Check Spdx Header](https://github.com/vllm-project/vllm/blob/main/tools/pre_commit/check_spdx_header.py): docs page.
+- [Generate Nightly Torch Test](https://github.com/vllm-project/vllm/blob/main/tools/pre_commit/generate_nightly_torch_test.py): docs page.
+
+## Vllm
+- [README](https://github.com/vllm-project/vllm/blob/main/vllm/distributed/kv_transfer/README.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/vllm/v1/worker/gpu/README.md): install & quickstart.
+- [Readme Tuning](https://github.com/vllm-project/vllm/blob/main/vllm/lora/ops/triton_ops/README_TUNING.md): install & quickstart.
+- [README](https://github.com/vllm-project/vllm/blob/main/vllm/model_executor/layers/quantization/utils/configs/README.md): install & quickstart.
+- [Aiter Ops](https://github.com/vllm-project/vllm/blob/main/vllm/_aiter_ops.py): docs page.
+- [Bc Linter](https://github.com/vllm-project/vllm/blob/main/vllm/_bc_linter.py): docs page.
+- [Beam Search](https://github.com/vllm-project/vllm/blob/main/vllm/beam_search.py): docs page.
+- [Collect Env](https://github.com/vllm-project/vllm/blob/main/vllm/collect_env.py): docs page.
+- [Connections](https://github.com/vllm-project/vllm/blob/main/vllm/connections.py): docs page.
+- [Custom Ops](https://github.com/vllm-project/vllm/blob/main/vllm/_custom_ops.py): docs page.

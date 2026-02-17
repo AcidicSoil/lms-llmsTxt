@@ -1,0 +1,1656 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- internal/agent/tools/references.md ---
+Find all references to/usage of a symbol by name using the Language Server Protocol (LSP).
+
+<usage>
+- Provide symbol name (e.g., "MyFunction", "myVariable", "MyType").
+- Optional path to narrow search to a directory or file (defaults to current directory).
+- Tool automatically locates the symbol and returns all references.
+</usage>
+
+<features>
+- Semantic-aware reference search (more accurate than grep/glob).
+- Returns references grouped by file with line and column numbers.
+- Supports multiple programming languages via LSP.
+- Finds only real references (not comments or unrelated strings).
+</features>
+
+<limitations>
+- May not find references in files not opened or indexed by the LSP server.
+- Results depend on the capabilities of the active LSP providers.
+</limitations>
+
+<tips>
+- Use this first when searching for where a symbol is used.
+- Do not use grep/glob for symbol searches.
+- Narrow scope with the path parameter for faster, more relevant results.
+- Use qualified names (e.g., pkg.Func, Class.method) for higher precision.
+</tips>
+
+
+--- LICENSE.md ---
+# Functional Source License, Version 1.1, MIT Future License
+
+## Abbreviation
+
+FSL-1.1-MIT
+
+## Notice
+
+Copyright 2025 Charmbracelet, Inc
+
+## Terms and Conditions
+
+### Licensor ("We")
+
+The party offering the Software under these Terms and Conditions.
+
+### The Software
+
+The "Software" is each version of the software that we make available under
+these Terms and Conditions, as indicated by our inclusion of these Terms and
+Conditions with the Software.
+
+### License Grant
+
+Subject to your compliance with this License Grant and the Patents,
+Redistribution and Trademark clauses below, we hereby grant you the right to
+use, copy, modify, create derivative works, publicly perform, publicly display
+and redistribute the Software for any Permitted Purpose identified below.
+
+### Permitted Purpose
+
+A Permitted Purpose is any purpose other than a Competing Use. A Competing Use
+means making the Software available to others in a commercial product or
+service that:
+
+1. substitutes for the Software;
+
+2. substitutes for any other product or service we offer using the Software
+   that exists as of the date we make the Software available; or
+
+3. offers the same or substantially similar functionality as the Software.
+
+Permitted Purposes specifically include using the Software:
+
+1. for your internal use and access;
+
+2. for non-commercial education;
+
+3. for non-commercial research; and
+
+4. in connection with professional services that you provide to a licensee
+   using the Software in accordance with these Terms and Conditions.
+
+### Patents
+
+To the extent your use for a Permitted Purpose would necessarily infringe our
+patents, the license grant above includes a license under our patents. If you
+make a claim against any party that the Software infringes or contributes to
+the infringement of any patent, then your patent license to the Software ends
+immediately.
+
+### Redistribution
+
+The Terms and Conditions apply to all copies, modifications and derivatives of
+the Software.
+
+If you redistribute any copies, modifications or derivatives of the Software,
+you must include a copy of or a link to these Terms and Conditions and not
+remove any copyright notices provided in or with the Software.
+
+### Disclaimer
+
+THE SOFTWARE IS PROVIDED "AS IS" AND WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING WITHOUT LIMITATION WARRANTIES OF FITNESS FOR A PARTICULAR
+PURPOSE, MERCHANTABILITY, TITLE OR NON-INFRINGEMENT.
+
+IN NO EVENT WILL WE HAVE ANY LIABILITY TO YOU ARISING OUT OF OR RELATED TO THE
+SOFTWARE, INCLUDING INDIRECT, SPECIAL, INCIDENTAL OR CONSEQUENTIAL DAMAGES,
+EVEN IF WE HAVE BEEN INFORMED OF THEIR POSSIBILITY IN ADVANCE.
+
+### Trademarks
+
+Except for displaying the License Details and identifying us as the origin of
+the Software, you have no right under these Terms and Conditions to use our
+trademarks, trade names, service marks or product names.
+
+## Grant of Future License
+
+We hereby irrevocably grant you an additional license to use the Software under
+the MIT license that is effective on the second anniversary of the date we make
+the Software available. On or after that date, you may use the Software under
+the MIT license, in which case the following will apply:
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+MIT License
+
+Copyright (c) 2025-03-21 - 2025-05-30 Kujtim Hoxha
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+--- AGENTS.md ---
+# Crush Development Guide
+
+## Build/Test/Lint Commands
+
+- **Build**: `go build .` or `go run .`
+- **Test**: `task test` or `go test ./...` (run single test: `go test ./internal/llm/prompt -run TestGetContextFromPaths`)
+- **Update Golden Files**: `go test ./... -update` (regenerates .golden files when test output changes)
+  - Update specific package: `go test ./internal/tui/components/core -update` (in this case, we're updating "core")
+- **Lint**: `task lint:fix`
+- **Format**: `task fmt` (gofumpt -w .)
+- **Dev**: `task dev` (runs with profiling enabled)
+
+## Code Style Guidelines
+
+- **Imports**: Use goimports formatting, group stdlib, external, internal packages
+- **Formatting**: Use gofumpt (stricter than gofmt), enabled in golangci-lint
+- **Naming**: Standard Go conventions - PascalCase for exported, camelCase for unexported
+- **Types**: Prefer explicit types, use type aliases for clarity (e.g., `type AgentName string`)
+- **Error handling**: Return errors explicitly, use `fmt.Errorf` for wrapping
+- **Context**: Always pass context.Context as first parameter for operations
+- **Interfaces**: Define interfaces in consuming packages, keep them small and focused
+- **Structs**: Use struct embedding for composition, group related fields
+- **Constants**: Use typed constants with iota for enums, group in const blocks
+- **Testing**: Use testify's `require` package, parallel tests with `t.Parallel()`,
+  `t.SetEnv()` to set environment variables. Always use `t.Tempdir()` when in
+  need of a temporary directory. This directory does not need to be removed.
+- **JSON tags**: Use snake_case for JSON field names
+- **File permissions**: Use octal notation (0o755, 0o644) for file permissions
+- **Comments**: End comments in periods unless comments are at the end of the line.
+
+## Testing with Mock Providers
+
+When writing tests that involve provider configurations, use the mock providers to avoid API calls:
+
+```go
+func TestYourFunction(t *testing.T) {
+    // Enable mock providers for testing
+    originalUseMock := config.UseMockProviders
+    config.UseMockProviders = true
+    defer func() {
+        config.UseMockProviders = originalUseMock
+        config.ResetProviders()
+    }()
+
+    // Reset providers to ensure fresh mock data
+    config.ResetProviders()
+
+    // Your test code here - providers will now return mock data
+    providers := config.Providers()
+    // ... test logic
+}
+```
+
+## Formatting
+
+- ALWAYS format any Go code you write.
+  - First, try `gofumpt -w .`.
+  - If `gofumpt` is not available, use `goimports`.
+  - If `goimports` is not available, use `gofmt`.
+  - You can also use `task fmt` to run `gofumpt -w .` on the entire project,
+    as long as `gofumpt` is on the `PATH`.
+
+## Comments
+
+- Comments that live on their own lines should start with capital letters and
+  end with periods. Wrap comments at 78 columns.
+
+## Committing
+
+- ALWAYS use semantic commits (`fix:`, `feat:`, `chore:`, `refactor:`, `docs:`, `sec:`, etc).
+- Try to keep commits to one line, not including your attribution. Only use
+  multi-line commits when additional context is truly necessary.
+
+## Working on the TUI (UI)
+Anytime you need to work on the tui before starting work read the internal/ui/AGENTS.md file
+
+
+--- CLA.md ---
+# Contributor License Agreement
+
+Thank you for your interest in the open source project(s) managed by Charmbracelet, Inc. ("Company"). In order to clarify the intellectual property license granted with Contributions from any person or entity, Company must have a Contributor License Agreement ("CLA") on file that has been signed by each contributor, indicating agreement to the license terms below. This license is for your protection as a contributor as well as the protection of Company and its other contributors and users; it does not change your rights to use your own Contributions for any other purpose.
+By submitting a contribution to this repository (e.g. opening a pull request) or otherwise agreeing in writing, You accept and agree to these terms and conditions for Your present and future Contributions submitted to Company. In return, Company shall consider Your Contributions for addition to the official Company open source project(s) for which they were submitted. Except for the license granted herein to Company and recipients of software distributed by Company, You reserve all right, title, and interest in and to Your Contributions.
+
+1. Definitions.
+   - "You" (or "Your") shall mean the copyright owner or legal entity authorized by the copyright owner that is entering into this CLA with Company. For legal entities, the entity making a Contribution and all other entities that control, are controlled by, or are under common control with that entity are considered to be a single Contributor. For the purposes of this definition, "control" means (i) the power, direct or indirect, to cause the direction or management of such entity, whether by contract or otherwise, or (ii) ownership of fifty percent (50%) or more of the outstanding shares, or (iii) beneficial ownership of such entity.
+   - "Contribution" shall mean any code, documentation or other original works of authorship, including any modifications or additions to an existing work, that are intentionally submitted by You to Company for inclusion in, or documentation of, any of the products owned or managed by Company (the "Work"). For the purposes of this definition, "submitted" means any form of electronic, verbal, or written communication sent to Company or its representatives, including but not limited to communication on electronic mailing lists, source code control systems, and issue tracking systems that are managed by, or on behalf of, Company for the purpose of discussing and improving the Work, but excluding communication that is conspicuously marked or otherwise designated in writing by You as "Not a Contribution."
+2. Grant of Copyright License. Subject to the terms and conditions of this CLA, You hereby grant to Company and to recipients of software distributed by Company a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable copyright license to reproduce, prepare derivative works of, publicly display, publicly perform, sublicense, and distribute Your Contributions and such derivative works.
+3. Grant of Patent License. Subject to the terms and conditions of this CLA, You hereby grant to Company and to recipients of software distributed by Company a perpetual, worldwide, non-exclusive, no-charge, royalty-free, irrevocable (except as stated in this section) patent license to make, have made, use, offer to sell, sell, import, and otherwise transfer the Work, where such license applies only to those patent claims licensable by You that are necessarily infringed by Your Contribution(s) alone or by combination of Your Contribution(s) with the Work to which such Contribution(s) were submitted. If any entity institutes patent litigation against You or any other entity (including a cross-claim or counterclaim in a lawsuit) alleging that Your Contribution, or the Work to which You have contributed, constitutes direct or contributory patent infringement, then any patent licenses granted to that entity under this CLA for that Contribution or Work shall terminate as of the date such litigation is filed.
+4. You represent and warrant that You are legally entitled to grant the above license. If You are an individual and Your employer(s) has rights to intellectual property that You create that includes Your Contributions, You represent that You have received permission to make Contributions on behalf of that employer, that Your employer has waived such rights for Your Contributions to Company, or that Your employer has entered into a separate CLA with Company covering Your Contributions. If You are a company, You represent further that each employee making a Contribution to Company under the company’s name is authorized to submit Contributions on behalf of the company.
+5. You represent and warrant that each of Your Contributions is Your original creation (see section 7 for submissions on behalf of others). You represent and warrant that, to Your knowledge, none of Your Contributions infringe, violate, or misappropriate any third party intellectual property or other proprietary rights.
+6. You are not expected to provide support for Your Contributions, except to the extent You desire to provide support. You may provide support for free, for a fee, or not at all. Unless required by applicable law or agreed to in writing, except for the warranties set forth above, You provide Your Contributions on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied, including, without limitation, any warranties or conditions of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A PARTICULAR PURPOSE.
+7. Should You wish to submit work that is not Your original creation, You may submit it to Company separately from any Contribution, identifying the complete details of its source and of any license or other restriction (including, but not limited to, related patents, trademarks, and license agreements) of which You are personally aware, and conspicuously marking the work as "Submitted on behalf of a third-party: [named here]".
+8. You agree to notify Company of any facts or circumstances of which You become aware that would make the above representations and warranties inaccurate in any respect.
+9. If You are entering into this CLA as a company, You represent and warrant that the individual accepting this CLA is duly authorized to enter into this CLA on the company’s behalf.
+
+For any copyright notices or other communications, please contact us at [vt100@charm.land](mailto:vt100@charm.land).
+
+
+--- README.md ---
+# Crush
+
+<p align="center">
+    <a href="https://stuff.charm.sh/crush/charm-crush.png"><img width="450" alt="Charm Crush Logo" src="https://github.com/user-attachments/assets/cf8ca3ce-8b02-43f0-9d0f-5a331488da4b" /></a><br />
+    <a href="https://github.com/charmbracelet/crush/releases"><img src="https://img.shields.io/github/release/charmbracelet/crush" alt="Latest Release"></a>
+    <a href="https://github.com/charmbracelet/crush/actions"><img src="https://github.com/charmbracelet/crush/actions/workflows/build.yml/badge.svg" alt="Build Status"></a>
+</p>
+
+<p align="center">Your new coding bestie, now available in your favourite terminal.<br />Your tools, your code, and your workflows, wired into your LLM of choice.</p>
+<p align="center">你的新编程伙伴，现在就在你最爱的终端中。<br />你的工具、代码和工作流，都与您选择的 LLM 模型紧密相连。</p>
+
+<p align="center"><img width="800" alt="Crush Demo" src="https://github.com/user-attachments/assets/58280caf-851b-470a-b6f7-d5c4ea8a1968" /></p>
+
+## Features
+
+- **Multi-Model:** choose from a wide range of LLMs or add your own via OpenAI- or Anthropic-compatible APIs
+- **Flexible:** switch LLMs mid-session while preserving context
+- **Session-Based:** maintain multiple work sessions and contexts per project
+- **LSP-Enhanced:** Crush uses LSPs for additional context, just like you do
+- **Extensible:** add capabilities via MCPs (`http`, `stdio`, and `sse`)
+- **Works Everywhere:** first-class support in every terminal on macOS, Linux, Windows (PowerShell and WSL), Android, FreeBSD, OpenBSD, and NetBSD
+- **Industrial Grade:** built on the Charm ecosystem, powering 25k+ applications, from leading open source projects to business-critical infrastructure
+
+## Installation
+
+Use a package manager:
+
+```bash
+# Homebrew
+brew install charmbracelet/tap/crush
+
+# NPM
+npm install -g @charmland/crush
+
+# Arch Linux (btw)
+yay -S crush-bin
+
+# Nix
+nix run github:numtide/nix-ai-tools#crush
+
+# FreeBSD
+pkg install crush
+```
+
+Windows users:
+
+```bash
+# Winget
+winget install charmbracelet.crush
+
+# Scoop
+scoop bucket add charm https://github.com/charmbracelet/scoop-bucket.git
+scoop install crush
+```
+
+<details>
+<summary><strong>Nix (NUR)</strong></summary>
+
+Crush is available via the official Charm [NUR](https://github.com/nix-community/NUR) in `nur.repos.charmbracelet.crush`, which is the most up-to-date way to get Crush in Nix.
+
+You can also try out Crush via the NUR with `nix-shell`:
+
+```bash
+# Add the NUR channel.
+nix-channel --add https://github.com/nix-community/NUR/archive/main.tar.gz nur
+nix-channel --update
+
+# Get Crush in a Nix shell.
+nix-shell -p '(import <nur> { pkgs = import <nixpkgs> {}; }).repos.charmbracelet.crush'
+```
+
+### NixOS & Home Manager Module Usage via NUR
+
+Crush provides NixOS and Home Manager modules via NUR.
+You can use these modules directly in your flake by importing them from NUR. Since it auto detects whether its a home manager or nixos context you can use the import the exact same way :)
+
+```nix
+{
+  inputs = {
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nur.url = "github:nix-community/NUR";
+  };
+
+  outputs = { self, nixpkgs, nur, ... }: {
+    nixosConfigurations.your-hostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+      modules = [
+        nur.modules.nixos.default
+        nur.repos.charmbracelet.modules.crush
+        {
+          programs.crush = {
+            enable = true;
+            settings = {
+              providers = {
+                openai = {
+                  id = "openai";
+                  name = "OpenAI";
+                  base_url = "https://api.openai.com/v1";
+                  type = "openai";
+                  api_key = "sk-fake123456789abcdef...";
+                  models = [
+                    {
+                      id = "gpt-4";
+                      name = "GPT-4";
+                    }
+                  ];
+                };
+              };
+              lsp = {
+                go = { command = "gopls"; enabled = true; };
+                nix = { command = "nil"; enabled = true; };
+              };
+              options = {
+                context_paths = [ "/etc/nixos/configuration.nix" ];
+                tui = { compact_mode = true; };
+                debug = false;
+              };
+            };
+          };
+        }
+      ];
+    };
+  };
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Debian/Ubuntu</strong></summary>
+
+```bash
+sudo mkdir -p /etc/apt/keyrings
+curl -fsSL https://repo.charm.sh/apt/gpg.key | sudo gpg --dearmor -o /etc/apt/keyrings/charm.gpg
+echo "deb [signed-by=/etc/apt/keyrings/charm.gpg] https://repo.charm.sh/apt/ * *" | sudo tee /etc/apt/sources.list.d/charm.list
+sudo apt update && sudo apt install crush
+```
+
+</details>
+
+<details>
+<summary><strong>Fedora/RHEL</strong></summary>
+
+```bash
+echo '[charm]
+name=Charm
+baseurl=https://repo.charm.sh/yum/
+enabled=1
+gpgcheck=1
+gpgkey=https://repo.charm.sh/yum/gpg.key' | sudo tee /etc/yum.repos.d/charm.repo
+sudo yum install crush
+```
+
+</details>
+
+Or, download it:
+
+- [Packages][releases] are available in Debian and RPM formats
+- [Binaries][releases] are available for Linux, macOS, Windows, FreeBSD, OpenBSD, and NetBSD
+
+[releases]: https://github.com/charmbracelet/crush/releases
+
+Or just install it with Go:
+
+```
+go install github.com/charmbracelet/crush@latest
+```
+
+> [!WARNING]
+> Productivity may increase when using Crush and you may find yourself nerd
+> sniped when first using the application. If the symptoms persist, join the
+> [Discord][discord] and nerd snipe the rest of us.
+
+## Getting Started
+
+The quickest way to get started is to grab an API key for your preferred
+provider such as Anthropic, OpenAI, Groq, OpenRouter, or Vercel AI Gateway and just start
+Crush. You'll be prompted to enter your API key.
+
+That said, you can also set environment variables for preferred providers.
+
+| Environment Variable        | Provider                                           |
+| --------------------------- | -------------------------------------------------- |
+| `ANTHROPIC_API_KEY`         | Anthropic                                          |
+| `OPENAI_API_KEY`            | OpenAI                                             |
+| `VERCEL_API_KEY`            | Vercel AI Gateway                                  |
+| `GEMINI_API_KEY`            | Google Gemini                                      |
+| `SYNTHETIC_API_KEY`         | Synthetic                                          |
+| `ZAI_API_KEY`               | Z.ai                                               |
+| `HF_TOKEN`                  | Hugging Face Inference                             |
+| `CEREBRAS_API_KEY`          | Cerebras                                           |
+| `OPENROUTER_API_KEY`        | OpenRouter                                         |
+| `GROQ_API_KEY`              | Groq                                               |
+| `VERTEXAI_PROJECT`          | Google Cloud VertexAI (Gemini)                     |
+| `VERTEXAI_LOCATION`         | Google Cloud VertexAI (Gemini)                     |
+| `AWS_ACCESS_KEY_ID`         | Amazon Bedrock (Claude)                            |
+| `AWS_SECRET_ACCESS_KEY`     | Amazon Bedrock (Claude)                            |
+| `AWS_REGION`                | Amazon Bedrock (Claude)                            |
+| `AWS_PROFILE`               | Amazon Bedrock (Custom Profile)                    |
+| `AWS_BEARER_TOKEN_BEDROCK`  | Amazon Bedrock                                     |
+| `AZURE_OPENAI_API_ENDPOINT` | Azure OpenAI models                                |
+| `AZURE_OPENAI_API_KEY`      | Azure OpenAI models (optional when using Entra ID) |
+| `AZURE_OPENAI_API_VERSION`  | Azure OpenAI models                                |
+
+### By the Way
+
+Is there a provider you’d like to see in Crush? Is there an existing model that needs an update?
+
+Crush’s default model listing is managed in [Catwalk](https://github.com/charmbracelet/catwalk), a community-supported, open source repository of Crush-compatible models, and you’re welcome to contribute.
+
+<a href="https://github.com/charmbracelet/catwalk"><img width="174" height="174" alt="Catwalk Badge" src="https://github.com/user-attachments/assets/95b49515-fe82-4409-b10d-5beb0873787d" /></a>
+
+## Configuration
+
+Crush runs great with no configuration. That said, if you do need or want to
+customize Crush, configuration can be added either local to the project itself,
+or globally, with the following priority:
+
+1. `.crush.json`
+2. `crush.json`
+3. `$HOME/.config/crush/crush.json`
+
+Configuration itself is stored as a JSON object:
+
+```json
+{
+  "this-setting": { "this": "that" },
+  "that-setting": ["ceci", "cela"]
+}
+```
+
+As an additional note, Crush also stores ephemeral data, such as application state, in one additional location:
+
+```bash
+# Unix
+$HOME/.local/share/crush/crush.json
+
+# Windows
+%LOCALAPPDATA%\crush\crush.json
+```
+
+> [!TIP]
+> You can override the user and data config locations by setting:
+> * `CRUSH_GLOBAL_CONFIG`
+> * `CRUSH_GLOBAL_DATA`
+
+### LSPs
+
+Crush can use LSPs for additional context to help inform its decisions, just
+like you would. LSPs can be added manually like so:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "lsp": {
+    "go": {
+      "command": "gopls",
+      "env": {
+        "GOTOOLCHAIN": "go1.24.5"
+      }
+    },
+    "typescript": {
+      "command": "typescript-language-server",
+      "args": ["--stdio"]
+    },
+    "nix": {
+      "command": "nil"
+    }
+  }
+}
+```
+
+### MCPs
+
+Crush also supports Model Context Protocol (MCP) servers through three
+transport types: `stdio` for command-line servers, `http` for HTTP endpoints,
+and `sse` for Server-Sent Events. Environment variable expansion is supported
+using `$(echo $VAR)` syntax.
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "mcp": {
+    "filesystem": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/path/to/mcp-server.js"],
+      "timeout": 120,
+      "disabled": false,
+      "disabled_tools": ["some-tool-name"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "timeout": 120,
+      "disabled": false,
+      "disabled_tools": ["create_issue", "create_pull_request"],
+      "headers": {
+        "Authorization": "Bearer $GH_PAT"
+      }
+    },
+    "streaming-service": {
+      "type": "sse",
+      "url": "https://example.com/mcp/sse",
+      "timeout": 120,
+      "disabled": false,
+      "headers": {
+        "API-Key": "$(echo $API_KEY)"
+      }
+    }
+  }
+}
+```
+
+### Ignoring Files
+
+Crush respects `.gitignore` files by default, but you can also create a
+`.crushignore` file to specify additional files and directories that Crush
+should ignore. This is useful for excluding files that you want in version
+control but don't want Crush to consider when providing context.
+
+The `.crushignore` file uses the same syntax as `.gitignore` and can be placed
+in the root of your project or in subdirectories.
+
+### Allowing Tools
+
+By default, Crush will ask you for permission before running tool calls. If
+you'd like, you can allow tools to be executed without prompting you for
+permissions. Use this with care.
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "permissions": {
+    "allowed_tools": [
+      "view",
+      "ls",
+      "grep",
+      "edit",
+      "mcp_context7_get-library-doc"
+    ]
+  }
+}
+```
+
+You can also skip all permission prompts entirely by running Crush with the
+`--yolo` flag. Be very, very careful with this feature.
+
+### Disabling Built-In Tools
+
+If you'd like to prevent Crush from using certain built-in tools entirely, you
+can disable them via the `options.disabled_tools` list. Disabled tools are
+completely hidden from the agent.
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "disabled_tools": [
+      "bash",
+      "sourcegraph"
+    ]
+  }
+}
+```
+
+To disable tools from MCP servers, see the [MCP config section](#mcps).
+
+### Agent Skills
+
+Crush supports the [Agent Skills](https://agentskills.io) open standard for
+extending agent capabilities with reusable skill packages. Skills are folders
+containing a `SKILL.md` file with instructions that Crush can discover and
+activate on demand.
+
+Skills are discovered from:
+
+- `~/.config/crush/skills/` on Unix (default, can be overridden with `CRUSH_SKILLS_DIR`)
+- `%LOCALAPPDATA%\crush\skills\` on Windows (default, can be overridden with `CRUSH_SKILLS_DIR`)
+- Additional paths configured via `options.skills_paths`
+
+```jsonc
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "skills_paths": [
+      "~/.config/crush/skills", // Windows: "%LOCALAPPDATA%\\crush\\skills",
+      "./project-skills"
+    ]
+  }
+}
+```
+
+You can get started with example skills from [anthropics/skills](https://github.com/anthropics/skills):
+
+```bash
+# Unix
+mkdir -p ~/.config/crush/skills
+cd ~/.config/crush/skills
+git clone https://github.com/anthropics/skills.git _temp
+mv _temp/skills/* . && rm -rf _temp
+```
+
+```powershell
+# Windows (PowerShell)
+mkdir -Force "$env:LOCALAPPDATA\crush\skills"
+cd "$env:LOCALAPPDATA\crush\skills"
+git clone https://github.com/anthropics/skills.git _temp
+mv _temp/skills/* . ; rm -r -force _temp
+```
+
+### Initialization
+
+When you initialize a project, Crush analyzes your codebase and creates
+a context file that helps it work more effectively in future sessions.
+By default, this file is named `AGENTS.md`, but you can customize the
+name and location with the `initialize_as` option:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "initialize_as": "AGENTS.md"
+  }
+}
+```
+
+This is useful if you prefer a different naming convention or want to
+place the file in a specific directory (e.g., `CRUSH.md` or
+`docs/LLMs.md`). Crush will fill the file with project-specific context
+like build commands, code patterns, and conventions it discovered during
+initialization.
+
+### Attribution Settings
+
+By default, Crush adds attribution information to Git commits and pull requests
+it creates. You can customize this behavior with the `attribution` option:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "attribution": {
+      "trailer_style": "co-authored-by",
+      "generated_with": true
+    }
+  }
+}
+```
+
+- `trailer_style`: Controls the attribution trailer added to commit messages
+  (default: `assisted-by`)
+	- `assisted-by`: Adds `Assisted-by: [Model Name] via Crush <crush@charm.land>`
+	  (includes the model name)
+	- `co-authored-by`: Adds `Co-Authored-By: Crush <crush@charm.land>`
+	- `none`: No attribution trailer
+- `generated_with`: When true (default), adds `💘 Generated with Crush` line to
+  commit messages and PR descriptions
+
+### Custom Providers
+
+Crush supports custom provider configurations for both OpenAI-compatible and
+Anthropic-compatible APIs.
+
+> [!NOTE]
+> Note that we support two "types" for OpenAI. Make sure to choose the right one
+> to ensure the best experience!
+> * `openai` should be used when proxying or routing requests through OpenAI.
+> * `openai-compat` should be used when using non-OpenAI providers that have OpenAI-compatible APIs.
+
+#### OpenAI-Compatible APIs
+
+Here’s an example configuration for Deepseek, which uses an OpenAI-compatible
+API. Don't forget to set `DEEPSEEK_API_KEY` in your environment.
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "deepseek": {
+      "type": "openai-compat",
+      "base_url": "https://api.deepseek.com/v1",
+      "api_key": "$DEEPSEEK_API_KEY",
+      "models": [
+        {
+          "id": "deepseek-chat",
+          "name": "Deepseek V3",
+          "cost_per_1m_in": 0.27,
+          "cost_per_1m_out": 1.1,
+          "cost_per_1m_in_cached": 0.07,
+          "cost_per_1m_out_cached": 1.1,
+          "context_window": 64000,
+          "default_max_tokens": 5000
+        }
+      ]
+    }
+  }
+}
+```
+
+#### Anthropic-Compatible APIs
+
+Custom Anthropic-compatible providers follow this format:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "custom-anthropic": {
+      "type": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "api_key": "$ANTHROPIC_API_KEY",
+      "extra_headers": {
+        "anthropic-version": "2023-06-01"
+      },
+      "models": [
+        {
+          "id": "claude-sonnet-4-20250514",
+          "name": "Claude Sonnet 4",
+          "cost_per_1m_in": 3,
+          "cost_per_1m_out": 15,
+          "cost_per_1m_in_cached": 3.75,
+          "cost_per_1m_out_cached": 0.3,
+          "context_window": 200000,
+          "default_max_tokens": 50000,
+          "can_reason": true,
+          "supports_attachments": true
+        }
+      ]
+    }
+  }
+}
+```
+
+### Amazon Bedrock
+
+Crush currently supports running Anthropic models through Bedrock, with caching disabled.
+
+- A Bedrock provider will appear once you have AWS configured, i.e. `aws configure`
+- Crush also expects the `AWS_REGION` or `AWS_DEFAULT_REGION` to be set
+- To use a specific AWS profile set `AWS_PROFILE` in your environment, i.e. `AWS_PROFILE=myprofile crush`
+- Alternatively to `aws configure`, you can also just set `AWS_BEARER_TOKEN_BEDROCK`
+
+### Vertex AI Platform
+
+Vertex AI will appear in the list of available providers when `VERTEXAI_PROJECT` and `VERTEXAI_LOCATION` are set. You will also need to be authenticated:
+
+```bash
+gcloud auth application-default login
+```
+
+To add specific models to the configuration, configure as such:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "providers": {
+    "vertexai": {
+      "models": [
+        {
+          "id": "claude-sonnet-4@20250514",
+          "name": "VertexAI Sonnet 4",
+          "cost_per_1m_in": 3,
+          "cost_per_1m_out": 15,
+          "cost_per_1m_in_cached": 3.75,
+          "cost_per_1m_out_cached": 0.3,
+          "context_window": 200000,
+          "default_max_tokens": 50000,
+          "can_reason": true,
+          "supports_attachments": true
+        }
+      ]
+    }
+  }
+}
+```
+
+### Local Models
+
+Local models can also be configured via OpenAI-compatible API. Here are two common examples:
+
+#### Ollama
+
+```json
+{
+  "providers": {
+    "ollama": {
+      "name": "Ollama",
+      "base_url": "http://localhost:11434/v1/",
+      "type": "openai-compat",
+      "models": [
+        {
+          "name": "Qwen 3 30B",
+          "id": "qwen3:30b",
+          "context_window": 256000,
+          "default_max_tokens": 20000
+        }
+      ]
+    }
+  }
+}
+```
+
+#### LM Studio
+
+```json
+{
+  "providers": {
+    "lmstudio": {
+      "name": "LM Studio",
+      "base_url": "http://localhost:1234/v1/",
+      "type": "openai-compat",
+      "models": [
+        {
+          "name": "Qwen 3 30B",
+          "id": "qwen/qwen3-30b-a3b-2507",
+          "context_window": 256000,
+          "default_max_tokens": 20000
+        }
+      ]
+    }
+  }
+}
+```
+
+## Logging
+
+Sometimes you need to look at logs. Luckily, Crush logs all sorts of
+stuff. Logs are stored in `./.crush/logs/crush.log` relative to the project.
+
+The CLI also contains some helper commands to make perusing recent logs easier:
+
+```bash
+# Print the last 1000 lines
+crush logs
+
+# Print the last 500 lines
+crush logs --tail 500
+
+# Follow logs in real time
+crush logs --follow
+```
+
+Want more logging? Run `crush` with the `--debug` flag, or enable it in the
+config:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "debug": true,
+    "debug_lsp": true
+  }
+}
+```
+
+## Provider Auto-Updates
+
+By default, Crush automatically checks for the latest and greatest list of
+providers and models from [Catwalk](https://github.com/charmbracelet/catwalk),
+the open source Crush provider database. This means that when new providers and
+models are available, or when model metadata changes, Crush automatically
+updates your local configuration.
+
+### Disabling automatic provider updates
+
+For those with restricted internet access, or those who prefer to work in
+air-gapped environments, this might not be want you want, and this feature can
+be disabled.
+
+To disable automatic provider updates, set `disable_provider_auto_update` into
+your `crush.json` config:
+
+```json
+{
+  "$schema": "https://charm.land/crush.json",
+  "options": {
+    "disable_provider_auto_update": true
+  }
+}
+```
+
+Or set the `CRUSH_DISABLE_PROVIDER_AUTO_UPDATE` environment variable:
+
+```bash
+export CRUSH_DISABLE_PROVIDER_AUTO_UPDATE=1
+```
+
+### Manually updating providers
+
+Manually updating providers is possible with the `crush update-providers`
+command:
+
+```bash
+# Update providers remotely from Catwalk.
+crush update-providers
+
+# Update providers from a custom Catwalk base URL.
+crush update-providers https://example.com/
+
+# Update providers from a local file.
+crush update-providers /path/to/local-providers.json
+
+# Reset providers to the embedded version, embedded at crush at build time.
+crush update-providers embedded
+
+# For more info:
+crush update-providers --help
+```
+
+## Metrics
+
+Crush records pseudonymous usage metrics (tied to a device-specific hash),
+which maintainers rely on to inform development and support priorities. The
+metrics include solely usage metadata; prompts and responses are NEVER
+collected.
+
+Details on exactly what’s collected are in the source code ([here](https://github.com/charmbracelet/crush/tree/main/internal/event)
+and [here](https://github.com/charmbracelet/crush/blob/main/internal/llm/agent/event.go)).
+
+You can opt out of metrics collection at any time by setting the environment
+variable by setting the following in your environment:
+
+```bash
+export CRUSH_DISABLE_METRICS=1
+```
+
+Or by setting the following in your config:
+
+```json
+{
+  "options": {
+    "disable_metrics": true
+  }
+}
+```
+
+Crush also respects the `DO_NOT_TRACK` convention which can be enabled via
+`export DO_NOT_TRACK=1`.
+
+## Contributing
+
+See the [contributing guide](https://github.com/charmbracelet/crush?tab=contributing-ov-file#contributing).
+
+## Whatcha think?
+
+We’d love to hear your thoughts on this project. Need help? We gotchu. You can find us on:
+
+- [Twitter](https://twitter.com/charmcli)
+- [Slack](https://charm.land/slack)
+- [Discord][discord]
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Bluesky](https://bsky.app/profile/charm.land)
+
+[discord]: https://charm.land/discord
+
+## License
+
+[FSL-1.1-MIT](https://github.com/charmbracelet/crush/raw/main/LICENSE.md)
+
+---
+
+Part of [Charm](https://charm.land).
+
+<a href="https://charm.land/"><img alt="The Charm logo" width="400" src="https://stuff.charm.sh/charm-banner-next.jpg" /></a>
+
+<!--prettier-ignore-->
+Charm热爱开源 • Charm loves open source
+
+
+## Links discovered
+- [NUR](https://github.com/nix-community/NUR)
+- [Catwalk](https://github.com/charmbracelet/catwalk)
+- [Agent Skills](https://agentskills.io)
+- [anthropics/skills](https://github.com/anthropics/skills)
+- [here](https://github.com/charmbracelet/crush/tree/main/internal/event)
+- [here](https://github.com/charmbracelet/crush/blob/main/internal/llm/agent/event.go)
+- [contributing guide](https://github.com/charmbracelet/crush?tab=contributing-ov-file#contributing)
+- [Twitter](https://twitter.com/charmcli)
+- [Slack](https://charm.land/slack)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Bluesky](https://bsky.app/profile/charm.land)
+- [FSL-1.1-MIT](https://github.com/charmbracelet/crush/raw/main/LICENSE.md)
+- [Charm](https://charm.land)
+- [<img width="450" alt="Charm Crush Logo" src="https://github.com/user-attachments/assets/cf8ca3ce-8b02-43f0-9d0f-5a331488da4b" />](https://stuff.charm.sh/crush/charm-crush.png)
+- [<img src="https://img.shields.io/github/release/charmbracelet/crush" alt="Latest Release">](https://github.com/charmbracelet/crush/releases)
+- [<img src="https://github.com/charmbracelet/crush/actions/workflows/build.yml/badge.svg" alt="Build Status">](https://github.com/charmbracelet/crush/actions)
+- [<img width="174" height="174" alt="Catwalk Badge" src="https://github.com/user-attachments/assets/95b49515-fe82-4409-b10d-5beb0873787d" />](https://github.com/charmbracelet/catwalk)
+- [<img alt="The Charm logo" width="400" src="https://stuff.charm.sh/charm-banner-next.jpg" />](https://charm.land/)
+
+--- internal/cmd/stats/index.html ---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crush Usage Statistics</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+      {{.CSS}}
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header-wrapper">
+        <a href="https://charm.land/crush" class="header-link">
+          <div class="header-content">
+            <div class="header-svg">{{.Header}}</div>
+            <div class="heartbit-svg">{{.Heartbit}}</div>
+          </div>
+        </a>
+      </div>
+
+      <div class="header-info">
+        Generated by {{.Username}} for {{.ProjectName}} in {{.GeneratedAt}}.
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <h3>Total Sessions</h3>
+          <div class="value" id="total-sessions"></div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Messages</h3>
+          <div class="value" id="total-messages"></div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Tokens</h3>
+          <div class="value" id="total-tokens"></div>
+        </div>
+        <div class="stat-card">
+          <h3>Total Cost</h3>
+          <div class="value cost" id="total-cost"></div>
+        </div>
+        <div class="stat-card">
+          <h3>Tokens/Session</h3>
+          <div class="value" id="avg-tokens"></div>
+        </div>
+        <div class="stat-card">
+          <h3>Response Time</h3>
+          <div class="value" id="avg-response"></div>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card full-width">
+          <h2>Activity Heatmap</h2>
+          <div class="chart-container tall">
+            <canvas id="heatmapChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card full-width">
+          <h2>Activity (Last 30 Days)</h2>
+          <div class="chart-container tall">
+            <canvas id="recentActivityChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card full-width">
+          <h2>Tool Usage</h2>
+          <div class="chart-container tall">
+            <canvas id="toolChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-card">
+            <h2>Messages by Provider</h2>
+            <div class="chart-container">
+              <canvas id="providerPieChart"></canvas>
+            </div>
+          </div>
+
+          <div class="chart-card">
+            <h2>Token Distribution</h2>
+            <div class="chart-container">
+              <canvas id="tokenPieChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card full-width">
+          <h2>Usage by Model</h2>
+          <div class="chart-container tall">
+            <canvas id="modelChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-card full-width">
+          <h2>Daily Usage History</h2>
+          <div style="overflow-x: auto">
+            <table id="daily-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Sessions</th>
+                  <th>Prompt Tokens</th>
+                  <th>Completion Tokens</th>
+                  <th>Total Tokens</th>
+                  <th>Cost</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-container">
+      <div class="footer">{{.Footer}}</div>
+    </div>
+
+    <script>
+      const stats = {{.StatsJSON}};
+      {{.JS}}
+    </script>
+  </body>
+</html>
+
+
+## Links discovered
+- [<div class="header-content"> <div class="header-svg">{{.Header}}</div> <div class="heartbit-svg">{{.Heartbit}}</div> </div>](https://charm.land/crush)
+
+--- internal/ui/AGENTS.md ---
+# UI Development Instructions
+
+## General Guidelines
+- Never use commands to send messages when you can directly mutate children or state.
+- Keep things simple; do not overcomplicate.
+- Create files if needed to separate logic; do not nest models.
+- Always do IO in commands
+- Never change the model state inside of a command use messages and than update the state in the main loop
+
+## Architecture
+
+### Main Model (`model/ui.go`)
+Keep most of the logic and state in the main model. This is where:
+- Message routing happens
+- Focus and UI state is managed
+- Layout calculations are performed
+- Dialogs are orchestrated
+
+### Components Should Be Dumb
+Components should not handle bubbletea messages directly. Instead:
+- Expose methods for state changes
+- Return `tea.Cmd` from methods when side effects are needed
+- Handle their own rendering via `Render(width int) string`
+
+### Chat Logic (`model/chat.go`)
+Most chat-related logic belongs here. Individual chat items in `chat/` should be simple renderers that cache their output and invalidate when data changes (see `cachedMessageItem` in `chat/messages.go`).
+
+## Key Patterns
+
+### Composition Over Inheritance
+Use struct embedding for shared behaviors. See `chat/messages.go` for examples of reusable embedded structs for highlighting, caching, and focus.
+
+### Interfaces
+- List item interfaces are in `list/item.go`
+- Chat message interfaces are in `chat/messages.go`
+- Dialog interface is in `dialog/dialog.go`
+
+### Styling
+- All styles are defined in `styles/styles.go`
+- Access styles via `*common.Common` passed to components
+- Use semantic color fields rather than hardcoded colors
+
+### Dialogs
+- Implement the dialog interface in `dialog/dialog.go`
+- Return message types from `Update()` to signal actions to the main model
+- Use the overlay system for managing dialog lifecycle
+
+## File Organization
+- `model/` - Main UI model and major components (chat, sidebar, etc.)
+- `chat/` - Chat message item types and renderers
+- `dialog/` - Dialog implementations
+- `list/` - Generic list component with lazy rendering
+- `common/` - Shared utilities and the Common struct
+- `styles/` - All style definitions
+- `anim/` - Animation system
+- `logo/` - Logo rendering
+
+## Common Gotchas
+- Always account for padding/borders in width calculations
+- Use `tea.Batch()` when returning multiple commands
+- Pass `*common.Common` to components that need styles or app access
+
+
+--- internal/agent/templates/agent_tool.md ---
+Launch a new agent that has access to the following tools: GlobTool, GrepTool, LS, View. When you are searching for a keyword or file and are not confident that you will find the right match on the first try, use the Agent tool to perform the search for you.
+
+<usage>
+- If you are searching for a keyword like "config" or "logger", or for questions like "which file does X?", the Agent tool is strongly recommended
+- If you want to read a specific file path, use the View or GlobTool tool instead of the Agent tool, to find the match more quickly
+- If you are searching for a specific class definition like "class Foo", use the GlobTool tool instead, to find the match more quickly
+</usage>
+
+<usage_notes>
+1. Launch multiple agents concurrently whenever possible, to maximize performance; to do that, use a single message with multiple tool uses
+2. When the agent is done, it will return a single message back to you. The result returned by the agent is not visible to the user. To show the user the result, you should send a text message back to the user with a concise summary of the result.
+3. Each agent invocation is stateless. You will not be able to send additional messages to the agent, nor will the agent be able to communicate with you outside of its final report. Therefore, your prompt should contain a highly detailed task description for the agent to perform autonomously and you should specify exactly what information the agent should return back to you in its final and only message to you.
+4. The agent's outputs should generally be trusted
+5. IMPORTANT: The agent can not use Bash, Replace, Edit, so can not modify files. If you want to use these tools, use them directly instead of going through the agent.
+</usage_notes>
+
+
+--- internal/agent/templates/agentic_fetch.md ---
+Fetches content from a URL or searches the web, then processes it using an AI model to extract information or answer questions.
+
+<when_to_use>
+Use this tool when you need to:
+- Search the web for information (omit the url parameter)
+- Extract specific information from a webpage (provide a url)
+- Answer questions about web content
+- Summarize or analyze web pages
+- Research topics by searching and following links
+
+DO NOT use this tool when:
+- You just need raw content without analysis (use fetch instead - faster and cheaper)
+- You want direct access to API responses or JSON (use fetch instead)
+- You don't need the content processed or interpreted (use fetch instead)
+</when_to_use>
+
+<usage>
+- Provide a prompt describing what information you want to find or extract (required)
+- Optionally provide a URL to fetch and analyze specific content
+- If no URL is provided, the agent will search the web to find relevant information
+- The tool spawns a sub-agent with web_search, web_fetch, and analysis tools
+- Returns the agent's response about the content
+</usage>
+
+<parameters>
+- prompt: What information you want to find or extract (required)
+- url: The URL to fetch content from (optional - if not provided, agent will search the web)
+</parameters>
+
+<usage_notes>
+- IMPORTANT: If an MCP-provided web fetch tool is available, prefer using that tool instead of this one, as it may have fewer restrictions. All MCP-provided tools start with "mcp_".
+- When using URL mode: The URL must be a fully-formed valid URL. HTTP URLs will be automatically upgraded to HTTPS.
+- When searching: Just provide the prompt describing what you want to find - the agent will search and fetch relevant pages.
+- The sub-agent can perform multiple searches and fetch multiple pages to gather comprehensive information.
+- This tool is read-only and does not modify any files.
+- Results will be summarized if the content is very large.
+- This tool uses AI processing and costs more tokens than the simple fetch tool.
+</usage_notes>
+
+<limitations>
+- Max response size: 5MB per page
+- Only supports HTTP and HTTPS protocols
+- Cannot handle authentication or cookies
+- Some websites may block automated requests
+- Uses additional tokens for AI processing
+- Search results depend on DuckDuckGo availability
+</limitations>
+
+<tips>
+- Be specific in your prompt about what information you want
+- For research tasks, omit the URL and let the agent search and follow relevant links
+- For complex pages, ask the agent to focus on specific sections
+- The agent has access to web_search, web_fetch, grep, and view tools
+- If you just need raw content, use the fetch tool instead to save tokens
+</tips>
+
+<examples>
+Search for information:
+- prompt: "What are the main new features in the latest Python release?"
+
+Fetch and analyze a URL:
+- url: "https://docs.python.org/3/whatsnew/3.12.html"
+- prompt: "Summarize the key changes in Python 3.12"
+</examples>
+
+
+--- internal/cmd/stats/AGENTS.md ---
+# General Guidelines
+
+- always format CSS, HTML, and JS files with `prettier`
+
+
+--- internal/agent/tools/diagnostics.md ---
+Get diagnostics for file and/or project.
+
+<usage>
+- Provide file path to get diagnostics for that file
+- Leave path empty to get diagnostics for entire project
+- Results displayed in structured format with severity levels
+</usage>
+
+<features>
+- Displays errors, warnings, and hints
+- Groups diagnostics by severity
+- Provides detailed information about each diagnostic
+</features>
+
+<limitations>
+- Results limited to diagnostics provided by LSP clients
+- May not cover all possible code issues
+- Does not provide suggestions for fixing issues
+</limitations>
+
+<tips>
+- Use with other tools for comprehensive code review
+- Combine with LSP client for real-time diagnostics
+</tips>
+
+
+--- internal/agent/tools/download.md ---
+Downloads binary data from URL and saves to local file.
+
+<usage>
+- Provide URL to download from
+- Specify local file path where content should be saved
+- Optional timeout for request
+</usage>
+
+<features>
+- Downloads any file type (binary or text)
+- Auto-creates parent directories if missing
+- Handles large files efficiently with streaming
+- Sets reasonable timeouts to prevent hanging
+- Validates input parameters before requests
+</features>
+
+<limitations>
+- Max file size: 100MB
+- Only supports HTTP and HTTPS protocols
+- Cannot handle authentication or cookies
+- Some websites may block automated requests
+- Will overwrite existing files without warning
+</limitations>
+
+<tips>
+- Use absolute paths or paths relative to working directory
+- Set appropriate timeouts for large files or slow connections
+</tips>
+
+
+--- internal/agent/tools/edit.md ---
+Edits files by replacing text, creating new files, or deleting content. For moving/renaming use Bash 'mv'. For large edits use Write tool.
+
+<prerequisites>
+1. Use View tool to understand file contents and context
+2. For new files: Use LS tool to verify parent directory exists
+3. **CRITICAL**: Note exact whitespace, indentation, and formatting from View output
+</prerequisites>
+
+<parameters>
+1. file_path: Absolute path to file (required)
+2. old_string: Text to replace (must match exactly including whitespace/indentation)
+3. new_string: Replacement text
+4. replace_all: Replace all occurrences (default false)
+</parameters>
+
+<special_cases>
+
+- Create file: provide file_path + new_string, leave old_string empty
+- Delete content: provide file_path + old_string, leave new_string empty
+  </special_cases>
+
+<critical_requirements>
+EXACT MATCHING: The tool is extremely literal. Text must match **EXACTLY**
+
+- Every space and tab character
+- Every blank line
+- Every newline character
+- Indentation level (count the spaces/tabs)
+- Comment spacing (`// comment` vs `//comment`)
+- Brace positioning (`func() {` vs `func(){`)
+
+Common failures:
+
+```
+Expected: "    func foo() {"     (4 spaces)
+Provided: "  func foo() {"       (2 spaces) ❌ FAILS
+
+Expected: "}\n\nfunc bar() {"    (2 newlines)
+Provided: "}\nfunc bar() {"      (1 newline) ❌ FAILS
+
+Expected: "// Comment"           (space after //)
+Provided: "//Comment"            (no space) ❌ FAILS
+```
+
+UNIQUENESS (when replace_all=false): old_string MUST uniquely identify target instance
+
+- Include 3-5 lines context BEFORE and AFTER change point
+- Include exact whitespace, indentation, surrounding code
+- If text appears multiple times, add more context to make it unique
+
+SINGLE INSTANCE: Tool changes ONE instance when replace_all=false
+
+- For multiple instances: set replace_all=true OR make separate calls with unique context
+- Plan calls carefully to avoid conflicts
+
+VERIFICATION BEFORE USING: Before every edit
+
+1. View the file and locate exact target location
+2. Check how many instances of target text exist
+3. Copy the EXACT text including all whitespace
+4. Verify you have enough context for unique identification
+5. Double-check indentation matches (count spaces/tabs)
+6. Plan separate calls or use replace_all for multiple changes
+   </critical_requirements>
+
+<warnings>
+Tool fails if:
+- old_string matches multiple locations and replace_all=false
+- old_string doesn't match exactly (including whitespace)
+- Insufficient context causes wrong instance change
+- Indentation is off by even one space
+- Missing or extra blank lines
+- Wrong tabs vs spaces
+</warnings>
+
+<recovery_steps>
+If you get "old_string not found in file":
+
+1. **View the file again** at the specific location
+2. **Copy more context** - include entire function if needed
+3. **Check whitespace**:
+   - Count indentation spaces/tabs
+   - Look for blank lines
+   - Check for trailing spaces
+4. **Verify character-by-character** that your old_string matches
+5. **Never guess** - always View the file to get exact text
+   </recovery_steps>
+
+<best_practices>
+
+- Ensure edits result in correct, idiomatic code
+- Don't leave code in broken state
+- Use absolute file paths (starting with /)
+- Use forward slashes (/) for cross-platform compatibility
+- Multiple edits to same file: send all in single message with multiple tool calls
+- **When in doubt, include MORE context rather than less**
+- Match the existing code style exactly (spaces, tabs, blank lines)
+  </best_practices>
+
+<whitespace_checklist>
+Before submitting an edit, verify:
+
+- [ ] Viewed the file first
+- [ ] Counted indentation spaces/tabs
+- [ ] Included blank lines if they exist
+- [ ] Matched brace/bracket positioning
+- [ ] Included 3-5 lines of surrounding context
+- [ ] Verified text appears exactly once (or using replace_all)
+- [ ] Copied text character-for-character, not approximated
+      </whitespace_checklist>
+
+<examples>
+✅ Correct: Exact match with context
+
+```
+old_string: "func ProcessData(input string) error {\n    if input == \"\" {\n        return errors.New(\"empty input\")\n    }\n    return nil\n}"
+
+new_string: "func ProcessData(input string) error {\n    if input == \"\" {\n        return errors.New(\"empty input\")\n    }\n    // New validation\n    if len(input) > 1000 {\n        return errors.New(\"input too long\")\n    }\n    return nil\n}"
+```
+
+❌ Incorrect: Not enough context
+
+```
+old_string: "return nil"  // Appears many times!
+```
+
+❌ Incorrect: Wrong indentation
+
+```
+old_string: "  if input == \"\" {"  // 2 spaces
+// But file actually has:        "    if input == \"\" {"  // 4 spaces
+```
+
+✅ Correct: Including context to make unique
+
+```
+old_string: "func ProcessData(input string) error {\n    if input == \"\" {\n        return errors.New(\"empty input\")\n    }\n    return nil"
+```
+
+</examples>
+
+<windows_notes>
+
+- Forward slashes work throughout (C:/path/file)
+- File permissions handled automatically
+- Line endings converted automatically (\n ↔ \r\n)
+  </windows_notes>
+
+
+--- internal/agent/tools/fetch.md ---
+Fetches raw content from URL and returns it in specified format without any AI processing.
+
+<when_to_use>
+Use this tool when you need:
+- Raw, unprocessed content from a URL
+- Direct access to API responses or JSON data
+- HTML/text/markdown content without interpretation
+- Simple, fast content retrieval without analysis
+- To save tokens by avoiding AI processing
+
+DO NOT use this tool when you need to:
+- Extract specific information from a webpage (use agentic_fetch instead)
+- Answer questions about web content (use agentic_fetch instead)
+- Analyze or summarize web pages (use agentic_fetch instead)
+</when_to_use>
+
+<usage>
+- Provide URL to fetch content from
+- Specify desired output format (text, markdown, or html)
+- Optional timeout for request
+</usage>
+
+<features>
+- Supports three output formats: text, markdown, html
+- Auto-handles HTTP redirects
+- Fast and lightweight - no AI processing
+- Sets reasonable timeouts to prevent hanging
+- Validates input parameters before requests
+</features>
+
+<limitations>
+- Max response size: 5MB
+- Only supports HTTP and HTTPS protocols
+- Cannot handle authentication or cookies
+- Some websites may block automated requests
+- Returns raw content only - no analysis or extraction
+</limitations>
+
+<tips>
+- Use text format for plain text content or simple API responses
+- Use markdown format for content that should be rendered with formatting
+- Use html format when you need raw HTML structure
+- Set appropriate timeouts for potentially slow websites
+- If the user asks to analyze or extract from a page, use agentic_fetch instead
+</tips>
+
+
+--- internal/agent/tools/glob.md ---
+Fast file pattern matching tool that finds files by name/pattern, returning paths sorted by modification time (newest first).
+
+<usage>
+- Provide glob pattern to match against file paths
+- Optional starting directory (defaults to current working directory)
+- Results sorted with most recently modified files first
+</usage>
+
+<pattern_syntax>
+- '\*' matches any sequence of non-separator characters
+- '\*\*' matches any sequence including separators
+- '?' matches any single non-separator character
+- '[...]' matches any character in brackets
+- '[!...]' matches any character not in brackets
+</pattern_syntax>
+
+<examples>
+- '*.js' - JavaScript files in current directory
+- '**/*.js' - JavaScript files in any subdirectory
+- 'src/**/*.{ts,tsx}' - TypeScript files in src directory
+- '*.{html,css,js}' - HTML, CSS, and JS files
+</examples>
+
+<limitations>
+- Results limited to 100 files (newest first)
+- Does not search file contents (use Grep for that)
+- Hidden files (starting with '.') skipped
+</limitations>
+
+<cross_platform>
+- Path separators handled automatically (/ and \ work)
+- Uses ripgrep (rg) if available, otherwise Go implementation
+- Patterns should use forward slashes (/) for compatibility
+</cross_platform>
+
+<tips>
+- Combine with Grep: find files with Glob, search contents with Grep
+- For iterative exploration requiring multiple searches, consider Agent tool
+- Check if results truncated and refine pattern if needed
+</tips>

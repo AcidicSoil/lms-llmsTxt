@@ -1,0 +1,1052 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- testdata/example.md ---
+Glamour
+=======
+
+A casual introduction. 你好世界!
+
+## Let’s talk about artichokes
+
+The _artichoke_ is mentioned as a garden plant in the 8th century BC by Homer
+**and** Hesiod. The naturally occurring variant of the artichoke, the cardoon,
+which is native to the Mediterranean area, also has records of use as a food
+among the ancient Greeks and Romans. Pliny the Elder mentioned growing of
+_carduus_ in Carthage and Cordoba.
+
+> He holds him with a skinny hand,
+> ‘There was a ship,’ quoth he.
+> ‘Hold off! unhand me, grey-beard loon!’
+> An artichoke, dropt he.
+
+--Samuel Taylor Coleridge, [The Rime of the Ancient Mariner][rime]
+
+[rime]: https://poetryfoundation.org/poems/43997/
+
+## Other foods worth mentioning
+
+1. Carrots
+1. Celery
+1. Tacos
+    * Soft
+    * Hard
+1. Cucumber
+
+## Things to eat today
+
+* [x] Carrots
+* [x] Ramen
+* [ ] Currywurst
+
+### Power levels of the aforementioned foods
+
+| Name       | Power | Comment          |
+| ---        | ---   | ---              |
+| Carrots    | 9001  | It’s over 9000?! |
+| Ramen      | 9002  | Also over 9000?! |
+| Currywurst | 10000 | What?!           |
+
+## Currying Artichokes
+
+Here’s a bit of code in [Haskell](https://haskell.org), because we are fancy.
+Remember that to compile Haskell you’ll need `ghc`.
+
+```haskell
+module Main where
+
+import Data.List (intercalate)
+
+hello :: String -> String
+hello s = "Hello, " <> s <> "."
+
+main :: IO ()
+main = putStrLn
+     $ intercalate "\n"
+     $ hello <$> [ "artichoke", "alcachofa" ]
+```
+
+***
+
+_Alcachofa_, if you were wondering, is artichoke in Spanish.
+
+
+## Links discovered
+- [Haskell](https://haskell.org)
+
+--- examples/artichokes/artichokes.md ---
+Glamour
+=======
+
+A casual introduction. 你好世界!
+
+## Let’s talk about artichokes
+
+The _artichoke_ is mentioned as a garden plant in the 8th century BC by Homer
+**and** Hesiod. The naturally occurring variant of the artichoke, the cardoon,
+which is native to the Mediterranean area, also has records of use as a food
+among the ancient Greeks and Romans. Pliny the Elder mentioned growing of
+_carduus_ in Carthage and Cordoba.
+
+> He holds him with a skinny hand,
+> ‘There was a ship,’ quoth he.
+> ‘Hold off! unhand me, grey-beard loon!’
+> An artichoke, dropt he.
+
+--Samuel Taylor Coleridge, [The Rime of the Ancient Mariner][rime]
+
+[rime]: https://poetryfoundation.org/poems/43997/
+
+## Other foods worth mentioning
+
+1. Carrots
+1. Celery
+1. Tacos
+    * Soft
+    * Hard
+1. Cucumber
+
+## Things to eat today
+
+* [x] Carrots
+* [x] Ramen
+* [ ] Currywurst
+
+### Power levels of the aforementioned foods
+
+| Name       | Power | Comment          |
+| ---        | ---   | ---              |
+| Carrots    | 9001  | It’s over 9000?! |
+| Ramen      | 9002  | Also over 9000?! |
+| Currywurst | 10000 | What?!           |
+
+## Currying Artichokes
+
+Here’s a bit of code in [Haskell](https://haskell.org), because we are fancy.
+Remember that to compile Haskell you’ll need `ghc`.
+
+```haskell
+module Main where
+
+import Data.List (intercalate)
+
+hello :: String -> String
+hello s = "Hello, " <> s <> "."
+
+main :: IO ()
+main = putStrLn
+     $ intercalate "\n"
+     $ hello <$> [ "artichoke", "alcachofa" ]
+```
+
+***
+
+_Alcachofa_, if you were wondering, is artichoke in Spanish.
+
+
+## Links discovered
+- [Haskell](https://haskell.org)
+
+--- styles/examples/block_quote.md ---
+> First line of quote
+> Second line
+
+
+--- styles/examples/code.md ---
+This is a `code`.
+
+
+--- styles/examples/code_block.md ---
+```
+This is a code block.
+```
+
+
+--- styles/examples/emoji.md ---
+:octopus: :zap: :cat: = :heart:
+
+
+--- styles/examples/emph.md ---
+This text is *emphasized*.
+
+
+--- styles/examples/enumeration.md ---
+1. First Item
+2. Second Item
+
+
+--- styles/examples/heading.md ---
+# h1
+
+## h2
+
+### h3
+
+
+--- styles/examples/hr.md ---
+---
+
+
+--- CONTRIBUTING.md ---
+# Contributing
+
+Contributions are welcome!
+
+Please submit a pull request for minor changes and submit issues for major changes for discussions.
+
+## Testing
+
+When providing a new feature or bug fix, please provide tests that demonstrate the issue along with your fix.
+
+### Golden Files
+
+If golden files need to be updated, you can do so with `-update`.
+
+Usage: `go test ./pkg/... -update`.
+
+## Themes
+
+New styles need to be implemented in `styles/<style-name>.go`, and then `go generate
+./...` will create the JSON files from it.
+
+You can look up all references of another theme (e.g. Dracula), and add your
+theme accordingly.
+
+
+--- README.md ---
+# Glamour
+
+<p>
+    <img src="https://github.com/user-attachments/assets/23aabf2a-8bd8-4e7b-bb50-993bce32541d" width="300" alt="Glamour Title Treatment"><br>
+    <a href="https://github.com/charmbracelet/glamour/releases"><img src="https://img.shields.io/github/release/charmbracelet/glamour.svg" alt="Latest Release"></a>
+    <a href="https://pkg.go.dev/github.com/charmbracelet/glamour?tab=doc"><img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc"></a>
+    <a href="https://github.com/charmbracelet/glamour/actions"><img src="https://github.com/charmbracelet/glamour/workflows/build/badge.svg" alt="Build Status"></a>
+    <a href="https://coveralls.io/github/charmbracelet/glamour?branch=master"><img src="https://coveralls.io/repos/github/charmbracelet/glamour/badge.svg?branch=master" alt="Coverage Status"></a>
+    <a href="https://goreportcard.com/report/charmbracelet/glamour"><img src="https://goreportcard.com/badge/charmbracelet/glamour" alt="Go ReportCard"></a>
+</p>
+
+Stylesheet-based markdown rendering for your CLI apps.
+
+<img width="845" src="https://github.com/user-attachments/assets/ec2ead40-c467-48cc-b6a8-f0f13709eeab" alt="Glamour example">
+
+`glamour` lets you render [markdown](https://en.wikipedia.org/wiki/Markdown)
+documents & templates on [ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)
+compatible terminals. You can create your own stylesheet or simply use one of
+the stylish defaults.
+
+## Usage
+
+```go
+import "github.com/charmbracelet/glamour"
+
+in := `# Hello World
+
+This is a simple example of Markdown rendering with Glamour!
+Check out the [other examples](https://github.com/charmbracelet/glamour/tree/master/examples) too.
+
+Bye!
+`
+
+out, err := glamour.Render(in, "dark")
+fmt.Print(out)
+```
+
+<img src="https://github.com/charmbracelet/glamour/raw/master/examples/helloworld/helloworld.png" width="600" alt="Hello World example">
+
+### Custom Renderer
+
+```go
+import "github.com/charmbracelet/glamour"
+
+r, _ := glamour.NewTermRenderer(
+    // detect background color and pick either the default dark or light theme
+    glamour.WithAutoStyle(),
+    // wrap output at specific width (default is 80)
+    glamour.WithWordWrap(40),
+)
+
+out, err := r.Render(in)
+fmt.Print(out)
+```
+
+## Styles
+
+You can find all available default styles in our [gallery](https://github.com/charmbracelet/glamour/tree/master/styles/gallery).
+Want to create your own style? [Learn how!](https://github.com/charmbracelet/glamour/tree/master/styles)
+
+There are a few options for using a custom style:
+
+1. Call `glamour.Render(inputText, "desiredStyle")`
+1. Set the `GLAMOUR_STYLE` environment variable to your desired default style or a file location for a style and call `glamour.RenderWithEnvironmentConfig(inputText)`
+1. Set the `GLAMOUR_STYLE` environment variable and pass `glamour.WithEnvironmentConfig()` to your custom renderer
+
+## Glamourous Projects
+
+Check out these projects, which use `glamour`:
+
+- [Glow](https://github.com/charmbracelet/glow), a markdown renderer for
+  the command-line.
+- [GitHub CLI](https://github.com/cli/cli), GitHub’s official command line tool.
+- [GitLab CLI](https://gitlab.com/gitlab-org/cli), GitLab's official command line tool.
+- [Gitea CLI](https://gitea.com/gitea/tea), Gitea's official command line tool.
+- [Meteor](https://github.com/odpf/meteor), an easy-to-use, plugin-driven metadata collection framework.
+
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/glamour/contribute
+
+## Feedback
+
+We’d love to hear your thoughts on this project. Feel free to drop us a note!
+
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
+
+## License
+
+[MIT](https://github.com/charmbracelet/glamour/raw/master/LICENSE)
+
+---
+
+Part of [Charm](https://charm.sh).
+
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400"></a>
+
+Charm热爱开源 • Charm loves open source
+
+
+## Links discovered
+- [markdown](https://en.wikipedia.org/wiki/Markdown)
+- [ANSI](https://en.wikipedia.org/wiki/ANSI_escape_code)
+- [other examples](https://github.com/charmbracelet/glamour/tree/master/examples)
+- [gallery](https://github.com/charmbracelet/glamour/tree/master/styles/gallery)
+- [Learn how!](https://github.com/charmbracelet/glamour/tree/master/styles)
+- [Glow](https://github.com/charmbracelet/glow)
+- [GitHub CLI](https://github.com/cli/cli)
+- [GitLab CLI](https://gitlab.com/gitlab-org/cli)
+- [Gitea CLI](https://gitea.com/gitea/tea)
+- [Meteor](https://github.com/odpf/meteor)
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
+- [MIT](https://github.com/charmbracelet/glamour/raw/master/LICENSE)
+- [Charm](https://charm.sh)
+- [<img src="https://img.shields.io/github/release/charmbracelet/glamour.svg" alt="Latest Release">](https://github.com/charmbracelet/glamour/releases)
+- [<img src="https://godoc.org/github.com/golang/gddo?status.svg" alt="GoDoc">](https://pkg.go.dev/github.com/charmbracelet/glamour?tab=doc)
+- [<img src="https://github.com/charmbracelet/glamour/workflows/build/badge.svg" alt="Build Status">](https://github.com/charmbracelet/glamour/actions)
+- [<img src="https://coveralls.io/repos/github/charmbracelet/glamour/badge.svg?branch=master" alt="Coverage Status">](https://coveralls.io/github/charmbracelet/glamour?branch=master)
+- [<img src="https://goreportcard.com/badge/charmbracelet/glamour" alt="Go ReportCard">](https://goreportcard.com/report/charmbracelet/glamour)
+- [<img alt="The Charm logo" src="https://stuff.charm.sh/charm-badge.jpg" width="400">](https://charm.sh/)
+
+--- styles/README.md ---
+# Glamour Style Guide
+
+The JSON files in this directory are generated from the default styles. To
+re-generate them, run:
+
+    go generate ..
+
+## Block Elements
+
+Block elements contain other elements and are rendered around them. All block
+elements support the following style settings:
+
+| Attribute        | Value  | Description                                                  |
+| ---------------- | ------ | ------------------------------------------------------------ |
+| block_prefix     | string | Printed before the block's first element (in parent's style) |
+| block_suffix     | string | Printed after the block's last element (in parent's style)   |
+| prefix           | string | Printed before the block's first element                     |
+| suffix           | string | Printed after the block's last element                       |
+| indent           | number | Specifies the indentation of the block                       |
+| indent_token     | string | Specifies the indentation format                             |
+| margin           | number | Specifies the margin around the block                        |
+| color            | color  | Defines the default text color for the block                 |
+| background_color | color  | Defines the default background color for the block           |
+
+Elements inside a block inherit the block's following style settings:
+
+| Attribute        | Value | Description                                        |
+| ---------------- | ----- | -------------------------------------------------- |
+| color            | color | Defines the default text color for the block       |
+| background_color | color | Defines the default background color for the block |
+| bold             | bool  | Increases text intensity                           |
+| faint            | bool  | Decreases text intensity                           |
+| italic           | bool  | Prints the text in italic                          |
+| crossed_out      | bool  | Enables strikethrough as text decoration           |
+| underline        | bool  | Enables underline as text decoration               |
+| overlined        | bool  | Enables overline as text decoration                |
+| blink            | bool  | Enables blinking text                              |
+| conceal          | bool  | Conceals / hides the text                          |
+| inverse          | bool  | Swaps fore- & background colors                    |
+
+### document
+
+The `document` element represents the markdown's body.
+
+#### Example
+
+Style:
+
+```json
+"document": {
+    "indent": 2,
+    "background_color": "234",
+    "block_prefix": "\n",
+    "block_suffix": "\n"
+}
+```
+
+---
+
+### paragraph
+
+The `paragraph` element represents a paragraph in the document.
+
+#### Example
+
+Style:
+
+```json
+"paragraph": {
+    "margin": 4,
+    "color": "15",
+    "background_color": "235"
+}
+```
+
+---
+
+### heading
+
+The `heading` element represents a heading.
+
+### h1 - h6
+
+The `h1` to `h6` elements represent headings. `h1` defines the most important
+heading, `h6` the least important heading. Undefined attributes are inherited
+from the `heading` element.
+
+#### Example
+
+Markdown:
+
+```markdown
+# h1
+
+## h2
+
+### h3
+```
+
+Style:
+
+```json
+"heading": {
+    "color": "15",
+    "background_color": "57"
+},
+"h1": {
+    "prefix": "=> ",
+    "suffix": " <=",
+    "margin": 2,
+    "bold": true,
+    "background_color": "69"
+},
+"h2": {
+    "prefix": "## ",
+    "margin": 4
+},
+"h3": {
+    "prefix": "### ",
+    "margin": 6
+}
+```
+
+Output:
+
+![Heading Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/heading.png)
+
+---
+
+### block_quote
+
+The `block_quote` element represents a quote.
+
+#### Example
+
+Style:
+
+```json
+"block_quote": {
+    "color": "200",
+    "indent": 1,
+    "indent_token": "=> "
+}
+```
+
+Output:
+
+![Block Quote Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/block_quote.png)
+
+---
+
+### list
+
+The `list` element represents a list in the document.
+
+| Attribute    | Value  | Description                                |
+| ------------ | ------ | ------------------------------------------ |
+| level_indent | number | Specifies the indentation for nested lists |
+
+#### Example
+
+Style:
+
+```json
+"list": {
+    "color": "15",
+    "background_color": "52",
+    "level_indent": 4
+}
+```
+
+---
+
+### code_block
+
+The `code_block` element represents a block of code.
+
+| Attribute | Value  | Description                                                     |
+| --------- | ------ | --------------------------------------------------------------- |
+| theme     | string | Defines the [Chroma][chroma] theme used for syntax highlighting |
+
+[chroma]: https://github.com/alecthomas/chroma
+
+#### Example
+
+Style:
+
+```json
+"code_block": {
+    "color": "200",
+    "theme": "solarized-dark"
+}
+```
+
+Output:
+
+![Code Block Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/code_block.png)
+
+---
+
+### table
+
+The `table` element represents a table of data.
+
+#### Example
+
+Markdown:
+
+```markdown
+| Label  | Value |
+| ------ | ----- |
+| First  | foo   |
+| Second | bar   |
+```
+
+Style:
+
+```json
+"table": {
+    "margin": 4
+}
+```
+
+Output:
+
+![Table Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/table.png)
+
+## Inline Elements
+
+All inline elements support the following style settings:
+
+| Attribute        | Value  | Description                                           |
+| ---------------- | ------ | ----------------------------------------------------- |
+| block_prefix     | string | Printed before the element (in parent's style)        |
+| block_suffix     | string | Printed after the element (in parent's style)         |
+| prefix           | string | Printed before the element                            |
+| suffix           | string | Printed after the element                             |
+| color            | color  | Defines the default text color for the document       |
+| background_color | color  | Defines the default background color for the document |
+| bold             | bool   | Increases text intensity                              |
+| faint            | bool   | Decreases text intensity                              |
+| italic           | bool   | Prints the text in italic                             |
+| crossed_out      | bool   | Enables strikethrough as text decoration              |
+| underline        | bool   | Enables underline as text decoration                  |
+| overlined        | bool   | Enables overline as text decoration                   |
+| blink            | bool   | Enables blinking text                                 |
+| conceal          | bool   | Conceals / hides the text                             |
+| inverse          | bool   | Swaps fore- & background colors                       |
+
+### text
+
+The `text` element represents a block of text.
+
+#### Example
+
+Style:
+
+```json
+"text": {
+    "bold": true,
+    "color": "15",
+    "background_color": "57"
+}
+```
+
+---
+
+### item
+
+The `item` element represents an item in a list.
+
+#### Example
+
+Markdown:
+
+```markdown
+- First Item
+    - Nested List Item
+- Second Item
+```
+
+Style:
+
+```json
+"item": {
+    "block_prefix": "• "
+}
+```
+
+Output:
+
+![List Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/list.png)
+
+---
+
+### enumeration
+
+The `enumeration` element represents an item in an ordered list.
+
+#### Example
+
+Markdown:
+
+```markdown
+1. First Item
+2. Second Item
+```
+
+Style:
+
+```json
+"enumeration": {
+    "block_prefix": ". "
+}
+```
+
+Output:
+
+![Enumeration Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/enumeration.png)
+
+---
+
+### task
+
+The `task` element represents a task item.
+
+| Attribute | Value  | Description                 |
+| --------- | ------ | --------------------------- |
+| ticked    | string | Prefix for finished tasks   |
+| unticked  | string | Prefix for unfinished tasks |
+
+#### Example
+
+Markdown:
+
+```markdown
+- [x] Finished Task
+- [ ] Outstanding Task
+```
+
+Style:
+
+```json
+"task": {
+    "ticked": "✓ ",
+    "unticked": "✗ "
+}
+```
+
+Output:
+
+![Task Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/task.png)
+
+---
+
+### link
+
+The `link` element represents a link.
+
+#### Example
+
+Markdown:
+
+```markdown
+This is a [link](https://charm.sh).
+```
+
+Style:
+
+```json
+"link": {
+    "color": "123",
+    "underline": true,
+    "block_prefix": "(",
+    "block_suffix": ")"
+}
+```
+
+Output:
+
+![Link Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/link.png)
+
+---
+
+### link_text
+
+The `link_text` element represents the text associated with a link.
+
+#### Example
+
+Style:
+
+```json
+"link_text": {
+    "color": "123",
+    "bold": true
+}
+```
+
+---
+
+### image
+
+The `image` element represents an image.
+
+#### Example
+
+Markdown:
+
+```markdown
+![Image](https://charm.sh/logo.png).
+```
+
+Style:
+
+```json
+"image": {
+    "color": "123",
+    "block_prefix": "[Image: ",
+    "block_suffix": "]"
+}
+```
+
+Output:
+
+![Image Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/image.png)
+
+---
+
+### image_text
+
+The `image_text` element represents the text associated with an image.
+
+#### Example
+
+Style:
+
+```json
+"image_text": {
+    "color": "8"
+}
+```
+
+---
+
+### code
+
+The `code` element represents an inline code segment.
+
+#### Example
+
+Style:
+
+```json
+"code": {
+    "color": "200"
+}
+```
+
+Output:
+
+![Code Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/code.png)
+
+---
+
+### emph
+
+The `emph` element represents an emphasized text.
+
+#### Example
+
+Markdown:
+
+```markdown
+This text is *emphasized*.
+```
+
+Style:
+
+```json
+"emph": {
+    "italic": true
+}
+```
+
+Output:
+
+![Emph Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/emph.png)
+
+---
+
+### strong
+
+The `strong` element represents important text.
+
+#### Example
+
+Markdown:
+
+```markdown
+This text is **strong**.
+```
+
+Style:
+
+```json
+"strong": {
+    "bold": true
+}
+```
+
+Output:
+
+![Strong Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/strong.png)
+
+---
+
+### strikethrough
+
+The `strikethrough` element represents strikethrough text.
+
+#### Example
+
+Markdown:
+
+```markdown
+~~Scratch this~~.
+```
+
+Style:
+
+```json
+"strikethrough": {
+    "crossed_out": true
+}
+```
+
+Output:
+
+![Strikethrough Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/strikethrough.png)
+
+---
+
+### hr
+
+The `hr` element represents a horizontal rule.
+
+#### Example
+
+Markdown:
+
+```markdown
+---
+```
+
+Style:
+
+```json
+"hr": {
+    "block_prefix": "---"
+}
+```
+
+## html_block
+## html_span
+
+
+## Links discovered
+- [Heading Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/heading.png)
+- [Block Quote Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/block_quote.png)
+- [Code Block Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/code_block.png)
+- [Table Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/table.png)
+- [List Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/list.png)
+- [Enumeration Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/enumeration.png)
+- [Task Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/task.png)
+- [link](https://charm.sh)
+- [Link Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/link.png)
+- [Image](https://charm.sh/logo.png)
+- [Image Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/image.png)
+- [Code Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/code.png)
+- [Emph Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/emph.png)
+- [Strong Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/strong.png)
+- [Strikethrough Example](https://github.com/charmbracelet/glamour/raw/master/styles/examples/strikethrough.png)
+
+--- styles/gallery/README.md ---
+# Glamour Style Section
+
+## Dark
+
+![Glamour Dark Style](./dark.png)
+
+## Light
+
+![Glamour Light Style](./light.png)
+
+## NoTTY
+
+Pronounced _naughty_.
+
+![Glamour NoTTY Style](./notty.png)
+
+## Dracula
+
+![Dracula Style](./dracula.png)
+
+## Tokyo Night
+
+![Tokyo Night Style](./tokyo-night.png)
+
+
+## Links discovered
+- [Glamour Dark Style](https://github.com/charmbracelet/glamour/blob/master/styles/gallery/dark.png)
+- [Glamour Light Style](https://github.com/charmbracelet/glamour/blob/master/styles/gallery/light.png)
+- [Glamour NoTTY Style](https://github.com/charmbracelet/glamour/blob/master/styles/gallery/notty.png)
+- [Dracula Style](https://github.com/charmbracelet/glamour/blob/master/styles/gallery/dracula.png)
+- [Tokyo Night Style](https://github.com/charmbracelet/glamour/blob/master/styles/gallery/tokyo-night.png)
+
+--- testdata/TestWithChromaFormatter.md ---
+## Usage
+
+```go
+import "github.com/charmbracelet/glamour"
+
+in := `# Hello World
+
+This is a simple example of Markdown rendering with Glamour!
+Check out the [other examples](https://github.com/charmbracelet/glamour/tree/master/examples) too.
+
+Bye!
+`
+
+out, err := glamour.Render(in, "dark")
+fmt.Print(out)
+```
+
+
+## Links discovered
+- [other examples](https://github.com/charmbracelet/glamour/tree/master/examples)
+
+--- testdata/issues/106.md ---
+- \`hi\`
+- \\hi
+- \*hi
+- \_hi
+- \{hi\}
+- \[hi\]
+- \<hi\>
+- \(hi\)
+- \# hi
+- \+ hi
+- \- hi
+- \. hi
+- \! hi
+- \| hi
+
+
+--- testdata/issues/107.md ---
+```ini
+[Mount]
+Options=reconnect,ServerAliveInterval=15,ServerAliveCountMax=3,noauto,_netdev,allow_other,uid=1000,gid=1000,IdentityFile=/PATH/TO/SSH-KEY/id_rsa,StrictHostKeyChecking=no
+```
+
+
+--- testdata/issues/117.md ---
+| cmd           | descr            |
+| ------------- | ---------------- |
+| `glow config` | open glow config |
+
+
+--- testdata/issues/149.md ---
+[a](http://example.com/with-a-big-path/likely-to-use-more-than-one-line?why-not=after-all-why-not-use-queryparams-too&abc=123)
+
+<!--FIXME: still a valid issue-->
+
+
+## Links discovered
+- [a](http://example.com/with-a-big-path/likely-to-use-more-than-one-line?why-not=after-all-why-not-use-queryparams-too&abc=123)
+
+--- testdata/issues/172.md ---
+<!-- TODO: still an issue -->
+
+> The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog.
+
+
+--- testdata/issues/237.md ---
+> Content Security Policy (CSP) is an added layer of security that helps to detect and mitigate certain types of attacks, including Cross-Site Scripting (XSS) and data injection attacks. These attacks are used for everything from data theft, to site defacement, to malware distribution.
+>
+> from MDN
+
+
+--- testdata/issues/239.md ---
+First term
+: Definition one of first term.
+
+Second term
+: Definition one of second term.
+
+
+--- testdata/issues/257.md ---
+```vim
+set runtimepath^=$XDG_CONFIG_HOME/vim
+```
+
+
+--- testdata/issues/290.md ---
+- **test@example.com**
+- https://google.com
+- _https://google.com_

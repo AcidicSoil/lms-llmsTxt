@@ -1,14 +1,14 @@
 # Codex
 
-> The Codex CLI is a local coding agent developed by OpenAI that enables users to interact with AI models for code generation and execution directly on their machines. It is designed to be used in conjunction with ChatGPT plans (Plus, Pro, Team, Edu, or Enterprise) or via API keys for advanced use cases. The CLI supports features like executing code, managing sessions, handling file operations, and integrating with IDEs or terminal environments.
+> The purpose of the Codex CLI project is to provide a local, command-line interface for OpenAI’s Codex coding agent. It enables users to interact with Codex directly on their machine, either through a terminal UI (TUI) or via integration into code editors like VS Code or Cursor. The agent can assist with code generation, execution, debugging, and collaboration — all locally, without relying on cloud infrastructure.  It supports: - Signing in via ChatGPT (for access to paid plans). - Using API keys for authentication. - Running code in isolated sandboxes. - Real-time streaming of responses. - Integrating with IDEs and other development tools.  This project is part of OpenAI’s broader strategy to make AI-powered coding assistants accessible, secure, and customizable — both for individual developers and enterprise teams.
 
 **Remember:**
-- Local AI Coding Agent
-- ChatGPT Integration
-- Terminal-Based Interaction
-- Code Execution & Feedback Loop
-- Model Migration & Selection
-- Multi-Session Support
+- Codex Agent: A local AI model that generates and executes code
+- TUI (Terminal User Interface): Interactive CLI experience with dynamic UI elements like chat composers, footers, and status indicators
+- Sandboxing: Isolated execution environments for running code securely
+- Collaboration Modes: Support for multi-user or team-based coding workflows
+- Streaming & Chunking: Real-time response generation to handle large outputs efficiently
+- Model Migration: Ability to switch between different Codex models (e.g., GPT-5, GPT-5 Mini)
 
 ## Docs
 - [Getting Started](https://github.com/openai/codex/blob/main/docs/getting-started.md): install & quickstart.
@@ -18,9 +18,12 @@
 - [Skill](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/SKILL.md): install & quickstart.
 - [Github Utils](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/github_utils.py): install & quickstart.
 - [Install Skill From Github](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/install-skill-from-github.py): install & quickstart.
-- [List Curated Skills](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/list-curated-skills.py): install & quickstart.
+- [List Skills](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/list-skills.py): install & quickstart.
 - [Example Config](https://github.com/openai/codex/blob/main/docs/example-config.md): worked example.
 - [Agents Md](https://github.com/openai/codex/blob/main/docs/agents_md.md): docs page.
+
+## Tutorials
+- [Userns Block Fd](https://github.com/openai/codex/blob/main/codex-rs/vendor/bubblewrap/demos/userns-block-fd.py): worked example.
 
 ## API
 - [README](https://github.com/openai/codex/blob/main/codex-rs/codex-api/README.md): install & quickstart.
@@ -38,15 +41,16 @@
 - [Changelog](https://github.com/openai/codex/blob/main/CHANGELOG.md): version history.
 - [Osrelease](https://github.com/openai/codex/blob/main/shell-tool-mcp/src/osRelease.ts): version history.
 - [Osrelease.Test](https://github.com/openai/codex/blob/main/shell-tool-mcp/tests/osRelease.test.ts): version history.
+- [Release Checklist](https://github.com/openai/codex/blob/main/codex-rs/vendor/bubblewrap/release-checklist.md): version history.
+- [Security](https://github.com/openai/codex/blob/main/codex-rs/vendor/bubblewrap/SECURITY.md): security policy.
 - [License](https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-creator/license.txt): usage terms.
+- [Skill](https://github.com/openai/codex/blob/main/.codex/skills/test-tui/SKILL.md): docs page.
 - [README](https://github.com/openai/codex/blob/main/.devcontainer/README.md): install & quickstart.
 - [Agents](https://github.com/openai/codex/blob/main/AGENTS.md): docs page.
-- [Pnpm](https://github.com/openai/codex/blob/main/PNPM.md): docs page.
 - [README](https://github.com/openai/codex/blob/main/README.md): docs page.
 
 ## .Github
 - [Pull Request Template](https://github.com/openai/codex/blob/main/.github/pull_request_template.md): docs page.
-- [Issue Deduplicator](https://github.com/openai/codex/blob/main/.github/prompts/issue-deduplicator.txt): docs page.
 - [Issue Labeler](https://github.com/openai/codex/blob/main/.github/prompts/issue-labeler.txt): docs page.
 - [Codex Attempt](https://github.com/openai/codex/blob/main/.github/codex/labels/codex-attempt.md): docs page.
 - [Codex Review](https://github.com/openai/codex/blob/main/.github/codex/labels/codex-review.md): docs page.
@@ -66,10 +70,10 @@
 - [README](https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md): install & quickstart.
 - [README](https://github.com/openai/codex/blob/main/codex-rs/chatgpt/README.md): install & quickstart.
 - [README](https://github.com/openai/codex/blob/main/codex-rs/codex-client/README.md): install & quickstart.
-- [README](https://github.com/openai/codex/blob/main/codex-rs/common/README.md): install & quickstart.
 - [README](https://github.com/openai/codex/blob/main/codex-rs/core/README.md): install & quickstart.
 - [README](https://github.com/openai/codex/blob/main/codex-rs/debug-client/README.md): install & quickstart.
 - [README](https://github.com/openai/codex/blob/main/codex-rs/exec-server/README.md): install & quickstart.
+- [README](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/README.md): install & quickstart.
 
 ## Scripts
 - [Readme Toc](https://github.com/openai/codex/blob/main/scripts/readme_toc.py): install & quickstart.

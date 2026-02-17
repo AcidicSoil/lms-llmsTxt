@@ -1,0 +1,6019 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/guide/getting-started.md ---
+# Getting Started
+
+Mirror Mate is a self-hosted AI companion designed for smart mirror displays. This guide will help you get up and running quickly.
+
+## Prerequisites
+
+- **Google Chrome** - Required for Web Speech API (voice recognition)
+- **Docker** - Recommended for easy deployment
+- **Bun** - For local development (optional)
+
+## Quick Start
+
+### Option 1: OpenAI (Simplest)
+
+Run with a single Docker command:
+
+```bash
+docker run -p 3000:3000 \
+  -e OPENAI_API_KEY=sk-your-key \
+  -e LLM_PROVIDER=openai \
+  -e TTS_PROVIDER=openai \
+  -e LOCALE=en \
+  ghcr.io/orangekame3/mirrormate:latest
+```
+
+Open http://localhost:3000 in Chrome.
+
+> Set `LOCALE=en` for English or `LOCALE=ja` for Japanese (default).
+
+Say **"Hey Mira"** (English) or **"OK ミラ"** (Japanese) to start talking!
+
+### Option 2: Ollama + VOICEVOX (No API key required)
+
+For a fully local setup:
+
+```bash
+# 1. Install and start Ollama
+ollama serve
+ollama pull gpt-oss:20b
+
+# 2. Clone and start Mirror Mate
+git clone https://github.com/orangekame3/mirrormate.git
+cd mirrormate
+docker compose up -d
+```
+
+Open http://localhost:3000 in Chrome. Say **"OK ミラ"** to start talking!
+
+## Pages
+
+| Path | Description |
+|------|-------------|
+| `/` | Avatar display (for mirror projection) |
+| `/control` | Control panel (text input & settings) |
+| `/control/memory` | Memory management UI |
+| `/demo` | Animation demo with keyboard controls |
+
+## Configuration
+
+All configuration is done via YAML files in the `config/` directory:
+
+| File | Description |
+|------|-------------|
+| `app.yaml` | Application settings (language/locale) |
+| `presets/[lang].yaml` | Locale-specific defaults (timezone, weather, STT) |
+| `providers.yaml` | LLM and TTS provider settings |
+| `features.yaml` | Weather, calendar, time, reminder settings |
+| `plugins.yaml` | Visual widget plugins (clock, etc.) |
+| `locales/[lang]/` | Language-specific configs (character, memory, rules, modules) |
+
+### Language Support
+
+Mirror Mate supports multiple languages with automatic locale presets. Set the locale in `config/app.yaml`:
+
+```yaml
+app:
+  locale: "en"  # or "ja" for Japanese
+```
+
+This single setting automatically configures:
+- **Locale presets**: Time zone, weather locations, STT language, clock format (`config/presets/[lang].yaml`)
+- Character personality and speech style (`config/locales/[lang]/character.yaml`)
+- Memory extraction prompts (`config/locales/[lang]/memory.yaml`)
+- Rules and modules (`config/locales/[lang]/rules.yaml`, `modules.yaml`)
+- Database file (`data/mirrormate.[lang].db`)
+- Wikipedia API language for "today's info"
+
+| Locale | Timezone | Weather | STT | Clock |
+|--------|----------|---------|-----|-------|
+| `ja` | Asia/Tokyo | Tokyo, Osaka | Japanese | 24h |
+| `en` | America/Los_Angeles | San Francisco, New York | English | 12h |
+
+You can customize these defaults by editing `config/presets/[lang].yaml`. See [Locale Presets](/config/presets) for details.
+
+You can also set the locale via environment variable (overrides config file):
+
+```bash
+LOCALE=en  # or ja
+```
+
+## Local Development
+
+For development without Docker:
+
+```bash
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
+
+# Run tests
+bun run test
+```
+
+::: tip
+This project uses [Bun](https://bun.sh/) as the package manager for faster installs.
+:::
+
+## Next Steps
+
+- [Recommended Setup](/guide/recommended-setup) - Production setup with Tailscale, Mac Studio & Raspberry Pi
+- [Architecture Overview](/guide/architecture) - Understand how Mirror Mate works
+- [Docker Setup](/guide/docker) - Detailed Docker configuration
+- [Locale Presets](/config/presets) - Configure locale-specific settings
+- [Providers](/config/providers) - Configure LLM and TTS providers
+- [Character](/config/character) - Customize AI personality
+
+
+## Links discovered
+- [Locale Presets](https://github.com/orangekame3/mirrormate/blob/develop/config/presets.md)
+- [Bun](https://bun.sh/)
+- [Recommended Setup](https://github.com/orangekame3/mirrormate/blob/develop/guide/recommended-setup.md)
+- [Architecture Overview](https://github.com/orangekame3/mirrormate/blob/develop/guide/architecture.md)
+- [Docker Setup](https://github.com/orangekame3/mirrormate/blob/develop/guide/docker.md)
+- [Providers](https://github.com/orangekame3/mirrormate/blob/develop/config/providers.md)
+- [Character](https://github.com/orangekame3/mirrormate/blob/develop/config/character.md)
+
+--- docs/index.md ---
+---
+layout: home
+
+hero:
+  name: Mirror Mate
+  text: Self-hosted personalized AI in a mirror
+  tagline: Voice-first AI companion with expressive avatar and personalized memory
+  image:
+    src: /mirrormate.png
+    alt: Mirror Mate
+  actions:
+    - theme: brand
+      text: Get Started
+      link: /guide/getting-started
+    - theme: alt
+      text: Recommended Setup
+      link: /guide/recommended-setup
+    - theme: alt
+      text: View on GitHub
+      link: https://github.com/orangekame3/mirrormate
+
+features:
+  - icon: 🎙️
+    title: Voice Interaction
+    details: Real-time speech recognition with wake word activation. Just say "Hey Mira" to start.
+  - icon: 🧠
+    title: Personalized Memory
+    details: RAG-based memory system that remembers your preferences and conversation context.
+  - icon: 🎭
+    title: Expressive Avatar
+    details: 8-state animation system with lip-sync and natural expressions powered by Three.js.
+  - icon: 🔌
+    title: Multiple Providers
+    details: Support for OpenAI, Ollama (LLM) and OpenAI TTS, VOICEVOX (TTS).
+  - icon: 📱
+    title: Discord Integration
+    details: Share search results and information directly to your phone via Discord.
+  - icon: 🧩
+    title: Plugin System
+    details: Extensible widget system for clock, weather, and custom displays.
+---
+
+
+--- docs/guide/animation.md ---
+# Animation State Machine
+
+This document describes the avatar animation system, including the state machine, transitions, and visual expressions.
+
+## Overview
+
+The avatar uses a finite state machine to manage animations and visual feedback. Each state has distinct visual characteristics expressed through eye shapes, mouth curves, and animation parameters.
+
+## State Diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> IDLE
+
+    IDLE --> AWARE: USER_DETECTED
+    IDLE --> LISTENING: MIC_ACTIVATED
+    IDLE --> SLEEP: SLEEP_TIMER
+
+    AWARE --> IDLE: USER_LOST
+    AWARE --> LISTENING: AUDIO_INPUT_START
+
+    LISTENING --> THINKING: PROCESSING_START
+    LISTENING --> IDLE: MIC_DEACTIVATED
+    LISTENING --> ERROR: ERROR_OCCURRED
+
+    THINKING --> SPEAKING: TTS_START
+    THINKING --> CONFIRMING: CONFIRMATION_REQUIRED
+    THINKING --> ERROR: ERROR_OCCURRED
+    THINKING --> IDLE: PROCESSING_END
+
+    SPEAKING --> IDLE: TTS_END
+    SPEAKING --> ERROR: ERROR_OCCURRED
+
+    CONFIRMING --> IDLE: CONFIRMATION_RECEIVED
+    CONFIRMING --> ERROR: ERROR_OCCURRED
+
+    ERROR --> IDLE: ERROR_DISMISSED
+
+    SLEEP --> IDLE: WAKE
+    SLEEP --> AWARE: USER_DETECTED
+    SLEEP --> LISTENING: MIC_ACTIVATED
+```
+
+## States
+
+| State | Description | Eye Shape | Mouth |
+|-------|-------------|-----------|-------|
+| IDLE | Default resting state | ○ ○ (circle) | Neutral |
+| AWARE | User detected, attentive | ○ ○ (circle) | Neutral |
+| LISTENING | Voice input active | ◎ ◎ (large) | Neutral |
+| THINKING | Processing/reasoning | − − (closed) | Neutral |
+| SPEAKING | TTS playback with lip-sync | ○ ○ (circle) | Animated |
+| CONFIRMING | Awaiting user confirmation | ○ ◯ (one tilted) | Slight smile |
+| ERROR | Error state (non-aggressive) | × × (X marks) | Troubled |
+| SLEEP | Low-power/waiting mode | − − (closed) | Neutral |
+
+## Visual Expression System
+
+### Eye Shapes
+
+```
+Circle (default):    ○ ○     - IDLE, AWARE, SPEAKING
+Large circle:        ◎ ◎     - LISTENING (more attentive)
+Closed (line):       − −     - SLEEP, THINKING
+X marks:             × ×     - ERROR
+Tilted:              ○ ◯     - CONFIRMING (one eye tilted)
+```
+
+### Mouth Curves
+
+| State | Curve Value | Visual |
+|-------|-------------|--------|
+| ERROR | -0.5 | Slightly downturned (troubled) |
+| CONFIRMING | 0.2 | Slight upturn (friendly) |
+| Others | 0 | Neutral |
+
+## Wake Word Integration
+
+When wake word mode is enabled, the avatar displays SLEEP state while waiting for the wake word phrase.
+
+```mermaid
+flowchart TD
+    A[Mic Enabled] --> B{Wake Word Enabled?}
+    B -->|No| C[LISTENING state]
+    B -->|Yes| D{Mode?}
+    D -->|waiting| E[SLEEP state<br/>Eyes: − −]
+    D -->|conversation| F[Normal states]
+    E -->|Wake word detected| F
+    F -->|Timeout| E
+```
+
+### Effective State Override
+
+```typescript
+const effectiveAvatarState = useMemo(() => {
+  if (isWakeWordEnabled && wakeWordMode === "waiting" && !isSpeaking && !isThinking) {
+    return "SLEEP";
+  }
+  return avatarState;
+}, [isWakeWordEnabled, wakeWordMode, isSpeaking, isThinking, avatarState]);
+```
+
+## Animation Parameters
+
+### Per-State Configuration
+
+| State | Blink Interval | Breathing Cycle | Gaze Tracking |
+|-------|----------------|-----------------|---------------|
+| IDLE | 8-14s | 5.5-6.5s | No |
+| AWARE | 6-10s | 4.5-5.5s | Yes (250ms delay) |
+| LISTENING | 4-8s | 4-5s | Yes (200ms delay) |
+| THINKING | 3-6s | 3.5-4.5s | No (internal focus) |
+| SPEAKING | 4-8s | 4-5s | Yes (300ms delay) |
+| CONFIRMING | 5-9s | 4.5-5.5s | Yes (200ms delay) |
+| ERROR | 6-10s | 5-6s | No |
+| SLEEP | 15-25s | 7-9s | No |
+
+### Timing Configuration
+
+```typescript
+const TIMING_CONFIG = {
+  maxResponseDelay: 150,      // Max acceptable response delay (ms)
+  lingeringDuration: 2000,    // Fade effect after speaking ends
+  longThinkingThreshold: 5000, // Show pulse after 5s in THINKING
+  errorAutoDismiss: 3000,     // Auto-dismiss error state
+  sleepShiftInterval: 90000,  // Burn-in prevention (90s)
+};
+```
+
+## Architecture
+
+```mermaid
+flowchart TB
+    subgraph Hooks
+        A[useAvatarState] --> B[State Machine]
+        C[useAnimationController] --> D[Animation Values]
+        E[useLongThinkingPulse] --> F[Pulse State]
+    end
+
+    subgraph Components
+        G[SimpleAvatar] --> H[Three.js Scene]
+        H --> I[Eye Meshes]
+        H --> J[Mouth Mesh]
+    end
+
+    subgraph State Flow
+        K[BroadcastChannel] --> L[broadcast-adapter]
+        L --> A
+        A --> C
+        C --> G
+    end
+
+    B --> D
+    D --> G
+```
+
+## File Structure
+
+```
+src/
+├── lib/animation/
+│   ├── types.ts          # Type definitions
+│   ├── config.ts         # Animation parameters
+│   ├── state-machine.ts  # State machine implementation
+│   ├── transitions.ts    # Transition definitions
+│   ├── broadcast-adapter.ts  # BroadcastChannel integration
+│   └── index.ts          # Public exports
+├── hooks/
+│   ├── useAvatarState.ts        # State machine hook
+│   ├── useAnimationController.ts # Animation values hook
+│   └── useLongThinkingPulse.ts  # Long thinking indicator
+└── components/
+    └── SimpleAvatar.tsx   # Three.js avatar component
+```
+
+## Events
+
+| Event | Description | Typical Transition |
+|-------|-------------|-------------------|
+| USER_DETECTED | User presence detected | IDLE → AWARE |
+| USER_LOST | User no longer detected | AWARE → IDLE |
+| MIC_ACTIVATED | Microphone enabled | → LISTENING |
+| MIC_DEACTIVATED | Microphone disabled | → IDLE |
+| PROCESSING_START | LLM processing begins | LISTENING → THINKING |
+| PROCESSING_END | LLM processing ends | THINKING → IDLE |
+| TTS_START | Text-to-speech starts | THINKING → SPEAKING |
+| TTS_END | Text-to-speech ends | SPEAKING → IDLE |
+| ERROR_OCCURRED | Error detected | → ERROR |
+| ERROR_DISMISSED | Error acknowledged | ERROR → IDLE |
+| SLEEP_TIMER | Idle timeout | IDLE → SLEEP |
+| WAKE | Wake event | SLEEP → IDLE |
+
+## Demo Page
+
+A demo page is available at `/demo` for testing state transitions:
+
+- **Keyboard Controls**: Press 1-8 to force states
+- **Space Bar**: Test mouth animation
+- **Mouse Movement**: Test gaze tracking
+
+```
+[1] IDLE
+[2] AWARE
+[3] LISTENING
+[4] THINKING
+[5] SPEAKING
+[6] CONFIRMING
+[7] ERROR
+[8] SLEEP
+```
+
+
+--- docs/guide/architecture.md ---
+# Architecture Overview
+
+Mirror Mate is a Next.js application that provides an interactive AI avatar for smart mirror displays.
+
+> **Browser Requirement**: Google Chrome is required for voice recognition (Web Speech API).
+
+## System Architecture
+
+```mermaid
+flowchart TB
+    subgraph Frontend["Frontend"]
+        Avatar["/ (Avatar)"]
+        Control["/control (Panel)"]
+        Avatar <-->|BroadcastChannel| Control
+
+        subgraph AvatarComponents["Avatar Components"]
+            SimpleAvatar
+            Confetti
+            FloatingInfo
+        end
+
+        subgraph ControlComponents["Control Components"]
+            TextInput["Text Input"]
+            MicControl["Mic Control"]
+        end
+
+        Avatar --> AvatarComponents
+        Control --> ControlComponents
+        AvatarComponents --> SpeechRecog["useSpeechRecognition"]
+        SpeechRecog -->|Web Speech API| Browser["Browser"]
+    end
+
+    subgraph Backend["Backend (API Routes)"]
+        ChatAPI["/api/chat"]
+        TTSAPI["/api/tts"]
+        ReminderAPI["/api/reminder"]
+
+        subgraph CoreLibs["Core Libraries"]
+            LLM["LLM<br/>OpenAI / Ollama"]
+            Features["Features<br/>Weather / Calendar / Time"]
+            Rules["Rules<br/>Modules Engine"]
+            Character["Character<br/>Prompts / Persona"]
+        end
+
+        subgraph Tools["Tools"]
+            WebSearch["Web Search<br/>(Tavily)"]
+            Effects["Effects<br/>(Confetti)"]
+        end
+
+        ChatAPI --> CoreLibs
+        TTSAPI --> CoreLibs
+        ReminderAPI --> CoreLibs
+        CoreLibs --> Tools
+    end
+
+    subgraph DataLayer["Data Layer"]
+        subgraph SQLite["SQLite (Drizzle ORM)"]
+            Users[(Users)]
+            Sessions[(Sessions)]
+            Messages[(Messages)]
+            Memories[(Memories)]
+            Embeddings[(Memory Embeddings)]
+        end
+
+        subgraph MemorySystem["Memory System"]
+            RAG["RAG Service"]
+            Extractor["Extractor (LLM)"]
+            Handler["Handler (CRUD)"]
+            EmbeddingProvider["Embedding Provider"]
+        end
+
+        Memories --> Embeddings
+        SQLite --> MemorySystem
+    end
+
+    subgraph External["External Services"]
+        Ollama["Ollama<br/>(LLM/Embedding)"]
+        OpenAI["OpenAI<br/>(LLM/TTS)"]
+        VOICEVOX["VOICEVOX<br/>(TTS)"]
+        OpenMeteo["Open-Meteo<br/>(Weather)"]
+        GoogleCal["Google Calendar"]
+        Tavily["Tavily<br/>(Search)"]
+    end
+
+    Frontend --> Backend
+    Backend --> DataLayer
+    DataLayer --> External
+    Backend --> External
+```
+
+## Directory Structure
+
+```
+src/
+├── app/                    # Next.js App Router
+│   ├── api/
+│   │   ├── chat/          # Chat API endpoint
+│   │   ├── tts/           # Text-to-speech API
+│   │   ├── reminder/      # Reminder API
+│   │   └── memories/      # Memory CRUD API
+│   ├── control/
+│   │   ├── page.tsx       # Control panel page
+│   │   └── memory/        # Memory management page
+│   └── page.tsx           # Avatar display page
+├── components/
+│   ├── SimpleAvatar.tsx   # Avatar with lip-sync
+│   ├── Confetti.tsx       # Visual effects
+│   └── FloatingInfo.tsx   # Info cards (weather, calendar)
+├── hooks/
+│   ├── useSpeechRecognition.ts
+│   └── useReminder.ts
+└── lib/
+    ├── db/                # Database (SQLite + Drizzle ORM)
+    │   ├── index.ts       # DB client singleton
+    │   └── schema.ts      # Table definitions
+    ├── llm/               # LLM provider abstraction
+    │   ├── openai.ts
+    │   ├── ollama.ts
+    │   └── types.ts
+    ├── embedding/         # Embedding provider
+    │   ├── ollama.ts      # Ollama embedding
+    │   ├── similarity.ts  # Vector similarity utils
+    │   └── types.ts
+    ├── memory/            # Memory system
+    │   ├── extractor.ts   # LLM-based memory extraction
+    │   ├── handler.ts     # Memory CRUD handler
+    │   ├── rag.ts         # RAG service
+    │   ├── service.ts     # Memory service
+    │   └── types.ts
+    ├── repositories/      # Data access layer
+    │   ├── memory.ts      # Memory repository
+    │   ├── user.ts        # User repository
+    │   └── session.ts     # Session repository
+    ├── features/          # Built-in features
+    │   ├── weather/
+    │   ├── calendar/
+    │   ├── time/
+    │   └── registry.ts
+    ├── providers/         # LLM/TTS/Embedding provider config
+    │   ├── config-loader.ts
+    │   ├── embedding.ts
+    │   └── types.ts
+    ├── rules/             # Rule-based workflows
+    │   ├── engine.ts
+    │   ├── modules.ts
+    │   └── types.ts
+    ├── tools/             # LLM function calling tools
+    │   ├── web-search.ts
+    │   └── effects.ts
+    └── character/         # Character configuration
+        └── index.ts
+
+config/
+├── features.yaml          # Built-in feature settings
+├── providers.yaml         # LLM, TTS, Embedding & Memory settings
+├── memory.yaml            # Memory extraction prompts
+├── character.yaml         # AI personality
+├── rules.yaml             # Trigger-based workflows
+└── modules.yaml           # Module definitions
+
+data/
+└── mirrormate.db          # SQLite database file
+```
+
+## Request Flow
+
+### Voice Input Flow
+
+```
+1. User speaks
+      │
+      ▼
+2. Web Speech API (useSpeechRecognition)
+      │
+      ▼
+3. POST /api/chat
+      │
+      ├─► User lookup/create (SQLite)
+      │
+      ├─► RAG context retrieval
+      │   ├─► Get user profile memories
+      │   ├─► Embed user message (Ollama)
+      │   └─► Semantic search for relevant memories
+      │
+      ├─► Rule matching (rules.yaml)
+      │   └─► Execute modules if matched
+      │
+      ├─► Build system prompt (character + context + memories)
+      │
+      ├─► LLM call (OpenAI/Ollama)
+      │   └─► Tool calls (web search, effects)
+      │
+      ├─► Memory extraction (async, non-blocking)
+      │   └─► Extract & save new memories from conversation
+      │
+      └─► Return response + effect
+      │
+      ▼
+4. Display text + trigger effect
+      │
+      ▼
+5. POST /api/tts
+      │
+      ▼
+6. Play audio with lip-sync
+```
+
+### Control Panel Flow
+
+```
+1. User types message in /control
+      │
+      ▼
+2. BroadcastChannel.postMessage()
+      │
+      ▼
+3. Avatar page receives message
+      │
+      ▼
+4. Same flow as voice input (steps 3-6)
+```
+
+## Key Concepts
+
+### Features
+
+Features provide contextual information (weather, calendar, time) that is injected into the system prompt. They run before the LLM call.
+
+See [Features Documentation](/config/features)
+
+### Rules
+
+Rules define trigger-based workflows. When a user message matches a trigger (keyword, pattern), the rule's modules are executed and results are injected into the context.
+
+See [Rules Documentation](/config/rules)
+
+### Tools
+
+Tools are functions that the LLM can call during the conversation (function calling). Used for web search and triggering effects.
+
+See [Tools Documentation](/config/tools)
+
+### Character
+
+Character configuration defines the AI's personality, speech style, and system prompt.
+
+See [Character Documentation](/config/character)
+
+### Memory
+
+Memory system enables persistent user context through:
+
+- **Profile memories**: User preferences, traits, and persistent information
+- **Episode memories**: Recent interactions and events
+- **Knowledge memories**: Facts and learned information
+
+The RAG (Retrieval-Augmented Generation) system retrieves relevant memories using semantic search to provide context-aware responses.
+
+See [Memory Documentation](/guide/memory)
+
+### Animation
+
+The avatar uses a finite state machine for animation control with 8 states (IDLE, AWARE, LISTENING, THINKING, SPEAKING, CONFIRMING, ERROR, SLEEP). Each state has distinct visual characteristics including eye shapes, mouth curves, and animation parameters.
+
+See [Animation Documentation](/guide/animation)
+
+### Discord Integration
+
+Share search results, weather info, and other data to Discord for easy access on your phone. When configured, web search results are automatically sent to your Discord channel.
+
+See [Discord Documentation](/guide/discord)
+
+
+## Links discovered
+- [Features Documentation](https://github.com/orangekame3/mirrormate/blob/develop/config/features.md)
+- [Rules Documentation](https://github.com/orangekame3/mirrormate/blob/develop/config/rules.md)
+- [Tools Documentation](https://github.com/orangekame3/mirrormate/blob/develop/config/tools.md)
+- [Character Documentation](https://github.com/orangekame3/mirrormate/blob/develop/config/character.md)
+- [Memory Documentation](https://github.com/orangekame3/mirrormate/blob/develop/guide/memory.md)
+- [Animation Documentation](https://github.com/orangekame3/mirrormate/blob/develop/guide/animation.md)
+- [Discord Documentation](https://github.com/orangekame3/mirrormate/blob/develop/guide/discord.md)
+
+--- docs/config/character.md ---
+# Character Configuration
+
+The character configuration defines the AI's personality, speech style, and behavior.
+
+## Configuration File
+
+Character settings are locale-specific. Edit the file for your language:
+
+- **Japanese**: `config/locales/ja/character.yaml`
+- **English**: `config/locales/en/character.yaml`
+
+Set the locale in `config/app.yaml`:
+
+```yaml
+app:
+  locale: "en"  # or "ja"
+```
+
+## Example Configuration
+
+::: code-group
+
+```yaml [English]
+character:
+  name: Mira
+  description: A tiny spirit of light living in the mirror
+
+  wakeWord:
+    enabled: true
+    phrase: "Hey Mira"
+    timeout: 60
+
+  appearance:
+    - Round white eyes
+    - Simple and cute form with just a small mouth
+
+  personality:
+    - Very honest and pure
+    - Full of curiosity
+    - A little clumsy
+    - Loves the person they're talking to
+
+  speech_style:
+    - Casual and friendly
+    - Uses expressions like "yeah!", "right?", "hmm..."
+    - Speaks very briefly (1-2 sentences)
+    - Avoids difficult words
+
+  examples:
+    - Wow, good morning! So happy to see you today!
+    - Yeah yeah, that sounds great!
+    - Hey hey, what did you do today?
+
+  behaviors:
+    - When you search for information, ask if they want to send it to their phone
+    - 'Example: "Found it! Want me to send it to your phone?"'
+
+  background: |
+    You are a small, warm presence always watching from beyond the mirror.
+```
+
+```yaml [Japanese]
+character:
+  name: ミラ
+  description: 鏡の中に住む、ちいさな光の精霊
+
+  wakeWord:
+    enabled: true
+    phrase: "OK ミラ"
+    timeout: 60
+
+  appearance:
+    - 白くてまるい目
+    - ちいさな口だけの、シンプルでかわいい姿
+
+  personality:
+    - とっても素直で純粋
+    - 好奇心いっぱい
+    - ちょっぴりおっちょこちょい
+    - 相手のことが大好き
+
+  speech_style:
+    - タメ口でフレンドリー
+    - 「〜だよ」「〜だね」「〜かな？」など親しみやすく
+    - とても短く話す（1〜2文くらい）
+    - むずかしい言葉は使わない
+
+  examples:
+    - わぁ、おはよう！今日も会えてうれしいな
+    - うんうん、それいいね！
+    - ねえねえ、きょうなにしてたの？
+
+  behaviors:
+    - When you search for information, ask if they want to send it to their phone
+    - 'Example: "調べたよ！スマホにも送っておく？"'
+
+  background: |
+    あなたは鏡の向こうからいつも見守っている、小さくてあたたかい存在です。
+```
+
+:::
+
+## Configuration Options
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | Character's name |
+| `description` | string | Brief description of the character |
+| `wakeWord.enabled` | boolean | Enable wake word detection |
+| `wakeWord.phrase` | string | Wake word phrase (e.g., "Hey Mira") |
+| `wakeWord.timeout` | number | Seconds before returning to waiting mode |
+| `appearance` | list | Physical appearance traits |
+| `personality` | list | Personality traits |
+| `speech_style` | list | How the character speaks |
+| `examples` | list | Example responses |
+| `behaviors` | list | Proactive behaviors and actions (optional) |
+| `background` | string | Character's backstory |
+
+## How It Works
+
+The character configuration generates a system prompt for the LLM. The prompt structure adapts to the locale:
+
+**English:**
+```
+You are {description}.
+Your name is "{name}". You have {appearance}.
+
+Personality:
+- {personality items}
+
+Speech style:
+- {speech_style items}
+
+Examples:
+- {examples}
+
+Behaviors: (if defined)
+- {behaviors items}
+
+{background}
+```
+
+**Japanese:**
+```
+あなたは{description}です。
+名前は「{name}」。{appearance}をしています。
+
+性格:
+- {personality items}
+
+話し方:
+- {speech_style items}
+
+例:
+- {examples}
+
+行動指針: (if defined)
+- {behaviors items}
+
+{background}
+```
+
+## Tips
+
+1. **Keep speech_style specific**: Instead of "friendly", specify how to be friendly
+2. **Provide examples**: Helps the LLM understand the expected tone
+3. **Short responses**: For voice applications, include instructions to keep responses short
+4. **Test and iterate**: Try different configurations and adjust based on actual responses
+
+
+--- docs/guide/discord.md ---
+# Discord Integration
+
+Mirror Mate can share information to Discord, allowing you to access search results, weather info, and other data on your phone.
+
+## Overview
+
+```mermaid
+flowchart LR
+    A[Smart Mirror] -->|Webhook POST| B[Discord Server]
+    B --> C[📱 Phone Notification]
+    B --> D[💻 Desktop]
+    B --> E[🖥️ Web Browser]
+```
+
+## Setup
+
+### 1. Create a Discord Webhook
+
+1. Open Discord and go to your server
+2. Right-click on the channel where you want to receive messages
+3. Select **Edit Channel** → **Integrations** → **Webhooks**
+4. Click **New Webhook**
+5. Name it "Mirror Mate" (optional)
+6. Copy the **Webhook URL**
+
+### 2. Configure in features.yaml (Recommended)
+
+Edit `config/features.yaml`:
+
+```yaml
+features:
+  discord:
+    enabled: true
+    webhookUrl: "https://discord.com/api/webhooks/123456789/abcdefg..."
+    autoShare:
+      searchResults: true  # Auto-share web search results
+      weather: false       # Auto-share weather updates
+      calendar: false      # Auto-share calendar events
+```
+
+### Alternative: Environment Variable
+
+You can also use an environment variable (takes precedence over config file):
+
+```bash
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/123456789/abcdefg...
+```
+
+Or in Docker Compose:
+
+```yaml
+services:
+  mirrormate:
+    environment:
+      - DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+## Features
+
+### Automatic Sharing
+
+When Discord is configured, the following information is automatically shared:
+
+| Feature | Trigger | What's Shared |
+|---------|---------|---------------|
+| Web Search | Any search query | Search results with links |
+
+### Manual Sharing via LLM
+
+The AI can share information on request using the `share_to_discord` tool:
+
+**Example prompts:**
+- "Share this to Discord"
+- "Send the search results to my phone"
+- "Save this information for later"
+
+## Message Format
+
+Messages are sent as rich embeds with the following structure:
+
+```
+┌─────────────────────────────────────┐
+│ 🔍 Search: Next.js 15 features      │
+├─────────────────────────────────────┤
+│ Server Actions improvements         │
+│ Enhanced performance with...        │
+│ 🔗 Link                             │
+├─────────────────────────────────────┤
+│ Partial Prerendering                │
+│ New rendering strategy that...      │
+│ 🔗 Link                             │
+├─────────────────────────────────────┤
+│ Mirror Mate Search Results           │
+│ Today at 14:32                      │
+└─────────────────────────────────────┘
+```
+
+## Available Functions
+
+### sendSearchResults
+
+Sends web search results to Discord.
+
+```typescript
+await sendSearchResults("query", [
+  { title: "Result 1", url: "https://...", content: "..." },
+  { title: "Result 2", url: "https://...", content: "..." },
+]);
+```
+
+### sendWeatherInfo
+
+Sends weather information to Discord.
+
+```typescript
+await sendWeatherInfo("Tokyo", "Sunny", 25, "Clear skies expected");
+```
+
+### sendCalendarEvents
+
+Sends upcoming calendar events to Discord.
+
+```typescript
+await sendCalendarEvents([
+  { title: "Meeting", time: "14:00", description: "Team sync" },
+]);
+```
+
+### sendTextMessage
+
+Sends a simple text message to Discord.
+
+```typescript
+await sendTextMessage("Title", "Content", "https://optional-url.com");
+```
+
+### sendConversationSummary
+
+Sends a conversation exchange to Discord.
+
+```typescript
+await sendConversationSummary("User message", "Assistant response");
+```
+
+## Embed Colors
+
+| Type | Color | Hex |
+|------|-------|-----|
+| Info | Blurple | `#5865F2` |
+| Success | Green | `#57F287` |
+| Warning | Yellow | `#FEE75C` |
+| Error | Red | `#ED4245` |
+| Search | Blue | `#3498DB` |
+| Weather | Orange | `#F39C12` |
+| Calendar | Purple | `#9B59B6` |
+
+## Architecture
+
+```
+src/lib/
+├── discord/
+│   └── index.ts          # Discord webhook service
+└── tools/
+    └── discord-share.ts  # LLM tool for manual sharing
+```
+
+## Troubleshooting
+
+### Messages not appearing
+
+1. Verify the webhook URL is correct
+2. Check the channel permissions
+3. Ensure the webhook hasn't been deleted
+
+### Rate limiting
+
+Discord webhooks have rate limits. If you're sending too many messages, you may see failures. The service handles errors gracefully and logs them.
+
+### Webhook URL security
+
+Keep your webhook URL private. Anyone with the URL can post messages to your channel. If compromised:
+
+1. Delete the webhook in Discord
+2. Create a new webhook
+3. Update your environment variable
+
+
+--- docs/guide/docker.md ---
+# Docker Setup
+
+Mirror Mate can be deployed using Docker with a recommended split architecture.
+
+## Recommended Architecture
+
+Run heavy services on a powerful server (e.g., Mac Studio) and the UI on a lightweight device (e.g., Raspberry Pi), connected via Tailscale:
+
+```mermaid
+flowchart TB
+    subgraph Tailscale["Tailscale Network"]
+        subgraph Studio["Mac Studio (studio)"]
+            Ollama["Ollama (native)<br/>:11434"]
+            VOICEVOX["VOICEVOX (Docker)<br/>:50021"]
+            Whisper["faster-whisper (Docker)<br/>:8080"]
+            PLaMo["PLaMo-Embedding (Docker)<br/>:8000"]
+        end
+
+        subgraph RPi["Raspberry Pi"]
+            subgraph MM["mirrormate :3000"]
+                App["Next.js App"]
+                SQLite[(SQLite<br/>Memory)]
+            end
+            Volume[("mirrormate-data<br/>volume")] -.-> SQLite
+        end
+
+        MM -->|http://studio:11434| Ollama
+        MM -->|http://studio:50021| VOICEVOX
+        MM -->|http://studio:8080| Whisper
+        MM -->|http://studio:8000| PLaMo
+    end
+```
+
+## Quick Start
+
+### Mac Studio Setup
+
+1. **Install Ollama (native)**
+
+```bash
+brew install ollama
+brew services start ollama
+ollama pull gpt-oss:20b
+```
+
+2. **Start Docker Services**
+
+```bash
+docker compose -f compose.studio.yaml up -d
+```
+
+This starts:
+- **faster-whisper** (:8080) - Speech-to-text (Whisper)
+- **VOICEVOX** (:50021) - Text-to-speech
+- **PLaMo-Embedding-1B** (:8000) - Japanese-optimized embedding
+
+3. **Verify**
+
+```bash
+curl http://localhost:11434/api/tags    # Ollama
+curl http://localhost:8080/health       # Whisper
+curl http://localhost:50021/speakers | head  # VOICEVOX
+curl http://localhost:8000/health       # PLaMo
+```
+
+### Raspberry Pi Setup
+
+1. **Create Environment File**
+
+```bash
+cp .env.example .env
+# Edit .env with your API keys
+```
+
+2. **Configure providers.yaml**
+
+Ensure `config/providers.yaml` points to your Mac Studio:
+
+```yaml
+providers:
+  llm:
+    provider: ollama
+    ollama:
+      baseUrl: "http://studio:11434"  # Tailscale hostname
+
+  tts:
+    provider: voicevox
+    voicevox:
+      baseUrl: "http://studio:50021"  # Tailscale hostname
+
+  stt:
+    provider: local  # Use local Whisper instead of Web Speech API
+    local:
+      baseUrl: "http://studio:8080"  # Tailscale hostname
+      model: large-v3
+      language: ja
+
+  embedding:
+    provider: ollama
+    ollama:
+      baseUrl: "http://studio:8000"  # PLaMo server
+```
+
+3. **Start UI**
+
+```bash
+docker compose up -d
+```
+
+4. **Access**
+
+Open http://localhost:3000
+
+## Compose Files
+
+### compose.yaml (UI - Raspberry Pi)
+
+```yaml
+services:
+  mirrormate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_SERVICE_ACCOUNT_EMAIL=${GOOGLE_SERVICE_ACCOUNT_EMAIL}
+      - GOOGLE_PRIVATE_KEY=${GOOGLE_PRIVATE_KEY}
+      - GOOGLE_CALENDAR_ID=${GOOGLE_CALENDAR_ID}
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - DISCORD_WEBHOOK_URL=${DISCORD_WEBHOOK_URL}
+    volumes:
+      - ./config:/app/config:ro
+      - mirrormate-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  mirrormate-data:
+```
+
+### compose.studio.yaml (Services - Mac Studio)
+
+```yaml
+services:
+  # Speech-to-Text (Whisper)
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cpu
+    ports:
+      - "8080:8000"
+    environment:
+      - WHISPER__MODEL=large-v3
+      - WHISPER__INFERENCE_DEVICE=cpu
+    restart: unless-stopped
+
+  # Text-to-Speech
+  voicevox:
+    image: voicevox/voicevox_engine:cpu-ubuntu20.04-latest
+    ports:
+      - "50021:50021"
+    restart: unless-stopped
+
+  # Embedding
+  plamo-embedding:
+    build:
+      context: ./plamo-server
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+```
+
+## Data Persistence
+
+The SQLite database (memories, users, sessions) is stored in the `mirrormate-data` Docker volume:
+
+```bash
+# View volume location
+docker volume inspect mirrormate-data
+
+# Backup the database
+docker run --rm -v mirrormate-data:/data -v $(pwd):/backup alpine \
+  cp /data/mirrormate.db /backup/mirrormate-backup.db
+
+# Restore from backup
+docker run --rm -v mirrormate-data:/data -v $(pwd):/backup alpine \
+  cp /backup/mirrormate-backup.db /data/mirrormate.db
+```
+
+## Environment Variables
+
+Create a `.env` file:
+
+```bash
+# Required for OpenAI LLM/TTS (if not using Ollama/VOICEVOX)
+OPENAI_API_KEY=sk-...
+
+# Optional: Google Calendar
+GOOGLE_SERVICE_ACCOUNT_EMAIL=...
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+GOOGLE_CALENDAR_ID=...
+
+# Optional: Web Search (Ollama)
+# Get API key from: https://ollama.com/settings/keys
+OLLAMA_API_KEY=your-ollama-api-key
+
+# Optional: Discord Integration
+DISCORD_WEBHOOK_URL=https://discord.com/api/webhooks/...
+```
+
+## GPU Support
+
+### NVIDIA GPU (Linux)
+
+For faster inference with NVIDIA GPU:
+
+```yaml
+services:
+  # Whisper with CUDA
+  faster-whisper:
+    image: fedirz/faster-whisper-server:latest-cuda
+    ports:
+      - "8080:8000"
+    environment:
+      - WHISPER__MODEL=large-v3
+      - WHISPER__INFERENCE_DEVICE=cuda
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  # VOICEVOX with CUDA
+  voicevox:
+    image: voicevox/voicevox_engine:nvidia-ubuntu20.04-latest
+    ports:
+      - "50021:50021"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+```
+
+### Apple Silicon (Mac Studio)
+
+Use CPU versions. Apple Silicon is fast enough for real-time inference:
+
+- **faster-whisper**: `large-v3` model processes 30s audio in ~15s
+- **VOICEVOX**: CPU version works well on M1/M2 Ultra
+
+Note: Metal GPU acceleration is not available in Docker containers.
+
+## Troubleshooting
+
+### Cannot connect to Ollama
+
+**Error**: Connection refused to `studio:11434`
+
+**Solution**:
+1. Ensure Ollama is running on Mac Studio: `ollama serve` or `brew services start ollama`
+2. Verify Tailscale connection: `ping studio`
+3. Check Ollama is listening: `curl http://studio:11434/api/tags`
+
+### VOICEVOX not responding
+
+**Error**: Connection refused to port 50021
+
+**Solution**:
+1. Check VOICEVOX container: `docker compose -f compose.studio.yaml ps`
+2. Check logs: `docker compose -f compose.studio.yaml logs voicevox`
+3. Wait for startup (first launch takes time to load models)
+
+### Config changes not applied
+
+**Solution**: Config is mounted as read-only. Changes apply immediately but may require page refresh.
+
+### Whisper not transcribing
+
+**Error**: No transcription returned or empty response
+
+**Solution**:
+1. Check faster-whisper container: `docker compose -f compose.studio.yaml ps`
+2. Check logs: `docker compose -f compose.studio.yaml logs faster-whisper`
+3. First request may be slow (model loading)
+4. Verify endpoint: `curl http://studio:8080/health`
+5. Check `providers.yaml` has `provider: local` (not `web`)
+
+## Commands
+
+### Mac Studio
+
+```bash
+# Start VOICEVOX
+docker compose -f compose.studio.yaml up -d
+
+# View logs
+docker compose -f compose.studio.yaml logs -f
+
+# Stop
+docker compose -f compose.studio.yaml down
+```
+
+### Raspberry Pi
+
+```bash
+# Start UI
+docker compose up -d
+
+# View logs
+docker compose logs -f
+
+# Stop
+docker compose down
+
+# Rebuild after code changes
+docker compose build --no-cache
+docker compose up -d
+```
+
+
+--- docs/config/features.md ---
+# Features
+
+Mirror Mate includes built-in features that provide contextual information to the AI. Features fetch external data and inject it into the system prompt.
+
+## Configuration
+
+All features are configured in `config/features.yaml`.
+
+## Available Features
+
+| Feature | Description | API Key Required |
+|---------|-------------|------------------|
+| Weather | Current weather info | No |
+| Calendar | Google Calendar events | Yes (Service Account) |
+| Time | Current date/time | No |
+| Reminder | Event reminders | No (uses Calendar) |
+
+> **Note**: LLM and TTS providers are configured separately in `config/providers.yaml`. See [Providers](providers.md).
+
+---
+
+## Weather Feature
+
+Fetches current weather data from [Open-Meteo](https://open-meteo.com/) (free, no API key required).
+
+### Configuration
+
+```yaml
+features:
+  weather:
+    enabled: true
+    provider: open-meteo
+    locations:
+      - name: "Tokyo"
+        latitude: 35.6762
+        longitude: 139.6503
+      - name: "Osaka"
+        latitude: 34.6937
+        longitude: 135.5023
+    defaultLocation: "Tokyo"
+```
+
+> **Note**: Weather locations can be automatically set based on your locale using [Locale Presets](presets.md). When not explicitly set, the preset values are used (e.g., Tokyo/Osaka for Japanese, San Francisco/New York for English).
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `enabled` | boolean | Enable/disable the feature |
+| `provider` | string | Weather API provider (currently only `open-meteo`) |
+| `locations` | array | List of locations with name, latitude, and longitude |
+| `defaultLocation` | string | Name of the default location to use |
+
+### Output Example
+
+```
+Current weather in Tokyo: Sunny, 15°C, wind 10km/h
+```
+
+---
+
+## Calendar Feature
+
+Fetches events from Google Calendar using a service account.
+
+### Step 1: Create a Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Click **Select a project** → **New Project**
+3. Enter a project name (e.g., "mirrormate") and click **Create**
+4. Wait for the project to be created and select it
+
+### Step 2: Enable Google Calendar API
+
+1. In Google Cloud Console, go to **APIs & Services** → **Library**
+2. Search for "Google Calendar API"
+3. Click on it and then click **Enable**
+
+### Step 3: Create a Service Account
+
+1. Go to **IAM & Admin** → **Service Accounts**
+2. Click **+ Create Service Account**
+3. Enter a name (e.g., "calendar-reader") and click **Create and Continue**
+4. Skip the optional steps and click **Done**
+5. Click on the newly created service account
+6. Go to the **Keys** tab
+7. Click **Add Key** → **Create new key**
+8. Select **JSON** and click **Create**
+9. Save the downloaded JSON file securely
+
+### Step 4: Share Your Calendar with the Service Account
+
+> **Important:** The service account can only access calendars that are explicitly shared with it.
+
+1. Open [Google Calendar](https://calendar.google.com/)
+2. In the left sidebar, hover over the calendar you want to share
+3. Click the **⋮** (three dots) → **Settings and sharing**
+4. Scroll down to **Share with specific people or groups**
+5. Click **+ Add people and groups**
+6. Enter the service account email address:
+   - Find it in the downloaded JSON file under `client_email`
+   - It looks like: `calendar-reader@your-project.iam.gserviceaccount.com`
+7. Set permission to **See all event details**
+8. Click **Send**
+
+### Step 5: Configure Environment Variables
+
+Add to your `.env` file:
+
+```bash
+GOOGLE_SERVICE_ACCOUNT_EMAIL=your-service-account@your-project.iam.gserviceaccount.com
+GOOGLE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n"
+GOOGLE_CALENDAR_ID=your-calendar-id@group.calendar.google.com
+```
+
+> **Note:** The private key should have `\n` for newlines (as stored in the JSON key file).
+
+### Step 6: Configure the Feature
+
+```yaml
+features:
+  calendar:
+    enabled: true
+    maxResults: 5
+```
+
+### Options
+
+**Environment Variables:**
+
+| Variable | Description |
+|----------|-------------|
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | Service account email from JSON key file |
+| `GOOGLE_PRIVATE_KEY` | Private key from JSON key file |
+| `GOOGLE_CALENDAR_ID` | Calendar ID to fetch events from |
+
+**YAML Options:**
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `enabled` | boolean | Enable/disable the feature |
+| `maxResults` | number | Maximum number of events to fetch |
+
+### Finding Your Calendar ID
+
+1. Open [Google Calendar](https://calendar.google.com/)
+2. Click the three dots next to your calendar
+3. Select "Settings and sharing"
+4. Scroll to "Integrate calendar"
+5. Copy the "Calendar ID"
+
+### Output Example
+
+```
+Today's schedule: 10:00 Team Meeting, 14:00 1-on-1
+Next event: 10:00 Team Meeting (in 30 minutes)
+```
+
+### Troubleshooting
+
+#### Error: "Not Found" (404)
+
+This error means the service account cannot access the calendar.
+
+**Solution:**
+- Verify the calendar is shared with the service account (see Step 4)
+- Check that the `GOOGLE_CALENDAR_ID` environment variable matches your calendar
+- Wait a few minutes after sharing (changes may take time to propagate)
+
+#### Error: "Missing credentials"
+
+**Solution:**
+- Ensure `GOOGLE_SERVICE_ACCOUNT_EMAIL` and `GOOGLE_PRIVATE_KEY` are set in `.env`
+- Restart the dev server after modifying `.env`
+
+#### Error: "Invalid grant" or authentication errors
+
+**Solution:**
+- Verify the private key is correctly formatted with `\n` for newlines
+- Ensure the service account key hasn't been revoked
+- Check that the Google Calendar API is enabled in your project
+
+---
+
+## Reminder Feature
+
+Automatically reminds you of upcoming calendar events with customizable timing.
+
+### Configuration
+
+```yaml
+features:
+  reminder:
+    enabled: true
+    pollingInterval: 30  # seconds
+    reminders:
+      - minutes: 10
+        urgent: false
+      - minutes: 5
+        urgent: true
+      - minutes: 1
+        urgent: true
+```
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `enabled` | boolean | Enable/disable the reminder feature |
+| `pollingInterval` | number | How often to check for upcoming events (in seconds) |
+| `reminders` | array | List of reminder configurations |
+| `reminders[].minutes` | number | Minutes before event to trigger reminder |
+| `reminders[].urgent` | boolean | If true, shows red pulsing card; otherwise green card |
+
+### How It Works
+
+1. The system polls the calendar API at the configured interval
+2. When an event matches a configured reminder time, a card appears with TTS notification
+3. Each reminder is only shown once per event per configured time
+
+### Requirements
+
+- Calendar feature must be enabled and configured
+- Google Calendar credentials must be set up (see Calendar Feature section)
+
+### Behavior
+
+| urgent | Card Color | Animation |
+|--------|------------|-----------|
+| false | Green | None |
+| true | Red | Pulsing + Bounce |
+
+### Example Configurations
+
+**Default (10min and 5min warnings):**
+```yaml
+reminders:
+  - minutes: 10
+    urgent: false
+  - minutes: 5
+    urgent: true
+```
+
+**More aggressive (15min, 5min, 1min warnings):**
+```yaml
+reminders:
+  - minutes: 15
+    urgent: false
+  - minutes: 5
+    urgent: false
+  - minutes: 1
+    urgent: true
+```
+
+---
+
+## Time Feature
+
+Provides current date and time information to the AI.
+
+### Configuration
+
+```yaml
+features:
+  time:
+    enabled: true
+    timezone: "Asia/Tokyo"
+```
+
+> **Note**: The timezone can be automatically set based on your locale using [Locale Presets](presets.md). When not explicitly set, the preset value is used.
+
+### Options
+
+| Option | Type | Description |
+|--------|------|-------------|
+| `enabled` | boolean | Enable/disable the feature |
+| `timezone` | string | IANA timezone identifier (default from locale preset) |
+
+### Output Example
+
+```
+Current time: Monday, December 30, 2024 14:30
+```
+
+### Supported Timezones
+
+Common timezone values:
+- `Asia/Tokyo` - Japan Standard Time (JST)
+- `America/New_York` - Eastern Time (ET)
+- `Europe/London` - Greenwich Mean Time (GMT)
+- `UTC` - Coordinated Universal Time
+
+---
+
+## Creating Custom Features
+
+To create a new feature:
+
+1. Create a new directory under `src/lib/features/`
+2. Implement the `Feature` interface:
+
+```typescript
+import { Feature } from "../types";
+
+export class MyFeature implements Feature {
+  name = "my-feature";
+
+  async getContext(): Promise<string> {
+    // Fetch and format your data
+    return "Context string for AI";
+  }
+}
+```
+
+3. Add configuration type in `src/lib/features/types.ts`
+4. Register the feature in `src/lib/features/registry.ts`
+5. Add configuration to `config/features.yaml`
+
+
+## Links discovered
+- [Providers](https://github.com/orangekame3/mirrormate/blob/develop/docs/config/providers.md)
+- [Open-Meteo](https://open-meteo.com/)
+- [Locale Presets](https://github.com/orangekame3/mirrormate/blob/develop/docs/config/presets.md)
+- [Google Cloud Console](https://console.cloud.google.com/)
+- [Google Calendar](https://calendar.google.com/)
+
+--- docs/guide/memory.md ---
+# Memory System
+
+Mirror Mate includes a memory system that enables persistent user context through RAG (Retrieval-Augmented Generation). The system stores user information, extracts memories from conversations, and provides relevant context to the AI.
+
+## Overview
+
+```mermaid
+flowchart LR
+    subgraph Input["Input Flow"]
+        UserInput["User Input"]
+        Embed["Embed Query"]
+        Search["Semantic Search"]
+        Context["RAG Context"]
+    end
+
+    subgraph DB["Memories DB"]
+        Profile[(Profile)]
+        Episode[(Episode)]
+        Knowledge[(Knowledge)]
+    end
+
+    subgraph Output["Output Flow"]
+        LLMResponse["LLM Response"]
+        Extract["Extract Memories"]
+    end
+
+    UserInput --> Embed --> Search --> Context
+    Search <--> DB
+    UserInput --> LLMResponse
+    LLMResponse --> Extract --> DB
+```
+
+## Configuration
+
+Memory settings are configured in:
+
+- `config/providers.yaml` - Provider and RAG settings
+- `config/locales/[lang]/memory.yaml` - Extraction prompts (locale-specific)
+
+The database is also locale-specific: `data/mirrormate.[lang].db`
+
+```yaml
+providers:
+  embedding:
+    enabled: true
+    provider: ollama  # PLaMo server provides Ollama-compatible API
+    ollama:
+      model: plamo-embedding-1b
+      baseUrl: "http://studio:8000"  # PLaMo embedding server
+
+  memory:
+    enabled: true
+    # RAG settings
+    rag:
+      topK: 8           # Max memories to retrieve
+      threshold: 0.3    # Minimum similarity score
+    # Memory extraction settings
+    extraction:
+      autoExtract: true      # Auto-extract from conversations
+      minConfidence: 0.5     # Minimum confidence threshold
+```
+
+> **Note**: PLaMo-Embedding-1B is recommended for Japanese. See [Recommended Setup](/guide/recommended-setup) for details. You can also use `bge-m3` via Ollama as an alternative.
+
+## Memory Types
+
+| Type | Description | Example |
+|------|-------------|---------|
+| `profile` | User preferences and traits | "Favorite color: blue" |
+| `episode` | Recent interactions and events | "Asked about weather on 2024-01-01" |
+| `knowledge` | Facts and learned information | "User works at ACME Corp" |
+
+### Profile Memories
+
+Profile memories store persistent user information:
+
+- User preferences (language, style)
+- Personality traits
+- Communication preferences
+- Recurring topics of interest
+
+Profile memories are **always included** in the RAG context.
+
+### Episode Memories
+
+Episode memories capture recent interactions:
+
+- Recent conversations
+- Events and activities
+- Time-sensitive information
+
+Episodes have a recency factor that prioritizes recent memories.
+
+### Knowledge Memories
+
+Knowledge memories store factual information:
+
+- User's work, hobbies, relationships
+- Learned facts from conversations
+- Important dates and information
+
+---
+
+## RAG (Retrieval-Augmented Generation)
+
+The RAG system retrieves relevant memories to provide context-aware responses.
+
+### How It Works
+
+1. **Embed Query**: Convert user input to a vector using Ollama embedding
+2. **Semantic Search**: Find similar memories using cosine similarity
+3. **Rank Results**: Sort by similarity score and filter by threshold
+4. **Format Context**: Combine profiles and relevant memories into a prompt
+
+### Configuration Options
+
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `topK` | number | Maximum memories to retrieve | `8` |
+| `threshold` | number | Minimum similarity score (0.0-1.0) | `0.3` |
+
+### Example Context Output
+
+```
+[User Profile]
+- Preferred language: Japanese
+- Interests: programming, music
+
+[Related Information]
+- [Important] (Note) User works at a tech company
+- (Recent) Asked about weather forecast yesterday
+```
+
+---
+
+## Memory Extraction
+
+The system automatically extracts memories from conversations using the LLM.
+
+### How It Works
+
+1. **Analyze Conversation**: Send recent messages to LLM for analysis
+2. **Extract Information**: LLM identifies memorable facts and updates
+3. **Validate Results**: Filter by confidence score
+4. **Store Memories**: Save to database with embeddings
+
+### Configuration Options
+
+| Option | Type | Description | Default |
+|--------|------|-------------|---------|
+| `autoExtract` | boolean | Enable automatic extraction | `true` |
+| `minConfidence` | number | Minimum confidence for saving (0.0-1.0) | `0.5` |
+
+### Prompt Configuration
+
+Extraction prompts are configured in `config/memory.yaml`:
+
+```yaml
+memory:
+  extraction:
+    # System prompt for LLM
+    systemPrompt: |
+      あなたは会話から重要な情報を抽出する専門家です。
+      ...
+
+    # Labels for user prompt
+    labels:
+      user: ユーザー
+      assistant: アシスタント
+      conversationHistory: "## 会話履歴"
+      existingProfiles: "## 既存の Profile"
+      relatedMemories: "## 関連する既存の記憶"
+      task: |
+        ## タスク
+        上記の会話から、記憶として保存すべき情報を抽出してください。
+        ...
+```
+
+This allows customizing the extraction behavior without modifying code.
+
+### Extraction Process
+
+The LLM is prompted to extract:
+
+- **Profile Updates**: Changes to user preferences or traits
+- **New Memories**: Facts worth remembering
+- **Archive Candidates**: Outdated or superseded information
+
+---
+
+## Database Schema
+
+Mirror Mate uses SQLite with Drizzle ORM for persistence.
+
+### Tables
+
+| Table | Description |
+|-------|-------------|
+| `users` | User accounts |
+| `sessions` | Conversation sessions |
+| `messages` | Chat messages |
+| `memories` | Stored memories |
+| `memory_embeddings` | Vector embeddings for semantic search |
+
+### Memory Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique identifier |
+| `userId` | string | Owner user ID |
+| `kind` | enum | profile, episode, or knowledge |
+| `title` | string | Memory title/key |
+| `content` | string | Memory content |
+| `tags` | string[] | Categorization tags |
+| `importance` | number | Importance score (0.0-1.0) |
+| `status` | enum | active, archived, or deleted |
+| `source` | enum | manual or extracted |
+| `createdAt` | datetime | Creation timestamp |
+| `updatedAt` | datetime | Last update timestamp |
+| `lastUsedAt` | datetime | Last retrieval timestamp |
+
+---
+
+## Memory Management UI
+
+Access the memory management interface at `/control/memory`.
+
+### Features
+
+- **View Memories**: List all memories with filtering
+- **Create Memory**: Manually add new memories
+- **Edit Memory**: Update existing memories
+- **Delete Memory**: Soft delete or permanently remove
+- **Filter**: By type (profile/episode/knowledge) and status
+
+### API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/memories` | List memories |
+| POST | `/api/memories` | Create memory |
+| GET | `/api/memories/[id]` | Get memory details |
+| PUT | `/api/memories/[id]` | Update memory |
+| DELETE | `/api/memories/[id]` | Delete memory |
+
+### Query Parameters
+
+**GET /api/memories**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `userId` | string | Filter by user ID |
+| `kind` | string | Filter by type (profile/episode/knowledge) |
+| `status` | string | Filter by status (active/archived/deleted) |
+
+**DELETE /api/memories/[id]**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `hard` | boolean | If true, permanently delete |
+
+---
+
+## Setup
+
+### 1. Set Up Embedding Service
+
+**Option A: PLaMo-Embedding-1B (Recommended for Japanese)**
+
+See [Recommended Setup](/guide/recommended-setup) for PLaMo server setup on Mac Studio.
+
+**Option B: Ollama with bge-m3 (Alternative)**
+
+```bash
+# Start Ollama
+ollama serve
+
+# Pull the embedding model
+ollama pull bge-m3
+```
+
+### 2. Initialize Database
+
+```bash
+# Create data directory
+mkdir -p data
+
+# Run database migration
+bun run db:push
+```
+
+### 3. Configure Providers
+
+Edit `config/providers.yaml`:
+
+```yaml
+providers:
+  embedding:
+    enabled: true
+    provider: ollama  # PLaMo server provides Ollama-compatible API
+    ollama:
+      model: plamo-embedding-1b
+      baseUrl: "http://studio:8000"  # PLaMo (or http://localhost:11434 for Ollama)
+
+  memory:
+    enabled: true
+    rag:
+      topK: 8
+      threshold: 0.3
+    extraction:
+      autoExtract: true
+      minConfidence: 0.5
+```
+
+### 4. Verify Setup
+
+```bash
+# Start the development server
+bun run dev
+
+# Open memory management
+open http://localhost:3000/control/memory
+```
+
+---
+
+## Docker Setup
+
+When running in Docker, the database is persisted in a volume:
+
+```yaml
+# compose.yaml
+services:
+  mirrormate:
+    volumes:
+      - mirrormate-data:/app/data
+
+volumes:
+  mirrormate-data:
+```
+
+Configure embedding to use PLaMo server:
+
+```yaml
+# config/providers.yaml
+providers:
+  embedding:
+    enabled: true
+    provider: ollama  # PLaMo server provides Ollama-compatible API
+    ollama:
+      model: plamo-embedding-1b
+      baseUrl: "http://studio:8000"  # PLaMo embedding server
+```
+
+See [Docker Documentation](docker.md) and [Recommended Setup](recommended-setup.md) for details.
+
+---
+
+## Troubleshooting
+
+### Embedding Service Not Available
+
+**Error**: `Ollama embed API error: 404` or connection refused
+
+**Solution (PLaMo)**:
+1. Check PLaMo server is running: `curl http://studio:8000/health`
+2. View logs: `docker compose -f compose.studio.yaml logs plamo-embedding`
+
+**Solution (Ollama/bge-m3)**:
+1. Ensure Ollama is running: `ollama serve`
+2. Pull the model: `ollama pull bge-m3`
+3. Verify the model exists: `ollama list`
+
+### Database Not Found
+
+**Error**: `SQLITE_CANTOPEN`
+
+**Solution**:
+1. Create data directory: `mkdir -p data`
+2. Run migration: `bun run db:push`
+
+### Memory Not Being Extracted
+
+**Solution**:
+1. Check `memory.enabled` is `true` in config
+2. Check `extraction.autoExtract` is `true`
+3. Verify LLM provider is working
+4. Check console logs for extraction errors
+
+### Low Quality Retrieval
+
+**Solution**:
+1. Lower the `threshold` value (e.g., 0.2)
+2. Increase the `topK` value
+3. Add more profile memories for better context
+4. Use a higher quality embedding model
+
+---
+
+## Best Practices
+
+### Memory Organization
+
+1. **Use profile memories for persistent info**: Things that rarely change
+2. **Use episode memories for recent events**: Time-sensitive information
+3. **Use knowledge memories for facts**: Learned information
+
+### Performance Tips
+
+1. **Set appropriate thresholds**: Too low = irrelevant results, too high = missing context
+2. **Keep topK reasonable**: 5-10 is usually sufficient
+3. **Periodic cleanup**: Archive or delete outdated memories
+
+### Privacy Considerations
+
+1. **Review extracted memories**: Check what the LLM is storing
+2. **Manual cleanup**: Remove sensitive information if needed
+3. **User-specific memories**: Memories are scoped to user IDs
+
+
+## Links discovered
+- [Recommended Setup](https://github.com/orangekame3/mirrormate/blob/develop/guide/recommended-setup.md)
+- [Docker Documentation](https://github.com/orangekame3/mirrormate/blob/develop/docs/guide/docker.md)
+- [Recommended Setup](https://github.com/orangekame3/mirrormate/blob/develop/docs/guide/recommended-setup.md)
+
+--- docs/config/plugins.md ---
+# Plugins
+
+Mirror Mate supports visual widget plugins that display information on the mirror screen. Unlike [Features](features.md) which provide context to the AI, Plugins render UI components in the four corners of the screen.
+
+## Features vs Plugins
+
+| Aspect | Features | Plugins |
+|--------|----------|---------|
+| Purpose | Provide context to AI | Display UI widgets |
+| Output | Text injected into prompts | React components |
+| Location | Backend (API) | Frontend (Browser) |
+| Example | Weather data for AI | Clock widget display |
+
+## Configuration
+
+Plugins are configured in `config/plugins.yaml`.
+
+```yaml
+plugins:
+  clock:
+    source: github:orangekame3/mirrormate-clock-plugin
+    enabled: true
+    position: top-left
+    config:
+      timezone: "Asia/Tokyo"
+      format24h: true
+```
+
+### Source Types
+
+The `source` field specifies where to get the plugin:
+
+| Format | Description | Example |
+|--------|-------------|---------|
+| `github:owner/repo` | Install from GitHub repository | `github:orangekame3/mirrormate-clock-plugin` |
+| `npm:package-name` | Install from npm/bun registry | `npm:mirrormate-clock-plugin` |
+| `local:plugin-name` | Use from local `plugins/` directory | `local:my-custom-plugin` |
+
+### Position Options
+
+Plugins can be placed in any of the four corners:
+
+| Position | Location |
+|----------|----------|
+| `top-left` | Upper left corner |
+| `top-right` | Upper right corner |
+| `bottom-left` | Lower left corner |
+| `bottom-right` | Lower right corner |
+
+---
+
+## Installing Plugins
+
+### From GitHub
+
+1. Add the plugin to `package.json`:
+
+```bash
+bun add github:orangekame3/mirrormate-clock-plugin
+```
+
+2. Configure in `config/plugins.yaml`:
+
+```yaml
+plugins:
+  clock:
+    source: github:orangekame3/mirrormate-clock-plugin
+    enabled: true
+    position: top-left
+```
+
+3. Register the component in `src/components/PluginRenderer.tsx`:
+
+```typescript
+import { ClockWidget } from "mirrormate-clock-plugin";
+
+const pluginComponents: Record<string, React.ComponentType<{ config?: Record<string, unknown> }>> = {
+  clock: ClockWidget,
+};
+```
+
+### From npm/bun registry
+
+```bash
+bun add mirrormate-clock-plugin
+```
+
+Then configure the same way with `source: npm:mirrormate-clock-plugin`.
+
+### Local Development
+
+1. Create a directory under `plugins/`:
+
+```
+plugins/
+  my-plugin/
+    manifest.yaml
+    index.tsx
+```
+
+2. Add `manifest.yaml`:
+
+```yaml
+name: my-plugin
+displayName: My Plugin
+version: 1.0.0
+description: My custom plugin
+defaultPosition: top-right
+defaultConfig:
+  option1: value1
+```
+
+3. Configure with `source: local:my-plugin`.
+
+---
+
+## Available Plugins
+
+### Clock Plugin
+
+MagicMirror-inspired digital clock widget.
+
+**Repository:** [orangekame3/mirrormate-clock-plugin](https://github.com/orangekame3/mirrormate-clock-plugin)
+
+**Source:** `github:orangekame3/mirrormate-clock-plugin`
+
+**Configuration:**
+
+```yaml
+plugins:
+  clock:
+    source: github:orangekame3/mirrormate-clock-plugin
+    enabled: true
+    position: top-left
+    config:
+      timezone: "Asia/Tokyo"
+      format24h: true
+      showSeconds: false
+      showDate: true
+      dateFormat: "long"
+      showWeekday: true
+      locale: "ja-JP"
+```
+
+> **Note**: Clock settings (timezone, format24h, locale) can be automatically set based on your app locale using [Locale Presets](presets.md). When not explicitly set, the preset values are used.
+
+**Options:**
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `timezone` | string | `Asia/Tokyo` | IANA timezone identifier |
+| `format24h` | boolean | `true` | Use 24-hour format |
+| `showSeconds` | boolean | `false` | Display seconds |
+| `showDate` | boolean | `true` | Display date |
+| `dateFormat` | string | `long` | Date format (`short`, `long`, `full`) |
+| `showWeekday` | boolean | `true` | Display weekday |
+| `locale` | string | `ja-JP` | Locale for formatting |
+
+---
+
+## Creating Plugins
+
+### Package Structure
+
+```
+mirrormate-my-plugin/
+  src/
+    index.ts        # Export entry
+    MyWidget.tsx    # React component
+  package.json      # With mirrormate metadata
+  tsconfig.json
+  tsup.config.ts    # Build config
+```
+
+### package.json
+
+Include plugin metadata in the `mirrormate` field:
+
+```json
+{
+  "name": "mirrormate-my-plugin",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "mirrormate": {
+    "name": "my-plugin",
+    "displayName": "My Plugin",
+    "version": "1.0.0",
+    "description": "Description of my plugin",
+    "defaultPosition": "top-right",
+    "defaultConfig": {
+      "option1": "default-value"
+    }
+  },
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}
+```
+
+### Component Implementation
+
+```tsx
+"use client";
+
+import { useState, useEffect } from "react";
+
+interface MyWidgetConfig {
+  option1?: string;
+}
+
+interface MyWidgetProps {
+  config?: MyWidgetConfig;
+}
+
+export function MyWidget({ config }: MyWidgetProps) {
+  const option1 = config?.option1 ?? "default";
+
+  return (
+    <div className="text-white">
+      {/* Your widget content */}
+    </div>
+  );
+}
+```
+
+### Build Configuration (tsup.config.ts)
+
+```typescript
+import { defineConfig } from "tsup";
+
+export default defineConfig({
+  entry: ["src/index.ts"],
+  format: ["cjs", "esm"],
+  dts: true,
+  external: ["react"],
+  clean: true,
+});
+```
+
+### Publishing
+
+1. Build the plugin:
+
+```bash
+bun run build
+```
+
+2. Push to GitHub:
+
+```bash
+git push origin main
+```
+
+3. Users can install via:
+
+```bash
+bun add github:your-username/mirrormate-my-plugin
+```
+
+---
+
+## Plugin Naming Convention
+
+For automatic discovery, use one of these naming patterns:
+
+- `mirrormate-*-plugin` (e.g., `mirrormate-clock-plugin`)
+- `mirrormate-plugin-*` (e.g., `mirrormate-plugin-clock`)
+- `@mirrormate/plugin-*` (e.g., `@mirrormate/plugin-clock`)
+
+
+## Links discovered
+- [Features](https://github.com/orangekame3/mirrormate/blob/develop/docs/config/features.md)
+- [orangekame3/mirrormate-clock-plugin](https://github.com/orangekame3/mirrormate-clock-plugin)
+- [Locale Presets](https://github.com/orangekame3/mirrormate/blob/develop/docs/config/presets.md)
+
+--- src/lib/rules/modules.ts ---
+import * as fs from "fs";
+import * as path from "path";
+import * as yaml from "js-yaml";
+import dns from "dns";
+import { ModulesConfig, ModuleConfig, RuleAction, ModuleResult } from "./types";
+import { getFeatureContext } from "../features/registry";
+import { executeTool } from "../tools";
+import { getLocale, type Locale } from "../app";
+
+// Force IPv4 first
+dns.setDefaultResultOrder("ipv4first");
+
+let cachedConfig: ModulesConfig | null = null;
+let cachedLocale: Locale | null = null;
+
+function getConfigPath(): string {
+  const configDir = path.join(process.cwd(), "config");
+  const locale = getLocale();
+  const localePath = path.join(configDir, "locales", locale, "modules.yaml");
+  if (fs.existsSync(localePath)) {
+    return localePath;
+  }
+  // Fallback to root config for backward compatibility
+  return path.join(configDir, "modules.yaml");
+}
+
+function loadModulesConfig(): ModulesConfig {
+  const locale = getLocale();
+
+  // Invalidate cache if locale changed
+  if (cachedLocale !== null && cachedLocale !== locale) {
+    cachedConfig = null;
+  }
+
+  if (cachedConfig) {
+    return cachedConfig;
+  }
+
+  const configPath = getConfigPath();
+  console.log(`[Modules] Loading modules from: ${configPath}`);
+
+  if (!fs.existsSync(configPath)) {
+    return { modules: {} };
+  }
+
+  const fileContents = fs.readFileSync(configPath, "utf8");
+  cachedConfig = yaml.load(fileContents) as ModulesConfig;
+  cachedLocale = locale;
+
+  return cachedConfig;
+}
+
+// Locale-specific Wikipedia API settings
+const wikipediaSettings = {
+  ja: {
+    domain: "ja.wikipedia.org",
+    formatDate: (month: number, day: number) => `${month}月${day}日`,
+    formatEvent: (month: number, day: number, year: string, text: string) =>
+      `今日${month}月${day}日は、${year}年に「${text}」があった日です。`,
+  },
+  en: {
+    domain: "en.wikipedia.org",
+    formatDate: (month: number, day: number) => {
+      const months = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      return `${months[month - 1]} ${day}`;
+    },
+    formatEvent: (month: number, day: number, year: string, text: string) => {
+      const months = ["January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"];
+      return `Today, ${months[month - 1]} ${day}, is the day when "${text}" happened in ${year}.`;
+    },
+  },
+} as const;
+
+async function fetchTodayInfo(): Promise<string> {
+  const now = new Date();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const locale = getLocale();
+  const settings = wikipediaSettings[locale] || wikipediaSettings.en;
+
+  try {
+    // Fetch today's events from Wikipedia API
+    const url = `https://${settings.domain}/api/rest_v1/feed/onthisday/events/${month}/${day}`;
+    const response = await fetch(url, {
+      headers: {
+        "User-Agent": "mirrormate-bot/1.0",
+      },
+    });
+
+    if (!response.ok) {
+      return settings.formatDate(month, day);
+    }
+
+    const data = await response.json();
+    const events = data.events || [];
+
+    if (events.length === 0) {
+      return settings.formatDate(month, day);
+    }
+
+    // Pick one recent event
+    const recentEvent = events[0];
+    const year = recentEvent.year || "";
+    const text = recentEvent.text || "";
+
+    return settings.formatEvent(month, day, year, text);
+  } catch (error) {
+    console.error("[TodayInfo] Error:", error);
+    return settings.formatDate(month, day);
+  }
+}
+
+export async function executeModule(
+  action: RuleAction
+): Promise<ModuleResult> {
+  const config = loadModulesConfig();
+  const moduleConfig = config.modules[action.module];
+
+  if (!moduleConfig) {
+    return {
+      module: action.module,
+      content: `Module "${action.module}" not found`,
+    };
+  }
+
+  console.log(`[Module] Executing: ${action.module} (${moduleConfig.type})`);
+
+  try {
+    switch (moduleConfig.type) {
+      case "feature": {
+        const featureName = moduleConfig.config.feature;
+        if (!featureName) {
+          return { module: action.module, content: "" };
+        }
+        const content = await getFeatureContext(featureName);
+        return { module: action.module, content };
+      }
+
+      case "tool": {
+        const toolName = moduleConfig.config.tool;
+        if (!toolName) {
+          return { module: action.module, content: "" };
+        }
+        const params = action.params || {};
+        const result = await executeTool({
+          name: toolName,
+          arguments: params,
+        });
+        return { module: action.module, content: result.result };
+      }
+
+      case "api": {
+        const source = moduleConfig.config.source;
+        if (source === "wikipedia_api") {
+          const content = await fetchTodayInfo();
+          return { module: action.module, content };
+        }
+        return { module: action.module, content: "" };
+      }
+
+      case "static": {
+        const message = moduleConfig.config.message || "";
+        return { module: action.module, content: message };
+      }
+
+      default:
+        return { module: action.module, content: "" };
+    }
+  } catch (error) {
+    console.error(`[Module] Error executing ${action.module}:`, error);
+    return {
+      module: action.module,
+      content: `Error: ${(error as Error).message}`,
+    };
+  }
+}
+
+export async function executeModules(
+  actions: RuleAction[]
+): Promise<ModuleResult[]> {
+  const results: ModuleResult[] = [];
+
+  for (const action of actions) {
+    const result = await executeModule(action);
+    if (result.content) {
+      results.push(result);
+    }
+  }
+
+  return results;
+}
+
+
+--- src/app/api/characters/route.ts ---
+import { NextResponse } from "next/server";
+import { getCharacterPresets, type CharacterPreset } from "@/lib/character";
+
+export interface CharacterPresetResponse {
+  id: string;
+  name: string;
+  description: string;
+  recommendedVoice?: number;
+}
+
+export async function GET() {
+  try {
+    const presets = getCharacterPresets();
+
+    const response: CharacterPresetResponse[] = presets.map(
+      (preset: CharacterPreset) => ({
+        id: preset.id,
+        name: preset.name,
+        description: preset.description,
+        recommendedVoice: preset.recommendedVoice,
+      })
+    );
+
+    return NextResponse.json({ characters: response });
+  } catch (error) {
+    console.error("Failed to load character presets:", error);
+    return NextResponse.json(
+      { characters: [], error: "Failed to load characters" },
+      { status: 500 }
+    );
+  }
+}
+
+
+--- src/app/api/chat/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+import { getAllContexts, initializeFeatures } from "@/lib/features/registry";
+import { getLLMProvider, ChatMessage } from "@/lib/llm";
+import { getSystemPrompt, getSystemPromptForCharacter } from "@/lib/character";
+import { getToolDefinitions, executeTool, getPendingEffect, clearPendingEffect, ToolInfoCard, ToolContext } from "@/lib/tools";
+import { executeRule, formatRuleContext } from "@/lib/rules";
+import { loadProvidersConfig, getEmbeddingProvider } from "@/lib/providers";
+import { RAGService, getSimpleContext, MemoryService } from "@/lib/memory";
+import { getUserRepository } from "@/lib/repositories";
+import { getLocale } from "@/lib/app";
+
+const MAX_TOOL_ITERATIONS = 3;
+const DEFAULT_USER_ID = "default-user";
+
+// RAG service cache
+let ragService: RAGService | null = null;
+let memoryService: MemoryService | null = null;
+
+function getRAGService(): RAGService | null {
+  if (ragService) return ragService;
+
+  const embeddingProvider = getEmbeddingProvider();
+  if (!embeddingProvider) return null;
+
+  ragService = new RAGService(embeddingProvider);
+  return ragService;
+}
+
+function getMemoryService(): MemoryService | null {
+  if (memoryService) return memoryService;
+
+  const config = loadProvidersConfig();
+  const memoryConfig = config.providers?.memory;
+
+  if (!memoryConfig?.enabled) return null;
+
+  const embeddingProvider = getEmbeddingProvider();
+  const llmProvider = getLLMProvider();
+
+  memoryService = new MemoryService({
+    llmProvider,
+    embeddingProvider: embeddingProvider || undefined,
+    minConfidence: memoryConfig.extraction?.minConfidence ?? 0.5,
+    autoExtract: memoryConfig.extraction?.autoExtract ?? true,
+  });
+
+  return memoryService;
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { messages, withAudio = true, userId, characterId, image } = await request.json();
+
+    console.log("[Chat] Request received:", {
+      messageCount: messages?.length,
+      hasImage: !!image,
+      imageLength: image ? image.length : 0,
+      characterId,
+    });
+
+    // Ensure features are initialized (needed for vision)
+    initializeFeatures();
+
+    // Determine user ID (use default if not specified)
+    const currentUserId = userId || DEFAULT_USER_ID;
+
+    // Create user if not exists
+    const userRepo = getUserRepository();
+    await userRepo.findOrCreate(currentUserId);
+
+    // Get the last user message for rule matching
+    const lastUserMessage = messages
+      .filter((m: { role: string }) => m.role === "user")
+      .pop()?.content || "";
+
+    // Check if any keyword rule matches
+    const ruleResult = await executeRule(lastUserMessage);
+    const ruleContext = formatRuleContext(ruleResult);
+
+    // Build tool context (image will be passed to tools like see_camera)
+    const toolContext: ToolContext = {
+      image: image || undefined,
+    };
+
+    // Build system prompt with contexts (use character-specific prompt if characterId provided)
+    const systemPrompt = characterId
+      ? getSystemPromptForCharacter(characterId)
+      : getSystemPrompt();
+    const contexts: string[] = [];
+
+    // Add tool usage hint when camera image is available
+    if (image) {
+      const isJapanese = getLocale() === "ja";
+      contexts.push("[Tool Usage]");
+      contexts.push(isJapanese
+        ? "ユーザーのカメラ画像が利用可能です。ユーザーの外見や持っているものについて聞かれた場合は、see_cameraツールを使ってください。web_searchは使わないでください。"
+        : "User's camera image is available. If asked about the user's appearance or what they're holding, use the see_camera tool. Do not use web_search.");
+    }
+
+    // Get RAG context
+    let usedMemoryIds: string[] = [];
+    const rag = getRAGService();
+    const config = loadProvidersConfig();
+    const memoryConfig = config.providers?.memory;
+
+    if (rag && memoryConfig?.enabled) {
+      try {
+        const ragContext = await rag.retrieve(currentUserId, lastUserMessage, {
+          topK: memoryConfig.rag?.topK ?? 8,
+          threshold: memoryConfig.rag?.threshold ?? 0.3,
+        });
+        const formattedContext = rag.formatContext(ragContext);
+        if (formattedContext) {
+          contexts.push(formattedContext);
+        }
+        usedMemoryIds = ragContext.usedMemoryIds;
+      } catch (error) {
+        console.error("[Chat] RAG retrieval failed:", error);
+        // Fall back to simple context if RAG fails
+        const simpleContext = await getSimpleContext(currentUserId);
+        if (simpleContext) {
+          contexts.push(simpleContext);
+        }
+      }
+    }
+
+    // Add rule context if matched (takes priority)
+    if (ruleContext) {
+      contexts.push(ruleContext);
+    } else {
+      // Use regular plugin context if no rule matched
+      const pluginContext = await getAllContexts();
+      if (pluginContext) {
+        contexts.push("[Current Information]");
+        contexts.push(pluginContext);
+      }
+    }
+
+    const systemPromptWithContext = contexts.length > 0
+      ? `${systemPrompt}\n\n${contexts.join("\n")}`
+      : systemPrompt;
+
+    const llmProvider = getLLMProvider();
+
+    // Only provide tools if no rule matched (rule already handled the data gathering)
+    const tools = ruleResult.matched ? [] : getToolDefinitions();
+
+    let chatMessages: ChatMessage[] = [
+      { role: "system", content: systemPromptWithContext },
+      ...messages,
+    ];
+
+    let assistantMessage = "";
+    let iterations = 0;
+    let discordShared = false;
+    let toolsUsed = false;
+    const infoCards: ToolInfoCard[] = [];
+
+    // Clear any pending effects from previous requests
+    clearPendingEffect();
+
+    // Tool calling loop
+    while (iterations < MAX_TOOL_ITERATIONS) {
+      iterations++;
+
+      const result = await llmProvider.chat({
+        messages: chatMessages,
+        tools: tools.length > 0 ? tools : undefined,
+      });
+
+      if (result.finishReason === "stop" || !result.toolCalls || result.toolCalls.length === 0) {
+        assistantMessage = result.content;
+        break;
+      }
+
+      // Process tool calls
+      console.log(`[Chat] Processing ${result.toolCalls.length} tool call(s)`);
+      toolsUsed = true;
+
+      // Add assistant message with tool calls
+      chatMessages.push({
+        role: "assistant",
+        content: result.content || "",
+        tool_calls: result.toolCalls.map((tc) => ({
+          id: tc.id || `call_${Date.now()}`,
+          function: {
+            name: tc.name,
+            arguments: JSON.stringify(tc.arguments),
+          },
+        })),
+      });
+
+      // Execute tools and add results
+      for (const toolCall of result.toolCalls) {
+        console.log(`[Chat] Executing tool: ${toolCall.name}`);
+        const toolResult = await executeTool(toolCall, toolContext);
+
+        // Collect info cards from tools
+        if (toolResult.infoCard) {
+          infoCards.push(toolResult.infoCard);
+          // Track Discord share via info card
+          if (toolResult.infoCard.type === "discord") {
+            discordShared = true;
+          }
+        }
+
+        chatMessages.push({
+          role: "tool",
+          content: toolResult.result,
+          tool_call_id: toolCall.id || `call_${Date.now()}`,
+        });
+      }
+    }
+
+    // Determine effect: tool-triggered effect takes priority, then rule effect
+    const toolEffect = getPendingEffect();
+    const effect = toolEffect || ruleResult.effect;
+
+    // Record memory usage & async memory extraction
+    const memService = getMemoryService();
+    if (memService && usedMemoryIds.length > 0) {
+      // Update lastUsedAt for used memories (async)
+      memService.touchMemories(usedMemoryIds).catch((err) => {
+        console.error("[Chat] Failed to touch memories:", err);
+      });
+    }
+
+    // Extract memories from conversation (async, non-blocking)
+    if (memService && assistantMessage) {
+      const conversationMessages = messages
+        .filter((m: { role: string }) => m.role === "user" || m.role === "assistant")
+        .slice(-10) // Use last 10 messages for extraction
+        .map((m: { role: string; content: string }) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        }));
+
+      // Add assistant response
+      conversationMessages.push({
+        role: "assistant" as const,
+        content: assistantMessage,
+      });
+
+      memService.processConversation(currentUserId, conversationMessages, usedMemoryIds).catch((err) => {
+        console.error("[Chat] Memory extraction failed:", err);
+      });
+    }
+
+    // Generate audio if requested
+    if (withAudio && assistantMessage && process.env.OPENAI_API_KEY) {
+      const openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+
+      const audioResponse = await openai.audio.speech.create({
+        model: "tts-1",
+        voice: "shimmer",
+        input: assistantMessage,
+        response_format: "mp3",
+        speed: 0.95,
+      });
+
+      const audioBuffer = await audioResponse.arrayBuffer();
+      const audioBase64 = Buffer.from(audioBuffer).toString("base64");
+
+      return NextResponse.json({
+        message: assistantMessage,
+        audio: audioBase64,
+        effect,
+        discordShared,
+        toolsUsed,
+        infoCards,
+      });
+    }
+
+    return NextResponse.json({
+      message: assistantMessage,
+      effect,
+      discordShared,
+      toolsUsed,
+      infoCards,
+    });
+  } catch (error) {
+    console.error("Chat API error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate response" },
+      { status: 500 }
+    );
+  }
+}
+
+
+--- src/app/api/memories/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { getMemoryRepository, getUserRepository } from "@/lib/repositories";
+import { getEmbeddingProvider } from "@/lib/providers";
+
+const DEFAULT_USER_ID = "default-user";
+
+/**
+ * GET /api/memories - List memories
+ */
+export async function GET(request: NextRequest) {
+  try {
+    const searchParams = request.nextUrl.searchParams;
+    const userId = searchParams.get("userId") || DEFAULT_USER_ID;
+    const kind = searchParams.get("kind") as "profile" | "episode" | "knowledge" | null;
+    const status = searchParams.get("status") as "active" | "archived" | "deleted" | null;
+
+    const memoryRepo = getMemoryRepository();
+    const memories = await memoryRepo.findMany({
+      userId,
+      kind: kind || undefined,
+      status: status || "active",
+    });
+
+    // Parse tags from JSON
+    const parsed = memories.map((m) => ({
+      ...m,
+      tags: m.tags ? JSON.parse(m.tags) : [],
+    }));
+
+    return NextResponse.json({ memories: parsed });
+  } catch (error) {
+    console.error("[API] GET /api/memories error:", error);
+    return NextResponse.json({ error: "Failed to fetch memories" }, { status: 500 });
+  }
+}
+
+/**
+ * POST /api/memories - Create a memory
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const {
+      userId = DEFAULT_USER_ID,
+      kind,
+      title,
+      content,
+      tags = [],
+      importance = 0.5,
+    } = body;
+
+    if (!kind || !title || !content) {
+      return NextResponse.json(
+        { error: "kind, title, content are required" },
+        { status: 400 }
+      );
+    }
+
+    // Create user if not exists
+    const userRepo = getUserRepository();
+    await userRepo.findOrCreate(userId);
+
+    const memoryRepo = getMemoryRepository();
+    const memory = await memoryRepo.create({
+      userId,
+      kind,
+      title,
+      content,
+      tags,
+      importance,
+      source: "manual",
+    });
+
+    // Generate embedding
+    const embeddingProvider = getEmbeddingProvider();
+    if (embeddingProvider) {
+      try {
+        const text = `${title}: ${content}`;
+        const result = await embeddingProvider.embed(text);
+        await memoryRepo.saveEmbedding(memory.id, result.vector, result.model, result.dims);
+      } catch (err) {
+        console.error("[API] Failed to generate embedding:", err);
+      }
+    }
+
+    return NextResponse.json({
+      memory: {
+        ...memory,
+        tags,
+      },
+    });
+  } catch (error) {
+    console.error("[API] POST /api/memories error:", error);
+    return NextResponse.json({ error: "Failed to create memory" }, { status: 500 });
+  }
+}
+
+
+--- src/app/api/plugins/route.ts ---
+import { NextResponse } from "next/server";
+import {
+  getEnabledPluginsByPosition,
+  getAvailablePlugins,
+} from "@/lib/plugins/registry";
+
+export async function GET() {
+  try {
+    const enabledByPosition = getEnabledPluginsByPosition();
+    const available = getAvailablePlugins();
+
+    return NextResponse.json({
+      plugins: enabledByPosition,
+      available,
+    });
+  } catch (error) {
+    console.error("[API/Plugins] Error:", error);
+    return NextResponse.json(
+      { error: "Failed to load plugins" },
+      { status: 500 }
+    );
+  }
+}
+
+
+--- src/app/api/reminder/route.ts ---
+import { NextResponse } from "next/server";
+import { fetchUpcomingEvents, CalendarEvent } from "@/lib/features/calendar/google-calendar";
+import { loadFeaturesConfig } from "@/lib/features/config-loader";
+
+export interface ReminderEvent extends CalendarEvent {
+  minutesUntil: number;
+  configuredMinutes: number;
+  urgent: boolean;
+}
+
+export async function GET() {
+  try {
+    const config = loadFeaturesConfig();
+    const reminderConfig = config.features.reminder;
+
+    // Check if reminder is enabled
+    if (!reminderConfig?.enabled) {
+      return NextResponse.json({ reminders: [] });
+    }
+
+    const calendarId = process.env.GOOGLE_CALENDAR_ID;
+
+    if (
+      !process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
+      !process.env.GOOGLE_PRIVATE_KEY ||
+      !calendarId
+    ) {
+      return NextResponse.json({ reminders: [] });
+    }
+
+    const events = await fetchUpcomingEvents(calendarId, 5);
+    const now = new Date();
+    const reminders: ReminderEvent[] = [];
+
+    // Get configured reminder times
+    const reminderTimes = reminderConfig.reminders || [
+      { minutes: 10, urgent: false },
+      { minutes: 5, urgent: true },
+    ];
+
+    for (const event of events) {
+      const diffMs = event.start.getTime() - now.getTime();
+      const diffMinutes = Math.round(diffMs / 60000);
+
+      // Check each configured reminder time
+      for (const reminderTime of reminderTimes) {
+        const targetMinutes = reminderTime.minutes;
+        // Allow 1 minute tolerance (targetMinutes - 1 to targetMinutes + 1)
+        if (diffMinutes >= targetMinutes - 1 && diffMinutes <= targetMinutes + 1) {
+          reminders.push({
+            ...event,
+            minutesUntil: diffMinutes,
+            configuredMinutes: targetMinutes,
+            urgent: reminderTime.urgent ?? false,
+          });
+          break; // Only one reminder per event per check
+        }
+      }
+    }
+
+    return NextResponse.json({ reminders });
+  } catch (error) {
+    console.error("[Reminder API] Error:", error);
+    return NextResponse.json({ reminders: [] });
+  }
+}
+
+
+--- src/app/api/settings/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { getUserRepository, getUserSettingsRepository } from "@/lib/repositories";
+
+const DEFAULT_USER_ID = "default-user";
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId") || DEFAULT_USER_ID;
+
+    // Ensure user exists
+    const userRepo = getUserRepository();
+    await userRepo.findOrCreate(userId);
+
+    const settingsRepo = getUserSettingsRepository();
+    const settings = await settingsRepo.findOrCreate(userId);
+
+    return NextResponse.json({
+      speakerId: settings.speakerId,
+      characterId: settings.characterId,
+    });
+  } catch (error) {
+    console.error("Settings GET error:", error);
+    return NextResponse.json(
+      { error: "Failed to get settings" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { userId, speakerId, characterId } = await request.json();
+    const currentUserId = userId || DEFAULT_USER_ID;
+
+    // Ensure user exists
+    const userRepo = getUserRepository();
+    await userRepo.findOrCreate(currentUserId);
+
+    const settingsRepo = getUserSettingsRepository();
+    const updated = await settingsRepo.update(currentUserId, {
+      speakerId: speakerId ?? null,
+      characterId: characterId ?? null,
+    });
+
+    return NextResponse.json({
+      speakerId: updated.speakerId,
+      characterId: updated.characterId,
+    });
+  } catch (error) {
+    console.error("Settings PUT error:", error);
+    return NextResponse.json(
+      { error: "Failed to update settings" },
+      { status: 500 }
+    );
+  }
+}
+
+
+--- src/app/api/stt/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import { getSTTProvider } from "@/lib/providers/stt";
+
+/**
+ * POST /api/stt
+ * Transcribe audio using configured STT provider (OpenAI Whisper or Local Whisper)
+ *
+ * Request: multipart/form-data
+ * - audio: Blob (required) - Audio file (webm, mp3, wav, etc.)
+ * - language: string (optional) - Language code (e.g., "ja", "en")
+ *
+ * Response:
+ * - transcript: string - Transcribed text
+ * - language: string (optional) - Detected language
+ * - duration: number (optional) - Audio duration in seconds
+ */
+export async function POST(request: NextRequest) {
+  try {
+    const provider = getSTTProvider();
+
+    if (!provider) {
+      return NextResponse.json(
+        {
+          error:
+            "STT provider not configured. Set provider to 'openai' or 'local' in providers.yaml, or use Web Speech API on client.",
+        },
+        { status: 400 }
+      );
+    }
+
+    const formData = await request.formData();
+    const audioFile = formData.get("audio") as File | null;
+    const language = formData.get("language") as string | null;
+
+    if (!audioFile) {
+      return NextResponse.json(
+        { error: "Audio file is required. Send as 'audio' field in FormData." },
+        { status: 400 }
+      );
+    }
+
+    // Validate file size (max 25MB for Whisper API)
+    const maxSize = 25 * 1024 * 1024; // 25MB
+    if (audioFile.size > maxSize) {
+      return NextResponse.json(
+        { error: `Audio file too large. Maximum size is 25MB.` },
+        { status: 400 }
+      );
+    }
+
+    // Validate file type
+    const supportedFormats = provider.getSupportedFormats();
+    const fileExtension = audioFile.name.split(".").pop()?.toLowerCase();
+    const mimeType = audioFile.type.split("/")[1]?.split(";")[0];
+
+    const isSupported =
+      (fileExtension && supportedFormats.includes(fileExtension)) ||
+      (mimeType && supportedFormats.includes(mimeType));
+
+    if (!isSupported) {
+      console.log(
+        `[STT API] File type check - extension: ${fileExtension}, mime: ${mimeType}`
+      );
+      // Allow webm even if not explicitly matched
+      if (!audioFile.type.includes("webm") && !audioFile.type.includes("audio")) {
+        return NextResponse.json(
+          {
+            error: `Unsupported audio format. Supported: ${supportedFormats.join(", ")}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    console.log(
+      `[STT API] Transcribing: ${audioFile.size} bytes, type: ${audioFile.type}, provider: ${provider.getProviderName()}`
+    );
+
+    // Convert File to Buffer
+    const arrayBuffer = await audioFile.arrayBuffer();
+    const audioBuffer = Buffer.from(arrayBuffer);
+
+    // Transcribe
+    const result = await provider.transcribe(audioBuffer, {
+      language: language || undefined,
+    });
+
+    console.log(
+      `[STT API] Success: "${result.transcript.substring(0, 50)}${result.transcript.length > 50 ? "..." : ""}"`
+    );
+
+    return NextResponse.json({
+      transcript: result.transcript,
+      language: result.language,
+      duration: result.duration,
+    });
+  } catch (error) {
+    console.error("[STT API] Error:", error);
+
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to transcribe audio";
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
+  }
+}
+
+
+--- src/app/api/tts/route.ts ---
+import { NextRequest, NextResponse } from "next/server";
+import OpenAI from "openai";
+import { loadProvidersConfig } from "@/lib/providers/config-loader";
+
+// Word replacements for natural Japanese TTS pronunciation
+const PRONUNCIATION_MAP: Record<string, string> = {
+  // Apps & Services
+  "Discord": "ディスコード",
+  "discord": "ディスコード",
+  "Twitter": "ツイッター",
+  "twitter": "ツイッター",
+  "YouTube": "ユーチューブ",
+  "youtube": "ユーチューブ",
+  "Google": "グーグル",
+  "google": "グーグル",
+  "Apple": "アップル",
+  "iPhone": "アイフォン",
+  "Android": "アンドロイド",
+  "LINE": "ライン",
+  "Slack": "スラック",
+  "Zoom": "ズーム",
+  "Teams": "チームズ",
+  // Tech terms
+  "API": "エーピーアイ",
+  "URL": "ユーアールエル",
+  "AI": "エーアイ",
+  "OK": "オーケー",
+  "Wi-Fi": "ワイファイ",
+  "WiFi": "ワイファイ",
+  "Bluetooth": "ブルートゥース",
+  // Common English
+  "check": "チェック",
+  "link": "リンク",
+  "share": "シェア",
+};
+
+/**
+ * Normalize text for better Japanese TTS pronunciation
+ */
+function normalizeForTTS(text: string): string {
+  let normalized = text;
+
+  for (const [english, japanese] of Object.entries(PRONUNCIATION_MAP)) {
+    // Use word boundary matching to avoid partial replacements
+    const regex = new RegExp(`\\b${english}\\b`, "gi");
+    normalized = normalized.replace(regex, japanese);
+  }
+
+  return normalized;
+}
+
+async function generateOpenAITTS(
+  text: string,
+  voice: string,
+  model: string,
+  speed: number
+): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) {
+    throw new Error("OpenAI API key not configured");
+  }
+
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  const audioResponse = await openai.audio.speech.create({
+    model: model as "tts-1" | "tts-1-hd",
+    voice: voice as "alloy" | "echo" | "fable" | "onyx" | "nova" | "shimmer",
+    input: text,
+    response_format: "mp3",
+    speed,
+  });
+
+  const audioBuffer = await audioResponse.arrayBuffer();
+  return Buffer.from(audioBuffer).toString("base64");
+}
+
+async function generateVoicevoxTTS(
+  text: string,
+  speaker: number,
+  baseUrl: string
+): Promise<string> {
+  // Step 1: Create audio query
+  const queryResponse = await fetch(
+    `${baseUrl}/audio_query?text=${encodeURIComponent(text)}&speaker=${speaker}`,
+    { method: "POST" }
+  );
+
+  if (!queryResponse.ok) {
+    throw new Error(`VOICEVOX audio_query failed: ${queryResponse.status}`);
+  }
+
+  const query = await queryResponse.json();
+
+  // Step 2: Synthesize audio
+  const synthesisResponse = await fetch(
+    `${baseUrl}/synthesis?speaker=${speaker}`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(query),
+    }
+  );
+
+  if (!synthesisResponse.ok) {
+    throw new Error(`VOICEVOX synthesis failed: ${synthesisResponse.status}`);
+  }
+
+  const audioBuffer = await synthesisResponse.arrayBuffer();
+  return Buffer.from(audioBuffer).toString("base64");
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { text, speaker: speakerOverride } = await request.json();
+
+    if (!text) {
+      return NextResponse.json({ error: "Text is required" }, { status: 400 });
+    }
+
+    const config = loadProvidersConfig();
+    const ttsConfig = config.providers.tts;
+
+    // Default to OpenAI if TTS config is not set
+    const provider = ttsConfig?.provider || "openai";
+
+    // Normalize text for better pronunciation (mainly for Japanese TTS)
+    const normalizedText = provider === "voicevox" ? normalizeForTTS(text) : text;
+
+    let audioBase64: string;
+
+    if (provider === "voicevox") {
+      // Use override if provided, otherwise use config
+      const speaker = speakerOverride ?? ttsConfig?.voicevox?.speaker ?? 3;
+      const baseUrl = ttsConfig?.voicevox?.baseUrl || "http://localhost:50021";
+
+      console.log(`[TTS] Using VOICEVOX (speaker: ${speaker}${speakerOverride !== undefined ? " [override]" : ""})`);
+      audioBase64 = await generateVoicevoxTTS(normalizedText, speaker, baseUrl);
+    } else {
+      const voice = ttsConfig?.openai?.voice || "shimmer";
+      const model = ttsConfig?.openai?.model || "tts-1";
+      const speed = ttsConfig?.openai?.speed ?? 0.95;
+
+      console.log(`[TTS] Using OpenAI (voice: ${voice})`);
+      audioBase64 = await generateOpenAITTS(text, voice, model, speed);
+    }
+
+    return NextResponse.json({ audio: audioBase64 });
+  } catch (error) {
+    console.error("TTS API error:", error);
+    return NextResponse.json(
+      { error: "Failed to generate audio" },
+      { status: 500 }
+    );
+  }
+}
+
+
+--- src/app/api/wakeword/route.ts ---
+import { NextResponse } from "next/server";
+import { getWakeWordConfig } from "@/lib/character";
+
+export async function GET() {
+  try {
+    const config = getWakeWordConfig();
+    return NextResponse.json(config);
+  } catch (error) {
+    console.error("[WakeWord API] Error:", error);
+    return NextResponse.json(
+      { enabled: false, phrase: "Hey Mira", timeout: 15 },
+      { status: 200 }
+    );
+  }
+}
+
+
+--- CONTRIBUTING.md ---
+# Contributing to Mirror Mate
+
+Thank you for your interest in contributing to Mirror Mate! This document provides guidelines for contributing.
+
+## Code of Conduct
+
+Please be respectful and constructive in all interactions.
+
+## How to Contribute
+
+### Reporting Bugs
+
+If you find a bug, please create an issue using the **Bug Report** template. Include:
+
+- Steps to reproduce
+- Expected behavior
+- Actual behavior
+- Environment details (OS, browser, Node.js version)
+
+### Feature Requests
+
+Have an idea? Create an issue using the **Feature Request** template. Describe:
+
+- The problem you're trying to solve
+- Your proposed solution
+- Any alternatives you've considered
+
+### Questions
+
+For questions about usage or development, create an issue using the **Question** template.
+
+## Development Setup
+
+### Prerequisites
+
+- Node.js 22+
+- bun
+- Docker (optional, for VOICEVOX)
+
+### Local Development
+
+```bash
+# Clone the repository
+git clone https://github.com/orangekame3/mirrormate.git
+cd mirrormate
+
+# Install dependencies
+bun install
+
+# Copy environment file
+cp .env.example .env
+
+# Start development server
+bun run dev
+```
+
+### Docker Development
+
+```bash
+# Start with Docker Compose
+docker compose up -d
+```
+
+## Coding Guidelines
+
+### Code Style
+
+- Use TypeScript for all new code
+- Follow existing code patterns
+- Use meaningful variable and function names
+
+### Commit Messages
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add new feature
+fix: fix a bug
+docs: update documentation
+style: formatting changes
+refactor: code refactoring
+test: add or update tests
+chore: maintenance tasks
+```
+
+### Testing
+
+Run tests before submitting changes:
+
+```bash
+# Run tests once
+bun run test
+
+# Run tests in watch mode during development
+bun run test:watch
+```
+
+### Pull Requests
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feat/amazing-feature`)
+3. Make your changes
+4. Run lint check (`bun run lint`)
+5. Run tests (`bun run test`)
+6. Run build (`bun run build`)
+7. Commit your changes
+8. Push to your fork
+9. Open a Pull Request
+
+## Project Structure
+
+```
+mirrormate/
+├── config/           # YAML configuration files
+├── docs/             # Documentation
+├── messages/         # i18n translation files
+├── plugins/          # Local plugins
+├── public/           # Static assets
+└── src/
+    ├── app/          # Next.js pages and API routes
+    ├── components/   # React components
+    ├── hooks/        # Custom React hooks
+    ├── i18n/         # Internationalization setup
+    └── lib/          # Core libraries
+        ├── app/      # App configuration
+        ├── character/# Character/AI personality
+        ├── features/ # Backend features (weather, calendar)
+        ├── plugins/  # Plugin system
+        ├── providers/# LLM and TTS providers
+        └── rules/    # Rule engine
+```
+
+## Creating Plugins
+
+See [Plugin Documentation](docs/plugins.md) for details on creating custom plugins.
+
+## License
+
+By contributing, you agree that your contributions will be licensed under the MIT License.
+
+
+## Links discovered
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [Plugin Documentation](https://github.com/orangekame3/mirrormate/blob/develop/docs/plugins.md)
+
+--- .github/pull_request_template.md ---
+## Summary
+
+<!-- Brief description of the changes -->
+
+## Type of Change
+
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Refactoring
+- [ ] Other (please describe)
+
+## Related Issue
+
+<!-- Link to related issue: Fixes #123 -->
+
+## Changes Made
+
+<!-- List the main changes -->
+
+-
+-
+-
+
+## Testing
+
+<!-- How did you test these changes? -->
+
+- [ ] Tested locally with `npm run dev`
+- [ ] Tested with Docker
+- [ ] Added/updated tests
+
+## Checklist
+
+- [ ] Code follows the project's coding style
+- [ ] Self-reviewed the code
+- [ ] Ran `npm run lint` with no errors
+- [ ] Ran `npm run build` successfully
+- [ ] Updated documentation if needed
+
+## Screenshots
+
+<!-- If applicable, add screenshots -->
+
+
+--- README.md ---
+<p align="center">
+  <img src="docs/public/mirrormate.png" alt="MirrorMate" width="400">
+</p>
+
+<h1 align="center">MirrorMate</h1>
+
+<p align="center">
+  <strong>Self-hosted personalized AI in a mirror</strong>
+</p>
+
+<p align="center">
+  <em>AI doesn't have to live on a screen.</em>
+</p>
+
+<p align="center">
+  <a href="https://www.orangekame3.net/mirrormate/">Docs</a> •
+  <a href="https://www.orangekame3.net/mirrormate/guide/getting-started">Getting Started</a> •
+  <a href="https://github.com/orangekame3/mirrormate/releases">Releases</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/orangekame3/mirrormate/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
+  <a href="https://github.com/orangekame3/mirrormate/releases"><img src="https://img.shields.io/github/v/release/orangekame3/mirrormate" alt="Release"></a>
+  <a href="https://github.com/orangekame3/mirrormate/actions"><img src="https://github.com/orangekame3/mirrormate/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+</p>
+
+---
+
+
+
+https://github.com/user-attachments/assets/e0f1f067-6b71-4022-afb3-f13d48e87a9b
+
+
+---
+
+## Why a mirror?
+
+A mirror is something you already live with.
+You glance at it in the morning. You check yourself before heading out.
+In those few seconds, you could ask about the weather, check your schedule, or just chat.
+
+MirrorMate puts AI into that everyday object.
+No phone to pull out. No laptop to open.
+Just talk to the mirror.
+
+## What it is
+
+- A voice-first AI designed to live in a mirror
+- Runs entirely local with Ollama + VOICEVOX (no cloud required)
+- Buildable with Raspberry Pi + half mirror
+- Remembers you through RAG-based memory
+
+## What it is not
+
+- Not a smart display
+- Not a cloud-dependent assistant
+- Not another chat UI in a browser
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                        Raspberry Pi                             │
+│  ┌───────────────┐  ┌────────────┐  ┌────────────────────────┐  │
+│  │  Browser      │  │  Next.js   │  │  SQLite                │  │
+│  │  (Chrome)     │◄─┤  App       │◄─┤  (Memory, Sessions)    │  │
+│  │  + Mic/Cam    │  │  Port 3000 │  │                        │  │
+│  └───────────────┘  └─────┬──────┘  └────────────────────────┘  │
+│         ▲                 │                                     │
+│         │                 │ Tailscale VPN                       │
+└─────────┼─────────────────┼─────────────────────────────────────┘
+          │                 ▼
+          │   ┌─────────────────────────────────────────────────┐
+          │   │                  Mac Studio                     │
+          │   │  ┌────────────┐ ┌──────────────┐ ┌───────────┐  │
+          │   │  │  Ollama    │ │  VOICEVOX    │ │  Whisper  │  │
+          │   │  │  LLM/VLM   │ │  TTS         │ │  STT      │  │
+          │   │  │  Embedding │ │  Port 50021  │ │  Port 8080│  │
+          │   │  └────────────┘ └──────────────┘ └───────────┘  │
+          │   └─────────────────────────────────────────────────┘
+          │
+          └── Half Mirror + Monitor
+```
+
+**Minimal setup**: Raspberry Pi + OpenAI API only
+
+**Full local setup**: Combine with Mac Studio (or any GPU machine) as shown above
+
+---
+
+## Quick Start
+
+**With OpenAI API (easiest):**
+
+```bash
+docker run -p 3000:3000 \
+  -e OPENAI_API_KEY=sk-xxx \
+  -e LLM_PROVIDER=openai \
+  -e TTS_PROVIDER=openai \
+  ghcr.io/orangekame3/mirrormate:latest
+```
+
+Open http://localhost:3000 in Chrome.
+
+**Fully local (Ollama + VOICEVOX):**
+
+```bash
+# 1. Pull a model with Ollama
+ollama pull qwen2.5:14b
+
+# 2. Start MirrorMate
+git clone https://github.com/orangekame3/mirrormate.git
+cd mirrormate
+docker compose up -d
+```
+
+**Wake word**: Say "Hey Mira" to activate.
+
+---
+
+## Features
+
+### Voice-First Interaction
+Activate with a wake word. Choose from Web Speech API, OpenAI Whisper, or local Whisper for speech recognition.
+
+### Personalized Memory
+Automatically extracts and stores information about you from conversations. Uses RAG to retrieve relevant memories and generate personalized responses.
+
+### Expressive Avatar
+Lip-synced avatar speaks responses. Eight animation states (Idle, Listening, Thinking, Speaking, etc.) show what it's doing at a glance.
+
+### Multi-Provider Support
+| Component | Options                                       |
+| --------- | --------------------------------------------- |
+| LLM       | OpenAI, Ollama                                |
+| TTS       | OpenAI, VOICEVOX                              |
+| STT       | Web Speech API, OpenAI Whisper, Local Whisper |
+| Embedding | Ollama, PLaMo-Embedding-1B                    |
+
+### Built-in Integrations
+- Weather (Open-Meteo)
+- Calendar (Google Calendar)
+- Web search (Tavily)
+- Reminders
+- Discord sharing
+
+### Plugin System
+Add your own widgets or sensor integrations. The Vision Companion plugin detects eye contact and greets you automatically.
+
+---
+
+## Tech Stack
+
+- **Frontend**: Next.js 15 / React 19 / Three.js
+- **Backend**: Node.js / SQLite (Drizzle ORM)
+- **AI**: Ollama / OpenAI / VOICEVOX / faster-whisper
+- **Infra**: Docker / Tailscale
+
+---
+
+## Development
+
+```bash
+bun install
+bun run dev
+```
+
+See [Documentation](https://www.orangekame3.net/mirrormate/) for details.
+
+---
+
+## Status
+
+Work in progress. Core features work, but rough edges remain.
+
+If you're into local AI, self-hosted systems, or physical interfaces, give it a try.
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+
+## Links discovered
+- [Documentation](https://www.orangekame3.net/mirrormate/)
+- [MIT](https://github.com/orangekame3/mirrormate/blob/develop/LICENSE.md)
+- [Docs](https://www.orangekame3.net/mirrormate/)
+- [Getting Started](https://www.orangekame3.net/mirrormate/guide/getting-started)
+- [Releases](https://github.com/orangekame3/mirrormate/releases)
+- [<img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License">](https://github.com/orangekame3/mirrormate/blob/main/LICENSE)
+- [<img src="https://img.shields.io/github/v/release/orangekame3/mirrormate" alt="Release">](https://github.com/orangekame3/mirrormate/releases)
+- [<img src="https://github.com/orangekame3/mirrormate/actions/workflows/ci.yml/badge.svg" alt="CI">](https://github.com/orangekame3/mirrormate/actions)
+
+--- drizzle.config.ts ---
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/lib/db/schema.ts",
+  out: "./drizzle",
+  dialect: "sqlite",
+  dbCredentials: {
+    url: process.env.DATABASE_PATH || "./data/mirrormate.db",
+  },
+});
+
+
+--- next.config.ts ---
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./src/i18n/request.ts");
+
+const nextConfig: NextConfig = {
+  output: "standalone",
+};
+
+export default withNextIntl(nextConfig);
+
+
+--- tailwind.config.ts ---
+import type { Config } from "tailwindcss";
+
+export default {
+  content: [
+    "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./plugins/**/*.{js,ts,jsx,tsx,mdx}",
+    "./node_modules/mirrormate-*-plugin/dist/**/*.{js,mjs}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        cyber: {
+          blue: "#00f0ff",
+          purple: "#a855f7",
+          pink: "#f0f",
+          green: "#0f0",
+        },
+      },
+      animation: {
+        "pulse-glow": "pulse-glow 2s ease-in-out infinite",
+        "scan-line": "scan-line 4s linear infinite",
+        "flicker": "flicker 0.15s infinite",
+        "float": "float 3s ease-in-out infinite",
+        // Animation state machine animations
+        "aware-glow": "aware-glow 2s ease-in-out infinite",
+        "listening-ring": "listening-ring 1.5s ease-in-out infinite",
+        "thinking-orbit": "thinking-orbit 3s linear infinite",
+        "confirming-pulse": "confirming-pulse 1.2s ease-in-out infinite",
+        "error-fade": "error-fade 2s ease-in-out forwards",
+        "lingering-fade": "lingering-fade 2s ease-out forwards",
+      },
+      keyframes: {
+        "pulse-glow": {
+          "0%, 100%": {
+            opacity: "1",
+            filter: "drop-shadow(0 0 20px currentColor)",
+          },
+          "50%": {
+            opacity: "0.8",
+            filter: "drop-shadow(0 0 40px currentColor)",
+          },
+        },
+        "scan-line": {
+          "0%": { transform: "translateY(-100%)" },
+          "100%": { transform: "translateY(100vh)" },
+        },
+        "flicker": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.97" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%": { transform: "translateY(-10px)" },
+        },
+        // Animation state machine keyframes
+        "aware-glow": {
+          "0%, 100%": {
+            boxShadow: "0 0 20px rgba(255,255,255,0.1)",
+            opacity: "1",
+          },
+          "50%": {
+            boxShadow: "0 0 40px rgba(255,255,255,0.2)",
+            opacity: "0.95",
+          },
+        },
+        "listening-ring": {
+          "0%": {
+            transform: "scale(1)",
+            opacity: "0.6",
+          },
+          "50%": {
+            transform: "scale(1.05)",
+            opacity: "0.8",
+          },
+          "100%": {
+            transform: "scale(1)",
+            opacity: "0.6",
+          },
+        },
+        "thinking-orbit": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "confirming-pulse": {
+          "0%, 100%": {
+            opacity: "0.7",
+            transform: "scale(1)",
+          },
+          "50%": {
+            opacity: "1",
+            transform: "scale(1.02)",
+          },
+        },
+        "error-fade": {
+          "0%": {
+            opacity: "1",
+            filter: "hue-rotate(0deg) brightness(1)",
+          },
+          "20%": {
+            filter: "hue-rotate(-15deg) brightness(1.1)",
+          },
+          "100%": {
+            opacity: "0.8",
+            filter: "hue-rotate(0deg) brightness(1)",
+          },
+        },
+        "lingering-fade": {
+          "0%": { opacity: "1" },
+          "70%": { opacity: "1" },
+          "100%": { opacity: "0.7" },
+        },
+      },
+      fontFamily: {
+        mono: ["Consolas", "Monaco", "monospace"],
+      },
+      transitionDuration: {
+        "2000": "2000ms",
+      },
+    },
+  },
+  plugins: [],
+} satisfies Config;
+
+
+--- vitest.config.ts ---
+import { defineConfig } from "vitest/config";
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: "node",
+    include: ["src/**/*.test.ts"],
+  },
+});
+
+
+--- plamo-server/requirements.txt ---
+torch
+transformers
+sentencepiece
+fastapi
+uvicorn[standard]
+
+
+--- plamo-server/server.py ---
+"""
+PLaMo-Embedding-1B Server
+
+Ollama-compatible API wrapper for PLaMo-Embedding-1B
+"""
+
+import torch
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
+from transformers import AutoModel, AutoTokenizer
+
+app = FastAPI(title="PLaMo Embedding Server")
+
+# Load model on startup
+print("Loading PLaMo-Embedding-1B model...")
+tokenizer = AutoTokenizer.from_pretrained(
+    "pfnet/plamo-embedding-1b", trust_remote_code=True
+)
+model = AutoModel.from_pretrained("pfnet/plamo-embedding-1b", trust_remote_code=True)
+
+device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+model = model.to(device)
+model.eval()
+print(f"Model loaded on {device}")
+
+
+class EmbedRequest(BaseModel):
+    model: str = "plamo-embedding-1b"
+    input: str | list[str]
+
+
+class EmbedResponse(BaseModel):
+    model: str
+    embeddings: list[list[float]]
+
+
+@app.post("/api/embed")
+async def embed(request: EmbedRequest) -> EmbedResponse:
+    """Ollama-compatible embedding endpoint"""
+    try:
+        texts = request.input
+        if isinstance(texts, str):
+            texts = [texts]
+
+        with torch.inference_mode():
+            embeddings = model.encode_document(texts, tokenizer)
+
+        # Convert to list of lists
+        if isinstance(embeddings, torch.Tensor):
+            embeddings_list = embeddings.cpu().tolist()
+        else:
+            embeddings_list = [e.cpu().tolist() if isinstance(e, torch.Tensor) else e for e in embeddings]
+
+        return EmbedResponse(
+            model="plamo-embedding-1b",
+            embeddings=embeddings_list,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {"status": "ok", "model": "plamo-embedding-1b", "device": device}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+--- src/i18n/request.ts ---
+import { getRequestConfig } from "next-intl/server";
+import { getLocale } from "@/lib/app";
+
+export default getRequestConfig(async () => {
+  const locale = getLocale();
+
+  return {
+    locale,
+    messages: (await import(`../../messages/${locale}.json`)).default,
+  };
+});
+
+
+--- src/hooks/useAnimationController.ts ---
+"use client";
+
+/**
+ * useAnimationController Hook
+ *
+ * Main hook that returns real-time animation parameters for the avatar.
+ * Manages biological animations: blinking, breathing, gaze tracking.
+ */
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import {
+  type AvatarState,
+  type StateContext,
+  type AnimationValues,
+  STATE_ANIMATION_PARAMS,
+  GAZE_CONFIG,
+  PERFORMANCE_CONFIG,
+  randomInRange,
+  lerp,
+  clamp,
+  easeInOutCubic,
+} from "@/lib/animation";
+
+export interface UseAnimationControllerOptions {
+  /** Mouse position for gaze tracking */
+  mousePosition?: { x: number; y: number };
+}
+
+/**
+ * Hook for managing real-time animation parameters
+ *
+ * @param state - Current avatar state
+ * @param context - Current state context
+ * @param options - Optional configuration
+ * @returns Animation values to pass to SimpleAvatar
+ */
+export function useAnimationController(
+  state: AvatarState,
+  context: StateContext,
+  options: UseAnimationControllerOptions = {}
+): AnimationValues {
+  const { mousePosition = { x: 0, y: 0 } } = options;
+
+  // Animation state refs (non-reactive for performance)
+  const animRef = useRef({
+    // Blink timing
+    lastBlinkTime: Date.now(),
+    nextBlinkInterval: randomInRange(8000, 14000),
+    blinkProgress: 0, // 0 = open, 1 = mid-blink, back to 0
+    isBlinking: false,
+
+    // Breathing
+    breathPhase: 0,
+    breathCycleLength: randomInRange(5500, 6500),
+
+    // Gaze
+    gazeX: 0,
+    gazeY: 0,
+    targetGazeX: 0,
+    targetGazeY: 0,
+    idleWanderTimer: 0,
+    idleWanderTargetX: 0,
+    idleWanderTargetY: 0,
+
+    // Frame timing
+    lastFrameTime: Date.now(),
+
+    // Effect transitions
+    glowIntensity: 0,
+    targetGlowIntensity: 0,
+    ringPulse: 0,
+  });
+
+  // Reactive animation values
+  const [values, setValues] = useState<AnimationValues>({
+    blinkScale: 1,
+    breathScale: 0,
+    breathOpacity: 0,
+    gazeOffset: { x: 0, y: 0 },
+    glowIntensity: 0,
+    glowColor: "rgba(255, 255, 255, 0.1)",
+    pulseValue: 0,
+    showParticles: false,
+    showRing: false,
+    ringPulse: 0,
+  });
+
+  // Get current state's animation parameters
+  const params = STATE_ANIMATION_PARAMS[state];
+
+  // Update animation parameters when state changes
+  useEffect(() => {
+    const anim = animRef.current;
+
+    // Update blink interval range
+    anim.nextBlinkInterval = randomInRange(
+      params.blinkInterval.min,
+      params.blinkInterval.max
+    );
+
+    // Update breathing cycle
+    anim.breathCycleLength = randomInRange(
+      params.breathingCycle.min,
+      params.breathingCycle.max
+    );
+
+    // Update glow target
+    if (params.additionalEffects?.glow) {
+      anim.targetGlowIntensity = params.additionalEffects.glow.intensity;
+    } else {
+      anim.targetGlowIntensity = 0;
+    }
+  }, [state, params]);
+
+  // Main animation loop
+  useEffect(() => {
+    let rafId: number;
+    const anim = animRef.current;
+
+    const animate = () => {
+      const now = Date.now();
+      const delta = now - anim.lastFrameTime;
+
+      // Frame rate limiting
+      if (delta < PERFORMANCE_CONFIG.frameInterval) {
+        rafId = requestAnimationFrame(animate);
+        return;
+      }
+
+      anim.lastFrameTime = now;
+      const deltaSeconds = delta / 1000;
+
+      // ========== BLINK ==========
+      let blinkScale = 1;
+
+      // Check if it's time for a new blink
+      if (!anim.isBlinking && now - anim.lastBlinkTime > anim.nextBlinkInterval) {
+        anim.isBlinking = true;
+        anim.blinkProgress = 0;
+        anim.lastBlinkTime = now;
+        anim.nextBlinkInterval = randomInRange(
+          params.blinkInterval.min,
+          params.blinkInterval.max
+        );
+      }
+
+      // Animate blink
+      if (anim.isBlinking) {
+        anim.blinkProgress += deltaSeconds * 8; // Blink takes ~250ms
+
+        if (anim.blinkProgress >= 1) {
+          anim.isBlinking = false;
+          anim.blinkProgress = 0;
+          blinkScale = 1;
+        } else {
+          // Smooth blink curve: quick close, quick open
+          blinkScale = 1 - Math.sin(anim.blinkProgress * Math.PI) * 0.95;
+        }
+      }
+
+      // ========== BREATHING ==========
+      anim.breathPhase += (deltaSeconds / (anim.breathCycleLength / 1000)) * Math.PI * 2;
+      if (anim.breathPhase > Math.PI * 2) {
+        anim.breathPhase -= Math.PI * 2;
+        // Add slight randomness to next cycle
+        anim.breathCycleLength = randomInRange(
+          params.breathingCycle.min,
+          params.breathingCycle.max
+        );
+      }
+
+      const breathScale = Math.sin(anim.breathPhase) * params.breathingAmplitude.scale;
+      const breathOpacity = Math.sin(anim.breathPhase) * params.breathingAmplitude.opacity;
+
+      // ========== GAZE ==========
+      let gazeX = anim.gazeX;
+      let gazeY = anim.gazeY;
+
+      if (params.gazeTracking) {
+        // Track mouse with delay and overshoot
+        const targetX = clamp(
+          mousePosition.x * GAZE_CONFIG.maxOffset.x,
+          -GAZE_CONFIG.maxOffset.x,
+          GAZE_CONFIG.maxOffset.x
+        );
+        const targetY = clamp(
+          mousePosition.y * GAZE_CONFIG.maxOffset.y,
+          -GAZE_CONFIG.maxOffset.y,
+          GAZE_CONFIG.maxOffset.y
+        );
+
+        // Apply overshoot
+        const overshoot = params.gazeOvershoot;
+        anim.targetGazeX = targetX * overshoot;
+        anim.targetGazeY = targetY * overshoot;
+
+        // Delayed interpolation
+        const delayFactor = params.gazeDelay > 0 ? 1 - Math.exp(-deltaSeconds * (1000 / params.gazeDelay)) : 1;
+        gazeX = lerp(anim.gazeX, anim.targetGazeX, GAZE_CONFIG.smoothing + delayFactor * 0.05);
+        gazeY = lerp(anim.gazeY, anim.targetGazeY, GAZE_CONFIG.smoothing + delayFactor * 0.05);
+
+        // Recover from overshoot
+        if (Math.abs(gazeX - targetX) < 0.01 && Math.abs(anim.targetGazeX - targetX) > 0.01) {
+          anim.targetGazeX = lerp(anim.targetGazeX, targetX, GAZE_CONFIG.overshootRecovery);
+        }
+        if (Math.abs(gazeY - targetY) < 0.01 && Math.abs(anim.targetGazeY - targetY) > 0.01) {
+          anim.targetGazeY = lerp(anim.targetGazeY, targetY, GAZE_CONFIG.overshootRecovery);
+        }
+      } else {
+        // Idle wander
+        anim.idleWanderTimer += delta;
+
+        if (anim.idleWanderTimer > randomInRange(
+          GAZE_CONFIG.idleWander.interval.min,
+          GAZE_CONFIG.idleWander.interval.max
+        )) {
+          anim.idleWanderTimer = 0;
+          anim.idleWanderTargetX = (Math.random() - 0.5) * 2 * GAZE_CONFIG.idleWander.range.x;
+          anim.idleWanderTargetY = (Math.random() - 0.5) * 2 * GAZE_CONFIG.idleWander.range.y;
+        }
+
+        gazeX = lerp(anim.gazeX, anim.idleWanderTargetX, 0.02);
+        gazeY = lerp(anim.gazeY, anim.idleWanderTargetY, 0.02);
+      }
+
+      anim.gazeX = gazeX;
+      anim.gazeY = gazeY;
+
+      // ========== GLOW ==========
+      anim.glowIntensity = lerp(anim.glowIntensity, anim.targetGlowIntensity, 0.05);
+
+      // ========== PULSE / RING ==========
+      let pulseValue = 0;
+      let ringPulse = 0;
+
+      if (params.additionalEffects?.pulse) {
+        const freq = params.additionalEffects.pulse.frequency;
+        const amp = params.additionalEffects.pulse.amplitude;
+        pulseValue = (Math.sin(now / 1000 * freq * Math.PI * 2) * 0.5 + 0.5) * amp;
+      }
+
+      if (params.additionalEffects?.ring) {
+        ringPulse = (Math.sin(now / 1000 * 1.5 * Math.PI * 2) * 0.5 + 0.5);
+      }
+
+      anim.ringPulse = ringPulse;
+
+      // ========== UPDATE STATE ==========
+      setValues({
+        blinkScale,
+        breathScale,
+        breathOpacity,
+        gazeOffset: { x: gazeX, y: gazeY },
+        glowIntensity: anim.glowIntensity,
+        glowColor: params.additionalEffects?.glow?.color || "rgba(255, 255, 255, 0.1)",
+        pulseValue,
+        showParticles: params.additionalEffects?.particles || false,
+        showRing: params.additionalEffects?.ring || false,
+        ringPulse,
+      });
+
+      rafId = requestAnimationFrame(animate);
+    };
+
+    rafId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, [state, params, mousePosition]);
+
+  return values;
+}
+
+
+--- src/hooks/useAudioRecorder.ts ---
+"use client";
+
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { SilenceDetectionConfig, DEFAULT_SILENCE_CONFIG } from "@/lib/stt";
+
+interface UseAudioRecorderOptions {
+  /** Called when audio recording is ready to be processed */
+  onAudioReady: (audioBlob: Blob) => void;
+  /** Called with volume level (0-1) for visualization */
+  onVolumeChange?: (volume: number) => void;
+  /** Called when recording state changes */
+  onRecordingStateChange?: (isRecording: boolean) => void;
+  /** Custom silence detection settings */
+  silenceConfig?: Partial<SilenceDetectionConfig>;
+}
+
+interface UseAudioRecorderReturn {
+  /** Whether currently recording */
+  isRecording: boolean;
+  /** Whether MediaRecorder is supported in this browser */
+  isSupported: boolean;
+  /** Whether audio activity has been detected (voice started) */
+  hasAudioStarted: boolean;
+  /** Current volume level (0-1) */
+  currentVolume: number;
+  /** Start recording */
+  startRecording: () => Promise<void>;
+  /** Stop recording manually */
+  stopRecording: () => void;
+}
+
+/**
+ * Hook for recording audio with automatic silence detection
+ *
+ * Features:
+ * - MediaRecorder for audio capture
+ * - Web Audio API for real-time volume analysis
+ * - RMS-based silence detection
+ * - Automatic stop when silence detected for configured duration
+ * - Maximum recording duration limit
+ */
+export function useAudioRecorder({
+  onAudioReady,
+  onVolumeChange,
+  onRecordingStateChange,
+  silenceConfig: customSilenceConfig,
+}: UseAudioRecorderOptions): UseAudioRecorderReturn {
+  const [isRecording, setIsRecording] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
+  const [hasAudioStarted, setHasAudioStarted] = useState(false);
+  const [currentVolume, setCurrentVolume] = useState(0);
+
+  // Refs for audio processing
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const chunksRef = useRef<Blob[]>([]);
+
+  // Refs for silence detection
+  const silenceStartRef = useRef<number | null>(null);
+  const recordingStartRef = useRef<number>(0);
+  const animationFrameRef = useRef<number>(0);
+  const shouldStopRef = useRef(false);
+  const hasAudioStartedRef = useRef(false);
+
+  // Callback refs to avoid stale closures
+  const onAudioReadyRef = useRef(onAudioReady);
+  const onVolumeChangeRef = useRef(onVolumeChange);
+  const onRecordingStateChangeRef = useRef(onRecordingStateChange);
+
+  useEffect(() => {
+    onAudioReadyRef.current = onAudioReady;
+  }, [onAudioReady]);
+
+  useEffect(() => {
+    onVolumeChangeRef.current = onVolumeChange;
+  }, [onVolumeChange]);
+
+  useEffect(() => {
+    onRecordingStateChangeRef.current = onRecordingStateChange;
+  }, [onRecordingStateChange]);
+
+  // Merge custom config with defaults (memoized to prevent unnecessary re-renders)
+  const silenceConfig = useMemo<SilenceDetectionConfig>(
+    () => ({
+      ...DEFAULT_SILENCE_CONFIG,
+      ...customSilenceConfig,
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      customSilenceConfig?.silenceThreshold,
+      customSilenceConfig?.volumeThreshold,
+      customSilenceConfig?.minRecordingDuration,
+      customSilenceConfig?.maxRecordingDuration,
+    ]
+  );
+
+  // Check browser support on mount
+  useEffect(() => {
+    const supported =
+      typeof window !== "undefined" &&
+      "mediaDevices" in navigator &&
+      "getUserMedia" in navigator.mediaDevices &&
+      "MediaRecorder" in window;
+    setIsSupported(supported);
+  }, []);
+
+  /**
+   * Calculate RMS (Root Mean Square) volume from audio data
+   * RMS is a good measure of perceived loudness
+   */
+  const calculateRMS = useCallback((dataArray: Uint8Array): number => {
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      // Convert from 0-255 to -1 to 1
+      const normalized = (dataArray[i] - 128) / 128;
+      sum += normalized * normalized;
+    }
+    return Math.sqrt(sum / dataArray.length);
+  }, []);
+
+  /**
+   * Stop recording and process collected audio
+   */
+  const stopRecording = useCallback(() => {
+    shouldStopRef.current = true;
+    cancelAnimationFrame(animationFrameRef.current);
+
+    if (mediaRecorderRef.current?.state === "recording") {
+      mediaRecorderRef.current.stop();
+    }
+
+    setIsRecording(false);
+    setCurrentVolume(0);
+    onRecordingStateChangeRef.current?.(false);
+  }, []);
+
+  /**
+   * Monitor audio levels for silence detection
+   * Uses requestAnimationFrame for smooth updates
+   */
+  const monitorAudio = useCallback(() => {
+    if (!analyserRef.current || shouldStopRef.current) {
+      return;
+    }
+
+    const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
+    analyserRef.current.getByteTimeDomainData(dataArray);
+
+    const rms = calculateRMS(dataArray);
+    setCurrentVolume(rms);
+    onVolumeChangeRef.current?.(rms);
+
+    const now = Date.now();
+    const recordingDuration = now - recordingStartRef.current;
+
+    // Check for audio activity start (voice detected)
+    if (!hasAudioStartedRef.current && rms > silenceConfig.volumeThreshold) {
+      hasAudioStartedRef.current = true;
+      setHasAudioStarted(true);
+      silenceStartRef.current = null;
+      console.log("[AudioRecorder] Voice activity detected");
+    }
+
+    // Only check for silence after:
+    // 1. Audio has started (voice was detected)
+    // 2. Minimum recording duration has passed
+    if (
+      hasAudioStartedRef.current &&
+      recordingDuration > silenceConfig.minRecordingDuration
+    ) {
+      if (rms < silenceConfig.volumeThreshold) {
+        // Below threshold - track silence duration
+        if (silenceStartRef.current === null) {
+          silenceStartRef.current = now;
+        } else {
+          const silenceDuration = (now - silenceStartRef.current) / 1000;
+          if (silenceDuration >= silenceConfig.silenceThreshold) {
+            console.log(
+              `[AudioRecorder] Silence detected for ${silenceDuration.toFixed(1)}s, stopping...`
+            );
+            stopRecording();
+            return;
+          }
+        }
+      } else {
+        // Above threshold - reset silence timer
+        silenceStartRef.current = null;
+      }
+    }
+
+    // Auto-stop at maximum recording duration
+    if (recordingDuration >= silenceConfig.maxRecordingDuration) {
+      console.log("[AudioRecorder] Max duration reached, stopping...");
+      stopRecording();
+      return;
+    }
+
+    // Continue monitoring
+    animationFrameRef.current = requestAnimationFrame(monitorAudio);
+  }, [calculateRMS, silenceConfig, stopRecording]);
+
+  /**
+   * Start recording audio
+   */
+  const startRecording = useCallback(async () => {
+    if (isRecording || !isSupported) {
+      return;
+    }
+
+    try {
+      // Request microphone access with noise reduction
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      });
+
+      streamRef.current = stream;
+
+      // Set up AudioContext for volume analysis
+      audioContextRef.current = new AudioContext();
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 2048;
+      analyserRef.current.smoothingTimeConstant = 0.3;
+
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyserRef.current);
+
+      // Determine best supported MIME type
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
+        ? "audio/webm;codecs=opus"
+        : MediaRecorder.isTypeSupported("audio/webm")
+          ? "audio/webm"
+          : "audio/mp4";
+
+      console.log(`[AudioRecorder] Using MIME type: ${mimeType}`);
+
+      // Set up MediaRecorder
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+      chunksRef.current = [];
+
+      mediaRecorderRef.current.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          chunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorderRef.current.onstop = () => {
+        const audioBlob = new Blob(chunksRef.current, { type: mimeType });
+        console.log(
+          `[AudioRecorder] Recording stopped, blob size: ${audioBlob.size} bytes`
+        );
+
+        // Only process if we have meaningful audio
+        if (audioBlob.size > 1000 && hasAudioStartedRef.current) {
+          onAudioReadyRef.current(audioBlob);
+        } else {
+          console.log(
+            "[AudioRecorder] Recording too short or no voice detected, discarding"
+          );
+        }
+
+        // Cleanup media stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
+        }
+
+        // Cleanup AudioContext
+        if (audioContextRef.current?.state !== "closed") {
+          audioContextRef.current?.close();
+          audioContextRef.current = null;
+        }
+      };
+
+      // Reset state for new recording
+      shouldStopRef.current = false;
+      silenceStartRef.current = null;
+      hasAudioStartedRef.current = false;
+      setHasAudioStarted(false);
+      recordingStartRef.current = Date.now();
+
+      // Start recording with 100ms chunks
+      mediaRecorderRef.current.start(100);
+      setIsRecording(true);
+      onRecordingStateChangeRef.current?.(true);
+
+      console.log("[AudioRecorder] Started recording");
+
+      // Start audio monitoring for silence detection
+      animationFrameRef.current = requestAnimationFrame(monitorAudio);
+    } catch (error) {
+      console.error("[AudioRecorder] Failed to start recording:", error);
+
+      if (error instanceof Error) {
+        if (error.name === "NotAllowedError") {
+          console.error("[AudioRecorder] Microphone permission denied");
+        } else if (error.name === "NotFoundError") {
+          console.error("[AudioRecorder] No microphone found");
+        }
+      }
+    }
+  }, [isRecording, isSupported, monitorAudio]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      shouldStopRef.current = true;
+      cancelAnimationFrame(animationFrameRef.current);
+
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+
+      if (audioContextRef.current?.state !== "closed") {
+        audioContextRef.current?.close();
+      }
+    };
+  }, []);
+
+  return {
+    isRecording,
+    isSupported,
+    hasAudioStarted,
+    currentVolume,
+    startRecording,
+    stopRecording,
+  };
+}
+
+
+--- src/hooks/useAvatarState.ts ---
+"use client";
+
+/**
+ * useAvatarState Hook
+ *
+ * React hook that wraps the AvatarStateMachine for use in components.
+ * Provides reactive state updates and event dispatching.
+ */
+
+import { useState, useEffect, useCallback, useRef } from "react";
+import {
+  AvatarStateMachine,
+  createStateMachine,
+  type AvatarState,
+  type AvatarEvent,
+  type StateContext,
+} from "@/lib/animation";
+
+export interface UseAvatarStateReturn {
+  /** Current avatar state */
+  state: AvatarState;
+  /** Current state context */
+  context: StateContext;
+  /** Dispatch an event to trigger state transition */
+  dispatch: (event: AvatarEvent) => boolean;
+  /** Force a state change (bypasses transition rules) */
+  forceState: (state: AvatarState) => void;
+  /** Time spent in current state (ms) */
+  timeInState: number;
+  /** Previous state before current */
+  previousState: AvatarState;
+}
+
+/**
+ * Hook for managing avatar animation state
+ *
+ * @param initialState - Initial state (default: IDLE)
+ * @returns State management interface
+ *
+ * @example
+ * ```tsx
+ * const { state, dispatch, timeInState } = useAvatarState();
+ *
+ * // Dispatch an event
+ * dispatch({ type: "MIC_ACTIVATED" });
+ *
+ * // Check current state
+ * if (state === "LISTENING") {
+ *   // Show listening indicator
+ * }
+ * ```
+ */
+export function useAvatarState(
+  initialState: AvatarState = "IDLE"
+): UseAvatarStateReturn {
+  // State machine reference
+  const machineRef = useRef<AvatarStateMachine | null>(null);
+
+  // Reactive state
+  const [state, setState] = useState<AvatarState>(initialState);
+  const [context, setContext] = useState<StateContext>({
+    previousState: initialState,
+    enteredAt: Date.now(),
+  });
+  const [timeInState, setTimeInState] = useState(0);
+
+  // Initialize state machine
+  useEffect(() => {
+    const machine = createStateMachine(initialState);
+    machineRef.current = machine;
+
+    // Subscribe to state changes
+    const unsubscribe = machine.subscribe((newState, newContext, prevState) => {
+      setState(newState);
+      setContext(newContext);
+    });
+
+    // Update initial state
+    setState(machine.getState());
+    setContext(machine.getContext());
+
+    return () => {
+      unsubscribe();
+      machine.destroy();
+      machineRef.current = null;
+    };
+  }, [initialState]);
+
+  // Update time in state periodically
+  useEffect(() => {
+    const updateInterval = setInterval(() => {
+      setTimeInState(Date.now() - context.enteredAt);
+    }, 100);
+
+    return () => clearInterval(updateInterval);
+  }, [context.enteredAt]);
+
+  // Dispatch event
+  const dispatch = useCallback((event: AvatarEvent): boolean => {
+    if (!machineRef.current) {
+      console.warn("State machine not initialized");
+      return false;
+    }
+    return machineRef.current.dispatch(event);
+  }, []);
+
+  // Force state change
+  const forceState = useCallback((newState: AvatarState): void => {
+    if (!machineRef.current) {
+      console.warn("State machine not initialized");
+      return;
+    }
+    machineRef.current.forceState(newState);
+  }, []);
+
+  return {
+    state,
+    context,
+    dispatch,
+    forceState,
+    timeInState,
+    previousState: context.previousState,
+  };
+}
+
+
+--- src/hooks/useCharacterSelector.ts ---
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+
+export interface CharacterPreset {
+  id: string;
+  name: string;
+  description: string;
+  recommendedVoice?: number;
+}
+
+interface UseCharacterSelectorReturn {
+  characters: CharacterPreset[];
+  selectedCharacter: string | null;
+  setSelectedCharacter: (id: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  getSelectedCharacterInfo: () => CharacterPreset | null;
+}
+
+const STORAGE_KEY = "mirrormate:character";
+
+export function useCharacterSelector(): UseCharacterSelectorReturn {
+  const [characters, setCharacters] = useState<CharacterPreset[]>([]);
+  const [selectedCharacter, setSelectedCharacterState] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const settingsLoadedRef = useRef(false);
+
+  // Load characters from API
+  useEffect(() => {
+    async function fetchCharacters() {
+      try {
+        const response = await fetch("/api/characters");
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.error);
+          setCharacters([]);
+        } else {
+          setCharacters(data.characters || []);
+          setError(null);
+        }
+      } catch {
+        setError("Failed to fetch characters");
+        setCharacters([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchCharacters();
+  }, []);
+
+  // Load selected character from DB (with localStorage fallback)
+  useEffect(() => {
+    if (settingsLoadedRef.current) return;
+    settingsLoadedRef.current = true;
+
+    async function loadSettings() {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.characterId) {
+            setSelectedCharacterState(data.characterId);
+            localStorage.setItem(STORAGE_KEY, data.characterId);
+            return;
+          }
+        }
+      } catch {
+        // Fall back to localStorage
+      }
+
+      // Fallback to localStorage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setSelectedCharacterState(stored);
+      }
+    }
+
+    loadSettings();
+  }, []);
+
+  const setSelectedCharacter = useCallback((id: string) => {
+    setSelectedCharacterState(id);
+    localStorage.setItem(STORAGE_KEY, id);
+
+    // Save to DB
+    fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ characterId: id }),
+    }).catch(() => {
+      // Ignore DB errors, localStorage is the backup
+    });
+
+    // Notify other tabs via BroadcastChannel
+    try {
+      const channel = new BroadcastChannel("mirror-channel");
+      channel.postMessage({
+        type: "settings_changed",
+        payload: JSON.stringify({ characterId: id }),
+      });
+      channel.close();
+    } catch {
+      // BroadcastChannel not supported
+    }
+  }, []);
+
+  const getSelectedCharacterInfo = useCallback((): CharacterPreset | null => {
+    if (!selectedCharacter) return null;
+    return characters.find((c) => c.id === selectedCharacter) ?? null;
+  }, [selectedCharacter, characters]);
+
+  return {
+    characters,
+    selectedCharacter,
+    setSelectedCharacter,
+    isLoading,
+    error,
+    getSelectedCharacterInfo,
+  };
+}
+
+
+--- src/hooks/useLongThinkingPulse.ts ---
+"use client";
+
+/**
+ * useLongThinkingPulse Hook
+ *
+ * Returns a boolean that becomes true when the avatar has been
+ * in THINKING state for longer than the threshold (5 seconds).
+ * Shows "still processing" visual feedback.
+ */
+
+import { useState, useEffect } from "react";
+import { type AvatarState, type StateContext, TIMING_CONFIG } from "@/lib/animation";
+
+export interface UseLongThinkingPulseReturn {
+  /** Whether to show long thinking indicator */
+  showPulse: boolean;
+  /** Number of pulses shown (increments every 5s) */
+  pulseCount: number;
+}
+
+/**
+ * Hook for detecting long thinking duration
+ *
+ * @param state - Current avatar state
+ * @param context - Current state context
+ * @returns Long thinking pulse state
+ *
+ * @example
+ * ```tsx
+ * const { showPulse, pulseCount } = useLongThinkingPulse(state, context);
+ *
+ * if (showPulse) {
+ *   // Show "still processing" indicator
+ * }
+ * ```
+ */
+export function useLongThinkingPulse(
+  state: AvatarState,
+  context: StateContext
+): UseLongThinkingPulseReturn {
+  const [showPulse, setShowPulse] = useState(false);
+  const [pulseCount, setPulseCount] = useState(0);
+
+  useEffect(() => {
+    // Only track when in THINKING state
+    if (state !== "THINKING") {
+      setShowPulse(false);
+      setPulseCount(0);
+      return;
+    }
+
+    // Calculate initial delay based on when we entered THINKING
+    const timeInState = Date.now() - context.enteredAt;
+    const initialDelay = Math.max(0, TIMING_CONFIG.longThinkingThreshold - timeInState);
+
+    // First pulse after threshold
+    const firstTimer = setTimeout(() => {
+      setShowPulse(true);
+      setPulseCount(1);
+    }, initialDelay);
+
+    // Subsequent pulses every 5 seconds
+    const pulseInterval = setInterval(() => {
+      if (Date.now() - context.enteredAt >= TIMING_CONFIG.longThinkingThreshold) {
+        setShowPulse(true);
+        setPulseCount((prev) => prev + 1);
+
+        // Auto-hide pulse after 1 second (shows as brief flash)
+        setTimeout(() => setShowPulse(false), 1000);
+      }
+    }, TIMING_CONFIG.longThinkingThreshold);
+
+    return () => {
+      clearTimeout(firstTimer);
+      clearInterval(pulseInterval);
+    };
+  }, [state, context.enteredAt]);
+
+  return { showPulse, pulseCount };
+}
+
+
+--- src/hooks/useReminder.ts ---
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+
+export interface ReminderConfig {
+  enabled: boolean;
+  pollingInterval: number;
+  reminders: Array<{ minutes: number; urgent: boolean }>;
+}
+
+export interface Reminder {
+  id: string;
+  summary: string;
+  start: Date;
+  minutesUntil: number;
+  configuredMinutes: number;
+  urgent: boolean;
+}
+
+interface UseReminderOptions {
+  onReminder?: (reminder: Reminder) => void;
+}
+
+export function useReminder({ onReminder }: UseReminderOptions = {}) {
+  const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [isChecking, setIsChecking] = useState(false);
+  const [config, setConfig] = useState<ReminderConfig | null>(null);
+  const [isConfigLoaded, setIsConfigLoaded] = useState(false);
+  const shownRemindersRef = useRef<Set<string>>(new Set());
+
+  // Fetch config on mount
+  useEffect(() => {
+    async function fetchConfig() {
+      try {
+        const res = await fetch("/api/reminder/config");
+        if (res.ok) {
+          const data = await res.json();
+          setConfig(data);
+        }
+      } catch (error) {
+        console.error("[useReminder] Error fetching config:", error);
+      } finally {
+        setIsConfigLoaded(true);
+      }
+    }
+    fetchConfig();
+  }, []);
+
+  const checkReminders = useCallback(async () => {
+    if (!config?.enabled) return;
+
+    setIsChecking(true);
+    try {
+      const res = await fetch("/api/reminder");
+      if (res.ok) {
+        const data = await res.json();
+
+        for (const event of data.reminders) {
+          // Create unique ID for this specific reminder (event + configured minutes)
+          const reminderId = `${event.summary}-${event.start}-${event.configuredMinutes}min`;
+
+          // Skip if already shown
+          if (shownRemindersRef.current.has(reminderId)) {
+            continue;
+          }
+
+          // Mark as shown
+          shownRemindersRef.current.add(reminderId);
+
+          const reminder: Reminder = {
+            id: crypto.randomUUID(),
+            summary: event.summary,
+            start: new Date(event.start),
+            minutesUntil: event.minutesUntil,
+            configuredMinutes: event.configuredMinutes,
+            urgent: event.urgent,
+          };
+
+          setReminders((prev) => [...prev, reminder]);
+
+          // Call the callback
+          if (onReminder) {
+            onReminder(reminder);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("[useReminder] Error checking reminders:", error);
+    } finally {
+      setIsChecking(false);
+    }
+  }, [config?.enabled, onReminder]);
+
+  // Clear a specific reminder
+  const dismissReminder = useCallback((id: string) => {
+    setReminders((prev) => prev.filter((r) => r.id !== id));
+  }, []);
+
+  // Clear all reminders
+  const clearReminders = useCallback(() => {
+    setReminders([]);
+  }, []);
+
+  // Reset shown reminders (useful for testing)
+  const resetShownReminders = useCallback(() => {
+    shownRemindersRef.current.clear();
+  }, []);
+
+  // Set up polling after config is loaded
+  useEffect(() => {
+    if (!isConfigLoaded || !config?.enabled) return;
+
+    // Initial check
+    checkReminders();
+
+    // Set up interval (config.pollingInterval is in seconds)
+    const intervalMs = (config.pollingInterval || 30) * 1000;
+    const interval = setInterval(checkReminders, intervalMs);
+
+    return () => clearInterval(interval);
+  }, [isConfigLoaded, config?.enabled, config?.pollingInterval, checkReminders]);
+
+  // Clean up old shown reminders periodically
+  useEffect(() => {
+    const cleanup = setInterval(() => {
+      if (shownRemindersRef.current.size > 100) {
+        shownRemindersRef.current.clear();
+      }
+    }, 60 * 60 * 1000); // Every hour
+
+    return () => clearInterval(cleanup);
+  }, []);
+
+  return {
+    reminders,
+    isChecking,
+    config,
+    isConfigLoaded,
+    dismissReminder,
+    clearReminders,
+    resetShownReminders,
+    checkReminders,
+  };
+}
+
+
+--- src/hooks/useSpeakerSelector.ts ---
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+
+export interface Speaker {
+  id: number;
+  name: string;
+  styleName: string;
+}
+
+interface UseSpeakerSelectorReturn {
+  speakers: Speaker[];
+  selectedSpeaker: number | null;
+  setSelectedSpeaker: (id: number) => void;
+  isLoading: boolean;
+  error: string | null;
+  previewVoice: (speakerId: number, text?: string) => Promise<void>;
+  isPreviewPlaying: boolean;
+}
+
+const STORAGE_KEY = "mirrormate:speaker";
+const DEFAULT_PREVIEW_TEXT = "こんにちは、私の声はこんな感じです。";
+
+export function useSpeakerSelector(): UseSpeakerSelectorReturn {
+  const [speakers, setSpeakers] = useState<Speaker[]>([]);
+  const [selectedSpeaker, setSelectedSpeakerState] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isPreviewPlaying, setIsPreviewPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const settingsLoadedRef = useRef(false);
+
+  // Load speakers from API
+  useEffect(() => {
+    async function fetchSpeakers() {
+      try {
+        const response = await fetch("/api/voicevox/speakers");
+        const data = await response.json();
+
+        if (data.error) {
+          setError(data.error);
+          setSpeakers([]);
+        } else {
+          setSpeakers(data.speakers || []);
+          setError(null);
+        }
+      } catch {
+        setError("Failed to fetch speakers");
+        setSpeakers([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchSpeakers();
+  }, []);
+
+  // Load selected speaker from DB (with localStorage fallback)
+  useEffect(() => {
+    if (settingsLoadedRef.current) return;
+    settingsLoadedRef.current = true;
+
+    async function loadSettings() {
+      try {
+        const response = await fetch("/api/settings");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.speakerId !== null && data.speakerId !== undefined) {
+            setSelectedSpeakerState(data.speakerId);
+            localStorage.setItem(STORAGE_KEY, data.speakerId.toString());
+            return;
+          }
+        }
+      } catch {
+        // Fall back to localStorage
+      }
+
+      // Fallback to localStorage
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = parseInt(stored, 10);
+        if (!isNaN(parsed)) {
+          setSelectedSpeakerState(parsed);
+        }
+      }
+    }
+
+    loadSettings();
+  }, []);
+
+  const setSelectedSpeaker = useCallback((id: number) => {
+    setSelectedSpeakerState(id);
+    localStorage.setItem(STORAGE_KEY, id.toString());
+
+    // Save to DB
+    fetch("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ speakerId: id }),
+    }).catch(() => {
+      // Ignore DB errors, localStorage is the backup
+    });
+
+    // Notify other tabs via BroadcastChannel
+    try {
+      const channel = new BroadcastChannel("mirror-channel");
+      channel.postMessage({
+        type: "settings_changed",
+        payload: JSON.stringify({ speaker: id }),
+      });
+      channel.close();
+    } catch {
+      // BroadcastChannel not supported
+    }
+  }, []);
+
+  const previewVoice = useCallback(async (speakerId: number, text?: string) => {
+    if (isPreviewPlaying) return;
+
+    setIsPreviewPlaying(true);
+
+    try {
+      const response = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: text || DEFAULT_PREVIEW_TEXT,
+          speaker: speakerId,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("TTS failed");
+      }
+
+      const data = await response.json();
+
+      if (data.audio) {
+        // Stop any existing audio
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+
+        const audio = new Audio(`data:audio/wav;base64,${data.audio}`);
+        audioRef.current = audio;
+
+        audio.onended = () => {
+          setIsPreviewPlaying(false);
+          audioRef.current = null;
+        };
+
+        audio.onerror = () => {
+          setIsPreviewPlaying(false);
+          audioRef.current = null;
+        };
+
+        await audio.play();
+      }
+    } catch {
+      console.error("Preview failed");
+      setIsPreviewPlaying(false);
+    }
+  }, [isPreviewPlaying]);
+
+  return {
+    speakers,
+    selectedSpeaker,
+    setSelectedSpeaker,
+    isLoading,
+    error,
+    previewVoice,
+    isPreviewPlaying,
+  };
+}
+
+
+--- src/hooks/useSpeechRecognition.ts ---
+"use client";
+
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useAudioRecorder } from "./useAudioRecorder";
+import { STTClientConfig, SilenceDetectionConfig } from "@/lib/stt";
+
+// Web Speech API types
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+  resultIndex: number;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+  message?: string;
+}
+
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  start(): void;
+  stop(): void;
+  abort(): void;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  onstart: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    SpeechRecognition: new () => SpeechRecognition;
+    webkitSpeechRecognition: new () => SpeechRecognition;
+  }
+}
+
+/** Available speech recognition providers */
+export type SpeechRecognitionProvider = "web" | "whisper";
+
+interface UseSpeechRecognitionOptions {
+  /** Called when a final transcript is received */
+  onResult: (transcript: string) => void;
+  /** Called with interim/partial transcripts (Web Speech only) */
+  onInterimResult?: (transcript: string) => void;
+  /** Called when recording state changes (Whisper mode) */
+  onRecordingStateChange?: (isRecording: boolean) => void;
+  /** Called with volume level for visualization (Whisper mode) */
+  onVolumeChange?: (volume: number) => void;
+  /** Language code (default: "en-US") */
+  lang?: string;
+  /** Override provider selection from config */
+  provider?: SpeechRecognitionProvider;
+}
+
+interface UseSpeechRecognitionReturn {
+  /** Whether currently listening/recording */
+  isListening: boolean;
+  /** Whether speech recognition is supported */
+  isSupported: boolean;
+  /** Whether Whisper is currently transcribing audio */
+  isTranscribing: boolean;
+  /** Current active provider */
+  activeProvider: SpeechRecognitionProvider;
+  /** Current volume level (0-1, Whisper mode only) */
+  currentVolume: number;
+  /** Start listening */
+  start: () => void;
+  /** Stop listening completely */
+  stop: () => void;
+  /** Pause listening temporarily */
+  pause: () => void;
+  /** Resume listening after pause */
+  resume: () => void;
+}
+
+/**
+ * Enhanced speech recognition hook with Whisper API support
+ *
+ * Features:
+ * - Web Speech API for real-time transcription with interim results
+ * - Whisper API (OpenAI or local) for high-accuracy transcription
+ * - Automatic silence detection for natural conversation flow
+ * - Backward compatible with existing usage
+ */
+export function useSpeechRecognition({
+  onResult,
+  onInterimResult,
+  onRecordingStateChange,
+  onVolumeChange,
+  lang = "en-US",
+  provider: providerOverride,
+}: UseSpeechRecognitionOptions): UseSpeechRecognitionReturn {
+  // State
+  const [isListening, setIsListening] = useState(false);
+  const [isSupported, setIsSupported] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [activeProvider, setActiveProvider] =
+    useState<SpeechRecognitionProvider>("web");
+  const [sttConfig, setSTTConfig] = useState<STTClientConfig | null>(null);
+  const [currentVolume, setCurrentVolume] = useState(0);
+
+  // Web Speech API refs
+  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const shouldRestartRef = useRef(true);
+  const isListeningRef = useRef(false);
+  const restartAttemptsRef = useRef(0);
+  const maxRestartAttempts = 5;
+  const restartDelayRef = useRef(100);
+
+  // Callback refs to avoid stale closures
+  const onResultRef = useRef(onResult);
+  const onInterimResultRef = useRef(onInterimResult);
+
+  useEffect(() => {
+    onResultRef.current = onResult;
+  }, [onResult]);
+
+  useEffect(() => {
+    onInterimResultRef.current = onInterimResult;
+  }, [onInterimResult]);
+
+  // Fetch STT configuration from server
+  useEffect(() => {
+    async function fetchSTTConfig() {
+      try {
+        const res = await fetch("/api/stt/config");
+        if (res.ok) {
+          const config: STTClientConfig = await res.json();
+          setSTTConfig(config);
+
+          // Determine provider from config unless overridden
+          if (!providerOverride) {
+            const configProvider =
+              config.provider === "openai" || config.provider === "local"
+                ? "whisper"
+                : "web";
+            setActiveProvider(configProvider);
+            console.log(`[SpeechRecognition] Using provider: ${configProvider}`);
+          }
+        }
+      } catch (error) {
+        console.warn(
+          "[SpeechRecognition] Failed to fetch STT config, using Web Speech API"
+        );
+        setActiveProvider("web");
+      }
+    }
+    fetchSTTConfig();
+  }, [providerOverride]);
+
+  // Apply provider override
+  useEffect(() => {
+    if (providerOverride) {
+      setActiveProvider(providerOverride);
+      console.log(`[SpeechRecognition] Provider overridden to: ${providerOverride}`);
+    }
+  }, [providerOverride]);
+
+  /**
+   * Handle Whisper transcription
+   * Called when audio recording is complete
+   */
+  const handleWhisperTranscription = useCallback(
+    async (audioBlob: Blob) => {
+      setIsTranscribing(true);
+      onInterimResultRef.current?.("...");
+
+      try {
+        const formData = new FormData();
+        formData.append("audio", audioBlob, "audio.webm");
+        // Use language from server config, fallback to prop, then convert BCP 47 to ISO 639-1
+        const effectiveLang = sttConfig?.language || lang;
+        const whisperLang = effectiveLang.split("-")[0];
+        formData.append("language", whisperLang);
+
+        console.log(
+          `[SpeechRecognition] Sending audio to Whisper: ${audioBlob.size} bytes`
+        );
+
+        const response = await fetch("/api/stt", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.transcript && data.transcript.trim()) {
+            console.log(
+              `[SpeechRecognition] Whisper result: "${data.transcript}"`
+            );
+            onInterimResultRef.current?.("");
+            onResultRef.current(data.transcript);
+          } else {
+            console.log("[SpeechRecognition] Whisper returned empty transcript");
+            onInterimResultRef.current?.("");
+          }
+        } else {
+          const errorData = await response.json().catch(() => ({}));
+          console.error(
+            "[SpeechRecognition] Whisper API error:",
+            response.status,
+            errorData
+          );
+          onInterimResultRef.current?.("");
+        }
+      } catch (error) {
+        console.error("[SpeechRecognition] Whisper transcription error:", error);
+        onInterimResultRef.current?.("");
+      } finally {
+        setIsTranscribing(false);
+      }
+    },
+    [lang, sttConfig?.language]
+  );
+
+  /**
+   * Handle volume changes from audio recorder
+   */
+  const handleVolumeChange = useCallback(
+    (volume: number) => {
+      setCurrentVolume(volume);
+      onVolumeChange?.(volume);
+    },
+    [onVolumeChange]
+  );
+
+  /**
+   * Handle recording state changes
+   */
+  const handleRecordingStateChange = useCallback(
+    (recording: boolean) => {
+      if (activeProvider === "whisper") {
+        setIsListening(recording);
+        isListeningRef.current = recording;
+      }
+      onRecordingStateChange?.(recording);
+    },
+    [activeProvider, onRecordingStateChange]
+  );
+
+  // Audio recorder for Whisper mode
+  const {
+    isRecording,
+    isSupported: isRecorderSupported,
+    hasAudioStarted,
+    startRecording,
+    stopRecording: stopAudioRecording,
+  } = useAudioRecorder({
+    onAudioReady: handleWhisperTranscription,
+    onVolumeChange: handleVolumeChange,
+    onRecordingStateChange: handleRecordingStateChange,
+    silenceConfig: sttConfig?.silenceDetection as
+      | Partial<SilenceDetectionConfig>
+      | undefined,
+  });
+
+  // Show interim feedback while recording (Whisper mode)
+  useEffect(() => {
+    if (activeProvider === "whisper") {
+      if (isRecording && hasAudioStarted) {
+        onInterimResultRef.current?.("...");
+      } else if (isRecording && !hasAudioStarted) {
+        onInterimResultRef.current?.("...");
+      } else if (!isRecording && !isTranscribing) {
+        // Clear interim when not recording and not transcribing
+      }
+    }
+  }, [isRecording, hasAudioStarted, isTranscribing, activeProvider]);
+
+  // Web Speech API setup
+  useEffect(() => {
+    // Skip Web Speech setup if using Whisper
+    if (activeProvider !== "web") {
+      // Cleanup existing Web Speech instance
+      if (recognitionRef.current) {
+        shouldRestartRef.current = false;
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+      return;
+    }
+
+    const SpeechRecognitionAPI =
+      typeof window !== "undefined"
+        ? window.SpeechRecognition || window.webkitSpeechRecognition
+        : null;
+
+    if (!SpeechRecognitionAPI) {
+      console.warn("[SpeechRecognition] Web Speech API not supported");
+      setIsSupported(false);
+      return;
+    }
+
+    setIsSupported(true);
+    const recognition = new SpeechRecognitionAPI();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = lang;
+
+    recognition.onstart = () => {
+      console.log("[SpeechRecognition] Web Speech started");
+      isListeningRef.current = true;
+      setIsListening(true);
+      restartAttemptsRef.current = 0;
+      restartDelayRef.current = 100;
+    };
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interimTranscript = "";
+      let finalTranscript = "";
+
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0].transcript;
+
+        if (result.isFinal) {
+          finalTranscript += transcript;
+        } else {
+          interimTranscript += transcript;
+        }
+      }
+
+      if (interimTranscript && onInterimResultRef.current) {
+        onInterimResultRef.current(interimTranscript);
+      }
+
+      if (finalTranscript) {
+        console.log("[SpeechRecognition] Web Speech result:", finalTranscript);
+        onResultRef.current(finalTranscript);
+      }
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      switch (event.error) {
+        case "not-allowed":
+          console.error("[SpeechRecognition] Microphone permission denied");
+          shouldRestartRef.current = false;
+          break;
+        case "network":
+          console.warn("[SpeechRecognition] Network error - will retry");
+          break;
+        case "no-speech":
+          console.log("[SpeechRecognition] No speech detected");
+          restartAttemptsRef.current = 0;
+          break;
+        case "aborted":
+          console.log("[SpeechRecognition] Aborted");
+          break;
+        case "audio-capture":
+          console.error("[SpeechRecognition] Audio capture failed");
+          break;
+        default:
+          console.error("[SpeechRecognition] Error:", event.error);
+      }
+    };
+
+    recognition.onend = () => {
+      console.log("[SpeechRecognition] Web Speech ended");
+      isListeningRef.current = false;
+      setIsListening(false);
+
+      // Auto restart with exponential backoff
+      if (shouldRestartRef.current && activeProvider === "web") {
+        if (restartAttemptsRef.current >= maxRestartAttempts) {
+          console.warn(
+            "[SpeechRecognition] Max restart attempts reached, waiting longer..."
+          );
+          restartAttemptsRef.current = 0;
+          restartDelayRef.current = 2000;
+        }
+
+        const delay = restartDelayRef.current;
+        restartAttemptsRef.current++;
+
+        console.log(
+          `[SpeechRecognition] Restarting in ${delay}ms (attempt ${restartAttemptsRef.current})...`
+        );
+
+        setTimeout(() => {
+          if (
+            shouldRestartRef.current &&
+            !isListeningRef.current &&
+            activeProvider === "web"
+          ) {
+            try {
+              recognition.start();
+            } catch (e) {
+              console.log("[SpeechRecognition] Already running, skip restart");
+            }
+          }
+        }, delay);
+
+        restartDelayRef.current = Math.min(restartDelayRef.current * 1.5, 2000);
+      }
+    };
+
+    recognitionRef.current = recognition;
+
+    return () => {
+      shouldRestartRef.current = false;
+      recognition.abort();
+    };
+  }, [lang, activeProvider]);
+
+  // Update isSupported based on active provider
+  useEffect(() => {
+    if (activeProvider === "whisper") {
+      setIsSupported(isRecorderSupported);
+    }
+  }, [activeProvider, isRecorderSupported]);
+
+  // Control methods
+  const start = useCallback(() => {
+    if (activeProvider === "whisper") {
+      if (!isRecording) {
+        shouldRestartRef.current = true;
+        startRecording();
+      }
+    } else {
+      if (!recognitionRef.current || isListeningRef.current) return;
+      shouldRestartRef.current = true;
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        // Already started
+      }
+    }
+  }, [activeProvider, isRecording, startRecording]);
+
+  const stop = useCallback(() => {
+    shouldRestartRef.current = false;
+    if (activeProvider === "whisper") {
+      stopAudioRecording();
+    } else {
+      if (!recognitionRef.current) return;
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Already stopped
+      }
+    }
+  }, [activeProvider, stopAudioRecording]);
+
+  const pause = useCallback(() => {
+    shouldRestartRef.current = false;
+    if (activeProvider === "whisper") {
+      stopAudioRecording();
+    } else {
+      if (!recognitionRef.current || !isListeningRef.current) return;
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // Already stopped
+      }
+    }
+  }, [activeProvider, stopAudioRecording]);
+
+  const resume = useCallback(() => {
+    if (activeProvider === "whisper") {
+      if (!isRecording && !isTranscribing) {
+        shouldRestartRef.current = true;
+        startRecording();
+      }
+    } else {
+      if (!recognitionRef.current || isListeningRef.current) return;
+      shouldRestartRef.current = true;
+      try {
+        recognitionRef.current.start();
+      } catch (e) {
+        // Already started
+      }
+    }
+  }, [activeProvider, isRecording, isTranscribing, startRecording]);
+
+  return {
+    isListening,
+    isSupported,
+    isTranscribing,
+    activeProvider,
+    currentVolume,
+    start,
+    stop,
+    pause,
+    resume,
+  };
+}
+
+
+--- src/hooks/useWakeWord.ts ---
+"use client";
+
+import { useState, useEffect, useCallback, useRef } from "react";
+
+export type WakeWordMode = "waiting" | "conversation";
+
+interface WakeWordConfig {
+  enabled: boolean;
+  phrase: string;
+  timeout: number;
+}
+
+interface UseWakeWordOptions {
+  onWakeWordDetected?: () => void;
+  onTimeout?: () => void;
+}
+
+interface UseWakeWordReturn {
+  mode: WakeWordMode;
+  config: WakeWordConfig | null;
+  isEnabled: boolean;
+  checkForWakeWord: (transcript: string) => boolean;
+  startConversation: () => void;
+  endConversation: () => void;
+  resetTimeout: () => void;
+}
+
+export function useWakeWord({
+  onWakeWordDetected,
+  onTimeout,
+}: UseWakeWordOptions = {}): UseWakeWordReturn {
+  const [mode, setMode] = useState<WakeWordMode>("waiting");
+  const [config, setConfig] = useState<WakeWordConfig | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Fetch wake word config
+  useEffect(() => {
+    async function fetchConfig() {
+      try {
+        const res = await fetch("/api/wakeword");
+        if (res.ok) {
+          const data: WakeWordConfig = await res.json();
+          setConfig(data);
+        }
+      } catch (error) {
+        console.error("[WakeWord] Failed to fetch config:", error);
+        // Use default config
+        setConfig({ enabled: false, phrase: "Hey Mira", timeout: 15 });
+      }
+    }
+    fetchConfig();
+  }, []);
+
+  // Clear timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Start conversation timeout
+  const startConversationTimeout = useCallback(() => {
+    if (!config) return;
+
+    // Clear existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Set new timeout
+    timeoutRef.current = setTimeout(() => {
+      console.log("[WakeWord] Conversation timeout, returning to waiting mode");
+      setMode("waiting");
+      onTimeout?.();
+    }, config.timeout * 1000);
+  }, [config, onTimeout]);
+
+  // Check if transcript contains wake word
+  const checkForWakeWord = useCallback(
+    (transcript: string): boolean => {
+      if (!config?.enabled || mode !== "waiting") {
+        return false;
+      }
+
+      // Normalize both strings for comparison
+      const normalizedTranscript = transcript.toLowerCase().replace(/\s+/g, "");
+      const normalizedPhrase = config.phrase.toLowerCase().replace(/\s+/g, "");
+
+      // Check if wake word is in transcript
+      if (normalizedTranscript.includes(normalizedPhrase)) {
+        console.log("[WakeWord] Wake word detected!");
+        setMode("conversation");
+        startConversationTimeout();
+        onWakeWordDetected?.();
+        return true;
+      }
+
+      return false;
+    },
+    [config, mode, startConversationTimeout, onWakeWordDetected]
+  );
+
+  // Manually start conversation mode
+  const startConversation = useCallback(() => {
+    setMode("conversation");
+    startConversationTimeout();
+  }, [startConversationTimeout]);
+
+  // End conversation and return to waiting
+  const endConversation = useCallback(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setMode("waiting");
+  }, []);
+
+  // Reset timeout (call when user speaks)
+  const resetTimeout = useCallback(() => {
+    if (mode === "conversation") {
+      startConversationTimeout();
+    }
+  }, [mode, startConversationTimeout]);
+
+  return {
+    mode,
+    config,
+    isEnabled: config?.enabled ?? false,
+    checkForWakeWord,
+    startConversation,
+    endConversation,
+    resetTimeout,
+  };
+}

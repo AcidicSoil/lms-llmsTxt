@@ -1,0 +1,928 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- examples/README.md ---
+# Examples
+
+### Alt Screen Toggle
+
+The `altscreen-toggle` example shows how to transition between the alternative
+screen buffer and the normal screen buffer using Bubble Tea.
+
+<a href="./altscreen-toggle/main.go">
+  <img width="750" src="./altscreen-toggle/altscreen-toggle.gif" />
+</a>
+
+### Chat
+
+The `chat` examples shows a basic chat application with a multi-line `textarea`
+input.
+
+<a href="./chat/main.go">
+  <img width="750" src="./chat/chat.gif" />
+</a>
+
+### Composable Views
+
+The `composable-views` example shows how to compose two bubble models (spinner
+and timer) together in a single application and switch between them.
+
+<a href="./composable-views/main.go">
+  <img width="750" src="./composable-views/composable-views.gif" />
+</a>
+
+### Credit Card Form
+
+The `credit-card-form` example demonstrates how to build a multi-step form with
+`textinputs` bubbles and validation on the inputs.
+
+<a href="./credit-card-form/main.go">
+  <img width="750" src="./credit-card-form/credit-card-form.gif" />
+</a>
+
+### Debounce
+
+The `debounce` example shows how to throttle key presses to avoid overloading
+your Bubble Tea application.
+
+<a href="./debounce/main.go">
+  <img width="750" src="./debounce/debounce.gif" />
+</a>
+
+### Exec
+
+The `exec` example shows how to execute a running command during the execution
+of a Bubble Tea application such as launching an `EDITOR`.
+ 
+<a href="./exec/main.go">
+  <img width="750" src="./exec/exec.gif" />
+</a>
+
+### Full Screen
+
+The `fullscreen` example shows how to make a Bubble Tea application fullscreen.
+
+<a href="./fullscreen/main.go">
+  <img width="750" src="./fullscreen/fullscreen.gif" />
+</a>
+
+### Glamour
+
+The `glamour` example shows how to use [Glamour](https://github.com/charmbracelet/glamour) inside a viewport bubble.
+
+<a href="./glamour/main.go">
+  <img width="750" src="./glamour/glamour.gif" />
+</a>
+
+### Help
+
+The `help` example shows how to use the `help` bubble to display help to the
+user of your application.
+
+<a href="./help/main.go">
+  <img width="750" src="./help/help.gif" />
+</a>
+
+### Http
+
+The `http` example shows how to make an `http` call within your Bubble Tea
+application.
+
+<a href="./http/main.go">
+  <img width="750" src="./http/http.gif" />
+</a>
+
+### Default List
+
+The `list-default` example shows how to use the list bubble.
+
+<a href="./list-default/main.go">
+  <img width="750" src="./list-default/list-default.gif" />
+</a>
+
+### Fancy List
+
+The `list-fancy` example shows how to use the list bubble with extra customizations.
+
+<a href="./list-fancy/main.go">
+  <img width="750" src="./list-fancy/list-fancy.gif" />
+</a>
+
+### Simple List
+
+The `list-simple` example shows how to use the list and customize it to have a simpler, more compact, appearance.
+
+<a href="./list-simple/main.go">
+  <img width="750" src="./list-simple/list-simple.gif" />
+</a>
+
+### Mouse
+
+The `mouse` example shows how to receive mouse events in a Bubble Tea
+application.
+
+<a href="./mouse/main.go">
+  Code
+</a>
+
+### Package Manager
+
+The `package-manager` example shows how to build an interface for a package
+manager using the `tea.Println` feature.
+
+<a href="./package-manager/main.go">
+  <img width="750" src="./package-manager/package-manager.gif" />
+</a>
+
+### Pager
+
+The `pager` example shows how to build a simple pager application similar to
+`less`.
+
+<a href="./pager/main.go">
+  <img width="750" src="./pager/pager.gif" />
+</a>
+
+### Paginator
+
+The `paginator` example shows how to build a simple paginated list.
+
+<a href="./paginator/main.go">
+  <img width="750" src="./paginator/paginator.gif" />
+</a>
+
+### Pipe
+
+The `pipe` example demonstrates using shell pipes to communicate with Bubble
+Tea applications.
+
+<a href="./pipe/main.go">
+  <img width="750" src="./pipe/pipe.gif" />
+</a>
+
+### Animated Progress
+
+The `progress-animated` example shows how to build a progress bar with an
+animated progression.
+
+<a href="./progress-animated/main.go">
+  <img width="750" src="./progress-animated/progress-animated.gif" />
+</a>
+
+### Download Progress
+
+The `progress-download` example demonstrates how to download a file while
+indicating download progress through Bubble Tea.
+
+<a href="./progress-download/main.go">
+  Code
+</a>
+
+### Static Progress
+
+The `progress-static` example shows a progress bar with static incrementation
+of progress.
+
+<a href="./progress-static/main.go">
+  <img width="750" src="./progress-static/progress-static.gif" />
+</a>
+
+### Real Time
+
+The `realtime` example demonstrates the use of go channels to perform realtime
+communication with a Bubble Tea application.
+
+<a href="./realtime/main.go">
+  <img width="750" src="./realtime/realtime.gif" />
+</a>
+
+### Result
+
+The `result` example shows a choice menu with the ability to select an option.
+
+<a href="./result/main.go">
+  <img width="750" src="./result/result.gif" />
+</a>
+
+### Send Msg
+
+The `send-msg` example demonstrates the usage of custom `tea.Msg`s.
+
+<a href="./send-msg/main.go">
+  <img width="750" src="./send-msg/send-msg.gif" />
+</a>
+
+### Sequence
+
+The `sequence` example demonstrates the `tea.Sequence` command.
+
+<a href="./sequence/main.go">
+  <img width="750" src="./sequence/sequence.gif" />
+</a>
+
+### Simple
+
+The `simple` example shows a very simple Bubble Tea application.
+
+<a href="./simple/main.go">
+  <img width="750" src="./simple/simple.gif" />
+</a>
+
+### Spinner
+
+The `spinner` example demonstrates a spinner bubble being used to indicate loading.
+
+<a href="./spinner/main.go">
+  <img width="750" src="./spinner/spinner.gif" />
+</a>
+
+### Spinners
+
+The `spinner` example shows various spinner types that are available.
+
+<a href="./spinners/main.go">
+  <img width="750" src="./spinners/spinners.gif" />
+</a>
+
+### Split Editors
+
+The `split-editors` example shows multiple `textarea`s being used in a single
+application and being able to switch focus between them.
+
+<a href="./split-editors/main.go">
+  <img width="750" src="./split-editors/split-editors.gif" />
+</a>
+
+### Stop Watch
+
+The `stopwatch` example shows a sample stop watch built with Bubble Tea.
+
+<a href="./stopwatch/main.go">
+  <img width="750" src="./stopwatch/stopwatch.gif" />
+</a>
+
+### Table
+
+The `table` example demonstrates the table bubble being used to display tabular
+data.
+
+<a href="./table/main.go">
+  <img width="750" src="./table/table.gif" />
+</a>
+
+### Tabs
+
+The `tabs` example demonstrates tabbed navigation styled with [Lip Gloss](https://github.com/charmbracelet/lipgloss).
+
+<a href="./tabs/main.go">
+  <img width="750" src="./tabs/tabs.gif" />
+</a>
+
+### Text Area
+
+The `textarea` example demonstrates a simple Bubble Tea application using a
+`textarea` bubble.
+
+<a href="./textarea/main.go">
+  <img width="750" src="./textarea/textarea.gif" />
+</a>
+
+### Text Input
+
+The `textinput` example demonstrates a simple Bubble Tea application using a `textinput` bubble.
+
+<a href="./textinput/main.go">
+  <img width="750" src="./textinput/textinput.gif" />
+</a>
+
+### Multiple Text Inputs
+
+The `textinputs` example shows multiple `textinputs` and being able to switch
+focus between them as well as changing the cursor mode.
+
+<a href="./textinputs/main.go">
+  <img width="750" src="./textinputs/textinputs.gif" />
+</a>
+
+### Timer
+
+The `timer` example shows a simple timer built with Bubble Tea.
+
+<a href="./timer/main.go">
+  <img width="750" src="./timer/timer.gif" />
+</a>
+
+### TUI Daemon
+
+The `tui-daemon-combo` demonstrates building a text-user interface along with a
+daemon mode using Bubble Tea.
+
+<a href="./tui-daemon-combo/main.go">
+  <img width="750" src="./tui-daemon-combo/tui-daemon-combo.gif" />
+</a>
+
+### Views
+
+The `views` example demonstrates how to build a Bubble Tea application with
+multiple views and switch between them.
+
+<a href="./views/main.go">
+  <img width="750" src="./views/views.gif" />
+</a>
+
+
+
+## Links discovered
+- [Glamour](https://github.com/charmbracelet/glamour)
+- [Lip Gloss](https://github.com/charmbracelet/lipgloss)
+- [<img width="750" src="./altscreen-toggle/altscreen-toggle.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/altscreen-toggle/main.go)
+- [<img width="750" src="./chat/chat.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/chat/main.go)
+- [<img width="750" src="./composable-views/composable-views.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/composable-views/main.go)
+- [<img width="750" src="./credit-card-form/credit-card-form.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/credit-card-form/main.go)
+- [<img width="750" src="./debounce/debounce.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/debounce/main.go)
+- [<img width="750" src="./exec/exec.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/exec/main.go)
+- [<img width="750" src="./fullscreen/fullscreen.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/fullscreen/main.go)
+- [<img width="750" src="./glamour/glamour.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/glamour/main.go)
+- [<img width="750" src="./help/help.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/help/main.go)
+- [<img width="750" src="./http/http.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/http/main.go)
+- [<img width="750" src="./list-default/list-default.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/list-default/main.go)
+- [<img width="750" src="./list-fancy/list-fancy.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/list-fancy/main.go)
+- [<img width="750" src="./list-simple/list-simple.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/list-simple/main.go)
+- [Code](https://github.com/charmbracelet/bubbletea/blob/main/examples/mouse/main.go)
+- [<img width="750" src="./package-manager/package-manager.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/package-manager/main.go)
+- [<img width="750" src="./pager/pager.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/pager/main.go)
+- [<img width="750" src="./paginator/paginator.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/paginator/main.go)
+- [<img width="750" src="./pipe/pipe.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/pipe/main.go)
+- [<img width="750" src="./progress-animated/progress-animated.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/progress-animated/main.go)
+- [Code](https://github.com/charmbracelet/bubbletea/blob/main/examples/progress-download/main.go)
+- [<img width="750" src="./progress-static/progress-static.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/progress-static/main.go)
+- [<img width="750" src="./realtime/realtime.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/realtime/main.go)
+- [<img width="750" src="./result/result.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/result/main.go)
+- [<img width="750" src="./send-msg/send-msg.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/send-msg/main.go)
+- [<img width="750" src="./sequence/sequence.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/sequence/main.go)
+- [<img width="750" src="./simple/simple.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/simple/main.go)
+- [<img width="750" src="./spinner/spinner.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/spinner/main.go)
+- [<img width="750" src="./spinners/spinners.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/spinners/main.go)
+- [<img width="750" src="./split-editors/split-editors.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/split-editors/main.go)
+- [<img width="750" src="./stopwatch/stopwatch.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/stopwatch/main.go)
+- [<img width="750" src="./table/table.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/table/main.go)
+- [<img width="750" src="./tabs/tabs.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/tabs/main.go)
+- [<img width="750" src="./textarea/textarea.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/textarea/main.go)
+- [<img width="750" src="./textinput/textinput.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/textinput/main.go)
+- [<img width="750" src="./textinputs/textinputs.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/textinputs/main.go)
+- [<img width="750" src="./timer/timer.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/timer/main.go)
+- [<img width="750" src="./tui-daemon-combo/tui-daemon-combo.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/tui-daemon-combo/main.go)
+- [<img width="750" src="./views/views.gif" />](https://github.com/charmbracelet/bubbletea/blob/main/examples/views/main.go)
+
+--- examples/altscreen-toggle/README.md ---
+# Alt Screen Toggle
+
+<img width="800" src="./altscreen-toggle.gif" />
+
+
+--- examples/chat/README.md ---
+# Chat
+
+<img width="800" src="./chat.gif" />
+
+
+--- examples/composable-views/README.md ---
+# Composable Views
+
+<img width="800" src="./composable-views.gif" />
+
+
+--- examples/credit-card-form/README.md ---
+# Credit Card Form
+
+<img width="800" src="./credit-card-form.gif" />
+
+
+--- examples/debounce/README.md ---
+# Debounce
+
+<img width="800" src="./debounce.gif" />
+
+
+--- examples/exec/README.md ---
+# Exec
+
+<img width="800" src="./exec.gif" />
+
+
+--- examples/fullscreen/README.md ---
+# Full Screen
+
+<img width="800" src="./fullscreen.gif" />
+
+
+--- examples/glamour/README.md ---
+# Glamour
+
+<img width="800" src="./glamour.gif" />
+
+
+--- examples/help/README.md ---
+# Help
+
+<img width="800" src="./help.gif" />
+
+
+--- README.md ---
+# Bubble Tea
+
+<p>
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset="https://stuff.charm.sh/bubbletea/bubble-tea-v2-light.png" width="308">
+      <source media="(prefers-color-scheme: dark)" srcset="https://stuff.charm.sh/bubbletea/bubble-tea-v2-dark.png" width="312">
+      <img src="https://stuff.charm.sh/bubbletea/bubble-tea-v2-light.png" width="308" />
+    </picture>
+    <br>
+    <a href="https://github.com/charmbracelet/bubbletea/releases"><img src="https://img.shields.io/github/release/charmbracelet/bubbletea.svg" alt="Latest Release"></a>
+    <a href="https://pkg.go.dev/github.com/charmbracelet/bubbletea?tab=doc"><img src="https://godoc.org/github.com/charmbracelet/bubbletea?status.svg" alt="GoDoc"></a>
+    <a href="https://github.com/charmbracelet/bubbletea/actions"><img src="https://github.com/charmbracelet/bubbletea/actions/workflows/build.yml/badge.svg?branch=main" alt="Build Status"></a>
+</p>
+
+The fun, functional and stateful way to build terminal apps. A Go framework
+based on [The Elm Architecture][elm]. Bubble Tea is well-suited for simple and
+complex terminal applications, either inline, full-window, or a mix of both.
+
+<p>
+    <img src="https://stuff.charm.sh/bubbletea/bubbletea-example.gif" width="100%" alt="Bubble Tea Example">
+</p>
+
+Bubble Tea is in use in production and includes a number of features and
+performance optimizations we’ve added along the way. Among those is
+a framerate-based renderer, mouse support, focus reporting and more.
+
+To get started, see the tutorial below, the [examples][examples], the
+[docs][docs], the [video tutorials][youtube] and some common [resources](#libraries-we-use-with-bubble-tea).
+
+[youtube]: https://charm.sh/yt
+
+## By the way
+
+Be sure to check out [Bubbles][bubbles], a library of common UI components for Bubble Tea.
+
+<p>
+    <a href="https://github.com/charmbracelet/bubbles"><img src="https://stuff.charm.sh/bubbles/bubbles-badge.png" width="174" alt="Bubbles Badge"></a>&nbsp;&nbsp;
+    <a href="https://github.com/charmbracelet/bubbles"><img src="https://stuff.charm.sh/bubbles-examples/textinput.gif" width="400" alt="Text Input Example from Bubbles"></a>
+</p>
+
+---
+
+## Tutorial
+
+Bubble Tea is based on the functional design paradigms of [The Elm
+Architecture][elm], which happens to work nicely with Go. It's a delightful way
+to build applications.
+
+This tutorial assumes you have a working knowledge of Go.
+
+By the way, the non-annotated source code for this program is available
+[on GitHub][tut-source].
+
+[elm]: https://guide.elm-lang.org/architecture/
+[tut-source]: https://github.com/charmbracelet/bubbletea/tree/main/tutorials/basics
+
+### Enough! Let's get to it.
+
+For this tutorial, we're making a shopping list.
+
+To start we'll define our package and import some libraries. Our only external
+import will be the Bubble Tea library, which we'll call `tea` for short.
+
+```go
+package main
+
+// These imports will be used later on the tutorial. If you save the file
+// now, Go might complain they are unused, but that's fine.
+// You may also need to run `go mod tidy` to download bubbletea and its
+// dependencies.
+import (
+    "fmt"
+    "os"
+
+    tea "github.com/charmbracelet/bubbletea"
+)
+```
+
+Bubble Tea programs are comprised of a **model** that describes the application
+state and three simple methods on that model:
+
+- **Init**, a function that returns an initial command for the application to run.
+- **Update**, a function that handles incoming events and updates the model accordingly.
+- **View**, a function that renders the UI based on the data in the model.
+
+### The Model
+
+So let's start by defining our model which will store our application's state.
+It can be any type, but a `struct` usually makes the most sense.
+
+```go
+type model struct {
+    choices  []string           // items on the to-do list
+    cursor   int                // which to-do list item our cursor is pointing at
+    selected map[int]struct{}   // which to-do items are selected
+}
+```
+
+### Initialization
+
+Next, we’ll define our application’s initial state. In this case, we’re defining
+a function to return our initial model, however, we could just as easily define
+the initial model as a variable elsewhere, too.
+
+```go
+func initialModel() model {
+	return model{
+		// Our to-do list is a grocery list
+		choices:  []string{"Buy carrots", "Buy celery", "Buy kohlrabi"},
+
+		// A map which indicates which choices are selected. We're using
+		// the  map like a mathematical set. The keys refer to the indexes
+		// of the `choices` slice, above.
+		selected: make(map[int]struct{}),
+	}
+}
+```
+
+Next, we define the `Init` method. `Init` can return a `Cmd` that could perform
+some initial I/O. For now, we don't need to do any I/O, so for the command,
+we'll just return `nil`, which translates to "no command."
+
+```go
+func (m model) Init() tea.Cmd {
+    // Just return `nil`, which means "no I/O right now, please."
+    return nil
+}
+```
+
+### The Update Method
+
+Next up is the update method. The update function is called when ”things
+happen.” Its job is to look at what has happened and return an updated model in
+response. It can also return a `Cmd` to make more things happen, but for now
+don't worry about that part.
+
+In our case, when a user presses the down arrow, `Update`’s job is to notice
+that the down arrow was pressed and move the cursor accordingly (or not).
+
+The “something happened” comes in the form of a `Msg`, which can be any type.
+Messages are the result of some I/O that took place, such as a keypress, timer
+tick, or a response from a server.
+
+We usually figure out which type of `Msg` we received with a type switch, but
+you could also use a type assertion.
+
+For now, we'll just deal with `tea.KeyMsg` messages, which are automatically
+sent to the update function when keys are pressed.
+
+```go
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+    switch msg := msg.(type) {
+
+    // Is it a key press?
+    case tea.KeyMsg:
+
+        // Cool, what was the actual key pressed?
+        switch msg.String() {
+
+        // These keys should exit the program.
+        case "ctrl+c", "q":
+            return m, tea.Quit
+
+        // The "up" and "k" keys move the cursor up
+        case "up", "k":
+            if m.cursor > 0 {
+                m.cursor--
+            }
+
+        // The "down" and "j" keys move the cursor down
+        case "down", "j":
+            if m.cursor < len(m.choices)-1 {
+                m.cursor++
+            }
+
+        // The "enter" key and the spacebar (a literal space) toggle
+        // the selected state for the item that the cursor is pointing at.
+        case "enter", " ":
+            _, ok := m.selected[m.cursor]
+            if ok {
+                delete(m.selected, m.cursor)
+            } else {
+                m.selected[m.cursor] = struct{}{}
+            }
+        }
+    }
+
+    // Return the updated model to the Bubble Tea runtime for processing.
+    // Note that we're not returning a command.
+    return m, nil
+}
+```
+
+You may have noticed that <kbd>ctrl+c</kbd> and <kbd>q</kbd> above return
+a `tea.Quit` command with the model. That’s a special command which instructs
+the Bubble Tea runtime to quit, exiting the program.
+
+### The View Method
+
+At last, it’s time to render our UI. Of all the methods, the view is the
+simplest. We look at the model in its current state and use it to return
+a `string`. That string is our UI!
+
+Because the view describes the entire UI of your application, you don’t have to
+worry about redrawing logic and stuff like that. Bubble Tea takes care of it
+for you.
+
+```go
+func (m model) View() string {
+    // The header
+    s := "What should we buy at the market?\n\n"
+
+    // Iterate over our choices
+    for i, choice := range m.choices {
+
+        // Is the cursor pointing at this choice?
+        cursor := " " // no cursor
+        if m.cursor == i {
+            cursor = ">" // cursor!
+        }
+
+        // Is this choice selected?
+        checked := " " // not selected
+        if _, ok := m.selected[i]; ok {
+            checked = "x" // selected!
+        }
+
+        // Render the row
+        s += fmt.Sprintf("%s [%s] %s\n", cursor, checked, choice)
+    }
+
+    // The footer
+    s += "\nPress q to quit.\n"
+
+    // Send the UI for rendering
+    return s
+}
+```
+
+### All Together Now
+
+The last step is to simply run our program. We pass our initial model to
+`tea.NewProgram` and let it rip:
+
+```go
+func main() {
+    p := tea.NewProgram(initialModel())
+    if _, err := p.Run(); err != nil {
+        fmt.Printf("Alas, there's been an error: %v", err)
+        os.Exit(1)
+    }
+}
+```
+
+## What’s Next?
+
+This tutorial covers the basics of building an interactive terminal UI, but
+in the real world you'll also need to perform I/O. To learn about that have a
+look at the [Command Tutorial][cmd]. It's pretty simple.
+
+There are also several [Bubble Tea examples][examples] available and, of course,
+there are [Go Docs][docs].
+
+[cmd]: https://github.com/charmbracelet/bubbletea/tree/main/tutorials/commands/
+[examples]: https://github.com/charmbracelet/bubbletea/tree/main/examples
+[docs]: https://pkg.go.dev/github.com/charmbracelet/bubbletea?tab=doc
+
+## Debugging
+
+### Debugging with Delve
+
+Since Bubble Tea apps assume control of stdin and stdout, you’ll need to run
+delve in headless mode and then connect to it:
+
+```bash
+# Start the debugger
+$ dlv debug --headless --api-version=2 --listen=127.0.0.1:43000 .
+API server listening at: 127.0.0.1:43000
+
+# Connect to it from another terminal
+$ dlv connect 127.0.0.1:43000
+```
+
+If you do not explicitly supply the `--listen` flag, the port used will vary
+per run, so passing this in makes the debugger easier to use from a script
+or your IDE of choice.
+
+Additionally, we pass in `--api-version=2` because delve defaults to version 1
+for backwards compatibility reasons. However, delve recommends using version 2
+for all new development and some clients may no longer work with version 1.
+For more information, see the [Delve documentation](https://github.com/go-delve/delve/tree/master/Documentation/api).
+
+### Logging Stuff
+
+You can’t really log to stdout with Bubble Tea because your TUI is busy
+occupying that! You can, however, log to a file by including something like
+the following prior to starting your Bubble Tea program:
+
+```go
+if len(os.Getenv("DEBUG")) > 0 {
+	f, err := tea.LogToFile("debug.log", "debug")
+	if err != nil {
+		fmt.Println("fatal:", err)
+		os.Exit(1)
+	}
+	defer f.Close()
+}
+```
+
+To see what’s being logged in real time, run `tail -f debug.log` while you run
+your program in another window.
+
+## Libraries we use with Bubble Tea
+
+- [Bubbles][bubbles]: Common Bubble Tea components such as text inputs, viewports, spinners and so on
+- [Lip Gloss][lipgloss]: Style, format and layout tools for terminal applications
+- [Harmonica][harmonica]: A spring animation library for smooth, natural motion
+- [BubbleZone][bubblezone]: Easy mouse event tracking for Bubble Tea components
+- [ntcharts][ntcharts]: A terminal charting library built for Bubble Tea and [Lip Gloss][lipgloss]
+
+[bubbles]: https://github.com/charmbracelet/bubbles
+[lipgloss]: https://github.com/charmbracelet/lipgloss
+[harmonica]: https://github.com/charmbracelet/harmonica
+[bubblezone]: https://github.com/lrstanley/bubblezone
+[ntcharts]: https://github.com/NimbleMarkets/ntcharts
+
+## Bubble Tea in the Wild
+
+There are over [10,000 applications](https://github.com/charmbracelet/bubbletea/network/dependents) built with Bubble Tea! Here are a handful of ’em.
+
+### Staff favourites
+
+- [chezmoi](https://github.com/twpayne/chezmoi): securely manage your dotfiles across multiple machines
+- [circumflex](https://github.com/bensadeh/circumflex): read Hacker News in the terminal
+- [gh-dash](https://www.github.com/dlvhdr/gh-dash): a GitHub CLI extension for PRs and issues
+- [Tetrigo](https://github.com/Broderick-Westrope/tetrigo): Tetris in the terminal
+- [Signls](https://github.com/emprcl/signls): a generative midi sequencer designed for composition and live performance
+- [Superfile](https://github.com/yorukot/superfile): a super file manager
+
+### In Industry
+
+- Microsoft Azure – [Aztify](https://github.com/Azure/aztfy): bring Microsoft Azure resources under Terraform
+- Daytona – [Daytona](https://github.com/daytonaio/daytona): open source dev environment manager
+- Cockroach Labs – [CockroachDB](https://github.com/cockroachdb/cockroach): a cloud-native, high-availability distributed SQL database
+- Truffle Security Co. – [Trufflehog](https://github.com/trufflesecurity/trufflehog): find leaked credentials
+- NVIDIA – [container-canary](https://github.com/NVIDIA/container-canary): a container validator
+- AWS – [eks-node-viewer](https://github.com/awslabs/eks-node-viewer): a tool for visualizing dynamic node usage within an EKS cluster
+- MinIO – [mc](https://github.com/minio/mc): the official [MinIO](https://min.io) client
+- Ubuntu – [Authd](https://github.com/ubuntu/authd): an authentication daemon for cloud-based identity providers
+
+### Charm stuff
+
+- [Glow](https://github.com/charmbracelet/glow): a markdown reader, browser, and online markdown stash
+- [Huh?](https://github.com/charmbracelet/huh): an interactive prompt and form toolkit
+- [Mods](https://github.com/charmbracelet/mods): AI on the CLI, built for pipelines
+- [Wishlist](https://github.com/charmbracelet/wishlist): an SSH directory (and bastion!)
+
+### There’s so much more where that came from
+
+For more applications built with Bubble Tea see [Charm & Friends][community].
+Is there something cool you made with Bubble Tea you want to share? [PRs][community] are
+welcome!
+
+## Contributing
+
+See [contributing][contribute].
+
+[contribute]: https://github.com/charmbracelet/bubbletea/contribute
+
+## Feedback
+
+We’d love to hear your thoughts on this project. Feel free to drop us a note!
+
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
+
+## Acknowledgments
+
+Bubble Tea is based on the paradigms of [The Elm Architecture][elm] by Evan
+Czaplicki et alia and the excellent [go-tea][gotea] by TJ Holowaychuk. It’s
+inspired by the many great [_Zeichenorientierte Benutzerschnittstellen_][zb]
+of days past.
+
+[elm]: https://guide.elm-lang.org/architecture/
+[gotea]: https://github.com/tj/go-tea
+[zb]: https://de.wikipedia.org/wiki/Zeichenorientierte_Benutzerschnittstelle
+[community]: https://github.com/charm-and-friends/charm-in-the-wild
+
+## License
+
+[MIT](https://github.com/charmbracelet/bubbletea/raw/main/LICENSE)
+
+---
+
+Part of [Charm](https://charm.sh).
+
+<a href="https://charm.sh/"><img alt="The Charm logo" src="https://stuff.charm.sh/charm-banner-next.jpg" width="400"></a>
+
+Charm热爱开源 • Charm loves open source • نحنُ نحب المصادر المفتوحة
+
+
+## Links discovered
+- [Delve documentation](https://github.com/go-delve/delve/tree/master/Documentation/api)
+- [10,000 applications](https://github.com/charmbracelet/bubbletea/network/dependents)
+- [chezmoi](https://github.com/twpayne/chezmoi)
+- [circumflex](https://github.com/bensadeh/circumflex)
+- [gh-dash](https://www.github.com/dlvhdr/gh-dash)
+- [Tetrigo](https://github.com/Broderick-Westrope/tetrigo)
+- [Signls](https://github.com/emprcl/signls)
+- [Superfile](https://github.com/yorukot/superfile)
+- [Aztify](https://github.com/Azure/aztfy)
+- [Daytona](https://github.com/daytonaio/daytona)
+- [CockroachDB](https://github.com/cockroachdb/cockroach)
+- [Trufflehog](https://github.com/trufflesecurity/trufflehog)
+- [container-canary](https://github.com/NVIDIA/container-canary)
+- [eks-node-viewer](https://github.com/awslabs/eks-node-viewer)
+- [mc](https://github.com/minio/mc)
+- [MinIO](https://min.io)
+- [Authd](https://github.com/ubuntu/authd)
+- [Glow](https://github.com/charmbracelet/glow)
+- [Huh?](https://github.com/charmbracelet/huh)
+- [Mods](https://github.com/charmbracelet/mods)
+- [Wishlist](https://github.com/charmbracelet/wishlist)
+- [Twitter](https://twitter.com/charmcli)
+- [The Fediverse](https://mastodon.social/@charmcli)
+- [Discord](https://charm.sh/chat)
+- [MIT](https://github.com/charmbracelet/bubbletea/raw/main/LICENSE)
+- [Charm](https://charm.sh)
+- [<img src="https://img.shields.io/github/release/charmbracelet/bubbletea.svg" alt="Latest Release">](https://github.com/charmbracelet/bubbletea/releases)
+- [<img src="https://godoc.org/github.com/charmbracelet/bubbletea?status.svg" alt="GoDoc">](https://pkg.go.dev/github.com/charmbracelet/bubbletea?tab=doc)
+- [<img src="https://github.com/charmbracelet/bubbletea/actions/workflows/build.yml/badge.svg?branch=main" alt="Build Status">](https://github.com/charmbracelet/bubbletea/actions)
+- [<img src="https://stuff.charm.sh/bubbles/bubbles-badge.png" width="174" alt="Bubbles Badge">](https://github.com/charmbracelet/bubbles)
+- [<img src="https://stuff.charm.sh/bubbles-examples/textinput.gif" width="400" alt="Text Input Example from Bubbles">](https://github.com/charmbracelet/bubbles)
+- [<img alt="The Charm logo" src="https://stuff.charm.sh/charm-banner-next.jpg" width="400">](https://charm.sh/)
+
+--- .github/ISSUE_TEMPLATE/bug_report.md ---
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**Setup**
+Please complete the following information along with version numbers, if applicable.
+ - OS [e.g. Ubuntu, macOS]
+ - Shell [e.g. zsh, fish]
+ - Terminal Emulator [e.g. kitty, iterm]
+ - Terminal Multiplexer [e.g. tmux]
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Go to '...'
+2. Click on '....'
+3. Scroll down to '....'
+4. See error
+
+**Source Code**
+Please include source code if needed to reproduce the behavior. 
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+Add screenshots to help explain your problem.
+
+**Additional context**
+Add any other context about the problem here.
+
+
+--- .github/ISSUE_TEMPLATE/feature_request.md ---
+---
+name: Feature request
+about: Suggest an idea for this project
+title: ''
+labels: enhancement
+assignees: ''
+
+---
+
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.

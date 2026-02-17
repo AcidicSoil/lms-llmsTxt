@@ -1,14 +1,14 @@
 # Dspy
 
-> DSPy aims to empower developers to build modular, self-improving AI systems by composing declarative Python code that instructs language models. It enables fast iteration through optimized prompt engineering and weight tuning, supporting applications like RAG pipelines, agent loops, and multi-stage reasoning. The framework is designed for researchers and practitioners seeking to move beyond brittle prompting toward programmable, reproducible, and self-optimizing LMs.
+> DSPy aims to revolutionize how developers interact with large language models by shifting from prompt engineering to programming — writing declarative Python code that instructs LMs to generate high-quality outputs. It enables the construction of modular AI systems and provides tools for optimizing prompts and model weights through techniques like teleprompting, fine-tuning, and self-refining pipelines. The project supports both academic research and real-world applications such as RAG, agent loops, and classification tasks, while fostering community engagement and open-source collaboration.
 
 **Remember:**
 - Declarative Self-improving Python (DSPy)
-- Modular AI systems
-- Prompt optimization and weight tuning
-- Adapters for various input/output formats
-- Primitives like Prediction, Tool, and History
-- Teleprompters for optimizing instructions and demonstrations
+- Modular AI Systems
+- Teleprompting
+- Optimization Algorithms (e.g., GEPA, BootstrapFewShot, MIPROv2)
+- Primitives (e.g., CodeInterpreter, ToolCalls, Prediction)
+- Adapters (e.g., ChatAdapter, JSONAdapter)
 
 ## Docs
 - [README](https://github.com/stanfordnlp/dspy/blob/main/docs/README.md): install & quickstart.
@@ -60,9 +60,9 @@
 - [README](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/README.md): install & quickstart.
 - [Conftest](https://github.com/stanfordnlp/dspy/blob/main/tests/conftest.py): docs page.
 - [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/__init__.py): docs page.
+- [Mock Interpreter](https://github.com/stanfordnlp/dspy/blob/main/tests/mock_interpreter.py): docs page.
 - [Conftest](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/conftest.py): docs page.
 - [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/__init__.py): docs page.
 - [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/test_utils/__init__.py): docs page.
 - [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/utils/__init__.py): docs page.
 - [Test Adapter File](https://github.com/stanfordnlp/dspy/blob/main/tests/signatures/test_adapter_file.py): docs page.
-- [Test Adapter Image](https://github.com/stanfordnlp/dspy/blob/main/tests/signatures/test_adapter_image.py): docs page.

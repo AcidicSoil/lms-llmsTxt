@@ -479,7 +479,7 @@ The `id` fields in the output will vary with each run.
 // Non-streaming response
 {"jsonrpc":"2.0","id":"xxxxxxxx","result":{"type":"message","role":"agent","parts":[{"type":"text","text":"Hello World"}],"messageId":"yyyyyyyy"}}
 // Streaming response (one chunk)
-{"jsonrpc":"2.0","id":"zzzzzzzz","result":{"type":"message","role":"agent","parts":[{"type":"text","text":"Hello World"}],"messageId":"wwwwwwww","final":true}}
+{"jsonrpc":"2.0","id":"zzzzzzzz","result":{"type":"message","role":"agent","parts":[{"type":"text","text":"Hello World"}],"messageId":"wwwwwwww"}}
 ```
 
 _(Actual IDs like `xxxxxxxx`, `yyyyyyyy`, `zzzzzzzz`, `wwwwwwww` will be different UUIDs/request IDs)_
@@ -563,15 +563,15 @@ The `langgraph` example showcases several important A2A concepts:
 
     - The `execute` method in `CurrencyAgentExecutor` is responsible for handling both non-streaming and streaming requests, orchestrated by the `DefaultRequestHandler`.
     - As the LangGraph agent processes the request (which might involve calling tools like `get_exchange_rate`), the `CurrencyAgentExecutor` enqueues different types of events onto the `EventQueue`:
-        - `TaskStatusUpdateEvent`: For intermediate updates (e.g., "Looking up exchange rates...", "Processing the exchange rates.."). The `final` flag on these events is `False`.
+        - `TaskStatusUpdateEvent`: For intermediate updates (e.g., "Looking up exchange rates...", "Processing the exchange rates..").
         - `TaskArtifactUpdateEvent`: When the final answer is ready, it's enqueued as an artifact. The `lastChunk` flag is `True`.
-        - A final `TaskStatusUpdateEvent` with `state=TaskState.completed` and `final=True` is sent to signify the end of the task for streaming.
+        - A final `TaskStatusUpdateEvent` with `state=TaskState.completed` is sent to signify the end of the task, closing the stream.
     - The `test_client.py`'s `run_streaming_test` function will print these individual event chunks as they are received from the server.
 
 4. **Multi-Turn Conversation (`TaskState.input_required`)**:
 
     - The `CurrencyAgent` can ask for clarification if a query is ambiguous (e.g., user asks "how much is 100 USD?").
-    - When this happens, the `CurrencyAgentExecutor` will enqueue a `TaskStatusUpdateEvent` where `status.state` is `TaskState.input_required` and `status.message` contains the agent's question (e.g., "To which currency would you like to convert?"). This event will have `final=True` for the current interaction stream.
+    - When this happens, the `CurrencyAgentExecutor` will enqueue a `TaskStatusUpdateEvent` where `status.state` is `TaskState.input_required` and `status.message` contains the agent's question (e.g., "To which currency would you like to convert?"). The stream closes after this event.
     - The `test_client.py`'s `run_multi_turn_test` function demonstrates this:
         - It sends an initial ambiguous query.
         - The agent responds (via the `DefaultRequestHandler` processing the enqueued events) with a `Task` whose status is `input_required`.
@@ -740,7 +740,7 @@ The A2A protocol aims to foster an ecosystem of interoperable AI agents. By buil
 
 ### Bug Fixes
 
-* Protocol should released as 0.2.2 ([22e7541](https://github.com/a2aproject/A2A/commit/22e7541be082c4f0845ff7fa044992cda05b437e))
+* Protocol should be released as 0.2.2 ([22e7541](https://github.com/a2aproject/A2A/commit/22e7541be082c4f0845ff7fa044992cda05b437e))
 * Resolve spec inconsistencies with JSON-RPC 2.0 ([628380e](https://github.com/a2aproject/A2A/commit/628380e7e392bc8f1778ae991d4719bd787c17a9))
 
 ## [0.2.1](https://github.com/a2aproject/A2A/compare/v0.2.0...v0.2.1) (2025-05-27)
@@ -1034,7 +1034,7 @@ The Agent2Agent project is governed by the Technical Steering Committee. The Com
 | **Microsoft** | Darrel Miller | Partner API Architect | [@darrelmiller](https://github.com/darrelmiller) |
 | **Cisco** | Luca Muscariello | Principal Engineer | [@muscariello](https://github.com/muscariello) |
 | **Amazon Web Services** | Nicholas Aldridge | Principal Engineer | [@000-000-000-000-000](https://github.com/000-000-000-000-000) |
-| **Salesforce** | Gary Lerhaupt | VP, Product Architecture | [@lerhaupt](https://github.com/lerhaupt) |
+| **Salesforce** | Stephen Petschulat | Principal Architect | [@spetschulatSFDC](https://github.com/spetschulatSFDC) |
 | **ServiceNow** | Sean Hughes | Director of Open Science | [@hughesthe1st](https://github.com/hughesthe1st) |
 | **SAP** | Sivakumar N. | Vice President | [@SivaNSAP](https://github.com/SivaNSAP) |
 | **IBM Research** | Kate Blair | Director of Incubation | [@geneknit](https://github.com/geneknit) |
@@ -1058,7 +1058,7 @@ The Agent2Agent project is governed by the Technical Steering Committee. The Com
 
     a. **"Startup Phase."** At the inception of the Project, each organization listed in the [`GOVERNANCE`](GOVERNANCE.md) file in the governance repository of the Project will have the right to appoint (and remove and replace) one employee to serve as a voting member of the TSC.
 
-    b. **"Steady State."** The TSC will decide upon a "steady state" composition of the TSC (whether by election, sub-project technical leads, or other method as determined by the TSC) for composition of the TSC from the date that is 18 months following the inception of the Project, or at such other point as determined by the TSC.
+    b. **"Steady State."** The TSC will decide upon a "steady state" composition of the TSC (whether by election, subproject technical leads, or other method as determined by the TSC), to take effect from the date that is 18 months following the inception of the Project, or at such other point as determined by the TSC.
 
     c. The TSC may choose an alternative approach for determining the voting members of the TSC, and any such alternative approach will be documented in the GOVERNANCE file. Any meetings of the Technical Steering Committee are intended to be open to the public, and can be conducted electronically, via teleconference, or in person.
 
@@ -1078,9 +1078,9 @@ The Agent2Agent project is governed by the Technical Steering Committee. The Com
 5. The TSC may elect a TSC Chair, who will preside over meetings of the TSC and will serve until their resignation or replacement by the TSC.
 6. **Responsibilities:** The TSC will be responsible for all aspects of oversight relating to the Project, which may include:
     1. coordinating the technical direction of the Project;
-    2. approving project or system proposals (including, but not limited to, incubation, deprecation, and changes to a sub-project's scope);
-    3. organizing sub-projects and removing sub-projects;
-    4. creating sub-committees or working groups to focus on cross-project technical issues and requirements;
+    2. approving project or system proposals (including, but not limited to, incubation, deprecation, and changes to a subproject's scope);
+    3. organizing subprojects and removing subprojects;
+    4. creating subcommittees or working groups to focus on cross-project technical issues and requirements;
     5. appointing representatives to work with other open source or open standards communities;
     6. establishing community norms, workflows, issuing releases, and security issue reporting policies;
     7. approving and implementing policies and processes for contributing (to be published in the [`CONTRIBUTING`](CONTRIBUTING.md) file) and coordinating with the series manager of the Project (as provided for in the Series Agreement, the "Series Manager") to resolve matters or concerns that may arise as set forth in Section 7 of this Charter;
@@ -1111,7 +1111,7 @@ Additional communication avenues will likely be added - stay tuned.
 - [@darrelmiller](https://github.com/darrelmiller)
 - [@muscariello](https://github.com/muscariello)
 - [@000-000-000-000-000](https://github.com/000-000-000-000-000)
-- [@lerhaupt](https://github.com/lerhaupt)
+- [@spetschulatSFDC](https://github.com/spetschulatSFDC)
 - [@hughesthe1st](https://github.com/hughesthe1st)
 - [@SivaNSAP](https://github.com/SivaNSAP)
 - [@geneknit](https://github.com/geneknit)
@@ -1216,6 +1216,37 @@ This document lists the maintainers of various repositories within the project.
   <img src="https://www.gstatic.com/_/boq-sdlc-agents-ui/_/r/Mvosg4klCA4.svg" alt="Ask Code Wiki" height="20">
 </a>
 
+<div style="text-align: left;">
+  <details>
+    <summary>🌐 Language</summary>
+    <div>
+      <div style="text-align: center;">
+        <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=en">English</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=zh-CN">简体中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=zh-TW">繁體中文</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ja">日本語</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ko">한국어</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=hi">हिन्दी</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=th">ไทย</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=fr">Français</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=de">Deutsch</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=es">Español</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=it">Italiano</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ru">Русский</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=pt">Português</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=nl">Nederlands</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=pl">Polski</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ar">العربية</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=fa">فارسی</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=tr">Türkçe</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=vi">Tiếng Việt</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=id">Bahasa Indonesia</a>
+        | <a href="https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=as">অসমীয়া</a>
+      </div>
+    </div>
+  </details>
+</div>
+
 <!-- markdownlint-disable MD041 -->
 <div style="text-align: center;">
   <div class="centered-logo-text-group">
@@ -1232,7 +1263,7 @@ With A2A, agents can:
 
 - Discover each other's capabilities.
 - Negotiate interaction modalities (text, forms, media).
-- Securely collaborate on long running tasks.
+- Securely collaborate on long-running tasks.
 - Operate without exposing their internal state, memory, or tools.
 
 ## Intro to A2A Video
@@ -1317,653 +1348,43 @@ The A2A Protocol is an open source project under the Linux Foundation, contribut
 - [form](https://goo.gle/a2a-partner)
 - [Apache License 2.0](https://github.com/a2aproject/A2A/blob/main/LICENSE.md)
 - [<img src="https://www.gstatic.com/_/boq-sdlc-agents-ui/_/r/Mvosg4klCA4.svg" alt="Ask Code Wiki" height="20">](https://codewiki.google/github.com/a2aproject/a2a)
-
---- .github/linters/.eslintrc.js ---
-/** @type {import('eslint').Linter.Config} */
-module.exports = {
-    root: true,
-    parser: '@typescript-eslint/parser',
-    plugins: ['@typescript-eslint', 'n'],
-    extends: [
-      'eslint:recommended',
-      'plugin:@typescript-eslint/recommended',
-      'plugin:n/recommended',
-    ],
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'off',
-      'n/no-unsupported-features/es-syntax': 'off',
-    },
-    overrides: [
-      {
-        files: ['*.ts', '*.tsx'],
-        parserOptions: {
-          ecmaVersion: 'latest',
-          sourceType: 'module',
-        },
-      },
-    ],
-  };
-
-
---- .github/PULL_REQUEST_TEMPLATE/become_a_repo_maintainer.md ---
----
-name: Become a repo maintainer
-about: Request maintainer status for the A2A repo
-title: Maintainer Request
-assignees: amye
-
----
-
-If you'd like to become a maintainer of the Agent2Agent repo on GitHub, please submit this template with your PR to add yourself to a maintainers group in [MAINTAINERS.md](../../MAINTAINERS.md).
-
-TSC voting majority will be required to approve maintainers.
-
-Once accepted you'll be able to commit to this repo!
-
-### GitHub user id
-
-- List your GitHub user id
-
-### Company affiliation
-
-- List your company name, or indicate Individual if you're not affiliated with a company
-
-### Requirements
-
-- [ ] I have at least one merged Pull Request
-- [ ] I have reviewed the [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
-- [ ] I have enabled [2FA on my GitHub account](https://github.com/settings/security)
-- [ ] I have joined the A2A discord
-
-
-## Links discovered
-- [MAINTAINERS.md](https://github.com/a2aproject/A2A/blob/main/MAINTAINERS.md)
-- [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
-- [2FA on my GitHub account](https://github.com/settings/security)
-
---- .github/PULL_REQUEST_TEMPLATE/PULL_REQUEST_TEMPLATE.md ---
-# Description
-
-Thank you for opening a Pull Request!
-Before submitting your PR, there are a few things you can do to make sure it goes smoothly:
-
-- [ ] Follow the [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md).
-- [ ] Make your Pull Request title in the <https://www.conventionalcommits.org/> specification.
-- [ ] Ensure the tests and linter pass (Run `nox -s format` from the repository root to format)
-- [ ] Appropriate docs were updated (if necessary)
-
-Fixes #<issue_number_goes_here> 🦕
-
-
-## Links discovered
-- [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
-
---- .github/actions/spelling/advice.md ---
-<!-- See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples%3A-advice --> <!-- markdownlint-disable MD033 MD041 -->
-<details><summary>If the flagged items are :exploding_head: false positives</summary>
-
-If items relate to a ...
-
-- binary file (or some other file you wouldn't want to check at all).
-
-  Please add a file path to the `excludes.txt` file matching the containing file.
-
-  File paths are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your files.
-
-  `^` refers to the file's path from the root of the repository, so `^README\.md$` would exclude `README.md` (on whichever branch you're using).
-
-- well-formed pattern.
-
-  If you can write a [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns) that would match it,
-  try adding it to the `patterns.txt` file.
-
-  Patterns are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your lines.
-
-  Note that patterns can't match multiline strings.
-
-</details>
-
-<!-- adoption information-->
-
-:steam_locomotive: If you're seeing this message and your PR is from a branch that doesn't have check-spelling,
-please merge to your PR's base branch to get the version configured for your repository.
-
-
-## Links discovered
-- [test](https://www.regexplanet.com/advanced/perl/)
-- [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns)
-
---- .github/actions/spelling/allow.txt ---
-AAAANSUh
-AAAAUA
-AAAGHMHc
-ACMRTUXB
-ACard
-AClient
-ACo
-ADK
-AError
-AExecutor
-AGP
-AIP
-ARequest
-ASED
-ASGI
-AServer
-AService
-ASq
-AStarlette
-AUTOCOMMIT
-Agentspace
-Agno
-Autogen
-Blogs
-CAs
-CLIs
-Camry
-Cjava
-Cpzuhi
-DDo
-DGT
-DHDe
-Debian
-Djq
-Dotnet
-EBFF
-EUR
-EUg
-FBT
-FHIR
-Fbr
-GAPI
-GAPIC
-GBP
-GVsb
-Gapic
-Gci
-Genkit
-Ghw
-GitVote
-HBz
-HKRMw
-HRA
-HSTS
-HXo
-Hackathon
-IFdvcmxk
-IMPCUk
-INR
-Ikp
-Imh
-Imprd
-JFUz
-JHv
-JIUz
-JPY
-JWKS
-JWS
-JWTs
-Jhb
-Jra
-KGgo
-KRW
-LHR
-LJcvt
-LLM
-LLMs
-Lix
-MSIs
-MWpm
-Mapr
-Nszl
-OIDC
-OOa
-Ollama
-PLE
-PLW
-PMEEi
-PTH
-QFdk
-Qvandrcy
-RPCs
-RUF
-SLAs
-SLF
-SSLv
-Solax
-TJS
-TMDB
-Tful
-URLTo
-Upserting
-Urke
-VBORw
-Vsb
-WHB
-WQi
-WVw
-Witteveen
-XBs
-XVCJ
-Xca
-YQGt
-YTAKFW
-YTT
-YWFh
-YWdlbn
-ZDS
-ZKHv
-ZXhhb
-ZXkt
-Zipkin
-Zms
-aab
-aacacac
-aboutasha
-achat
-aconnect
-adk
-afet
-affef
-agentcard
-agentic
-agentskill
-agno
-agntcy
-agp
-ainvoke
-aip
-airbnb
-aldridge
-alloydb
-amannn
-aparse
-aproject
-aprotocol
-argjson
-arxiv
-askmarvin
-asyncclick
-autogen
-automodule
-autouse
-backstory
-backticks
-bbb
-beeai
-bufbuild
-bzr
-cae
-canceltask
-ccc
-cdn
-ceee
-cfe
-cls
-coc
-codegen
-codeowner
-codespace
-crewai
-datamodel
-datapart
-dbc
-dcda
-dcfa
-dde
-deepwiki
-direnv
-docstrings
-documentai
-dotnet
-eaf
-ebedef
-efaab
-efbd
-embeddings
-endblock
-endmacro
-envoyproxy
-euo
-evt
-excinfo
-faa
-faf
-fafd
-fdebd
-ffbb
-fff
-firewalls
-flightbook
-forbes
-fsv
-fyi
-gapic
-gcp
-genai
-geneknit
-genkit
-genproto
-georoute
-gettask
-gettickets
-gitvote
-gle
-googleai
-googleapi
-googleapis
-googleblog
-gpt
-gstatic
-gweb
-hackathon
-hackathons
-hqdefault
-hughesthe
-iat
-ietf
-inbox
-inmemory
-ipynb
-iss
-jherr
-jku
-jqlang
-jti
-jwks
-kadirpekel
-konami
-kty
-langgraph
-linenums
-linkedin
-linting
-listtasks
-litellm
-llm
-llms
-lng
-logtostderr
-marvin
-mcp
-mcr
-mesop
-mikefarah
-mindsdb
-mintlify
-motherlode
-mozilla
-msword
-multiagent
-multipage
-mydb
-myorg
-nearform
-nlp
-notif
-npush
-objc
-octicons
-oidc
-ollama
-oneof
-openapis
-openapiv
-openapiv2
-oreilly
-postgres
-postgresql
-pqr
-prefecthq
-protoc
-protolint
-pyguide
-pylance
-pymdownx
-pypa
-pypackages
-pytype
-pyupgrade
-qwq
-rcm
-regen
-repomapr
-reportgen
-reposted
-rst
-rvelicheti
-scm
-sllm
-sourced
-sourcing
-squidfunk
-srcs
-sse
-sss
-stateclass
-stephenh
-styleguide
-svn
-systemctl
-tagwords
-tasksget
-taskslist
-taskssend
-taskstate
-taskstatus
-textpart
-threadsafe
-toctree
-tok
-toolkits
-tracestate
-ugc
-undoc
-utm
-venv-docs
-versioned
-vnd
-voa
-vscode
-weavehacks
-webform
-webpage
-whatwg
-wikipedia
-winget
-wsgi
-wwwwwwww
-xxxxx
-xxxxxxxx
-youtube
-yyyyyyyy
-zzzzzzzz
-
-
---- .github/actions/spelling/excludes.txt ---
-# See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-excludes
-(?:^|/)(?i)COPYRIGHT
-(?:^|/)(?i)LICEN[CS]E
-(?:^|/)(?i)CODE_OF_CONDUCT.md\E$
-(?:^|/)(?i).gitignore\E$
-(?:^|/)3rdparty/
-(?:^|/)go\.sum$
-(?:^|/)package(?:-lock|)\.json$
-(?:^|/)Pipfile$
-(?:^|/)pyproject.toml
-(?:^|/)requirements(?:-dev|-doc|-test|)\.txt$
-(?:^|/)vendor/
-/CODEOWNERS$
-\.a$
-\.ai$
-\.all-contributorsrc$
-\.avi$
-\.bmp$
-\.bz2$
-\.cer$
-\.class$
-\.coveragerc$
-\.crl$
-\.crt$
-\.csr$
-\.dll$
-\.docx?$
-\.drawio$
-\.DS_Store$
-\.eot$
-\.eps$
-\.exe$
-\.gif$
-\.git-blame-ignore-revs$
-\.gitattributes$
-\.gitkeep$
-\.graffle$
-\.gz$
-\.icns$
-\.ico$
-\.jar$
-\.jks$
-\.jpe?g$
-\.key$
-\.lib$
-\.lock$
-\.map$
-\.min\..
-\.mo$
-\.mod$
-\.mp[34]$
-\.o$
-\.ocf$
-\.otf$
-\.p12$
-\.parquet$
-\.pdf$
-\.pem$
-\.pfx$
-\.png$
-\.psd$
-\.pyc$
-\.pylintrc$
-\.qm$
-\.s$
-\.sig$
-\.so$
-\.svgz?$
-\.sys$
-\.tar$
-\.tgz$
-\.tiff?$
-\.ttf$
-\.wav$
-\.webm$
-\.webp$
-\.woff2?$
-\.xcf$
-\.xlsx?$
-\.xpm$
-\.xz$
-\.zip$
-^\.github/actions/spelling/
-^\Q.github/workflows/spelling.yaml\E$
-^\Q.github/workflows/linter.yaml\E$
-^\Qlychee.toml\E$
-\.vscode/
-^\Qdocs/partners.md\E$
-^\Qspecification/json/a2a.json\E$
-CHANGELOG.md
-\.gitignore
-^\Qdocs/robots.txt\E$
-CODE_OF_CONDUCT.md
-
-
---- specification/grpc/README.md ---
-# Protocol Buffer Definitions
-
-This folder contains the A2A specification in Protocol Buffer (protobuf) format
-
-## Prerequisites
-
-Before you can validate or generate code from these protobuf definitions, you need to install `buf`.
-
-Follow the installation instructions on the official `buf` GitHub repository:
-<https://github.com/bufbuild/buf/>
-
-## Validation
-
-To validate your protobuf definitions and ensure they adhere to linting rules, run the following command from the root of this folder:
-
-```sh
-buf lint
-```
-
-## Code Generation
-
-`buf.gen.yaml` is configured to generate code for the following languages:
-
-- Go
-- Java
-- Python
-- TypeScript
-
-To generate code for all configured languages, run the following command from the root of this folder:
-
-```sh
-buf generate
-```
-
-`buf.gen.yaml` uses remote plugins for generation, if you wish to use local plugins change remote to local
-
-```yaml
-plugins:
-  - local: protoc-gen-java
-    out: src/java
-  - local: protoc-gen-grpc-java
-    out: src/java
-```
-
-Alternatively use `protoc` commandline for code generation
-
-```bash
-protoc --java_out=./src/java --grpc-java_out=./src/java -I. a2a.proto
-```
-
-### Generating for Specific Languages
-
-If you do not need to generate code for all the languages listed above, you can comment out the unwanted language sections in your `buf.gen.yaml` file.
-
-For example, if you only want to generate Java exclude the rest, your `buf.gen.yaml` might look something like this (ensure you adapt this to your actual `buf.gen.yaml` structure):
-
-```yaml
-# buf.gen.yaml
-version: v2
-plugins:
-#  - plugin: buf.build/protocolbuffers/go
-#    out: src/go
-#  - plugin: buf.build/protocolbuffers/python
-#    out: src/python
-  - plugin: buf.build/protocolbuffers/java
-    out: src/java
-#  - plugin: buf.build/grpc/typescript
-#    out: src/ts
-```
-
+- [English](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=en)
+- [简体中文](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=zh-CN)
+- [繁體中文](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=zh-TW)
+- [日本語](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ja)
+- [한국어](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ko)
+- [हिन्दी](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=hi)
+- [ไทย](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=th)
+- [Français](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=fr)
+- [Deutsch](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=de)
+- [Español](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=es)
+- [Italiano](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=it)
+- [Русский](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ru)
+- [Português](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=pt)
+- [Nederlands](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=nl)
+- [Polski](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=pl)
+- [العربية](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=ar)
+- [فارسی](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=fa)
+- [Türkçe](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=tr)
+- [Tiếng Việt](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=vi)
+- [Bahasa Indonesia](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=id)
+- [অসমীয়া](https://openaitx.github.io/view.html?user=a2aproject&project=A2A&lang=as)
 
 --- specification/json/README.md ---
 # A2A JSON Artifact
 
-`a2a.json` is a **non-normative build artifact** derived from the canonical proto definition at `specification/grpc/a2a.proto`. It is generated during builds and intentionally **not** committed to source control.
+`a2a.json` is a **non-normative build artifact** derived from the canonical proto definition at `specification/a2a.proto`. It is generated during builds and intentionally **not** committed to source control.
 
 Generation pipeline:
 
 1. `scripts/proto_to_json_schema.sh` converts proto directly to JSON Schema using bufbuild's `protoc-gen-jsonschema` plugin.
-2. The resulting `a2a.json` (JSON Schema 2020-12 bundle) is copied to `docs/spec-json/a2a.json` for site publishing.
+2. The resulting `a2a.json` (JSON Schema 2020-12 bundle) is copied to `docs/spec/a2a.json` for site publishing.
 
 The build uses `protoc` with `protoc-gen-jsonschema` plugin and `jq` for bundling. Only source (`a2a.proto`) and scripts remain under version control.
 
 The artifact is generated automatically in:
 
 - Local docs builds (`scripts/build_docs.sh`)
-- CI workflow (`.github/workflows/generate-a2a-json.yml`) on proto changes
 
 ## Do Not Edit
 
@@ -2159,3 +1580,771 @@ Planned improvements include:
 
 ## Links discovered
 - [brew.sh](https://brew.sh/)
+
+--- .github/linters/.eslintrc.js ---
+/** @type {import('eslint').Linter.Config} */
+module.exports = {
+    root: true,
+    parser: '@typescript-eslint/parser',
+    plugins: ['@typescript-eslint', 'n'],
+    extends: [
+      'eslint:recommended',
+      'plugin:@typescript-eslint/recommended',
+      'plugin:n/recommended',
+    ],
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'off',
+      'n/no-unsupported-features/es-syntax': 'off',
+    },
+    overrides: [
+      {
+        files: ['*.ts', '*.tsx'],
+        parserOptions: {
+          ecmaVersion: 'latest',
+          sourceType: 'module',
+        },
+      },
+    ],
+  };
+
+
+--- .github/PULL_REQUEST_TEMPLATE/become_a_repo_maintainer.md ---
+---
+name: Become a repo maintainer
+about: Request maintainer status for the A2A repo
+title: Maintainer Request
+assignees: amye
+
+---
+
+If you'd like to become a maintainer of the Agent2Agent repo on GitHub, please submit this template with your PR to add yourself to a maintainers group in [MAINTAINERS.md](../../MAINTAINERS.md).
+
+TSC voting majority will be required to approve maintainers.
+
+Once accepted you'll be able to commit to this repo!
+
+### GitHub user id
+
+- List your GitHub user id
+
+### Company affiliation
+
+- List your company name, or indicate Individual if you're not affiliated with a company
+
+### Requirements
+
+- [ ] I have at least one merged Pull Request
+- [ ] I have reviewed the [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [ ] I have enabled [2FA on my GitHub account](https://github.com/settings/security)
+- [ ] I have joined the A2A discord
+
+
+## Links discovered
+- [MAINTAINERS.md](https://github.com/a2aproject/A2A/blob/main/MAINTAINERS.md)
+- [contribution guidelines](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+- [2FA on my GitHub account](https://github.com/settings/security)
+
+--- .github/PULL_REQUEST_TEMPLATE/PULL_REQUEST_TEMPLATE.md ---
+# Description
+
+Thank you for opening a Pull Request!
+Before submitting your PR, there are a few things you can do to make sure it goes smoothly:
+
+- [ ] Follow the [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md).
+- [ ] Make your Pull Request title in the <https://www.conventionalcommits.org/> specification.
+- [ ] Ensure the tests and linter pass (Run `nox -s format` from the repository root to format)
+- [ ] Appropriate docs were updated (if necessary)
+
+Fixes #<issue_number_goes_here> 🦕
+
+
+## Links discovered
+- [`CONTRIBUTING` Guide](https://github.com/a2aproject/A2A/blob/main/CONTRIBUTING.md)
+
+--- .github/actions/spelling/advice.md ---
+<!-- See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples%3A-advice --> <!-- markdownlint-disable MD033 MD041 -->
+<details><summary>If the flagged items are :exploding_head: false positives</summary>
+
+If items relate to a ...
+
+- binary file (or some other file you wouldn't want to check at all).
+
+  Please add a file path to the `excludes.txt` file matching the containing file.
+
+  File paths are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your files.
+
+  `^` refers to the file's path from the root of the repository, so `^README\.md$` would exclude `README.md` (on whichever branch you're using).
+
+- well-formed pattern.
+
+  If you can write a [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns) that would match it,
+  try adding it to the `patterns.txt` file.
+
+  Patterns are Perl 5 Regular Expressions - you can [test](https://www.regexplanet.com/advanced/perl/) yours before committing to verify it will match your lines.
+
+  Note that patterns can't match multiline strings.
+
+</details>
+
+<!-- adoption information-->
+
+:steam_locomotive: If you're seeing this message and your PR is from a branch that doesn't have check-spelling,
+please merge to your PR's base branch to get the version configured for your repository.
+
+
+## Links discovered
+- [test](https://www.regexplanet.com/advanced/perl/)
+- [pattern](https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-patterns)
+
+--- .github/actions/spelling/allow.txt ---
+AAAANSUh
+AAAAUA
+AAAGHMHc
+ACMRTUXB
+ACard
+AClient
+ACo
+ADK
+ADR
+AError
+AExecutor
+AGP
+AIP
+ARequest
+ASED
+ASGI
+AServer
+AService
+ASq
+AStarlette
+AUTOCOMMIT
+Agentspace
+Agno
+Autogen
+Bahasa
+Blogs
+CAs
+CLIs
+Camry
+Cjava
+Cpzuhi
+DDo
+DGT
+DHDe
+Datetimes
+Debian
+Djq
+Dotnet
+EBFF
+EUR
+EUg
+Espa
+FBT
+FHIR
+Fbr
+GAPI
+GAPIC
+GBP
+GVsb
+Gapic
+Gci
+Genkit
+Ghw
+GitVote
+HBz
+HKRMw
+HRA
+HSTS
+HXo
+Hackathon
+IFdvcmxk
+IMPCUk
+INR
+Ikp
+Imh
+Imprd
+JFUz
+JHv
+JIUz
+JPY
+JWKS
+JWS
+JWTs
+Jhb
+Jra
+KGgo
+KRW
+LHR
+LJcvt
+LLM
+LLMs
+Lix
+MSIs
+MWpm
+Mapr
+Mvosg
+Nszl
+OIDC
+OOa
+Ollama
+PLE
+PLW
+PMEEi
+PTH
+Polski
+Portugu
+QFdk
+Qvandrcy
+RPCs
+RUF
+SLAs
+SLF
+SSLv
+Solax
+TJS
+TMDB
+Tful
+URLTo
+Upserting
+Urke
+VBORw
+Vsb
+WHB
+WQi
+WVw
+Witteveen
+XBs
+XVCJ
+Xca
+YQGt
+YTAKFW
+YTT
+YWFh
+YWdlbn
+ZDS
+ZKHv
+ZXhhb
+ZXkt
+Zipkin
+Zms
+aab
+aacacac
+aboutasha
+achat
+aconnect
+adk
+adr
+adrs
+afet
+affef
+agentcard
+agentic
+agentskill
+agno
+agntcy
+agp
+ainvoke
+aip
+airbnb
+aldridge
+alloydb
+amannn
+aparse
+aproject
+aprotocol
+argjson
+arxiv
+askmarvin
+asyncclick
+autogen
+automodule
+autouse
+backstory
+backticks
+bbb
+beeai
+boq
+bufbuild
+bzr
+cae
+canceltask
+ccc
+cdn
+ceee
+cfe
+chrusty
+cls
+coc
+codegen
+codeowner
+codespace
+codewiki
+crewai
+datamodel
+datapart
+dbc
+dcda
+dcfa
+dde
+deepwiki
+direnv
+docstrings
+documentai
+dotnet
+eaf
+ebedef
+efaab
+efbd
+embeddings
+endblock
+endmacro
+envoyproxy
+euo
+evt
+excinfo
+faa
+faf
+fafd
+fdebd
+ffbb
+fff
+firewalls
+flightbook
+forbes
+fsv
+fyi
+gapic
+gcp
+genai
+geneknit
+genkit
+genproto
+georoute
+gettask
+gettickets
+gitvote
+gle
+googleai
+googleapi
+googleapis
+googleblog
+gpt
+gstatic
+gweb
+hackathon
+hackathons
+hqdefault
+hughesthe
+iana
+iat
+ietf
+inbox
+inmemory
+ipynb
+iss
+jherr
+jku
+jqlang
+jti
+jwks
+kadirpekel
+konami
+kty
+langgraph
+lerhaupt
+linenums
+linkedin
+linting
+listtasks
+litellm
+llm
+llms
+lng
+logtostderr
+marvin
+mcp
+mcr
+mesop
+mikefarah
+mindsdb
+mintlify
+motherlode
+mozilla
+msword
+multiagent
+multipage
+mydb
+myorg
+nearform
+nlp
+notif
+npush
+objc
+octicons
+oidc
+ollama
+oneof
+openaitx
+openapis
+openapiv
+openapiv2
+oreilly
+postgres
+postgresql
+pqr
+prefecthq
+protoc
+protojson
+protolint
+pyguide
+pylance
+pymdownx
+pypa
+pypackages
+pytype
+pyupgrade
+qwq
+rcm
+regen
+repomapr
+reportgen
+reposted
+rst
+rvelicheti
+scm
+sllm
+sourced
+sourcing
+squidfunk
+srcs
+sse
+sss
+stateclass
+stephenh
+styleguide
+svn
+systemctl
+tagwords
+tasksget
+taskslist
+taskssend
+taskstate
+taskstatus
+textpart
+threadsafe
+toctree
+tok
+toolkits
+tracestate
+ugc
+undoc
+utm
+venv-docs
+versioned
+vnd
+voa
+vscode
+weavehacks
+webform
+webpage
+whatwg
+wikipedia
+winget
+wsgi
+wwwwwwww
+xxxxx
+xxxxxxxx
+youtube
+yyyyyyyy
+zzzzzzzz
+
+
+--- .github/actions/spelling/excludes.txt ---
+# See https://github.com/check-spelling/check-spelling/wiki/Configuration-Examples:-excludes
+(?:^|/)(?i)COPYRIGHT
+(?:^|/)(?i)LICEN[CS]E
+(?:^|/)(?i)CODE_OF_CONDUCT.md\E$
+(?:^|/)(?i).gitignore\E$
+(?:^|/)3rdparty/
+(?:^|/)go\.sum$
+(?:^|/)package(?:-lock|)\.json$
+(?:^|/)Pipfile$
+(?:^|/)pyproject.toml
+(?:^|/)requirements(?:-dev|-doc|-test|)\.txt$
+(?:^|/)vendor/
+/CODEOWNERS$
+\.a$
+\.ai$
+\.all-contributorsrc$
+\.avi$
+\.bmp$
+\.bz2$
+\.cer$
+\.class$
+\.coveragerc$
+\.crl$
+\.crt$
+\.csr$
+\.dll$
+\.docx?$
+\.drawio$
+\.DS_Store$
+\.eot$
+\.eps$
+\.exe$
+\.gif$
+\.git-blame-ignore-revs$
+\.gitattributes$
+\.gitkeep$
+\.graffle$
+\.gz$
+\.icns$
+\.ico$
+\.jar$
+\.jks$
+\.jpe?g$
+\.key$
+\.lib$
+\.lock$
+\.map$
+\.min\..
+\.mo$
+\.mod$
+\.mp[34]$
+\.o$
+\.ocf$
+\.otf$
+\.p12$
+\.parquet$
+\.pdf$
+\.pem$
+\.pfx$
+\.png$
+\.psd$
+\.pyc$
+\.pylintrc$
+\.qm$
+\.s$
+\.sig$
+\.so$
+\.svgz?$
+\.sys$
+\.tar$
+\.tgz$
+\.tiff?$
+\.ttf$
+\.wav$
+\.webm$
+\.webp$
+\.woff2?$
+\.xcf$
+\.xlsx?$
+\.xpm$
+\.xz$
+\.zip$
+^\.github/actions/spelling/
+^\Q.github/workflows/spelling.yaml\E$
+^\Q.github/workflows/linter.yaml\E$
+^\Qlychee.toml\E$
+\.vscode/
+^\Qdocs/partners.md\E$
+^\Qspecification/json/a2a.json\E$
+CHANGELOG.md
+\.gitignore
+^\Qdocs/robots.txt\E$
+CODE_OF_CONDUCT.md
+
+
+--- adrs/adr-001-protojson-serialization.md ---
+# ADR-001: Leverage ProtoJSON Specification for JSON Serialization
+
+**Status:** Accepted
+
+**Date:** 2025-11-18
+
+**Decision Makers:** Technical Steering Committee (TSC)
+
+**Technical Story:** JSON serialization approach for A2A specification
+
+## Context
+
+The A2A specification defines message structures using Protocol Buffers (proto definitions) but also needs to support JSON serialization for HTTP/REST-based communication and JSONRPC payloads. We needed to establish a normative approach for how JSON payloads should be serialized based on the proto definitions referenced by the specification.
+
+Without a clearly specified approach to JSON serialization from proto definitions, implementers could create incompatible JSON representations, leading to interoperability issues across different A2A implementations.
+
+## Decision Drivers
+
+* Need for a standardized, well-documented approach to JSON serialization
+* Ability to leverage existing Protocol Buffer tooling
+* Clear specification for handling edge cases and type mappings
+* Idiomatic use of JSON conventions
+* Coupling of specification to tool chain
+
+## Considered Options
+
+* ProtoJSON (canonical JSON encoding for Protocol Buffers)
+* Explicit transformation rules defined in the A2A specification
+
+## Decision Outcome
+
+**Chosen option:** "ProtoJSON specification"
+
+The TSC has decided to leverage the ProtoJSON specification as the normative approach to serializing JSON based on the proto definition referenced by the specification. This provides a well-defined, standardized way to convert Protocol Buffer messages to JSON format.
+
+This decision was made with some reservation due to the dependency on ProtoJSON mechanisms and potential impact on protocol bindings unrelated to protobuf and gRPC. However, the decision is reversible if we identify significant issues during implementation, at which point we can duplicate the ProtoJSON conventions in the A2A specification where applicable and describe differences as needed.
+
+### Consequences
+
+#### Positive
+
+* Standardized approach with clear documentation and specification
+* Wide ecosystem support with mature libraries across multiple languages
+* Consistent behavior across different implementations
+* Reduced ambiguity in JSON representation
+* Built-in handling for proto3 types and conventions
+* Provides well-defined rules for wire-unsafe changes
+* Removes the need to define data type handling rules for dates and numbers in the A2A specification
+
+#### Negative
+
+* **Breaking change**: This decision will result in breaking changes to existing JSON payloads, specifically relating to the casing of enum values (ProtoJSON uses SCREAMING_SNAKE_CASE for enums)
+* **Loss of roundtrip capability**: We will not be able to roundtrip unknown values because ProtoJSON doesn't support preserving unknown fields in the JSON representation
+* Migration effort required for existing implementations
+* **Ugly enums** Developers are not used to seeing enum values in SCREAMING_SNAKE_CASE in JSON, which may lead to confusion or errors during implementation
+* Changes to the ProtoJSON specification for the benefit of gRPC could have an impact on other protocol bindings.
+* Enums require a "unspecified" value even when they are only used for required fields to meet Proto best practices.
+* Certain field names need to have less than optimal names to avoid conflicts with proto keywords. e.g. message.
+
+#### Neutral
+
+* Implementations must follow ProtoJSON specification strictly
+* Documentation must clearly communicate the breaking changes
+
+## References
+
+* [ProtoJSON format](https://protobuf.dev/programming-guides/json/)
+
+## Notes
+
+This decision was made to ensure long-term interoperability and maintainability of the A2A specification. While it introduces breaking changes in the short term, the benefits of standardization and ecosystem alignment outweigh the migration costs.
+
+Implementers should be aware that the enum casing change is the most visible breaking change and should plan accordingly for version transitions.
+
+
+## Links discovered
+- [ProtoJSON format](https://protobuf.dev/programming-guides/json/)
+
+--- adrs/adr-template.md ---
+# ADR-[number]: [Title]
+
+**Status:** [Proposed | Accepted | Deprecated | Superseded]
+
+**Date:** YYYY-MM-DD
+
+**Decision Makers:** [List of people involved in the decision]
+
+**Technical Story:** [Optional: Link to related issue/story]
+
+## Context
+
+[Describe the context and problem statement. What is the issue that we're seeing that is motivating this decision or change?]
+
+## Decision Drivers
+
+* [Driver 1: e.g., performance requirements]
+* [Driver 2: e.g., maintainability concerns]
+* [Driver 3: e.g., team expertise]
+* [Driver 4: e.g., cost considerations]
+
+## Considered Options
+
+* [Option 1]
+* [Option 2]
+* [Option 3]
+
+## Decision Outcome
+
+**Chosen option:** "[Option X]"
+
+[Describe why this option was selected. What are the expected positive outcomes?]
+
+### Consequences
+
+#### Positive
+
+* [Positive consequence 1]
+* [Positive consequence 2]
+
+#### Negative
+
+* [Negative consequence 1]
+* [Negative consequence 2]
+
+#### Neutral
+
+* [Neutral consequence 1]
+
+## [Optional] Pros and Cons of the Options
+
+### [Option 1]
+
+[Brief description of option 1]
+
+**Pros:**
+
+* [Advantage 1]
+* [Advantage 2]
+
+**Cons:**
+
+* [Disadvantage 1]
+* [Disadvantage 2]
+
+### [Option 2]
+
+[Brief description of option 2]
+
+**Pros:**
+
+* [Advantage 1]
+* [Advantage 2]
+* [Advantage 2]
+
+**Cons:**
+
+* [Disadvantage 1]
+* [Disadvantage 2]
+
+### [Option 3]
+
+[Brief description of option 3]
+
+**Pros:**
+
+* [Advantage 1]
+* [Advantage 2]
+* [Advantage 2]
+
+**Cons:**
+
+* [Disadvantage 1]
+* [Disadvantage 2]
+
+## Implementation
+
+[Optional: Describe the implementation plan, timeline, and any specific technical details]
+
+## Related Decisions
+
+* [Link to related ADR 1]
+* [Link to related ADR 2]
+
+## References
+
+* [Link to resource 1]
+* [Link to resource 2]
+* [Link to resource 3]
+
+## Notes
+
+[Any additional notes, follow-up items, or context that doesn't fit elsewhere]

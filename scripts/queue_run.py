@@ -321,6 +321,7 @@ def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser()
     p.add_argument(
         "--repos-file",
+        "-rf",
         default="repos.md",
         help="Path to repos.md (default: repos.md)",
     )

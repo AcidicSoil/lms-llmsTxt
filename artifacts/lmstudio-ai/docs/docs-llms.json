@@ -1,0 +1,544 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Docs",
+    "summary": "[\u2190 Home](/README.md)"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Authentication",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_getting-started/authentication.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Project Setup",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_getting-started/project-setup.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quickstart",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/2_rest/quickstart.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Repl",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_getting-started/repl.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Examples",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/2_prompt-preprocessor/examples.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Api Changelog",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/api-changelog.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Act",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_7_api-reference/act.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Act",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/7_api-reference/_act.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Chat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_7_api-reference/chat.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Chat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/7_api-reference/_chat.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Complete",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_7_api-reference/complete.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Complete",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/7_api-reference/_complete.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Count Tokens",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_7_api-reference/count-tokens.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Count Tokens",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/7_api-reference/_count-tokens.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Embed",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_7_api-reference/embed.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/contributing.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Template Dont Edit",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_template_dont_edit.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": " Assets",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_assets/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_assets/nvidia-spark-playbook/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Run",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_assets/nvidia-spark-playbook/js/run.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Run",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_assets/nvidia-spark-playbook/py/run.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": " Configuration",
+      "links": [
+        {
+          "title": "Inference",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_configuration/inference.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Lm Runtimes",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_configuration/lm-runtimes.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Load",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/_configuration/_load.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "0 App",
+      "links": [
+        {
+          "title": "0 Root",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/0_root/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "1 Basics",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/1_basics/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "2 Mcp",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/2_mcp/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Modelyaml",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/3_modelyaml/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Presets",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/3_presets/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Branching",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/5_advanced/_branching.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/1_basics/chat.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Connect Apps",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/1_basics/_connect-apps.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Context",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/5_advanced/_context.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Deeplink",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/0_app/2_mcp/deeplink.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "1 Developer",
+      "links": [
+        {
+          "title": "1 Developer",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "2 Rest",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/2_rest/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Openai Compat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/3_openai-compat/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "4 Anthropic Compat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/4_anthropic-compat/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "0 Server",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/0_core/0_server/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Embeddings",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/_embeddings.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Authentication",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/0_core/authentication.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/2_rest/chat.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat Completions",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/3_openai-compat/chat-completions.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Completions",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_developer/3_openai-compat/completions.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "1 Python",
+      "links": [
+        {
+          "title": "1 Python",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Embedding",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/3_embedding/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "4 Tokenization",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/4_tokenization/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Act",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/2_agent/act.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Apply Prompt Template",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/_more/_apply-prompt-template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Cancelling Predictions",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_llm-prediction/cancelling-predictions.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat Completion",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_llm-prediction/chat-completion.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Completion",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/1_llm-prediction/completion.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Download Models",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/5_manage-models/_download-models.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Get Context Length",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/1_python/6_model-info/get-context-length.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "2 Typescript",
+      "links": [
+        {
+          "title": "2 Typescript",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Plugins",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "4 Embedding",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/4_embedding/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "5 Tokenization",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/5_tokenization/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "1 Tools Provider",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/1_tools-provider/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "2 Prompt Preprocessor",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/2_prompt-preprocessor/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "3 Generator",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/3_generator/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "4 Custom Configuration",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/4_custom-configuration/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "5 Publish Plugins",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/5_publish-plugins/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Authentication",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/2_typescript/authentication.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "3 Cli",
+      "links": [
+        {
+          "title": "3 Cli",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Lms Load",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/_lms-load.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chat",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/0_local-models/chat.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Clone",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/3_develop-and-publish/clone.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Dev",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/3_develop-and-publish/dev.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Get",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/0_local-models/get.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Import",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/0_local-models/import.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Load",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/0_local-models/load.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Log Stream",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/1_serve/log-stream.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Login",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/3_cli/3_develop-and-publish/login.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "4 Integrations",
+      "links": [
+        {
+          "title": "4 Integrations",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/4_integrations/index.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Claude Code",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/4_integrations/claude-code.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex",
+          "url": "https://github.com/lmstudio-ai/docs/blob/main/4_integrations/codex.md",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

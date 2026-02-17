@@ -1,0 +1,349 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Accomplish",
+    "summary": "<p align=\"center\"> <strong>English</strong> | <a href=\"README.zh-CN.md\">\u4e2d\u6587</a> | <a href=\"README.ja.md\">\u65e5\u672c\u8a9e</a> | <a href=\"README.ko.md\">\ud55c\uad6d\uc5b4</a> | <a href=\"README.es.md\">Espa\u00f1ol</a> | <a href=\"README.tr.md\">T\u00fcrk\u00e7e</a> | <a href=\"README.ar.md\">\u0627\u0644\u0639\u0631\u0628\u064a\u0629</a> | <a href=\"README.id.md\">Bahasa Indonesia</a>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Permission Api",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/src/main/permission-api.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Thought Stream Api",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/src/main/thought-stream-api.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Completionenforcer",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/CompletionEnforcer.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Logcollector",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/LogCollector.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Logfilewriter",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/LogFileWriter.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Opencodeadapter",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/OpenCodeAdapter.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Opencodelogwatcher",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/OpenCodeLogWatcher.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Permission Api.Integration.Test",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/__tests__/integration/main/permission-api.integration.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Permissionrequesthandler",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/internal/classes/PermissionRequestHandler.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Scraping",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/mcp-tools/dev-browser/references/scraping.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Security",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/SECURITY.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/.changeset/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Claude",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/CLAUDE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ar",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.ar.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Es",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.es.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Id",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.id.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ja",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.ja.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ko",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.ko.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Tr",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.tr.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Zh Cn",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/README.zh-CN.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Trademarks",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/TRADEMARKS.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/.github/PULL_REQUEST_TEMPLATE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Bug Report",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/.github/ISSUE_TEMPLATE/bug_report.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Feature Request",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/.github/ISSUE_TEMPLATE/feature_request.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Apps",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/e2e/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Desktop",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Postcss.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/postcss.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Tailwind.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/tailwind.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vite.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/vite.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/vitest.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Integration.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/vitest.integration.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Unit.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/vitest.unit.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Playwright.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/e2e/playwright.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Setup",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/apps/desktop/__tests__/setup.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/mcp-tools/dev-browser-mcp/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Vitest.Config",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/vitest.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Common",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/common.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Types",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/types.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Adapter",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/opencode/adapter.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Auth",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/opencode/auth.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Azure Foundry",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/providers/azure-foundry.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Bedrock",
+          "url": "https://github.com/accomplish-ai/accomplish/blob/main/packages/agent-core/src/providers/bedrock.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

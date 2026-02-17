@@ -1,0 +1,384 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Cc Mirror",
+    "summary": "<p align=\"center\"> <img src=\"./assets/cc-mirror-providers.png\" alt=\"CC-MIRROR Provider Themes\" width=\"800\"> </p> <p align=\"center\"> <a href=\"https://www.npmjs.com/package/cc-mirror\"><img src=\"https://img.shields.io/npm/v/cc-mirror.svg\" alt=\"npm version\"></a> <a href=\"https://opensource.org/licenses/MIT\"><img src=\"https://img.shields.io/badge/License-MIT-yellow.svg\" alt=\"License: MIT\"></a>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/docs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/install.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install Validation.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/core/install-validation.test.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/docs/architecture/overview.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installnativestep",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/variant-builder/steps/InstallNativeStep.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installnativeupdatestep",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/variant-builder/update-steps/InstallNativeUpdateStep.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skillinstallstep",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/variant-builder/steps/SkillInstallStep.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skillinstallupdatestep",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/variant-builder/update-steps/SkillInstallUpdateStep.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Tweakcc Guide",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/docs/TWEAKCC-GUIDE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Mirror Claude",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/docs/features/mirror-claude.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Apikeyscreen.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/tui/ApiKeyScreen.test.ts",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Concepts",
+      "links": [
+        {
+          "title": "Design",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/DESIGN.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Claude",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/CLAUDE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Eslint.Config",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/eslint.config.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/PULL_REQUEST_TEMPLATE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Bug Report",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/ISSUE_TEMPLATE/bug_report.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Context",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/context.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributors",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/contributors.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Decisions",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/decisions.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Feature Request",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/ISSUE_TEMPLATE/feature_request.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Patterns",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/patterns.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Runs",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/runs.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Standing Rules",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/standing-rules.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Agent Briefs",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/.github/maintainer/work/agent-briefs.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Bundle",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/scripts/bundle.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Render Tui Svg",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/scripts/render-tui-svg.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Run Tests",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/scripts/run-tests.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "Args",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/cli/args.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Ccrouter",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/brands/ccrouter.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Claude Config",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/claude-config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Constants",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/constants.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Defaultthemes",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/brands/defaultThemes.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Diffpalette",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/brands/diffPalette.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Doctor",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/cli/doctor.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Errors",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/errors.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Fs",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/core/fs.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Gatewayz",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/src/brands/gatewayz.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Test",
+      "links": [
+        {
+          "title": "Claude Config.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/claude-config.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Core.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/core.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Ink Testing Library.D",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/ink-testing-library.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Prompt Pack.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/prompt-pack.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Provider Matrix.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/provider-matrix.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Shell Env.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/shell-env.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Tui.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/tui.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Tweakcc Error.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/tweakcc-error.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "App.Integration.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/tui/App.integration.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "App.Navigation.Test",
+          "url": "https://github.com/numman-ali/cc-mirror/blob/main/test/tui/App.navigation.test.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

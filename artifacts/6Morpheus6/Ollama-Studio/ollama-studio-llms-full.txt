@@ -1,0 +1,666 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- install.js ---
+module.exports = {
+  run: [
+    // Install Ollama Model Creator dependencies from requirements.txt
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",
+        message: [
+          "uv pip install -r requirements.txt"
+        ],
+      }
+    },
+    {
+      method: "notify",
+      params: {
+        html: "Installation complete! Make sure Ollama is installed on your system, then click 'Start' to launch Ollama Model Creator."
+      }
+    }
+  ]
+}
+
+
+--- README.md ---
+# 🦙 Ollama Studio
+
+A Gradio web interface for creating custom Ollama models with your own system prompts and parameters, designed for easy installation via [Pinokio](https://pinokio.computer/).
+
+## Features
+
+- **One-Click Install** - Pinokio handles all dependencies automatically
+- **Modern Gradio UI** - Clean, intuitive interface for model creation
+- **Custom System Prompts** - Upload your own prompt files (.txt, .md)
+- **Base Model Selection** - Choose from any locally installed Ollama model
+- **Temperature Control** - Fine-tune model creativity and randomness
+- **Real-time Feedback** - See model creation progress and detailed output
+- **Cross-Platform** - Works on Windows, macOS, and Linux
+
+## Prerequisites
+
+**Ollama must be installed on your system before using this tool.**
+
+- Download and install Ollama from: [https://ollama.ai](https://ollama.ai)
+- Pull at least one base model: `ollama pull llama3.2`
+
+## Installation
+
+### Via Pinokio (Recommended)
+
+1. Install [Pinokio](https://pinokio.computer/)
+2. Search for "Ollama Model Creator" or add this repository URL
+3. Click **Install** - Pinokio will:
+   - Create a Python virtual environment
+   - Install Gradio and dependencies
+4. Click **Start** to launch the web UI
+
+### Manual Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/ollama-model-creator.git
+cd ollama-model-creator
+
+# Create virtual environment
+python -m venv env
+source env/bin/activate  # Linux/Mac
+# or: env\Scripts\activate  # Windows
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the app
+python app.py
+```
+
+## Start Ollama Studio
+
+1. **Start** the app via Pinokio or `python app.py`
+2. Open `http://127.0.0.1:7860` in your browser
+
+## Usage - Debate Arena
+
+1. Select 2 models for the dropdown menus (don't mix GGUF with normal models)
+2. Choose a topic
+3. Select the Debate Rounds
+4. Click **Start Debate**
+5. Optionally download the Debate as text file
+
+[YouTube - Debate Arena](https://youtu.be/iOjumLr2gWY)  
+[![Debeta Arena Video](https://img.youtube.com/vi/iOjumLr2gWY/0.jpg)](https://youtu.be/iOjumLr2gWY)
+
+## Usage - Ollama Maker
+
+1. **Select a prompt file** containing your custom system instructions
+2. **Choose a base model** from your locally installed Ollama models
+3. **Enter a name** for your new custom model (e.g., `my-assistant`)
+4. **Set temperature** (0.0-2.0, default 1.0)
+5. Click **Create Model**
+6. Wait for the model to be created
+7. Run your new model: `ollama run my-assistant`
+
+[YouTube - Ollama Maker:](https://www.youtube.com/watch?v=WDtpR9dGEtg)  
+[![Ollama Maker video](https://img.youtube.com/vi/WDtpR9dGEtg/0.jpg)](https://www.youtube.com/watch?v=WDtpR9dGEtg)
+
+## Settings Guide
+
+| Setting | Default | Description |
+|---------|---------|-------------|
+| Prompt File | - | Text file with your custom system prompt |
+| Base Model | First available | Ollama model to use as foundation |
+| New Model Name | my-custom-model | Name for your custom model |
+| Temperature | 1.0 | Controls randomness (0.0=focused, 2.0=creative) |
+
+## Temperature Guide
+
+- **0.1 - 0.5**: More focused, deterministic, factual responses
+- **0.6 - 1.0**: Balanced creativity and coherence (recommended)
+- **1.1 - 2.0**: More creative, diverse, unpredictable outputs
+
+## System Requirements
+
+### Minimum
+
+- **Ollama**: Installed and running
+- **RAM**: 8GB
+- **Storage**: Minimal (depends on Ollama models)
+
+### Recommended
+
+- **RAM**: 16GB+
+- **Storage**: SSD for better performance
+
+## Example Prompt File
+
+Create a text file (e.g., `assistant.txt`) with your system prompt:
+
+```txt
+You are a helpful coding assistant specialized in Python.
+You provide clear, concise code examples with explanations.
+You follow best practices and modern Python conventions.
+```
+
+Then use this file to create your custom model!
+
+## Troubleshooting
+
+### "No local Ollama models found"
+
+- Make sure Ollama is installed and running
+- Pull at least one model: `ollama pull llama3.2`
+- Verify with: `ollama list`
+
+### "ollama command not found"
+
+- Ensure Ollama is installed and in your system PATH
+- Restart your terminal/command prompt after installation
+
+## Credits
+
+- **Authored by**: [ERP-Legend](https://github.com/reefer42)
+- **Co-authored by**: [PierrunoYT](https://github.com/PierrunoYT) and [Morpheus](https://github.com/6Morpheus6)
+- **Ollama**: [Ollama](https://ollama.ai)
+- **Gradio**: [Gradio](https://gradio.app)
+- **Pinokio**: [Pinokio](https://pinokio.computer/)
+
+## License
+
+MIT
+
+
+## Links discovered
+- [Pinokio](https://pinokio.computer/)
+- [https://ollama.ai](https://ollama.ai)
+- [YouTube - Debate Arena](https://youtu.be/iOjumLr2gWY)
+- [![Debeta Arena Video](https://img.youtube.com/vi/iOjumLr2gWY/0.jpg)
+- [YouTube - Ollama Maker:](https://www.youtube.com/watch?v=WDtpR9dGEtg)
+- [![Ollama Maker video](https://img.youtube.com/vi/WDtpR9dGEtg/0.jpg)
+- [ERP-Legend](https://github.com/reefer42)
+- [PierrunoYT](https://github.com/PierrunoYT)
+- [Morpheus](https://github.com/6Morpheus6)
+- [Ollama](https://ollama.ai)
+- [Gradio](https://gradio.app)
+
+--- app.py ---
+#!/usr/bin/env python3
+import os
+import ollama
+import warnings
+import requests
+import tempfile
+import subprocess
+import gradio as gr
+from dataclasses import dataclass
+from typing import Generator, Callable, Optional, Tuple
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+
+# --- KONFIGURATION ---
+OLLAMA_HOST = "http://127.0.0.1:11434"
+
+CSS = """
+.header { text-align: center; margin-bottom: 20px; }
+.header h1 { margin-bottom: 0; }
+"""
+
+# =============================================================================
+# TEIL 1: LOGIK FÜR DEN MODEL CREATOR
+# =============================================================================
+
+def get_local_models_subprocess():
+    """Get list of local Ollama models via subprocess (for Creator)."""
+    try:
+        result = subprocess.run(
+            ["ollama", "list"],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        lines = result.stdout.strip().split('\n')[1:]
+        models = [line.split()[0] for line in lines if line.strip()]
+        return models if models else None
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+
+def validate_temperature(temp_str):
+    try:
+        temp = float(temp_str)
+        if temp < 0:
+            return False, "Temperature must be non-negative."
+        return True, temp
+    except ValueError:
+        return False, "Invalid temperature. Please enter a numeric value."
+
+def get_model_updates():
+    """Hilfsfunktion: Holt frische Modelle und erstellt Updates für alle Dropdowns."""
+    models = get_local_models_subprocess() or []
+    return (
+        gr.update(choices=models), 
+        gr.update(choices=models), 
+        gr.update(choices=models)
+    )
+
+def create_model_logic(prompt_file, base_model, new_model_name, temperature):
+    """Logik zum Erstellen des Modells mit Auto-Refresh."""
+    no_update = (gr.update(), gr.update(), gr.update())
+
+    if not prompt_file: return "❌ Error: Select a prompt file.", "", *no_update
+    if not base_model: return "❌ Error: Select a base model.", "", *no_update
+    if not new_model_name.strip(): return "❌ Error: Provide a model name.", "", *no_update
+    
+    is_valid, result = validate_temperature(temperature)
+    if not is_valid: return f"❌ Error: {result}", "", *no_update
+    temp_value = result
+    
+    try:
+        file_path = prompt_file.name if hasattr(prompt_file, 'name') else prompt_file
+        with open(file_path, 'r', encoding='utf-8') as f:
+            custom_prompt = f.read()
+    except Exception as e:
+        return f"❌ Error reading prompt file: {str(e)}", "", *no_update
+    
+    if not custom_prompt.strip(): return "❌ Error: Prompt file is empty.", "", *no_update
+    
+    modelfile_content = f'FROM {base_model}\nPARAMETER temperature {temp_value}\nSYSTEM """\n{custom_prompt}\n"""\n'
+    
+    try:
+        with tempfile.NamedTemporaryFile(mode='w', suffix='_Modelfile', delete=False, encoding='utf-8') as f:
+            modelfile_path = f.name
+            f.write(modelfile_content)
+        
+        process = subprocess.Popen(
+            ["ollama", "create", new_model_name, "-f", modelfile_path],
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+        )
+        
+        output_lines = [line.rstrip() for line in process.stdout]
+        process.wait()
+        output_text = '\n'.join(output_lines)
+        
+        try: os.unlink(modelfile_path)
+        except: pass
+        
+        if process.returncode == 0:
+            upd1, upd2, upd3 = get_model_updates()
+            msg = f"✅ Custom model '{new_model_name}' created!\nRun: ollama run {new_model_name}"
+            return msg, output_text, upd1, upd2, upd3
+        else:
+            return f"❌ Failed. Return code: {process.returncode}", output_text, *no_update
+            
+    except Exception as e:
+        return f"❌ Error creating model: {str(e)}", "", *no_update
+
+def refresh_creator_models():
+    models = get_local_models_subprocess()
+    return gr.Dropdown(choices=models if models else [], value=models[0] if models else None)
+
+
+# =============================================================================
+# TEIL 2: LOGIK FÜR DIE DEBATTE
+# =============================================================================
+
+@dataclass
+class DebateConfig:
+    model_1: str
+    model_2: str
+    topic: str
+    rounds: int
+
+class OllamaService:
+    def __init__(self, host: str = OLLAMA_HOST):
+        self.host = host
+        self.client = ollama.Client(host=host)
+
+    def get_models(self) -> list[str]:
+        try:
+            resp = requests.get(f"{self.host}/api/tags", timeout=5)
+            if resp.ok:
+                return [m["name"] for m in resp.json().get("models", [])]
+        except requests.RequestException:
+            pass
+        return []
+
+    def chat(self, model: str, message: str) -> str:
+        response = self.client.chat(
+            model=model, messages=[{"role": "user", "content": message}]
+        )
+        return response["message"]["content"]
+
+class DebateEngine:
+    def __init__(self, service: OllamaService):
+        self.service = service
+
+    def run(self, config: DebateConfig, on_progress: Optional[Callable[[float, str], None]] = None) -> Generator[str, None, None]:
+        output = self._header(config)
+        yield output
+        prompt = f"Let's discuss: {config.topic}. Share your perspective."
+
+        for round_num in range(1, config.rounds + 1):
+            if on_progress:
+                on_progress(round_num / config.rounds, f"Round {round_num}/{config.rounds}")
+
+            output += f"### 🔵 {config.model_1} — Round {round_num}\n\n"
+            yield output
+            try:
+                reply_1 = self.service.chat(config.model_1, prompt)
+                output += f"{reply_1}\n\n"
+                yield output
+            except Exception as e:
+                yield output + f"⚠️ Error: {e}"; return
+
+            output += f"### 🟢 {config.model_2} — Round {round_num}\n\n"
+            yield output
+            try:
+                reply_2 = self.service.chat(config.model_2, reply_1)
+                output += f"{reply_2}\n\n"
+                yield output
+                prompt = reply_2
+            except Exception as e:
+                yield output + f"⚠️ Error: {e}"; return
+
+            output += "---\n\n"
+            yield output
+
+        output += "## ✅ Debate Complete\n"
+        yield output
+
+    def _header(self, config: DebateConfig) -> str:
+        return f"## 🎭 {config.topic}\n\n| Model 1 | Model 2 | Rounds |\n|---|---|---|\n| {config.model_1} | {config.model_2} | {config.rounds} |\n\n---\n"
+
+# Services
+debate_service = OllamaService()
+debate_engine = DebateEngine(debate_service)
+
+def get_debate_models():
+    models = debate_service.get_models()
+    return models if models else ["No models found"]
+
+def refresh_debate_models():
+    choices = get_debate_models()
+    def_1 = choices[0] if choices else None
+    def_2 = choices[1] if len(choices) > 1 else def_1
+    return gr.update(choices=choices, value=def_1), gr.update(choices=choices, value=def_2)
+
+def start_debate(m1, m2, topic, rounds, progress=gr.Progress()):
+    # 1. Validierung
+    if not m1 or not m2 or not topic.strip():
+        # Kein Download-Button Update
+        yield "⚠️ Please check inputs.", gr.update(visible=False)
+        return
+
+    config = DebateConfig(m1, m2, topic.strip(), int(rounds))
+    
+    # Variable um den gesamten Text zu speichern
+    full_transcript = ""
+
+    # 2. Debatte läuft (Button bleibt unsichtbar)
+    for update in debate_engine.run(config, on_progress=lambda pct, msg: progress(pct, desc=msg)):
+        full_transcript = update
+        yield update, gr.update(visible=False)
+
+    # 3. Debatte fertig -> Datei speichern
+    try:
+        # Temporäre Datei erstellen (oder überschreiben)
+        filename = "debate_transcript.txt"
+        with open(filename, "w", encoding="utf-8") as f:
+            f.write(full_transcript)
+        
+        # 4. Finales Yield: Text UND Button sichtbar machen
+        yield full_transcript, gr.update(value=filename, visible=True)
+    except Exception as e:
+        yield full_transcript + f"\n\n❌ Error saving file: {e}", gr.update(visible=False)
+
+
+# =============================================================================
+# TEIL 3: MAIN APP UI
+# =============================================================================
+
+initial_debate_models = get_debate_models()
+initial_creator_models = get_local_models_subprocess()
+
+with gr.Blocks(title="Ollama Studio", css=CSS, theme=gr.themes.Soft()) as app:
+    
+    gr.HTML("""
+        <div class="header">
+            <h1>🦙 Ollama Studio</h1>
+            <p>Debate Arena & Model Creator</p>
+        </div>
+    """)
+
+    with gr.Tabs():
+        
+        # --- TAB 1: DEBATE ARENA ---
+        with gr.TabItem("🎭 Debate Arena"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    gr.Markdown("#### ⚙️ Debate Config")
+                    deb_model_1 = gr.Dropdown(choices=initial_debate_models, value=initial_debate_models[0] if initial_debate_models else None, label="🔵 Model 1")
+                    deb_model_2 = gr.Dropdown(choices=initial_debate_models, value=initial_debate_models[1] if len(initial_debate_models) > 1 else initial_debate_models[0], label="🟢 Model 2")
+                    deb_refresh_btn = gr.Button("🔄 Refresh Models", size="sm")
+                    deb_topic = gr.Textbox(label="Topic", placeholder="Should AI be regulated?", lines=2)
+                    deb_rounds = gr.Slider(1, 10, value=3, step=1, label="Rounds")
+                    deb_start_btn = gr.Button("🚀 Start Debate", variant="primary")           
+                    deb_download_btn = gr.DownloadButton(
+                        label="💾 Download Transcript (.txt)", 
+                        visible=False
+                    )
+
+                with gr.Column(scale=2):
+                    gr.Markdown("#### 📜 Transcript")
+                    deb_output = gr.Markdown("*Ready to debate...*")
+                    
+            deb_refresh_btn.click(refresh_debate_models, outputs=[deb_model_1, deb_model_2])
+            
+            # Update: outputs enthält jetzt auch den Button
+            deb_start_btn.click(
+                start_debate, 
+                inputs=[deb_model_1, deb_model_2, deb_topic, deb_rounds], 
+                outputs=[deb_output, deb_download_btn]
+            )
+
+        # --- TAB 2: MODEL CREATOR ---
+        with gr.TabItem("🛠️ Model Creator"):
+            with gr.Row():
+                with gr.Column():
+                    gr.Markdown("#### 📝 Define Model")
+                    crt_file = gr.File(label="System Prompt File (.txt/.md)", file_types=[".txt", ".md"])
+                    crt_base_model = gr.Dropdown(choices=initial_creator_models or [], label="Base Model", value=initial_creator_models[0] if initial_creator_models else None)
+                    crt_refresh_btn = gr.Button("🔄 Refresh Models", size="sm")
+                    
+                    crt_name = gr.Textbox(label="New Model Name", placeholder="my-custom-model")
+                    crt_temp = gr.Textbox(label="Temperature", value="1.8")
+                    crt_create_btn = gr.Button("🏗️ Create Model", variant="primary")
+                
+                with gr.Column():
+                    gr.Markdown("#### 📊 Output")
+                    crt_status = gr.Textbox(label="Status", lines=4)
+                    crt_details = gr.Textbox(label="Log", lines=8)
+
+            crt_refresh_btn.click(refresh_creator_models, outputs=[crt_base_model])
+            
+            crt_create_btn.click(
+                create_model_logic, 
+                inputs=[crt_file, crt_base_model, crt_name, crt_temp], 
+                outputs=[crt_status, crt_details, deb_model_1, deb_model_2, crt_base_model]
+            )
+
+if __name__ == "__main__":
+    app.launch(server_name="127.0.0.1", server_port=7860)
+
+--- link.js ---
+module.exports = {
+  run: [
+    {
+      method: "fs.link",
+      params: {
+        venv: "env"
+      }
+    }
+  ]
+}
+
+
+--- pinokio.js ---
+const path = require('path')
+module.exports = {
+  version: "3.7",
+  title: "Ollama Model Creator",
+  description: "🦙 Let 2 models debate about a topic you pick. Create custom Ollama models with your own system prompts and parameters and use them to debate ot publish on ollama.com Easy-to-use Gradio interface for building personalized AI models with temperature control and custom instructions.",
+  icon: "icon.png",
+  menu: async (kernel, info) => {
+    let installed = info.exists("env")
+    let running = {
+      install: info.running("install.js"),
+      start: info.running("start.js"),
+      update: info.running("update.js"),
+      reset: info.running("reset.js"),
+      link: info.running("link.js")
+    }
+    if (running.install) {
+      return [{
+        default: true,
+        icon: "fa-solid fa-plug",
+        text: "Installing",
+        href: "install.js",
+      }]
+    } else if (installed) {
+      if (running.start) {
+        let local = info.local("start.js")
+        if (local && local.url) {
+          return [{
+            default: true,
+            icon: "fa-solid fa-rocket",
+            text: "Open Web UI",
+            href: local.url,
+          }, {
+            icon: 'fa-solid fa-terminal',
+            text: "Terminal",
+            href: "start.js",
+          }]
+        } else {
+          return [{
+            default: true,
+            icon: 'fa-solid fa-terminal',
+            text: "Terminal",
+            href: "start.js",
+          }]
+        }
+      } else if (running.update) {
+        return [{
+          default: true,
+          icon: 'fa-solid fa-terminal',
+          text: "Updating",
+          href: "update.js",
+        }]
+      } else if (running.reset) {
+        return [{
+          default: true,
+          icon: 'fa-solid fa-terminal',
+          text: "Resetting",
+          href: "reset.js",
+        }]
+      } else if (running.link) {
+        return [{
+          default: true,
+          icon: 'fa-solid fa-terminal',
+          text: "Deduplicating",
+          href: "link.js",
+        }]
+      } else {
+        return [{
+          default: true,
+          icon: "fa-solid fa-power-off",
+          text: "Start",
+          href: "start.js",
+        }, {
+          icon: "fa-solid fa-plug",
+          text: "Update",
+          href: "update.js",
+        }, {
+          icon: "fa-solid fa-plug",
+          text: "Install",
+          href: "install.js",
+        }, {
+          icon: "fa-solid fa-file-zipper",
+          text: "<div><strong>Save Disk Space</strong><div>Deduplicates redundant library files</div></div>",
+          href: "link.js",
+        }, {
+          icon: "fa-regular fa-circle-xmark",
+          text: "<div><strong>Reset</strong><div>Revert to pre-install state</div></div>",
+          href: "reset.js",
+          confirm: "Are you sure you wish to reset the app?"
+        }]
+      }
+    } else {
+      return [{
+        default: true,
+        icon: "fa-solid fa-plug",
+        text: "Install",
+        href: "install.js",
+      }]
+    }
+  }
+}
+
+
+--- requirements.txt ---
+gradio==5.50.0
+ollama
+requests
+
+
+--- reset.js ---
+module.exports = {
+  run: [{
+    method: "fs.rm",
+    params: {
+      path: "env"
+    }
+  }]
+}
+
+
+--- start.js ---
+module.exports = {
+  daemon: true,
+  run: [
+    // Launch Ollama Model Creator Gradio Web UI
+    {
+      method: "shell.run",
+      params: {
+        venv: "env",
+        env: { },
+        message: [
+          "python app.py"
+        ],
+        on: [{
+          // Monitor for Gradio's HTTP URL output
+          "event": "/http:\\/\\/[^\\s\\/]+:\\d{2,5}(?=[^\\w]|$)/",
+          "done": true
+        }]
+      }
+    },
+    // Set the local URL variable for the "Open Web UI" button
+    {
+      method: "local.set",
+      params: {
+        url: "{{input.event[0]}}"
+      }
+    }
+  ]
+}
+
+
+
+--- update.js ---
+module.exports = {
+  run: [{
+    method: "shell.run",
+    params: {
+      message: "git pull"
+    }
+  }]
+}

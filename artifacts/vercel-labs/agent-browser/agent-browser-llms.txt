@@ -1,35 +1,55 @@
 # Agent Browser
 
-> The project aims to empower AI agents with reliable, fast, and scalable browser automation capabilities. By providing a native Rust CLI with rich command support (including semantic selectors, session management, and cloud providers), it enables agents to navigate, interact, and extract data from websites programmatically — especially suited for tasks like form automation, UI testing, or agent-driven web browsing. It also supports persistent state across sessions and integrates with cloud browser infrastructure for serverless or CI environments.
+> The purpose of agent-browser is to empower AI agents with a fast, reliable, and extensible browser automation tool that operates in headless mode while supporting persistent sessions, authentication, and cloud-based execution. It enables agents to navigate websites, interact with elements using semantic locators or deterministic refs, manage cookies and storage, and even stream browser views for human-AI collaboration. The tool is optimized for AI workflows — such as parsing snapshots, identifying interactive elements, and executing actions — while offering fallbacks for environments without native binaries.
 
 **Remember:**
-- Agent Mode
-- Semantic Locators (refs)
-- Snapshot Tree
-- Session Isolation
-- Persistent Profiles
-- CDP Connection
+- Ref-based element selection
+- Semantic locators (role, text, label, etc.)
+- Session persistence with profiles and encryption
+- Snapshot accessibility tree for AI interpretation
+- CDP mode for remote browser control
+- Streaming for live preview or pair browsing
 
 ## Docs
 - [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.
-- [Next.Config](https://github.com/vercel-labs/agent-browser/blob/main/docs/next.config.ts): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/installation/page.mdx): install & quickstart.
+- [Docs Navigation](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/docs-navigation.ts): docs page.
+- [Mdx To Markdown](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/mdx-to-markdown.ts): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/page.mdx): docs page.
+- [Rate Limit](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/rate-limit.ts): docs page.
+- [Utils](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/utils.ts): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/cdp-mode/page.mdx): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/changelog/page.mdx): version history.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/commands/page.mdx): docs page.
 
 ## API
 - [Authentication](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/authentication.md): API reference.
+- [Commands](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/commands.md): API reference.
 - [Proxy Support](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/proxy-support.md): API reference.
 - [Session Management](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/session-management.md): API reference.
 - [Snapshot Refs](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/snapshot-refs.md): API reference.
 - [Video Recording](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/video-recording.md): API reference.
+- [Output Patterns](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/references/output-patterns.md): API reference.
+- [Workflows](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/references/workflows.md): API reference.
 
 ## Optional
 - [Changelog](https://github.com/vercel-labs/agent-browser/blob/main/CHANGELOG.md): version history.
+- [License](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/LICENSE.txt): usage terms.
 - [README](https://github.com/vercel-labs/agent-browser/blob/main/.changeset/README.md): install & quickstart.
 - [Agents](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md): docs page.
 - [README](https://github.com/vercel-labs/agent-browser/blob/main/README.md): docs page.
+- [Agent Browser](https://github.com/vercel-labs/agent-browser/blob/main/bin/agent-browser.js): docs page.
 - [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
 - [Vitest.Config](https://github.com/vercel-labs/agent-browser/blob/main/vitest.config.ts): docs page.
 
+## .Agents
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/SKILL.md): docs page.
+- [Init Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/init_skill.py): docs page.
+- [Package Skill](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/package_skill.py): docs page.
+- [Quick Validate](https://github.com/vercel-labs/agent-browser/blob/main/.agents/skills/skill-creator/scripts/quick_validate.py): docs page.
+
 ## Scripts
+- [Check Version Sync](https://github.com/vercel-labs/agent-browser/blob/main/scripts/check-version-sync.js): docs page.
 - [Copy Native](https://github.com/vercel-labs/agent-browser/blob/main/scripts/copy-native.js): docs page.
 - [Sync Version](https://github.com/vercel-labs/agent-browser/blob/main/scripts/sync-version.js): docs page.
 
@@ -40,11 +60,12 @@
 - [Browser.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.test.ts): docs page.
 - [Daemon](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.ts): docs page.
 - [Daemon.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.test.ts): docs page.
-- [Protocol](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.ts): docs page.
-- [Protocol.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.test.ts): docs page.
-- [Snapshot](https://github.com/vercel-labs/agent-browser/blob/main/src/snapshot.ts): docs page.
-- [Stream Server](https://github.com/vercel-labs/agent-browser/blob/main/src/stream-server.ts): docs page.
+- [Encryption](https://github.com/vercel-labs/agent-browser/blob/main/src/encryption.ts): docs page.
+- [Encryption.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/encryption.test.ts): docs page.
+- [Ios Actions](https://github.com/vercel-labs/agent-browser/blob/main/src/ios-actions.ts): docs page.
+- [Ios Manager](https://github.com/vercel-labs/agent-browser/blob/main/src/ios-manager.ts): docs page.
 
 ## Test
+- [File Access.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/file-access.test.ts): docs page.
 - [Launch Options.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/launch-options.test.ts): docs page.
 - [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.

@@ -1,0 +1,244 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Dspyteach",
+    "summary": "--- [![PyPI](https://img.shields.io/pypi/v/dspyteach.svg?include_prereleases&cacheSeconds=60&t=1)](https://pypi.org/project/dspyteach/) [![Downloads](https://img.shields.io/pypi/dm/dspyteach.svg?cacheSeconds=300)](https://pypi.org/project/dspyteach/) [![TestPyPI](https://img.shields.io/badge/TestPyPI-dspyteach-informational?cacheSeconds=300)](https://test.pypi.org/project/dspyteach/)"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Lm Studio Provider",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/lm-studio-provider.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Releasing",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/docs/RELEASING.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Analyze File Cli.Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/analyze_file_cli.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Analyze File Cli.Teaching",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-teachings/analyze_file_cli.teaching.md",
+          "note": "worked example"
+        },
+        {
+          "title": "File Analyzer.Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/file_analyzer.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "File Analyzer.Teaching",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-teachings/file_analyzer.teaching.md",
+          "note": "worked example"
+        },
+        {
+          "title": "File Helpers.Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/file_helpers.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "File Helpers.Teaching",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-teachings/file_helpers.teaching.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Init  .Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/__init__.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Refactor Analyzer.Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/refactor_analyzer.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Signatures.Refactor",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-refactor/signatures.refactor.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Signatures.Teaching",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/example-data/.dspy-file-teachings/signatures.teaching.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Verify Fences",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/scripts/verify_fences.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Dspy File",
+      "links": [
+        {
+          "title": "Analyze File Cli",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/analyze_file_cli.py",
+          "note": "docs page"
+        },
+        {
+          "title": "File Analyzer",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/file_analyzer.py",
+          "note": "docs page"
+        },
+        {
+          "title": "File Helpers",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/file_helpers.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Refactor Analyzer",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/refactor_analyzer.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Signatures",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/signatures.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/prompts/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Refactor Prompt Template",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/dspy_file/prompts/refactor_prompt_template.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "Conftest",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/tests/conftest.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Smoke Test",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/tests/smoke_test.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Cli Connectivity",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/tests/test_cli_connectivity.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test File Helpers",
+          "url": "https://github.com/AcidicSoil/DSPyTeach/blob/main/tests/test_file_helpers.py",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

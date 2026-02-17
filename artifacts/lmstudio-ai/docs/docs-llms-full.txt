@@ -1,7 +1,7 @@
 # llms-full (private-aware)
 > Built from GitHub files and website pages. Large files may be truncated.
 
---- 1_python/1_getting-started/_authentication.md ---
+--- 1_python/1_getting-started/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -238,7 +238,7 @@ the scan explicitly, and passing in the reported API server details when creatin
 ## Links discovered
 - [here](https://github.com/lmstudio-ai/lmstudio-python)
 
---- 1_developer/2_rest/_quickstart.md ---
+--- 1_developer/2_rest/quickstart.md ---
 ---
 title: Get up and running with the LM Studio API
 sidebar_title: Quickstart
@@ -451,7 +451,7 @@ variants:
           "integrations": [
             {
               "type": "plugin",
-              "id": "mcp/playwright".
+              "id": "mcp/playwright",
               "allowed_tools": ["browser_navigate"]
             }
           ],
@@ -735,6 +735,29 @@ index: 2
 
 ---
 
+###### LM Studio 0.4.1
+
+### Anthropic-compatible API
+
+- New Anthropic-compatible endpoint: `POST /v1/messages`.
+  - Use Claude code models with LM Studio
+  - See docs for more details: [/docs/developer/anthropic-compat](/docs/developer/anthropic-compat).
+
+---
+
+###### LM Studio 0.4.0
+
+### LM Studio native v1 REST API
+
+- Official release of LM Studio's native v1 REST API at `/api/v1/*` endpoints.
+  - [MCP via API](/docs/developer/core/mcp)
+  - [Stateful chats](/docs/developer/rest/stateful-chats)
+  - [Authentication](/docs/developer/core/authentication) configuration with API tokens
+  - Model [download](/docs/developer/rest/download), [load](/docs/developer/rest/load) and [unload](/docs/developer/rest/unload) endpoints
+  - See [overview](/docs/developer/rest) page for more details and [comparison](/docs/developer/rest#inference-endpoint-comparison) with OpenAI-compatible endpoints.
+
+---
+
 ###### LM Studio 0.3.29 • 2025‑10‑06
 
 ### OpenAI `/v1/responses` and variant listing
@@ -963,6 +986,15 @@ lms get deepseek-r1 --mlx
 
 
 ## Links discovered
+- [/docs/developer/anthropic-compat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
+- [MCP via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/mcp.md)
+- [Stateful chats](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/stateful-chats.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [overview](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
+- [comparison](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest#inference-endpoint-comparison.md)
 - [/docs/developer/openai-compat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
 - [/blog/lmstudio-v0.3.29](https://github.com/lmstudio-ai/docs/blob/main/blog/lmstudio-v0.3.29)
 - [/docs/cli/local-models/load](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/load.md)
@@ -2083,6 +2115,12 @@ You can drag and drop chats in and out of folders, and even drag folders into fo
 
 You can duplicate a whole chat conversation by clicking the `•••` menu and selecting "Duplicate". If the chat has any files in it, they will be duplicated too.
 
+### Split view in chat
+
+You can view two chats side by side by dragging and dropping chat tabs to either half of the window. Alternatively, use the split view icon at the top right of a chat window to split left or right. 
+
+Close one side of the split view with the 'x' button in the top right of each pane.
+
 ## FAQ
 
 #### Where are chats stored in the file system?
@@ -2226,7 +2264,7 @@ lmstudio://add_mcp?name=hf-mcp-server&config=eyJ1cmwiOiJodHRwczovL2h1Z2dpbmdmYWN
 ---
 title: LM Studio Developer Docs
 sidebar_title: Introduction
-description: Build with LM Studio's local APIs and SDKs — TypeScript, Python, REST, and OpenAI‑compatible endpoints.
+description: Build with LM Studio's local APIs and SDKs — TypeScript, Python, REST, and OpenAI and Anthropic-compatible endpoints.
 index: 1
 ---
 
@@ -2235,7 +2273,9 @@ index: 1
 
 - TypeScript SDK: [lmstudio-js](/docs/typescript)
 - Python SDK: [lmstudio-python](/docs/python)
+- LM Studio REST API: [Stateful Chats, MCPs via API](/docs/developer/rest)
 - OpenAI‑compatible: [Chat, Responses, Embeddings](/docs/developer/openai-compat)
+- Anthropic-compatible: [Messages](/docs/developer/anthropic-compat)
 - LM Studio CLI: [`lms`](/docs/cli)
 
 :::split:::
@@ -2243,11 +2283,38 @@ index: 1
 ## What you can build
 
 - Chat and text generation with streaming
+- Tool calling and local agents with MCP
 - Structured output (JSON schema)
-- Tool calling and local agents
 - Embeddings and tokenization
-- Model management (JIT load, TTL, auto‑evict)
+- Model management (load, download, list)
 ```
+
+## Install `llmster` for headless deployments
+
+`llmster` is LM Studio's core, packaged as a daemon for headless deployment on servers, cloud instances, or CI. The daemon runs standalone, and it is not dependent on the LM Studio GUI.
+
+**Mac / Linux**
+
+```bash
+curl -fsSL https://lmstudio.ai/install.sh | bash
+```
+
+**Windows**
+
+```powershell
+irm https://lmstudio.ai/install.ps1 | iex
+```
+
+**Basic usage**
+
+```bash
+lms daemon up          # Start the daemon
+lms get <model>        # Download a model
+lms server start       # Start the local server
+lms chat               # Open an interactive session
+```
+
+Learn more: [Headless deployments](/blog/0.4.0#deploy-on-servers-deploy-in-ci-deploy-anywhere)
 
 ## Super quick start
 
@@ -2286,43 +2353,217 @@ with lms.Client() as client:
 
 Full docs: [lmstudio-python](/docs/python), Source: [GitHub](https://github.com/lmstudio-ai/lmstudio-python)
 
-### Try a minimal HTTP request (OpenAI‑compatible)
+### HTTP (LM Studio REST API)
 
 ```bash
 lms server start --port 1234
 ```
 
 ```bash
-curl http://localhost:1234/v1/chat/completions \
+curl http://localhost:1234/api/v1/chat \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LM_API_TOKEN" \
   -d '{
     "model": "openai/gpt-oss-20b",
-    "messages": [{"role": "user", "content": "Who are you, and what can you do?"}]
+    "input": "Who are you, and what can you do?"
   }'
 ```
 
-Full docs: [OpenAI‑compatible endpoints](/docs/developer/openai-compat)
+Full docs: [LM Studio REST API](/docs/developer/rest)
 
 ## Helpful links
 
-- API Changelog: [/docs/developer/api-changelog](/docs/developer/api-changelog)
-- Local server basics: [/docs/developer/core](/docs/developer/core)
-- CLI reference: [/docs/cli](/docs/cli)
-- Community: [Discord](https://discord.gg/lmstudio)
+- [API Changelog](/docs/developer/api-changelog)
+- [Local server basics](/docs/developer/core)
+- [CLI reference](/docs/cli)
+- [Discord Community](https://discord.gg/lmstudio)
 
 
 ## Links discovered
 - [lmstudio-js](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [lmstudio-python](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
+- [Stateful Chats, MCPs via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [Chat, Responses, Embeddings](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Messages](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 - [`lms`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
+- [Headless deployments](https://github.com/lmstudio-ai/docs/blob/main/blog/0.4.0#deploy-on-servers-deploy-in-ci-deploy-anywhere)
 - [GitHub](https://github.com/lmstudio-ai/lmstudio-js)
 - [GitHub](https://github.com/lmstudio-ai/lmstudio-python)
-- [OpenAI‑compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
-- [/docs/developer/api-changelog](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/api-changelog.md)
-- [/docs/developer/core](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core.md)
-- [/docs/cli](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
-- [Discord](https://discord.gg/lmstudio)
+- [LM Studio REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
+- [API Changelog](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/api-changelog.md)
+- [Local server basics](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core.md)
+- [CLI reference](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
+- [Discord Community](https://discord.gg/lmstudio)
+
+--- 1_developer/2_rest/index.md ---
+---
+title: LM Studio API
+sidebar_title: Overview
+description: LM Studio's REST API for local inference and model management
+fullPage: false
+index: 1
+---
+
+LM Studio offers a powerful REST API with first-class support for local inference and model management. In addition to our native API, we provide OpenAI-compatible endpoints ([learn more](/docs/developer/openai-compat)) and Anthropic-compatible endpoints ([learn more](/docs/developer/anthropic-compat)).
+
+## What's new
+Previously, there was a [v0 REST API](/docs/developer/rest/endpoints). With LM Studio 0.4.0, we have officially released our native v1 REST API at `/api/v1/*` endpoints and recommend using it.
+
+The v1 REST API includes enhanced features such as:
+- [MCP via API](/docs/developer/core/mcp)
+- [Stateful chats](/docs/developer/rest/stateful-chats)
+- [Authentication](/docs/developer/core/authentication) configuration with API tokens
+- Model [download](/docs/developer/rest/download), [load](/docs/developer/rest/load) and [unload](/docs/developer/rest/unload) endpoints
+
+## Supported endpoints
+The following endpoints are available in LM Studio's v1 REST API.
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Docs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/api/v1/chat</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/chat">Chat</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models</code></td>
+      <td><apimethod method="GET" /></td>
+      <td><a href="/docs/developer/rest/list">List Models</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/load</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/load">Load</a></td>
+    </tr>
+    <tr>
+        <td><code>/api/v1/models/unload</code></td>
+        <td><apimethod method="POST" /></td>
+        <td><a href="/docs/developer/rest/unload">Unload</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/download</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/download">Download</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/download/status</code></td>
+      <td><apimethod method="GET" /></td>
+      <td><a href="/docs/developer/rest/download-status">Download Status</a></td>
+    </tr>
+  </tbody>
+</table>
+
+## Inference endpoint comparison
+The table below compares the features of LM Studio's `/api/v1/chat` endpoint with OpenAI-compatible and Anthropic-compatible inference endpoints.
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th><a href="/docs/developer/rest/chat"><code>/api/v1/chat</code></a></th>
+      <th><a href="/docs/developer/openai-compat/responses"><code>/v1/responses</code></a></th>
+      <th><a href="/docs/developer/openai-compat/chat-completions"><code>/v1/chat/completions</code></a></th>
+      <th><a href="/docs/developer/anthropic-compat/messages"><code>/v1/messages</code></a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Streaming</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Stateful chat</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Remote MCPs</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>MCPs you have in LM Studio</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Custom tools</td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Include assistant messages in the request</td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Model load streaming events</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Prompt processing streaming events</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Specify context length in the request</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+Please report bugs by opening an issue on [Github](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues).
+
+
+## Links discovered
+- [learn more](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [learn more](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
+- [v0 REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/endpoints.md)
+- [MCP via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/mcp.md)
+- [Stateful chats](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/stateful-chats.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [Github](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues)
+- [Chat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/chat.md)
+- [List Models](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/list.md)
+- [Load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [Unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [Download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [Download Status](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download-status.md)
+- [<code>/api/v1/chat</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/chat.md)
+- [<code>/v1/responses</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
+- [<code>/v1/chat/completions</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/chat-completions.md)
+- [<code>/v1/messages</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
 
 --- 1_developer/3_openai-compat/index.md ---
 ---
@@ -2417,6 +2658,13 @@ const client = new OpenAI({
    }'
 ```
 
+
+## Using Codex with LM Studio
+
+Codex is supported because LM Studio implements the OpenAI-compatible `POST /v1/responses` endpoint.
+
+See: [Use Codex with LM Studio](/docs/integrations/codex) and [Responses](/docs/developer/openai-compat/responses).
+
 ---
 
 Other OpenAI client libraries should have similar options to set the base URL.
@@ -2425,12 +2673,116 @@ If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstud
 
 
 ## Links discovered
+- [Use Codex with LM Studio](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/codex.md)
+- [Responses](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
 - [Discord](https://discord.gg/lmstudio)
 - [Models](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/models.md)
-- [Responses](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
 - [Chat Completions](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/chat-completions.md)
 - [Embeddings](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/embeddings.md)
 - [Completions](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/completions.md)
+
+--- 1_developer/4_anthropic-compat/index.md ---
+---
+title: Anthropic Compatibility Endpoints
+sidebar_title: Overview
+description: Send Messages requests using the Anthropic-compatible API.
+index: 1
+---
+
+### Supported endpoints
+
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Docs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/v1/messages</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/anthropic-compat/messages">Messages</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+## Using Claude Code with LM Studio
+
+For a full walkthrough, see: [Use Claude Code with LM Studio](/docs/integrations/claude-code).
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:1234
+export ANTHROPIC_AUTH_TOKEN=lmstudio
+claude --model openai/gpt-oss-20b
+```
+
+## Authentication headers
+
+When Require Authentication is enabled, LM Studio accepts both `x-api-key` and the standard `Authorization: Bearer <token>` header. To learn more about enabling auth in LM Studio, checkout [Authentication](/docs/developer/core/authentication).
+
+## Set the base URL to point to LM Studio
+
+Point your Anthropic client (or any HTTP request) at your local LM Studio server.
+
+Note: The following examples assume the server port is `1234`.
+
+### cURL example
+
+```diff
+- curl https://api.anthropic.com/v1/messages \
++ curl http://localhost:1234/v1/messages \
+   -H "Content-Type: application/json" \
++  -H "x-api-key: $LM_API_TOKEN" \
+   -d '{
+-    "model": "claude-4-5-sonnet",
++    "model": "ibm/granite-4-micro",
+     "max_tokens": 256,
+     "messages": [
+       {"role": "user", "content": "Write a haiku about local LLMs."}
+     ]
+   }'
+```
+
+### Python example
+
+```python
+from anthropic import Anthropic
+
+client = Anthropic(
+    base_url="http://localhost:1234",
+    api_key="lmstudio",
+)
+
+message = client.messages.create(
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hello from LM Studio",
+        }
+    ],
+    model="ibm/granite-4-micro",
+)
+
+print(message.content)
+```
+
+If you have not enabled Require Authentication, the `x-api-key` header is optional.
+For the Python example, you can also omit `api_key` when authentication is disabled.
+
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio) and enter the developers channel.
+
+
+## Links discovered
+- [Use Claude Code with LM Studio](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/claude-code.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [Discord](https://discord.gg/lmstudio)
+- [Messages](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
 
 --- 1_developer/0_core/0_server/index.md ---
 ---
@@ -2443,7 +2795,7 @@ index: 1
 
 You can serve local LLMs from LM Studio's Developer tab, either on `localhost` or on the network.
 
-LM Studio's APIs can be used through [REST API](/docs/developer/rest), client libraries like [lmstudio-js](/docs/typescript) and [lmstudio-python](/docs/python), and [OpenAI compatibility endpoints](/docs/developer/openai-compat)
+LM Studio's APIs can be used through [REST API](/docs/developer/rest), client libraries like [lmstudio-js](/docs/typescript) and [lmstudio-python](/docs/python), and compatibility endpoints like [OpenAI-compatible](/docs/developer/openai-compat) and [Anthropic-compatible](/docs/developer/anthropic-compat).
 
 <img src="/assets/docs/server.png" style="" data-caption="Load and serve LLMs from LM Studio" />
 
@@ -2467,18 +2819,22 @@ lms server start
 - [LM Studio REST API](/docs/developer/rest)
 - [TypeScript SDK](/docs/typescript) - `lmstudio-js`
 - [Python SDK](/docs/python) - `lmstudio-python`
-- [OpenAI compatibility endpoints](/docs/developer/openai-compat)
+- [OpenAI-compatible endpoints](/docs/developer/openai-compat)
+- [Anthropic-compatible endpoints](/docs/developer/anthropic-compat)
 
 
 ## Links discovered
 - [REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [lmstudio-js](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [lmstudio-python](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
-- [OpenAI compatibility endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [OpenAI-compatible](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Anthropic-compatible](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 - [LM Studio's CLI](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
 - [LM Studio REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [TypeScript SDK](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [Python SDK](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
+- [OpenAI-compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Anthropic-compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 
 --- 1_developer/_embeddings.md ---
 ---
@@ -2490,7 +2846,7 @@ description: Use embedding models in LM Studio
 
 lorem ipsum dolor sit amet, consectetur adipiscing elit. nullam auctor, nunc nec suscipit ultricies, nunc nunc ultricies nunc, nec suscipit nunc nunc nec. nullam.
 
---- 1_developer/0_core/_authentication.md ---
+--- 1_developer/0_core/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -2539,7 +2895,7 @@ To edit the permissions of an existing API Token, click on the Edit button next 
 ### Using API Tokens with REST API:
 
 ```lms_noticechill
-The example below requires [allowing calling servers from mcp.json](/docs/developer/core/server/settings) to be enabled and the [tiktoken MCP](https://gitmcp.io/openai/tiktoken) in mcp.json.
+The example below requires [allowing calling servers from mcp.json](/docs/developer/core/server/settings) to be enabled and the [Playwright MCP](https://github.com/microsoft/playwright-mcp) in mcp.json.
 ```
 
 ```bash
@@ -2549,16 +2905,15 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "model": "ibm/granite-4-micro",
-    "input": "What is the first line in the tiktoken documentation?",
+    "input": "Open lmstudio.ai",
     "integrations": [
       {
         "type": "plugin",
-        "id": "mcp/tiktoken",
-        "allowed_tools": [
-          "fetch_tiktoken_documentation"
-        ]
+        "id": "mcp/playwright",
+        "allowed_tools": ["browser_navigate"]
       }
-    ]
+    ],
+    "context_length": 8000
   }'
 ```
 
@@ -2574,11 +2929,11 @@ To use API tokens with the TypeScript SDK, see the [TS SDK guide](/docs/typescri
 ## Links discovered
 - [LM Studio 0.4.0](https://github.com/lmstudio-ai/docs/blob/main/download.md)
 - [allowing calling servers from mcp.json](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/server/settings.md)
-- [tiktoken MCP](https://gitmcp.io/openai/tiktoken)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
 - [Python SDK guide](https://github.com/lmstudio-ai/docs/blob/main/docs/python/getting-started/authentication.md)
 - [TS SDK guide](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript/authentication.md)
 
---- 1_developer/2_rest/_chat.md ---
+--- 1_developer/2_rest/chat.md ---
 ---
 title: "Chat with a model"
 description: "Send a message to a model and receive a response. Supports MCP integration."
@@ -2598,9 +2953,45 @@ api_info:
   optional: false
   description: Unique identifier for the model to use.
 - name: input
-  type: string
+  type: string | array<object>
   optional: false
   description: Message to send to the model.
+  children:
+    - name: Input text
+      unstyledName: true
+      type: string
+      description: Text content of the message.
+    - name: Input object
+      unstyledName: true
+      type: object
+      description: Object representing a message with additional metadata.
+      children:
+        - name: Text Input
+          type: object
+          optional: true
+          description: Text input to provide user messages
+          children:
+            - name: type
+              type: '"message"'
+              optional: false
+              description: Type of input item.
+            - name: content
+              type: string
+              description: Text content of the message.
+              optional: false
+        - name: Image Input
+          type: object
+          optional: true
+          description: Image input to provide user messages
+          children:
+            - name: type
+              type: '"image"'
+              optional: false
+              description: Type of input item.
+            - name: data_url
+              type: string
+              description: Image data as a base64-encoded data URL.
+              optional: false
 - name: system_prompt
   type: string
   optional: true
@@ -2703,9 +3094,8 @@ api_info:
 ```
 :::split:::
 ```lms_code_snippet
-title: Example Request
 variants:
-  curl:
+  Request with MCP:
     language: bash
     code: |
       curl http://localhost:1234/api/v1/chat \
@@ -2732,6 +3122,28 @@ variants:
             }
           ],
           "context_length": 8000,
+          "temperature": 0
+        }'
+  Request with Images:
+    language: bash
+    code: |
+      # Image is a small red square encoded as a base64 data URL
+      curl http://localhost:1234/api/v1/chat \
+        -H "Authorization: Bearer $LM_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+          "model": "qwen/qwen3-vl-4b",
+          "input": [
+            {
+              "type": "text",
+              "content": "Describe this image in two sentences"
+            },
+            {
+              "type": "image",
+              "data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC"
+            }
+          ],
+          "context_length": 2048,
           "temperature": 0
         }'
 ```
@@ -2803,6 +3215,47 @@ variants:
         - name: content
           type: string
           description: Text content of the reasoning.
+    - name: Invalid tool call
+      unstyledName: true
+      type: object
+      description: An invalid tool call made by the model - due to invalid tool name or tool arguments.
+      children:
+        - name: type
+          type: '"invalid_tool_call"'
+          description: Type of output item.
+        - name: reason
+          type: string
+          description: Reason why the tool call was invalid.
+        - name: metadata
+          type: object
+          description: Metadata about the invalid tool call.
+          children:
+            - name: type
+              type: '"invalid_name" | "invalid_arguments"'
+              description: Type of error that occurred.
+            - name: tool_name
+              type: string
+              description: Name of the tool that was attempted to be called.
+            - name: arguments
+              type: object
+              optional: true
+              description: Arguments that were passed to the tool (only present for `invalid_arguments` errors).
+            - name: provider_info
+              type: object
+              optional: true
+              description: Information about the tool provider (only present for `invalid_arguments` errors).
+              children:
+                - name: type
+                  type: '"plugin" | "ephemeral_mcp"'
+                  description: Provider type.
+                - name: plugin_id
+                  type: string
+                  optional: true
+                  description: Identifier of the plugin (when `type` is `"plugin"`).
+                - name: server_label
+                  type: string
+                  optional: true
+                  description: Label of the MCP server (when `type` is `"ephemeral_mcp"`).
 - name: stats
   type: object
   description: Token usage and performance metrics.
@@ -2833,9 +3286,8 @@ variants:
 ```
 :::split:::
 ```lms_code_snippet
-title: Response
 variants:
-  json:
+  Request with MCP:
     language: json
     code: |
       {
@@ -2885,6 +3337,26 @@ variants:
           "model_load_time_seconds": 2.656
         },
         "response_id": "resp_4ef013eba0def1ed23f19dde72b67974c579113f544086de"
+      }
+  Request with Images:
+    language: json
+    code: |
+      {
+        "model_instance_id": "qwen/qwen3-vl-4b",
+        "output": [
+          {
+            "type": "message",
+            "content": "This image is a solid, vibrant red square that fills the entire frame, with no discernible texture, pattern, or other elements. It presents a minimalist, uniform visual field of pure red, evoking a sense of boldness or urgency."
+          }
+        ],
+        "stats": {
+          "input_tokens": 17,
+          "total_output_tokens": 50,
+          "reasoning_output_tokens": 0,
+          "tokens_per_second": 51.03762685242662,
+          "time_to_first_token_seconds": 0.814
+        },
+        "response_id": "resp_0182bd7c479d7451f9a35471f9c26b34de87a7255856b9a4"
       }
 ```
 ````
@@ -2969,198 +3441,6 @@ Using this endpoint with chat‑tuned models may produce unexpected tokens. Pref
 - Prompt template is not applied
 - See OpenAI docs: https://platform.openai.com/docs/api-reference/completions
 
-
---- 1_developer/2_rest/_download.md ---
----
-title: "Download a model"
-description: "Download LLMs and embedding models"
-fullPage: true
-index: 8
-api_info:
-  method: POST
----
-
-````lms_hstack
-`POST /api/v1/models/download`
-
-**Request body**
-```lms_params
-- name: model
-  type: string
-  optional: false
-  description: The model to download. Accepts [model catalog](https://lmstudio.ai/models) identifiers (e.g., `openai/gpt-oss-20b`) and exact Hugging Face links (e.g., `https://huggingface.co/lmstudio-community/gpt-oss-20b-GGUF`)
-- name: quantization
-  type: string
-  optional: true
-  description: Quantization level of the model to download (e.g., `Q4_K_M`). Only supported for Hugging Face links.
-```
-:::split:::
-```lms_code_snippet
-title: Example Request
-variants:
-  curl:
-    language: bash
-    code: |
-      curl http://localhost:1234/api/v1/models/download \
-        -H "Authorization: Bearer $LM_API_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "model": "ibm/granite-4-micro"
-        }'
-```
-````
-
-````lms_hstack
-**Response fields**
-
-Returns a download job status object. The response varies based on the download status.
-
-```lms_params
-- name: job_id
-  type: string
-  optional: true
-  description: Unique identifier for the download job. Absent when `status` is `already_downloaded`.
-- name: status
-  type: '"downloading" | "paused" | "completed" | "failed" | "already_downloaded"'
-  description: Current status of the download.
-- name: bytes_per_second
-  type: number
-  optional: true
-  description: Current download speed in bytes per second. Present when `status` is `downloading`.
-- name: estimated_completion
-  type: string
-  optional: true
-  description: Estimated completion time in ISO 8601 format. Present when `status` is `downloading`.
-- name: completed_at
-  type: string
-  optional: true
-  description: Download completion time in ISO 8601 format. Present when `status` is `completed`.
-- name: total_size_bytes
-  type: number
-  optional: true
-  description: Total size of the download in bytes. Absent when `status` is `already_downloaded`.
-- name: downloaded_bytes
-  type: number
-  optional: true
-  description: Number of bytes downloaded so far. Absent when `status` is `already_downloaded`.
-- name: started_at
-  type: string
-  optional: true
-  description: Download start time in ISO 8601 format. Absent when `status` is `already_downloaded`.
-```
-:::split:::
-```lms_code_snippet
-title: Response
-variants:
-  json:
-    language: json
-    code: |
-      {
-        "job_id": "job_493c7c9ded",
-        "status": "downloading",
-        "total_size_bytes": 2279145003,
-        "downloaded_bytes": 948,
-        "bytes_per_second": 7834.710743801653,
-        "estimated_completion": "2025-10-07T00:21:47.030Z",
-        "started_at": "2025-10-03T15:33:23.496Z"
-      }
-```
-````
-
-
-## Links discovered
-- [model catalog](https://lmstudio.ai/models)
-
---- 1_developer/2_rest/_download-status.md ---
----
-title: "Get download status"
-description: "Get the status of model downloads"
-fullPage: true
-index: 9
-api_info:
-  method: GET
----
-
-````lms_hstack
-`GET /api/v1/models/download/status/:job_id`
-
-**Path parameters**
-```lms_params
-- name: job_id
-  type: string
-  optional: false
-  description: The unique identifier of the download job. `job_id` is returned by the [download](/docs/developer/rest/download) endpoint when a download is initiated.
-```
-:::split:::
-```lms_code_snippet
-title: Example Request
-variants:
-  curl:
-    language: bash
-    code: |
-      curl -H "Authorization: Bearer $LM_API_TOKEN" \
-        http://localhost:1234/api/v1/models/download/status/job_493c7c9ded
-```
-````
-
-````lms_hstack
-**Response fields**
-
-Returns a single download job status object. The response varies based on the download status.
-
-```lms_params
-- name: job_id
-  type: string
-  description: Unique identifier for the download job.
-- name: status
-  type: '"downloading" | "paused" | "completed" | "failed"'
-  description: Current status of the download.
-- name: bytes_per_second
-  type: number
-  optional: true
-  description: Current download speed in bytes per second. Present when `status` is `downloading`.
-- name: estimated_completion
-  type: string
-  optional: true
-  description: Estimated completion time in ISO 8601 format. Present when `status` is `downloading`.
-- name: completed_at
-  type: string
-  optional: true
-  description: Download completion time in ISO 8601 format. Present when `status` is `completed`.
-- name: total_size_bytes
-  type: number
-  optional: true
-  description: Total size of the download in bytes.
-- name: downloaded_bytes
-  type: number
-  optional: true
-  description: Number of bytes downloaded so far.
-- name: started_at
-  type: string
-  optional: true
-  description: Download start time in ISO 8601 format.
-```
-:::split:::
-```lms_code_snippet
-title: Response
-variants:
-  json:
-    language: json
-    code: |
-      {
-        "job_id": "job_493c7c9ded",
-        "status": "completed",
-        "total_size_bytes": 2279145003,
-        "downloaded_bytes": 2279145003,
-        "started_at": "2025-10-03T15:33:23.496Z",
-        "completed_at": "2025-10-03T15:43:12.102Z"
-      }
-```
-````
-
-
-## Links discovered
-- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
 
 --- 1_python/index.md ---
 ---
@@ -4742,7 +5022,7 @@ index: 1
 
 Plugins extend LM Studio's functionality by providing "hook functions" that execute at specific points during operation.
 
-Plugins are currently written in JavaScript/TypeScript and run on Node.js v20.18.0. Python support is in development.
+Plugins are currently written in JavaScript/TypeScript and run on Node.js v22.21.1. Python support is in development.
 
 ## Getting Started
 
@@ -4762,7 +5042,7 @@ lms dev
 
 Your plugin will appear in LM Studio's plugin list. Development mode automatically rebuilds and reloads your plugin when you make code changes.
 
-You only need `lms dev` during development. When the plugin is installed, LM Studio automatically runs them as needed. Learn more about distributing and installing plugins in the [Sharing Plugins](./plugins/sharing) section.
+You only need `lms dev` during development. When the plugin is installed, LM Studio automatically runs them as needed. Learn more about distributing and installing plugins in the [Sharing Plugins](./plugins/publish-plugins) section.
 
 ## Next Steps
 
@@ -4792,13 +5072,12 @@ You only need `lms dev` during development. When the plugin is installed, LM Stu
 
 
 ## Links discovered
-- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/sharing.md)
+- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/publish-plugins.md)
 - [Tools Providers](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/tools-provider.md)
 - [Prompt Preprocessors](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/prompt-preprocessor.md)
 - [Generators](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/generator.md)
 - [Custom Configurations](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/custom-configuration.md)
 - [Third-Party Dependencies](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/dependencies.md)
-- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/publish-plugins.md)
 
 --- 2_typescript/4_embedding/index.md ---
 ---
@@ -5116,7 +5395,7 @@ lms push --private
 Private artifact is in test. Get in touch if you are interested.
 
 
---- 2_typescript/_authentication.md ---
+--- 2_typescript/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -5917,3 +6196,144 @@ lms login --with-pre-authenticated-keys \
   optional: true
   description: "Private key to use with --with-pre-authenticated-keys"
 ```
+
+--- 4_integrations/index.md ---
+---
+title: Integrations
+sidebar_title: Introduction
+description: Use LM Studio with external tools and apps.
+index: 1 
+---
+
+Use LM Studio as a seamless, drop-in local backend for your favorite tools. 
+
+Whether you are using an IDE extension or a custom automation script, simply point your base URL to http://localhost:1234 to power your workflows with LM Studio and maintain complete control over your data privacy.
+
+We provide guides below for popular tools and are constantly expanding this list to include new integrations.
+
+## Available Integrations
+
+- [Claude Code](/docs/integrations/claude-code)
+- [Codex](/docs/integrations/codex)
+
+
+## Links discovered
+- [Claude Code](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/claude-code.md)
+- [Codex](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/codex.md)
+
+--- 4_integrations/claude-code.md ---
+---
+title: Claude Code
+description: Use Claude Code with LM Studio
+index: 2 
+---
+
+Claude Code can talk to LM Studio via the Anthropic-compatible `POST /v1/messages` endpoint.
+See: [Anthropic-compatible Messages endpoint](/docs/developer/anthropic-compat/messages).
+
+<img src="/assets/docs/claude-code.webp" style="width: 100%;" data-caption="Claude Code configured to use LM Studio via the Anthropic-compatible API" />
+
+### 1) Start LM Studio's local server
+
+Make sure LM Studio is running as a server (default port `1234`).
+
+You can start it from the app, or from the terminal with `lms`:
+
+```bash
+lms server start --port 1234
+```
+
+### 2) Configure Claude Code
+
+Set these environment variables so the `claude` CLI points to your local LM Studio:
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:1234
+export ANTHROPIC_AUTH_TOKEN=lmstudio
+```
+
+
+Notes:
+- If Require Authentication is enabled, set `ANTHROPIC_AUTH_TOKEN` to your LM Studio API token. To learn more, see: [Authentication](/docs/developer/core/authentication).
+
+### 3) Run Claude Code against a local model
+
+```bash
+claude --model openai/gpt-oss-20b
+```
+
+```lms_protip
+Use a model (and server/model settings) with more than ~25k context length. Tools like Claude Code can consume a lot of context.
+```
+
+### 4) If Require Authentication is enabled, use your LM Studio API token
+
+If you turned on "Require Authentication" in LM Studio, create an API token and set:
+
+```bash
+export LM_API_TOKEN=<LMSTUDIO_TOKEN>
+export ANTHROPIC_AUTH_TOKEN=$LM_API_TOKEN
+```
+
+When Require Authentication is enabled, LM Studio accepts both `x-api-key` and `Authorization: Bearer <token>`.
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio)
+
+
+## Links discovered
+- [Anthropic-compatible Messages endpoint](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [Discord](https://discord.gg/lmstudio)
+
+--- 4_integrations/codex.md ---
+---
+title: Codex
+description: Use Codex with LM Studio
+index: 3
+---
+
+Codex can talk to LM Studio via the OpenAI-compatible `POST /v1/responses` endpoint.
+See: [OpenAI-compatible Responses endpoint](/docs/developer/openai-compat/responses).
+
+<img src="/assets/docs/codex.webp" style="width: 100%;" data-caption="Codex configured to use LM Studio via the OpenAI-compatible API" />
+
+### 1) Start LM Studio's local server
+
+Make sure LM Studio is running as a server (default port `1234`).
+
+You can start it from the app, or from the terminal with `lms`:
+
+```bash
+lms server start --port 1234
+```
+
+### 2) Run Codex against a local model
+
+Run Codex as you normally would, but with the `--oss` flag to point it to LM Studio.
+
+Example:
+
+```bash
+codex --oss
+```
+
+
+By default, Codex will download and use [openai/gpt-oss-20b](https://lmstudio.ai/models/openai/gpt-oss-20b).
+
+```lms_protip
+Use a model (and server/model settings) with more than ~25k context length. Tools like Codex can consume a lot of context.
+```
+
+You can also use any other model you have available in LM Studio. For example:
+
+```bash
+codex --oss -m ibm/granite-4-micro
+```
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio)
+
+
+## Links discovered
+- [OpenAI-compatible Responses endpoint](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
+- [openai/gpt-oss-20b](https://lmstudio.ai/models/openai/gpt-oss-20b)
+- [Discord](https://discord.gg/lmstudio)

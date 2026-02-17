@@ -1,0 +1,429 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Codex",
+    "summary": "<p align=\"center\"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask codex</code></p> <p align=\"center\"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer. <p align=\"center\"> <img src=\"./.github/codex-cli-splash.png\" alt=\"Codex CLI splash\" width=\"80%\" />"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Getting Started",
+          "url": "https://github.com/openai/codex/blob/main/docs/getting-started.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install",
+          "url": "https://github.com/openai/codex/blob/main/docs/install.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install Native Deps",
+          "url": "https://github.com/openai/codex/blob/main/codex-cli/scripts/install_native_deps.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/LICENSE.txt",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/SKILL.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Github Utils",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/github_utils.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Install Skill From Github",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/install-skill-from-github.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "List Curated Skills",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-installer/scripts/list-curated-skills.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Example Config",
+          "url": "https://github.com/openai/codex/blob/main/docs/example-config.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Agents Md",
+          "url": "https://github.com/openai/codex/blob/main/docs/agents_md.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/codex-api/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/responses-api-proxy/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/responses-api-proxy/npm/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Eslint.Config",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/eslint.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Tsup.Config",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/tsup.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Abort.Test",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/tests/abort.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Basic Streaming",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/samples/basic_streaming.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/src/codex.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Codexexecspy",
+          "url": "https://github.com/openai/codex/blob/main/sdk/typescript/tests/codexExecSpy.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://github.com/openai/codex/blob/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Osrelease",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/osRelease.ts",
+          "note": "version history"
+        },
+        {
+          "title": "Osrelease.Test",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/tests/osRelease.test.ts",
+          "note": "version history"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/src/skills/assets/samples/skill-creator/license.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/.devcontainer/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/openai/codex/blob/main/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/README.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/openai/codex/blob/main/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Issue Deduplicator",
+          "url": "https://github.com/openai/codex/blob/main/.github/prompts/issue-deduplicator.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Issue Labeler",
+          "url": "https://github.com/openai/codex/blob/main/.github/prompts/issue-labeler.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex Attempt",
+          "url": "https://github.com/openai/codex/blob/main/.github/codex/labels/codex-attempt.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex Review",
+          "url": "https://github.com/openai/codex/blob/main/.github/codex/labels/codex-review.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex Rust Review",
+          "url": "https://github.com/openai/codex/blob/main/.github/codex/labels/codex-rust-review.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex Triage",
+          "url": "https://github.com/openai/codex/blob/main/.github/codex/labels/codex-triage.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Codex Cli",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-cli/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-cli/scripts/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Build Npm Package",
+          "url": "https://github.com/openai/codex/blob/main/codex-cli/scripts/build_npm_package.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Codex",
+          "url": "https://github.com/openai/codex/blob/main/codex-cli/bin/codex.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Codex Rs",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/ansi-escape/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/app-server-test-client/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/chatgpt/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/codex-client/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/common/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/core/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/debug-client/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/codex-rs/exec-server/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Readme Toc",
+          "url": "https://github.com/openai/codex/blob/main/scripts/readme_toc.py",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Asciicheck",
+          "url": "https://github.com/openai/codex/blob/main/scripts/asciicheck.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Mock Responses Websocket Server",
+          "url": "https://github.com/openai/codex/blob/main/scripts/mock_responses_websocket_server.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Stage Npm Packages",
+          "url": "https://github.com/openai/codex/blob/main/scripts/stage_npm_packages.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Shell Tool Mcp",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Tsup.Config",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/tsup.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Bashselection",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/bashSelection.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Bashselection.Test",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/tests/bashSelection.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Constants",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/constants.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Platform",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/platform.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Types",
+          "url": "https://github.com/openai/codex/blob/main/shell-tool-mcp/src/types.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

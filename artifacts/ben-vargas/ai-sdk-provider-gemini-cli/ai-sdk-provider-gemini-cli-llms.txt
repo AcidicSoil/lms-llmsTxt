@@ -1,46 +1,46 @@
 # Ai Sdk Provider Gemini Cli
 
-> This project provides a stable, community-maintained TypeScript SDK provider for Google’s Gemini AI models, compatible with both Vercel AI SDK v4 and v5. Its purpose is to simplify integration of Gemini’s capabilities — including text generation, structured output via Zod, streaming, and tool calling — into applications using the AI SDK. It ensures compatibility with breaking changes, supports OAuth and API key authentication, and includes detailed documentation, examples, and logging for debugging.
+> This project provides a seamless, type-safe interface to Google’s Gemini models through the Vercel AI SDK, allowing developers to leverage Gemini’s capabilities — including text generation, tool calling, structured output via Zod, and multimodal inputs — in their applications. It supports multiple authentication methods (OAuth and API key), customizable configurations, and advanced features like streaming responses and logging control. The project is intended for community use and is not affiliated with Google or Vercel.
 
 **Remember:**
 - AI SDK Provider
-- Vercel AI SDK (v4 and v5)
-- Google Gemini CLI Core
-- OAuth Authentication
-- Zod Schema Validation
+- Gemini Models (e.g., gemini-3-pro-preview)
+- OAuth Authentication via Gemini CLI
+- Zod Schema Mapping for Structured Output
+- Tool Calling and Function Invocation
 - Streaming Responses
 
 ## Docs
-- [README](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/README.md): install & quickstart.
-- [Dependency Notes](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/dependency-notes.md): docs page.
-- [Gemini Cli Auth Options](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/gemini-cli-auth-options.md): docs page.
-- [Language Model V2 Implementation](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/language-model-v2-implementation.md): docs page.
-- [Project Structure](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/project-structure.md): docs page.
-- [Tool Schema Mapping](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/tool-schema-mapping.md): docs page.
-- [Zod To Gemini Mapping](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/zod-to-gemini-mapping.md): docs page.
-- [Breaking Changes](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/BREAKING_CHANGES.md): docs page.
-- [Development Status](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/DEVELOPMENT_STATUS.md): docs page.
-- [Guide](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/docs/ai-sdk-v5/GUIDE.md): docs page.
+- [README](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/README.md): install & quickstart.
+- [Dependency Notes](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/dependency-notes.md): docs page.
+- [Gemini Cli Auth Options](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/gemini-cli-auth-options.md): docs page.
+- [Known Limitations](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/known-limitations.md): docs page.
+- [Language Model V3 Implementation](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/language-model-v3-implementation.md): docs page.
+- [Project Structure](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/project-structure.md): docs page.
+- [Tool Schema Mapping](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/tool-schema-mapping.md): docs page.
+- [Zod To Gemini Mapping](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/zod-to-gemini-mapping.md): docs page.
+- [Breaking Changes](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/ai-sdk-v6/BREAKING_CHANGES.md): docs page.
+- [Development Status](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/docs/ai-sdk-v6/DEVELOPMENT_STATUS.md): docs page.
 
 ## Tutorials
-- [README](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/examples/README.md): install & quickstart.
+- [README](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/examples/README.md): install & quickstart.
 
 ## Optional
-- [Changelog](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/CHANGELOG.md): version history.
-- [Contributing](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/CONTRIBUTING.md): docs page.
-- [README](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/README.md): docs page.
-- [Eslint.Config](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/eslint.config.js): docs page.
-- [Tsup.Config](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/tsup.config.ts): docs page.
-- [Vitest.Config](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/vitest.config.ts): docs page.
+- [Changelog](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/CHANGELOG.md): version history.
+- [Contributing](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/CONTRIBUTING.md): docs page.
+- [README](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/README.md): docs page.
+- [Eslint.Config](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/eslint.config.js): docs page.
+- [Tsup.Config](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/tsup.config.ts): docs page.
+- [Vitest.Config](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/vitest.config.ts): docs page.
 
 ## Src
-- [Client](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/client.ts): docs page.
-- [Error](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/error.ts): docs page.
-- [Gemini Language Model](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/gemini-language-model.ts): docs page.
-- [Gemini Provider](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/gemini-provider.ts): docs page.
-- [Index](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/index.ts): docs page.
-- [Logger](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/logger.ts): docs page.
-- [Message Mapper](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/message-mapper.ts): docs page.
-- [Tool Mapper](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/tool-mapper.ts): docs page.
-- [Types](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/types.ts): docs page.
-- [Validation](https://raw.githubusercontent.com/ben-vargas/ai-sdk-provider-gemini-cli/main/src/validation.ts): docs page.
+- [Client](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/client.ts): docs page.
+- [Error](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/error.ts): docs page.
+- [Gemini Language Model](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/gemini-language-model.ts): docs page.
+- [Gemini Provider](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/gemini-provider.ts): docs page.
+- [Index](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/index.ts): docs page.
+- [Logger](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/logger.ts): docs page.
+- [Message Mapper](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/message-mapper.ts): docs page.
+- [Tool Mapper](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/tool-mapper.ts): docs page.
+- [Types](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/types.ts): docs page.
+- [Validation](https://github.com/ben-vargas/ai-sdk-provider-gemini-cli/blob/main/src/validation.ts): docs page.

@@ -1,0 +1,51 @@
+# Lobster
+
+> Lobster provides a structured, typed workflow shell for AI agents to execute complex, composable tasks — such as monitoring GitHub PRs, triaging emails, or executing system commands — without generating verbose or token-heavy queries. It enables resumable and deterministic execution by leveraging JSON pipelines and state management. The project aims to reduce cognitive load on agents by abstracting repetitive operations into reusable macros, while maintaining local-first execution and avoiding ownership of OAuth tokens.
+
+**Remember:**
+- Typed JSON-first pipelines
+- Local-first execution
+- Composable macros for AI agents
+- Approval gates (e.g., `approve`)
+- Workflow files (YAML/JSON with steps, env, condition)
+- State management and resumability
+
+## API
+- [Index](https://github.com/openclaw/lobster/blob/main/src/sdk/index.ts): docs page.
+- [Lobster](https://github.com/openclaw/lobster/blob/main/src/sdk/Lobster.ts): docs page.
+- [Runtime](https://github.com/openclaw/lobster/blob/main/src/sdk/runtime.ts): docs page.
+- [Token](https://github.com/openclaw/lobster/blob/main/src/sdk/token.ts): docs page.
+- [Approve](https://github.com/openclaw/lobster/blob/main/src/sdk/primitives/approve.ts): docs page.
+- [Diff](https://github.com/openclaw/lobster/blob/main/src/sdk/primitives/diff.ts): docs page.
+- [Exec](https://github.com/openclaw/lobster/blob/main/src/sdk/primitives/exec.ts): docs page.
+- [State](https://github.com/openclaw/lobster/blob/main/src/sdk/primitives/state.ts): docs page.
+
+## Optional
+- [Changelog](https://github.com/openclaw/lobster/blob/main/CHANGELOG.md): version history.
+- [README](https://github.com/openclaw/lobster/blob/main/README.md): docs page.
+- [Vision](https://github.com/openclaw/lobster/blob/main/VISION.md): docs page.
+- [Lobster](https://github.com/openclaw/lobster/blob/main/bin/lobster.js): docs page.
+
+## Src
+- [Cli](https://github.com/openclaw/lobster/blob/main/src/cli.ts): docs page.
+- [Parser](https://github.com/openclaw/lobster/blob/main/src/parser.ts): docs page.
+- [Resume](https://github.com/openclaw/lobster/blob/main/src/resume.ts): docs page.
+- [Runtime](https://github.com/openclaw/lobster/blob/main/src/runtime.ts): docs page.
+- [Token](https://github.com/openclaw/lobster/blob/main/src/token.ts): docs page.
+- [Commands List](https://github.com/openclaw/lobster/blob/main/src/commands/commands_list.ts): docs page.
+- [File](https://github.com/openclaw/lobster/blob/main/src/workflows/file.ts): docs page.
+- [Github Pr Monitor](https://github.com/openclaw/lobster/blob/main/src/workflows/github_pr_monitor.ts): docs page.
+- [Index](https://github.com/openclaw/lobster/blob/main/src/recipes/index.ts): docs page.
+- [Json](https://github.com/openclaw/lobster/blob/main/src/renderers/json.ts): docs page.
+
+## Test
+- [Approve Preview.Test](https://github.com/openclaw/lobster/blob/main/test/approve_preview.test.ts): docs page.
+- [Clawd Invoke Legacy.Test](https://github.com/openclaw/lobster/blob/main/test/clawd_invoke_legacy.test.ts): docs page.
+- [Clawd Invoke.Test](https://github.com/openclaw/lobster/blob/main/test/clawd_invoke.test.ts): docs page.
+- [Commands List.Test](https://github.com/openclaw/lobster/blob/main/test/commands_list.test.ts): docs page.
+- [Dedupe.Test](https://github.com/openclaw/lobster/blob/main/test/dedupe.test.ts): docs page.
+- [Diff Last.Test](https://github.com/openclaw/lobster/blob/main/test/diff_last.test.ts): docs page.
+- [Doctor.Test](https://github.com/openclaw/lobster/blob/main/test/doctor.test.ts): docs page.
+- [Email Triage.Test](https://github.com/openclaw/lobster/blob/main/test/email_triage.test.ts): docs page.
+- [Exec Stdin.Test](https://github.com/openclaw/lobster/blob/main/test/exec_stdin.test.ts): docs page.
+- [Github Pr Notify Format.Test](https://github.com/openclaw/lobster/blob/main/test/github_pr_notify_format.test.ts): docs page.

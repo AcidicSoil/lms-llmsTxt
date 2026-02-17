@@ -1,0 +1,824 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Cline",
+    "summary": "<div align=\"center\"><sub> English | <a href=\"https://github.com/cline/cline/blob/main/locales/es/README.md\" target=\"_blank\">Espa\u00f1ol</a> | <a href=\"https://github.com/cline/cline/blob/main/locales/de/README.md\" target=\"_blank\">Deutsch</a> | <a href=\"https://github.com/cline/cline/blob/main/locales/ja/README.md\" target=\"_blank\">\u65e5\u672c\u8a9e</a> | <a href=\"https://github.com/cline/cline/blob/main/locales/zh-cn/README.md\" target=\"_blank\">\u7b80\u4f53\u4e2d\u6587</a> | <a href=\"https://github.com/cline/cline/blob/main/locales/zh-tw/README.md\" target=\"_blank\">\u7e41\u9ad4\u4e2d\u6587</a> | <a href=\"https://github.com/cline/cline/blob/main/locales/ko/README.md\" target=\"_blank\">\ud55c\uad6d\uc5b4</a>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Cline Overview",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/cline-overview.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Authorizing With Cline",
+          "url": "https://github.com/cline/cline/blob/main/docs/getting-started/authorizing-with-cline.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Getting Started",
+          "url": "https://github.com/cline/cline/blob/main/docs/cline-cli/getting-started.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installation",
+          "url": "https://github.com/cline/cline/blob/main/docs/cline-cli/installation.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installing Cline",
+          "url": "https://github.com/cline/cline/blob/main/docs/getting-started/installing-cline.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Mcp Overview",
+          "url": "https://github.com/cline/cline/blob/main/docs/mcp/mcp-overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/cline/cline/blob/main/docs/cline-cli/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/cline/cline/blob/main/docs/customization/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/cline/cline/blob/main/docs/enterprise-solutions/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/cline/cline/blob/main/docs/running-models-locally/overview.mdx",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Examples",
+          "url": "https://github.com/cline/cline/blob/main/src/core/prompts/system-prompt/components/tool_use/examples.ts",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Test Standalone Core Api Server",
+          "url": "https://github.com/cline/cline/blob/main/scripts/test-standalone-core-api-server.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Api",
+          "url": "https://github.com/cline/cline/blob/main/src/shared/api.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Cline Api.Test",
+          "url": "https://github.com/cline/cline/blob/main/src/test/cline-api.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Combineapirequests",
+          "url": "https://github.com/cline/cline/blob/main/src/shared/combineApiRequests.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Getapimetrics",
+          "url": "https://github.com/cline/cline/blob/main/src/shared/getApiMetrics.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Api",
+          "url": "https://github.com/cline/cline/blob/main/src/shared/cline/api.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Classifier",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/classifier.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Getapimetrics.Test",
+          "url": "https://github.com/cline/cline/blob/main/src/shared/__tests__/getApiMetrics.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Github Api",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/github_api.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/cline/cline/blob/main/src/core/api/index.ts",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Concepts",
+      "links": [
+        {
+          "title": "Architecture",
+          "url": "https://github.com/cline/cline/blob/main/evals/ARCHITECTURE.md",
+          "note": "core concept"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/evals/benchmarks/tool-precision/replace-in-file/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/evals/benchmarks/tool-precision/replace-in-file/dashboard/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://github.com/cline/cline/blob/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://github.com/cline/cline/blob/main/cli/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/locales/ar-sa/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/locales/de/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/locales/es/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/locales/ja/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/cline/cline/blob/main/locales/ko/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/cline/cline/blob/main/.cline/skills/create-pull-request/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Claude",
+          "url": "https://github.com/cline/cline/blob/main/CLAUDE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Of Conduct",
+          "url": "https://github.com/cline/cline/blob/main/CODE_OF_CONDUCT.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Playwright.Config",
+          "url": "https://github.com/cline/cline/blob/main/playwright.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Setup",
+          "url": "https://github.com/cline/cline/blob/main/test-setup.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Changeset",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/.changeset/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Five Olives Behave",
+          "url": "https://github.com/cline/cline/blob/main/.changeset/five-olives-behave.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Quick Cycles Appear",
+          "url": "https://github.com/cline/cline/blob/main/.changeset/quick-cycles-appear.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Tidy Reasoning Traces",
+          "url": "https://github.com/cline/cline/blob/main/.changeset/tidy-reasoning-traces.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Clinerules",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/hooks/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Cli",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/cli.md",
+          "note": "docs page"
+        },
+        {
+          "title": "General",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/general.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Network",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/network.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Protobuf Development",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/protobuf-development.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Address Pr Comments",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/workflows/address-pr-comments.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Find Pr Reviewers",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/workflows/find-pr-reviewers.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Git Branch Analysis",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/workflows/git-branch-analysis.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Pr Review",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/workflows/pr-review.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Writing Documentation",
+          "url": "https://github.com/cline/cline/blob/main/.clinerules/workflows/writing-documentation.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/cline/cline/blob/main/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coverage Check Test",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/tests/coverage_check_test.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Extraction",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/extraction.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Main",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/__main__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Util",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/util.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Workflow",
+          "url": "https://github.com/cline/cline/blob/main/.github/scripts/coverage_check/workflow.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Cli",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/cli/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Development",
+          "url": "https://github.com/cline/cline/blob/main/cli/DEVELOPMENT.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Vitest.Config",
+          "url": "https://github.com/cline/cline/blob/main/cli/vitest.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Cline.1",
+          "url": "https://github.com/cline/cline/blob/main/cli/man/cline.1.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Index.Test",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/index.test.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Stub Devtools",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/stub-devtools.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Vscode Context",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/vscode-context.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vscode Shim",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/vscode-shim.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Acpagent",
+          "url": "https://github.com/cline/cline/blob/main/cli/src/acp/AcpAgent.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Evals",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/evals/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/evals/e2e/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/evals/smoke-tests/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Run Cline Bench",
+          "url": "https://github.com/cline/cline/blob/main/evals/e2e/run-cline-bench.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Run Smoke Tests",
+          "url": "https://github.com/cline/cline/blob/main/evals/smoke-tests/run-smoke-tests.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Cli",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/cli.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Metrics",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/metrics.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Analysis Output",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/schemas/analysis-output.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Harbor",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/parsers/harbor.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Harbor Output",
+          "url": "https://github.com/cline/cline/blob/main/evals/analysis/src/schemas/harbor-output.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Locales",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/ar-sa/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/de/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/es/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/ja/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/ko/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/pt-BR/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/zh-cn/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/locales/zh-tw/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Code Of Conduct",
+          "url": "https://github.com/cline/cline/blob/main/locales/ar-sa/CODE_OF_CONDUCT.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Of Conduct",
+          "url": "https://github.com/cline/cline/blob/main/locales/de/CODE_OF_CONDUCT.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Build Tests",
+          "url": "https://github.com/cline/cline/blob/main/scripts/build-tests.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Generate Stubs",
+          "url": "https://github.com/cline/cline/blob/main/scripts/generate-stubs.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Interactive Playwright",
+          "url": "https://github.com/cline/cline/blob/main/scripts/interactive-playwright.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Report Issue",
+          "url": "https://github.com/cline/cline/blob/main/scripts/report-issue.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Hostbridge Server",
+          "url": "https://github.com/cline/cline/blob/main/scripts/test-hostbridge-server.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Testing Platform Orchestrator",
+          "url": "https://github.com/cline/cline/blob/main/scripts/testing-platform-orchestrator.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/exports/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/test/e2e/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/prompts/system-prompt/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/hooks/__tests__/fixtures/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/prompts/system-prompt/__tests__/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/prompts/system-prompt/tools/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/test/e2e/fixtures/workspace/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/test/e2e/fixtures/workspace_2/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/src/core/hooks/__tests__/fixtures/template/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Standalone",
+      "links": [
+        {
+          "title": "Index",
+          "url": "https://github.com/cline/cline/blob/main/standalone/runtime-files/vscode/index.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Stub Utils",
+          "url": "https://github.com/cline/cline/blob/main/standalone/runtime-files/vscode/stub-utils.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Vscode Impls",
+          "url": "https://github.com/cline/cline/blob/main/standalone/runtime-files/vscode/vscode-impls.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Vscode Stubs",
+          "url": "https://github.com/cline/cline/blob/main/standalone/runtime-files/vscode/vscode-stubs.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Testing Platform",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Config",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/harness/config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Grpcadapter",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/adapters/grpcAdapter.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Types",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/harness/types.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Utils",
+          "url": "https://github.com/cline/cline/blob/main/testing-platform/harness/utils.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Walkthrough",
+      "links": [
+        {
+          "title": "Step1",
+          "url": "https://github.com/cline/cline/blob/main/walkthrough/step1.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Step2",
+          "url": "https://github.com/cline/cline/blob/main/walkthrough/step2.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Step3",
+          "url": "https://github.com/cline/cline/blob/main/walkthrough/step3.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Step4",
+          "url": "https://github.com/cline/cline/blob/main/walkthrough/step4.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Step5",
+          "url": "https://github.com/cline/cline/blob/main/walkthrough/step5.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Webview Ui",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/.storybook/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/src/components/settings/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Webview Ui",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Vite.Config",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/vite.config.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Constants",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/src/constants.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Main",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/.storybook/main.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Preview",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/.storybook/preview.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Setuptests",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/src/setupTests.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Themes",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/.storybook/themes.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Vite Env.D",
+          "url": "https://github.com/cline/cline/blob/main/webview-ui/src/vite-env.d.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

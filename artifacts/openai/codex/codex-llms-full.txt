@@ -64,7 +64,7 @@ cargo test --all-features
 
 Codex is written in Rust, so it honors the `RUST_LOG` environment variable to configure its logging behavior.
 
-The TUI defaults to `RUST_LOG=codex_core=info,codex_tui=info,codex_rmcp_client=info` and log messages are written to `~/.codex/log/codex-tui.log`, so you can leave the following running in a separate terminal to monitor log messages as they are written:
+The TUI defaults to `RUST_LOG=codex_core=info,codex_tui=info,codex_rmcp_client=info` and log messages are written to `~/.codex/log/codex-tui.log` by default. For a single run, you can override the log directory with `-c log_dir=...` (for example, `-c log_dir=./.codex-log`).
 
 ```bash
 tail -F ~/.codex/log/codex-tui.log
@@ -772,10 +772,10 @@ metadata:
 
 # Skill Installer
 
-Helps install skills. By default these are from https://github.com/openai/skills/tree/main/skills/.curated, but users can also provide other locations.
+Helps install skills. By default these are from https://github.com/openai/skills/tree/main/skills/.curated, but users can also provide other locations. Experimental skills live in https://github.com/openai/skills/tree/main/skills/.experimental and can be installed the same way.
 
 Use the helper scripts based on the task:
-- List curated skills when the user asks what is available, or if the user uses this skill without specifying what to do.
+- List skills when the user asks what is available, or if the user uses this skill without specifying what to do. Default listing is `.curated`, but you can pass `--path skills/.experimental` when they ask about experimental skills.
 - Install from the curated list when the user provides a skill name.
 - Install from another repo when the user provides a GitHub repo/path (including private repos).
 
@@ -783,7 +783,7 @@ Install skills with the helper scripts.
 
 ## Communication
 
-When listing curated skills, output approximately as follows, depending on the context of the user's request:
+When listing skills, output approximately as follows, depending on the context of the user's request. If they ask about experimental skills, list from `.experimental` instead of `.curated` and label the source accordingly:
 """
 Skills from {repo}:
 1. skill-1
@@ -798,10 +798,12 @@ After installing a skill, tell the user: "Restart Codex to pick up new skills."
 
 All of these scripts use network, so when running in the sandbox, request escalation when running them.
 
-- `scripts/list-curated-skills.py` (prints curated list with installed annotations)
-- `scripts/list-curated-skills.py --format json`
+- `scripts/list-skills.py` (prints skills list with installed annotations)
+- `scripts/list-skills.py --format json`
+- Example (experimental list): `scripts/list-skills.py --path skills/.experimental`
 - `scripts/install-skill-from-github.py --repo <owner>/<repo> --path <path/to/skill> [<path/to/skill> ...]`
 - `scripts/install-skill-from-github.py --url https://github.com/<owner>/<repo>/tree/<ref>/<path>`
+- Example (experimental skill): `scripts/install-skill-from-github.py --repo openai/skills --path skills/.experimental/<skill-name>`
 
 ## Behavior and Options
 
@@ -1156,9 +1158,9 @@ if __name__ == "__main__":
     raise SystemExit(main(sys.argv[1:]))
 
 
---- codex-rs/core/src/skills/assets/samples/skill-installer/scripts/list-curated-skills.py ---
+--- codex-rs/core/src/skills/assets/samples/skill-installer/scripts/list-skills.py ---
 #!/usr/bin/env python3
-"""List curated skills from a GitHub repo path."""
+"""List skills from a GitHub repo path."""
 
 from __future__ import annotations
 
@@ -1206,28 +1208,32 @@ def _installed_skills() -> set[str]:
     return entries
 
 
-def _list_curated(repo: str, path: str, ref: str) -> list[str]:
+def _list_skills(repo: str, path: str, ref: str) -> list[str]:
     api_url = github_api_contents_url(repo, path, ref)
     try:
         payload = _request(api_url)
     except urllib.error.HTTPError as exc:
         if exc.code == 404:
             raise ListError(
-                "Curated skills path not found: "
+                "Skills path not found: "
                 f"https://github.com/{repo}/tree/{ref}/{path}"
             ) from exc
-        raise ListError(f"Failed to fetch curated skills: HTTP {exc.code}") from exc
+        raise ListError(f"Failed to fetch skills: HTTP {exc.code}") from exc
     data = json.loads(payload.decode("utf-8"))
     if not isinstance(data, list):
-        raise ListError("Unexpected curated listing response.")
+        raise ListError("Unexpected skills listing response.")
     skills = [item["name"] for item in data if item.get("type") == "dir"]
     return sorted(skills)
 
 
 def _parse_args(argv: list[str]) -> Args:
-    parser = argparse.ArgumentParser(description="List curated skills.")
+    parser = argparse.ArgumentParser(description="List skills.")
     parser.add_argument("--repo", default=DEFAULT_REPO)
-    parser.add_argument("--path", default=DEFAULT_PATH)
+    parser.add_argument(
+        "--path",
+        default=DEFAULT_PATH,
+        help="Repo path to list (default: skills/.curated)",
+    )
     parser.add_argument("--ref", default=DEFAULT_REF)
     parser.add_argument(
         "--format",
@@ -1241,7 +1247,7 @@ def _parse_args(argv: list[str]) -> Args:
 def main(argv: list[str]) -> int:
     args = _parse_args(argv)
     try:
-        skills = _list_curated(args.repo, args.path, args.ref)
+        skills = _list_skills(args.repo, args.path, args.ref)
         installed = _installed_skills()
         if args.format == "json":
             payload = [
@@ -1284,12 +1290,54 @@ When the `child_agents_md` feature flag is enabled (via `[features]` in `config.
 ## Links discovered
 - [this documentation](https://developers.openai.com/codex/guides/agents-md)
 
+--- codex-rs/vendor/bubblewrap/demos/userns-block-fd.py ---
+#!/usr/bin/env python3
+
+import os, select, subprocess, sys, json
+
+pipe_info = os.pipe()
+userns_block = os.pipe()
+
+pid = os.fork()
+
+if pid != 0:
+    os.close(pipe_info[1])
+    os.close(userns_block[0])
+
+    select.select([pipe_info[0]], [], [])
+
+    data = json.load(os.fdopen(pipe_info[0]))
+    child_pid = str(data['child-pid'])
+
+    subprocess.call(["newuidmap", child_pid, "0", str(os.getuid()), "1"])
+    subprocess.call(["newgidmap", child_pid, "0", str(os.getgid()), "1"])
+
+    os.write(userns_block[1], b'1')
+else:
+    os.close(pipe_info[0])
+    os.close(userns_block[1])
+
+    os.set_inheritable(pipe_info[1], True)
+    os.set_inheritable(userns_block[0], True)
+
+    args = ["bwrap",
+            "bwrap",
+            "--unshare-all",
+            "--unshare-user",
+            "--userns-block-fd", "%i" % userns_block[0],
+            "--info-fd", "%i" % pipe_info[1],
+            "--bind", "/", "/",
+            "cat", "/proc/self/uid_map"]
+
+    os.execlp(*args)
+
+
 --- codex-rs/codex-api/README.md ---
 # codex-api
 
 Typed clients for Codex/OpenAI APIs built on top of the generic transport in `codex-client`.
 
-- Hosts the request/response models and prompt helpers for Responses, Chat Completions, and Compact APIs.
+- Hosts the request/response models and request builders for Responses and Compact APIs.
 - Owns provider configuration (base URLs, headers, query params), auth header injection, retry tuning, and stream idle settings.
 - Parses SSE streams into `ResponseEvent`/`ResponseStream`, including rate-limit snapshots and API-specific error mapping.
 - Serves as the wire-level layer consumed by `codex-core`; higher layers handle auth refresh and business logic.
@@ -1298,14 +1346,10 @@ Typed clients for Codex/OpenAI APIs built on top of the generic transport in `co
 
 The public interface of this crate is intentionally small and uniform:
 
-- **Prompted endpoints (Chat + Responses)**
-  - Input: a single `Prompt` plus endpoint-specific options.
-    - `Prompt` (re-exported as `codex_api::Prompt`) carries:
-      - `instructions: String` – the fully-resolved system prompt for this turn.
-      - `input: Vec<ResponseItem>` – conversation history and user/tool messages.
-      - `tools: Vec<serde_json::Value>` – JSON tools compatible with the target API.
-      - `parallel_tool_calls: bool`.
-      - `output_schema: Option<Value>` – used to build `text.format` when present.
+- **Responses endpoint**
+  - Input:
+    - `ResponsesApiRequest` for the request body (`model`, `instructions`, `input`, `tools`, `parallel_tool_calls`, reasoning/text controls).
+    - `ResponsesOptions` for transport/header concerns (`conversation_id`, `session_source`, `extra_headers`, `compression`, `turn_state`).
   - Output: a `ResponseStream` of `ResponseEvent` (both re-exported from `common`).
 
 - **Compaction endpoint**
@@ -1315,6 +1359,15 @@ The public interface of this crate is intentionally small and uniform:
     - `instructions: &str` – fully-resolved compaction instructions.
   - Output: `Vec<ResponseItem>`.
   - `CompactClient::compact_input(&CompactionInput, extra_headers)` wraps the JSON encoding and retry/telemetry wiring.
+
+- **Memory summarize endpoint**
+  - Input: `MemorySummarizeInput` (re-exported as `codex_api::MemorySummarizeInput`):
+    - `model: String`.
+    - `raw_memories: Vec<RawMemory>` (serialized as `traces` for wire compatibility).
+      - `RawMemory` includes `id`, `metadata.source_path`, and normalized `items`.
+    - `reasoning: Option<Reasoning>`.
+  - Output: `Vec<MemorySummarizeOutput>`.
+  - `MemoriesClient::summarize_input(&MemorySummarizeInput, extra_headers)` wraps JSON encoding and retry/telemetry wiring.
 
 All HTTP details (URLs, headers, retry/backoff policies, SSE framing) are encapsulated in `codex-api` and `codex-client`. Callers construct prompts/inputs using protocol types and work with typed streams of `ResponseEvent` or compacted `ResponseItem` values.
 
@@ -1410,7 +1463,7 @@ https://github.com/hyperium/http/blob/439d1c50d71e3be3204b6c4a1bf2255ed78e1f93/s
 
 Embed the Codex agent in your workflows and apps.
 
-The TypeScript SDK wraps the bundled `codex` binary. It spawns the CLI and exchanges JSONL events over stdin/stdout.
+The TypeScript SDK wraps the `codex` CLI from `@openai/codex`. It spawns the CLI and exchanges JSONL events over stdin/stdout.
 
 ## Installation
 
@@ -1539,6 +1592,22 @@ const codex = new Codex({
 
 The SDK still injects its required variables (such as `OPENAI_BASE_URL` and `CODEX_API_KEY`) on top of the environment you
 provide.
+
+### Passing `--config` overrides
+
+Use the `config` option to provide additional Codex CLI configuration overrides. The SDK accepts a JSON object, flattens it
+into dotted paths, and serializes values as TOML literals before passing them as repeated `--config key=value` flags.
+
+```typescript
+const codex = new Codex({
+  config: {
+    show_raw_agent_reasoning: true,
+    sandbox_workspace_write: { network_access: true },
+  },
+});
+```
+
+Thread options still take precedence for overlapping settings because they are emitted after these global overrides.
 
 
 ## Links discovered
@@ -1881,7 +1950,8 @@ export class Codex {
   private options: CodexOptions;
 
   constructor(options: CodexOptions = {}) {
-    this.exec = new CodexExec(options.codexPathOverride, options.env);
+    const { codexPathOverride, env, config } = options;
+    this.exec = new CodexExec(codexPathOverride, env, config);
     this.options = options;
   }
 
@@ -2022,6 +2092,77 @@ ID_LIKE="CentOS   Rocky"`;
   });
 });
 
+
+--- codex-rs/vendor/bubblewrap/release-checklist.md ---
+bubblewrap release checklist
+============================
+
+* Collect release notes in `NEWS`
+* Update version number in `meson.build` and release date in `NEWS`
+* Commit the changes
+* `meson dist -C ${builddir}`
+* Do any final smoke-testing, e.g. update a package, install and test it
+* `git evtag sign v$VERSION`
+    * Include the release notes from `NEWS` in the tag message
+* `git push --atomic origin main v$VERSION`
+* https://github.com/containers/bubblewrap/releases/new
+    * Fill in the new version's tag in the "Tag version" box
+    * Title: `$VERSION`
+    * Copy the release notes into the description
+    * Upload the tarball that you built with `meson dist`
+    * Get the `sha256sum` of the tarball and append it to the description
+    * `Publish release`
+
+
+--- codex-rs/vendor/bubblewrap/SECURITY.md ---
+## Security and Disclosure Information Policy for the bubblewrap Project
+
+The bubblewrap Project follows the [Security and Disclosure Information Policy](https://github.com/containers/common/blob/HEAD/SECURITY.md) for the Containers Projects.
+
+### System security
+
+If bubblewrap is setuid root, then the goal is that it does not allow
+a malicious local user to do anything that would not have been possible
+on a kernel that allows unprivileged users to create new user namespaces.
+For example, [CVE-2020-5291](https://github.com/containers/bubblewrap/security/advisories/GHSA-j2qp-rvxj-43vj)
+was treated as a security vulnerability in bubblewrap.
+
+If bubblewrap is not setuid root, then it is not a security boundary
+between the user and the OS, because anything bubblewrap could do, a
+malicious user could equally well do by writing their own tool equivalent
+to bubblewrap.
+
+### Sandbox security
+
+bubblewrap is a toolkit for constructing sandbox environments.
+bubblewrap is not a complete, ready-made sandbox with a specific security
+policy.
+
+Some of bubblewrap's use-cases want a security boundary between the sandbox
+and the real system; other use-cases want the ability to change the layout of
+the filesystem for processes inside the sandbox, but do not aim to be a
+security boundary.
+As a result, the level of protection between the sandboxed processes and
+the host system is entirely determined by the arguments passed to
+bubblewrap.
+
+Whatever program constructs the command-line arguments for bubblewrap
+(often a larger framework like Flatpak, libgnome-desktop, sandwine
+or an ad-hoc script) is responsible for defining its own security model,
+and choosing appropriate bubblewrap command-line arguments to implement
+that security model.
+
+For example,
+[CVE-2017-5226](https://github.com/flatpak/flatpak/security/advisories/GHSA-7gfv-rvfx-h87x)
+(in which a Flatpak app could send input to a parent terminal using the
+`TIOCSTI` ioctl) is considered to be a Flatpak vulnerability, not a
+bubblewrap vulnerability.
+
+
+## Links discovered
+- [Security and Disclosure Information Policy](https://github.com/containers/common/blob/HEAD/SECURITY.md)
+- [CVE-2020-5291](https://github.com/containers/bubblewrap/security/advisories/GHSA-j2qp-rvxj-43vj)
+- [CVE-2017-5226](https://github.com/flatpak/flatpak/security/advisories/GHSA-7gfv-rvfx-h87x)
 
 --- codex-rs/core/src/skills/assets/samples/skill-creator/license.txt ---
 
@@ -2228,6 +2369,23 @@ ID_LIKE="CentOS   Rocky"`;
    limitations under the License.
 
 
+--- .codex/skills/test-tui/SKILL.md ---
+---
+name: test-tui
+description: Guide for testing Codex TUI interactively
+---
+
+You can start and use Codex TUI to verify changes. 
+
+Important notes:
+
+Start interactively.
+Always set RUST_LOG="trace" when starting the process.
+Pass `-c log_dir=<some_temp_dir>` argument to have logs written to a specific directory to help with debugging.
+When sending a test message programmatically, send text first, then send Enter in a separate write (do not send text + Enter in one burst).
+Use `just codex` target to run - `just codex -c ...`
+
+
 --- .devcontainer/README.md ---
 # Containerized Development
 
@@ -2275,16 +2433,22 @@ In the codex-rs folder where the rust code lives:
 - Always collapse if statements per https://rust-lang.github.io/rust-clippy/master/index.html#collapsible_if
 - Always inline format! args when possible per https://rust-lang.github.io/rust-clippy/master/index.html#uninlined_format_args
 - Use method references over closures when possible per https://rust-lang.github.io/rust-clippy/master/index.html#redundant_closure_for_method_calls
+- When possible, make `match` statements exhaustive and avoid wildcard arms.
 - When writing tests, prefer comparing the equality of entire objects over fields one by one.
 - When making a change that adds or changes an API, ensure that the documentation in the `docs/` folder is up to date if applicable.
 - If you change `ConfigToml` or nested config types, run `just write-config-schema` to update `codex-rs/core/config.schema.json`.
+- If you change Rust dependencies (`Cargo.toml` or `Cargo.lock`), run `just bazel-lock-update` from the
+  repo root to refresh `MODULE.bazel.lock`, and include that lockfile update in the same change.
+- After dependency changes, run `just bazel-lock-check` from the repo root so lockfile drift is caught
+  locally before CI.
+- Do not create small helper methods that are referenced only once.
 
 Run `just fmt` (in `codex-rs` directory) automatically after you have finished making Rust code changes; do not ask for approval to run it. Additionally, run the tests:
 
 1. Run the test for the specific project that was changed. For example, if changes were made in `codex-rs/tui`, run `cargo test -p codex-tui`.
 2. Once those pass, if any changes were made in common, core, or protocol, run the complete test suite with `cargo test --all-features`. project-specific or individual tests can be run without asking the user, but do ask the user before running the complete test suite.
 
-Before finalizing a large change to `codex-rs`, run `just fix -p <project>` (in `codex-rs` directory) to fix any linter issues in the code. Prefer scoping with `-p` to avoid slow workspace‑wide Clippy builds; only run `just fix` without `-p` if you changed shared crates.
+Before finalizing a large change to `codex-rs`, run `just fix -p <project>` (in `codex-rs` directory) to fix any linter issues in the code. Prefer scoping with `-p` to avoid slow workspace‑wide Clippy builds; only run `just fix` without `-p` if you changed shared crates. Do not re-run tests after running `fix` or `fmt`.
 
 ## TUI style conventions
 
@@ -2322,7 +2486,14 @@ See `codex-rs/tui/styles.md`.
 
 ### Snapshot tests
 
-This repo uses snapshot tests (via `insta`), especially in `codex-rs/tui`, to validate rendered output. When UI or text output changes intentionally, update the snapshots as follows:
+This repo uses snapshot tests (via `insta`), especially in `codex-rs/tui`, to validate rendered output.
+
+**Requirement:** any change that affects user-visible UI (including adding new UI) must include
+corresponding `insta` snapshot coverage (add a new snapshot test if one doesn't exist yet, or
+update the existing snapshot). Review and accept snapshot updates as part of the PR so UI impact
+is easy to review and future diffs stay visual.
+
+When UI or text output changes intentionally, update the snapshots as follows:
 
 - Run tests to generate any updated snapshots:
   - `cargo test -p codex-tui`
@@ -2376,85 +2547,59 @@ If you don’t have the tool:
   // assert using request.function_call_output(call_id) or request.json_body() or other helpers.
   ```
 
+## App-server API Development Best Practices
 
---- PNPM.md ---
-# Migration to pnpm
+These guidelines apply to app-server protocol work in `codex-rs`, especially:
 
-This project has been migrated from npm to pnpm to improve dependency management and developer experience.
+- `app-server-protocol/src/protocol/common.rs`
+- `app-server-protocol/src/protocol/v2.rs`
+- `app-server/README.md`
 
-## Why pnpm?
+### Core Rules
 
-- **Faster installation**: pnpm is significantly faster than npm and yarn
-- **Disk space savings**: pnpm uses a content-addressable store to avoid duplication
-- **Phantom dependency prevention**: pnpm creates a strict node_modules structure
-- **Native workspaces support**: simplified monorepo management
+- All active API development should happen in app-server v2. Do not add new API surface area to v1.
+- Follow payload naming consistently:
+  `*Params` for request payloads, `*Response` for responses, and `*Notification` for notifications.
+- Expose RPC methods as `<resource>/<method>` and keep `<resource>` singular (for example, `thread/read`, `app/list`).
+- Always expose fields as camelCase on the wire with `#[serde(rename_all = "camelCase")]` unless a tagged union or explicit compatibility requirement needs a targeted rename.
+- Exception: config RPC payloads are expected to use snake_case to mirror config.toml keys (see the config read/write/list APIs in `app-server-protocol/src/protocol/v2.rs`).
+- Always set `#[ts(export_to = "v2/")]` on v2 request/response/notification types so generated TypeScript lands in the correct namespace.
+- Never use `#[serde(skip_serializing_if = "Option::is_none")]` for v2 API payload fields.
+  Exception: client->server requests that intentionally have no params may use:
+  `params: #[ts(type = "undefined")] #[serde(skip_serializing_if = "Option::is_none")] Option<()>`.
+- Keep Rust and TS wire renames aligned. If a field or variant uses `#[serde(rename = "...")]`, add matching `#[ts(rename = "...")]`.
+- For discriminated unions, use explicit tagging in both serializers:
+  `#[serde(tag = "type", ...)]` and `#[ts(tag = "type", ...)]`.
+- Prefer plain `String` IDs at the API boundary (do UUID parsing/conversion internally if needed).
+- Timestamps should be integer Unix seconds (`i64`) and named `*_at` (for example, `created_at`, `updated_at`, `resets_at`).
+- For experimental API surface area:
+  use `#[experimental("method/or/field")]`, derive `ExperimentalApi` when field-level gating is needed, and use `inspect_params: true` in `common.rs` when only some fields of a method are experimental.
 
-## How to use pnpm
+### Client->server request payloads (`*Params`)
 
-### Installation
+- Every optional field must be annotated with `#[ts(optional = nullable)]`. Do not use `#[ts(optional = nullable)]` outside client->server request payloads (`*Params`).
+- Optional collection fields (for example `Vec`, `HashMap`) must use `Option<...>` + `#[ts(optional = nullable)]`. Do not use `#[serde(default)]` to model optional collections, and do not use `skip_serializing_if` on v2 payload fields.
+- When you want omission to mean `false` for boolean fields, use `#[serde(default, skip_serializing_if = "std::ops::Not::not")] pub field: bool` over `Option<bool>`.
+- For new list methods, implement cursor pagination by default:
+  request fields `pub cursor: Option<String>` and `pub limit: Option<u32>`,
+  response fields `pub data: Vec<...>` and `pub next_cursor: Option<String>`.
 
-```bash
-# Global installation of pnpm
-npm install -g pnpm@10.8.1
+### Development Workflow
 
-# Or with corepack (available with Node.js 22+)
-corepack enable
-corepack prepare pnpm@10.8.1 --activate
-```
-
-### Common commands
-
-| npm command     | pnpm equivalent  |
-| --------------- | ---------------- |
-| `npm install`   | `pnpm install`   |
-| `npm run build` | `pnpm run build` |
-| `npm test`      | `pnpm test`      |
-| `npm run lint`  | `pnpm run lint`  |
-
-### Workspace-specific commands
-
-| Action                                     | Command                                  |
-| ------------------------------------------ | ---------------------------------------- |
-| Run a command in a specific package        | `pnpm --filter @openai/codex run build`  |
-| Install a dependency in a specific package | `pnpm --filter @openai/codex add lodash` |
-| Run a command in all packages              | `pnpm -r run test`                       |
-
-## Monorepo structure
-
-```
-codex/
-├── pnpm-workspace.yaml    # Workspace configuration
-├── .npmrc                 # pnpm configuration
-├── package.json           # Root dependencies and scripts
-├── codex-cli/             # Main package
-│   └── package.json       # codex-cli specific dependencies
-└── docs/                  # Documentation (future package)
-```
-
-## Configuration files
-
-- **pnpm-workspace.yaml**: Defines the packages included in the monorepo
-- **.npmrc**: Configures pnpm behavior
-- **Root package.json**: Contains shared scripts and dependencies
-
-## CI/CD
-
-CI/CD workflows have been updated to use pnpm instead of npm. Make sure your CI environments use pnpm 10.8.1 or higher.
-
-## Known issues
-
-If you encounter issues with pnpm, try the following solutions:
-
-1. Remove the `node_modules` folder and `pnpm-lock.yaml` file, then run `pnpm install`
-2. Make sure you're using pnpm 10.8.1 or higher
-3. Verify that Node.js 22 or higher is installed
+- Update docs/examples when API behavior changes (at minimum `app-server/README.md`).
+- Regenerate schema fixtures when API shapes change:
+  `just write-app-server-schema`
+  (and `just write-app-server-schema --experimental` when experimental API fixtures are affected).
+- Validate with `cargo test -p codex-app-server-protocol`.
+- Avoid boilerplate tests that only assert experimental field markers for individual
+  request fields in `common.rs`; rely on schema generation/tests and behavioral coverage instead.
 
 
 --- README.md ---
 <p align="center"><code>npm i -g @openai/codex</code><br />or <code>brew install --cask codex</code></p>
 <p align="center"><strong>Codex CLI</strong> is a coding agent from OpenAI that runs locally on your computer.
 <p align="center">
-  <img src="./.github/codex-cli-splash.png" alt="Codex CLI splash" width="80%" />
+  <img src="https://github.com/openai/codex/blob/main/.github/codex-cli-splash.png" alt="Codex CLI splash" width="80%" />
 </p>
 </br>
 If you want Codex in your code editor (VS Code, Cursor, Windsurf), <a href="https://developers.openai.com/codex/ide">install in your IDE.</a>
@@ -2535,27 +2680,6 @@ If your PR conforms to our contribution guidelines, replace this text with a det
 Include a link to a bug report or enhancement request.
 
 
---- .github/prompts/issue-deduplicator.txt ---
-You are an assistant that triages new GitHub issues by identifying potential duplicates.
-
-You will receive the following JSON files located in the current working directory:
-- `codex-current-issue.json`: JSON object describing the newly created issue (fields: number, title, body).
-- `codex-existing-issues.json`: JSON array of recent issues (each element includes number, title, body, createdAt).
-
-Instructions:
-- Load both files as JSON and review their contents carefully. The codex-existing-issues.json file is large, ensure you explore all of it.
-- Compare the current issue against the existing issues to find up to five that appear to describe the same underlying problem or request.
-- Only consider an issue a potential duplicate if there is a clear overlap in symptoms, feature requests, reproduction steps, or error messages.
-- Prioritize newer issues when similarity is comparable.
-- Ignore pull requests and issues whose similarity is tenuous.
-- When unsure, prefer returning fewer matches.
-
-Output requirements:
-- Respond with a JSON array of issue numbers (integers), ordered from most likely duplicate to least.
-- Include at most five numbers.
-- If you find no plausible duplicates, respond with `[]`.
-
-
 --- .github/prompts/issue-labeler.txt ---
 You are an assistant that reviews GitHub issues for the repository.
 
@@ -2625,10 +2749,10 @@ Things to look out for when doing the review:
 
 ## Code Organization
 
-- Each create in the Cargo workspace in `codex-rs` has a specific purpose: make a note if you believe new code is not introduced in the correct crate.
+- Each crate in the Cargo workspace in `codex-rs` has a specific purpose: make a note if you believe new code is not introduced in the correct crate.
 - When possible, try to keep the `core` crate as small as possible. Non-core but shared logic is often a good candidate for `codex-rs/common`.
 - Be wary of large files and offer suggestions for how to break things into more reasonably-sized files.
-- Rust files should generally be organized such that the public parts of the API appear near the top of the file and helper functions go below. This is analagous to the "inverted pyramid" structure that is favored in journalism.
+- Rust files should generally be organized such that the public parts of the API appear near the top of the file and helper functions go below. This is analogous to the "inverted pyramid" structure that is favored in journalism.
 
 ## Assertions in Tests
 
@@ -3530,6 +3654,10 @@ example, to stage the CLI, responses proxy, and SDK packages for version `0.6.0`
 This downloads the native artifacts once, hydrates `vendor/` for each package, and writes
 tarballs to `dist/npm/`.
 
+When `--package codex` is provided, the staging helper builds the lightweight
+`@openai/codex` meta package plus all platform-native `@openai/codex` variants
+that are later published under platform-specific dist-tags.
+
 If you need to invoke `build_npm_package.py` directly, run
 `codex-cli/scripts/install_native_deps.py` first and pass `--vendor-src` pointing to the
 directory that contains the populated `vendor/` tree.
@@ -3552,15 +3680,78 @@ CODEX_CLI_ROOT = SCRIPT_DIR.parent
 REPO_ROOT = CODEX_CLI_ROOT.parent
 RESPONSES_API_PROXY_NPM_ROOT = REPO_ROOT / "codex-rs" / "responses-api-proxy" / "npm"
 CODEX_SDK_ROOT = REPO_ROOT / "sdk" / "typescript"
+CODEX_NPM_NAME = "@openai/codex"
+
+# `npm_name` is the local optional-dependency alias consumed by `bin/codex.js`.
+# The underlying package published to npm is always `@openai/codex`.
+CODEX_PLATFORM_PACKAGES: dict[str, dict[str, str]] = {
+    "codex-linux-x64": {
+        "npm_name": "@openai/codex-linux-x64",
+        "npm_tag": "linux-x64",
+        "target_triple": "x86_64-unknown-linux-musl",
+        "os": "linux",
+        "cpu": "x64",
+    },
+    "codex-linux-arm64": {
+        "npm_name": "@openai/codex-linux-arm64",
+        "npm_tag": "linux-arm64",
+        "target_triple": "aarch64-unknown-linux-musl",
+        "os": "linux",
+        "cpu": "arm64",
+    },
+    "codex-darwin-x64": {
+        "npm_name": "@openai/codex-darwin-x64",
+        "npm_tag": "darwin-x64",
+        "target_triple": "x86_64-apple-darwin",
+        "os": "darwin",
+        "cpu": "x64",
+    },
+    "codex-darwin-arm64": {
+        "npm_name": "@openai/codex-darwin-arm64",
+        "npm_tag": "darwin-arm64",
+        "target_triple": "aarch64-apple-darwin",
+        "os": "darwin",
+        "cpu": "arm64",
+    },
+    "codex-win32-x64": {
+        "npm_name": "@openai/codex-win32-x64",
+        "npm_tag": "win32-x64",
+        "target_triple": "x86_64-pc-windows-msvc",
+        "os": "win32",
+        "cpu": "x64",
+    },
+    "codex-win32-arm64": {
+        "npm_name": "@openai/codex-win32-arm64",
+        "npm_tag": "win32-arm64",
+        "target_triple": "aarch64-pc-windows-msvc",
+        "os": "win32",
+        "cpu": "arm64",
+    },
+}
+
+PACKAGE_EXPANSIONS: dict[str, list[str]] = {
+    "codex": ["codex", *CODEX_PLATFORM_PACKAGES],
+}
 
 PACKAGE_NATIVE_COMPONENTS: dict[str, list[str]] = {
-    "codex": ["codex", "rg"],
+    "codex": [],
+    "codex-linux-x64": ["codex", "rg"],
+    "codex-linux-arm64": ["codex", "rg"],
+    "codex-darwin-x64": ["codex", "rg"],
+    "codex-darwin-arm64": ["codex", "rg"],
+    "codex-win32-x64": ["codex", "rg", "codex-windows-sandbox-setup", "codex-command-runner"],
+    "codex-win32-arm64": ["codex", "rg", "codex-windows-sandbox-setup", "codex-command-runner"],
     "codex-responses-api-proxy": ["codex-responses-api-proxy"],
-    "codex-sdk": ["codex"],
+    "codex-sdk": [],
 }
-WINDOWS_ONLY_COMPONENTS: dict[str, list[str]] = {
-    "codex": ["codex-windows-sandbox-setup", "codex-command-runner"],
+
+PACKAGE_TARGET_FILTERS: dict[str, str] = {
+    package_name: package_config["target_triple"]
+    for package_name, package_config in CODEX_PLATFORM_PACKAGES.items()
 }
+
+PACKAGE_CHOICES = tuple(PACKAGE_NATIVE_COMPONENTS)
+
 COMPONENT_DEST_DIR: dict[str, str] = {
     "codex": "codex",
     "codex-responses-api-proxy": "codex-responses-api-proxy",
@@ -3574,7 +3765,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Build or stage the Codex CLI npm package.")
     parser.add_argument(
         "--package",
-        choices=("codex", "codex-responses-api-proxy", "codex-sdk"),
+        choices=PACKAGE_CHOICES,
         default="codex",
         help="Which npm package to stage (default: codex).",
     )
@@ -3636,6 +3827,7 @@ def main() -> int:
 
         vendor_src = args.vendor_src.resolve() if args.vendor_src else None
         native_components = PACKAGE_NATIVE_COMPONENTS.get(package, [])
+        target_filter = PACKAGE_TARGET_FILTERS.get(package)
 
         if native_components:
             if vendor_src is None:
@@ -3646,7 +3838,12 @@ def main() -> int:
                     "pointing to a directory containing pre-installed binaries."
                 )
 
-            copy_native_binaries(vendor_src, staging_dir, package, native_components)
+            copy_native_binaries(
+                vendor_src,
+                staging_dir,
+                native_components,
+                target_filter={target_filter} if target_filter else None,
+            )
 
         if release_version:
             staging_dir_str = str(staging_dir)
@@ -3663,12 +3860,17 @@ def main() -> int:
                     "Verify the responses API proxy:\n"
                     f"    node {staging_dir_str}/bin/codex-responses-api-proxy.js --help\n\n"
                 )
+            elif package in CODEX_PLATFORM_PACKAGES:
+                print(
+                    f"Staged version {version} for release in {staging_dir_str}\n\n"
+                    "Verify native payload contents:\n"
+                    f"    ls {staging_dir_str}/vendor\n\n"
+                )
             else:
                 print(
                     f"Staged version {version} for release in {staging_dir_str}\n\n"
                     "Verify the SDK contents:\n"
                     f"    ls {staging_dir_str}/dist\n"
-                    f"    ls {staging_dir_str}/vendor\n"
                     "    node -e \"import('./dist/index.js').then(() => console.log('ok'))\"\n\n"
                 )
         else:
@@ -3698,6 +3900,9 @@ def prepare_staging_dir(staging_dir: Path | None) -> tuple[Path, bool]:
 
 
 def stage_sources(staging_dir: Path, version: str, package: str) -> None:
+    package_json: dict
+    package_json_path: Path | None = None
+
     if package == "codex":
         bin_dir = staging_dir / "bin"
         bin_dir.mkdir(parents=True, exist_ok=True)
@@ -3711,6 +3916,35 @@ def stage_sources(staging_dir: Path, version: str, package: str) -> None:
             shutil.copy2(readme_src, staging_dir / "README.md")
 
         package_json_path = CODEX_CLI_ROOT / "package.json"
+    elif package in CODEX_PLATFORM_PACKAGES:
+        platform_package = CODEX_PLATFORM_PACKAGES[package]
+        platform_npm_tag = platform_package["npm_tag"]
+        platform_version = compute_platform_package_version(version, platform_npm_tag)
+
+        readme_src = REPO_ROOT / "README.md"
+        if readme_src.exists():
+            shutil.copy2(readme_src, staging_dir / "README.md")
+
+        with open(CODEX_CLI_ROOT / "package.json", "r", encoding="utf-8") as fh:
+            codex_package_json = json.load(fh)
+
+        package_json = {
+            "name": CODEX_NPM_NAME,
+            "version": platform_version,
+            "license": codex_package_json.get("license", "Apache-2.0"),
+            "os": [platform_package["os"]],
+            "cpu": [platform_package["cpu"]],
+            "files": ["vendor"],
+            "repository": codex_package_json.get("repository"),
+        }
+
+        engines = codex_package_json.get("engines")
+        if isinstance(engines, dict):
+            package_json["engines"] = engines
+
+        package_manager = codex_package_json.get("packageManager")
+        if isinstance(package_manager, str):
+            package_json["packageManager"] = package_manager
     elif package == "codex-responses-api-proxy":
         bin_dir = staging_dir / "bin"
         bin_dir.mkdir(parents=True, exist_ok=True)
@@ -3728,25 +3962,42 @@ def stage_sources(staging_dir: Path, version: str, package: str) -> None:
     else:
         raise RuntimeError(f"Unknown package '{package}'.")
 
-    with open(package_json_path, "r", encoding="utf-8") as fh:
-        package_json = json.load(fh)
-    package_json["version"] = version
+    if package_json_path is not None:
+        with open(package_json_path, "r", encoding="utf-8") as fh:
+            package_json = json.load(fh)
+        package_json["version"] = version
 
-    if package == "codex-sdk":
+    if package == "codex":
+        package_json["files"] = ["bin"]
+        package_json["optionalDependencies"] = {
+            CODEX_PLATFORM_PACKAGES[platform_package]["npm_name"]: (
+                f"npm:{CODEX_NPM_NAME}@"
+                f"{compute_platform_package_version(version, CODEX_PLATFORM_PACKAGES[platform_package]['npm_tag'])}"
+            )
+            for platform_package in PACKAGE_EXPANSIONS["codex"]
+            if platform_package != "codex"
+        }
+
+    elif package == "codex-sdk":
         scripts = package_json.get("scripts")
         if isinstance(scripts, dict):
             scripts.pop("prepare", None)
 
-        files = package_json.get("files")
-        if isinstance(files, list):
-            if "vendor" not in files:
-                files.append("vendor")
-        else:
-            package_json["files"] = ["dist", "vendor"]
+        dependencies = package_json.get("dependencies")
+        if not isinstance(dependencies, dict):
+            dependencies = {}
+        dependencies[CODEX_NPM_NAME] = version
+        package_json["dependencies"] = dependencies
 
     with open(staging_dir / "package.json", "w", encoding="utf-8") as out:
         json.dump(package_json, out, indent=2)
         out.write("\n")
+
+
+def compute_platform_package_version(version: str, platform_tag: str) -> str:
+    # npm forbids republishing the same package name/version, so each
+    # platform-specific tarball needs a unique version string.
+    return f"{version}-{platform_tag}"
 
 
 def run_command(cmd: list[str], cwd: Path | None = None) -> None:
@@ -3778,8 +4029,8 @@ def stage_codex_sdk_sources(staging_dir: Path) -> None:
 def copy_native_binaries(
     vendor_src: Path,
     staging_dir: Path,
-    package: str,
     components: list[str],
+    target_filter: set[str] | None = None,
 ) -> None:
     vendor_src = vendor_src.resolve()
     if not vendor_src.exists():
@@ -3794,15 +4045,18 @@ def copy_native_binaries(
         shutil.rmtree(vendor_dest)
     vendor_dest.mkdir(parents=True, exist_ok=True)
 
+    copied_targets: set[str] = set()
+
     for target_dir in vendor_src.iterdir():
         if not target_dir.is_dir():
             continue
 
-        if "windows" in target_dir.name:
-            components_set.update(WINDOWS_ONLY_COMPONENTS.get(package, []))
+        if target_filter is not None and target_dir.name not in target_filter:
+            continue
 
         dest_target_dir = vendor_dest / target_dir.name
         dest_target_dir.mkdir(parents=True, exist_ok=True)
+        copied_targets.add(target_dir.name)
 
         for component in components_set:
             dest_dir_name = COMPONENT_DEST_DIR.get(component)
@@ -3819,6 +4073,12 @@ def copy_native_binaries(
             if dest_component_dir.exists():
                 shutil.rmtree(dest_component_dir)
             shutil.copytree(src_component_dir, dest_component_dir)
+
+    if target_filter is not None:
+        missing_targets = sorted(target_filter - copied_targets)
+        if missing_targets:
+            missing_list = ", ".join(missing_targets)
+            raise RuntimeError(f"Missing target directories in vendor source: {missing_list}")
 
 
 def run_npm_pack(staging_dir: Path, output_path: Path) -> Path:
@@ -3865,12 +4125,23 @@ if __name__ == "__main__":
 
 import { spawn } from "node:child_process";
 import { existsSync } from "fs";
+import { createRequire } from "node:module";
 import path from "path";
 import { fileURLToPath } from "url";
 
 // __dirname equivalent in ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const require = createRequire(import.meta.url);
+
+const PLATFORM_PACKAGE_BY_TARGET = {
+  "x86_64-unknown-linux-musl": "@openai/codex-linux-x64",
+  "aarch64-unknown-linux-musl": "@openai/codex-linux-arm64",
+  "x86_64-apple-darwin": "@openai/codex-darwin-x64",
+  "aarch64-apple-darwin": "@openai/codex-darwin-arm64",
+  "x86_64-pc-windows-msvc": "@openai/codex-win32-x64",
+  "aarch64-pc-windows-msvc": "@openai/codex-win32-arm64",
+};
 
 const { platform, arch } = process;
 
@@ -3921,9 +4192,51 @@ if (!targetTriple) {
   throw new Error(`Unsupported platform: ${platform} (${arch})`);
 }
 
-const vendorRoot = path.join(__dirname, "..", "vendor");
-const archRoot = path.join(vendorRoot, targetTriple);
+const platformPackage = PLATFORM_PACKAGE_BY_TARGET[targetTriple];
+if (!platformPackage) {
+  throw new Error(`Unsupported target triple: ${targetTriple}`);
+}
+
 const codexBinaryName = process.platform === "win32" ? "codex.exe" : "codex";
+const localVendorRoot = path.join(__dirname, "..", "vendor");
+const localBinaryPath = path.join(
+  localVendorRoot,
+  targetTriple,
+  "codex",
+  codexBinaryName,
+);
+
+let vendorRoot;
+try {
+  const packageJsonPath = require.resolve(`${platformPackage}/package.json`);
+  vendorRoot = path.join(path.dirname(packageJsonPath), "vendor");
+} catch {
+  if (existsSync(localBinaryPath)) {
+    vendorRoot = localVendorRoot;
+  } else {
+    const packageManager = detectPackageManager();
+    const updateCommand =
+      packageManager === "bun"
+        ? "bun install -g @openai/codex@latest"
+        : "npm install -g @openai/codex@latest";
+    throw new Error(
+      `Missing optional dependency ${platformPackage}. Reinstall Codex: ${updateCommand}`,
+    );
+  }
+}
+
+if (!vendorRoot) {
+  const packageManager = detectPackageManager();
+  const updateCommand =
+    packageManager === "bun"
+      ? "bun install -g @openai/codex@latest"
+      : "npm install -g @openai/codex@latest";
+  throw new Error(
+    `Missing optional dependency ${platformPackage}. Reinstall Codex: ${updateCommand}`,
+  );
+}
+
+const archRoot = path.join(vendorRoot, targetTriple);
 const binaryPath = path.join(archRoot, "codex", codexBinaryName);
 
 // Use an asynchronous spawn instead of spawnSync so that Node is able to
@@ -4092,6 +4405,7 @@ You can enable notifications by configuring a script that is run whenever the ag
 ### `codex exec` to run Codex programmatically/non-interactively
 
 To run Codex non-interactively, run `codex exec PROMPT` (you can also pass the prompt via `stdin`) and Codex will work on your task until it decides that it is done and exits. Output is printed to the terminal directly. You can set the `RUST_LOG` environment variable to see more about what's going on.
+Use `codex exec --ephemeral ...` to run without persisting session rollout files to disk.
 
 ### Experimenting with the Codex Sandbox
 
@@ -4138,6 +4452,8 @@ This folder is the root of a Cargo workspace. It contains quite a bit of experim
 - [`tui/`](./tui) CLI that launches a fullscreen TUI built with [Ratatui](https://ratatui.rs/).
 - [`cli/`](./cli) CLI multitool that provides the aforementioned CLIs via subcommands.
 
+If you want to contribute or inspect behavior in detail, start by reading the module-level `README.md` files under each crate and run the project workspace from the top-level `codex-rs` directory so shared config, features, and build scripts stay aligned.
+
 
 ## Links discovered
 - [GitHub Releases](https://github.com/openai/codex/releases)
@@ -4174,7 +4490,54 @@ Advantages:
 
 --- codex-rs/app-server-test-client/README.md ---
 # App Server Test Client
-Exercises simple `codex app-server` flows end-to-end, logging JSON-RPC messages sent between client and server to stdout.
+Quickstart for running and hitting `codex app-server`.
+
+## Quickstart
+
+Run from `<reporoot>/codex-rs`.
+
+```bash
+# 1) Build debug codex binary
+cargo build -p codex-cli --bin codex
+
+# 2) Start websocket app-server in background
+cargo run -p codex-app-server-test-client -- \
+  --codex-bin ./target/debug/codex \
+  serve --listen ws://127.0.0.1:4222 --kill
+
+# 3) Call app-server (defaults to ws://127.0.0.1:4222)
+cargo run -p codex-app-server-test-client -- model-list
+```
+
+## Testing Thread Rejoin Behavior
+
+Build and start an app server using commands above. The app-server log is written to `/tmp/codex-app-server-test-client/app-server.log`
+
+### 1) Get a thread id
+
+Create at least one thread, then list threads:
+
+```bash
+cargo run -p codex-app-server-test-client -- send-message-v2 "seed thread for rejoin test"
+cargo run -p codex-app-server-test-client -- thread-list --limit 5
+```
+
+Copy a thread id from the `thread-list` output.
+
+### 2) Rejoin while a turn is in progress (two terminals)
+
+Terminal A:
+
+```bash
+cargo run --bin codex-app-server-test-client -- \
+  resume-message-v2 <THREAD_ID> "respond with thorough docs on the rust core"
+```
+
+Terminal B (while Terminal A is still streaming):
+
+```bash
+cargo run --bin codex-app-server-test-client -- thread-resume <THREAD_ID>
+```
 
 
 --- codex-rs/app-server/README.md ---
@@ -4193,11 +4556,26 @@ Exercises simple `codex app-server` flows end-to-end, logging JSON-RPC messages 
 - [Events](#events)
 - [Approvals](#approvals)
 - [Skills](#skills)
+- [Apps](#apps)
 - [Auth endpoints](#auth-endpoints)
+- [Experimental API Opt-in](#experimental-api-opt-in)
 
 ## Protocol
 
-Similar to [MCP](https://modelcontextprotocol.io/), `codex app-server` supports bidirectional communication, streaming JSONL over stdio. The protocol is JSON-RPC 2.0, though the `"jsonrpc":"2.0"` header is omitted.
+Similar to [MCP](https://modelcontextprotocol.io/), `codex app-server` supports bidirectional communication using JSON-RPC 2.0 messages (with the `"jsonrpc":"2.0"` header omitted on the wire).
+
+Supported transports:
+
+- stdio (`--listen stdio://`, default): newline-delimited JSON (JSONL)
+- websocket (`--listen ws://IP:PORT`): one JSON-RPC message per websocket text frame (**experimental / unsupported**)
+
+Websocket transport is currently experimental and unsupported. Do not rely on it for production workloads.
+
+Backpressure behavior:
+
+- The server uses bounded queues between transport ingress, request processing, and outbound writes.
+- When request ingress is saturated, new requests are rejected with a JSON-RPC error code `-32001` and message `"Server overloaded; retry later."`.
+- Clients should treat this as retryable and use exponential backoff with jitter.
 
 ## Message Schema
 
@@ -4220,7 +4598,7 @@ Use the thread APIs to create, list, or archive conversations. Drive a conversat
 
 ## Lifecycle Overview
 
-- Initialize once: Immediately after launching the codex app-server process, send an `initialize` request with your client metadata, then emit an `initialized` notification. Any other request before this handshake gets rejected.
+- Initialize once per connection: Immediately after opening a transport connection, send an `initialize` request with your client metadata, then emit an `initialized` notification. Any other request on that connection before this handshake gets rejected.
 - Start (or resume) a thread: Call `thread/start` to open a fresh conversation. The response returns the thread object and you’ll also get a `thread/started` notification. If you’re continuing an existing conversation, call `thread/resume` with its ID instead. If you want to branch from an existing conversation, call `thread/fork` to create a new thread id with copied history.
 - Begin a turn: To send user input, call `turn/start` with the target `threadId` and the user's input. Optional fields let you override model, cwd, sandbox policy, etc. This immediately returns the new turn object and triggers a `turn/started` notification.
 - Stream events: After `turn/start`, keep reading JSON-RPC notifications on stdout. You’ll see `item/started`, `item/completed`, deltas like `item/agentMessage/delta`, tool progress, etc. These represent streaming model output plus any side effects (commands, tool calls, reasoning notes).
@@ -4228,7 +4606,9 @@ Use the thread APIs to create, list, or archive conversations. Drive a conversat
 
 ## Initialization
 
-Clients must send a single `initialize` request before invoking any other method, then acknowledge with an `initialized` notification. The server returns the user agent string it will present to upstream services; subsequent requests issued before initialization receive a `"Not initialized"` error, and repeated `initialize` calls receive an `"Already initialized"` error.
+Clients must send a single `initialize` request per transport connection before invoking any other method on that connection, then acknowledge with an `initialized` notification. The server returns the user agent string it will present to upstream services; subsequent requests issued before initialization receive a `"Not initialized"` error, and repeated `initialize` calls on the same connection receive an `"Already initialized"` error.
+
+`initialize.params.capabilities` also supports per-connection notification opt-out via `optOutNotificationMethods`, which is a list of exact method names to suppress for that connection. Matching is exact (no wildcards/prefixes). Unknown method names are accepted and ignored.
 
 Applications building on top of `codex app-server` should identify themselves via the `clientInfo` parameter.
 
@@ -4252,23 +4632,54 @@ Example (from OpenAI's official VSCode extension):
 }
 ```
 
+Example with notification opt-out:
+
+```json
+{
+  "method": "initialize",
+  "id": 1,
+  "params": {
+    "clientInfo": {
+      "name": "my_client",
+      "title": "My Client",
+      "version": "0.1.0"
+    },
+    "capabilities": {
+      "experimentalApi": true,
+      "optOutNotificationMethods": [
+        "codex/event/session_configured",
+        "item/agentMessage/delta"
+      ]
+    }
+  }
+}
+```
+
 ## API Overview
 
 - `thread/start` — create a new thread; emits `thread/started` and auto-subscribes you to turn/item events for that thread.
 - `thread/resume` — reopen an existing thread by id so subsequent `turn/start` calls append to it.
 - `thread/fork` — fork an existing thread into a new thread id by copying the stored history; emits `thread/started` and auto-subscribes you to turn/item events for the new thread.
-- `thread/list` — page through stored rollouts; supports cursor-based pagination and optional `modelProviders` filtering.
+- `thread/list` — page through stored rollouts; supports cursor-based pagination and optional `modelProviders`, `sourceKinds`, `archived`, and `cwd` filters.
 - `thread/loaded/list` — list the thread ids currently loaded in memory.
 - `thread/read` — read a stored thread by id without resuming it; optionally include turns via `includeTurns`.
 - `thread/archive` — move a thread’s rollout file into the archived directory; returns `{}` on success.
+- `thread/name/set` — set or update a thread’s user-facing name; returns `{}` on success. Thread names are not required to be unique; name lookups resolve to the most recently updated thread.
+- `thread/unarchive` — move an archived rollout file back into the sessions directory; returns the restored `thread` on success.
+- `thread/compact/start` — trigger conversation history compaction for a thread; returns `{}` immediately while progress streams through standard turn/item notifications.
+- `thread/backgroundTerminals/clean` — terminate all running background terminals for a thread (experimental; requires `capabilities.experimentalApi`); returns `{}` when the cleanup request is accepted.
 - `thread/rollback` — drop the last N turns from the agent’s in-memory context and persist a rollback marker in the rollout so future resumes see the pruned history; returns the updated `thread` (with `turns` populated) on success.
-- `turn/start` — add user input to a thread and begin Codex generation; responds with the initial `turn` object and streams `turn/started`, `item/*`, and `turn/completed` notifications.
+- `turn/start` — add user input to a thread and begin Codex generation; responds with the initial `turn` object and streams `turn/started`, `item/*`, and `turn/completed` notifications. For `collaborationMode`, `settings.developer_instructions: null` means "use built-in instructions for the selected mode".
+- `turn/steer` — add user input to an already in-flight turn without starting a new turn; returns the active `turnId` that accepted the input.
 - `turn/interrupt` — request cancellation of an in-flight turn by `(thread_id, turn_id)`; success is an empty `{}` response and the turn finishes with `status: "interrupted"`.
 - `review/start` — kick off Codex’s automated reviewer for a thread; responds like `turn/start` and emits `item/started`/`item/completed` notifications with `enteredReviewMode` and `exitedReviewMode` items, plus a final assistant `agentMessage` containing the review.
 - `command/exec` — run a single command under the server sandbox without starting a thread/turn (handy for utilities and validation).
-- `model/list` — list available models (with reasoning effort options).
+- `model/list` — list available models (set `includeHidden: true` to include entries with `hidden: true`), with reasoning effort options and optional `upgrade` model ids.
+- `experimentalFeature/list` — list feature flags with stage metadata (`beta`, `underDevelopment`, `stable`, etc.), enabled/default-enabled state, and cursor pagination. For non-beta flags, `displayName`/`description`/`announcement` are `null`.
 - `collaborationMode/list` — list available collaboration mode presets (experimental, no pagination).
 - `skills/list` — list skills for one or more `cwd` values (optional `forceReload`).
+- `skills/remote/read` — list public remote skills (**under development; do not call from production clients yet**).
+- `skills/remote/write` — download a public remote skill by `hazelnutId`; `isPreload=true` writes to `.codex/vendor_imports/skills` under `codex_home` (**under development; do not call from production clients yet**).
 - `app/list` — list available apps.
 - `skills/config/write` — write user-level skill config by path.
 - `mcpServer/oauth/login` — start an OAuth login for a configured MCP server; returns an `authorization_url` and later emits `mcpServer/oauthLogin/completed` once the browser flow finishes.
@@ -4280,7 +4691,7 @@ Example (from OpenAI's official VSCode extension):
 - `config/read` — fetch the effective config on disk after resolving config layering.
 - `config/value/write` — write a single config key/value to the user's config.toml on disk.
 - `config/batchWrite` — apply multiple config edits atomically to the user's config.toml on disk.
-- `configRequirements/read` — fetch the loaded requirements allow-lists from `requirements.toml` and/or MDM (or `null` if none are configured).
+- `configRequirements/read` — fetch loaded requirements constraints from `requirements.toml` and/or MDM (or `null` if none are configured), including allow-lists (`allowedApprovalPolicies`, `allowedSandboxModes`, `allowedWebSearchModes`), `enforceResidency`, and `network` constraints.
 
 ### Example: Start or resume a thread
 
@@ -4294,7 +4705,21 @@ Start a fresh thread when you need a new Codex conversation.
     "cwd": "/Users/me/project",
     "approvalPolicy": "never",
     "sandbox": "workspaceWrite",
-    "personality": "friendly"
+    "personality": "friendly",
+    // Experimental: requires opt-in
+    "dynamicTools": [
+        {
+            "name": "lookup_ticket",
+            "description": "Fetch a ticket by id",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "id": { "type": "string" }
+                },
+                "required": ["id"]
+            }
+        }
+    ],
 } }
 { "id": 10, "result": {
     "thread": {
@@ -4306,6 +4731,8 @@ Start a fresh thread when you need a new Codex conversation.
 } }
 { "method": "thread/started", "params": { "thread": { … } } }
 ```
+
+Valid `personality` values are `"friendly"`, `"pragmatic"`, and `"none"`. When `"none"` is selected, the personality placeholder is replaced with an empty string.
 
 To continue a stored session, call `thread/resume` with the `thread.id` you previously recorded. The response shape matches `thread/start`, and no additional notifications are emitted. You can also pass the same configuration overrides supported by `thread/start`, such as `personality`:
 
@@ -4325,6 +4752,8 @@ To branch from a stored session, call `thread/fork` with the `thread.id`. This c
 { "method": "thread/started", "params": { "thread": { … } } }
 ```
 
+Experimental API: `thread/start`, `thread/resume`, and `thread/fork` accept `persistExtendedHistory: true` to persist a richer subset of ThreadItems for non-lossy history when calling `thread/read`, `thread/resume`, and `thread/fork` later. This does not backfill events that were not persisted previously.
+
 ### Example: List threads (with pagination & filters)
 
 `thread/list` lets you render a history UI. Results default to `createdAt` (newest first) descending. Pass any combination of:
@@ -4333,7 +4762,9 @@ To branch from a stored session, call `thread/fork` with the `thread.id`. This c
 - `limit` — server defaults to a reasonable page size if unset.
 - `sortKey` — `created_at` (default) or `updated_at`.
 - `modelProviders` — restrict results to specific providers; unset, null, or an empty array will include all providers.
+- `sourceKinds` — restrict results to specific sources; omit or pass `[]` for interactive sessions only (`cli`, `vscode`).
 - `archived` — when `true`, list archived threads only. When `false` or `null`, list non-archived threads (default).
+- `cwd` — restrict results to threads whose session cwd exactly matches this path.
 
 Example:
 
@@ -4389,6 +4820,31 @@ Use `thread/archive` to move the persisted rollout (stored as a JSONL file on di
 ```
 
 An archived thread will not appear in `thread/list` unless `archived` is set to `true`.
+
+### Example: Unarchive a thread
+
+Use `thread/unarchive` to move an archived rollout back into the sessions directory.
+
+```json
+{ "method": "thread/unarchive", "id": 24, "params": { "threadId": "thr_b" } }
+{ "id": 24, "result": { "thread": { "id": "thr_b" } } }
+```
+
+### Example: Trigger thread compaction
+
+Use `thread/compact/start` to trigger manual history compaction for a thread. The request returns immediately with `{}`.
+
+Progress is emitted as standard `turn/*` and `item/*` notifications on the same `threadId`. Clients should expect a single compaction item:
+
+- `item/started` with `item: { "type": "contextCompaction", ... }`
+- `item/completed` with the same `contextCompaction` item id
+
+While compaction is running, the thread is effectively in a turn so clients should surface progress UI based on the notifications.
+
+```json
+{ "method": "thread/compact/start", "id": 25, "params": { "threadId": "thr_b" } }
+{ "id": 25, "result": {} }
+```
 
 ### Example: Start a turn (send user input)
 
@@ -4452,6 +4908,26 @@ Invoke a skill explicitly by including `$<skill-name>` in the text input and add
 } } }
 ```
 
+### Example: Start a turn (invoke an app)
+
+Invoke an app by including `$<app-slug>` in the text input and adding a `mention` input item with the app id in `app://<connector-id>` form.
+
+```json
+{ "method": "turn/start", "id": 34, "params": {
+    "threadId": "thr_123",
+    "input": [
+        { "type": "text", "text": "$demo-app Summarize the latest updates." },
+        { "type": "mention", "name": "Demo App", "path": "app://demo-app" }
+    ]
+} }
+{ "id": 34, "result": { "turn": {
+    "id": "turn_458",
+    "status": "inProgress",
+    "items": [],
+    "error": null
+} } }
+```
+
 ### Example: Interrupt an active turn
 
 You can cancel a running Turn with `turn/interrupt`.
@@ -4465,6 +4941,33 @@ You can cancel a running Turn with `turn/interrupt`.
 ```
 
 The server requests cancellations for running subprocesses, then emits a `turn/completed` event with `status: "interrupted"`. Rely on the `turn/completed` to know when Codex-side cleanup is done.
+
+### Example: Clean background terminals
+
+Use `thread/backgroundTerminals/clean` to terminate all running background terminals associated with a thread. This method is experimental and requires `capabilities.experimentalApi = true`.
+
+```json
+{ "method": "thread/backgroundTerminals/clean", "id": 35, "params": {
+    "threadId": "thr_123"
+} }
+{ "id": 35, "result": {} }
+```
+
+### Example: Steer an active turn
+
+Use `turn/steer` to append additional user input to the currently active turn. This does not emit
+`turn/started` and does not accept turn context overrides.
+
+```json
+{ "method": "turn/steer", "id": 32, "params": {
+    "threadId": "thr_123",
+    "input": [ { "type": "text", "text": "Actually focus on failing tests first." } ],
+    "expectedTurnId": "turn_456"
+} }
+{ "id": 32, "result": { "turnId": "turn_456" } }
+```
+
+`expectedTurnId` is required. If there is no active turn (or `expectedTurnId` does not match the active turn), the request fails with an `invalid request` error.
 
 ### Example: Request a code review
 
@@ -4561,6 +5064,27 @@ Notes:
 
 Event notifications are the server-initiated event stream for thread lifecycles, turn lifecycles, and the items within them. After you start or resume a thread, keep reading stdout for `thread/started`, `turn/*`, and `item/*` notifications.
 
+### Notification opt-out
+
+Clients can suppress specific notifications per connection by sending exact method names in `initialize.params.capabilities.optOutNotificationMethods`.
+
+- Exact-match only: `item/agentMessage/delta` suppresses only that method.
+- Unknown method names are ignored.
+- Applies to both legacy (`codex/event/*`) and v2 (`thread/*`, `turn/*`, `item/*`, etc.) notifications.
+- Does not apply to requests/responses/errors.
+
+Examples:
+
+- Opt out of legacy session setup event: `codex/event/session_configured`
+- Opt out of streamed agent text deltas: `item/agentMessage/delta`
+
+### Fuzzy file search events (experimental)
+
+The fuzzy file search session API emits per-query notifications:
+
+- `fuzzyFileSearch/sessionUpdated` — `{ sessionId, query, files }` with the current matching files for the active query.
+- `fuzzyFileSearch/sessionCompleted` — `{ sessionId, query }` once indexing/matching for that query has completed.
+
 ### Turn events
 
 The app-server streams JSON-RPC notifications while a turn is running. Each turn starts with `turn/started` (initial `turn`) and ends with `turn/completed` (final `turn` status). Token usage events stream separately via `thread/tokenUsage/updated`. Clients subscribe to the events they care about, rendering each item incrementally as updates arrive. The per-item lifecycle is always: `item/started` → zero or more item-specific deltas → `item/completed`.
@@ -4578,16 +5102,18 @@ Today both notifications carry an empty `items` array even when item events were
 
 - `userMessage` — `{id, content}` where `content` is a list of user inputs (`text`, `image`, or `localImage`).
 - `agentMessage` — `{id, text}` containing the accumulated agent reply.
+- `plan` — `{id, text}` emitted for plan-mode turns; plan text can stream via `item/plan/delta` (experimental).
 - `reasoning` — `{id, summary, content}` where `summary` holds streamed reasoning summaries (applicable for most OpenAI models) and `content` holds raw reasoning blocks (applicable for e.g. open source models).
 - `commandExecution` — `{id, command, cwd, status, commandActions, aggregatedOutput?, exitCode?, durationMs?}` for sandboxed commands; `status` is `inProgress`, `completed`, `failed`, or `declined`.
 - `fileChange` — `{id, changes, status}` describing proposed edits; `changes` list `{path, kind, diff}` and `status` is `inProgress`, `completed`, `failed`, or `declined`.
 - `mcpToolCall` — `{id, server, tool, status, arguments, result?, error?}` describing MCP calls; `status` is `inProgress`, `completed`, or `failed`.
-- `collabToolCall` — `{id, tool, status, senderThreadId, receiverThreadId?, newThreadId?, prompt?, agentStatus?}` describing collab tool calls (`spawn_agent`, `send_input`, `wait`, `close_agent`); `status` is `inProgress`, `completed`, or `failed`.
-- `webSearch` — `{id, query}` for a web search request issued by the agent.
+- `collabToolCall` — `{id, tool, status, senderThreadId, receiverThreadId?, newThreadId?, prompt?, agentStatus?}` describing collab tool calls (`spawn_agent`, `send_input`, `resume_agent`, `wait`, `close_agent`); `status` is `inProgress`, `completed`, or `failed`.
+- `webSearch` — `{id, query, action?}` for a web search request issued by the agent; `action` mirrors the Responses API web_search action payload (`search`, `open_page`, `find_in_page`) and may be omitted until completion.
 - `imageView` — `{id, path}` emitted when the agent invokes the image viewer tool.
 - `enteredReviewMode` — `{id, review}` sent when the reviewer starts; `review` is a short user-facing label such as `"current changes"` or the requested target description.
 - `exitedReviewMode` — `{id, review}` emitted when the reviewer finishes; `review` is the full plain-text review (usually, overall notes plus bullet point findings).
-- `compacted` - `{threadId, turnId}` when codex compacts the conversation history. This can happen automatically.
+- `contextCompaction` — `{id}` emitted when codex compacts the conversation history. This can happen automatically.
+- `compacted` - `{threadId, turnId}` when codex compacts the conversation history. This can happen automatically. **Deprecated:** Use `contextCompaction` instead.
 
 All items emit two shared lifecycle events:
 
@@ -4599,6 +5125,10 @@ There are additional item-specific events:
 #### agentMessage
 
 - `item/agentMessage/delta` — appends streamed text for the agent message; concatenate `delta` values for the same `itemId` in order to reconstruct the full reply.
+
+#### plan
+
+- `item/plan/delta` — streams proposed plan content for plan items (experimental); concatenate `delta` values for the same plan `itemId`. These deltas correspond to the `<proposed_plan>` block.
 
 #### reasoning
 
@@ -4662,6 +5192,41 @@ Order of messages:
 
 UI guidance for IDEs: surface an approval dialog as soon as the request arrives. The turn will proceed after the server receives a response to the approval request. The terminal `item/completed` notification will be sent with the appropriate status.
 
+### Dynamic tool calls (experimental)
+
+`dynamicTools` on `thread/start` and the corresponding `item/tool/call` request/response flow are experimental APIs. To enable them, set `initialize.params.capabilities.experimentalApi = true`.
+
+When a dynamic tool is invoked during a turn, the server sends an `item/tool/call` JSON-RPC request to the client:
+
+```json
+{
+  "method": "item/tool/call",
+  "id": 60,
+  "params": {
+    "threadId": "thr_123",
+    "turnId": "turn_123",
+    "callId": "call_123",
+    "tool": "lookup_ticket",
+    "arguments": { "id": "ABC-123" }
+  }
+}
+```
+
+The client must respond with content items. Use `inputText` for text and `inputImage` for image URLs/data URLs:
+
+```json
+{
+  "id": 60,
+  "result": {
+    "contentItems": [
+      { "type": "inputText", "text": "Ticket ABC-123 is open." },
+      { "type": "inputImage", "imageUrl": "data:image/png;base64,AAA" }
+    ],
+    "success": true
+  }
+}
+```
+
 ## Skills
 
 Invoke a skill by including `$<skill-name>` in the text input. Add a `skill` input item (recommended) so the backend injects full skill instructions instead of relying on the model to resolve the name.
@@ -4696,11 +5261,20 @@ $skill-creator Add a new skill for triaging flaky CI and include step-by-step us
 ```
 
 Use `skills/list` to fetch the available skills (optionally scoped by `cwds`, with `forceReload`).
+You can also add `perCwdExtraUserRoots` to scan additional absolute paths as `user` scope for specific `cwd` entries.
+Entries whose `cwd` is not present in `cwds` are ignored.
+`skills/list` might reuse a cached skills result per `cwd`; setting `forceReload` to `true` refreshes the result from disk.
 
 ```json
 { "method": "skills/list", "id": 25, "params": {
-    "cwds": ["/Users/me/project"],
-    "forceReload": false
+    "cwds": ["/Users/me/project", "/Users/me/other-project"],
+    "forceReload": true,
+    "perCwdExtraUserRoots": [
+      {
+        "cwd": "/Users/me/project",
+        "extraUserRoots": ["/Users/me/shared-skills"]
+      }
+    ]
 } }
 { "id": 25, "result": {
     "data": [{
@@ -4738,14 +5312,102 @@ To enable or disable a skill by path:
 }
 ```
 
+## Apps
+
+Use `app/list` to fetch available apps (connectors). Each entry includes metadata like the app `id`, display `name`, `installUrl`, whether it is currently accessible, and whether it is enabled in config.
+
+```json
+{ "method": "app/list", "id": 50, "params": {
+    "cursor": null,
+    "limit": 50,
+    "threadId": "thr_123",
+    "forceRefetch": false
+} }
+{ "id": 50, "result": {
+    "data": [
+        {
+            "id": "demo-app",
+            "name": "Demo App",
+            "description": "Example connector for documentation.",
+            "logoUrl": "https://example.com/demo-app.png",
+            "logoUrlDark": null,
+            "distributionChannel": null,
+            "installUrl": "https://chatgpt.com/apps/demo-app/demo-app",
+            "isAccessible": true,
+            "isEnabled": true
+        }
+    ],
+    "nextCursor": null
+} }
+```
+
+When `threadId` is provided, app feature gating (`Feature::Apps`) is evaluated using that thread's config snapshot. When omitted, the latest global config is used.
+
+`app/list` returns after both accessible apps and directory apps are loaded. Set `forceRefetch: true` to bypass app caches and fetch fresh data from sources. Cache entries are only replaced when those refetches succeed.
+
+The server also emits `app/list/updated` notifications whenever either source (accessible apps or directory apps) finishes loading. Each notification includes the latest merged app list.
+
+```json
+{
+  "method": "app/list/updated",
+  "params": {
+    "data": [
+      {
+        "id": "demo-app",
+        "name": "Demo App",
+        "description": "Example connector for documentation.",
+        "logoUrl": "https://example.com/demo-app.png",
+        "logoUrlDark": null,
+        "distributionChannel": null,
+        "installUrl": "https://chatgpt.com/apps/demo-app/demo-app",
+        "isAccessible": true,
+        "isEnabled": true
+      }
+    ]
+  }
+}
+```
+
+Invoke an app by inserting `$<app-slug>` in the text input. The slug is derived from the app name and lowercased with non-alphanumeric characters replaced by `-` (for example, "Demo App" becomes `$demo-app`). Add a `mention` input item (recommended) so the server uses the exact `app://<connector-id>` path rather than guessing by name.
+
+Example:
+
+```
+$demo-app Pull the latest updates from the team.
+```
+
+```json
+{
+  "method": "turn/start",
+  "id": 51,
+  "params": {
+    "threadId": "thread-1",
+    "input": [
+      {
+        "type": "text",
+        "text": "$demo-app Pull the latest updates from the team."
+      },
+      { "type": "mention", "name": "Demo App", "path": "app://demo-app" }
+    ]
+  }
+}
+```
+
 ## Auth endpoints
 
 The JSON-RPC auth/account surface exposes request/response methods plus server-initiated notifications (no `id`). Use these to determine auth state, start or cancel logins, logout, and inspect ChatGPT rate limits.
 
+### Authentication modes
+
+Codex supports these authentication modes. The current mode is surfaced in `account/updated` (`authMode`) and can be inferred from `account/read`.
+
+- **API key (`apiKey`)**: Caller supplies an OpenAI API key via `account/login/start` with `type: "apiKey"`. The API key is saved and used for API requests.
+- **ChatGPT managed (`chatgpt`)** (recommended): Codex owns the ChatGPT OAuth flow and refresh tokens. Start via `account/login/start` with `type: "chatgpt"`; Codex persists tokens to disk and refreshes them automatically.
+
 ### API Overview
 
 - `account/read` — fetch current account info; optionally refresh tokens.
-- `account/login/start` — begin login (`apiKey` or `chatgpt`).
+- `account/login/start` — begin login (`apiKey`, `chatgpt`).
 - `account/login/completed` (notify) — emitted when a login attempt finishes (success or error).
 - `account/login/cancel` — cancel a pending ChatGPT login by `loginId`.
 - `account/logout` — sign out; triggers `account/updated`.
@@ -4839,6 +5501,95 @@ Field notes:
 - `windowDurationMins` is the quota window length.
 - `resetsAt` is a Unix timestamp (seconds) for the next reset.
 
+## Experimental API Opt-in
+
+Some app-server methods and fields are intentionally gated behind an experimental capability with no backwards-compatible guarantees. This lets clients choose between:
+
+- Stable surface only (default): no opt-in, no experimental methods/fields exposed.
+- Experimental surface: opt in during `initialize`.
+
+### Generating stable vs experimental client schemas
+
+`codex app-server` schema generation defaults to the stable API surface (experimental fields and methods filtered out). Pass `--experimental` to include experimental methods/fields in generated TypeScript or JSON schema:
+
+```bash
+# Stable-only output (default)
+codex app-server generate-ts --out DIR
+codex app-server generate-json-schema --out DIR
+
+# Include experimental API surface
+codex app-server generate-ts --out DIR --experimental
+codex app-server generate-json-schema --out DIR --experimental
+```
+
+### How clients opt in at runtime
+
+Set `capabilities.experimentalApi` to `true` in your single `initialize` request:
+
+```json
+{
+  "method": "initialize",
+  "id": 1,
+  "params": {
+    "clientInfo": {
+      "name": "my_client",
+      "title": "My Client",
+      "version": "0.1.0"
+    },
+    "capabilities": {
+      "experimentalApi": true
+    }
+  }
+}
+```
+
+Then send the standard `initialized` notification and proceed normally.
+
+Notes:
+
+- If `capabilities` is omitted, `experimentalApi` is treated as `false`.
+- This setting is negotiated once at initialization time for the process lifetime (re-initializing is rejected with `"Already initialized"`).
+
+### What happens without opt-in
+
+If a request uses an experimental method or sets an experimental field without opting in, app-server rejects it with a JSON-RPC error. The message is:
+
+`<descriptor> requires experimentalApi capability`
+
+Examples of descriptor strings:
+
+- `mock/experimentalMethod` (method-level gate)
+- `thread/start.mockExperimentalField` (field-level gate)
+
+### For maintainers: Adding experimental fields and methods
+
+Use this checklist when introducing a field/method that should only be available when the client opts into experimental APIs.
+
+At runtime, clients must send `initialize` with `capabilities.experimentalApi = true` to use experimental methods or fields.
+
+1. Annotate the field in the protocol type (usually `app-server-protocol/src/protocol/v2.rs`) with:
+   ```rust
+   #[experimental("thread/start.myField")]
+   pub my_field: Option<String>,
+   ```
+2. Ensure the params type derives `ExperimentalApi` so field-level gating can be detected at runtime.
+
+3. In `app-server-protocol/src/protocol/common.rs`, keep the method stable and use `inspect_params: true` when only some fields are experimental (like `thread/start`). If the entire method is experimental, annotate the method variant with `#[experimental("method/name")]`.
+
+4. Regenerate protocol fixtures:
+
+   ```bash
+   just write-app-server-schema
+   # Include experimental API fields/methods in fixtures.
+   just write-app-server-schema --experimental
+   ```
+
+5. Verify the protocol crate:
+
+   ```bash
+   cargo test -p codex-app-server-protocol
+   ```
+
 
 ## Links discovered
 - [Codex VS Code extension](https://marketplace.visualstudio.com/items?itemName=openai.chatgpt)
@@ -4863,14 +5614,6 @@ Generic transport layer that wraps HTTP requests, retries, and streaming primiti
 - Consumed by higher-level crates like `codex-api`; it stays neutral on endpoints, headers, or API-specific error shapes.
 
 
---- codex-rs/common/README.md ---
-# codex-common
-
-This crate is designed for utilities that need to be shared across other crates in the workspace, but should not go in `core`.
-
-For narrow utility features, the pattern is to add introduce a new feature under `[features]` in `Cargo.toml` and then gate it with `#[cfg]` in `lib.rs`, as appropriate.
-
-
 --- codex-rs/core/README.md ---
 # codex-core
 
@@ -4887,6 +5630,30 @@ Expects `/usr/bin/sandbox-exec` to be present.
 When using the workspace-write sandbox policy, the Seatbelt profile allows
 writes under the configured writable roots while keeping `.git` (directory or
 pointer file), the resolved `gitdir:` target, and `.codex` read-only.
+
+Network access and filesystem read/write roots are controlled by
+`SandboxPolicy`. Seatbelt consumes the resolved policy and enforces it.
+
+Seatbelt also supports macOS permission-profile extensions layered on top of
+`SandboxPolicy`:
+
+- no extension profile provided:
+  keeps legacy default preferences read access (`user-preference-read`).
+- extension profile provided with no `macos_preferences` grant:
+  does not add preferences access clauses.
+- `macos_preferences = "readonly"`:
+  enables cfprefs read clauses and `user-preference-read`.
+- `macos_preferences = "readwrite"`:
+  includes readonly clauses plus `user-preference-write` and cfprefs shm write
+  clauses.
+- `macos_automation = true`:
+  enables broad Apple Events send permissions.
+- `macos_automation = ["com.apple.Notes", ...]`:
+  enables Apple Events send only to listed bundle IDs.
+- `macos_accessibility = true`:
+  enables `com.apple.axserver` mach lookup.
+- `macos_calendar = true`:
+  enables `com.apple.CalendarAgent` mach lookup.
 
 ### Linux
 
@@ -4926,7 +5693,7 @@ cargo run -p codex-debug-client -- --thread-id thr_123
 - `--codex-bin <path>`: path to the `codex` binary (default: `codex`).
 - `-c, --config key=value`: pass through `--config` overrides to `codex`.
 - `--thread-id <id>`: resume a thread instead of starting a new one.
-- `--approval-policy <policy>`: `untrusted`, `on-failure`, `on-request`, `never`.
+- `--approval-policy <policy>`: `untrusted`, `on-failure` (deprecated), `on-request`, `never`.
 - `--auto-approve`: auto-approve command/file-change approvals (default: decline).
 - `--final-only`: only show completed assistant messages and tool items.
 - `--model <name>`: optional model override for thread start/resume.
@@ -4962,7 +5729,7 @@ unless `--final-only` is set.
 
 This crate contains the code for two executables:
 
-- `codex-exec-mcp-server` is an MCP server that provides a tool named `shell` that runs a shell command inside a sandboxed instance of Bash. Every resulting `execve(2)` call made within Bash is intercepted and run via the executable defined by the `BASH_EXEC_WRAPPER` environment variable within the Bash process. In practice, `BASH_EXEC_WRAPPER` is set to `codex-execve-wrapper`.
+- `codex-exec-mcp-server` is an MCP server that provides a tool named `shell` that runs a shell command inside a sandboxed shell process. Every resulting `execve(2)` call made within that shell is intercepted and run via the executable defined by the `EXEC_WRAPPER` environment variable within the shell process. In practice, `EXEC_WRAPPER` is set to `codex-execve-wrapper`.
 - `codex-execve-wrapper` is the executable that takes the arguments to the `execve(2)` call and "escalates" it to the MCP server via a shared file descriptor (specified by the `CODEX_ESCALATE_SOCKET` environment variable) for consideration. Based on the [Codex `.rules`](https://developers.openai.com/codex/local-config#rules-preview), the MCP server replies with one of:
   - `Run`: `codex-execve-wrapper` should invoke `execve(2)` on itself to run the original command within Bash
   - `Escalate`: forward the file descriptors of the current process to the MCP server so the command can be run faithfully outside the sandbox. Because the MCP server will have the original FDs for `stdout` and `stderr`, it can write those directly. When the process completes, the MCP server forwards the exit code to `codex-execve-wrapper` so that it exits in a consistent manner.
@@ -4970,7 +5737,7 @@ This crate contains the code for two executables:
 
 ## Patched Bash
 
-We carry a small patch to `execute_cmd.c` (see `patches/bash-exec-wrapper.patch`) that adds support for `BASH_EXEC_WRAPPER`. The original commit message is “add support for BASH_EXEC_WRAPPER” and the patch applies cleanly to `a8a1c2fac029404d3f42cd39f5a20f24b6e4fe4b` from https://github.com/bminor/bash. To rebuild manually:
+We carry a small patch to `execute_cmd.c` (see `patches/bash-exec-wrapper.patch`) that adds support for `EXEC_WRAPPER`. The original commit message is “add support for BASH_EXEC_WRAPPER” and the patch applies cleanly to `a8a1c2fac029404d3f42cd39f5a20f24b6e4fe4b` from https://github.com/bminor/bash. To rebuild manually:
 
 ```bash
 git clone https://github.com/bminor/bash
@@ -4987,6 +5754,199 @@ make -j"$(nproc)"
 
 ## Links discovered
 - [Codex `.rules`](https://developers.openai.com/codex/local-config#rules-preview)
+
+--- codex-rs/execpolicy-legacy/README.md ---
+# codex-execpolicy-legacy
+
+This crate hosts the original execpolicy implementation. The newer prefix-rule
+engine lives in `codex-execpolicy`.
+
+The goal of this library is to classify a proposed [`execv(3)`](https://linux.die.net/man/3/execv) command into one of the following states:
+
+- `safe` The command is safe to run (\*).
+- `match` The command matched a rule in the policy, but the caller should decide whether it is safe to run based on the files it will write.
+- `forbidden` The command is not allowed to be run.
+- `unverified` The safety cannot be determined: make the user decide.
+
+(\*) Whether an `execv(3)` call should be considered "safe" often requires additional context beyond the arguments to `execv()` itself. For example, if you trust an autonomous software agent to write files in your source tree, then deciding whether `/bin/cp foo bar` is "safe" depends on `getcwd(3)` for the calling process as well as the `realpath` of `foo` and `bar` when resolved against `getcwd()`.
+To that end, rather than returning a boolean, the validator returns a structured result that the client is expected to use to determine the "safety" of the proposed `execv()` call.
+
+For example, to check the command `ls -l foo`, the checker would be invoked as follows:
+
+```shell
+cargo run -p codex-execpolicy-legacy -- check ls -l foo | jq
+```
+
+It will exit with `0` and print the following to stdout:
+
+```json
+{
+  "result": "safe",
+  "match": {
+    "program": "ls",
+    "flags": [
+      {
+        "name": "-l"
+      }
+    ],
+    "opts": [],
+    "args": [
+      {
+        "index": 1,
+        "type": "ReadableFile",
+        "value": "foo"
+      }
+    ],
+    "system_path": ["/bin/ls", "/usr/bin/ls"]
+  }
+}
+```
+
+Of note:
+
+- `foo` is tagged as a `ReadableFile`, so the caller should resolve `foo` relative to `getcwd()` and `realpath` it (as it may be a symlink) to determine whether `foo` is safe to read.
+- While the specified executable is `ls`, `"system_path"` offers `/bin/ls` and `/usr/bin/ls` as viable alternatives to avoid using whatever `ls` happens to appear first on the user's `$PATH`. If either exists on the host, it is recommended to use it as the first argument to `execv(3)` instead of `ls`.
+
+Further, "safety" in this system is not a guarantee that the command will execute successfully. As an example, `cat /Users/mbolin/code/codex/README.md` may be considered "safe" if the system has decided the agent is allowed to read anything under `/Users/mbolin/code/codex`, but it will fail at runtime if `README.md` does not exist. (Though this is "safe" in that the agent did not read any files that it was not authorized to read.)
+
+## Policy
+
+Currently, the default policy is defined in [`default.policy`](./src/default.policy) within the crate.
+
+The system uses [Starlark](https://bazel.build/rules/language) as the file format because, unlike something like JSON or YAML, it supports "macros" without compromising on safety or reproducibility. (Under the hood, we use [`starlark-rust`](https://github.com/facebook/starlark-rust) as the specific Starlark implementation.)
+
+This policy contains "rules" such as:
+
+```python
+define_program(
+    program="cp",
+    options=[
+        flag("-r"),
+        flag("-R"),
+        flag("--recursive"),
+    ],
+    args=[ARG_RFILES, ARG_WFILE],
+    system_path=["/bin/cp", "/usr/bin/cp"],
+    should_match=[
+        ["foo", "bar"],
+    ],
+    should_not_match=[
+        ["foo"],
+    ],
+)
+```
+
+This rule means that:
+
+- `cp` can be used with any of the following flags (where "flag" means "an option that does not take an argument"): `-r`, `-R`, `--recursive`.
+- The initial `ARG_RFILES` passed to `args` means that it expects one or more arguments that correspond to "readable files"
+- The final `ARG_WFILE` passed to `args` means that it expects exactly one argument that corresponds to a "writeable file."
+- As a means of a lightweight way of including a unit test alongside the definition, the `should_match` list is a list of examples of `execv(3)` args that should match the rule and `should_not_match` is a list of examples that should not match. These examples are verified when the `.policy` file is loaded.
+
+Note that the language of the `.policy` file is still evolving, as we have to continue to expand it so it is sufficiently expressive to accept all commands we want to consider "safe" without allowing unsafe commands to pass through.
+
+The integrity of `default.policy` is verified [via unit tests](./tests).
+
+Further, the CLI supports a `--policy` option to specify a custom `.policy` file for ad-hoc testing.
+
+## Output Type: `match`
+
+Going back to the `cp` example, because the rule matches an `ARG_WFILE`, it will return `match` instead of `safe`:
+
+```shell
+cargo run -p codex-execpolicy-legacy -- check cp src1 src2 dest | jq
+```
+
+If the caller wants to consider allowing this command, it should parse the JSON to pick out the `WriteableFile` arguments and decide whether they are safe to write:
+
+```json
+{
+  "result": "match",
+  "match": {
+    "program": "cp",
+    "flags": [],
+    "opts": [],
+    "args": [
+      {
+        "index": 0,
+        "type": "ReadableFile",
+        "value": "src1"
+      },
+      {
+        "index": 1,
+        "type": "ReadableFile",
+        "value": "src2"
+      },
+      {
+        "index": 2,
+        "type": "WriteableFile",
+        "value": "dest"
+      }
+    ],
+    "system_path": ["/bin/cp", "/usr/bin/cp"]
+  }
+}
+```
+
+Note the exit code is still `0` for a `match` unless the `--require-safe` flag is specified, in which case the exit code is `12`.
+
+## Output Type: `forbidden`
+
+It is also possible to define a rule that, if it matches a command, should flag it as _forbidden_. For example, we do not want agents to be able to run `applied deploy` _ever_, so we define the following rule:
+
+```python
+define_program(
+    program="applied",
+    args=["deploy"],
+    forbidden="Infrastructure Risk: command contains 'applied deploy'",
+    should_match=[
+        ["deploy"],
+    ],
+    should_not_match=[
+        ["lint"],
+    ],
+)
+```
+
+Note that for a rule to be forbidden, the `forbidden` keyword arg must be specified as the reason the command is forbidden. This will be included in the output:
+
+```shell
+cargo run -p codex-execpolicy-legacy -- check applied deploy | jq
+```
+
+```json
+{
+  "result": "forbidden",
+  "reason": "Infrastructure Risk: command contains 'applied deploy'",
+  "cause": {
+    "Exec": {
+      "exec": {
+        "program": "applied",
+        "flags": [],
+        "opts": [],
+        "args": [
+          {
+            "index": 0,
+            "type": {
+              "Literal": "deploy"
+            },
+            "value": "deploy"
+          }
+        ],
+        "system_path": []
+      }
+    }
+  }
+}
+```
+
+
+## Links discovered
+- [`execv(3)`](https://linux.die.net/man/3/execv)
+- [`default.policy`](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/src/default.policy)
+- [Starlark](https://bazel.build/rules/language)
+- [`starlark-rust`](https://github.com/facebook/starlark-rust)
+- [via unit tests](https://github.com/openai/codex/blob/main/codex-rs/execpolicy-legacy/tests.md)
 
 --- scripts/readme_toc.py ---
 #!/usr/bin/env python3
@@ -5467,7 +6427,8 @@ if _SPEC is None or _SPEC.loader is None:
 _BUILD_MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_BUILD_MODULE)
 PACKAGE_NATIVE_COMPONENTS = getattr(_BUILD_MODULE, "PACKAGE_NATIVE_COMPONENTS", {})
-WINDOWS_ONLY_COMPONENTS = getattr(_BUILD_MODULE, "WINDOWS_ONLY_COMPONENTS", {})
+PACKAGE_EXPANSIONS = getattr(_BUILD_MODULE, "PACKAGE_EXPANSIONS", {})
+CODEX_PLATFORM_PACKAGES = getattr(_BUILD_MODULE, "CODEX_PLATFORM_PACKAGES", {})
 
 
 def parse_args() -> argparse.Namespace:
@@ -5506,8 +6467,17 @@ def collect_native_components(packages: list[str]) -> set[str]:
     components: set[str] = set()
     for package in packages:
         components.update(PACKAGE_NATIVE_COMPONENTS.get(package, []))
-        components.update(WINDOWS_ONLY_COMPONENTS.get(package, []))
     return components
+
+
+def expand_packages(packages: list[str]) -> list[str]:
+    expanded: list[str] = []
+    for package in packages:
+        for expanded_package in PACKAGE_EXPANSIONS.get(package, [package]):
+            if expanded_package in expanded:
+                continue
+            expanded.append(expanded_package)
+    return expanded
 
 
 def resolve_release_workflow(version: str) -> dict:
@@ -5562,6 +6532,13 @@ def run_command(cmd: list[str]) -> None:
     subprocess.run(cmd, cwd=REPO_ROOT, check=True)
 
 
+def tarball_name_for_package(package: str, version: str) -> str:
+    if package in CODEX_PLATFORM_PACKAGES:
+        platform = package.removeprefix("codex-")
+        return f"codex-npm-{platform}-{version}.tgz"
+    return f"{package}-npm-{version}.tgz"
+
+
 def main() -> int:
     args = parse_args()
 
@@ -5570,14 +6547,14 @@ def main() -> int:
 
     runner_temp = Path(os.environ.get("RUNNER_TEMP", tempfile.gettempdir()))
 
-    packages = list(args.packages)
+    packages = expand_packages(list(args.packages))
     native_components = collect_native_components(packages)
 
     vendor_temp_root: Path | None = None
     vendor_src: Path | None = None
     resolved_head_sha: str | None = None
 
-    final_messsages = []
+    final_messages = []
 
     try:
         if native_components:
@@ -5593,7 +6570,7 @@ def main() -> int:
 
         for package in packages:
             staging_dir = Path(tempfile.mkdtemp(prefix=f"npm-stage-{package}-", dir=runner_temp))
-            pack_output = output_dir / f"{package}-npm-{args.release_version}.tgz"
+            pack_output = output_dir / tarball_name_for_package(package, args.release_version)
 
             cmd = [
                 str(BUILD_SCRIPT),
@@ -5616,12 +6593,12 @@ def main() -> int:
                 if not args.keep_staging_dirs:
                     shutil.rmtree(staging_dir, ignore_errors=True)
 
-            final_messsages.append(f"Staged {package} at {pack_output}")
+            final_messages.append(f"Staged {package} at {pack_output}")
     finally:
         if vendor_temp_root is not None and not args.keep_staging_dirs:
             shutil.rmtree(vendor_temp_root, ignore_errors=True)
 
-    for msg in final_messsages:
+    for msg in final_messages:
         print(msg)
 
     return 0
@@ -5733,7 +6710,7 @@ The Codex harness (used by the CLI and the VS Code extension) sends such request
 This package wraps the `codex-exec-mcp-server` binary and its helpers so that the shell MCP can be invoked via `npx -y @openai/codex-shell-tool-mcp`. It bundles:
 
 - `codex-exec-mcp-server` and `codex-execve-wrapper` built for macOS (arm64, x64) and Linux (musl arm64, musl x64).
-- A patched Bash that honors `BASH_EXEC_WRAPPER`, built for multiple glibc baselines (Ubuntu 24.04/22.04/20.04, Debian 12/11, CentOS-like 9) and macOS (15/14/13).
+- A patched Bash that honors `EXEC_WRAPPER`, built for multiple glibc baselines (Ubuntu 24.04/22.04/20.04, Debian 12/11, CentOS-like 9) and macOS (15/14/13).
 - A launcher (`bin/mcp-server.js`) that picks the correct binaries for the current `process.platform` / `process.arch`, specifying `--execve` and `--bash` for the MCP, as appropriate.
 
 See [the README in the Codex repo](https://github.com/openai/codex/blob/main/codex-rs/exec-server/README.md) for details.

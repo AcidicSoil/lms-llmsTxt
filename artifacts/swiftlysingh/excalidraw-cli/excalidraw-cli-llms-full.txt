@@ -1,0 +1,3061 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- README.md ---
+# excalidraw-cli
+<p>
+  <a href="https://www.npmjs.com/package/@swiftlysingh/excalidraw-cli"><img src="https://img.shields.io/npm/v/@swiftlysingh/excalidraw-cli" alt="npm version"></a>
+  <a href="https://github.com/swiftlysingh/excalidraw-cli/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License"></a>
+</p>
+
+<p align="center">
+  <img alt="image" src="https://github.com/user-attachments/assets/5af4b002-bd69-4187-8836-84135685117a" />
+</p>
+
+<p align="center">
+  Create Excalidraw flowcharts and diagrams from text-based DSL or JSON.
+</p>
+
+
+
+## Features
+
+- **Text-based DSL** for quick flowchart creation
+- **JSON API** for programmatic use
+- **Auto-layout** using ELK.js (Eclipse Layout Kernel)
+- **Multiple flow directions**: TB (top-bottom), BT, LR, RL
+- **Programmable API** for integration into other tools
+
+## Installation
+
+### Using the npm
+
+```bash
+npm i @swiftlysingh/excalidraw-cli
+```
+
+### From Source (Local Development)
+
+```bash
+git clone https://github.com/swiftlysingh/excalidraw-cli.git
+cd excalidraw-cli
+npm install
+npm run build
+npm link  # Makes 'excalidraw-cli' available globally
+```
+
+### Direct Usage (No Install)
+
+```bash
+# Run directly with node
+node dist/cli.js create --inline "[A] -> [B]" -o diagram.excalidraw
+```
+
+## Quick Start
+
+### Create from DSL
+
+```bash
+# Inline DSL
+excalidraw-cli create --inline "(Start) -> [Process] -> {Decision?}" -o flow.excalidraw
+
+# From file
+excalidraw-cli create flowchart.dsl -o diagram.excalidraw
+
+# From stdin
+echo "[A] -> [B] -> [C]" | excalidraw-cli create --stdin -o diagram.excalidraw
+```
+
+### DSL Syntax
+
+| Syntax | Element | Description |
+|--------|---------|-------------|
+| `[Label]` | Rectangle | Process steps, actions |
+| `{Label}` | Diamond | Decisions, conditionals |
+| `(Label)` | Ellipse | Start/End points |
+| `[[Label]]` | Database | Data storage |
+| `->` | Arrow | Connection |
+| `-->` | Dashed Arrow | Dashed connection |
+| `-> "text" ->` | Labeled Arrow | Connection with label |
+
+### Example DSL
+
+```
+(Start) -> [Enter Credentials] -> {Valid?}
+{Valid?} -> "yes" -> [Dashboard] -> (End)
+{Valid?} -> "no" -> [Show Error] -> [Enter Credentials]
+```
+
+### Directives
+
+```
+@direction LR    # Left to Right (default: TB)
+@spacing 60      # Node spacing in pixels
+```
+
+## CLI Reference
+
+### Commands
+
+#### `create`
+
+Create an Excalidraw flowchart.
+
+```bash
+excalidraw-cli create [input] [options]
+```
+
+**Options:**
+- `-o, --output <file>` - Output file path (default: flowchart.excalidraw)
+- `-f, --format <type>` - Input format: dsl, json (default: dsl)
+- `--inline <dsl>` - Inline DSL string
+- `--stdin` - Read from stdin
+- `-d, --direction <dir>` - Flow direction: TB, BT, LR, RL
+- `-s, --spacing <n>` - Node spacing in pixels
+- `--verbose` - Verbose output
+
+#### `parse`
+
+Parse and validate input without generating output.
+
+```bash
+excalidraw-cli parse <input> [options]
+```
+
+## JSON API
+
+For programmatic flowchart creation:
+
+```json
+{
+  "nodes": [
+    { "id": "start", "type": "ellipse", "label": "Start" },
+    { "id": "process", "type": "rectangle", "label": "Process" },
+    { "id": "end", "type": "ellipse", "label": "End" }
+  ],
+  "edges": [
+    { "from": "start", "to": "process" },
+    { "from": "process", "to": "end" }
+  ],
+  "options": {
+    "direction": "TB",
+    "nodeSpacing": 50
+  }
+}
+```
+
+```bash
+excalidraw-cli create flowchart.json -o diagram.excalidraw
+```
+
+## Programmatic Usage
+
+```typescript
+import { createFlowchartFromDSL, createFlowchartFromJSON } from 'excalidraw-cli';
+
+// From DSL
+const dsl = '(Start) -> [Process] -> (End)';
+const json = await createFlowchartFromDSL(dsl);
+
+// From JSON input
+const input = {
+  nodes: [
+    { id: 'a', type: 'rectangle', label: 'Hello' },
+    { id: 'b', type: 'rectangle', label: 'World' }
+  ],
+  edges: [{ from: 'a', to: 'b' }]
+};
+const json2 = await createFlowchartFromJSON(input);
+```
+
+## Examples
+
+Here are some flowcharts created with excalidraw-cli:
+
+### Simple Flow
+![Simple Flow](assets/up.png)
+
+### iOS App Architecture
+![iOS App Architecture](assets/ios-app-architecture.png)
+
+### LeetCode Problem Solving Flow
+![LeetCode Flow](assets/leetcode.png)
+
+## Output
+
+The generated `.excalidraw` files can be:
+
+1. Opened directly in [Excalidraw](https://excalidraw.com) (File > Open)
+2. Imported into Obsidian with the Excalidraw plugin
+3. Used with any tool that supports the Excalidraw format
+
+## License
+
+MIT
+
+
+## Links discovered
+- [Simple Flow](https://github.com/swiftlysingh/excalidraw-cli/blob/main/assets/up.png)
+- [iOS App Architecture](https://github.com/swiftlysingh/excalidraw-cli/blob/main/assets/ios-app-architecture.png)
+- [LeetCode Flow](https://github.com/swiftlysingh/excalidraw-cli/blob/main/assets/leetcode.png)
+- [Excalidraw](https://excalidraw.com)
+- [<img src="https://img.shields.io/npm/v/@swiftlysingh/excalidraw-cli" alt="npm version">](https://www.npmjs.com/package/@swiftlysingh/excalidraw-cli)
+- [<img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT License">](https://github.com/swiftlysingh/excalidraw-cli/blob/main/LICENSE)
+
+--- eslint.config.js ---
+import eslint from '@eslint/js';
+import tseslint from '@typescript-eslint/eslint-plugin';
+import tsparser from '@typescript-eslint/parser';
+
+export default [
+  eslint.configs.recommended,
+  {
+    files: ['src/**/*.ts'],
+    languageOptions: {
+      parser: tsparser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+      },
+      globals: {
+        console: 'readonly',
+        process: 'readonly',
+        Buffer: 'readonly',
+        __dirname: 'readonly',
+        __filename: 'readonly',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tseslint,
+    },
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-unused-vars': 'off',
+    },
+  },
+  {
+    ignores: ['dist/', 'node_modules/', '*.js'],
+  },
+];
+
+
+--- vitest.config.ts ---
+import { defineConfig } from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'node',
+    include: ['tests/**/*.test.ts'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html'],
+      include: ['src/**/*.ts'],
+      exclude: ['src/types/**/*.ts'],
+    },
+  },
+});
+
+
+--- src/cli.ts ---
+#!/usr/bin/env node
+
+/**
+ * Excalidraw CLI
+ *
+ * Create Excalidraw flowcharts from DSL, JSON, or DOT input.
+ */
+
+import { Command } from 'commander';
+import { readFileSync, writeFileSync } from 'fs';
+import { parseDSL } from './parser/dsl-parser.js';
+import { parseJSONString } from './parser/json-parser.js';
+import { parseDOT } from './parser/dot-parser.js';
+import { layoutGraph } from './layout/elk-layout.js';
+import { generateExcalidraw, serializeExcalidraw } from './generator/excalidraw-generator.js';
+import type { FlowchartGraph, FlowDirection } from './types/dsl.js';
+
+const program = new Command();
+
+program
+  .name('excalidraw-cli')
+  .description('Create Excalidraw flowcharts from DSL, JSON, or DOT')
+  .version('1.0.1');
+
+/**
+ * Create command - main flowchart creation
+ */
+program
+  .command('create')
+  .description('Create an Excalidraw flowchart')
+  .argument('[input]', 'Input file path (DSL, JSON, or DOT)')
+  .option('-o, --output <file>', 'Output file path', 'flowchart.excalidraw')
+  .option('-f, --format <type>', 'Input format: dsl, json, dot (default: dsl)', 'dsl')
+  .option('--inline <dsl>', 'Inline DSL/DOT string')
+  .option('--stdin', 'Read input from stdin')
+  .option('-d, --direction <dir>', 'Flow direction: TB, BT, LR, RL (default: TB)')
+  .option('-s, --spacing <n>', 'Node spacing in pixels', '50')
+  .option('--verbose', 'Verbose output')
+  .action(async (inputFile, options, command) => {
+    try {
+      let input: string;
+      let format = options.format;
+      const formatExplicitlySet = command.getOptionValueSource('format') === 'cli';
+
+      // Get input from various sources
+      if (options.inline) {
+        input = options.inline;
+      } else if (options.stdin) {
+        input = readFileSync(0, 'utf-8'); // Read from stdin
+      } else if (inputFile) {
+        input = readFileSync(inputFile, 'utf-8');
+
+        // Auto-detect format from file extension (only if --format not explicitly set)
+        if (!formatExplicitlySet) {
+          if (inputFile.endsWith('.json')) {
+            format = 'json';
+          } else if (inputFile.endsWith('.dot') || inputFile.endsWith('.gv')) {
+            format = 'dot';
+          }
+        }
+      } else {
+        console.error('Error: No input provided. Use --inline, --stdin, or provide an input file.');
+        process.exit(1);
+      }
+
+      if (options.verbose) {
+        console.log(`Input format: ${format}`);
+        console.log(`Input length: ${input.length} characters`);
+      }
+
+      // Parse input
+      let graph: FlowchartGraph;
+      if (format === 'json') {
+        graph = parseJSONString(input);
+      } else if (format === 'dot') {
+        graph = parseDOT(input);
+      } else {
+        graph = parseDSL(input);
+      }
+
+      // Apply CLI options
+      if (options.direction) {
+        const dir = options.direction.toUpperCase() as FlowDirection;
+        if (['TB', 'BT', 'LR', 'RL'].includes(dir)) {
+          graph.options.direction = dir;
+        }
+      }
+      if (options.spacing) {
+        const spacing = parseInt(options.spacing, 10);
+        if (!isNaN(spacing)) {
+          graph.options.nodeSpacing = spacing;
+        }
+      }
+
+      if (options.verbose) {
+        console.log(`Parsed ${graph.nodes.length} nodes and ${graph.edges.length} edges`);
+        console.log(`Layout direction: ${graph.options.direction}`);
+      }
+
+      // Layout the graph
+      const layoutedGraph = await layoutGraph(graph);
+
+      if (options.verbose) {
+        console.log(`Layout complete. Canvas size: ${layoutedGraph.width}x${layoutedGraph.height}`);
+      }
+
+      // Generate Excalidraw file
+      const excalidrawFile = generateExcalidraw(layoutedGraph);
+      const output = serializeExcalidraw(excalidrawFile);
+
+      // Write output
+      if (options.output === '-') {
+        process.stdout.write(output);
+      } else {
+        writeFileSync(options.output, output, 'utf-8');
+        console.log(`Created: ${options.output}`);
+      }
+    } catch (error) {
+      console.error('Error:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+/**
+ * Parse command - parse and validate input without generating
+ */
+program
+  .command('parse')
+  .description('Parse and validate input without generating output')
+  .argument('<input>', 'Input file path')
+  .option('-f, --format <type>', 'Input format: dsl, json, dot (default: dsl)', 'dsl')
+  .action((inputFile, options, command) => {
+    try {
+      const input = readFileSync(inputFile, 'utf-8');
+      let format = options.format;
+      const formatExplicitlySet = command.getOptionValueSource('format') === 'cli';
+
+      // Auto-detect format from file extension (only if --format not explicitly set)
+      if (!formatExplicitlySet) {
+        if (inputFile.endsWith('.json')) {
+          format = 'json';
+        } else if (inputFile.endsWith('.dot') || inputFile.endsWith('.gv')) {
+          format = 'dot';
+        }
+      }
+
+      // Parse input
+      let graph: FlowchartGraph;
+      if (format === 'json') {
+        graph = parseJSONString(input);
+      } else if (format === 'dot') {
+        graph = parseDOT(input);
+      } else {
+        graph = parseDSL(input);
+      }
+
+      console.log('Parse successful!');
+      console.log(`  Nodes: ${graph.nodes.length}`);
+      console.log(`  Edges: ${graph.edges.length}`);
+      console.log(`  Direction: ${graph.options.direction}`);
+      console.log('\nNodes:');
+      for (const node of graph.nodes) {
+        console.log(`  - [${node.type}] ${node.label}`);
+      }
+      console.log('\nEdges:');
+      for (const edge of graph.edges) {
+        const sourceNode = graph.nodes.find((n) => n.id === edge.source);
+        const targetNode = graph.nodes.find((n) => n.id === edge.target);
+        const label = edge.label ? ` "${edge.label}"` : '';
+        console.log(`  - ${sourceNode?.label} ->${label} ${targetNode?.label}`);
+      }
+    } catch (error) {
+      console.error('Parse error:', error instanceof Error ? error.message : error);
+      process.exit(1);
+    }
+  });
+
+// Parse arguments and run
+program.parse();
+
+
+--- src/index.ts ---
+/**
+ * Excalidraw CLI - Programmatic API
+ *
+ * Create Excalidraw flowcharts programmatically.
+ */
+
+// Type exports
+export type {
+  FlowchartGraph,
+  FlowchartInput,
+  GraphNode,
+  GraphEdge,
+  LayoutOptions,
+  LayoutedGraph,
+  LayoutedNode,
+  LayoutedEdge,
+  NodeType,
+  NodeStyle,
+  EdgeStyle,
+  FlowDirection,
+} from './types/dsl.js';
+
+export type {
+  ExcalidrawFile,
+  ExcalidrawElement,
+  ExcalidrawRectangle,
+  ExcalidrawDiamond,
+  ExcalidrawEllipse,
+  ExcalidrawText,
+  ExcalidrawArrow,
+  ExcalidrawAppState,
+} from './types/excalidraw.js';
+
+// Parser exports
+export { parseDSL } from './parser/dsl-parser.js';
+export { parseJSON, parseJSONString } from './parser/json-parser.js';
+
+// Layout exports
+export { layoutGraph } from './layout/elk-layout.js';
+
+// Generator exports
+export { generateExcalidraw, serializeExcalidraw } from './generator/excalidraw-generator.js';
+
+// Factory exports (for advanced usage)
+export { createNode, createArrow, createText } from './factory/index.js';
+
+// Default options
+export { DEFAULT_LAYOUT_OPTIONS } from './types/dsl.js';
+export { DEFAULT_APP_STATE, DEFAULT_ELEMENT_STYLE } from './types/excalidraw.js';
+
+/**
+ * High-level API: Create an Excalidraw flowchart from DSL string
+ */
+export async function createFlowchartFromDSL(dsl: string): Promise<string> {
+  const graph = (await import('./parser/dsl-parser.js')).parseDSL(dsl);
+  const layoutedGraph = await (await import('./layout/elk-layout.js')).layoutGraph(graph);
+  const excalidrawFile = (await import('./generator/excalidraw-generator.js')).generateExcalidraw(
+    layoutedGraph
+  );
+  return (await import('./generator/excalidraw-generator.js')).serializeExcalidraw(excalidrawFile);
+}
+
+/**
+ * High-level API: Create an Excalidraw flowchart from JSON input
+ */
+export async function createFlowchartFromJSON(input: import('./types/dsl.js').FlowchartInput): Promise<string> {
+  const graph = (await import('./parser/json-parser.js')).parseJSON(input);
+  const layoutedGraph = await (await import('./layout/elk-layout.js')).layoutGraph(graph);
+  const excalidrawFile = (await import('./generator/excalidraw-generator.js')).generateExcalidraw(
+    layoutedGraph
+  );
+  return (await import('./generator/excalidraw-generator.js')).serializeExcalidraw(excalidrawFile);
+}
+
+
+--- src/layout/arrow-router.ts ---
+/**
+ * Arrow Router
+ *
+ * Calculates binding points for arrows connecting to shapes.
+ */
+
+import type { LayoutedNode } from '../types/dsl.js';
+import type { ExcalidrawArrowBinding } from '../types/excalidraw.js';
+
+/**
+ * Calculate the binding point for an arrow endpoint on a node.
+ * Returns normalized coordinates [0-1] relative to the node.
+ */
+export function calculateBindingPoint(
+  node: LayoutedNode,
+  arrowPoint: { x: number; y: number }
+): ExcalidrawArrowBinding {
+  // Calculate relative position
+  const relX = (arrowPoint.x - node.x) / node.width;
+  const relY = (arrowPoint.y - node.y) / node.height;
+
+  // Clamp to valid range [0, 1]
+  const fixedX = Math.max(0, Math.min(1, relX));
+  const fixedY = Math.max(0, Math.min(1, relY));
+
+  return {
+    elementId: node.id,
+    mode: 'orbit',
+    fixedPoint: [fixedX, fixedY],
+  };
+}
+
+/**
+ * Find the best connection point on a node's edge for an arrow
+ * coming from a given direction.
+ */
+export function findEdgeConnectionPoint(
+  node: LayoutedNode,
+  fromPoint: { x: number; y: number }
+): { x: number; y: number; binding: ExcalidrawArrowBinding } {
+  const centerX = node.x + node.width / 2;
+  const centerY = node.y + node.height / 2;
+
+  // Calculate angle from center to fromPoint
+  const dx = fromPoint.x - centerX;
+  const dy = fromPoint.y - centerY;
+  const angle = Math.atan2(dy, dx);
+
+  // Determine which edge to connect to based on angle
+  // Top: -3π/4 to -π/4
+  // Right: -π/4 to π/4
+  // Bottom: π/4 to 3π/4
+  // Left: 3π/4 to -3π/4 (wrapping)
+
+  let x: number;
+  let y: number;
+  let relX: number;
+  let relY: number;
+
+  if (angle >= -Math.PI / 4 && angle < Math.PI / 4) {
+    // Connect to right edge
+    x = node.x + node.width;
+    y = centerY;
+    relX = 1;
+    relY = 0.5;
+  } else if (angle >= Math.PI / 4 && angle < (3 * Math.PI) / 4) {
+    // Connect to bottom edge
+    x = centerX;
+    y = node.y + node.height;
+    relX = 0.5;
+    relY = 1;
+  } else if (angle >= (-3 * Math.PI) / 4 && angle < -Math.PI / 4) {
+    // Connect to top edge
+    x = centerX;
+    y = node.y;
+    relX = 0.5;
+    relY = 0;
+  } else {
+    // Connect to left edge
+    x = node.x;
+    y = centerY;
+    relX = 0;
+    relY = 0.5;
+  }
+
+  return {
+    x,
+    y,
+    binding: {
+      elementId: node.id,
+      mode: 'orbit',
+      fixedPoint: [relX, relY],
+    },
+  };
+}
+
+/**
+ * Calculate arrow binding for a source node (where arrow starts)
+ */
+export function calculateStartBinding(
+  sourceNode: LayoutedNode,
+  targetNode: LayoutedNode
+): { point: { x: number; y: number }; binding: ExcalidrawArrowBinding } {
+  const targetCenter = {
+    x: targetNode.x + targetNode.width / 2,
+    y: targetNode.y + targetNode.height / 2,
+  };
+
+  const result = findEdgeConnectionPoint(sourceNode, targetCenter);
+  return { point: { x: result.x, y: result.y }, binding: result.binding };
+}
+
+/**
+ * Calculate arrow binding for a target node (where arrow ends)
+ */
+export function calculateEndBinding(
+  sourceNode: LayoutedNode,
+  targetNode: LayoutedNode
+): { point: { x: number; y: number }; binding: ExcalidrawArrowBinding } {
+  const sourceCenter = {
+    x: sourceNode.x + sourceNode.width / 2,
+    y: sourceNode.y + sourceNode.height / 2,
+  };
+
+  const result = findEdgeConnectionPoint(targetNode, sourceCenter);
+  return { point: { x: result.x, y: result.y }, binding: result.binding };
+}
+
+
+--- src/factory/connection-factory.ts ---
+/**
+ * Connection Factory
+ *
+ * Creates Excalidraw arrow elements for connections between nodes.
+ */
+
+import { createBaseElement } from './element-factory.js';
+import { calculateStartBinding, calculateEndBinding } from '../layout/arrow-router.js';
+import type {
+  ExcalidrawArrow,
+  ExcalidrawArrowBinding,
+  ExcalidrawBoundElement,
+} from '../types/excalidraw.js';
+import type { LayoutedEdge, LayoutedNode, EdgeStyle } from '../types/dsl.js';
+
+/**
+ * Map DSL edge style to Excalidraw properties
+ */
+function mapEdgeStyle(style?: EdgeStyle): Partial<ExcalidrawArrow> {
+  if (!style) return {};
+
+  return {
+    strokeColor: style.strokeColor,
+    strokeWidth: style.strokeWidth,
+    strokeStyle: style.strokeStyle,
+    roughness: style.roughness,
+    startArrowhead: style.startArrowhead ?? null,
+    endArrowhead: style.endArrowhead ?? 'arrow',
+  };
+}
+
+/**
+ * Create an arrow element
+ */
+export function createArrow(
+  edge: LayoutedEdge,
+  sourceNode: LayoutedNode,
+  targetNode: LayoutedNode,
+  boundElements?: ExcalidrawBoundElement[]
+): ExcalidrawArrow {
+  const styleProps = mapEdgeStyle(edge.style);
+
+  // Calculate bindings
+  const startBindingInfo = calculateStartBinding(sourceNode, targetNode);
+  const endBindingInfo = calculateEndBinding(sourceNode, targetNode);
+
+  // Use the source point as arrow position
+  const x = edge.sourcePoint.x;
+  const y = edge.sourcePoint.y;
+
+  // Calculate bounding box for width/height
+  let minX = 0,
+    maxX = 0,
+    minY = 0,
+    maxY = 0;
+  for (const [px, py] of edge.points) {
+    minX = Math.min(minX, px);
+    maxX = Math.max(maxX, px);
+    minY = Math.min(minY, py);
+    maxY = Math.max(maxY, py);
+  }
+
+  const width = maxX - minX;
+  const height = maxY - minY;
+
+  return {
+    ...createBaseElement('arrow', x, y, width, height, {
+      id: edge.id,
+      roundness: { type: 2 }, // Proportional roundness for smooth curves
+      boundElements: boundElements || null,
+      ...styleProps,
+    }),
+    type: 'arrow',
+    points: edge.points,
+    lastCommittedPoint: null,
+    startBinding: startBindingInfo.binding,
+    endBinding: endBindingInfo.binding,
+    startArrowhead: styleProps.startArrowhead ?? null,
+    endArrowhead: styleProps.endArrowhead ?? 'arrow',
+    elbowed: false,
+  } as ExcalidrawArrow;
+}
+
+/**
+ * Create arrow with explicit bindings
+ */
+export function createArrowWithBindings(
+  id: string,
+  x: number,
+  y: number,
+  points: Array<[number, number]>,
+  startBinding: ExcalidrawArrowBinding | null,
+  endBinding: ExcalidrawArrowBinding | null,
+  boundElements?: ExcalidrawBoundElement[],
+  style?: EdgeStyle
+): ExcalidrawArrow {
+  const styleProps = mapEdgeStyle(style);
+
+  // Calculate bounding box
+  let minX = 0,
+    maxX = 0,
+    minY = 0,
+    maxY = 0;
+  for (const [px, py] of points) {
+    minX = Math.min(minX, px);
+    maxX = Math.max(maxX, px);
+    minY = Math.min(minY, py);
+    maxY = Math.max(maxY, py);
+  }
+
+  return {
+    ...createBaseElement('arrow', x, y, maxX - minX, maxY - minY, {
+      id,
+      roundness: { type: 2 },
+      boundElements: boundElements || null,
+      ...styleProps,
+    }),
+    type: 'arrow',
+    points,
+    lastCommittedPoint: null,
+    startBinding,
+    endBinding,
+    startArrowhead: styleProps.startArrowhead ?? null,
+    endArrowhead: styleProps.endArrowhead ?? 'arrow',
+    elbowed: false,
+  } as ExcalidrawArrow;
+}
+
+
+--- src/parser/dot-parser.ts ---
+/**
+ * DOT/Graphviz Parser
+ *
+ * Parses DOT language syntax and converts to FlowchartGraph.
+ * Uses ts-graphviz library for parsing.
+ *
+ * Supported DOT features:
+ *   - digraph and graph declarations
+ *   - Node declarations with labels and shapes
+ *   - Edges: A -> B (directed) and A -- B (undirected)
+ *   - Edge labels: [label="text"]
+ *   - Node shapes: [shape=diamond|ellipse|box|cylinder]
+ *   - Graph direction: rankdir=TB|BT|LR|RL
+ *   - Dashed edges: [style=dashed]
+ *   - Subgraphs (flattened to regular nodes)
+ *   - Color attributes (fillcolor, color)
+ */
+
+import { fromDot, type RootGraphModel, type NodeModel, type EdgeModel, type SubgraphModel } from 'ts-graphviz';
+import { nanoid } from 'nanoid';
+import type {
+  FlowchartGraph,
+  GraphNode,
+  GraphEdge,
+  LayoutOptions,
+  NodeType,
+  FlowDirection,
+  NodeStyle,
+  EdgeStyle,
+} from '../types/dsl.js';
+import { DEFAULT_LAYOUT_OPTIONS } from '../types/dsl.js';
+
+/**
+ * Map of DOT node IDs to their explicit NodeModel (if declared explicitly)
+ */
+type ExplicitNodeMap = Map<string, NodeModel>;
+
+/**
+ * Map DOT shape names to our NodeType
+ */
+function mapDotShape(dotShape: string | undefined): NodeType {
+  if (!dotShape) return 'rectangle';
+
+  const shape = dotShape.toLowerCase();
+
+  switch (shape) {
+    case 'ellipse':
+    case 'oval':
+    case 'circle':
+      return 'ellipse';
+    case 'diamond':
+      return 'diamond';
+    case 'cylinder':
+    case 'record':
+    case 'mrecord':
+      return 'database';
+    case 'box':
+    case 'rect':
+    case 'rectangle':
+    case 'square':
+    default:
+      return 'rectangle';
+  }
+}
+
+/**
+ * Map DOT rankdir to our FlowDirection
+ */
+function mapRankDir(rankdir: string | undefined): FlowDirection | undefined {
+  if (!rankdir) return undefined;
+
+  const dir = rankdir.toUpperCase();
+  if (dir === 'TB' || dir === 'BT' || dir === 'LR' || dir === 'RL') {
+    return dir as FlowDirection;
+  }
+  return undefined;
+}
+
+/**
+ * Check if a DOT style attribute contains a specific style value.
+ * DOT style attributes can be comma-separated (e.g., "filled,dashed").
+ * This function splits by comma and checks for exact matches to avoid
+ * false positives like "dashedline" matching "dashed".
+ */
+function hasStyleValue(styleAttr: string, value: string): boolean {
+  const styles = styleAttr.split(',').map((s) => s.trim().toLowerCase());
+  return styles.includes(value.toLowerCase());
+}
+
+/**
+ * Extract node style from DOT attributes
+ */
+function extractNodeStyle(node: NodeModel): NodeStyle | undefined {
+  const style: NodeStyle = {};
+  let hasStyle = false;
+
+  const fillcolor = node.attributes.get('fillcolor');
+  if (fillcolor && typeof fillcolor === 'string') {
+    style.backgroundColor = fillcolor;
+    hasStyle = true;
+  }
+
+  const color = node.attributes.get('color');
+  if (color && typeof color === 'string') {
+    style.strokeColor = color;
+    hasStyle = true;
+  }
+
+  const styleAttr = node.attributes.get('style');
+  if (styleAttr && typeof styleAttr === 'string') {
+    if (hasStyleValue(styleAttr, 'dashed')) {
+      style.strokeStyle = 'dashed';
+      hasStyle = true;
+    } else if (hasStyleValue(styleAttr, 'dotted')) {
+      style.strokeStyle = 'dotted';
+      hasStyle = true;
+    }
+  }
+
+  return hasStyle ? style : undefined;
+}
+
+/**
+ * Extract edge style from DOT attributes
+ */
+function extractEdgeStyle(edge: EdgeModel): EdgeStyle | undefined {
+  const style: EdgeStyle = {};
+  let hasStyle = false;
+
+  const color = edge.attributes.get('color');
+  if (color && typeof color === 'string') {
+    style.strokeColor = color;
+    hasStyle = true;
+  }
+
+  const styleAttr = edge.attributes.get('style');
+  if (styleAttr && typeof styleAttr === 'string') {
+    if (hasStyleValue(styleAttr, 'dashed')) {
+      style.strokeStyle = 'dashed';
+      hasStyle = true;
+    } else if (hasStyleValue(styleAttr, 'dotted')) {
+      style.strokeStyle = 'dotted';
+      hasStyle = true;
+    }
+  }
+
+  return hasStyle ? style : undefined;
+}
+
+/**
+ * Get the node ID from an edge target (handles NodeModel and ForwardRefNode/plain objects)
+ */
+function getNodeIdFromTarget(target: unknown): string | null {
+  if (!target) return null;
+
+  // Handle NodeModel or ForwardRefNode (both have id property)
+  if (typeof target === 'object' && 'id' in target && typeof (target as { id: unknown }).id === 'string') {
+    return (target as { id: string }).id;
+  }
+
+  return null;
+}
+
+/**
+ * Recursively collect all explicit nodes from a graph and its subgraphs
+ */
+function collectExplicitNodes(
+  graph: RootGraphModel | SubgraphModel,
+  explicitNodes: ExplicitNodeMap
+): void {
+  // Process explicit nodes in this graph
+  for (const node of graph.nodes) {
+    if (!explicitNodes.has(node.id)) {
+      explicitNodes.set(node.id, node);
+    }
+  }
+
+  // Recursively process subgraphs
+  for (const subgraph of graph.subgraphs) {
+    collectExplicitNodes(subgraph, explicitNodes);
+  }
+}
+
+/**
+ * Recursively collect all node IDs referenced in edges
+ */
+function collectNodeIdsFromEdges(
+  graph: RootGraphModel | SubgraphModel,
+  nodeIds: Set<string>
+): void {
+  for (const edge of graph.edges) {
+    const targets = edge.targets;
+    if (!targets) continue;
+
+    for (const target of targets) {
+      const id = getNodeIdFromTarget(target);
+      if (id) {
+        nodeIds.add(id);
+      }
+    }
+  }
+
+  // Recursively process subgraphs
+  for (const subgraph of graph.subgraphs) {
+    collectNodeIdsFromEdges(subgraph, nodeIds);
+  }
+}
+
+/**
+ * Recursively collect all edges from a graph and its subgraphs
+ */
+function collectEdges(
+  graph: RootGraphModel | SubgraphModel,
+  nodeMap: Map<string, GraphNode>,
+  edges: GraphEdge[]
+): void {
+  // Process edges in this graph
+  for (const edge of graph.edges) {
+    const targets = edge.targets;
+    if (!targets || targets.length < 2) continue;
+
+    // Process edge chain (A -> B -> C becomes A->B and B->C)
+    for (let i = 0; i < targets.length - 1; i++) {
+      const sourceId = getNodeIdFromTarget(targets[i]);
+      const targetId = getNodeIdFromTarget(targets[i + 1]);
+
+      if (!sourceId || !targetId) continue;
+
+      const sourceNode = nodeMap.get(sourceId);
+      const targetNode = nodeMap.get(targetId);
+
+      if (!sourceNode || !targetNode) continue;
+
+      const label = edge.attributes.get('label');
+      const edgeStyle = extractEdgeStyle(edge);
+
+      edges.push({
+        id: nanoid(10),
+        source: sourceNode.id,
+        target: targetNode.id,
+        label: typeof label === 'string' ? label : undefined,
+        style: edgeStyle,
+      });
+    }
+  }
+
+  // Recursively process subgraphs
+  for (const subgraph of graph.subgraphs) {
+    collectEdges(subgraph, nodeMap, edges);
+  }
+}
+
+/**
+ * Parse DOT string into a FlowchartGraph
+ */
+export function parseDOT(input: string): FlowchartGraph {
+  let rootGraph: RootGraphModel;
+
+  try {
+    rootGraph = fromDot(input);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Invalid DOT syntax: ${message}`);
+  }
+
+  const options: LayoutOptions = { ...DEFAULT_LAYOUT_OPTIONS };
+
+  // Extract graph-level attributes using get() on the root graph
+  const rankdir = rootGraph.get('rankdir');
+  const direction = mapRankDir(typeof rankdir === 'string' ? rankdir : undefined);
+  if (direction) {
+    options.direction = direction;
+  }
+
+  const nodesep = rootGraph.get('nodesep');
+  if (typeof nodesep === 'number') {
+    // nodesep is in inches, convert to approximate pixels (72 dpi)
+    options.nodeSpacing = Math.round(nodesep * 72);
+  }
+
+  const ranksep = rootGraph.get('ranksep');
+  if (typeof ranksep === 'number') {
+    // ranksep is in inches, convert to approximate pixels (72 dpi)
+    options.rankSpacing = Math.round(ranksep * 72);
+  }
+
+  // Step 1: Collect all explicit nodes (declared with attributes)
+  const explicitNodes: ExplicitNodeMap = new Map();
+  collectExplicitNodes(rootGraph, explicitNodes);
+
+  // Step 2: Collect all node IDs referenced in edges (including implicit nodes)
+  const allNodeIds = new Set<string>();
+  collectNodeIdsFromEdges(rootGraph, allNodeIds);
+
+  // Also add explicit node IDs
+  for (const nodeId of explicitNodes.keys()) {
+    allNodeIds.add(nodeId);
+  }
+
+  // Step 3: Build the node map (merging explicit attributes with implicit nodes)
+  const nodeMap = new Map<string, GraphNode>();
+  for (const nodeId of allNodeIds) {
+    const explicitNode = explicitNodes.get(nodeId);
+
+    if (explicitNode) {
+      // Node was explicitly declared - use its attributes
+      const label = explicitNode.attributes.get('label');
+      const shape = explicitNode.attributes.get('shape');
+      const nodeStyle = extractNodeStyle(explicitNode);
+
+      nodeMap.set(nodeId, {
+        id: nanoid(10),
+        type: mapDotShape(typeof shape === 'string' ? shape : undefined),
+        label: typeof label === 'string' ? label : nodeId,
+        style: nodeStyle,
+      });
+    } else {
+      // Implicit node (only referenced in edges) - use defaults
+      nodeMap.set(nodeId, {
+        id: nanoid(10),
+        type: 'rectangle',
+        label: nodeId,
+      });
+    }
+  }
+
+  // Step 4: Collect all edges
+  const edges: GraphEdge[] = [];
+  collectEdges(rootGraph, nodeMap, edges);
+
+  return {
+    nodes: Array.from(nodeMap.values()),
+    edges,
+    options,
+  };
+}
+
+
+--- src/types/dsl.ts ---
+/**
+ * Flowchart DSL Type Definitions
+ */
+
+export type NodeType = 'rectangle' | 'diamond' | 'ellipse' | 'database' | 'image';
+
+export type FlowDirection = 'TB' | 'BT' | 'LR' | 'RL';
+
+export type LayoutAlgorithm = 'layered' | 'tree' | 'force';
+
+export type ArrowheadType = 'arrow' | 'bar' | 'dot' | 'triangle' | null;
+
+export type StrokeStyle = 'solid' | 'dashed' | 'dotted';
+
+export type FillStyle = 'solid' | 'hachure' | 'cross-hatch';
+
+/**
+ * Node style configuration
+ */
+export interface NodeStyle {
+  backgroundColor?: string;
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: StrokeStyle;
+  fillStyle?: FillStyle;
+  opacity?: number;
+  fontSize?: number;
+  fontFamily?: number;
+  roughness?: number;
+}
+
+/**
+ * Edge style configuration
+ */
+export interface EdgeStyle {
+  strokeColor?: string;
+  strokeWidth?: number;
+  strokeStyle?: StrokeStyle;
+  startArrowhead?: ArrowheadType;
+  endArrowhead?: ArrowheadType;
+  roughness?: number;
+}
+
+/**
+ * Image source configuration
+ */
+export interface ImageSource {
+  src: string; // File path or URL
+  width?: number; // Explicit width (optional)
+  height?: number; // Explicit height (optional)
+}
+
+/**
+ * Decoration position anchors
+ */
+export type DecorationAnchor =
+  | 'top'
+  | 'bottom'
+  | 'left'
+  | 'right'
+  | 'top-left'
+  | 'top-right'
+  | 'bottom-left'
+  | 'bottom-right';
+
+/**
+ * Decoration attached to a node
+ */
+export interface NodeDecoration {
+  src: string;
+  anchor: DecorationAnchor;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * A node in the flowchart graph
+ */
+export interface GraphNode {
+  id: string;
+  type: NodeType;
+  label: string;
+  style?: NodeStyle;
+  image?: ImageSource; // For image nodes
+  decorations?: NodeDecoration[]; // Decorations attached to this node
+}
+
+/**
+ * An edge (connection) between nodes
+ */
+export interface GraphEdge {
+  id: string;
+  source: string;
+  target: string;
+  label?: string;
+  style?: EdgeStyle;
+}
+
+/**
+ * Layout configuration options
+ */
+export interface LayoutOptions {
+  algorithm: LayoutAlgorithm;
+  direction: FlowDirection;
+  nodeSpacing: number;
+  rankSpacing: number;
+  padding: number;
+}
+
+/**
+ * Positioned image (decoration placed at absolute or relative position)
+ */
+export interface PositionedImage {
+  id: string;
+  src: string;
+  position:
+    | { type: 'absolute'; x: number; y: number }
+    | { type: 'near'; nodeLabel: string; anchor?: DecorationAnchor };
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Scatter configuration for distributing images across the canvas
+ */
+export interface ScatterConfig {
+  src: string;
+  count: number;
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Complete flowchart graph representation
+ */
+export interface FlowchartGraph {
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  options: LayoutOptions;
+  images?: PositionedImage[]; // @image directives
+  scatter?: ScatterConfig[]; // @scatter directives
+  library?: string; // @library path
+}
+
+/**
+ * Default layout options
+ */
+export const DEFAULT_LAYOUT_OPTIONS: LayoutOptions = {
+  algorithm: 'layered',
+  direction: 'TB',
+  nodeSpacing: 50,
+  rankSpacing: 80,
+  padding: 50,
+};
+
+/**
+ * JSON input format for programmatic API
+ */
+export interface FlowchartInput {
+  nodes: Array<{
+    id: string;
+    type: string;
+    label: string;
+    style?: NodeStyle;
+  }>;
+  edges: Array<{
+    from: string;
+    to: string;
+    label?: string;
+    style?: EdgeStyle;
+  }>;
+  options?: Partial<LayoutOptions>;
+}
+
+/**
+ * Node with computed layout position
+ */
+export interface LayoutedNode extends GraphNode {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Edge with computed layout points
+ */
+export interface LayoutedEdge extends GraphEdge {
+  points: Array<[number, number]>;
+  sourcePoint: { x: number; y: number };
+  targetPoint: { x: number; y: number };
+}
+
+/**
+ * Layouted positioned image with resolved coordinates
+ */
+export interface LayoutedImage {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+/**
+ * Layouted flowchart graph
+ */
+export interface LayoutedGraph {
+  nodes: LayoutedNode[];
+  edges: LayoutedEdge[];
+  options: LayoutOptions;
+  width: number;
+  height: number;
+  images?: LayoutedImage[]; // Resolved positioned images
+  scatter?: ScatterConfig[]; // Scatter configs for post-layout generation
+  library?: string; // Library path
+}
+
+
+--- src/parser/dsl-parser.ts ---
+/**
+ * DSL Parser for Flowchart Syntax
+ *
+ * Syntax:
+ *   [Label]        - Rectangle (process step)
+ *   {Label}        - Diamond (decision)
+ *   (Label)        - Ellipse (start/end)
+ *   [[Label]]      - Database
+ *   ![path]        - Image element
+ *   ![path](WxH)   - Image with dimensions
+ *   A -> B         - Connection
+ *   A -> "label" -> B  - Labeled connection
+ *   A --> B        - Dashed connection
+ *
+ * Directives:
+ *   @direction TB  - Set flow direction (TB, BT, LR, RL)
+ *   @spacing N     - Set node spacing
+ *   @image path at X,Y           - Position image at absolute coordinates
+ *   @image path near (NodeLabel) - Position image near a node
+ *   @decorate path anchor        - Attach decoration to preceding node
+ *   @sticker name [at X,Y]       - Add sticker from library
+ *   @library path                - Set custom sticker library path
+ *   @scatter path count:N        - Scatter images across canvas
+ */
+
+import { nanoid } from 'nanoid';
+import type {
+  FlowchartGraph,
+  GraphNode,
+  GraphEdge,
+  LayoutOptions,
+  NodeType,
+  PositionedImage,
+  ScatterConfig,
+  DecorationAnchor,
+  ImageSource,
+} from '../types/dsl.js';
+import { DEFAULT_LAYOUT_OPTIONS } from '../types/dsl.js';
+
+interface Token {
+  type: 'node' | 'arrow' | 'label' | 'directive' | 'newline' | 'image' | 'decorate';
+  value: string;
+  nodeType?: NodeType;
+  dashed?: boolean;
+  // Image-specific properties
+  imageSrc?: string;
+  imageWidth?: number;
+  imageHeight?: number;
+  // Decoration-specific properties
+  decorationAnchor?: DecorationAnchor;
+}
+
+/**
+ * Tokenize DSL input into tokens
+ */
+function tokenize(input: string): Token[] {
+  const tokens: Token[] = [];
+  let i = 0;
+  const len = input.length;
+
+  while (i < len) {
+    // Skip whitespace (except newlines)
+    if (input[i] === ' ' || input[i] === '\t') {
+      i++;
+      continue;
+    }
+
+    // Newline
+    if (input[i] === '\n') {
+      tokens.push({ type: 'newline', value: '\n' });
+      i++;
+      continue;
+    }
+
+    // Comment (skip rest of line)
+    if (input[i] === '#') {
+      while (i < len && input[i] !== '\n') i++;
+      continue;
+    }
+
+    // Image ![path] or ![path](WxH)
+    if (input[i] === '!' && input[i + 1] === '[') {
+      i += 2; // skip ![
+      let src = '';
+      while (i < len && input[i] !== ']') {
+        src += input[i];
+        i++;
+      }
+      i++; // skip ]
+
+      let width: number | undefined;
+      let height: number | undefined;
+
+      // Check for optional dimensions (WxH)
+      if (i < len && input[i] === '(') {
+        i++; // skip (
+        let dims = '';
+        while (i < len && input[i] !== ')') {
+          dims += input[i];
+          i++;
+        }
+        i++; // skip )
+        const match = dims.match(/^(\d+)\s*[xX]\s*(\d+)$/);
+        if (match) {
+          width = parseInt(match[1], 10);
+          height = parseInt(match[2], 10);
+        }
+      }
+
+      tokens.push({
+        type: 'image',
+        value: src.trim(),
+        imageSrc: src.trim(),
+        imageWidth: width,
+        imageHeight: height,
+      });
+      continue;
+    }
+
+    // Directive (@direction, @spacing, @image, @decorate, @sticker, @library, @scatter)
+    if (input[i] === '@') {
+      let directive = '';
+      i++; // skip @
+      while (i < len && /[a-zA-Z0-9]/.test(input[i])) {
+        directive += input[i];
+        i++;
+      }
+      // Get directive value (stop at newline, comment, or another @)
+      while (i < len && (input[i] === ' ' || input[i] === '\t')) i++;
+      let value = '';
+      while (i < len && input[i] !== '\n' && input[i] !== '#' && input[i] !== '@') {
+        value += input[i];
+        i++;
+      }
+
+      // Handle @decorate as a special token type (attaches to preceding node)
+      if (directive === 'decorate') {
+        // Parse: @decorate path anchor
+        const parts = value.trim().split(/\s+/);
+        const src = parts[0] || '';
+        const anchor = (parts[1] || 'top-right') as DecorationAnchor;
+        tokens.push({
+          type: 'decorate',
+          value: src,
+          imageSrc: src,
+          decorationAnchor: anchor,
+        });
+      } else {
+        tokens.push({ type: 'directive', value: `${directive} ${value.trim()}` });
+      }
+      continue;
+    }
+
+    // Database [[Label]]
+    if (input[i] === '[' && input[i + 1] === '[') {
+      i += 2;
+      let label = '';
+      while (i < len && !(input[i] === ']' && input[i + 1] === ']')) {
+        label += input[i];
+        i++;
+      }
+      i += 2; // skip ]]
+      tokens.push({ type: 'node', value: label.trim(), nodeType: 'database' });
+      continue;
+    }
+
+    // Rectangle [Label]
+    if (input[i] === '[') {
+      i++;
+      let label = '';
+      let depth = 1;
+      while (i < len && depth > 0) {
+        if (input[i] === '[') depth++;
+        else if (input[i] === ']') depth--;
+        if (depth > 0) label += input[i];
+        i++;
+      }
+      tokens.push({ type: 'node', value: label.trim(), nodeType: 'rectangle' });
+      continue;
+    }
+
+    // Diamond {Label}
+    if (input[i] === '{') {
+      i++;
+      let label = '';
+      let depth = 1;
+      while (i < len && depth > 0) {
+        if (input[i] === '{') depth++;
+        else if (input[i] === '}') depth--;
+        if (depth > 0) label += input[i];
+        i++;
+      }
+      tokens.push({ type: 'node', value: label.trim(), nodeType: 'diamond' });
+      continue;
+    }
+
+    // Ellipse (Label)
+    if (input[i] === '(') {
+      i++;
+      let label = '';
+      let depth = 1;
+      while (i < len && depth > 0) {
+        if (input[i] === '(') depth++;
+        else if (input[i] === ')') depth--;
+        if (depth > 0) label += input[i];
+        i++;
+      }
+      tokens.push({ type: 'node', value: label.trim(), nodeType: 'ellipse' });
+      continue;
+    }
+
+    // Dashed arrow -->
+    if (input[i] === '-' && input[i + 1] === '-' && input[i + 2] === '>') {
+      tokens.push({ type: 'arrow', value: '-->', dashed: true });
+      i += 3;
+      continue;
+    }
+
+    // Arrow ->
+    if (input[i] === '-' && input[i + 1] === '>') {
+      tokens.push({ type: 'arrow', value: '->' });
+      i += 2;
+      continue;
+    }
+
+    // Quoted label "text"
+    if (input[i] === '"') {
+      i++;
+      let label = '';
+      while (i < len && input[i] !== '"') {
+        if (input[i] === '\\' && i + 1 < len) {
+          i++;
+          label += input[i];
+        } else {
+          label += input[i];
+        }
+        i++;
+      }
+      i++; // skip closing "
+      tokens.push({ type: 'label', value: label });
+      continue;
+    }
+
+    // Skip unknown characters
+    i++;
+  }
+
+  return tokens;
+}
+
+/**
+ * Parse @image directive value
+ * Formats:
+ *   @image path at X,Y
+ *   @image path near (NodeLabel)
+ *   @image path near (NodeLabel) anchor
+ */
+function parseImageDirective(value: string): PositionedImage | null {
+  // Match: path at X,Y
+  const atMatch = value.match(/^(.+?)\s+at\s+(\d+)\s*,\s*(\d+)$/i);
+  if (atMatch) {
+    return {
+      id: nanoid(10),
+      src: atMatch[1].trim(),
+      position: {
+        type: 'absolute',
+        x: parseInt(atMatch[2], 10),
+        y: parseInt(atMatch[3], 10),
+      },
+    };
+  }
+
+  // Match: path near (NodeLabel) [anchor]
+  const nearMatch = value.match(/^(.+?)\s+near\s+\(([^)]+)\)(?:\s+(\S+))?$/i);
+  if (nearMatch) {
+    return {
+      id: nanoid(10),
+      src: nearMatch[1].trim(),
+      position: {
+        type: 'near',
+        nodeLabel: nearMatch[2].trim(),
+        anchor: (nearMatch[3] as DecorationAnchor) || undefined,
+      },
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Parse @scatter directive value
+ * Format: @scatter path count:N [width:W] [height:H]
+ */
+function parseScatterDirective(value: string): ScatterConfig | null {
+  const parts = value.trim().split(/\s+/);
+  if (parts.length < 2) return null;
+
+  const src = parts[0];
+  let count = 10; // default
+  let width: number | undefined;
+  let height: number | undefined;
+
+  for (let i = 1; i < parts.length; i++) {
+    const [key, val] = parts[i].split(':');
+    if (key === 'count' && val) count = parseInt(val, 10);
+    if (key === 'width' && val) width = parseInt(val, 10);
+    if (key === 'height' && val) height = parseInt(val, 10);
+  }
+
+  return { src, count, width, height };
+}
+
+/**
+ * Parse tokens into a FlowchartGraph
+ */
+export function parseDSL(input: string): FlowchartGraph {
+  const tokens = tokenize(input);
+
+  const nodes: Map<string, GraphNode> = new Map();
+  const edges: GraphEdge[] = [];
+  const options: LayoutOptions = { ...DEFAULT_LAYOUT_OPTIONS };
+  const images: PositionedImage[] = [];
+  const scatter: ScatterConfig[] = [];
+  let library: string | undefined;
+
+  // Helper to get or create node by label
+  function getOrCreateNode(
+    label: string,
+    type: NodeType,
+    imageData?: ImageSource
+  ): GraphNode {
+    // Use label as key for deduplication
+    const key = `${type}:${label}`;
+    if (!nodes.has(key)) {
+      const node: GraphNode = {
+        id: nanoid(10),
+        type,
+        label,
+      };
+      if (imageData) {
+        node.image = imageData;
+      }
+      nodes.set(key, node);
+    }
+    return nodes.get(key)!;
+  }
+
+  let i = 0;
+  let lastNode: GraphNode | null = null;
+  let pendingLabel: string | null = null;
+  let pendingDashed = false;
+
+  while (i < tokens.length) {
+    const token = tokens[i];
+
+    if (token.type === 'newline') {
+      lastNode = null;
+      pendingLabel = null;
+      pendingDashed = false;
+      i++;
+      continue;
+    }
+
+    if (token.type === 'directive') {
+      const [directive, ...valueParts] = token.value.split(' ');
+      const value = valueParts.join(' ');
+
+      if (directive === 'direction') {
+        const dir = value.toUpperCase();
+        if (dir === 'TB' || dir === 'BT' || dir === 'LR' || dir === 'RL') {
+          options.direction = dir;
+        }
+      } else if (directive === 'spacing') {
+        const spacing = parseInt(value, 10);
+        if (!isNaN(spacing)) {
+          options.nodeSpacing = spacing;
+        }
+      } else if (directive === 'image') {
+        const img = parseImageDirective(value);
+        if (img) images.push(img);
+      } else if (directive === 'scatter') {
+        const cfg = parseScatterDirective(value);
+        if (cfg) scatter.push(cfg);
+      } else if (directive === 'library') {
+        library = value.trim();
+      } else if (directive === 'sticker') {
+        // Stickers are resolved later using the library path
+        // For now, treat as positioned image with sticker: prefix
+        const parts = value.trim().split(/\s+/);
+        const stickerName = parts[0];
+        if (stickerName) {
+          // Check for positioning (at or near)
+          const restValue = parts.slice(1).join(' ');
+          if (restValue.includes('at') || restValue.includes('near')) {
+            const img = parseImageDirective(`sticker:${stickerName} ${restValue}`);
+            if (img) images.push(img);
+          } else {
+            // Standalone sticker - will be placed at default position
+            images.push({
+              id: nanoid(10),
+              src: `sticker:${stickerName}`,
+              position: { type: 'absolute', x: 0, y: 0 }, // Will be resolved later
+            });
+          }
+        }
+      }
+      i++;
+      continue;
+    }
+
+    if (token.type === 'image') {
+      // Create an image node
+      const imageData: ImageSource = {
+        src: token.imageSrc!,
+        width: token.imageWidth,
+        height: token.imageHeight,
+      };
+      const node = getOrCreateNode(token.value, 'image', imageData);
+
+      if (lastNode) {
+        edges.push({
+          id: nanoid(10),
+          source: lastNode.id,
+          target: node.id,
+          label: pendingLabel || undefined,
+          style: pendingDashed ? { strokeStyle: 'dashed' } : undefined,
+        });
+        pendingLabel = null;
+        pendingDashed = false;
+      }
+
+      lastNode = node;
+      i++;
+      continue;
+    }
+
+    if (token.type === 'decorate') {
+      // Attach decoration to the last node
+      if (lastNode) {
+        if (!lastNode.decorations) {
+          lastNode.decorations = [];
+        }
+        lastNode.decorations.push({
+          src: token.imageSrc!,
+          anchor: token.decorationAnchor || 'top-right',
+        });
+      }
+      i++;
+      continue;
+    }
+
+    if (token.type === 'node') {
+      const node = getOrCreateNode(token.value, token.nodeType!);
+
+      if (lastNode) {
+        // Create edge from lastNode to this node
+        edges.push({
+          id: nanoid(10),
+          source: lastNode.id,
+          target: node.id,
+          label: pendingLabel || undefined,
+          style: pendingDashed ? { strokeStyle: 'dashed' } : undefined,
+        });
+        pendingLabel = null;
+        pendingDashed = false;
+      }
+
+      lastNode = node;
+      i++;
+      continue;
+    }
+
+    if (token.type === 'arrow') {
+      pendingDashed = token.dashed || false;
+      i++;
+      continue;
+    }
+
+    if (token.type === 'label') {
+      pendingLabel = token.value;
+      i++;
+      continue;
+    }
+
+    i++;
+  }
+
+  const result: FlowchartGraph = {
+    nodes: Array.from(nodes.values()),
+    edges,
+    options,
+  };
+
+  if (images.length > 0) result.images = images;
+  if (scatter.length > 0) result.scatter = scatter;
+  if (library) result.library = library;
+
+  return result;
+}
+
+// Re-export DEFAULT_LAYOUT_OPTIONS
+export { DEFAULT_LAYOUT_OPTIONS } from '../types/dsl.js';
+
+
+## Links discovered
+- [path](https://github.com/swiftlysingh/excalidraw-cli/blob/main/src/parser/WxH.md)
+
+--- src/factory/element-factory.ts ---
+/**
+ * Base Element Factory
+ *
+ * Creates base Excalidraw element properties shared by all elements.
+ */
+
+import { nanoid } from 'nanoid';
+import type { ExcalidrawElementBase } from '../types/excalidraw.js';
+import { DEFAULT_ELEMENT_STYLE } from '../types/excalidraw.js';
+
+// Index counter for z-ordering
+let indexCounter = 0;
+
+/**
+ * Generate a unique index string for element ordering
+ */
+function generateIndex(): string {
+  indexCounter++;
+  // Convert to base-26 alphabetic index (a, b, c, ..., aa, ab, ...)
+  let idx = indexCounter;
+  let result = '';
+  while (idx > 0) {
+    idx--;
+    result = String.fromCharCode(97 + (idx % 26)) + result;
+    idx = Math.floor(idx / 26);
+  }
+  return 'a' + result;
+}
+
+/**
+ * Generate a random seed for roughness rendering
+ */
+function generateSeed(): number {
+  return Math.floor(Math.random() * 2147483647);
+}
+
+/**
+ * Generate version nonce
+ */
+function generateVersionNonce(): number {
+  return Math.floor(Math.random() * 2147483647);
+}
+
+/**
+ * Create base element properties
+ */
+export function createBaseElement(
+  type: ExcalidrawElementBase['type'],
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  options?: Partial<ExcalidrawElementBase>
+): ExcalidrawElementBase {
+  return {
+    id: options?.id || nanoid(21),
+    type,
+    x,
+    y,
+    width,
+    height,
+    angle: options?.angle ?? 0,
+    strokeColor: options?.strokeColor ?? DEFAULT_ELEMENT_STYLE.strokeColor,
+    backgroundColor: options?.backgroundColor ?? DEFAULT_ELEMENT_STYLE.backgroundColor,
+    fillStyle: options?.fillStyle ?? DEFAULT_ELEMENT_STYLE.fillStyle,
+    strokeWidth: options?.strokeWidth ?? DEFAULT_ELEMENT_STYLE.strokeWidth,
+    strokeStyle: options?.strokeStyle ?? DEFAULT_ELEMENT_STYLE.strokeStyle,
+    roughness: options?.roughness ?? DEFAULT_ELEMENT_STYLE.roughness,
+    opacity: options?.opacity ?? DEFAULT_ELEMENT_STYLE.opacity,
+    groupIds: options?.groupIds ?? [],
+    frameId: options?.frameId ?? null,
+    index: options?.index ?? generateIndex(),
+    roundness: options?.roundness ?? null,
+    seed: options?.seed ?? generateSeed(),
+    version: options?.version ?? 1,
+    versionNonce: options?.versionNonce ?? generateVersionNonce(),
+    isDeleted: options?.isDeleted ?? false,
+    boundElements: options?.boundElements ?? null,
+    updated: options?.updated ?? Date.now(),
+    link: options?.link ?? null,
+    locked: options?.locked ?? false,
+  };
+}
+
+/**
+ * Reset the index counter (useful for testing)
+ */
+export function resetIndexCounter(): void {
+  indexCounter = 0;
+}
+
+// Re-export defaults
+export { DEFAULT_ELEMENT_STYLE } from '../types/excalidraw.js';
+
+
+--- src/layout/elk-layout.ts ---
+/**
+ * ELK.js Layout Engine
+ *
+ * Uses ELK (Eclipse Layout Kernel) for automatic graph layout.
+ */
+
+import _ELK from 'elkjs/lib/elk.bundled.js';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const ELK = _ELK as any;
+import type {
+  FlowchartGraph,
+  LayoutedGraph,
+  LayoutedNode,
+  LayoutedEdge,
+  LayoutedImage,
+  LayoutOptions,
+  GraphNode,
+  PositionedImage,
+  DecorationAnchor,
+} from '../types/dsl.js';
+import { getImageDimensions } from '../factory/image-factory.js';
+
+// ELK types
+interface ElkNode {
+  id: string;
+  width: number;
+  height: number;
+  x?: number;
+  y?: number;
+  labels?: Array<{ text: string }>;
+}
+
+interface ElkEdge {
+  id: string;
+  sources: string[];
+  targets: string[];
+  labels?: Array<{ text: string }>;
+  sections?: Array<{
+    startPoint: { x: number; y: number };
+    endPoint: { x: number; y: number };
+    bendPoints?: Array<{ x: number; y: number }>;
+  }>;
+}
+
+interface ElkGraph {
+  id: string;
+  layoutOptions: Record<string, string>;
+  children: ElkNode[];
+  edges: ElkEdge[];
+}
+
+/**
+ * Calculate node dimensions based on label and type
+ */
+function calculateNodeDimensions(node: GraphNode): { width: number; height: number } {
+  // Handle image nodes specially
+  if (node.type === 'image' && node.image) {
+    return getImageDimensions(node.image.src, node.image.width, node.image.height);
+  }
+
+  const lines = node.label.split('\n');
+  const maxLineLength = Math.max(...lines.map((l) => l.length));
+  const lineCount = lines.length;
+
+  // Base character width (approximate)
+  const charWidth = 10;
+  const lineHeight = 25;
+  const paddingX = 40;
+  const paddingY = 30;
+
+  let width = maxLineLength * charWidth + paddingX;
+  let height = lineCount * lineHeight + paddingY;
+
+  // Minimum dimensions based on node type
+  const minDimensions: Record<string, { width: number; height: number }> = {
+    rectangle: { width: 100, height: 60 },
+    diamond: { width: 120, height: 80 },
+    ellipse: { width: 100, height: 60 },
+    database: { width: 100, height: 70 },
+  };
+
+  const min = minDimensions[node.type] || minDimensions.rectangle;
+  width = Math.max(width, min.width);
+  height = Math.max(height, min.height);
+
+  // Diamonds need extra space for the rotated shape
+  if (node.type === 'diamond') {
+    width = Math.max(width * 1.4, 140);
+    height = Math.max(height * 1.4, 100);
+  }
+
+  return { width, height };
+}
+
+/**
+ * Convert flow direction to ELK direction
+ */
+function getElkDirection(direction: LayoutOptions['direction']): string {
+  const mapping: Record<string, string> = {
+    TB: 'DOWN',
+    BT: 'UP',
+    LR: 'RIGHT',
+    RL: 'LEFT',
+  };
+  return mapping[direction] || 'DOWN';
+}
+
+/**
+ * Layout a flowchart graph using ELK
+ */
+export async function layoutGraph(graph: FlowchartGraph): Promise<LayoutedGraph> {
+  const elk = new ELK();
+
+  // Build ELK graph
+  const elkGraph: ElkGraph = {
+    id: 'root',
+    layoutOptions: {
+      'elk.algorithm': 'layered',
+      'elk.direction': getElkDirection(graph.options.direction),
+      'elk.spacing.nodeNode': String(graph.options.nodeSpacing),
+      'elk.layered.spacing.baseValue': String(graph.options.rankSpacing),
+      'elk.layered.spacing.edgeNodeBetweenLayers': String(graph.options.nodeSpacing),
+      'elk.edgeRouting': 'ORTHOGONAL',
+      'elk.layered.crossingMinimization.strategy': 'LAYER_SWEEP',
+      'elk.layered.nodePlacement.strategy': 'NETWORK_SIMPLEX',
+    },
+    children: graph.nodes.map((node) => {
+      const dims = calculateNodeDimensions(node);
+      return {
+        id: node.id,
+        width: dims.width,
+        height: dims.height,
+        labels: [{ text: node.label }],
+      };
+    }),
+    edges: graph.edges.map((edge) => ({
+      id: edge.id,
+      sources: [edge.source],
+      targets: [edge.target],
+      labels: edge.label ? [{ text: edge.label }] : undefined,
+    })),
+  };
+
+  // Run ELK layout
+  const layoutResult = await elk.layout(elkGraph);
+
+  // Build node map for lookups
+  const nodeMap = new Map<string, GraphNode>();
+  for (const node of graph.nodes) {
+    nodeMap.set(node.id, node);
+  }
+
+  // Extract layouted nodes
+  const layoutedNodes: LayoutedNode[] = [];
+  const elkNodeMap = new Map<string, ElkNode>();
+
+  for (const elkNode of layoutResult.children || []) {
+    elkNodeMap.set(elkNode.id, elkNode);
+    const originalNode = nodeMap.get(elkNode.id);
+    if (originalNode) {
+      layoutedNodes.push({
+        ...originalNode,
+        x: (elkNode.x || 0) + graph.options.padding,
+        y: (elkNode.y || 0) + graph.options.padding,
+        width: elkNode.width || 100,
+        height: elkNode.height || 60,
+      });
+    }
+  }
+
+  // Extract layouted edges
+  const layoutedEdges: LayoutedEdge[] = [];
+  for (const elkEdge of (layoutResult.edges as ElkEdge[]) || []) {
+    const originalEdge = graph.edges.find((e) => e.id === elkEdge.id);
+    if (!originalEdge) continue;
+
+    const section = elkEdge.sections?.[0];
+    let points: Array<[number, number]> = [];
+    let sourcePoint = { x: 0, y: 0 };
+    let targetPoint = { x: 0, y: 0 };
+
+    if (section) {
+      sourcePoint = {
+        x: section.startPoint.x + graph.options.padding,
+        y: section.startPoint.y + graph.options.padding,
+      };
+      targetPoint = {
+        x: section.endPoint.x + graph.options.padding,
+        y: section.endPoint.y + graph.options.padding,
+      };
+
+      // Build points array (relative to start point for Excalidraw)
+      points = [[0, 0]];
+
+      if (section.bendPoints) {
+        for (const bend of section.bendPoints) {
+          points.push([
+            bend.x + graph.options.padding - sourcePoint.x,
+            bend.y + graph.options.padding - sourcePoint.y,
+          ]);
+        }
+      }
+
+      points.push([targetPoint.x - sourcePoint.x, targetPoint.y - sourcePoint.y]);
+    } else {
+      // Fallback: calculate direct line between node centers
+      const sourceElk = elkNodeMap.get(originalEdge.source);
+      const targetElk = elkNodeMap.get(originalEdge.target);
+
+      if (sourceElk && targetElk) {
+        const sx = (sourceElk.x || 0) + (sourceElk.width || 0) / 2 + graph.options.padding;
+        const sy = (sourceElk.y || 0) + (sourceElk.height || 0) / 2 + graph.options.padding;
+        const tx = (targetElk.x || 0) + (targetElk.width || 0) / 2 + graph.options.padding;
+        const ty = (targetElk.y || 0) + (targetElk.height || 0) / 2 + graph.options.padding;
+
+        sourcePoint = { x: sx, y: sy };
+        targetPoint = { x: tx, y: ty };
+        points = [
+          [0, 0],
+          [tx - sx, ty - sy],
+        ];
+      }
+    }
+
+    layoutedEdges.push({
+      ...originalEdge,
+      points,
+      sourcePoint,
+      targetPoint,
+    });
+  }
+
+  // Calculate total dimensions
+  let maxX = 0;
+  let maxY = 0;
+  for (const node of layoutedNodes) {
+    maxX = Math.max(maxX, node.x + node.width);
+    maxY = Math.max(maxY, node.y + node.height);
+  }
+
+  const canvasWidth = maxX + graph.options.padding;
+  const canvasHeight = maxY + graph.options.padding;
+
+  // Resolve positioned images
+  const layoutedImages = resolvePositionedImages(
+    graph.images || [],
+    layoutedNodes,
+    canvasWidth,
+    canvasHeight
+  );
+
+  const result: LayoutedGraph = {
+    nodes: layoutedNodes,
+    edges: layoutedEdges,
+    options: graph.options,
+    width: canvasWidth,
+    height: canvasHeight,
+  };
+
+  if (layoutedImages.length > 0) result.images = layoutedImages;
+  if (graph.scatter && graph.scatter.length > 0) result.scatter = graph.scatter;
+  if (graph.library) result.library = graph.library;
+
+  return result;
+}
+
+/**
+ * Calculate position offset for decoration anchor
+ */
+function getAnchorOffset(
+  anchor: DecorationAnchor | undefined,
+  nodeWidth: number,
+  nodeHeight: number,
+  imageWidth: number,
+  imageHeight: number
+): { x: number; y: number } {
+  const margin = 5; // Small margin from node edge
+
+  switch (anchor) {
+    case 'top':
+      return { x: (nodeWidth - imageWidth) / 2, y: -imageHeight - margin };
+    case 'bottom':
+      return { x: (nodeWidth - imageWidth) / 2, y: nodeHeight + margin };
+    case 'left':
+      return { x: -imageWidth - margin, y: (nodeHeight - imageHeight) / 2 };
+    case 'right':
+      return { x: nodeWidth + margin, y: (nodeHeight - imageHeight) / 2 };
+    case 'top-left':
+      return { x: -imageWidth / 2, y: -imageHeight / 2 };
+    case 'top-right':
+      return { x: nodeWidth - imageWidth / 2, y: -imageHeight / 2 };
+    case 'bottom-left':
+      return { x: -imageWidth / 2, y: nodeHeight - imageHeight / 2 };
+    case 'bottom-right':
+      return { x: nodeWidth - imageWidth / 2, y: nodeHeight - imageHeight / 2 };
+    default:
+      // Default to top-right
+      return { x: nodeWidth - imageWidth / 2, y: -imageHeight / 2 };
+  }
+}
+
+/**
+ * Resolve positioned images to absolute coordinates
+ */
+function resolvePositionedImages(
+  images: PositionedImage[],
+  layoutedNodes: LayoutedNode[],
+  _canvasWidth: number,
+  _canvasHeight: number
+): LayoutedImage[] {
+  const result: LayoutedImage[] = [];
+  const defaultSize = 50;
+
+  // Build node lookup by label
+  const nodeByLabel = new Map<string, LayoutedNode>();
+  for (const node of layoutedNodes) {
+    nodeByLabel.set(node.label, node);
+  }
+
+  for (const image of images) {
+    const width = image.width || defaultSize;
+    const height = image.height || defaultSize;
+
+    if (image.position.type === 'absolute') {
+      result.push({
+        id: image.id,
+        src: image.src,
+        x: image.position.x,
+        y: image.position.y,
+        width,
+        height,
+      });
+    } else if (image.position.type === 'near') {
+      const node = nodeByLabel.get(image.position.nodeLabel);
+      if (node) {
+        const offset = getAnchorOffset(
+          image.position.anchor,
+          node.width,
+          node.height,
+          width,
+          height
+        );
+        result.push({
+          id: image.id,
+          src: image.src,
+          x: node.x + offset.x,
+          y: node.y + offset.y,
+          width,
+          height,
+        });
+      } else {
+        // Node not found, place at origin
+        console.warn(`Node "${image.position.nodeLabel}" not found for positioned image`);
+        result.push({
+          id: image.id,
+          src: image.src,
+          x: 0,
+          y: 0,
+          width,
+          height,
+        });
+      }
+    }
+  }
+
+  return result;
+}
+
+
+--- src/types/excalidraw.ts ---
+/**
+ * Excalidraw Element Type Definitions
+ * Based on Excalidraw JSON schema
+ */
+
+export type ExcalidrawElementType =
+  | 'rectangle'
+  | 'diamond'
+  | 'ellipse'
+  | 'text'
+  | 'arrow'
+  | 'line'
+  | 'freedraw'
+  | 'image';
+
+export type ExcalidrawFillStyle = 'solid' | 'hachure' | 'cross-hatch';
+
+export type ExcalidrawStrokeStyle = 'solid' | 'dashed' | 'dotted';
+
+export type ExcalidrawArrowhead = 'arrow' | 'bar' | 'dot' | 'triangle' | null;
+
+export type ExcalidrawTextAlign = 'left' | 'center' | 'right';
+
+export type ExcalidrawVerticalAlign = 'top' | 'middle' | 'bottom';
+
+/**
+ * Roundness configuration for elements
+ */
+export interface ExcalidrawRoundness {
+  type: 1 | 2 | 3; // 1=legacy, 2=proportional, 3=adaptive
+}
+
+/**
+ * Binding reference for arrows
+ */
+export interface ExcalidrawBoundElement {
+  id: string;
+  type: 'arrow' | 'text';
+}
+
+/**
+ * Arrow binding to shapes
+ */
+export interface ExcalidrawArrowBinding {
+  elementId: string;
+  mode: 'orbit' | 'point';
+  fixedPoint: [number, number]; // Normalized [0-1] coordinates
+}
+
+/**
+ * Base properties shared by all Excalidraw elements
+ */
+export interface ExcalidrawElementBase {
+  id: string;
+  type: ExcalidrawElementType;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  angle: number;
+  strokeColor: string;
+  backgroundColor: string;
+  fillStyle: ExcalidrawFillStyle;
+  strokeWidth: number;
+  strokeStyle: ExcalidrawStrokeStyle;
+  roughness: number;
+  opacity: number;
+  groupIds: string[];
+  frameId: string | null;
+  index: string;
+  roundness: ExcalidrawRoundness | null;
+  seed: number;
+  version: number;
+  versionNonce: number;
+  isDeleted: boolean;
+  boundElements: ExcalidrawBoundElement[] | null;
+  updated: number;
+  link: string | null;
+  locked: boolean;
+}
+
+/**
+ * Rectangle element
+ */
+export interface ExcalidrawRectangle extends ExcalidrawElementBase {
+  type: 'rectangle';
+}
+
+/**
+ * Diamond element
+ */
+export interface ExcalidrawDiamond extends ExcalidrawElementBase {
+  type: 'diamond';
+}
+
+/**
+ * Ellipse element
+ */
+export interface ExcalidrawEllipse extends ExcalidrawElementBase {
+  type: 'ellipse';
+}
+
+/**
+ * Text element
+ */
+export interface ExcalidrawText extends ExcalidrawElementBase {
+  type: 'text';
+  text: string;
+  fontSize: number;
+  fontFamily: number; // 1=Virgil, 2=Helvetica, 3=Cascadia, 5=Excalifont
+  textAlign: ExcalidrawTextAlign;
+  verticalAlign: ExcalidrawVerticalAlign;
+  containerId: string | null;
+  originalText: string;
+  autoResize: boolean;
+  lineHeight: number;
+}
+
+/**
+ * Arrow element
+ */
+export interface ExcalidrawArrow extends ExcalidrawElementBase {
+  type: 'arrow';
+  points: Array<[number, number]>;
+  lastCommittedPoint: [number, number] | null;
+  startBinding: ExcalidrawArrowBinding | null;
+  endBinding: ExcalidrawArrowBinding | null;
+  startArrowhead: ExcalidrawArrowhead;
+  endArrowhead: ExcalidrawArrowhead;
+  elbowed: boolean;
+}
+
+/**
+ * Line element
+ */
+export interface ExcalidrawLine extends ExcalidrawElementBase {
+  type: 'line';
+  points: Array<[number, number]>;
+  lastCommittedPoint: [number, number] | null;
+  startBinding: ExcalidrawArrowBinding | null;
+  endBinding: ExcalidrawArrowBinding | null;
+  startArrowhead: ExcalidrawArrowhead;
+  endArrowhead: ExcalidrawArrowhead;
+}
+
+/**
+ * Image element
+ */
+export interface ExcalidrawImage extends ExcalidrawElementBase {
+  type: 'image';
+  fileId: string;
+  status: 'pending' | 'saved' | 'error';
+  scale: [number, number];
+}
+
+/**
+ * Union type for all Excalidraw elements
+ */
+export type ExcalidrawElement =
+  | ExcalidrawRectangle
+  | ExcalidrawDiamond
+  | ExcalidrawEllipse
+  | ExcalidrawText
+  | ExcalidrawArrow
+  | ExcalidrawLine
+  | ExcalidrawImage;
+
+/**
+ * File data for embedded images
+ */
+export interface ExcalidrawFileData {
+  mimeType: string;
+  id: string;
+  dataURL: string; // data:image/...;base64,... or URL
+  created: number;
+  lastRetrieved?: number;
+}
+
+/**
+ * Application state for the canvas
+ */
+export interface ExcalidrawAppState {
+  gridSize: number;
+  gridStep: number;
+  gridModeEnabled: boolean;
+  viewBackgroundColor: string;
+  lockedMultiSelections: Record<string, unknown>;
+}
+
+/**
+ * Complete Excalidraw file structure
+ */
+export interface ExcalidrawFile {
+  type: 'excalidraw';
+  version: 2;
+  source: string;
+  elements: ExcalidrawElement[];
+  appState: ExcalidrawAppState;
+  files: Record<string, ExcalidrawFileData>;
+}
+
+/**
+ * Default app state
+ */
+export const DEFAULT_APP_STATE: ExcalidrawAppState = {
+  gridSize: 20,
+  gridStep: 5,
+  gridModeEnabled: false,
+  viewBackgroundColor: '#ffffff',
+  lockedMultiSelections: {},
+};
+
+/**
+ * Default element style values
+ */
+export const DEFAULT_ELEMENT_STYLE = {
+  strokeColor: '#1e1e1e',
+  backgroundColor: 'transparent',
+  fillStyle: 'solid' as ExcalidrawFillStyle,
+  strokeWidth: 2,
+  strokeStyle: 'solid' as ExcalidrawStrokeStyle,
+  roughness: 1,
+  opacity: 100,
+};
+
+/**
+ * Font family mapping
+ */
+export const FONT_FAMILIES = {
+  Virgil: 1,
+  Helvetica: 2,
+  Cascadia: 3,
+  Excalifont: 5,
+} as const;
+
+
+--- tests/unit/parser/dot-parser.test.ts ---
+import { describe, it, expect } from 'vitest';
+import { parseDOT } from '../../../src/parser/dot-parser.js';
+
+describe('DOT Parser', () => {
+  describe('node parsing', () => {
+    it('should parse nodes from a simple digraph', () => {
+      const result = parseDOT('digraph { A; B; C; }');
+      expect(result.nodes).toHaveLength(3);
+      expect(result.nodes.map((n) => n.label).sort()).toEqual(['A', 'B', 'C']);
+    });
+
+    it('should parse rectangle nodes (default shape)', () => {
+      const result = parseDOT('digraph { A [shape=box]; }');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('rectangle');
+    });
+
+    it('should parse rectangle nodes with rect shape', () => {
+      const result = parseDOT('digraph { A [shape=rect]; }');
+      expect(result.nodes[0].type).toBe('rectangle');
+    });
+
+    it('should parse ellipse nodes', () => {
+      const result = parseDOT('digraph { Start [shape=ellipse]; }');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('ellipse');
+      expect(result.nodes[0].label).toBe('Start');
+    });
+
+    it('should parse oval nodes as ellipse', () => {
+      const result = parseDOT('digraph { End [shape=oval]; }');
+      expect(result.nodes[0].type).toBe('ellipse');
+    });
+
+    it('should parse circle nodes as ellipse', () => {
+      // Note: 'node' (case-insensitive) is a DOT keyword for setting default node attributes
+      const result = parseDOT('digraph { MyNode [shape=circle]; }');
+      expect(result.nodes[0].type).toBe('ellipse');
+    });
+
+    it('should parse diamond nodes', () => {
+      const result = parseDOT('digraph { Decision [shape=diamond]; }');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('diamond');
+    });
+
+    it('should parse cylinder nodes as database', () => {
+      const result = parseDOT('digraph { DB [shape=cylinder]; }');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('database');
+    });
+
+    it('should parse record nodes as database', () => {
+      const result = parseDOT('digraph { Storage [shape=record]; }');
+      expect(result.nodes[0].type).toBe('database');
+    });
+
+    it('should use label attribute when provided', () => {
+      const result = parseDOT('digraph { A [label="Process Step"]; }');
+      expect(result.nodes[0].label).toBe('Process Step');
+    });
+
+    it('should use node ID as label when no label attribute', () => {
+      const result = parseDOT('digraph { ProcessStep; }');
+      expect(result.nodes[0].label).toBe('ProcessStep');
+    });
+
+    it('should handle quoted node IDs', () => {
+      const result = parseDOT('digraph { "Node With Spaces"; }');
+      expect(result.nodes[0].label).toBe('Node With Spaces');
+    });
+  });
+
+  describe('edge parsing', () => {
+    it('should parse simple directed edges', () => {
+      const result = parseDOT('digraph { A -> B; }');
+      expect(result.nodes).toHaveLength(2);
+      expect(result.edges).toHaveLength(1);
+
+      const sourceNode = result.nodes.find((n) => n.label === 'A');
+      const targetNode = result.nodes.find((n) => n.label === 'B');
+      expect(result.edges[0].source).toBe(sourceNode?.id);
+      expect(result.edges[0].target).toBe(targetNode?.id);
+    });
+
+    it('should parse edge chains', () => {
+      const result = parseDOT('digraph { A -> B -> C; }');
+      expect(result.nodes).toHaveLength(3);
+      expect(result.edges).toHaveLength(2);
+    });
+
+    it('should parse multiple edges', () => {
+      const result = parseDOT('digraph { A -> B; B -> C; C -> A; }');
+      expect(result.edges).toHaveLength(3);
+    });
+
+    it('should parse labeled edges', () => {
+      const result = parseDOT('digraph { A -> B [label="yes"]; }');
+      expect(result.edges[0].label).toBe('yes');
+    });
+
+    it('should parse dashed edges', () => {
+      const result = parseDOT('digraph { A -> B [style=dashed]; }');
+      expect(result.edges[0].style?.strokeStyle).toBe('dashed');
+    });
+
+    it('should parse dotted edges', () => {
+      const result = parseDOT('digraph { A -> B [style=dotted]; }');
+      expect(result.edges[0].style?.strokeStyle).toBe('dotted');
+    });
+
+    it('should parse edge color', () => {
+      const result = parseDOT('digraph { A -> B [color=red]; }');
+      expect(result.edges[0].style?.strokeColor).toBe('red');
+    });
+
+    it('should parse undirected graph edges', () => {
+      const result = parseDOT('graph { A -- B; }');
+      expect(result.nodes).toHaveLength(2);
+      expect(result.edges).toHaveLength(1);
+    });
+  });
+
+  describe('direction/layout options', () => {
+    it('should parse rankdir TB', () => {
+      const result = parseDOT('digraph { rankdir=TB; A -> B; }');
+      expect(result.options.direction).toBe('TB');
+    });
+
+    it('should parse rankdir LR', () => {
+      const result = parseDOT('digraph { rankdir=LR; A -> B; }');
+      expect(result.options.direction).toBe('LR');
+    });
+
+    it('should parse rankdir BT', () => {
+      const result = parseDOT('digraph { rankdir=BT; A -> B; }');
+      expect(result.options.direction).toBe('BT');
+    });
+
+    it('should parse rankdir RL', () => {
+      const result = parseDOT('digraph { rankdir=RL; A -> B; }');
+      expect(result.options.direction).toBe('RL');
+    });
+
+    it('should default to TB when no rankdir specified', () => {
+      const result = parseDOT('digraph { A -> B; }');
+      expect(result.options.direction).toBe('TB');
+    });
+  });
+
+  describe('node styles', () => {
+    it('should parse fillcolor attribute', () => {
+      const result = parseDOT('digraph { A [fillcolor=lightblue]; }');
+      expect(result.nodes[0].style?.backgroundColor).toBe('lightblue');
+    });
+
+    it('should parse color attribute as stroke color', () => {
+      const result = parseDOT('digraph { A [color=red]; }');
+      expect(result.nodes[0].style?.strokeColor).toBe('red');
+    });
+
+    it('should parse dashed node style', () => {
+      const result = parseDOT('digraph { A [style=dashed]; }');
+      expect(result.nodes[0].style?.strokeStyle).toBe('dashed');
+    });
+  });
+
+  describe('subgraph handling', () => {
+    it('should flatten subgraph nodes to main graph', () => {
+      const result = parseDOT(`
+        digraph {
+          subgraph cluster_0 {
+            A; B;
+          }
+          C;
+        }
+      `);
+      expect(result.nodes).toHaveLength(3);
+      expect(result.nodes.map((n) => n.label).sort()).toEqual(['A', 'B', 'C']);
+    });
+
+    it('should preserve edges within subgraphs', () => {
+      const result = parseDOT(`
+        digraph {
+          subgraph cluster_0 {
+            A -> B;
+          }
+          B -> C;
+        }
+      `);
+      expect(result.edges).toHaveLength(2);
+    });
+
+    it('should handle nested subgraphs', () => {
+      const result = parseDOT(`
+        digraph {
+          subgraph cluster_outer {
+            subgraph cluster_inner {
+              A;
+            }
+            B;
+          }
+          C;
+        }
+      `);
+      expect(result.nodes).toHaveLength(3);
+    });
+  });
+
+  describe('complex flowcharts', () => {
+    it('should parse a decision tree flowchart', () => {
+      const dot = `
+        digraph {
+          rankdir=TB;
+          
+          Start [shape=ellipse];
+          Process [shape=box];
+          Decision [shape=diamond];
+          End [shape=ellipse];
+          
+          Start -> Process;
+          Process -> Decision;
+          Decision -> End [label="yes"];
+          Decision -> Process [label="no"];
+        }
+      `;
+      const result = parseDOT(dot);
+
+      expect(result.nodes).toHaveLength(4);
+      expect(result.edges).toHaveLength(4);
+
+      const startNode = result.nodes.find((n) => n.label === 'Start');
+      const decisionNode = result.nodes.find((n) => n.label === 'Decision');
+      expect(startNode?.type).toBe('ellipse');
+      expect(decisionNode?.type).toBe('diamond');
+
+      const yesEdge = result.edges.find((e) => e.label === 'yes');
+      const noEdge = result.edges.find((e) => e.label === 'no');
+      expect(yesEdge).toBeDefined();
+      expect(noEdge).toBeDefined();
+    });
+
+    it('should parse a login flow from the issue example', () => {
+      const dot = `
+        digraph {
+          Start -> Process -> Decision;
+          Decision -> End [label="yes"];
+          Decision -> Process [label="no"];
+          
+          Start [shape=ellipse];
+          Decision [shape=diamond];
+          End [shape=ellipse];
+        }
+      `;
+      const result = parseDOT(dot);
+
+      expect(result.nodes.length).toBeGreaterThanOrEqual(4);
+      expect(result.edges.length).toBeGreaterThanOrEqual(4);
+    });
+
+    it('should deduplicate nodes referenced multiple times', () => {
+      const result = parseDOT('digraph { A -> B; B -> C; A -> C; }');
+      expect(result.nodes).toHaveLength(3);
+    });
+  });
+
+  describe('error handling', () => {
+    it('should throw on invalid DOT syntax', () => {
+      expect(() => parseDOT('not valid dot')).toThrow('Invalid DOT syntax');
+    });
+
+    it('should throw on unclosed braces', () => {
+      expect(() => parseDOT('digraph { A -> B')).toThrow();
+    });
+
+    it('should handle empty digraph', () => {
+      const result = parseDOT('digraph {}');
+      expect(result.nodes).toHaveLength(0);
+      expect(result.edges).toHaveLength(0);
+    });
+
+    it('should handle digraph with only whitespace', () => {
+      const result = parseDOT('digraph {   }');
+      expect(result.nodes).toHaveLength(0);
+    });
+  });
+
+  describe('named graphs', () => {
+    it('should parse named digraph', () => {
+      const result = parseDOT('digraph MyGraph { A -> B; }');
+      expect(result.nodes).toHaveLength(2);
+      expect(result.edges).toHaveLength(1);
+    });
+
+    it('should parse strict digraph', () => {
+      const result = parseDOT('strict digraph { A -> B; A -> B; }');
+      expect(result.nodes).toHaveLength(2);
+      // In strict mode, duplicate edges should be merged by ts-graphviz
+      // The edge count depends on how ts-graphviz handles strict mode
+      expect(result.edges.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+});
+
+
+
+--- tests/unit/parser/dsl-parser.test.ts ---
+import { describe, it, expect } from 'vitest';
+import { parseDSL } from '../../../src/parser/dsl-parser.js';
+
+describe('DSL Parser', () => {
+  describe('node parsing', () => {
+    it('should parse rectangle nodes', () => {
+      const result = parseDSL('[Process Step]');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('rectangle');
+      expect(result.nodes[0].label).toBe('Process Step');
+    });
+
+    it('should parse diamond nodes', () => {
+      const result = parseDSL('{Decision?}');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('diamond');
+      expect(result.nodes[0].label).toBe('Decision?');
+    });
+
+    it('should parse ellipse nodes', () => {
+      const result = parseDSL('(Start)');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('ellipse');
+      expect(result.nodes[0].label).toBe('Start');
+    });
+
+    it('should parse database nodes', () => {
+      const result = parseDSL('[[Database]]');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('database');
+      expect(result.nodes[0].label).toBe('Database');
+    });
+  });
+
+  describe('connection parsing', () => {
+    it('should parse simple connections', () => {
+      const result = parseDSL('[A] -> [B]');
+      expect(result.nodes).toHaveLength(2);
+      expect(result.edges).toHaveLength(1);
+      expect(result.edges[0].source).toBe(result.nodes[0].id);
+      expect(result.edges[0].target).toBe(result.nodes[1].id);
+    });
+
+    it('should parse labeled connections', () => {
+      const result = parseDSL('[A] -> "yes" -> [B]');
+      expect(result.edges[0].label).toBe('yes');
+    });
+
+    it('should parse dashed connections', () => {
+      const result = parseDSL('[A] --> [B]');
+      expect(result.edges[0].style?.strokeStyle).toBe('dashed');
+    });
+
+    it('should parse chains of connections', () => {
+      const result = parseDSL('[A] -> [B] -> [C]');
+      expect(result.nodes).toHaveLength(3);
+      expect(result.edges).toHaveLength(2);
+    });
+  });
+
+  describe('directive parsing', () => {
+    it('should parse direction directive', () => {
+      const result = parseDSL('@direction LR\n[A] -> [B]');
+      expect(result.options.direction).toBe('LR');
+    });
+
+    it('should parse spacing directive', () => {
+      const result = parseDSL('@spacing 100\n[A] -> [B]');
+      expect(result.options.nodeSpacing).toBe(100);
+    });
+  });
+
+  describe('complex flowcharts', () => {
+    it('should parse a decision tree', () => {
+      const dsl = `
+        (Start) -> [Enter Credentials] -> {Valid?}
+        {Valid?} -> "yes" -> [Dashboard] -> (End)
+        {Valid?} -> "no" -> [Show Error] -> [Enter Credentials]
+      `;
+      const result = parseDSL(dsl);
+
+      expect(result.nodes.length).toBeGreaterThanOrEqual(5);
+      expect(result.edges.length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('should deduplicate nodes by label and type', () => {
+      const result = parseDSL('[A] -> [B]\n[B] -> [C]');
+      const bNodes = result.nodes.filter((n) => n.label === 'B');
+      expect(bNodes).toHaveLength(1);
+    });
+  });
+
+  describe('image parsing', () => {
+    it('should parse basic image nodes', () => {
+      const result = parseDSL('![logo.png]');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('image');
+      expect(result.nodes[0].label).toBe('logo.png');
+      expect(result.nodes[0].image?.src).toBe('logo.png');
+    });
+
+    it('should parse image nodes with dimensions', () => {
+      const result = parseDSL('![logo.png](200x100)');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].type).toBe('image');
+      expect(result.nodes[0].image?.width).toBe(200);
+      expect(result.nodes[0].image?.height).toBe(100);
+    });
+
+    it('should parse images in flowcharts', () => {
+      const result = parseDSL('(Start) -> ![icon.png] -> [Process]');
+      expect(result.nodes).toHaveLength(3);
+      expect(result.nodes[1].type).toBe('image');
+      expect(result.edges).toHaveLength(2);
+    });
+
+    it('should parse URL images', () => {
+      const result = parseDSL('![https://example.com/image.png]');
+      expect(result.nodes[0].image?.src).toBe('https://example.com/image.png');
+    });
+  });
+
+  describe('image directive parsing', () => {
+    it('should parse @image at directive', () => {
+      const result = parseDSL('@image icon.png at 100,200');
+      expect(result.images).toHaveLength(1);
+      expect(result.images![0].src).toBe('icon.png');
+      expect(result.images![0].position).toEqual({ type: 'absolute', x: 100, y: 200 });
+    });
+
+    it('should parse @image near directive', () => {
+      const result = parseDSL('@image icon.png near (Start)');
+      expect(result.images).toHaveLength(1);
+      expect(result.images![0].position).toEqual({
+        type: 'near',
+        nodeLabel: 'Start',
+        anchor: undefined,
+      });
+    });
+
+    it('should parse @image near with anchor', () => {
+      const result = parseDSL('@image icon.png near (Start) top-left');
+      expect(result.images![0].position).toEqual({
+        type: 'near',
+        nodeLabel: 'Start',
+        anchor: 'top-left',
+      });
+    });
+  });
+
+  describe('decoration parsing', () => {
+    it('should parse @decorate directive', () => {
+      const result = parseDSL('(Start) @decorate holly.png top-left');
+      expect(result.nodes).toHaveLength(1);
+      expect(result.nodes[0].decorations).toHaveLength(1);
+      expect(result.nodes[0].decorations![0].src).toBe('holly.png');
+      expect(result.nodes[0].decorations![0].anchor).toBe('top-left');
+    });
+
+    it('should parse multiple decorations', () => {
+      const result = parseDSL('(Start) @decorate a.png top-left @decorate b.png top-right');
+      expect(result.nodes[0].decorations).toHaveLength(2);
+    });
+  });
+
+  describe('sticker and library parsing', () => {
+    it('should parse @library directive', () => {
+      const result = parseDSL('@library ./stickers/');
+      expect(result.library).toBe('./stickers/');
+    });
+
+    it('should parse @sticker directive', () => {
+      const result = parseDSL('@sticker snowflake');
+      expect(result.images).toHaveLength(1);
+      expect(result.images![0].src).toBe('sticker:snowflake');
+    });
+
+    it('should parse @sticker with position', () => {
+      const result = parseDSL('@sticker snowflake at 50,50');
+      expect(result.images![0].src).toBe('sticker:snowflake');
+      expect(result.images![0].position).toEqual({ type: 'absolute', x: 50, y: 50 });
+    });
+  });
+
+  describe('scatter parsing', () => {
+    it('should parse @scatter directive', () => {
+      const result = parseDSL('@scatter snowflake.png count:20');
+      expect(result.scatter).toHaveLength(1);
+      expect(result.scatter![0].src).toBe('snowflake.png');
+      expect(result.scatter![0].count).toBe(20);
+    });
+
+    it('should parse @scatter with dimensions', () => {
+      const result = parseDSL('@scatter star.png count:10 width:30 height:30');
+      expect(result.scatter![0].width).toBe(30);
+      expect(result.scatter![0].height).toBe(30);
+    });
+  });
+});
+
+
+## Links discovered
+- [logo.png](https://github.com/swiftlysingh/excalidraw-cli/blob/main/tests/unit/parser/200x100.md)

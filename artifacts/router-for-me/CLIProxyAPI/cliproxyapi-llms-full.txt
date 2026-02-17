@@ -1,0 +1,1457 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/sdk-access.md ---
+# @sdk/access SDK Reference
+
+The `github.com/router-for-me/CLIProxyAPI/v6/sdk/access` package centralizes inbound request authentication for the proxy. It offers a lightweight manager that chains credential providers, so servers can reuse the same access control logic inside or outside the CLI runtime.
+
+## Importing
+
+```go
+import (
+    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+)
+```
+
+Add the module with `go get github.com/router-for-me/CLIProxyAPI/v6/sdk/access`.
+
+## Provider Registry
+
+Providers are registered globally and then attached to a `Manager` as a snapshot:
+
+- `RegisterProvider(type, provider)` installs a pre-initialized provider instance.
+- Registration order is preserved the first time each `type` is seen.
+- `RegisteredProviders()` returns the providers in that order.
+
+## Manager Lifecycle
+
+```go
+manager := sdkaccess.NewManager()
+manager.SetProviders(sdkaccess.RegisteredProviders())
+```
+
+* `NewManager` constructs an empty manager.
+* `SetProviders` replaces the provider slice using a defensive copy.
+* `Providers` retrieves a snapshot that can be iterated safely from other goroutines.
+
+If the manager itself is `nil` or no providers are configured, the call returns `nil, nil`, allowing callers to treat access control as disabled.
+
+## Authenticating Requests
+
+```go
+result, authErr := manager.Authenticate(ctx, req)
+switch {
+case authErr == nil:
+    // Authentication succeeded; result describes the provider and principal.
+case sdkaccess.IsAuthErrorCode(authErr, sdkaccess.AuthErrorCodeNoCredentials):
+    // No recognizable credentials were supplied.
+case sdkaccess.IsAuthErrorCode(authErr, sdkaccess.AuthErrorCodeInvalidCredential):
+    // Supplied credentials were present but rejected.
+default:
+    // Internal/transport failure was returned by a provider.
+}
+```
+
+`Manager.Authenticate` walks the configured providers in order. It returns on the first success, skips providers that return `AuthErrorCodeNotHandled`, and aggregates `AuthErrorCodeNoCredentials` / `AuthErrorCodeInvalidCredential` for a final result.
+
+Each `Result` includes the provider identifier, the resolved principal, and optional metadata (for example, which header carried the credential).
+
+## Built-in `config-api-key` Provider
+
+The proxy includes one built-in access provider:
+
+- `config-api-key`: Validates API keys declared under top-level `api-keys`.
+  - Credential sources: `Authorization: Bearer`, `X-Goog-Api-Key`, `X-Api-Key`, `?key=`, `?auth_token=`
+  - Metadata: `Result.Metadata["source"]` is set to the matched source label.
+
+In the CLI server and `sdk/cliproxy`, this provider is registered automatically based on the loaded configuration.
+
+```yaml
+api-keys:
+  - sk-test-123
+  - sk-prod-456
+```
+
+## Loading Providers from External Go Modules
+
+To consume a provider shipped in another Go module, import it for its registration side effect:
+
+```go
+import (
+    _ "github.com/acme/xplatform/sdk/access/providers/partner" // registers partner-token
+    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+)
+```
+
+The blank identifier import ensures `init` runs so `sdkaccess.RegisterProvider` executes before you call `RegisteredProviders()` (or before `cliproxy.NewBuilder().Build()`).
+
+### Metadata and auditing
+
+`Result.Metadata` carries provider-specific context. The built-in `config-api-key` provider, for example, stores the credential source (`authorization`, `x-goog-api-key`, `x-api-key`, `query-key`, `query-auth-token`). Populate this map in custom providers to enrich logs and downstream auditing.
+
+## Writing Custom Providers
+
+```go
+type customProvider struct{}
+
+func (p *customProvider) Identifier() string { return "my-provider" }
+
+func (p *customProvider) Authenticate(ctx context.Context, r *http.Request) (*sdkaccess.Result, *sdkaccess.AuthError) {
+    token := r.Header.Get("X-Custom")
+    if token == "" {
+        return nil, sdkaccess.NewNotHandledError()
+    }
+    if token != "expected" {
+        return nil, sdkaccess.NewInvalidCredentialError()
+    }
+    return &sdkaccess.Result{
+        Provider:  p.Identifier(),
+        Principal: "service-user",
+        Metadata:  map[string]string{"source": "x-custom"},
+    }, nil
+}
+
+func init() {
+    sdkaccess.RegisterProvider("custom", &customProvider{})
+}
+```
+
+A provider must implement `Identifier()` and `Authenticate()`. To make it available to the access manager, call `RegisterProvider` inside `init` with an initialized provider instance.
+
+## Error Semantics
+
+- `NewNoCredentialsError()` (`AuthErrorCodeNoCredentials`): no credentials were present or recognized. (HTTP 401)
+- `NewInvalidCredentialError()` (`AuthErrorCodeInvalidCredential`): credentials were present but rejected. (HTTP 401)
+- `NewNotHandledError()` (`AuthErrorCodeNotHandled`): fall through to the next provider.
+- `NewInternalAuthError(message, cause)` (`AuthErrorCodeInternal`): transport/system failure. (HTTP 500)
+
+Errors propagate immediately to the caller unless they are classified as `not_handled` / `no_credentials` / `invalid_credential` and can be aggregated by the manager.
+
+## Integration with cliproxy Service
+
+`sdk/cliproxy` wires `@sdk/access` automatically when you build a CLI service via `cliproxy.NewBuilder`. Supplying a manager lets you reuse the same instance in your host process:
+
+```go
+coreCfg, _ := config.LoadConfig("config.yaml")
+accessManager := sdkaccess.NewManager()
+
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(coreCfg).
+  WithConfigPath("config.yaml").
+  WithRequestAccessManager(accessManager).
+  Build()
+```
+
+Register any custom providers (typically via blank imports) before calling `Build()` so they are present in the global registry snapshot.
+
+### Hot reloading
+
+When configuration changes, refresh any config-backed providers and then reset the manager's provider chain:
+
+```go
+// configaccess is github.com/router-for-me/CLIProxyAPI/v6/internal/access/config_access
+configaccess.Register(&newCfg.SDKConfig)
+accessManager.SetProviders(sdkaccess.RegisteredProviders())
+```
+
+This mirrors the behaviour in `internal/access.ApplyAccessProviders`, enabling runtime updates without restarting the process.
+
+
+--- docs/sdk-access_CN.md ---
+# @sdk/access 开发指引
+
+`github.com/router-for-me/CLIProxyAPI/v6/sdk/access` 包负责代理的入站访问认证。它提供一个轻量的管理器，用于按顺序链接多种凭证校验实现，让服务器在 CLI 运行时内外都能复用相同的访问控制逻辑。
+
+## 引用方式
+
+```go
+import (
+    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+)
+```
+
+通过 `go get github.com/router-for-me/CLIProxyAPI/v6/sdk/access` 添加依赖。
+
+## Provider Registry
+
+访问提供者是全局注册，然后以快照形式挂到 `Manager` 上：
+
+- `RegisterProvider(type, provider)` 注册一个已经初始化好的 provider 实例。
+- 每个 `type` 第一次出现时会记录其注册顺序。
+- `RegisteredProviders()` 会按该顺序返回 provider 列表。
+
+## 管理器生命周期
+
+```go
+manager := sdkaccess.NewManager()
+manager.SetProviders(sdkaccess.RegisteredProviders())
+```
+
+- `NewManager` 创建空管理器。
+- `SetProviders` 替换提供者切片并做防御性拷贝。
+- `Providers` 返回适合并发读取的快照。
+
+如果管理器本身为 `nil` 或未配置任何 provider，调用会返回 `nil, nil`，可视为关闭访问控制。
+
+## 认证请求
+
+```go
+result, authErr := manager.Authenticate(ctx, req)
+switch {
+case authErr == nil:
+    // Authentication succeeded; result carries provider and principal.
+case sdkaccess.IsAuthErrorCode(authErr, sdkaccess.AuthErrorCodeNoCredentials):
+    // No recognizable credentials were supplied.
+case sdkaccess.IsAuthErrorCode(authErr, sdkaccess.AuthErrorCodeInvalidCredential):
+    // Credentials were present but rejected.
+default:
+    // Provider surfaced a transport-level failure.
+}
+```
+
+`Manager.Authenticate` 会按顺序遍历 provider：遇到成功立即返回，`AuthErrorCodeNotHandled` 会继续尝试下一个；`AuthErrorCodeNoCredentials` / `AuthErrorCodeInvalidCredential` 会在遍历结束后汇总给调用方。
+
+`Result` 提供认证提供者标识、解析出的主体以及可选元数据（例如凭证来源）。
+
+## 内建 `config-api-key` Provider
+
+代理内置一个访问提供者：
+
+- `config-api-key`：校验 `config.yaml` 顶层的 `api-keys`。
+  - 凭证来源：`Authorization: Bearer`、`X-Goog-Api-Key`、`X-Api-Key`、`?key=`、`?auth_token=`
+  - 元数据：`Result.Metadata["source"]` 会写入匹配到的来源标识
+
+在 CLI 服务端与 `sdk/cliproxy` 中，该 provider 会根据加载到的配置自动注册。
+
+```yaml
+api-keys:
+  - sk-test-123
+  - sk-prod-456
+```
+
+## 引入外部 Go 模块提供者
+
+若要消费其它 Go 模块输出的访问提供者，直接用空白标识符导入以触发其 `init` 注册即可：
+
+```go
+import (
+    _ "github.com/acme/xplatform/sdk/access/providers/partner" // registers partner-token
+    sdkaccess "github.com/router-for-me/CLIProxyAPI/v6/sdk/access"
+)
+```
+
+空白导入可确保 `init` 先执行，从而在你调用 `RegisteredProviders()`（或 `cliproxy.NewBuilder().Build()`）之前完成 `sdkaccess.RegisterProvider`。
+
+### 元数据与审计
+
+`Result.Metadata` 用于携带提供者特定的上下文信息。内建的 `config-api-key` 会记录凭证来源（`authorization`、`x-goog-api-key`、`x-api-key`、`query-key`、`query-auth-token`）。自定义提供者同样可以填充该 Map，以便丰富日志与审计场景。
+
+## 编写自定义提供者
+
+```go
+type customProvider struct{}
+
+func (p *customProvider) Identifier() string { return "my-provider" }
+
+func (p *customProvider) Authenticate(ctx context.Context, r *http.Request) (*sdkaccess.Result, *sdkaccess.AuthError) {
+    token := r.Header.Get("X-Custom")
+    if token == "" {
+        return nil, sdkaccess.NewNotHandledError()
+    }
+    if token != "expected" {
+        return nil, sdkaccess.NewInvalidCredentialError()
+    }
+    return &sdkaccess.Result{
+        Provider:  p.Identifier(),
+        Principal: "service-user",
+        Metadata:  map[string]string{"source": "x-custom"},
+    }, nil
+}
+
+func init() {
+    sdkaccess.RegisterProvider("custom", &customProvider{})
+}
+```
+
+自定义提供者需要实现 `Identifier()` 与 `Authenticate()`。在 `init` 中用已初始化实例调用 `RegisterProvider` 注册到全局 registry。
+
+## 错误语义
+
+- `NewNoCredentialsError()`（`AuthErrorCodeNoCredentials`）：未提供或未识别到凭证。（HTTP 401）
+- `NewInvalidCredentialError()`（`AuthErrorCodeInvalidCredential`）：凭证存在但校验失败。（HTTP 401）
+- `NewNotHandledError()`（`AuthErrorCodeNotHandled`）：告诉管理器跳到下一个 provider。
+- `NewInternalAuthError(message, cause)`（`AuthErrorCodeInternal`）：网络/系统错误。（HTTP 500）
+
+除可汇总的 `not_handled` / `no_credentials` / `invalid_credential` 外，其它错误会立即冒泡返回。
+
+## 与 cliproxy 集成
+
+使用 `sdk/cliproxy` 构建服务时会自动接入 `@sdk/access`。如果希望在宿主进程里复用同一个 `Manager` 实例，可传入自定义管理器：
+
+```go
+coreCfg, _ := config.LoadConfig("config.yaml")
+accessManager := sdkaccess.NewManager()
+
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(coreCfg).
+  WithConfigPath("config.yaml").
+  WithRequestAccessManager(accessManager).
+  Build()
+```
+
+请在调用 `Build()` 之前完成自定义 provider 的注册（通常通过空白导入触发 `init`），以确保它们被包含在全局 registry 的快照中。
+
+### 动态热更新提供者
+
+当配置发生变化时，刷新依赖配置的 provider，然后重置 manager 的 provider 链：
+
+```go
+// configaccess is github.com/router-for-me/CLIProxyAPI/v6/internal/access/config_access
+configaccess.Register(&newCfg.SDKConfig)
+accessManager.SetProviders(sdkaccess.RegisteredProviders())
+```
+
+这一流程与 `internal/access.ApplyAccessProviders` 保持一致，避免为更新访问策略而重启进程。
+
+
+--- docs/sdk-advanced.md ---
+# SDK Advanced: Executors & Translators
+
+This guide explains how to extend the embedded proxy with custom providers and schemas using the SDK. You will:
+- Implement a provider executor that talks to your upstream API
+- Register request/response translators for schema conversion
+- Register models so they appear in `/v1/models`
+
+The examples use Go 1.24+ and the v6 module path.
+
+## Concepts
+
+- Provider executor: a runtime component implementing `auth.ProviderExecutor` that performs outbound calls for a given provider key (e.g., `gemini`, `claude`, `codex`). Executors can also implement `RequestPreparer` to inject credentials on raw HTTP requests.
+- Translator registry: schema conversion functions routed by `sdk/translator`. The built‑in handlers translate between OpenAI/Gemini/Claude/Codex formats; you can register new ones.
+- Model registry: publishes the list of available models per client/provider to power `/v1/models` and routing hints.
+
+## 1) Implement a Provider Executor
+
+Create a type that satisfies `auth.ProviderExecutor`.
+
+```go
+package myprov
+
+import (
+  "context"
+  "net/http"
+
+  coreauth "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/auth"
+  clipexec "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/executor"
+)
+
+type Executor struct{}
+
+func (Executor) Identifier() string { return "myprov" }
+
+// Optional: mutate outbound HTTP requests with credentials
+func (Executor) PrepareRequest(req *http.Request, a *coreauth.Auth) error {
+  // Example: req.Header.Set("Authorization", "Bearer "+a.APIKey)
+  return nil
+}
+
+func (Executor) Execute(ctx context.Context, a *coreauth.Auth, req clipexec.Request, opts clipexec.Options) (clipexec.Response, error) {
+  // Build HTTP request based on req.Payload (already translated into provider format)
+  // Use per‑auth transport if provided: transport := a.RoundTripper // via RoundTripperProvider
+  // Perform call and return provider JSON payload
+  return clipexec.Response{Payload: []byte(`{"ok":true}`)}, nil
+}
+
+func (Executor) ExecuteStream(ctx context.Context, a *coreauth.Auth, req clipexec.Request, opts clipexec.Options) (<-chan clipexec.StreamChunk, error) {
+  ch := make(chan clipexec.StreamChunk, 1)
+  go func() { defer close(ch); ch <- clipexec.StreamChunk{Payload: []byte("data: {\"done\":true}\n\n")} }()
+  return ch, nil
+}
+
+func (Executor) Refresh(ctx context.Context, a *coreauth.Auth) (*coreauth.Auth, error) {
+  // Optionally refresh tokens and return updated auth
+  return a, nil
+}
+```
+
+Register the executor with the core manager before starting the service:
+
+```go
+core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
+core.RegisterExecutor(myprov.Executor{})
+svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
+```
+
+If your auth entries use provider `"myprov"`, the manager routes requests to your executor.
+
+## 2) Register Translators
+
+The handlers accept OpenAI/Gemini/Claude/Codex inputs. To support a new provider format, register translation functions in `sdk/translator`’s default registry.
+
+Direction matters:
+- Request: register from inbound schema to provider schema
+- Response: register from provider schema back to inbound schema
+
+Example: Convert OpenAI Chat → MyProv Chat and back.
+
+```go
+package myprov
+
+import (
+  "context"
+  sdktr "github.com/router-for-me/CLIProxyAPI/v6/sdk/translator"
+)
+
+const (
+  FOpenAI = sdktr.Format("openai.chat")
+  FMyProv = sdktr.Format("myprov.chat")
+)
+
+func init() {
+  sdktr.Register(FOpenAI, FMyProv,
+    // Request transform (model, rawJSON, stream)
+    func(model string, raw []byte, stream bool) []byte { return convertOpenAIToMyProv(model, raw, stream) },
+    // Response transform (stream & non‑stream)
+    sdktr.ResponseTransform{
+      Stream: func(ctx context.Context, model string, originalReq, translatedReq, raw []byte, param *any) []string {
+        return convertStreamMyProvToOpenAI(model, originalReq, translatedReq, raw)
+      },
+      NonStream: func(ctx context.Context, model string, originalReq, translatedReq, raw []byte, param *any) string {
+        return convertMyProvToOpenAI(model, originalReq, translatedReq, raw)
+      },
+    },
+  )
+}
+```
+
+When the OpenAI handler receives a request that should route to `myprov`, the pipeline uses the registered transforms automatically.
+
+## 3) Register Models
+
+Expose models under `/v1/models` by registering them in the global model registry using the auth ID (client ID) and provider name.
+
+```go
+models := []*cliproxy.ModelInfo{
+  { ID: "myprov-pro-1", Object: "model", Type: "myprov", DisplayName: "MyProv Pro 1" },
+}
+cliproxy.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
+```
+
+The embedded server calls this automatically for built‑in providers; for custom providers, register during startup (e.g., after loading auths) or upon auth registration hooks.
+
+## Credentials & Transports
+
+- Use `Manager.SetRoundTripperProvider` to inject per‑auth `*http.Transport` (e.g., proxy):
+  ```go
+  core.SetRoundTripperProvider(myProvider) // returns transport per auth
+  ```
+- For raw HTTP flows, implement `PrepareRequest` and/or call `Manager.InjectCredentials(req, authID)` to set headers.
+
+## Testing Tips
+
+- Enable request logging: Management API GET/PUT `/v0/management/request-log`
+- Toggle debug logs: Management API GET/PUT `/v0/management/debug`
+- Hot reload changes in `config.yaml` and `auths/` are picked up automatically by the watcher
+
+
+
+--- docs/sdk-advanced_CN.md ---
+# SDK 高级指南：执行器与翻译器
+
+本文介绍如何使用 SDK 扩展内嵌代理：
+- 实现自定义 Provider 执行器以调用你的上游 API
+- 注册请求/响应翻译器进行协议转换
+- 注册模型以出现在 `/v1/models`
+
+示例基于 Go 1.24+ 与 v6 模块路径。
+
+## 概念
+
+- Provider 执行器：实现 `auth.ProviderExecutor` 的运行时组件，负责某个 provider key（如 `gemini`、`claude`、`codex`）的真正出站调用。若实现 `RequestPreparer` 接口，可在原始 HTTP 请求上注入凭据。
+- 翻译器注册表：由 `sdk/translator` 驱动的协议转换函数。内置了 OpenAI/Gemini/Claude/Codex 的互转；你也可以注册新的格式转换。
+- 模型注册表：对外发布可用模型列表，供 `/v1/models` 与路由参考。
+
+## 1) 实现 Provider 执行器
+
+创建类型满足 `auth.ProviderExecutor` 接口。
+
+```go
+package myprov
+
+import (
+    "context"
+    "net/http"
+
+    coreauth "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/auth"
+    clipexec "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy/executor"
+)
+
+type Executor struct{}
+
+func (Executor) Identifier() string { return "myprov" }
+
+// 可选：在原始 HTTP 请求上注入凭据
+func (Executor) PrepareRequest(req *http.Request, a *coreauth.Auth) error {
+    // 例如：req.Header.Set("Authorization", "Bearer "+a.Attributes["api_key"]) 
+    return nil
+}
+
+func (Executor) Execute(ctx context.Context, a *coreauth.Auth, req clipexec.Request, opts clipexec.Options) (clipexec.Response, error) {
+    // 基于 req.Payload 构造上游请求，返回上游 JSON 负载
+    return clipexec.Response{Payload: []byte(`{"ok":true}`)}, nil
+}
+
+func (Executor) ExecuteStream(ctx context.Context, a *coreauth.Auth, req clipexec.Request, opts clipexec.Options) (<-chan clipexec.StreamChunk, error) {
+    ch := make(chan clipexec.StreamChunk, 1)
+    go func() { defer close(ch); ch <- clipexec.StreamChunk{Payload: []byte("data: {\\"done\\":true}\\n\\n")} }()
+    return ch, nil
+}
+
+func (Executor) Refresh(ctx context.Context, a *coreauth.Auth) (*coreauth.Auth, error) { return a, nil }
+```
+
+在启动服务前将执行器注册到核心管理器：
+
+```go
+core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
+core.RegisterExecutor(myprov.Executor{})
+svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath(cfgPath).WithCoreAuthManager(core).Build()
+```
+
+当凭据的 `Provider` 为 `"myprov"` 时，管理器会将请求路由到你的执行器。
+
+## 2) 注册翻译器
+
+内置处理器接受 OpenAI/Gemini/Claude/Codex 的入站格式。要支持新的 provider 协议，需要在 `sdk/translator` 的默认注册表中注册转换函数。
+
+方向很重要：
+- 请求：从“入站格式”转换为“provider 格式”
+- 响应：从“provider 格式”转换回“入站格式”
+
+示例：OpenAI Chat → MyProv Chat 及其反向。
+
+```go
+package myprov
+
+import (
+  "context"
+  sdktr "github.com/router-for-me/CLIProxyAPI/v6/sdk/translator"
+)
+
+const (
+  FOpenAI = sdktr.Format("openai.chat")
+  FMyProv = sdktr.Format("myprov.chat")
+)
+
+func init() {
+  sdktr.Register(FOpenAI, FMyProv,
+    func(model string, raw []byte, stream bool) []byte { return convertOpenAIToMyProv(model, raw, stream) },
+    sdktr.ResponseTransform{
+      Stream: func(ctx context.Context, model string, originalReq, translatedReq, raw []byte, param *any) []string {
+        return convertStreamMyProvToOpenAI(model, originalReq, translatedReq, raw)
+      },
+      NonStream: func(ctx context.Context, model string, originalReq, translatedReq, raw []byte, param *any) string {
+        return convertMyProvToOpenAI(model, originalReq, translatedReq, raw)
+      },
+    },
+  )
+}
+```
+
+当 OpenAI 处理器接到需要路由到 `myprov` 的请求时，流水线会自动应用已注册的转换。
+
+## 3) 注册模型
+
+通过全局模型注册表将模型暴露到 `/v1/models`：
+
+```go
+models := []*cliproxy.ModelInfo{
+  { ID: "myprov-pro-1", Object: "model", Type: "myprov", DisplayName: "MyProv Pro 1" },
+}
+cliproxy.GlobalModelRegistry().RegisterClient(authID, "myprov", models)
+```
+
+内置 Provider 会自动注册；自定义 Provider 建议在启动时（例如加载到 Auth 后）或在 Auth 注册钩子中调用。
+
+## 凭据与传输
+
+- 使用 `Manager.SetRoundTripperProvider` 注入按账户的 `*http.Transport`（例如代理）：
+  ```go
+  core.SetRoundTripperProvider(myProvider) // 按账户返回 transport
+  ```
+- 对于原始 HTTP 请求，若实现了 `PrepareRequest`，或通过 `Manager.InjectCredentials(req, authID)` 进行头部注入。
+
+## 测试建议
+
+- 启用请求日志：管理 API GET/PUT `/v0/management/request-log`
+- 切换调试日志：管理 API GET/PUT `/v0/management/debug`
+- 热更新：`config.yaml` 与 `auths/` 变化会自动被侦测并应用
+
+
+
+--- docs/sdk-usage.md ---
+# CLI Proxy SDK Guide
+
+The `sdk/cliproxy` module exposes the proxy as a reusable Go library so external programs can embed the routing, authentication, hot‑reload, and translation layers without depending on the CLI binary.
+
+## Install & Import
+
+```bash
+go get github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy
+```
+
+```go
+import (
+    "context"
+    "errors"
+    "time"
+
+    "github.com/router-for-me/CLIProxyAPI/v6/internal/config"
+    "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy"
+)
+```
+
+Note the `/v6` module path.
+
+## Minimal Embed
+
+```go
+cfg, err := config.LoadConfig("config.yaml")
+if err != nil { panic(err) }
+
+svc, err := cliproxy.NewBuilder().
+    WithConfig(cfg).
+    WithConfigPath("config.yaml"). // absolute or working-dir relative
+    Build()
+if err != nil { panic(err) }
+
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
+
+if err := svc.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+    panic(err)
+}
+```
+
+The service manages config/auth watching, background token refresh, and graceful shutdown. Cancel the context to stop it.
+
+## Server Options (middleware, routes, logs)
+
+The server accepts options via `WithServerOptions`:
+
+```go
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(cfg).
+  WithConfigPath("config.yaml").
+  WithServerOptions(
+    // Add global middleware
+    cliproxy.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
+    // Tweak gin engine early (CORS, trusted proxies, etc.)
+    cliproxy.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
+    // Add your own routes after defaults
+    cliproxy.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
+      e.GET("/healthz", func(c *gin.Context) { c.String(200, "ok") })
+    }),
+    // Override request log writer/dir
+    cliproxy.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
+      return logging.NewFileRequestLogger(true, "logs", filepath.Dir(cfgPath))
+    }),
+  ).
+  Build()
+```
+
+These options mirror the internals used by the CLI server.
+
+## Management API (when embedded)
+
+- Management endpoints are mounted only when `remote-management.secret-key` is set in `config.yaml`.
+- Remote access additionally requires `remote-management.allow-remote: true`.
+- See MANAGEMENT_API.md for endpoints. Your embedded server exposes them under `/v0/management` on the configured port.
+
+## Using the Core Auth Manager
+
+The service uses a core `auth.Manager` for selection, execution, and auto‑refresh. When embedding, you can provide your own manager to customize transports or hooks:
+
+```go
+core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
+core.SetRoundTripperProvider(myRTProvider) // per‑auth *http.Transport
+
+svc, _ := cliproxy.NewBuilder().
+    WithConfig(cfg).
+    WithConfigPath("config.yaml").
+    WithCoreAuthManager(core).
+    Build()
+```
+
+Implement a custom per‑auth transport:
+
+```go
+type myRTProvider struct{}
+func (myRTProvider) RoundTripperFor(a *coreauth.Auth) http.RoundTripper {
+    if a == nil || a.ProxyURL == "" { return nil }
+    u, _ := url.Parse(a.ProxyURL)
+    return &http.Transport{ Proxy: http.ProxyURL(u) }
+}
+```
+
+Programmatic execution is available on the manager:
+
+```go
+// Non‑streaming
+resp, err := core.Execute(ctx, []string{"gemini"}, req, opts)
+
+// Streaming
+chunks, err := core.ExecuteStream(ctx, []string{"gemini"}, req, opts)
+for ch := range chunks { /* ... */ }
+```
+
+Note: Built‑in provider executors are wired automatically when you run the `Service`. If you want to use `Manager` stand‑alone without the HTTP server, you must register your own executors that implement `auth.ProviderExecutor`.
+
+## Custom Client Sources
+
+Replace the default loaders if your creds live outside the local filesystem:
+
+```go
+type memoryTokenProvider struct{}
+func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*cliproxy.TokenClientResult, error) {
+    // Populate from memory/remote store and return counts
+    return &cliproxy.TokenClientResult{}, nil
+}
+
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(cfg).
+  WithConfigPath("config.yaml").
+  WithTokenClientProvider(&memoryTokenProvider{}).
+  WithAPIKeyClientProvider(cliproxy.NewAPIKeyClientProvider()).
+  Build()
+```
+
+## Hooks
+
+Observe lifecycle without patching internals:
+
+```go
+hooks := cliproxy.Hooks{
+  OnBeforeStart: func(cfg *config.Config) { log.Infof("starting on :%d", cfg.Port) },
+  OnAfterStart:  func(s *cliproxy.Service) { log.Info("ready") },
+}
+svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
+```
+
+## Shutdown
+
+`Run` defers `Shutdown`, so cancelling the parent context is enough. To stop manually:
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+_ = svc.Shutdown(ctx)
+```
+
+## Notes
+
+- Hot reload: changes to `config.yaml` and `auths/` are picked up automatically.
+- Request logging can be toggled at runtime via the Management API.
+- Gemini Web features (`gemini-web.*`) are honored in the embedded server.
+
+
+--- docs/sdk-usage_CN.md ---
+# CLI Proxy SDK 使用指南
+
+`sdk/cliproxy` 模块将代理能力以 Go 库的形式对外暴露，方便在其它服务中内嵌路由、鉴权、热更新与翻译层，而无需依赖可执行的 CLI 程序。
+
+## 安装与导入
+
+```bash
+go get github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy
+```
+
+```go
+import (
+    "context"
+    "errors"
+    "time"
+
+    "github.com/router-for-me/CLIProxyAPI/v6/internal/config"
+    "github.com/router-for-me/CLIProxyAPI/v6/sdk/cliproxy"
+)
+```
+
+注意模块路径包含 `/v6`。
+
+## 最小可用示例
+
+```go
+cfg, err := config.LoadConfig("config.yaml")
+if err != nil { panic(err) }
+
+svc, err := cliproxy.NewBuilder().
+    WithConfig(cfg).
+    WithConfigPath("config.yaml"). // 绝对路径或工作目录相对路径
+    Build()
+if err != nil { panic(err) }
+
+ctx, cancel := context.WithCancel(context.Background())
+defer cancel()
+
+if err := svc.Run(ctx); err != nil && !errors.Is(err, context.Canceled) {
+    panic(err)
+}
+```
+
+服务内部会管理配置与认证文件的监听、后台令牌刷新与优雅关闭。取消上下文即可停止服务。
+
+## 服务器可选项（中间件、路由、日志）
+
+通过 `WithServerOptions` 自定义：
+
+```go
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(cfg).
+  WithConfigPath("config.yaml").
+  WithServerOptions(
+    // 追加全局中间件
+    cliproxy.WithMiddleware(func(c *gin.Context) { c.Header("X-Embed", "1"); c.Next() }),
+    // 提前调整 gin 引擎（如 CORS、trusted proxies）
+    cliproxy.WithEngineConfigurator(func(e *gin.Engine) { e.ForwardedByClientIP = true }),
+    // 在默认路由之后追加自定义路由
+    cliproxy.WithRouterConfigurator(func(e *gin.Engine, _ *handlers.BaseAPIHandler, _ *config.Config) {
+      e.GET("/healthz", func(c *gin.Context) { c.String(200, "ok") })
+    }),
+    // 覆盖请求日志的创建（启用/目录）
+    cliproxy.WithRequestLoggerFactory(func(cfg *config.Config, cfgPath string) logging.RequestLogger {
+      return logging.NewFileRequestLogger(true, "logs", filepath.Dir(cfgPath))
+    }),
+  ).
+  Build()
+```
+
+这些选项与 CLI 服务器内部用法保持一致。
+
+## 管理 API（内嵌时）
+
+- 仅当 `config.yaml` 中设置了 `remote-management.secret-key` 时才会挂载管理端点。
+- 远程访问还需要 `remote-management.allow-remote: true`。
+- 具体端点见 MANAGEMENT_API_CN.md。内嵌服务器会在配置端口下暴露 `/v0/management`。
+
+## 使用核心鉴权管理器
+
+服务内部使用核心 `auth.Manager` 负责选择、执行、自动刷新。内嵌时可自定义其传输或钩子：
+
+```go
+core := coreauth.NewManager(coreauth.NewFileStore(cfg.AuthDir), nil, nil)
+core.SetRoundTripperProvider(myRTProvider) // 按账户返回 *http.Transport
+
+svc, _ := cliproxy.NewBuilder().
+    WithConfig(cfg).
+    WithConfigPath("config.yaml").
+    WithCoreAuthManager(core).
+    Build()
+```
+
+实现每个账户的自定义传输：
+
+```go
+type myRTProvider struct{}
+func (myRTProvider) RoundTripperFor(a *coreauth.Auth) http.RoundTripper {
+    if a == nil || a.ProxyURL == "" { return nil }
+    u, _ := url.Parse(a.ProxyURL)
+    return &http.Transport{ Proxy: http.ProxyURL(u) }
+}
+```
+
+管理器提供编程式执行接口：
+
+```go
+// 非流式
+resp, err := core.Execute(ctx, []string{"gemini"}, req, opts)
+
+// 流式
+chunks, err := core.ExecuteStream(ctx, []string{"gemini"}, req, opts)
+for ch := range chunks { /* ... */ }
+```
+
+说明：运行 `Service` 时会自动注册内置的提供商执行器；若仅单独使用 `Manager` 而不启动 HTTP 服务器，则需要自行实现并注册满足 `auth.ProviderExecutor` 的执行器。
+
+## 自定义凭据来源
+
+当凭据不在本地文件系统时，替换默认加载器：
+
+```go
+type memoryTokenProvider struct{}
+func (p *memoryTokenProvider) Load(ctx context.Context, cfg *config.Config) (*cliproxy.TokenClientResult, error) {
+    // 从内存/远端加载并返回数量统计
+    return &cliproxy.TokenClientResult{}, nil
+}
+
+svc, _ := cliproxy.NewBuilder().
+  WithConfig(cfg).
+  WithConfigPath("config.yaml").
+  WithTokenClientProvider(&memoryTokenProvider{}).
+  WithAPIKeyClientProvider(cliproxy.NewAPIKeyClientProvider()).
+  Build()
+```
+
+## 启动钩子
+
+无需修改内部代码即可观察生命周期：
+
+```go
+hooks := cliproxy.Hooks{
+  OnBeforeStart: func(cfg *config.Config) { log.Infof("starting on :%d", cfg.Port) },
+  OnAfterStart:  func(s *cliproxy.Service) { log.Info("ready") },
+}
+svc, _ := cliproxy.NewBuilder().WithConfig(cfg).WithConfigPath("config.yaml").WithHooks(hooks).Build()
+```
+
+## 关闭
+
+`Run` 内部会延迟调用 `Shutdown`，因此只需取消父上下文即可。若需手动停止：
+
+```go
+ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+defer cancel()
+_ = svc.Shutdown(ctx)
+```
+
+## 说明
+
+- 热更新：`config.yaml` 与 `auths/` 变化会被自动侦测并应用。
+- 请求日志可通过管理 API 在运行时开关。
+- `gemini-web.*` 相关配置在内嵌服务器中会被遵循。
+
+
+
+--- docs/sdk-watcher.md ---
+# SDK Watcher Integration
+
+The SDK service exposes a watcher integration that surfaces granular auth updates without forcing a full reload. This document explains the queue contract, how the service consumes updates, and how high-frequency change bursts are handled.
+
+## Update Queue Contract
+
+- `watcher.AuthUpdate` represents a single credential change. `Action` may be `add`, `modify`, or `delete`, and `ID` carries the credential identifier. For `add`/`modify` the `Auth` payload contains a fully populated clone of the credential; `delete` may omit `Auth`.
+- `WatcherWrapper.SetAuthUpdateQueue(chan<- watcher.AuthUpdate)` wires the queue produced by the SDK service into the watcher. The queue must be created before the watcher starts.
+- The service builds the queue via `ensureAuthUpdateQueue`, using a buffered channel (`capacity=256`) and a dedicated consumer goroutine (`consumeAuthUpdates`). The consumer drains bursts by looping through the backlog before reacquiring the select loop.
+
+## Watcher Behaviour
+
+- `internal/watcher/watcher.go` keeps a shadow snapshot of auth state (`currentAuths`). Each filesystem or configuration event triggers a recomputation and a diff against the previous snapshot to produce minimal `AuthUpdate` entries that mirror adds, edits, and removals.
+- Updates are coalesced per credential identifier. If multiple changes occur before dispatch (e.g., write followed by delete), only the final action is sent downstream.
+- The watcher runs an internal dispatch loop that buffers pending updates in memory and forwards them asynchronously to the queue. Producers never block on channel capacity; they just enqueue into the in-memory buffer and signal the dispatcher. Dispatch cancellation happens when the watcher stops, guaranteeing goroutines exit cleanly.
+
+## High-Frequency Change Handling
+
+- The dispatch loop and service consumer run independently, preventing filesystem watchers from blocking even when many updates arrive at once.
+- Back-pressure is absorbed in two places:
+  - The dispatch buffer (map + order slice) coalesces repeated updates for the same credential until the consumer catches up.
+  - The service channel capacity (256) combined with the consumer drain loop ensures several bursts can be processed without oscillation.
+- If the queue is saturated for an extended period, updates continue to be merged, so the latest state is eventually applied without replaying redundant intermediate states.
+
+## Usage Checklist
+
+1. Instantiate the SDK service (builder or manual construction).
+2. Call `ensureAuthUpdateQueue` before starting the watcher to allocate the shared channel.
+3. When the `WatcherWrapper` is created, call `SetAuthUpdateQueue` with the service queue, then start the watcher.
+4. Provide a reload callback that handles configuration updates; auth deltas will arrive via the queue and are applied by the service automatically through `handleAuthUpdate`.
+
+Following this flow keeps auth changes responsive while avoiding full reloads for every edit.
+
+
+--- docs/sdk-watcher_CN.md ---
+# SDK Watcher集成说明
+
+本文档介绍SDK服务与文件监控器之间的增量更新队列，包括接口契约、高频变更下的处理策略以及接入步骤。
+
+## 更新队列契约
+
+- `watcher.AuthUpdate`描述单条凭据变更，`Action`可能为`add`、`modify`或`delete`，`ID`是凭据标识。对于`add`/`modify`会携带完整的`Auth`克隆，`delete`可以省略`Auth`。
+- `WatcherWrapper.SetAuthUpdateQueue(chan<- watcher.AuthUpdate)`用于将服务侧创建的队列注入watcher，必须在watcher启动前完成。
+- 服务通过`ensureAuthUpdateQueue`创建容量为256的缓冲通道，并在`consumeAuthUpdates`中使用专职goroutine消费；消费侧会主动“抽干”积压事件，降低切换开销。
+
+## Watcher行为
+
+- `internal/watcher/watcher.go`维护`currentAuths`快照，文件或配置事件触发后会重建快照并与旧快照对比，生成最小化的`AuthUpdate`列表。
+- 以凭据ID为维度对更新进行合并，同一凭据在短时间内的多次变更只会保留最新状态（例如先写后删只会下发`delete`）。
+- watcher内部运行异步分发循环：生产者只向内存缓冲追加事件并唤醒分发协程，即使通道暂时写满也不会阻塞文件事件线程。watcher停止时会取消分发循环，确保协程正常退出。
+
+## 高频变更处理
+
+- 分发循环与服务消费协程相互独立，因此即便短时间内出现大量变更也不会阻塞watcher事件处理。
+- 背压通过两级缓冲吸收：
+  - 分发缓冲（map + 顺序切片）会合并同一凭据的重复事件，直到消费者完成处理。
+  - 服务端通道的256容量加上消费侧的“抽干”逻辑，可平稳处理多个突发批次。
+- 当通道长时间处于高压状态时，缓冲仍持续合并事件，从而在消费者恢复后一次性应用最新状态，避免重复处理无意义的中间状态。
+
+## 接入步骤
+
+1. 实例化SDK Service（构建器或手工创建）。
+2. 在启动watcher之前调用`ensureAuthUpdateQueue`创建共享通道。
+3. watcher通过工厂函数创建后立刻调用`SetAuthUpdateQueue`注入通道，然后再启动watcher。
+4. Reload回调专注于配置更新；认证增量会通过队列送达，并由`handleAuthUpdate`自动应用。
+
+遵循上述流程即可在避免全量重载的同时保持凭据变更的实时性。
+
+
+--- .github/ISSUE_TEMPLATE/bug_report.md ---
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+**Is it a request payload issue?**
+[  ] Yes, this is a request payload issue. I am using a client/cURL to send a request payload, but I received an unexpected error.
+[  ] No, it's another issue.
+
+**If it's a request payload issue, you MUST know**
+Our team doesn't have any GODs or ORACLEs or MIND READERs. Please make sure to attach the request log or curl payload.
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**CLI Type**
+What type of CLI account do you use?  (gemini-cli, gemini, codex, claude code or openai-compatibility)
+
+**Model Name**
+What model are you using? (example: gemini-2.5-pro, claude-sonnet-4-20250514, gpt-5, etc.)
+
+**LLM Client**
+What LLM Client are you using? (example: roo-code, cline, claude code, etc.)
+
+**Request Information**
+The best way is to paste the cURL command of the HTTP request here.
+Alternatively, you can set `request-log: true` in the `config.yaml` file and then upload the detailed log file.
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**OS Type**
+ - OS: [e.g. macOS]
+ - Version [e.g. 15.6.0]
+
+**Additional context**
+Add any other context about the problem here.
+
+
+--- README.md ---
+# CLI Proxy API
+
+English | [中文](README_CN.md)
+
+A proxy server that provides OpenAI/Gemini/Claude/Codex compatible API interfaces for CLI.
+
+It now also supports OpenAI Codex (GPT models) and Claude Code via OAuth.
+
+So you can use local or multi-account CLI access with OpenAI(include Responses)/Gemini/Claude-compatible clients and SDKs.
+
+## Sponsor
+
+[![z.ai](https://assets.router-for.me/english-4.7.png)](https://z.ai/subscribe?ic=8JVLJQFSKB)
+
+This project is sponsored by Z.ai, supporting us with their GLM CODING PLAN.
+
+GLM CODING PLAN is a subscription service designed for AI coding, starting at just $3/month. It provides access to their flagship GLM-4.7 model across 10+ popular AI coding tools (Claude Code, Cline, Roo Code, etc.), offering developers top-tier, fast, and stable coding experiences.
+
+Get 10% OFF GLM CODING PLAN：https://z.ai/subscribe?ic=8JVLJQFSKB
+
+---
+
+<table>
+<tbody>
+<tr>
+<td width="180"><a href="https://www.packyapi.com/register?aff=cliproxyapi"><img src="./assets/packycode.png" alt="PackyCode" width="150"></a></td>
+<td>Thanks to PackyCode for sponsoring this project! PackyCode is a reliable and efficient API relay service provider, offering relay services for Claude Code, Codex, Gemini, and more. PackyCode provides special discounts for our software users: register using <a href="https://www.packyapi.com/register?aff=cliproxyapi">this link</a> and enter the "cliproxyapi" promo code during recharge to get 10% off.</td>
+</tr>
+<tr>
+<td width="180"><a href="https://www.aicodemirror.com/register?invitecode=TJNAIF"><img src="./assets/aicodemirror.png" alt="AICodeMirror" width="150"></a></td>
+<td>Thanks to AICodeMirror for sponsoring this project! AICodeMirror provides official high-stability relay services for Claude Code / Codex / Gemini CLI, with enterprise-grade concurrency, fast invoicing, and 24/7 dedicated technical support. Claude Code / Codex / Gemini official channels at 38% / 2% / 9% of original price, with extra discounts on top-ups! AICodeMirror offers special benefits for CLIProxyAPI users: register via <a href="https://www.aicodemirror.com/register?invitecode=TJNAIF">this link</a> to enjoy 20% off your first top-up, and enterprise customers can get up to 25% off!</td>
+</tr>
+</tbody>
+</table>
+
+## Overview
+
+- OpenAI/Gemini/Claude compatible API endpoints for CLI models
+- OpenAI Codex support (GPT models) via OAuth login
+- Claude Code support via OAuth login
+- Qwen Code support via OAuth login
+- iFlow support via OAuth login
+- Amp CLI and IDE extensions support with provider routing
+- Streaming and non-streaming responses
+- Function calling/tools support
+- Multimodal input support (text and images)
+- Multiple accounts with round-robin load balancing (Gemini, OpenAI, Claude, Qwen and iFlow)
+- Simple CLI authentication flows (Gemini, OpenAI, Claude, Qwen and iFlow)
+- Generative Language API Key support
+- AI Studio Build multi-account load balancing
+- Gemini CLI multi-account load balancing
+- Claude Code multi-account load balancing
+- Qwen Code multi-account load balancing
+- iFlow multi-account load balancing
+- OpenAI Codex multi-account load balancing
+- OpenAI-compatible upstream providers via config (e.g., OpenRouter)
+- Reusable Go SDK for embedding the proxy (see `docs/sdk-usage.md`)
+
+## Getting Started
+
+CLIProxyAPI Guides: [https://help.router-for.me/](https://help.router-for.me/)
+
+## Management API
+
+see [MANAGEMENT_API.md](https://help.router-for.me/management/api)
+
+## Amp CLI Support
+
+CLIProxyAPI includes integrated support for [Amp CLI](https://ampcode.com) and Amp IDE extensions, enabling you to use your Google/ChatGPT/Claude OAuth subscriptions with Amp's coding tools:
+
+- Provider route aliases for Amp's API patterns (`/api/provider/{provider}/v1...`)
+- Management proxy for OAuth authentication and account features
+- Smart model fallback with automatic routing
+- **Model mapping** to route unavailable models to alternatives (e.g., `claude-opus-4.5` → `claude-sonnet-4`)
+- Security-first design with localhost-only management endpoints
+
+**→ [Complete Amp CLI Integration Guide](https://help.router-for.me/agent-client/amp-cli.html)**
+
+## SDK Docs
+
+- Usage: [docs/sdk-usage.md](docs/sdk-usage.md)
+- Advanced (executors & translators): [docs/sdk-advanced.md](docs/sdk-advanced.md)
+- Access: [docs/sdk-access.md](docs/sdk-access.md)
+- Watcher: [docs/sdk-watcher.md](docs/sdk-watcher.md)
+- Custom Provider Example: `examples/custom-provider`
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Who is with us?
+
+Those projects are based on CLIProxyAPI:
+
+### [vibeproxy](https://github.com/automazeio/vibeproxy)
+
+Native macOS menu bar app to use your Claude Code & ChatGPT subscriptions with AI coding tools - no API keys needed
+
+### [Subtitle Translator](https://github.com/VjayC/SRT-Subtitle-Translator-Validator)
+
+Browser-based tool to translate SRT subtitles using your Gemini subscription via CLIProxyAPI with automatic validation/error correction - no API keys needed
+
+### [CCS (Claude Code Switch)](https://github.com/kaitranntt/ccs)
+
+CLI wrapper for instant switching between multiple Claude accounts and alternative models (Gemini, Codex, Antigravity) via CLIProxyAPI OAuth - no API keys needed
+
+### [ProxyPal](https://github.com/heyhuynhgiabuu/proxypal)
+
+Native macOS GUI for managing CLIProxyAPI: configure providers, model mappings, and endpoints via OAuth - no API keys needed.
+
+### [Quotio](https://github.com/nguyenphutrong/quotio)
+
+Native macOS menu bar app that unifies Claude, Gemini, OpenAI, Qwen, and Antigravity subscriptions with real-time quota tracking and smart auto-failover for AI coding tools like Claude Code, OpenCode, and Droid - no API keys needed.
+
+### [CodMate](https://github.com/loocor/CodMate)
+
+Native macOS SwiftUI app for managing CLI AI sessions (Codex, Claude Code, Gemini CLI) with unified provider management, Git review, project organization, global search, and terminal integration. Integrates CLIProxyAPI to provide OAuth authentication for Codex, Claude, Gemini, Antigravity, and Qwen Code, with built-in and third-party provider rerouting through a single proxy endpoint - no API keys needed for OAuth providers.
+
+### [ProxyPilot](https://github.com/Finesssee/ProxyPilot)
+
+Windows-native CLIProxyAPI fork with TUI, system tray, and multi-provider OAuth for AI coding tools - no API keys needed.
+
+### [Claude Proxy VSCode](https://github.com/uzhao/claude-proxy-vscode)
+
+VSCode extension for quick switching between Claude Code models, featuring integrated CLIProxyAPI as its backend with automatic background lifecycle management.
+
+### [ZeroLimit](https://github.com/0xtbug/zero-limit)
+
+Windows desktop app built with Tauri + React for monitoring AI coding assistant quotas via CLIProxyAPI. Track usage across Gemini, Claude, OpenAI Codex, and Antigravity accounts with real-time dashboard, system tray integration, and one-click proxy control - no API keys needed.
+
+### [CPA-XXX Panel](https://github.com/ferretgeek/CPA-X)
+
+A lightweight web admin panel for CLIProxyAPI with health checks, resource monitoring, real-time logs, auto-update, request statistics and pricing display. Supports one-click installation and systemd service.
+
+### [CLIProxyAPI Tray](https://github.com/kitephp/CLIProxyAPI_Tray)
+
+A Windows tray application implemented using PowerShell scripts, without relying on any third-party libraries. The main features include: automatic creation of shortcuts, silent running, password management, channel switching (Main / Plus), and automatic downloading and updating.
+
+### [霖君](https://github.com/wangdabaoqq/LinJun)
+
+霖君 is a cross-platform desktop application for managing AI programming assistants, supporting macOS, Windows, and Linux systems. Unified management of Claude Code, Gemini CLI, OpenAI Codex, Qwen Code, and other AI coding tools, with local proxy for multi-account quota tracking and one-click configuration.
+
+### [CLIProxyAPI Dashboard](https://github.com/itsmylife44/cliproxyapi-dashboard)
+
+A modern web-based management dashboard for CLIProxyAPI built with Next.js, React, and PostgreSQL. Features real-time log streaming, structured configuration editing, API key management, OAuth provider integration for Claude/Gemini/Codex, usage analytics, container management, and config sync with OpenCode via companion plugin - no manual YAML editing needed.
+
+> [!NOTE]  
+> If you developed a project based on CLIProxyAPI, please open a PR to add it to this list.
+
+## More choices
+
+Those projects are ports of CLIProxyAPI or inspired by it:
+
+### [9Router](https://github.com/decolua/9router)
+
+A Next.js implementation inspired by CLIProxyAPI, easy to install and use, built from scratch with format translation (OpenAI/Claude/Gemini/Ollama), combo system with auto-fallback, multi-account management with exponential backoff, a Next.js web dashboard, and support for CLI tools (Cursor, Claude Code, Cline, RooCode) - no API keys needed.
+
+> [!NOTE]  
+> If you have developed a port of CLIProxyAPI or a project inspired by it, please open a PR to add it to this list.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+
+## Links discovered
+- [中文](https://github.com/router-for-me/CLIProxyAPI/blob/main/README_CN.md)
+- [![z.ai](https://assets.router-for.me/english-4.7.png)
+- [https://help.router-for.me/](https://help.router-for.me/)
+- [MANAGEMENT_API.md](https://help.router-for.me/management/api)
+- [Amp CLI](https://ampcode.com)
+- [Complete Amp CLI Integration Guide](https://help.router-for.me/agent-client/amp-cli.html)
+- [docs/sdk-usage.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-usage.md)
+- [docs/sdk-advanced.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-advanced.md)
+- [docs/sdk-access.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-access.md)
+- [docs/sdk-watcher.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-watcher.md)
+- [vibeproxy](https://github.com/automazeio/vibeproxy)
+- [Subtitle Translator](https://github.com/VjayC/SRT-Subtitle-Translator-Validator)
+- [CCS (Claude Code Switch)](https://github.com/kaitranntt/ccs)
+- [ProxyPal](https://github.com/heyhuynhgiabuu/proxypal)
+- [Quotio](https://github.com/nguyenphutrong/quotio)
+- [CodMate](https://github.com/loocor/CodMate)
+- [ProxyPilot](https://github.com/Finesssee/ProxyPilot)
+- [Claude Proxy VSCode](https://github.com/uzhao/claude-proxy-vscode)
+- [ZeroLimit](https://github.com/0xtbug/zero-limit)
+- [CPA-XXX Panel](https://github.com/ferretgeek/CPA-X)
+- [CLIProxyAPI Tray](https://github.com/kitephp/CLIProxyAPI_Tray)
+- [霖君](https://github.com/wangdabaoqq/LinJun)
+- [CLIProxyAPI Dashboard](https://github.com/itsmylife44/cliproxyapi-dashboard)
+- [9Router](https://github.com/decolua/9router)
+- [LICENSE](https://github.com/router-for-me/CLIProxyAPI/blob/main/LICENSE.md)
+- [<img src="./assets/packycode.png" alt="PackyCode" width="150">](https://www.packyapi.com/register?aff=cliproxyapi)
+- [this link](https://www.packyapi.com/register?aff=cliproxyapi)
+- [<img src="./assets/aicodemirror.png" alt="AICodeMirror" width="150">](https://www.aicodemirror.com/register?invitecode=TJNAIF)
+- [this link](https://www.aicodemirror.com/register?invitecode=TJNAIF)
+
+--- README_CN.md ---
+# CLI 代理 API
+
+[English](README.md) | 中文
+
+一个为 CLI 提供 OpenAI/Gemini/Claude/Codex 兼容 API 接口的代理服务器。
+
+现已支持通过 OAuth 登录接入 OpenAI Codex（GPT 系列）和 Claude Code。
+
+您可以使用本地或多账户的CLI方式，通过任何与 OpenAI（包括Responses）/Gemini/Claude 兼容的客户端和SDK进行访问。
+
+## 赞助商
+
+[![bigmodel.cn](https://assets.router-for.me/chinese-4.7.png)](https://www.bigmodel.cn/claude-code?ic=RRVJPB5SII)
+
+本项目由 Z智谱 提供赞助, 他们通过 GLM CODING PLAN 对本项目提供技术支持。
+
+GLM CODING PLAN 是专为AI编码打造的订阅套餐，每月最低仅需20元，即可在十余款主流AI编码工具如 Claude Code、Cline、Roo Code 中畅享智谱旗舰模型GLM-4.7，为开发者提供顶尖的编码体验。
+
+智谱AI为本软件提供了特别优惠，使用以下链接购买可以享受九折优惠：https://www.bigmodel.cn/claude-code?ic=RRVJPB5SII
+
+---
+
+<table>
+<tbody>
+<tr>
+<td width="180"><a href="https://www.packyapi.com/register?aff=cliproxyapi"><img src="./assets/packycode.png" alt="PackyCode" width="150"></a></td>
+<td>感谢 PackyCode 对本项目的赞助！PackyCode 是一家可靠高效的 API 中转服务商，提供 Claude Code、Codex、Gemini 等多种服务的中转。PackyCode 为本软件用户提供了特别优惠：使用<a href="https://www.packyapi.com/register?aff=cliproxyapi">此链接</a>注册，并在充值时输入 "cliproxyapi" 优惠码即可享受九折优惠。</td>
+</tr>
+<tr>
+<td width="180"><a href="https://www.aicodemirror.com/register?invitecode=TJNAIF"><img src="./assets/aicodemirror.png" alt="AICodeMirror" width="150"></a></td>
+<td>感谢 AICodeMirror 赞助了本项目！AICodeMirror 提供 Claude Code / Codex / Gemini CLI 官方高稳定中转服务，支持企业级高并发、极速开票、7×24 专属技术支持。 Claude Code / Codex / Gemini 官方渠道低至 3.8 / 0.2 / 0.9 折，充值更有折上折！AICodeMirror 为 CLIProxyAPI 的用户提供了特别福利，通过<a href="https://www.aicodemirror.com/register?invitecode=TJNAIF">此链接</a>注册的用户，可享受首充8折，企业客户最高可享 7.5 折！</td>
+</tr>
+</tbody>
+</table>
+
+
+## 功能特性
+
+- 为 CLI 模型提供 OpenAI/Gemini/Claude/Codex 兼容的 API 端点
+- 新增 OpenAI Codex（GPT 系列）支持（OAuth 登录）
+- 新增 Claude Code 支持（OAuth 登录）
+- 新增 Qwen Code 支持（OAuth 登录）
+- 新增 iFlow 支持（OAuth 登录）
+- 支持流式与非流式响应
+- 函数调用/工具支持
+- 多模态输入（文本、图片）
+- 多账户支持与轮询负载均衡（Gemini、OpenAI、Claude、Qwen 与 iFlow）
+- 简单的 CLI 身份验证流程（Gemini、OpenAI、Claude、Qwen 与 iFlow）
+- 支持 Gemini AIStudio API 密钥
+- 支持 AI Studio Build 多账户轮询
+- 支持 Gemini CLI 多账户轮询
+- 支持 Claude Code 多账户轮询
+- 支持 Qwen Code 多账户轮询
+- 支持 iFlow 多账户轮询
+- 支持 OpenAI Codex 多账户轮询
+- 通过配置接入上游 OpenAI 兼容提供商（例如 OpenRouter）
+- 可复用的 Go SDK（见 `docs/sdk-usage_CN.md`）
+
+## 新手入门
+
+CLIProxyAPI 用户手册： [https://help.router-for.me/](https://help.router-for.me/cn/)
+
+## 管理 API 文档
+
+请参见 [MANAGEMENT_API_CN.md](https://help.router-for.me/cn/management/api)
+
+## Amp CLI 支持
+
+CLIProxyAPI 已内置对 [Amp CLI](https://ampcode.com) 和 Amp IDE 扩展的支持，可让你使用自己的 Google/ChatGPT/Claude OAuth 订阅来配合 Amp 编码工具：
+
+- 提供商路由别名，兼容 Amp 的 API 路径模式（`/api/provider/{provider}/v1...`）
+- 管理代理，处理 OAuth 认证和账号功能
+- 智能模型回退与自动路由
+- 以安全为先的设计，管理端点仅限 localhost
+
+**→ [Amp CLI 完整集成指南](https://help.router-for.me/cn/agent-client/amp-cli.html)**
+
+## SDK 文档
+
+- 使用文档：[docs/sdk-usage_CN.md](docs/sdk-usage_CN.md)
+- 高级（执行器与翻译器）：[docs/sdk-advanced_CN.md](docs/sdk-advanced_CN.md)
+- 认证: [docs/sdk-access_CN.md](docs/sdk-access_CN.md)
+- 凭据加载/更新: [docs/sdk-watcher_CN.md](docs/sdk-watcher_CN.md)
+- 自定义 Provider 示例：`examples/custom-provider`
+
+## 贡献
+
+欢迎贡献！请随时提交 Pull Request。
+
+1. Fork 仓库
+2. 创建您的功能分支（`git checkout -b feature/amazing-feature`）
+3. 提交您的更改（`git commit -m 'Add some amazing feature'`）
+4. 推送到分支（`git push origin feature/amazing-feature`）
+5. 打开 Pull Request
+
+## 谁与我们在一起？
+
+这些项目基于 CLIProxyAPI:
+
+### [vibeproxy](https://github.com/automazeio/vibeproxy)
+
+一个原生 macOS 菜单栏应用，让您可以使用 Claude Code & ChatGPT 订阅服务和 AI 编程工具，无需 API 密钥。
+
+### [Subtitle Translator](https://github.com/VjayC/SRT-Subtitle-Translator-Validator)
+
+一款基于浏览器的 SRT 字幕翻译工具，可通过 CLI 代理 API 使用您的 Gemini 订阅。内置自动验证与错误修正功能，无需 API 密钥。
+
+### [CCS (Claude Code Switch)](https://github.com/kaitranntt/ccs)
+
+CLI 封装器，用于通过 CLIProxyAPI OAuth 即时切换多个 Claude 账户和替代模型（Gemini, Codex, Antigravity），无需 API 密钥。
+
+### [ProxyPal](https://github.com/heyhuynhgiabuu/proxypal)
+
+基于 macOS 平台的原生 CLIProxyAPI GUI：配置供应商、模型映射以及OAuth端点，无需 API 密钥。
+
+### [Quotio](https://github.com/nguyenphutrong/quotio)
+
+原生 macOS 菜单栏应用，统一管理 Claude、Gemini、OpenAI、Qwen 和 Antigravity 订阅，提供实时配额追踪和智能自动故障转移，支持 Claude Code、OpenCode 和 Droid 等 AI 编程工具，无需 API 密钥。
+
+### [CodMate](https://github.com/loocor/CodMate)
+
+原生 macOS SwiftUI 应用，用于管理 CLI AI 会话（Claude Code、Codex、Gemini CLI），提供统一的提供商管理、Git 审查、项目组织、全局搜索和终端集成。集成 CLIProxyAPI 为 Codex、Claude、Gemini、Antigravity 和 Qwen Code 提供统一的 OAuth 认证，支持内置和第三方提供商通过单一代理端点重路由 - OAuth 提供商无需 API 密钥。
+
+### [ProxyPilot](https://github.com/Finesssee/ProxyPilot)
+
+原生 Windows CLIProxyAPI 分支，集成 TUI、系统托盘及多服务商 OAuth 认证，专为 AI 编程工具打造，无需 API 密钥。
+
+### [Claude Proxy VSCode](https://github.com/uzhao/claude-proxy-vscode)
+
+一款 VSCode 扩展，提供了在 VSCode 中快速切换 Claude Code 模型的功能，内置 CLIProxyAPI 作为其后端，支持后台自动启动和关闭。
+
+### [ZeroLimit](https://github.com/0xtbug/zero-limit)
+
+Windows 桌面应用，基于 Tauri + React 构建，用于通过 CLIProxyAPI 监控 AI 编程助手配额。支持跨 Gemini、Claude、OpenAI Codex 和 Antigravity 账户的使用量追踪，提供实时仪表盘、系统托盘集成和一键代理控制，无需 API 密钥。
+
+### [CPA-XXX Panel](https://github.com/ferretgeek/CPA-X)
+
+面向 CLIProxyAPI 的 Web 管理面板，提供健康检查、资源监控、日志查看、自动更新、请求统计与定价展示，支持一键安装与 systemd 服务。
+
+### [CLIProxyAPI Tray](https://github.com/kitephp/CLIProxyAPI_Tray)
+
+Windows 托盘应用，基于 PowerShell 脚本实现，不依赖任何第三方库。主要功能包括：自动创建快捷方式、静默运行、密码管理、通道切换（Main / Plus）以及自动下载与更新。
+
+### [霖君](https://github.com/wangdabaoqq/LinJun)
+
+霖君是一款用于管理AI编程助手的跨平台桌面应用，支持macOS、Windows、Linux系统。统一管理Claude Code、Gemini CLI、OpenAI Codex、Qwen Code等AI编程工具，本地代理实现多账户配额跟踪和一键配置。
+
+### [CLIProxyAPI Dashboard](https://github.com/itsmylife44/cliproxyapi-dashboard)
+
+一个面向 CLIProxyAPI 的现代化 Web 管理仪表盘，基于 Next.js、React 和 PostgreSQL 构建。支持实时日志流、结构化配置编辑、API Key 管理、Claude/Gemini/Codex 的 OAuth 提供方集成、使用量分析、容器管理，并可通过配套插件与 OpenCode 同步配置，无需手动编辑 YAML。
+
+> [!NOTE]  
+> 如果你开发了基于 CLIProxyAPI 的项目，请提交一个 PR（拉取请求）将其添加到此列表中。
+
+## 更多选择
+
+以下项目是 CLIProxyAPI 的移植版或受其启发：
+
+### [9Router](https://github.com/decolua/9router)
+
+基于 Next.js 的实现，灵感来自 CLIProxyAPI，易于安装使用；自研格式转换（OpenAI/Claude/Gemini/Ollama）、组合系统与自动回退、多账户管理（指数退避）、Next.js Web 控制台，并支持 Cursor、Claude Code、Cline、RooCode 等 CLI 工具，无需 API 密钥。
+
+> [!NOTE]  
+> 如果你开发了 CLIProxyAPI 的移植或衍生项目，请提交 PR 将其添加到此列表中。
+
+## 许可证
+
+此项目根据 MIT 许可证授权 - 有关详细信息，请参阅 [LICENSE](LICENSE) 文件。
+
+## 写给所有中国网友的
+
+QQ 群：188637136
+
+或
+
+Telegram 群：https://t.me/CLIProxyAPI
+
+
+## Links discovered
+- [English](https://github.com/router-for-me/CLIProxyAPI/blob/main/README.md)
+- [![bigmodel.cn](https://assets.router-for.me/chinese-4.7.png)
+- [https://help.router-for.me/](https://help.router-for.me/cn/)
+- [MANAGEMENT_API_CN.md](https://help.router-for.me/cn/management/api)
+- [Amp CLI](https://ampcode.com)
+- [Amp CLI 完整集成指南](https://help.router-for.me/cn/agent-client/amp-cli.html)
+- [docs/sdk-usage_CN.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-usage_CN.md)
+- [docs/sdk-advanced_CN.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-advanced_CN.md)
+- [docs/sdk-access_CN.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-access_CN.md)
+- [docs/sdk-watcher_CN.md](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-watcher_CN.md)
+- [vibeproxy](https://github.com/automazeio/vibeproxy)
+- [Subtitle Translator](https://github.com/VjayC/SRT-Subtitle-Translator-Validator)
+- [CCS (Claude Code Switch)](https://github.com/kaitranntt/ccs)
+- [ProxyPal](https://github.com/heyhuynhgiabuu/proxypal)
+- [Quotio](https://github.com/nguyenphutrong/quotio)
+- [CodMate](https://github.com/loocor/CodMate)
+- [ProxyPilot](https://github.com/Finesssee/ProxyPilot)
+- [Claude Proxy VSCode](https://github.com/uzhao/claude-proxy-vscode)
+- [ZeroLimit](https://github.com/0xtbug/zero-limit)
+- [CPA-XXX Panel](https://github.com/ferretgeek/CPA-X)
+- [CLIProxyAPI Tray](https://github.com/kitephp/CLIProxyAPI_Tray)
+- [霖君](https://github.com/wangdabaoqq/LinJun)
+- [CLIProxyAPI Dashboard](https://github.com/itsmylife44/cliproxyapi-dashboard)
+- [9Router](https://github.com/decolua/9router)
+- [LICENSE](https://github.com/router-for-me/CLIProxyAPI/blob/main/LICENSE.md)
+- [<img src="./assets/packycode.png" alt="PackyCode" width="150">](https://www.packyapi.com/register?aff=cliproxyapi)
+- [此链接](https://www.packyapi.com/register?aff=cliproxyapi)
+- [<img src="./assets/aicodemirror.png" alt="AICodeMirror" width="150">](https://www.aicodemirror.com/register?invitecode=TJNAIF)
+- [此链接](https://www.aicodemirror.com/register?invitecode=TJNAIF)
+
+--- internal/misc/claude_code_instructions.txt ---
+[{"type":"text","text":"You are Claude Code, Anthropic's official CLI for Claude.","cache_control":{"type":"ephemeral"}}]

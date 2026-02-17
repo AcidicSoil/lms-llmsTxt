@@ -1,0 +1,2748 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- core/src/examples/base_example_provider.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {Example} from './example.js';
+
+/**
+ * A unique symbol to identify ADK agent classes.
+ * Defined once and shared by all BaseExampleProvider instances.
+ */
+const BASE_EXAMPLE_PROVIDER_SIGNATURE_SYMBOL = Symbol.for(
+  'google.adk.baseExampleProvider',
+);
+
+/**
+ * Type guard to check if an object is an instance of BaseExampleProvider.
+ * @param obj The object to check.
+ * @returns True if the object is an instance of BaseExampleProvider, false otherwise.
+ */
+export function isBaseExampleProvider(
+  obj: unknown,
+): obj is BaseExampleProvider {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    BASE_EXAMPLE_PROVIDER_SIGNATURE_SYMBOL in obj &&
+    obj[BASE_EXAMPLE_PROVIDER_SIGNATURE_SYMBOL] === true
+  );
+}
+
+/**
+ * Base class for example providers.
+ *
+ *  This class defines the interface for providing examples for a given query.
+ */
+export abstract class BaseExampleProvider {
+  /**
+   * A unique symbol to identify ADK example provider classes.
+   */
+  readonly [BASE_EXAMPLE_PROVIDER_SIGNATURE_SYMBOL] = true;
+
+  /**
+   * Returns a list of examples for a given query.
+   *
+   * @param query The query to get examples for.
+   * @return A list of Example objects.
+   */
+  abstract getExamples(query: string): Example[];
+}
+
+
+--- core/src/examples/example.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {Content} from '@google/genai';
+
+/**
+ * A few-shot example.
+ */
+export interface Example {
+  /**
+   * The input content for the example.
+   */
+  input: Content;
+  /**
+   * The expected output content for the example.
+   */
+  output: Content[];
+}
+
+
+--- core/src/examples/example_util.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {FunctionCall, Part} from '@google/genai';
+
+import {
+  BaseExampleProvider,
+  isBaseExampleProvider,
+} from './base_example_provider.js';
+import {Example} from './example.js';
+
+const EXAMPLES_INTRO =
+  '<EXAMPLES>\nBegin few-shot\nThe following are examples of user queries and' +
+  ' model responses using the available tools.\n\n';
+const EXAMPLES_END = 'End few-shot\n<EXAMPLES>';
+const EXAMPLE_START = 'EXAMPLE {}:\nBegin example\n';
+const EXAMPLE_END = 'End example\n\n';
+const USER_PREFIX = '[user]\n';
+const MODEL_PREFIX = '[model]\n';
+const FUNCTION_PREFIX = '```\n';
+const FUNCTION_CALL_PREFIX = '```tool_code\n';
+const FUNCTION_CALL_SUFFIX = '\n```\n';
+const FUNCTION_RESPONSE_PREFIX = '```tool_outputs\n';
+const FUNCTION_RESPONSE_SUFFIX = '\n```\n';
+
+/**
+ * Converts a list of examples to a string that can be used in a system
+ * instruction.
+ */
+export function convertExamplesToText(
+  examples: Example[],
+  model?: string,
+): string {
+  let examplesStr = '';
+  for (const [exampleNum, example] of examples.entries()) {
+    let output = `${EXAMPLE_START.replace('{}', String(exampleNum + 1))}${USER_PREFIX}`;
+    if (example.input?.parts) {
+      output +=
+        example.input.parts
+          .filter((part: Part) => part.text)
+          .map((part: Part) => part.text!)
+          .join('\n') + '\n';
+    }
+
+    const gemini2 = !model || model.includes('gemini-2');
+    let previousRole: string | undefined;
+    for (const content of example.output) {
+      const role = content.role === 'model' ? MODEL_PREFIX : USER_PREFIX;
+      if (role !== previousRole) {
+        output += role;
+      }
+      previousRole = role;
+      for (const part of content.parts || []) {
+        if (part.functionCall) {
+          const prefix = gemini2 ? FUNCTION_PREFIX : FUNCTION_CALL_PREFIX;
+          const functionCall = part.functionCall as FunctionCall;
+          const args: string[] = [];
+          if (functionCall.args) {
+            for (const [k, v] of Object.entries(functionCall.args)) {
+              if (typeof v === 'string') {
+                args.push(`${k}='${v}'`);
+              } else {
+                args.push(`${k}=${v}`);
+              }
+            }
+          }
+          const functionCallString = `${functionCall.name}(${args.join(', ')})`;
+          output += `${prefix}${functionCallString}${FUNCTION_CALL_SUFFIX}`;
+        } else if (part.functionResponse) {
+          const prefix = gemini2 ? FUNCTION_PREFIX : FUNCTION_RESPONSE_PREFIX;
+          output += `${prefix}${JSON.stringify(part.functionResponse)}${
+            FUNCTION_RESPONSE_SUFFIX
+          }`;
+        } else if (part.text) {
+          output += `${part.text}\n`;
+        }
+      }
+    }
+
+    output += EXAMPLE_END;
+    examplesStr += output;
+  }
+
+  return `${EXAMPLES_INTRO}${examplesStr}${EXAMPLES_END}`;
+}
+
+export function buildExampleSi(
+  examples: Example[] | BaseExampleProvider,
+  query: string,
+  model?: string,
+): string {
+  if (Array.isArray(examples)) {
+    return convertExamplesToText(examples, model);
+  }
+  if (isBaseExampleProvider(examples)) {
+    return convertExamplesToText(examples.getExamples(query), model);
+  }
+
+  throw new Error('Invalid example configuration');
+}
+
+
+--- CONTRIBUTING.md ---
+# How to contribute
+
+We'd love to accept your patches and contributions to this project.
+
+## Before you begin
+
+### Sign our Contributor License Agreement
+
+Contributions to this project must be accompanied by a
+[Contributor License Agreement](https://cla.developers.google.com/about) (CLA).
+You (or your employer) retain the copyright to your contribution; this simply
+gives us permission to use and redistribute your contributions as part of the
+project.
+
+If you or your current employer have already signed the Google CLA (even if it
+was for a different project), you probably don't need to do it again.
+
+Visit <https://cla.developers.google.com/> to see your current agreements or to
+sign a new one.
+
+### Review our community guidelines
+
+This project follows
+[Google's Open Source Community Guidelines](https://opensource.google/conduct/).
+
+## Contribution process
+
+### Code reviews
+
+All submissions, including submissions by project members, require review. We
+use GitHub pull requests for this purpose. Consult
+[GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
+information on using pull requests.
+
+## PR policy
+
+### AI Generated code
+
+It's ok to generate the first draft using AI but we would like code which has
+gone through human refinement.
+
+
+### TSDoc
+
+We want our TSDocs to be concise and meaningful.
+Usually aligned with adk-python.
+
+
+## Links discovered
+- [Contributor License Agreement](https://cla.developers.google.com/about)
+- [Google's Open Source Community Guidelines](https://opensource.google/conduct/)
+- [GitHub Help](https://help.github.com/articles/about-pull-requests/)
+
+--- core/CHANGELOG.md ---
+# Changelog
+
+## [0.3.0](https://github.com/google/adk-js/compare/adk-v0.2.5...adk-v0.3.0) (2026-01-30)
+
+
+### Features
+
+* add setLogger() for custom logger support ([#96](https://github.com/google/adk-js/issues/96)) ([7e96728](https://github.com/google/adk-js/commit/7e967282757ed66f5a9f45a6ba0b2abbed78856f))
+
+
+### Bug Fixes
+
+* use getter for rootAgent to match Python SDK behavior ([#95](https://github.com/google/adk-js/issues/95)) ([23b1d7f](https://github.com/google/adk-js/commit/23b1d7f27ce8175ecf0ca14f2c974234fca0ae7d))
+
+## [0.2.5](https://github.com/google/adk-js/compare/v0.2.4...adk-v0.2.5) (2026-01-28)
+
+### Bug Fixes
+
+- handle empty MCP schema types during Gemini conversion ([345d16b](https://github.com/google/adk-js/commit/345d16b))
+- Fix bug when ADK web server crashes on agent graph generation ([3c7f28e](https://github.com/google/adk-js/commit/3c7f28e))
+
+### Changed
+
+- Update the test as per review to use toEqual ([5680f93](https://github.com/google/adk-js/commit/5680f93))
+- Stop using `instanceof` operator and replace it with a type guard function to check for class instances ([1921e54](https://github.com/google/adk-js/commit/1921e54))
+
+### Miscellaneous Chores
+
+- support release-please for release automation ([2c55c5d](https://github.com/google/adk-js/commit/2c55c5d))
+- Fix doctype warning during doc generation ([5bb216f](https://github.com/google/adk-js/commit/5bb216f))
+- Bump lodash-es in the npm_and_yarn group ([af195be](https://github.com/google/adk-js/commit/af195be))
+- Generate docs for the @google/adk-js package using TypeDoc ([3fd2f35](https://github.com/google/adk-js/commit/3fd2f35))
+
+## [0.2.4](https://github.com/google/adk-js/compare/v0.2.3...v0.2.4) 2026-01-16
+
+### Bug Fixes
+
+- Fix runtime error `TypeError: (0 , import_cloneDeep.default) is not a function` for commonjs setup ([533ede7](https://github.com/google/adk-js/commit/533ede7))
+- Move the assign of the built-in code executor under the supportCfc if condition ([7758d58](https://github.com/google/adk-js/commit/7758d58))
+
+### Changed
+
+- Bump version of google/genai dependency ([587b7f3](https://github.com/google/adk-js/commit/587b7f3))
+
+## [0.2.3](https://github.com/google/adk-js/compare/v0.2.2...v0.2.3) - 2026-01-15
+
+### Features
+
+- Support Gemini 3 models for BuiltInCodeExecutor ([3bef09e](https://github.com/google/adk-js/commit/3bef09e))
+
+## [0.2.2](https://github.com/google/adk-js/compare/v0.2.1...v0.2.2) - 2026-01-08
+
+### Features
+
+- Integrate code executor to LlmAgent ([9165450](https://github.com/google/adk-js/commit/9165450))
+- Expose new function to identify if the given class a ADK BaseAgent instance or not ([4bded65](https://github.com/google/adk-js/commit/4bded65))
+- Add a type guard for BaseLlm ([76be5ca](https://github.com/google/adk-js/commit/76be5ca))
+
+### Bug Fixes
+
+- Agent transfer mechanism ([5fa1877](https://github.com/google/adk-js/commit/5fa1877))
+- Improve error message for missing appName in runner ([6b9a340](https://github.com/google/adk-js/commit/6b9a340))
+- proper type inference to functional tool parameters to auto type inference ([0afb8f3](https://github.com/google/adk-js/commit/0afb8f3))
+- StreamableHTTP header parameter passing in MCPSessionManager ([81bffbc](https://github.com/google/adk-js/commit/81bffbc))
+- gracefully handle nullable or unknown types ([601f924](https://github.com/google/adk-js/commit/601f924))
+- Fix CI build ([1dbca9e](https://github.com/google/adk-js/commit/1dbca9e))
+- Fix CI tests ([e9e1dd2](https://github.com/google/adk-js/commit/e9e1dd2))
+
+## [0.2.1](https://github.com/google/adk-js/compare/v0.2.0...v0.2.1) - 2025-12-16
+
+### Changed
+
+- Simplify package READMEs ([4f2d5f4](https://github.com/google/adk-js/commit/4f2d5f4))
+
+## [0.2.0](https://github.com/google/adk-js/compare/v0.1.3...v0.2.0) - 2025-12-15
+
+### Features
+
+- Integrate OpenTelemetry (OTel) support ([9a1d9b5](https://github.com/google/adk-js/commit/9a1d9b5))
+
+### Changed
+
+- Move core dependencies to `dependencies` in package.json ([5338182](https://github.com/google/adk-js/commit/5338182))
+- Move request labeling to base LLM and add support for agent engine telemetry ([d11fd1d](https://github.com/google/adk-js/commit/d11fd1d))
+
+### Miscellaneous Chores
+
+- update Gen AI SDK ([7ce74cd](https://github.com/google/adk-js/commit/7ce74cd))
+
+## [0.1.3] - 2025-11-05
+
+### Features
+
+- Add GCS artifact service ([c1f901c](https://github.com/google/adk-js/commit/c1f901c))
+- Export Gemini and GeminiParams ([e7d50e3](https://github.com/google/adk-js/commit/e7d50e3))
+- Support long running tool ([814c654](https://github.com/google/adk-js/commit/814c654))
+- Enable code execution ([cc93abc](https://github.com/google/adk-js/commit/cc93abc))
+- Enable thinking_config for Gemini ([d348fd6](https://github.com/google/adk-js/commit/d348fd6))
+- Add esbuild to bundle the source code for different targets ([9abc793](https://github.com/google/adk-js/commit/9abc793))
+
+### Bug Fixes
+
+- Update BaseLlm constructor to use a parameter object ([dee0f50](https://github.com/google/adk-js/commit/dee0f50))
+- Handle error during the tool execution ([6158083](https://github.com/google/adk-js/commit/6158083))
+- fix toGeminiSchema ([37d00cb](https://github.com/google/adk-js/commit/37d00cb))
+- Fix error when calling `event.isFinalResponse()` ([153ad89](https://github.com/google/adk-js/commit/153ad89))
+
+### Changed
+
+- Make `createEventActions` part of public API ([633af65](https://github.com/google/adk-js/commit/633af65))
+- Make RunConfig as interface ([0b85aba](https://github.com/google/adk-js/commit/0b85aba))
+- Unify import signature as import from @google/adk ([2371b12](https://github.com/google/adk-js/commit/2371b12))
+- Refactor build process using a dedicated build script ([941c0e6](https://github.com/google/adk-js/commit/941c0e6))
+- Rename methods to remove the "Async" suffix ([df8ebab](https://github.com/google/adk-js/commit/df8ebab))
+- Make LlmResponse as interface ([6e5f035](https://github.com/google/adk-js/commit/6e5f035))
+- Split entrypoints based on targets (web, node) ([6d485fc](https://github.com/google/adk-js/commit/6d485fc))
+
+
+## Links discovered
+- [0.3.0](https://github.com/google/adk-js/compare/adk-v0.2.5...adk-v0.3.0)
+- [#96](https://github.com/google/adk-js/issues/96)
+- [7e96728](https://github.com/google/adk-js/commit/7e967282757ed66f5a9f45a6ba0b2abbed78856f)
+- [#95](https://github.com/google/adk-js/issues/95)
+- [23b1d7f](https://github.com/google/adk-js/commit/23b1d7f27ce8175ecf0ca14f2c974234fca0ae7d)
+- [0.2.5](https://github.com/google/adk-js/compare/v0.2.4...adk-v0.2.5)
+- [345d16b](https://github.com/google/adk-js/commit/345d16b)
+- [3c7f28e](https://github.com/google/adk-js/commit/3c7f28e)
+- [5680f93](https://github.com/google/adk-js/commit/5680f93)
+- [1921e54](https://github.com/google/adk-js/commit/1921e54)
+- [2c55c5d](https://github.com/google/adk-js/commit/2c55c5d)
+- [5bb216f](https://github.com/google/adk-js/commit/5bb216f)
+- [af195be](https://github.com/google/adk-js/commit/af195be)
+- [3fd2f35](https://github.com/google/adk-js/commit/3fd2f35)
+- [0.2.4](https://github.com/google/adk-js/compare/v0.2.3...v0.2.4)
+- [533ede7](https://github.com/google/adk-js/commit/533ede7)
+- [7758d58](https://github.com/google/adk-js/commit/7758d58)
+- [587b7f3](https://github.com/google/adk-js/commit/587b7f3)
+- [0.2.3](https://github.com/google/adk-js/compare/v0.2.2...v0.2.3)
+- [3bef09e](https://github.com/google/adk-js/commit/3bef09e)
+- [0.2.2](https://github.com/google/adk-js/compare/v0.2.1...v0.2.2)
+- [9165450](https://github.com/google/adk-js/commit/9165450)
+- [4bded65](https://github.com/google/adk-js/commit/4bded65)
+- [76be5ca](https://github.com/google/adk-js/commit/76be5ca)
+- [5fa1877](https://github.com/google/adk-js/commit/5fa1877)
+- [6b9a340](https://github.com/google/adk-js/commit/6b9a340)
+- [0afb8f3](https://github.com/google/adk-js/commit/0afb8f3)
+- [81bffbc](https://github.com/google/adk-js/commit/81bffbc)
+- [601f924](https://github.com/google/adk-js/commit/601f924)
+- [1dbca9e](https://github.com/google/adk-js/commit/1dbca9e)
+- [e9e1dd2](https://github.com/google/adk-js/commit/e9e1dd2)
+- [0.2.1](https://github.com/google/adk-js/compare/v0.2.0...v0.2.1)
+- [4f2d5f4](https://github.com/google/adk-js/commit/4f2d5f4)
+- [0.2.0](https://github.com/google/adk-js/compare/v0.1.3...v0.2.0)
+- [9a1d9b5](https://github.com/google/adk-js/commit/9a1d9b5)
+- [5338182](https://github.com/google/adk-js/commit/5338182)
+- [d11fd1d](https://github.com/google/adk-js/commit/d11fd1d)
+- [7ce74cd](https://github.com/google/adk-js/commit/7ce74cd)
+- [c1f901c](https://github.com/google/adk-js/commit/c1f901c)
+- [e7d50e3](https://github.com/google/adk-js/commit/e7d50e3)
+- [814c654](https://github.com/google/adk-js/commit/814c654)
+- [cc93abc](https://github.com/google/adk-js/commit/cc93abc)
+- [d348fd6](https://github.com/google/adk-js/commit/d348fd6)
+- [9abc793](https://github.com/google/adk-js/commit/9abc793)
+- [dee0f50](https://github.com/google/adk-js/commit/dee0f50)
+- [6158083](https://github.com/google/adk-js/commit/6158083)
+- [37d00cb](https://github.com/google/adk-js/commit/37d00cb)
+- [153ad89](https://github.com/google/adk-js/commit/153ad89)
+- [633af65](https://github.com/google/adk-js/commit/633af65)
+- [0b85aba](https://github.com/google/adk-js/commit/0b85aba)
+- [2371b12](https://github.com/google/adk-js/commit/2371b12)
+- [941c0e6](https://github.com/google/adk-js/commit/941c0e6)
+- [df8ebab](https://github.com/google/adk-js/commit/df8ebab)
+- [6e5f035](https://github.com/google/adk-js/commit/6e5f035)
+- [6d485fc](https://github.com/google/adk-js/commit/6d485fc)
+
+--- dev/CHANGELOG.md ---
+# Changelog
+
+## [0.3.0](https://github.com/google/adk-js/compare/devtools-v0.2.5...devtools-v0.3.0) (2026-01-30)
+
+
+### Miscellaneous Chores
+
+* **devtools:** Synchronize adk versions
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @google/adk bumped from ^0.2.5 to ^0.3.0
+
+## [0.2.5](https://github.com/google/adk-js/compare/v0.2.4...devtools-v0.2.5) (2026-01-28)
+
+### Dependencies
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.2.4 to ^0.2.5
+
+### Bug Fixes
+
+- Fix bug when ADK web server crashes on agent graph generation ([3c7f28e](https://github.com/google/adk-js/commit/3c7f28e))
+
+### Miscellaneous Chores
+
+- support release-please for release automation ([2c55c5d](https://github.com/google/adk-js/commit/2c55c5d09f56b18f7adea61d0106c7f77112bde1))
+
+## [0.2.4](https://github.com/google/adk-js/compare/v0.2.3...v0.2.4) - 2026-01-16
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.2.3 to ^0.2.4
+
+## [0.2.3](https://github.com/google/adk-js/compare/devtools-v0.2.2...v0.2.3) - 2026-01-15
+
+### Dependencies
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.2.2 to ^0.2.3
+
+## [0.2.2](https://github.com/google/adk-js/compare/devtools-v0.2.1...v0.2.2) - 2026-01-08
+
+### Features
+
+- Support -y, --yes options in the ADK CLI create command ([6afe042](https://github.com/google/adk-js/commit/6afe042))
+- Add interactive CLI command for creating new agent projects with dependency setup ([d6686e8](https://github.com/google/adk-js/commit/d6686e8))
+
+### Dependencies
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.2.1 to ^0.2.2
+
+## [0.2.1](https://github.com/google/adk-js/compare/devtools-v0.2.0...v0.2.1) - 2025-12-16
+
+### Changed
+
+- Simplify package READMEs ([4f2d5f4](https://github.com/google/adk-js/commit/4f2d5f4))
+
+### Dependencies
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.2.0 to ^0.2.1
+
+## [0.2.0](https://github.com/google/adk-js/compare/devtools-v0.1.3...v0.2.0) - 2025-12-15
+
+### Dependencies
+
+- The following workspace dependencies were updated
+  - dependencies
+    - @google/adk bumped from ^0.1.3 to ^0.2.0
+
+## [0.1.3] - 2025-11-05
+
+### Features
+
+- Add `adk deploy cloud_run` command to deploy agents to Cloud Run ([9593a85](https://github.com/google/adk-js/commit/9593a85))
+- Allow to serve individual files ([c776f88](https://github.com/google/adk-js/commit/c776f88))
+- Move devtools build logic to a dedicated build.js script ([088765b](https://github.com/google/adk-js/commit/088765b))
+- Add `adk run` command ([91b181d](https://github.com/google/adk-js/commit/91b181d))
+- Add `adk api_server` command ([65208d9](https://github.com/google/adk-js/commit/65208d9))
+- Implement agent graph server API endpoint ([4dcbeeb](https://github.com/google/adk-js/commit/4dcbeeb))
+
+### Bug Fixes
+
+- Fix tests in dev ([74586cc](https://github.com/google/adk-js/commit/74586cc))
+- Fix cli server build issues ([31b9568](https://github.com/google/adk-js/commit/31b9568))
+
+### Changed
+
+- Changes the package name from `@google/adk_cli` to `@google/adk-devtools` ([a581404](https://github.com/google/adk-js/commit/a581404))
+- Refactor Agent Loading and CLI Commands ([642251d](https://github.com/google/adk-js/commit/642251d))
+- Refactor ADK dev server to use `cors` and built-in Express body parsers ([f35ede9](https://github.com/google/adk-js/commit/f35ede9))
+- Rename methods to remove the "Async" suffix ([df8ebab](https://github.com/google/adk-js/commit/df8ebab))
+- Add skeleton nodejs/express server + cli to run it ([2de5b16](https://github.com/google/adk-js/commit/2de5b16))
+
+
+## Links discovered
+- [0.3.0](https://github.com/google/adk-js/compare/devtools-v0.2.5...devtools-v0.3.0)
+- [0.2.5](https://github.com/google/adk-js/compare/v0.2.4...devtools-v0.2.5)
+- [3c7f28e](https://github.com/google/adk-js/commit/3c7f28e)
+- [2c55c5d](https://github.com/google/adk-js/commit/2c55c5d09f56b18f7adea61d0106c7f77112bde1)
+- [0.2.4](https://github.com/google/adk-js/compare/v0.2.3...v0.2.4)
+- [0.2.3](https://github.com/google/adk-js/compare/devtools-v0.2.2...v0.2.3)
+- [0.2.2](https://github.com/google/adk-js/compare/devtools-v0.2.1...v0.2.2)
+- [6afe042](https://github.com/google/adk-js/commit/6afe042)
+- [d6686e8](https://github.com/google/adk-js/commit/d6686e8)
+- [0.2.1](https://github.com/google/adk-js/compare/devtools-v0.2.0...v0.2.1)
+- [4f2d5f4](https://github.com/google/adk-js/commit/4f2d5f4)
+- [0.2.0](https://github.com/google/adk-js/compare/devtools-v0.1.3...v0.2.0)
+- [9593a85](https://github.com/google/adk-js/commit/9593a85)
+- [c776f88](https://github.com/google/adk-js/commit/c776f88)
+- [088765b](https://github.com/google/adk-js/commit/088765b)
+- [91b181d](https://github.com/google/adk-js/commit/91b181d)
+- [65208d9](https://github.com/google/adk-js/commit/65208d9)
+- [4dcbeeb](https://github.com/google/adk-js/commit/4dcbeeb)
+- [74586cc](https://github.com/google/adk-js/commit/74586cc)
+- [31b9568](https://github.com/google/adk-js/commit/31b9568)
+- [a581404](https://github.com/google/adk-js/commit/a581404)
+- [642251d](https://github.com/google/adk-js/commit/642251d)
+- [f35ede9](https://github.com/google/adk-js/commit/f35ede9)
+- [df8ebab](https://github.com/google/adk-js/commit/df8ebab)
+- [2de5b16](https://github.com/google/adk-js/commit/2de5b16)
+
+--- core/src/plugins/security_plugin.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {FunctionCall} from '@google/genai';
+
+import {Event} from '../events/event.js';
+import {BasePlugin} from '../plugins/base_plugin.js';
+import {BaseTool} from '../tools/base_tool.js';
+import {ToolConfirmation} from '../tools/tool_confirmation.js';
+import {ToolContext} from '../tools/tool_context.js';
+
+// Constants
+export const REQUEST_CONFIRMATION_FUNCTION_CALL_NAME =
+  'adk_request_confirmation';
+
+const TOOL_CALL_SECURITY_CHECK_STATES = 'orcas_tool_call_security_check_states';
+const INTERMEDIATE_REQUIRE_TOOL_CALL_CONFIRMATION_ERROR =
+  'This tool call needs external confirmation before completion.';
+
+// --------------------------------------------------------------------------
+// #START Policy Engine Interface
+// --------------------------------------------------------------------------
+
+/**
+ * The outcome of a policy check.
+ */
+export enum PolicyOutcome {
+  // The tool call is rejected by the policy engine.
+  DENY = 'DENY',
+  // The tool call needs external confirmation before proceeding.
+  CONFIRM = 'CONFIRM',
+  // The tool call is allowed by the policy engine.
+  ALLOW = 'ALLOW',
+}
+
+export interface PolicyCheckResult {
+  outcome: string;
+  reason?: string;
+}
+
+export interface ToolCallPolicyContext {
+  tool: BaseTool;
+  toolArgs: Record<string, unknown>;
+}
+
+export interface BasePolicyEngine {
+  evaluate(context: ToolCallPolicyContext): Promise<PolicyCheckResult>;
+}
+
+export class InMemoryPolicyEngine implements BasePolicyEngine {
+  async evaluate(): Promise<PolicyCheckResult> {
+    // Default permissive implementation
+    return Promise.resolve({
+      outcome: PolicyOutcome.ALLOW,
+      reason: 'For prototyping purpose, all tool calls are allowed.',
+    });
+  }
+}
+// --------------------------------------------------------------------------
+// #END Policy Engine Interface
+// --------------------------------------------------------------------------
+
+/**
+ *  Security Plugin for running Orcas agents.
+ */
+export class SecurityPlugin extends BasePlugin {
+  private readonly policyEngine: BasePolicyEngine;
+
+  constructor(params?: {policyEngine?: BasePolicyEngine}) {
+    super('security_plugin');
+    this.policyEngine = params?.policyEngine ?? new InMemoryPolicyEngine();
+  }
+
+  override async beforeToolCallback({
+    tool,
+    toolArgs,
+    toolContext,
+  }: {
+    tool: BaseTool;
+    toolArgs: {[key: string]: unknown};
+    toolContext: ToolContext;
+  }): Promise<{[key: string]: unknown} | undefined> {
+    const toolCallCheckState = this.getToolCallCheckState(toolContext);
+
+    // We only check the tool call policy ONCE, when the tool call is handled
+    // for the first time.
+    if (!toolCallCheckState) {
+      return this.checkToolCallPolicy({
+        tool: tool,
+        toolArgs: toolArgs,
+        toolContext: toolContext,
+      });
+    }
+
+    if (toolCallCheckState !== PolicyOutcome.CONFIRM) {
+      return;
+    }
+
+    if (!toolContext.toolConfirmation) {
+      return {partial: INTERMEDIATE_REQUIRE_TOOL_CALL_CONFIRMATION_ERROR};
+    }
+
+    this.setToolCallCheckState(toolContext, toolContext.toolConfirmation);
+    if (!toolContext.toolConfirmation.confirmed) {
+      return {
+        error: 'Tool call rejected from confirmation flow.',
+      };
+    }
+    toolContext.toolConfirmation = undefined;
+    return;
+  }
+
+  private getToolCallCheckState(
+    toolContext: ToolContext,
+  ): string | ToolConfirmation | undefined {
+    const {functionCallId} = toolContext;
+    if (!functionCallId) {
+      return;
+    }
+
+    const toolCallStates =
+      (toolContext.state.get(TOOL_CALL_SECURITY_CHECK_STATES) as {
+        [key: string]: string | ToolConfirmation;
+      }) ?? {};
+    return toolCallStates[functionCallId];
+  }
+
+  private setToolCallCheckState(
+    toolContext: ToolContext,
+    state: string | ToolConfirmation,
+  ): void {
+    const {functionCallId} = toolContext;
+    if (!functionCallId) {
+      return;
+    }
+
+    const toolCallStates =
+      (toolContext.state.get(TOOL_CALL_SECURITY_CHECK_STATES) as {
+        [key: string]: string | ToolConfirmation;
+      }) ?? {};
+    toolCallStates[functionCallId] = state;
+    toolContext.state.set(TOOL_CALL_SECURITY_CHECK_STATES, toolCallStates);
+  }
+
+  private async checkToolCallPolicy({
+    tool,
+    toolArgs,
+    toolContext,
+  }: {
+    tool: BaseTool;
+    toolArgs: {[key: string]: unknown};
+    toolContext: ToolContext;
+  }): Promise<{[key: string]: unknown} | undefined> {
+    const policyCheckResult = await this.policyEngine.evaluate({
+      tool,
+      toolArgs,
+    });
+
+    this.setToolCallCheckState(toolContext, policyCheckResult.outcome);
+
+    switch (policyCheckResult.outcome) {
+      case PolicyOutcome.DENY:
+        return {
+          error: `This tool call is rejected by policy engine. Reason: ${
+            policyCheckResult.reason
+          }`,
+        };
+      case PolicyOutcome.CONFIRM:
+        toolContext.requestConfirmation({
+          hint: `Policy engine requires confirmation calling tool: ${
+            tool.name
+          }. Reason: ${policyCheckResult.reason}`,
+        });
+        return {partial: INTERMEDIATE_REQUIRE_TOOL_CALL_CONFIRMATION_ERROR};
+      case PolicyOutcome.ALLOW:
+        return;
+      default:
+        return;
+    }
+  }
+}
+
+/**
+ * Gets the ask user confirmation function calls from the event.
+ * @param event The event to get the function calls from.
+ * @returns The ask user confirmation function calls.
+ */
+export function getAskUserConfirmationFunctionCalls(
+  event: Event,
+): FunctionCall[] {
+  if (!event.content || !event.content.parts) {
+    return [];
+  }
+  const results: FunctionCall[] = [];
+
+  for (const part of event.content.parts) {
+    if (
+      part &&
+      part.functionCall &&
+      part.functionCall.name === REQUEST_CONFIRMATION_FUNCTION_CALL_NAME
+    ) {
+      results.push(part.functionCall);
+    }
+  }
+  return results;
+}
+
+
+--- .prettierrc.js ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export default {
+  "printWidth": 80,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": true,
+  "singleQuote": true,
+  "quoteProps": "preserve",
+  "bracketSpacing": false,
+  "trailingComma": "all",
+  "arrowParens": "always",
+  "bracketSameLine": true,
+  "endOfLine": "auto",
+  "plugins": ["prettier-plugin-organize-imports"],
+};
+
+
+--- README.md ---
+# Agent Development Kit (ADK) for TypeScript
+
+[![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![NPM Version](https://img.shields.io/npm/v/@google/adk)](https://www.npmjs.com/package/@google/adk)
+[![r/agentdevelopmentkit](https://img.shields.io/badge/Reddit-r%2Fagentdevelopmentkit-FF4500?style=flat&logo=reddit&logoColor=white)](https://www.reddit.com/r/agentdevelopmentkit/)
+
+<html>
+    <h2 align="center">
+      <img src="https://raw.githubusercontent.com/google/adk-python/main/assets/agent-development-kit.png" width="256"/>
+    </h2>
+    <h3 align="center">
+      An open-source, code-first TypeScript toolkit for building, evaluating, and deploying sophisticated AI agents with flexibility and control.
+    </h3>
+    <h3 align="center">
+      Important Links:
+      <a href="https://google.github.io/adk-docs/">Docs</a>,
+      <a href="https://github.com/google/adk-samples">Samples</a>,
+      <a href="https://github.com/google/adk-python">Python ADK</a>.
+      <a href="https://github.com/google/adk-java">Java ADK</a>,
+      <a href="https://github.com/google/adk-go">Go ADK</a> &
+      <a href="https://github.com/google/adk-web">Web ADK</a>.
+    </h3>
+</html>
+
+Agent Development Kit (ADK) is designed for developers seeking fine-grained
+control and flexibility when building advanced AI agents that are tightly
+integrated with services in Google Cloud. It allows you to define agent
+behavior, orchestration, and tool use directly in code, enabling robust
+debugging, versioning, and deployment anywhere – from your laptop to the cloud.
+
+--------------------------------------------------------------------------------
+
+## ✨ Key Features
+
+-   **Rich Tool Ecosystem**: Utilize pre-built tools, custom functions, OpenAPI
+    specs, or integrate existing tools to give agents diverse capabilities, all
+    for tight integration with the Google ecosystem.
+
+-   **Code-First Development**: Define agent logic, tools, and orchestration
+    directly in TypeScript for ultimate flexibility, testability, and versioning.
+
+-   **Modular Multi-Agent Systems**: Design scalable applications by composing
+    multiple specialized agents into flexible hierarchies.
+
+## 🚀 Installation
+
+If you're using npm, add the following to your dependencies:
+
+```bash
+npm install @google/adk
+```
+
+Or with yarn:
+
+```bash
+yarn add @google/adk
+```
+
+## 📚 Documentation
+
+For building, evaluating, and deploying agents by follow the TypeScript
+documentation & samples:
+
+*   **[Documentation](https://google.github.io/adk-docs)**
+*   **[Samples](https://github.com/google/adk-samples)**
+
+## 🏁 Feature Highlight
+
+### Same Features & Familiar Interface As Other ADKs:
+
+```typescript
+import { LlmAgent, GOOGLE_SEARCH } from '@google/adk';
+
+const rootAgent = new LlmAgent({
+    name: 'search_assistant',
+    description: 'An assistant that can search the web.',
+    model: 'gemini-2.5-flash', // Or your preferred models
+    instruction: 'You are a helpful assistant. Answer user questions using Google Search when needed.',
+    tools: [GOOGLE_SEARCH],
+});
+```
+
+### Development UI
+
+Same as the Python Development UI.
+A built-in development UI to help you test, evaluate, debug, and showcase your agent(s).
+<img src="https://raw.githubusercontent.com/google/adk-python/main/assets/adk-web-dev-ui-function-call.png"/>
+
+### Evaluate Agents
+
+Coming soon...
+
+## 🤖 A2A and ADK integration
+
+For remote agent-to-agent communication, ADK integrates with the
+[A2A protocol](https://github.com/google/A2A/).
+Examples coming soon...
+
+## 🏗️ Building the Project
+
+This project uses `esbuild` to compile and bundle the TypeScript source code.
+You can build the project using the following npm scripts:
+
+*   `npm run build`: Compiles the TypeScript code into CommonJS, ESM, and Web formats in the `dist` directory.
+*   `npm run build:bundle`: Creates bundled versions of the output for easier distribution or use in environments that don't support tree-shaking well.
+*   `npm run build:watch`: Watches for changes in the source files and automatically rebuilds the project for ESM format only.
+
+## 🤝 Contributing
+
+We welcome contributions from the community! Whether it's bug reports, feature requests, documentation improvements, or code contributions, please see our
+- [General contribution guideline and flow](https://google.github.io/adk-docs/contributing-guide/).
+- Then if you want to contribute code, please read [Code Contributing Guidelines](./CONTRIBUTING.md) to get started.
+
+## 📄 License
+
+This project is licensed under the Apache 2.0 License - see the
+[LICENSE](LICENSE) file for details.
+
+## Preview
+
+This feature is subject to the "Pre-GA Offerings Terms" in the General Service
+Terms section of the
+[Service Specific Terms](https://cloud.google.com/terms/service-terms#1). Pre-GA
+features are available "as is" and might have limited support. For more
+information, see the
+[launch stage descriptions](https://cloud.google.com/products?hl=en#product-launch-stages).
+
+--------------------------------------------------------------------------------
+
+*Happy Agent Building!*
+
+
+## Links discovered
+- [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)
+- [![NPM Version](https://img.shields.io/npm/v/@google/adk)
+- [![r/agentdevelopmentkit](https://img.shields.io/badge/Reddit-r%2Fagentdevelopmentkit-FF4500?style=flat&logo=reddit&logoColor=white)
+- [Documentation](https://google.github.io/adk-docs)
+- [Samples](https://github.com/google/adk-samples)
+- [A2A protocol](https://github.com/google/A2A/)
+- [General contribution guideline and flow](https://google.github.io/adk-docs/contributing-guide/)
+- [Code Contributing Guidelines](https://github.com/google/adk-js/blob/main/CONTRIBUTING.md)
+- [LICENSE](https://github.com/google/adk-js/blob/main/LICENSE.md)
+- [Service Specific Terms](https://cloud.google.com/terms/service-terms#1)
+- [launch stage descriptions](https://cloud.google.com/products?hl=en#product-launch-stages)
+- [Docs](https://google.github.io/adk-docs/)
+- [Python ADK](https://github.com/google/adk-python)
+- [Java ADK](https://github.com/google/adk-java)
+- [Go ADK](https://github.com/google/adk-go)
+- [Web ADK](https://github.com/google/adk-web)
+
+--- eslint.config.js ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import js from "@eslint/js";
+import globals from "globals";
+import tseslint from "typescript-eslint";
+import { defineConfig } from "eslint/config";
+
+export default defineConfig([
+  {
+    ignores: ["**/dist/**", "dev/src/browser/**"],
+  },
+  tseslint.configs.recommended,
+  {
+    files: ["**/*.ts"],
+    plugins: { js },
+    extends: ["js/recommended"],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+        ...globals.vitest
+      },
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "@typescript-eslint/no-unused-vars": [
+        "error",
+        {
+          "argsIgnorePattern": "^_",
+          "varsIgnorePattern": "^_",
+          "caughtErrorsIgnorePattern": "^_"
+        }
+      ]
+    },
+  },
+]);
+
+
+--- vitest.config.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import path from 'path';
+import {defineConfig} from 'vitest/config';
+
+export default defineConfig({
+  test: {
+    environment: 'node',
+    globals: true,
+    include: ['**/*_test.ts'],
+  },
+  resolve: {alias: {'@google/adk': path.resolve(__dirname, './core/src')}},
+});
+
+
+--- .github/ISSUE_TEMPLATE/bug_report.md ---
+---
+name: Bug report
+about: Create a report to help us improve
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+** Please make sure you read the contribution guide and file the issues in the
+right place. **
+[Contribution guide.](https://google.github.io/adk-docs/contributing-guide/)
+
+**Describe the bug**
+A clear and concise description of what the bug is.
+
+**To Reproduce**
+Steps to reproduce the behavior:
+1. Install '...'
+2. Run '....'
+3. Open '....'
+4. See error
+
+**Expected behavior**
+A clear and concise description of what you expected to happen.
+
+**Screenshots**
+If applicable, add screenshots to help explain your problem.
+
+**Desktop (please complete the following information):**
+ - OS: [e.g. iOS]
+ - TS version/environment:
+ - ADK version(see maven dependency):
+
+**Additional context**
+Add any other context about the problem here.
+
+## Links discovered
+- [Contribution guide.](https://google.github.io/adk-docs/contributing-guide/)
+
+--- .github/ISSUE_TEMPLATE/feature_request.md ---
+---
+name: Feature request
+about: Suggest an idea for TypeScript ADK
+title: ''
+labels: ''
+assignees: ''
+
+---
+
+** Please make sure you read the contribution guide and file the issues in the
+right place. **
+[Contribution guide.](https://google.github.io/adk-docs/contributing-guide/)
+
+**Is your feature request related to a problem? Please describe.**
+A clear and concise description of what the problem is. Ex. I'm always
+frustrated when [...]
+
+**Describe the solution you'd like**
+A clear and concise description of what you want to happen.
+
+**Describe alternatives you've considered**
+A clear and concise description of any alternative solutions or features you've
+considered.
+
+**Additional context**
+Add any other context or screenshots about the feature request here.
+
+## Links discovered
+- [Contribution guide.](https://google.github.io/adk-docs/contributing-guide/)
+
+--- core/README.md ---
+# @google/adk
+
+Please see README for adk-js at https://github.com/google/adk-js
+
+--- core/build.js ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import esbuild from 'esbuild';
+import {writeFile} from 'node:fs/promises';
+
+const platformBuildTargets = {
+  'node': ['node10.4'],
+  'browser': ['chrome58', 'firefox57', 'safari11'],
+};
+
+const licenseHeaderText = `/**
+  * @license
+  * Copyright 2025 Google LLC
+  * SPDX-License-Identifier: Apache-2.0
+  */
+`;
+
+/**
+ * Builds the ADK core library with the given options.
+ *
+ * @param {{
+ *   targetDir: string,
+ *   platform: string,
+ *   format: string,
+ *   bundle: boolean,
+ *   watch: boolean,
+ *   entry: string
+ * }} options - The build options.
+ * @return {!Promise} A promise that resolves when the build is complete.
+ */
+function build({
+  targetDir,
+  platform,
+  format,
+  bundle,
+  watch,
+  entry = 'index.ts',
+}) {
+  const buildOptions = {
+    target: platformBuildTargets[platform],
+    platform,
+    format,
+    bundle,
+    minify: bundle,
+    sourcemap: bundle,
+    packages: 'external',
+    logLevel: 'info',
+  };
+
+  // Prepend license header to the top of the file
+  if (format === 'cjs' || bundle) {
+    buildOptions.banner = {js: licenseHeaderText};
+  }
+
+  if (bundle) {
+    buildOptions.entryPoints = [`./src/${entry}`];
+    buildOptions.outfile = `./dist/${targetDir}/index.js`;
+  } else {
+    buildOptions.entryPoints = ['./src/**/*.ts'];
+    buildOptions.outdir = `./dist/${targetDir}`;
+  }
+
+  return watch
+    ? esbuild.context(buildOptions).then((c) => c.watch())
+    : esbuild.build(buildOptions);
+}
+
+/**
+ * The main function that builds the ADK core library.
+ */
+async function main() {
+  const bundle = process.argv.includes('--bundle');
+  const watch = process.argv.includes('--watch');
+
+  if (watch) {
+    build({
+      targetDir: 'esm',
+      platform: 'node',
+      format: 'esm',
+      bundle,
+      watch: true,
+    });
+  } else {
+    await Promise.all([
+      build({targetDir: 'esm', platform: 'node', format: 'esm', bundle}),
+      build({targetDir: 'cjs', platform: 'node', format: 'cjs', bundle}),
+      build({
+        targetDir: 'web',
+        platform: 'browser',
+        format: 'esm',
+        entry: 'index_web.ts',
+        bundle,
+      }),
+    ]);
+
+    // Create package.json for cjs to ensure Node.js treats it as commonjs.
+    await writeFile('./dist/cjs/package.json', '{"type": "commonjs"}');
+  }
+}
+
+main();
+
+
+--- core/src/common.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export {ActiveStreamingTool} from './agents/active_streaming_tool.js';
+export type {ActiveStreamingToolParams} from './agents/active_streaming_tool.js';
+export {BaseAgent, isBaseAgent} from './agents/base_agent.js';
+export type {
+  AfterAgentCallback,
+  BaseAgentConfig,
+  BeforeAgentCallback,
+  SingleAgentCallback,
+} from './agents/base_agent.js';
+export {
+  BaseLlmRequestProcessor,
+  BaseLlmResponseProcessor,
+} from './agents/base_llm_processor.js';
+export {CallbackContext} from './agents/callback_context.js';
+export {functionsExportedForTestingOnly} from './agents/functions.js';
+export {InvocationContext} from './agents/invocation_context.js';
+export type {InvocationContextParams} from './agents/invocation_context.js';
+export {LiveRequestQueue} from './agents/live_request_queue.js';
+export type {LiveRequest} from './agents/live_request_queue.js';
+export {LlmAgent, isLlmAgent} from './agents/llm_agent.js';
+export type {
+  AfterModelCallback,
+  AfterToolCallback,
+  BeforeModelCallback,
+  BeforeToolCallback,
+  InstructionProvider,
+  LlmAgentConfig,
+  SingleAfterModelCallback,
+  SingleAfterToolCallback,
+  SingleBeforeModelCallback,
+  SingleBeforeToolCallback,
+  ToolUnion,
+} from './agents/llm_agent.js';
+export {LoopAgent, isLoopAgent} from './agents/loop_agent.js';
+export type {LoopAgentConfig} from './agents/loop_agent.js';
+export {ParallelAgent, isParallelAgent} from './agents/parallel_agent.js';
+export {ReadonlyContext} from './agents/readonly_context.js';
+export {StreamingMode} from './agents/run_config.js';
+export type {RunConfig} from './agents/run_config.js';
+export {SequentialAgent, isSequentialAgent} from './agents/sequential_agent.js';
+export type {TranscriptionEntry} from './agents/transcription_entry.js';
+export {InMemoryArtifactService} from './artifacts/in_memory_artifact_service.js';
+export {AuthCredentialTypes} from './auth/auth_credential.js';
+export type {
+  AuthCredential,
+  HttpAuth,
+  HttpCredentials,
+  OAuth2Auth,
+  ServiceAccount,
+  ServiceAccountCredential,
+} from './auth/auth_credential.js';
+export type {AuthScheme, OpenIdConnectWithConfig} from './auth/auth_schemes.js';
+export type {AuthConfig} from './auth/auth_tool.js';
+export type {BaseCredentialService} from './auth/credential_service/base_credential_service.js';
+export {BaseCodeExecutor} from './code_executors/base_code_executor.js';
+export type {ExecuteCodeParams} from './code_executors/base_code_executor.js';
+export {BuiltInCodeExecutor} from './code_executors/built_in_code_executor.js';
+export type {
+  CodeExecutionInput,
+  CodeExecutionResult,
+  File,
+} from './code_executors/code_execution_utils.js';
+export {
+  createEvent,
+  getFunctionCalls,
+  getFunctionResponses,
+  hasTrailingCodeExecutionResult,
+  isFinalResponse,
+  stringifyContent,
+} from './events/event.js';
+export type {Event} from './events/event.js';
+export {createEventActions} from './events/event_actions.js';
+export type {EventActions} from './events/event_actions.js';
+export {
+  BaseExampleProvider,
+  isBaseExampleProvider,
+} from './examples/base_example_provider.js';
+export type {Example} from './examples/example.js';
+export {InMemoryMemoryService} from './memory/in_memory_memory_service.js';
+export type {MemoryEntry} from './memory/memory_entry.js';
+export {BaseLlm, isBaseLlm} from './models/base_llm.js';
+export type {BaseLlmConnection} from './models/base_llm_connection.js';
+export {Gemini} from './models/google_llm.js';
+export type {GeminiParams} from './models/google_llm.js';
+export type {LlmRequest} from './models/llm_request.js';
+export type {LlmResponse} from './models/llm_response.js';
+export {LLMRegistry} from './models/registry.js';
+export type {BaseLlmType} from './models/registry.js';
+export {BasePlugin} from './plugins/base_plugin.js';
+export {LoggingPlugin} from './plugins/logging_plugin.js';
+export {PluginManager} from './plugins/plugin_manager.js';
+export {
+  InMemoryPolicyEngine,
+  PolicyOutcome,
+  REQUEST_CONFIRMATION_FUNCTION_CALL_NAME,
+  SecurityPlugin,
+  getAskUserConfirmationFunctionCalls,
+} from './plugins/security_plugin.js';
+export type {
+  BasePolicyEngine,
+  PolicyCheckResult,
+  ToolCallPolicyContext,
+} from './plugins/security_plugin.js';
+export {InMemoryRunner} from './runner/in_memory_runner.js';
+export {Runner} from './runner/runner.js';
+export type {RunnerConfig} from './runner/runner.js';
+export {InMemorySessionService} from './sessions/in_memory_session_service.js';
+export {createSession} from './sessions/session.js';
+export type {Session} from './sessions/session.js';
+export {State} from './sessions/state.js';
+export {AgentTool, isAgentTool} from './tools/agent_tool.js';
+export type {AgentToolConfig} from './tools/agent_tool.js';
+export {BaseTool, isBaseTool} from './tools/base_tool.js';
+export {BaseToolset} from './tools/base_toolset.js';
+export type {ToolPredicate} from './tools/base_toolset.js';
+export {FunctionTool, isFunctionTool} from './tools/function_tool.js';
+export type {
+  ToolExecuteArgument,
+  ToolExecuteFunction,
+  ToolInputParameters,
+  ToolOptions,
+} from './tools/function_tool.js';
+export {GOOGLE_SEARCH, GoogleSearchTool} from './tools/google_search_tool.js';
+export {LongRunningFunctionTool} from './tools/long_running_tool.js';
+export {ToolConfirmation} from './tools/tool_confirmation.js';
+export {ToolContext} from './tools/tool_context.js';
+export {LogLevel, getLogger, setLogLevel, setLogger} from './utils/logger.js';
+export type {Logger} from './utils/logger.js';
+export {isGemini2OrAbove} from './utils/model_name.js';
+export {zodObjectToSchema} from './utils/simple_zod_to_json.js';
+export {GoogleLLMVariant} from './utils/variant_utils.js';
+export {version} from './version.js';
+
+export * from './artifacts/base_artifact_service.js';
+export * from './memory/base_memory_service.js';
+export * from './sessions/base_session_service.js';
+export * from './tools/base_tool.js';
+
+
+--- core/src/index.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export * from './artifacts/gcs_artifact_service.js';
+export * from './common.js';
+export * from './telemetry/google_cloud.js';
+export * from './telemetry/setup.js';
+export * from './tools/mcp/mcp_session_manager.js';
+export * from './tools/mcp/mcp_tool.js';
+export * from './tools/mcp/mcp_toolset.js';
+
+
+--- core/src/index_web.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+export * from './common.js';
+
+
+--- core/src/version.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+// version: major.minor.patch
+export const version = '0.3.0'; // x-release-please-version
+
+
+--- core/src/agents/active_streaming_tool.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {LiveRequestQueue} from './live_request_queue.js';
+
+/**
+ * The parameters for creating an ActiveStreamingTool.
+ */
+export interface ActiveStreamingToolParams {
+  task?: Promise<void>;
+  stream?: LiveRequestQueue;
+}
+
+/**
+ * Manages streaming tool related resources during invocation.
+ */
+export class ActiveStreamingTool {
+  /**
+   * The active task of this streaming tool.
+   * TODO: Replace 'Promise<void>' with a proper Task type if available in this
+   * env.
+   */
+  task?: Promise<void>;
+
+  /**
+   * The active (input) streams of this streaming tool.
+   */
+  stream?: LiveRequestQueue;
+
+  constructor(params: ActiveStreamingToolParams = {}) {
+    this.task = params.task;
+    this.stream = params.stream;
+  }
+}
+
+
+--- core/src/tools/agent_tool.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {Content, FunctionDeclaration, Type} from '@google/genai';
+
+import {BaseAgent} from '../agents/base_agent.js';
+import {isLlmAgent} from '../agents/llm_agent.js';
+import {Event} from '../events/event.js';
+import {InMemoryMemoryService} from '../memory/in_memory_memory_service.js';
+import {Runner} from '../runner/runner.js';
+import {InMemorySessionService} from '../sessions/in_memory_session_service.js';
+import {GoogleLLMVariant} from '../utils/variant_utils.js';
+
+import {BaseTool, RunAsyncToolRequest} from './base_tool.js';
+import {ForwardingArtifactService} from './forwarding_artifact_service.js';
+
+/**
+ * The configuration of the agent tool.
+ */
+export interface AgentToolConfig {
+  /**
+   * The reference to the agent instance.
+   */
+  agent: BaseAgent;
+
+  /**
+   * Whether to skip summarization of the agent output.
+   */
+  skipSummarization?: boolean;
+}
+
+/**
+ * A unique symbol to identify ADK agent classes.
+ * Defined once and shared by all BaseTool instances.
+ */
+const AGENT_TOOL_SIGNATURE_SYMBOL = Symbol.for('google.adk.agentTool');
+
+/**
+ * Type guard to check if an object is an instance of BaseTool.
+ * @param obj The object to check.
+ * @returns True if the object is an instance of BaseTool, false otherwise.
+ */
+export function isAgentTool(obj: unknown): obj is AgentTool {
+  return (
+    typeof obj === 'object' &&
+    obj !== null &&
+    AGENT_TOOL_SIGNATURE_SYMBOL in obj &&
+    obj[AGENT_TOOL_SIGNATURE_SYMBOL] === true
+  );
+}
+
+/**
+ * A tool that wraps an agent.
+ *
+ * This tool allows an agent to be called as a tool within a larger
+ * application. The agent's input schema is used to define the tool's input
+ * parameters, and the agent's output is returned as the tool's result.
+ *
+ *  @param config: The configuration of the agent tool.
+ */
+export class AgentTool extends BaseTool {
+  /** A unique symbol to identify ADK agent tool class. */
+  readonly [AGENT_TOOL_SIGNATURE_SYMBOL] = true;
+
+  private readonly agent: BaseAgent;
+
+  private readonly skipSummarization: boolean;
+
+  constructor(config: AgentToolConfig) {
+    super({
+      name: config.agent.name,
+      description: config.agent.description || '',
+    });
+    this.agent = config.agent;
+    this.skipSummarization = config.skipSummarization || false;
+  }
+
+  override _getDeclaration(): FunctionDeclaration {
+    let declaration: FunctionDeclaration;
+
+    if (isLlmAgent(this.agent) && this.agent.inputSchema) {
+      declaration = {
+        name: this.name,
+        description: this.description,
+        // TODO(b/425992518): We should not use the agent's input schema as is.
+        // It should be validated and possibly transformed. Consider similar
+        // logic to one we have in Python ADK.
+        parameters: this.agent.inputSchema,
+      };
+    } else {
+      declaration = {
+        name: this.name,
+        description: this.description,
+        parameters: {
+          type: Type.OBJECT,
+          properties: {
+            'request': {
+              type: Type.STRING,
+            },
+          },
+          required: ['request'],
+        },
+      };
+    }
+
+    if (this.apiVariant !== GoogleLLMVariant.GEMINI_API) {
+      const hasOutputSchema = isLlmAgent(this.agent) && this.agent.outputSchema;
+      declaration.response = hasOutputSchema
+        ? {type: Type.OBJECT}
+        : {type: Type.STRING};
+    }
+
+    return declaration;
+  }
+
+  override async runAsync({
+    args,
+    toolContext,
+  }: RunAsyncToolRequest): Promise<unknown> {
+    if (this.skipSummarization) {
+      toolContext.actions.skipSummarization = true;
+    }
+
+    const hasInputSchema = isLlmAgent(this.agent) && this.agent.inputSchema;
+    const content: Content = {
+      role: 'user',
+      parts: [
+        {
+          // TODO(b/425992518): Should be validated. Consider similar
+          // logic to one we have in Python ADK.
+          text: hasInputSchema
+            ? JSON.stringify(args)
+            : (args['request'] as string),
+        },
+      ],
+    };
+
+    const runner = new Runner({
+      appName: this.agent.name,
+      agent: this.agent,
+      artifactService: new ForwardingArtifactService(toolContext),
+      sessionService: new InMemorySessionService(),
+      memoryService: new InMemoryMemoryService(),
+      credentialService: toolContext.invocationContext.credentialService,
+    });
+
+    const session = await runner.sessionService.createSession({
+      appName: this.agent.name,
+      userId: 'tmp_user',
+      state: toolContext.state.toRecord(),
+    });
+
+    let lastEvent: Event | undefined;
+    for await (const event of runner.runAsync({
+      userId: session.userId,
+      sessionId: session.id,
+      newMessage: content,
+    })) {
+      if (event.actions.stateDelta) {
+        toolContext.state.update(event.actions.stateDelta);
+      }
+
+      lastEvent = event;
+    }
+
+    if (!lastEvent?.content?.parts?.length) {
+      return '';
+    }
+
+    const hasOutputSchema = isLlmAgent(this.agent) && this.agent.outputSchema;
+    const mergedText = lastEvent.content.parts
+      .map((part) => part.text)
+      .filter((text) => text)
+      .join('\n');
+
+    // TODO - b/425992518: In case of output schema, the output should be
+    // validated. Consider similar logic to one we have in Python ADK.
+    return hasOutputSchema ? JSON.parse(mergedText) : mergedText;
+  }
+}
+
+
+--- core/src/auth/auth_credential.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * Represents the secret token value for HTTP authentication, like user name,
+ * password, oauth token, etc.
+ */
+export interface HttpCredentials {
+  username?: string;
+  password?: string;
+  token?: string;
+}
+
+/**
+ * The credentials and metadata for HTTP authentication.
+ */
+export interface HttpAuth {
+  /**
+   * The name of the HTTP Authorization scheme to be used in the Authorization
+   * header as defined in RFC7235. The values used SHOULD be registered in the
+   * IANA Authentication Scheme registry.
+   * Examples: 'basic', 'bearer'
+   */
+  scheme: string;
+  credentials: HttpCredentials;
+}
+
+/**
+ * Represents credential value and its metadata for a OAuth2 credential.
+ */
+export interface OAuth2Auth {
+  clientId?: string;
+  clientSecret?: string;
+  /**
+   * tool or adk can generate the authUri with the state info thus client can
+   * verify the state
+   */
+  authUri?: string;
+  state?: string;
+  /**
+   * tool or adk can decide the redirect_uri if they don't want client to decide
+   */
+  redirectUri?: string;
+  authResponseUri?: string;
+  authCode?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresAt?: number;
+  expiresIn?: number;
+}
+
+/**
+ * Represents Google Service Account configuration.
+ * @example
+ * config = {
+ *   type: "service_account",
+ *   projectId: "your_project_id",
+ *   privateKeyId: "your_private_key_id",
+ *   privateKey: "-----BEGIN PRIVATE KEY-----...",
+ *   clientEmail: "...@....iam.gserviceaccount.com",
+ *   clientId: "your_client_id",
+ *   authUri: "https://accounts.google.com/o/oauth2/auth",
+ *   tokenUri: "https://oauth2.googleapis.com/token",
+ *   authProviderX509CertUrl: "https://www.googleapis.com/oauth2/v1/certs",
+ *   clientX509CertUrl: "https://www.googleapis.com/robot/v1/metadata/x509/...",
+ *   universeDomain: "googleapis.com",
+ * }
+ */
+export interface ServiceAccountCredential {
+  /**
+   * The type should be 'service_account'.
+   */
+  type: 'service_account';
+
+  /**
+   * The project ID of the Google Cloud project.
+   */
+  projectId: string;
+
+  /**
+   * The ID of the private key.
+   */
+  privateKeyId: string;
+
+  /**
+   * The private key value.
+   */
+  privateKey: string;
+
+  /**
+   * The client email.
+   */
+  clientEmail: string;
+
+  /**
+   * The client ID.
+   */
+  clientId: string;
+
+  /**
+   * The authorization URI.
+   */
+  authUri: string;
+
+  /**
+   * The token URI.
+   */
+  tokenUri: string;
+
+  /**
+   * URL for auth provider's X.509 cert.
+   */
+  authProviderX509CertUrl: string;
+
+  /**
+   * URL for the client's X.509 cert.
+   */
+  clientX509CertUrl: string;
+
+  /**
+   * The universe domain.
+   */
+  universeDomain: string;
+}
+
+/**
+ * Represents Google Service Account configuration.
+ */
+export interface ServiceAccount {
+  serviceAccountCredential?: ServiceAccountCredential;
+  scopes?: string[];
+  useDefaultCredential?: boolean;
+}
+
+/*
+ * Represents the type of authentication credential.
+ */
+export enum AuthCredentialTypes {
+  /**
+   * API Key credential:
+   * @see {@link https://swagger.io/docs/specification/v3_0/authentication/api-keys/}
+   */
+  API_KEY = 'apiKey',
+
+  /**
+   * Credentials for HTTP Auth schemes:
+   * @see {@link https://www.iana.org/assignments/http-authschemes/http-auth-schemes.xhtml}
+   */
+  HTTP = 'http',
+
+  /**
+   * OAuth2 credentials:
+   * @see {@link https://swagger.io/docs/specification/v3_0/authentication/oauth2/}
+   */
+  OAUTH2 = 'oauth2',
+
+  /**
+   * Open ID Connect credentials:
+   * @see {@link https://swagger.io/docs/specification/v3_0/authentication/openid-connect-discovery/}
+   */
+  OPEN_ID_CONNECT = 'openIdConnect',
+
+  /**
+   * Service Account credentials:
+   * @see {@link https://cloud.google.com/iam/docs/service-account-creds}
+   */
+  SERVICE_ACCOUNT = 'serviceAccount',
+}
+
+/**
+ * Data class representing an authentication credential.
+ *
+ * To exchange for the actual credential, please use
+ * CredentialExchanger.exchangeCredential().
+ *
+ * @example
+ * // API Key Auth
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.API_KEY,
+ *   apiKey: "your_api_key",
+ * };
+ *
+ * @example
+ * // HTTP Auth
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.HTTP,
+ *   http: {
+ *     scheme: "basic",
+ *     credentials: {
+ *       username: "user",
+ *       password: "password",
+ *     },
+ *   }
+ * }
+ *
+ * @example
+ * // OAuth2 Bearer Token in HTTP Header
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.HTTP,
+ *   http: {
+ *     scheme: "bearer",
+ *     credentials: {
+ *       token: "your_access_token",
+ *     },
+ *   }
+ * }
+ *
+ * @example
+ * // OAuth2 Auth with Authorization Code Flow
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.OAUTH2,
+ *   oauth2: {
+ *     clientId: "your_client_id",
+ *     clientSecret: "your_client_secret",
+ *   }
+ * }
+ *
+ * @example:
+ * // Open ID Connect Auth
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.OPEN_ID_CONNECT,
+ *   oauth2: {
+ *     clientId: "1234",
+ *     clientSecret: "secret",
+ *     redirectUri: "https://example.com",
+ *     scopes: ["scope1", "scope2"],
+ *   }
+ * }
+ *
+ * @example:
+ * // Auth with resource reference
+ * const authCredential: AuthCredential = {
+ *   authType: AuthCredentialTypes.API_KEY,
+ *   resourceRef: "projects/1234/locations/us-central1/resources/resource1"
+ * }
+ */
+export interface AuthCredential {
+  authType: AuthCredentialTypes;
+
+  /**
+   * Resource reference for the credential.
+   * This will be supported in the future.
+   */
+  resourceRef?: string;
+
+  apiKey?: string;
+  http?: HttpAuth;
+  serviceAccount?: ServiceAccount;
+  oauth2?: OAuth2Auth;
+}
+
+
+--- core/src/auth/auth_handler.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import {State} from '../sessions/state.js';
+
+import {AuthCredential} from './auth_credential.js';
+import {AuthConfig} from './auth_tool.js';
+
+// TODO(b/425992518): Implement the rest
+/**
+ * A handler that handles the auth flow in Agent Development Kit to help
+ * orchestrates the credential request and response flow (e.g. OAuth flow)
+ * This class should only be used by Agent Development Kit.
+ */
+export class AuthHandler {
+  constructor(private readonly authConfig: AuthConfig) {}
+
+  getAuthResponse(state: State): AuthCredential | undefined {
+    const credentialKey = 'temp:' + this.authConfig.credentialKey;
+
+    return state.get<AuthCredential>(credentialKey);
+  }
+
+  generateAuthRequest(): AuthConfig {
+    const authSchemeType = this.authConfig.authScheme.type;
+
+    if (!['oauth2', 'openIdConnect'].includes(authSchemeType)) {
+      return this.authConfig;
+    }
+
+    if (this.authConfig.exchangedAuthCredential?.oauth2?.authUri) {
+      return this.authConfig;
+    }
+
+    if (!this.authConfig.rawAuthCredential) {
+      throw new Error(`Auth Scheme ${authSchemeType} requires authCredential.`);
+    }
+
+    if (!this.authConfig.rawAuthCredential.oauth2) {
+      throw new Error(
+        `Auth Scheme ${authSchemeType} requires oauth2 in authCredential.`,
+      );
+    }
+
+    if (this.authConfig.rawAuthCredential.oauth2.authUri) {
+      return {
+        credentialKey: this.authConfig.credentialKey,
+        authScheme: this.authConfig.authScheme,
+        rawAuthCredential: this.authConfig.rawAuthCredential,
+        exchangedAuthCredential: this.authConfig.rawAuthCredential,
+      };
+    }
+
+    if (
+      !this.authConfig.rawAuthCredential.oauth2.clientId ||
+      !this.authConfig.rawAuthCredential.oauth2.clientSecret
+    ) {
+      throw new Error(
+        `Auth Scheme ${authSchemeType} requires both clientId and clientSecret in authCredential.oauth2.`,
+      );
+    }
+
+    return {
+      credentialKey: this.authConfig.credentialKey,
+      authScheme: this.authConfig.authScheme,
+      rawAuthCredential: this.authConfig.rawAuthCredential,
+      exchangedAuthCredential: this.generateAuthUri(),
+    };
+  }
+
+  /**
+   * Generates an response containing the auth uri for user to sign in.
+   *
+   * @return An AuthCredential object containing the auth URI and state.
+   * @throws Error: If the authorization endpoint is not configured in the
+   *     auth scheme.
+   */
+  generateAuthUri(): AuthCredential | undefined {
+    return this.authConfig.rawAuthCredential;
+    // TODO - b/425992518: Implement the rest of the function
+  }
+}
+
+
+--- dev/README.md ---
+# @google/adk-devtools
+
+Please see README for adk-js at https://github.com/google/adk-js
+
+--- dev/src/browser/index.html ---
+<!doctype html>
+<!--
+ Copyright 2025 Google LLC
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+-->
+<html lang="en" data-beasties-container>
+<head>
+  <meta charset="utf-8">
+  <title>Agent Development Kit Dev UI</title>
+  <base href="./">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="adk_favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <style>@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCajshE7g.woff2) format('woff2');unicode-range:U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCYjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCljshE7g.woff2) format('woff2');unicode-range:U+02C7, U+02D8-02D9, U+02DB, U+0307, U+1400-167F, U+18B0-18F5, U+25CC, U+11AB0-11ABF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCHjshE7g.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCOjshE7g.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCLjshE7g.woff2) format('woff2');unicode-range:U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCbjshE7g.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCVjshE7g.woff2) format('woff2');unicode-range:U+0589, U+10A0-10FF, U+1C90-1CBA, U+1CBD-1CBF, U+205A, U+2D00-2D2F, U+2E31;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCGjshE7g.woff2) format('woff2');unicode-range:U+1F00-1FFF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCJjshE7g.woff2) format('woff2');unicode-range:U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCRjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCpjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A01-0A76, U+200C-200D, U+20B9, U+25CC, U+262C, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCIjshE7g.woff2) format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCBjshE7g.woff2) format('woff2');unicode-range:U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCDjshE7g.woff2) format('woff2');unicode-range:U+0E81-0EDF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCSjshE7g.woff2) format('woff2');unicode-range:U+0307, U+0323, U+0951-0952, U+0964-0965, U+0D00-0D7F, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC, U+A830-A832;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCTjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0B01-0B77, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCXjshE7g.woff2) format('woff2');unicode-range:U+0964-0965, U+0D81-0DF4, U+1CF2, U+200C-200D, U+25CC, U+111E1-111F4;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTDkjshE7g.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCcjshE7g.woff2) format('woff2');unicode-range:U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCWjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0C00-0C7F, U+1CDA, U+1CF2, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCejshE7g.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCFjshE7g.woff2) format('woff2');unicode-range:U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCEjshE7g.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCKjsg.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rgCIlsw.woff2) format('woff2');unicode-range:U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rACIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2kQCIlsw.woff2) format('woff2');unicode-range:U+02C7, U+02D8-02D9, U+02DB, U+0307, U+1400-167F, U+18B0-18F5, U+25CC, U+11AB0-11ABF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2swCIlsw.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2ugCIlsw.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vwCIlsw.woff2) format('woff2');unicode-range:U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rwCIlsw.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2oQCIlsw.woff2) format('woff2');unicode-range:U+0589, U+10A0-10FF, U+1C90-1CBA, U+1CBD-1CBF, U+205A, U+2D00-2D2F, U+2E31;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sgCIlsw.woff2) format('woff2');unicode-range:U+1F00-1FFF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vQCIlsw.woff2) format('woff2');unicode-range:U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pQCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2nQCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A01-0A76, U+200C-200D, U+20B9, U+25CC, U+262C, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vACIlsw.woff2) format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2tQCIlsw.woff2) format('woff2');unicode-range:U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2twCIlsw.woff2) format('woff2');unicode-range:U+0E81-0EDF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pgCIlsw.woff2) format('woff2');unicode-range:U+0307, U+0323, U+0951-0952, U+0964-0965, U+0D00-0D7F, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC, U+A830-A832;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pwCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0B01-0B77, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2owCIlsw.woff2) format('woff2');unicode-range:U+0964-0965, U+0D81-0DF4, U+1CF2, U+200C-200D, U+25CC, U+111E1-111F4;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq20ACIlsw.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2qACIlsw.woff2) format('woff2');unicode-range:U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2ogCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0C00-0C7F, U+1CDA, U+1CF2, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2qgCIlsw.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sQCIlsw.woff2) format('woff2');unicode-range:U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sACIlsw.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vgCI.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
+  <style>@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCajshE7g.woff2) format('woff2');unicode-range:U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCYjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCljshE7g.woff2) format('woff2');unicode-range:U+02C7, U+02D8-02D9, U+02DB, U+0307, U+1400-167F, U+18B0-18F5, U+25CC, U+11AB0-11ABF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCHjshE7g.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCOjshE7g.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCLjshE7g.woff2) format('woff2');unicode-range:U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCbjshE7g.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCVjshE7g.woff2) format('woff2');unicode-range:U+0589, U+10A0-10FF, U+1C90-1CBA, U+1CBD-1CBF, U+205A, U+2D00-2D2F, U+2E31;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCGjshE7g.woff2) format('woff2');unicode-range:U+1F00-1FFF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCJjshE7g.woff2) format('woff2');unicode-range:U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCRjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCpjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A01-0A76, U+200C-200D, U+20B9, U+25CC, U+262C, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCIjshE7g.woff2) format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCBjshE7g.woff2) format('woff2');unicode-range:U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCDjshE7g.woff2) format('woff2');unicode-range:U+0E81-0EDF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCSjshE7g.woff2) format('woff2');unicode-range:U+0307, U+0323, U+0951-0952, U+0964-0965, U+0D00-0D7F, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC, U+A830-A832;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCTjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0B01-0B77, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCXjshE7g.woff2) format('woff2');unicode-range:U+0964-0965, U+0D81-0DF4, U+1CF2, U+200C-200D, U+25CC, U+111E1-111F4;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTDkjshE7g.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCcjshE7g.woff2) format('woff2');unicode-range:U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCWjshE7g.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0C00-0C7F, U+1CDA, U+1CF2, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCejshE7g.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCFjshE7g.woff2) format('woff2');unicode-range:U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCEjshE7g.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans';font-style:italic;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaXrENHsxJlGDuGo1OIlL3L2JB874GPhFI9_IqmuTCKjsg.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rgCIlsw.woff2) format('woff2');unicode-range:U+0308, U+0530-058F, U+2010, U+2024, U+25CC, U+FB13-FB17;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rACIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0980-09FE, U+1CD0, U+1CD2, U+1CD5-1CD6, U+1CD8, U+1CE1, U+1CEA, U+1CED, U+1CF2, U+1CF5-1CF7, U+200C-200D, U+20B9, U+25CC, U+A8F1;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2kQCIlsw.woff2) format('woff2');unicode-range:U+02C7, U+02D8-02D9, U+02DB, U+0307, U+1400-167F, U+18B0-18F5, U+25CC, U+11AB0-11ABF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2swCIlsw.woff2) format('woff2');unicode-range:U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2ugCIlsw.woff2) format('woff2');unicode-range:U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vwCIlsw.woff2) format('woff2');unicode-range:U+0900-097F, U+1CD0-1CF9, U+200C-200D, U+20A8, U+20B9, U+20F0, U+25CC, U+A830-A839, U+A8E0-A8FF, U+11B00-11B09;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2rwCIlsw.woff2) format('woff2');unicode-range:U+030E, U+1200-1399, U+2D80-2DDE, U+AB01-AB2E, U+1E7E0-1E7E6, U+1E7E8-1E7EB, U+1E7ED-1E7EE, U+1E7F0-1E7FE;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2oQCIlsw.woff2) format('woff2');unicode-range:U+0589, U+10A0-10FF, U+1C90-1CBA, U+1CBD-1CBF, U+205A, U+2D00-2D2F, U+2E31;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sgCIlsw.woff2) format('woff2');unicode-range:U+1F00-1FFF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vQCIlsw.woff2) format('woff2');unicode-range:U+0370-0377, U+037A-037F, U+0384-038A, U+038C, U+038E-03A1, U+03A3-03FF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pQCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A80-0AFF, U+200C-200D, U+20B9, U+25CC, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2nQCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0A01-0A76, U+200C-200D, U+20B9, U+25CC, U+262C, U+A830-A839;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vACIlsw.woff2) format('woff2');unicode-range:U+0307-0308, U+0590-05FF, U+200C-2010, U+20AA, U+25CC, U+FB1D-FB4F;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2tQCIlsw.woff2) format('woff2');unicode-range:U+1780-17FF, U+19E0-19FF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2twCIlsw.woff2) format('woff2');unicode-range:U+0E81-0EDF, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pgCIlsw.woff2) format('woff2');unicode-range:U+0307, U+0323, U+0951-0952, U+0964-0965, U+0D00-0D7F, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC, U+A830-A832;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2pwCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0B01-0B77, U+1CDA, U+1CF2, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2owCIlsw.woff2) format('woff2');unicode-range:U+0964-0965, U+0D81-0DF4, U+1CF2, U+200C-200D, U+25CC, U+111E1-111F4;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq20ACIlsw.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2qACIlsw.woff2) format('woff2');unicode-range:U+0964-0965, U+0B82-0BFA, U+200C-200D, U+20B9, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2ogCIlsw.woff2) format('woff2');unicode-range:U+0951-0952, U+0964-0965, U+0C00-0C7F, U+1CDA, U+1CF2, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2qgCIlsw.woff2) format('woff2');unicode-range:U+02D7, U+0303, U+0331, U+0E01-0E5B, U+200C-200D, U+25CC;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sQCIlsw.woff2) format('woff2');unicode-range:U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2sACIlsw.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesans/v64/4UaRrENHsxJlGDuGo1OIlJfC6l_24rlCK1Yo_Iq2vgCI.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Google Sans Mono';font-style:italic;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sfzYWFYtnZ_Cg-t0Uq_rfivrdYNY1cbhrBZQI.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans Mono';font-style:italic;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sfzYWFYtnZ_Cg-t0Uq_rfivrdYNY1cDhrBZQI.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans Mono';font-style:italic;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sfzYWFYtnZ_Cg-t0Uq_rfivrdYNY1cABrB.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}@font-face{font-family:'Google Sans Mono';font-style:normal;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sZzYWFYtnZ_Cg-t0Uq_rfivrdYNeZsAgLF.woff2) format('woff2');unicode-range:U+0001-000C, U+000E-001F, U+007F-009F, U+20DD-20E0, U+20E2-20E4, U+2150-218F, U+2190, U+2192, U+2194-2199, U+21AF, U+21E6-21F0, U+21F3, U+2218-2219, U+2299, U+22C4-22C6, U+2300-243F, U+2440-244A, U+2460-24FF, U+25A0-27BF, U+2800-28FF, U+2921-2922, U+2981, U+29BF, U+29EB, U+2B00-2BFF, U+4DC0-4DFF, U+FFF9-FFFB, U+10140-1018E, U+10190-1019C, U+101A0, U+101D0-101FD, U+102E0-102FB, U+10E60-10E7E, U+1D2C0-1D2D3, U+1D2E0-1D37F, U+1F000-1F0FF, U+1F100-1F1AD, U+1F1E6-1F1FF, U+1F30D-1F30F, U+1F315, U+1F31C, U+1F31E, U+1F320-1F32C, U+1F336, U+1F378, U+1F37D, U+1F382, U+1F393-1F39F, U+1F3A7-1F3A8, U+1F3AC-1F3AF, U+1F3C2, U+1F3C4-1F3C6, U+1F3CA-1F3CE, U+1F3D4-1F3E0, U+1F3ED, U+1F3F1-1F3F3, U+1F3F5-1F3F7, U+1F408, U+1F415, U+1F41F, U+1F426, U+1F43F, U+1F441-1F442, U+1F444, U+1F446-1F449, U+1F44C-1F44E, U+1F453, U+1F46A, U+1F47D, U+1F4A3, U+1F4B0, U+1F4B3, U+1F4B9, U+1F4BB, U+1F4BF, U+1F4C8-1F4CB, U+1F4D6, U+1F4DA, U+1F4DF, U+1F4E3-1F4E6, U+1F4EA-1F4ED, U+1F4F7, U+1F4F9-1F4FB, U+1F4FD-1F4FE, U+1F503, U+1F507-1F50B, U+1F50D, U+1F512-1F513, U+1F53E-1F54A, U+1F54F-1F5FA, U+1F610, U+1F650-1F67F, U+1F687, U+1F68D, U+1F691, U+1F694, U+1F698, U+1F6AD, U+1F6B2, U+1F6B9-1F6BA, U+1F6BC, U+1F6C6-1F6CF, U+1F6D3-1F6D7, U+1F6E0-1F6EA, U+1F6F0-1F6F3, U+1F6F7-1F6FC, U+1F700-1F7FF, U+1F800-1F80B, U+1F810-1F847, U+1F850-1F859, U+1F860-1F887, U+1F890-1F8AD, U+1F8B0-1F8BB, U+1F8C0-1F8C1, U+1F900-1F90B, U+1F93B, U+1F946, U+1F984, U+1F996, U+1F9E9, U+1FA00-1FA6F, U+1FA70-1FA7C, U+1FA80-1FA89, U+1FA8F-1FAC6, U+1FACE-1FADC, U+1FADF-1FAE9, U+1FAF0-1FAF8, U+1FB00-1FBFF;}@font-face{font-family:'Google Sans Mono';font-style:normal;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sZzYWFYtnZ_Cg-t0Uq_rfivrdYNYZsAgLF.woff2) format('woff2');unicode-range:U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;}@font-face{font-family:'Google Sans Mono';font-style:normal;font-weight:1 1000;font-display:swap;src:url(https://fonts.gstatic.com/s/googlesansmono/v26/P5sZzYWFYtnZ_Cg-t0Uq_rfivrdYNYhsAg.woff2) format('woff2');unicode-range:U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;}</style>
+  <style>@font-face{font-family:'Material Icons';font-style:normal;font-weight:400;src:url(https://fonts.gstatic.com/s/materialicons/v143/flUhRq6tzZclQEJ-Vdg-IuiaDsNc.woff2) format('woff2');}.material-icons{font-family:'Material Icons';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;}</style>
+  <style>@font-face{font-family:'Material Symbols Outlined';font-style:normal;font-weight:400;src:url(https://fonts.gstatic.com/s/materialsymbolsoutlined/v266/kJF1BvYX7BgnkSrUwT8OhrdQw4oELdPIeeII9v6oDMzByHX9rA6RzaxHMPdY43zj-jCxv3fzvRNU22ZXGJpEpjC_1v-p_4MrImHCIJIZrDCvHOej.woff2) format('woff2');}.material-symbols-outlined{font-family:'Material Symbols Outlined';font-weight:normal;font-style:normal;font-size:24px;line-height:1;letter-spacing:normal;text-transform:none;display:inline-block;white-space:nowrap;word-wrap:normal;direction:ltr;-webkit-font-feature-settings:'liga';-webkit-font-smoothing:antialiased;}</style>
+<style>html{color-scheme:dark}html{--mat-sys-background:light-dark(#fcf9f8, #131314);--mat-sys-error:light-dark(#ba1a1a, #ffb4ab);--mat-sys-error-container:light-dark(#ffdad6, #93000a);--mat-sys-inverse-on-surface:light-dark(#f3f0f0, #313030);--mat-sys-inverse-primary:light-dark(#c1c7cd, #595f65);--mat-sys-inverse-surface:light-dark(#313030, #e5e2e2);--mat-sys-on-background:light-dark(#1c1b1c, #e5e2e2);--mat-sys-on-error:light-dark(#ffffff, #690005);--mat-sys-on-error-container:light-dark(#410002, #ffdad6);--mat-sys-on-primary:light-dark(#ffffff, #2b3136);--mat-sys-on-primary-container:light-dark(#161c21, #dde3e9);--mat-sys-on-primary-fixed:light-dark(#161c21, #161c21);--mat-sys-on-primary-fixed-variant:light-dark(#41474d, #41474d);--mat-sys-on-secondary:light-dark(#ffffff, #003061);--mat-sys-on-secondary-container:light-dark(#001b3c, #d5e3ff);--mat-sys-on-secondary-fixed:light-dark(#001b3c, #001b3c);--mat-sys-on-secondary-fixed-variant:light-dark(#0f4784, #0f4784);--mat-sys-on-surface:light-dark(#1c1b1c, #e5e2e2);--mat-sys-on-surface-variant:light-dark(#44474a, #e1e2e6);--mat-sys-on-tertiary:light-dark(#ffffff, #2b3136);--mat-sys-on-tertiary-container:light-dark(#161c21, #dde3e9);--mat-sys-on-tertiary-fixed:light-dark(#161c21, #161c21);--mat-sys-on-tertiary-fixed-variant:light-dark(#41474d, #41474d);--mat-sys-outline:light-dark(#74777b, #8e9194);--mat-sys-outline-variant:light-dark(#c4c7ca, #44474a);--mat-sys-primary:light-dark(#595f65, #c1c7cd);--mat-sys-primary-container:light-dark(#dde3e9, #41474d);--mat-sys-primary-fixed:light-dark(#dde3e9, #dde3e9);--mat-sys-primary-fixed-dim:light-dark(#c1c7cd, #c1c7cd);--mat-sys-scrim:light-dark(#000000, #000000);--mat-sys-secondary:light-dark(#305f9d, #a7c8ff);--mat-sys-secondary-container:light-dark(#d5e3ff, #0f4784);--mat-sys-secondary-fixed:light-dark(#d5e3ff, #d5e3ff);--mat-sys-secondary-fixed-dim:light-dark(#a7c8ff, #a7c8ff);--mat-sys-shadow:light-dark(#000000, #000000);--mat-sys-surface:light-dark(#fcf9f8, #131314);--mat-sys-surface-bright:light-dark(#fcf9f8, #393939);--mat-sys-surface-container:light-dark(#f0eded, #201f20);--mat-sys-surface-container-high:light-dark(#eae7e7, #2a2a2a);--mat-sys-surface-container-highest:light-dark(#e5e2e2, #393939);--mat-sys-surface-container-low:light-dark(#f6f3f3, #1c1b1c);--mat-sys-surface-container-lowest:light-dark(#ffffff, #0e0e0e);--mat-sys-surface-dim:light-dark(#dcd9d9, #131314);--mat-sys-surface-tint:light-dark(#595f65, #c1c7cd);--mat-sys-surface-variant:light-dark(#e1e2e6, #44474a);--mat-sys-tertiary:light-dark(#595f65, #c1c7cd);--mat-sys-tertiary-container:light-dark(#dde3e9, #41474d);--mat-sys-tertiary-fixed:light-dark(#dde3e9, #dde3e9);--mat-sys-tertiary-fixed-dim:light-dark(#c1c7cd, #c1c7cd);--mat-sys-neutral-variant20:#2d3134;--mat-sys-neutral10:#1c1b1c}html{--mat-sys-level0:0px 0px 0px 0px rgba(0, 0, 0, .2), 0px 0px 0px 0px rgba(0, 0, 0, .14), 0px 0px 0px 0px rgba(0, 0, 0, .12)}html{--mat-sys-level1:0px 2px 1px -1px rgba(0, 0, 0, .2), 0px 1px 1px 0px rgba(0, 0, 0, .14), 0px 1px 3px 0px rgba(0, 0, 0, .12)}html{--mat-sys-level2:0px 3px 3px -2px rgba(0, 0, 0, .2), 0px 3px 4px 0px rgba(0, 0, 0, .14), 0px 1px 8px 0px rgba(0, 0, 0, .12)}html{--mat-sys-level3:0px 3px 5px -1px rgba(0, 0, 0, .2), 0px 6px 10px 0px rgba(0, 0, 0, .14), 0px 1px 18px 0px rgba(0, 0, 0, .12)}html{--mat-sys-level4:0px 5px 5px -3px rgba(0, 0, 0, .2), 0px 8px 10px 1px rgba(0, 0, 0, .14), 0px 3px 14px 2px rgba(0, 0, 0, .12)}html{--mat-sys-level5:0px 7px 8px -4px rgba(0, 0, 0, .2), 0px 12px 17px 2px rgba(0, 0, 0, .14), 0px 5px 22px 4px rgba(0, 0, 0, .12)}html{--mat-sys-corner-extra-large:28px;--mat-sys-corner-extra-large-top:28px 28px 0 0;--mat-sys-corner-extra-small:4px;--mat-sys-corner-extra-small-top:4px 4px 0 0;--mat-sys-corner-full:9999px;--mat-sys-corner-large:16px;--mat-sys-corner-large-end:0 16px 16px 0;--mat-sys-corner-large-start:16px 0 0 16px;--mat-sys-corner-large-top:16px 16px 0 0;--mat-sys-corner-medium:12px;--mat-sys-corner-none:0;--mat-sys-corner-small:8px}html{--mat-sys-dragged-state-layer-opacity:.16;--mat-sys-focus-state-layer-opacity:.12;--mat-sys-hover-state-layer-opacity:.08;--mat-sys-pressed-state-layer-opacity:.12}html{font-family:Google Sans,Helvetica Neue,sans-serif!important}body{height:100vh;margin:0}:root{--mat-sys-primary:black;--mdc-checkbox-selected-icon-color:white;--mat-sys-background:#131314;--mat-tab-header-active-label-text-color:#8AB4F8;--mat-tab-header-active-hover-label-text-color:#8AB4F8;--mat-tab-header-active-focus-label-text-color:#8AB4F8;--mat-tab-header-label-text-weight:500;--mdc-text-button-label-text-color:#89b4f8}:root{--mdc-dialog-container-color:#2b2b2f}:root{--mdc-dialog-subhead-color:white}:root{--mdc-circular-progress-active-indicator-color:#a8c7fa}:root{--mdc-circular-progress-size:80}</style><link rel="stylesheet" href="./styles-4VDSPQ37.css" media="print" onload="this.media='all'"><noscript><link rel="stylesheet" href="./styles-4VDSPQ37.css"></noscript></head>
+<body>
+  <app-root></app-root>
+<link rel="modulepreload" href="./chunk-EQDQRRRY.js"><script src="./polyfills-B6TNHZQ6.js" type="module"></script><script src="./main-W7QZBYAR.js" type="module"></script></body>
+</html>
+
+
+--- dev/build.js ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+const esbuild = require('esbuild');
+const {exec} = require('node:child_process');
+const {promisify} = require('node:util');
+const execAsync = promisify(exec);
+
+const licenseHeaderText = `/**
+  * @license
+  * Copyright 2025 Google LLC
+  * SPDX-License-Identifier: Apache-2.0
+  */
+`;
+
+/**
+ * Builds the ADK devtools library with the given options.
+ */
+async function main() {
+  await Promise.all([
+    esbuild.build({
+      entryPoints: ['./src/cli/cli.ts'],
+      outfile: 'dist/cli/cli.cjs',
+      target: 'node10.4',
+      platform: 'node',
+      format: 'cjs',
+      bundle: true,
+      minify: true,
+      sourcemap: false,
+      packages: 'external',
+      logLevel: 'info',
+      banner: {js: licenseHeaderText},
+    }),
+    execAsync('cp -r ./src/browser ./dist/browser'),
+  ]);
+}
+
+main();
+
+
+--- dev/samples/agent_as_tool.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {AgentTool, LlmAgent} from '@google/adk';
+
+const summaryAgent = new LlmAgent({
+  model: 'gemini-2.0-flash',
+  name: 'summary_agent',
+  instruction:
+    'You are an expert summarizer. Please read the following text and provide a concise summary.',
+  description: 'Agent to summarize text',
+});
+
+export const rootAgent = new LlmAgent({
+  name: 'root_agent',
+  model: 'gemini-2.5-flash',
+  instruction:
+    "You are a helpful assistant. When the user provides a text, use the 'summarize' tool to generate a summary. Always forward the user's message exactly as received to the 'summarize' tool, without modifying or summarizing it yourself. Present the response from the tool to the user.",
+  tools: [new AgentTool({agent: summaryAgent, skipSummarization: true})],
+});
+
+
+--- dev/samples/agent_with_tool.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {FunctionTool, LlmAgent} from '@google/adk';
+import {z} from 'zod';
+
+interface ToolResult {
+  status: 'success' | 'error';
+  report?: string;
+  error_message?: string;
+}
+
+/**
+ * Retrieves the current weather report for a specified city.
+ *
+ * @param city The name of the city for which to retrieve the weather
+ report.
+ * @returns status and result or error msg.
+ */
+async function get_weather({city}: {city: string}): Promise<ToolResult> {
+  if (city.toLowerCase() === 'new york') {
+    return {
+      'status': 'success',
+      'report':
+        'The weather in New York is sunny with a temperature of 25 degrees Celsius (77 degrees Fahrenheit).',
+    };
+  } else {
+    return {
+      'status': 'error',
+      'error_message': `Weather information for '${city}' is not available.`,
+    };
+  }
+}
+
+/**
+ * Returns the current time in a specified city.
+ *
+ * @param city The name of the city for which to retrieve the current time.
+ * @returns status and result or error msg.
+ */
+async function get_current_time({city}: {city: string}): Promise<ToolResult> {
+  if (city.toLowerCase() === 'new york') {
+    const tzIdentifier = 'America/New_York';
+    try {
+      const now = new Date();
+      const report = `The current time in ${city} is ${now.toLocaleString(
+        'en-US',
+        {
+          timeZone: tzIdentifier,
+        },
+      )} ${tzIdentifier}`;
+      return {'status': 'success', 'report': report};
+    } catch (e) {
+      return {
+        'status': 'error',
+        'error_message': `Error getting time for ${city}: ${e}`,
+      };
+    }
+  } else {
+    return {
+      'status': 'error',
+      'error_message': `Sorry, I don't have timezone information for ${city}.`,
+    };
+  }
+}
+
+const getWeatherTool = new FunctionTool({
+  name: 'get_weather',
+  description: 'Retrieves the current weather report for a specified city.',
+  parameters: z.object({
+    city: z.string().describe('The name of the city.'),
+  }),
+  execute: get_weather,
+});
+
+const getCurrentTimeTool = new FunctionTool({
+  name: 'get_current_time',
+  description: 'Returns the current time in a specified city.',
+  parameters: z.object({
+    city: z.string().describe('The name of the city.'),
+  }),
+  execute: get_current_time,
+});
+
+export const rootAgent = new LlmAgent({
+  name: 'weather_time_agent',
+  model: 'gemini-2.5-flash',
+  description:
+    'Agent to answer questions about the time and weather in a city.',
+  instruction:
+    'You are a helpful agent who can answer user questions about the time and weather in a city.',
+  tools: [getWeatherTool, getCurrentTimeTool],
+});
+
+
+--- dev/samples/google_search_agent.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {GOOGLE_SEARCH, LlmAgent} from '@google/adk';
+
+export const rootAgent = new LlmAgent({
+  model: 'gemini-2.5-flash',
+  name: 'root_agent',
+  description:
+    'an agent whose job it is to perform Google search queries and answer questions about the results.',
+  instruction:
+    'You are an agent whose job is to perform Google search queries and answer questions about the results.',
+  tools: [GOOGLE_SEARCH],
+});
+
+
+--- dev/samples/loop_agent.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {FunctionTool, LlmAgent, LoopAgent} from '@google/adk';
+import {z} from 'zod';
+
+function getRandomArbitrary(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
+
+const getTemperatureTool = new FunctionTool({
+  name: 'get_temperature',
+  description: 'Get the temperature from the environment.',
+  execute: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+
+    const temperature = getRandomArbitrary(30, 40);
+
+    console.log('Current temperature is: ', temperature);
+
+    return temperature;
+  },
+});
+
+const notifyUserTool = new FunctionTool({
+  name: 'notify_user',
+  description: 'Notify the user if temperature is too high.',
+  parameters: z.object({
+    temperature: z.number().describe('The temperature.'),
+    threshold: z.number().describe('The threshold.'),
+  }),
+  execute: ({
+    temperature,
+    threshold,
+  }: {
+    temperature: number;
+    threshold: number;
+  }) => {
+    console.log(
+      `[NOTIFICATION]: Temperature ${
+        temperature
+      } is too high! Threshold is ${threshold}.`,
+    );
+  },
+});
+
+const monitorTemperatureAgent = new LlmAgent({
+  name: 'monitor_temperature_agent',
+  model: 'gemini-2.5-flash',
+  description:
+    'An agent that continuously monitors the temperature and alerts the user if temperature is too high.',
+  instruction:
+    'You are an agent that continuously monitors the temperature and alerts the user if the temperature is too high. Threshold is provided by the user.',
+  tools: [getTemperatureTool, notifyUserTool],
+});
+
+export const rootAgent = new LoopAgent({
+  name: 'root_agent',
+  description:
+    'An agent that continuously monitors the temperature and alerts the user if temperature is too high.',
+  maxIterations: 5,
+  subAgents: [monitorTemperatureAgent],
+});
+
+
+--- dev/samples/parallel_agent.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {
+  FunctionTool,
+  GOOGLE_SEARCH,
+  LlmAgent,
+  ParallelAgent,
+} from '@google/adk';
+import {z} from 'zod';
+
+function getRandomArbitrary(min: number, max: number): number {
+  return Math.random() * (max - min) + min;
+}
+
+const getWeatherTemperatureTool = new FunctionTool({
+  name: 'get_weather_temperature',
+  description:
+    'Retrieves the current templature in celsius for a specified city.',
+  parameters: z.object({
+    city: z.string().describe('The name of the city.'),
+  }),
+  execute: ({city}: {city: string}) => {
+    const temperature = Math.floor(getRandomArbitrary(15, 35));
+
+    return `Temperature in ${city} is ${temperature} Celsius.`;
+  },
+});
+
+const googleSearchAgent = new LlmAgent({
+  name: 'google_search_agent',
+  model: 'gemini-2.5-flash',
+  description:
+    'An agent whose job it is to perform Google search queries and answer questions about the results.',
+  instruction:
+    'You are an agent whose job is to perform Google search query and return summary for the result maximum containing 300 characters.',
+  tools: [GOOGLE_SEARCH],
+});
+
+const getWeatherAgent = new LlmAgent({
+  name: 'get_weather_agent',
+  model: 'gemini-2.5-flash',
+  description: 'Retrieves the current weather report for a specified city.',
+  instruction:
+    'You are responsible for retrieving the current weather temperature for a city from the user request. You should not ask for additional information.',
+  tools: [getWeatherTemperatureTool],
+});
+
+export const rootAgent = new ParallelAgent({
+  name: 'parallel_agent',
+  description: 'A parallel agent that runs multiple sub-agents in parallel.',
+  subAgents: [googleSearchAgent, getWeatherAgent],
+});
+
+
+--- dev/samples/sequential_agent.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {FunctionTool, LlmAgent, SequentialAgent} from '@google/adk';
+import {z} from 'zod';
+
+function getRandomIntInclusive(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+const rollDiceTool = new FunctionTool({
+  name: 'roll_dice',
+  description: 'Roll a die and return the rolled result.',
+  parameters: z.object({
+    sides: z.number().describe('The number of sides of the dice.'),
+  }),
+  execute: ({sides}: {sides: number}) => {
+    return getRandomIntInclusive(1, sides);
+  },
+});
+
+const rollAgent = new LlmAgent({
+  name: 'roll_agent',
+  description: 'Handles rolling dice of different sizes.',
+  model: 'gemini-2.5-flash',
+  instruction: `You are responsible for rolling dice based on the user's request. When asked to roll a dice, you must call the roll_dice tool with the number of sides as an integer.`,
+  tools: [rollDiceTool],
+});
+
+const checkPrimeTool = new FunctionTool({
+  name: 'check_prime',
+  description: 'Check if a given list of numbers are prime.',
+  parameters: z.object({
+    numbers: z.array(z.number()).describe('The list of numbers to check.'),
+  }),
+  execute: ({numbers}: {numbers: number[]}) => {
+    const primes = new Set<number>();
+
+    for (const number of numbers) {
+      if (number <= 1) {
+        continue;
+      }
+
+      if (number === 2) {
+        primes.add(number);
+        continue;
+      }
+
+      let isPrime = true;
+      for (let i = 2; i <= Math.floor(number ** 0.5) + 1; i++) {
+        if (number % i === 0) {
+          isPrime = false;
+          break;
+        }
+      }
+      if (isPrime) {
+        primes.add(number);
+      }
+    }
+    if (primes.size === 0) {
+      return 'No prime numbers found.';
+    }
+    return `${[...primes].join(', ')} are prime numbers.`;
+  },
+});
+
+const primeAgent = new LlmAgent({
+  name: 'prime_agent',
+  description: 'Handles checking if numbers are prime.',
+  model: 'gemini-2.5-flash',
+  instruction: `You are responsible for checking whether numbers are prime. When asked to check primes, you must call the check_prime tool with a list of integers. Never attempt to determine prime numbers manually. Return the prime number results to the root agent.`,
+  tools: [checkPrimeTool],
+});
+
+export const rootAgent = new SequentialAgent({
+  name: 'simple_sequential_agent',
+  subAgents: [rollAgent, primeAgent],
+});
+
+
+--- dev/src/version.ts ---
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+// version: major.minor.patch
+export const version = '0.3.0'; // x-release-please-version
+
+
+--- tests/integration/build_setup/build_setup_test.ts ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {ChildProcessWithoutNullStreams, exec, spawn} from 'node:child_process';
+import * as fs from 'node:fs/promises';
+import {promisify} from 'node:util';
+import {afterAll, describe, expect, it} from 'vitest';
+
+const execAsync = promisify(exec);
+const dirname = process.cwd();
+
+const TEST_EXECUTION_TIMEOUT = 20000;
+
+function sendInput(
+  childProcess: ChildProcessWithoutNullStreams,
+  input: string,
+): Promise<string> {
+  childProcess.stdin.write(input);
+  childProcess.stdin.end();
+
+  return getResponse(childProcess);
+}
+
+function getResponse(
+  childProcess: ChildProcessWithoutNullStreams,
+): Promise<string> {
+  return new Promise<string>((resolve) => {
+    let output = '';
+    let resolved = false;
+
+    const onFinish = () => {
+      if (!resolved) {
+        resolve(output);
+      }
+
+      childProcess.stdout.off('data', onData);
+      resolved = true;
+    };
+
+    const onData = (data: Buffer) => {
+      output += data.toString();
+    };
+
+    childProcess.stdout.on('data', onData);
+    childProcess.stdout.once('end', onFinish);
+    childProcess.stdout.once('close', onFinish);
+  });
+}
+
+describe('Build setup', () => {
+  describe.each(['js_commonjs', 'js_esm', 'ts_commonjs', 'ts_esm'])(
+    '%s',
+    (buildSetup: string) => {
+      const projectPath = `${dirname}/tests/integration/build_setup/${buildSetup}`;
+
+      it(
+        'should build and run agent successfully',
+        async () => {
+          await execAsync('npm install', {cwd: projectPath});
+
+          if (buildSetup.startsWith('ts_')) {
+            const buildResult = await execAsync('npm run build', {
+              cwd: projectPath,
+            });
+            expect(buildResult.stderr).toBe('');
+            expect(buildResult.stdout).toContain('\nBuild complete');
+          }
+
+          const childProcess = spawn('npm', ['run', 'start'], {
+            cwd: projectPath,
+            shell: true,
+          });
+
+          let response = await sendInput(childProcess, 'Tell me a joke.\n');
+          expect(response.toString()).toContain('test-llm-model-response');
+
+          response = await sendInput(childProcess, 'exit\n');
+          expect(response.toString()).toContain('');
+        },
+        TEST_EXECUTION_TIMEOUT,
+      );
+
+      afterAll(async () => {
+        await fs.rm(`${projectPath}/node_modules`, {recursive: true});
+        await fs.unlink(`${projectPath}/package-lock.json`);
+
+        if (buildSetup.startsWith('ts_')) {
+          await fs.rm(`${projectPath}/dist`, {recursive: true});
+        }
+      });
+    },
+  );
+});
+
+
+--- tests/integration/build_setup/js_commonjs/agent.js ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+const {LlmAgent, setLogLevel, LogLevel, BaseLlm, LLMRegistry} = require('@google/adk'); // eslint-disable-line @typescript-eslint/no-require-imports
+const {createModelContent, GenerateContentResponse} = require('@google/genai'); // eslint-disable-line @typescript-eslint/no-require-imports
+
+setLogLevel(LogLevel.DEBUG);
+
+class MockLlmConnection {
+  async sendHistory() {
+    return Promise.resolve();
+  }
+  async sendContent() {
+    return Promise.resolve();
+  }
+  async sendRealtime() {}
+  async * receive() {}
+  async close() {}
+}
+
+class MockLll extends BaseLlm {
+  static supportedModels = ['test-llm-model'];
+
+  async generateContentAsync(prompt) {
+    return `Mock response to: ${prompt}`;
+  }
+
+  async * generateContentAsync() {
+    const generateContentResponse = new GenerateContentResponse();
+
+    generateContentResponse.candidates =
+        [{content: createModelContent('test-llm-model-response')}];
+    const candidate = generateContentResponse.candidates[0];
+
+    yield {
+      content: candidate.content,
+      groundingMetadata: candidate.groundingMetadata,
+      usageMetadata: generateContentResponse.usageMetadata,
+      finishReason: candidate.finishReason,
+    };
+  }
+
+  async connect() {
+    return new MockLlmConnection();
+  }
+}
+
+LLMRegistry.register(MockLll);
+
+const rootAgent = new LlmAgent({
+  name: 'root_agent',
+  model: 'test-llm-model',
+  description: 'Root agent',
+});
+
+module.exports = {rootAgent};
+
+
+--- tests/integration/build_setup/js_esm/agent.js ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {BaseLlm, LlmAgent, LLMRegistry, LogLevel, setLogLevel} from '@google/adk';
+import {createModelContent, GenerateContentResponse} from '@google/genai';
+
+setLogLevel(LogLevel.DEBUG);
+
+class MockLlmConnection {
+  async sendHistory() {
+    return Promise.resolve();
+  }
+
+  async sendContent() {
+    return Promise.resolve();
+  }
+
+  async sendRealtime() {}
+
+  async * receive() {}
+
+  async close() {}
+}
+
+class MockLll extends BaseLlm {
+  static supportedModels = ['test-llm-model'];
+
+  async generateContentAsync(prompt) {
+    return `Mock response to: ${prompt}`;
+  }
+
+  async * generateContentAsync() {
+    const generateContentResponse = new GenerateContentResponse();
+
+    generateContentResponse.candidates =
+        [{content: createModelContent('test-llm-model-response')}];
+    const candidate = generateContentResponse.candidates[0];
+
+    yield {
+      content: candidate.content,
+      groundingMetadata: candidate.groundingMetadata,
+      usageMetadata: generateContentResponse.usageMetadata,
+      finishReason: candidate.finishReason,
+    };
+  }
+
+  async connect() {
+    return new MockLlmConnection();
+  }
+}
+
+LLMRegistry.register(MockLll);
+
+export const rootAgent = new LlmAgent({
+  name: 'root_agent',
+  model: 'test-llm-model',
+  description: 'Root agent',
+});
+
+
+--- tests/integration/build_setup/ts_commonjs/agent.ts ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+const {
+  BaseLlm,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  BaseLlmConnection,
+  LlmAgent,
+  LLMRegistry,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  LlmResponse,
+  setLogLevel,
+  LogLevel,
+} = require('@google/adk'); // eslint-disable-line @typescript-eslint/no-require-imports
+const {createModelContent, GenerateContentResponse} = require('@google/genai'); // eslint-disable-line @typescript-eslint/no-require-imports
+
+type BaseLlmConnectionType = typeof BaseLlmConnection;
+type LlmResponseType = typeof LlmResponse;
+
+setLogLevel(LogLevel.DEBUG);
+
+class MockLlmConnection implements BaseLlmConnectionType {
+  async sendHistory(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async sendContent(): Promise<void> {}
+
+  async sendRealtime(): Promise<void> {}
+
+  async *receive(): AsyncGenerator<LlmResponseType, void, void> {}
+
+  async close(): Promise<void> {}
+}
+
+class MockLll extends BaseLlm {
+  constructor({model}: {model: string}) {
+    super({model});
+  }
+
+  static readonly supportedModels = ['test-llm-model'];
+
+  async *generateContentAsync(): AsyncGenerator<LlmResponseType, void> {
+    const generateContentResponse = new GenerateContentResponse();
+
+    generateContentResponse.candidates = [
+      {content: createModelContent('test-llm-model-response')},
+    ];
+    const candidate = generateContentResponse.candidates[0]!;
+
+    yield {
+      content: candidate.content,
+      groundingMetadata: candidate.groundingMetadata,
+      usageMetadata: generateContentResponse.usageMetadata,
+      finishReason: candidate.finishReason,
+    };
+  }
+
+  async connect(): Promise<BaseLlmConnectionType> {
+    return new MockLlmConnection();
+  }
+}
+
+LLMRegistry.register(MockLll);
+
+const rootAgent = new LlmAgent({
+  name: 'root_agent',
+  model: 'test-llm-model',
+  description: 'Root agent',
+});
+
+module.exports = {rootAgent};
+
+
+--- tests/integration/build_setup/ts_esm/agent.ts ---
+/**
+ * @license
+ * Copyright 2026 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+import {
+  BaseLlm,
+  BaseLlmConnection,
+  LlmAgent,
+  LLMRegistry,
+  LlmResponse,
+  LogLevel,
+  setLogLevel,
+} from '@google/adk';
+import {createModelContent, GenerateContentResponse} from '@google/genai';
+
+setLogLevel(LogLevel.DEBUG);
+
+class MockLlmConnection implements BaseLlmConnection {
+  async sendHistory(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  async sendContent(): Promise<void> {}
+
+  async sendRealtime(): Promise<void> {}
+
+  async *receive(): AsyncGenerator<LlmResponse, void, void> {}
+
+  async close(): Promise<void> {}
+}
+
+class MockLll extends BaseLlm {
+  constructor({model}: {model: string}) {
+    super({model});
+  }
+
+  static override readonly supportedModels = ['test-llm-model'];
+
+  async *generateContentAsync(): AsyncGenerator<LlmResponse, void> {
+    const generateContentResponse = new GenerateContentResponse();
+
+    generateContentResponse.candidates = [
+      {content: createModelContent('test-llm-model-response')},
+    ];
+    const candidate = generateContentResponse.candidates[0]!;
+
+    yield {
+      content: candidate.content,
+      groundingMetadata: candidate.groundingMetadata,
+      usageMetadata: generateContentResponse.usageMetadata,
+      finishReason: candidate.finishReason,
+    };
+  }
+
+  async connect(): Promise<BaseLlmConnection> {
+    return new MockLlmConnection();
+  }
+}
+
+LLMRegistry.register(MockLll);
+
+export const rootAgent = new LlmAgent({
+  name: 'root_agent',
+  model: 'test-llm-model',
+  description: 'Root agent',
+});

@@ -1,0 +1,81 @@
+# Marvin
+
+> Marvin aims to empower developers to build intelligent, structured, and observable AI workflows by abstracting away the complexity of managing LLM interactions. It enables the creation of reusable agents, composable tasks, and thread-based orchestration, all while ensuring type-safe outputs and rich observability. The framework is designed for both simplicity in rapid prototyping and scalability in complex agentic systems, targeting modern AI development with clean APIs and extensibility.
+
+**Remember:**
+- Task-Centric Architecture
+- Agents (specialized LLM configurations)
+- Threads (context managers for multi-task orchestration)
+- Structured Output Utilities (extract, cast, classify, generate)
+- Pydantic AI Integration
+- Type-Safe Results
+
+## Docs
+- [Installation](https://github.com/prefecthq/marvin/blob/main/docs/installation.mdx): install & quickstart.
+- [Quickstart](https://github.com/prefecthq/marvin/blob/main/docs/quickstart.mdx): install & quickstart.
+- [README](https://github.com/prefecthq/marvin/blob/main/docs/README.md): install & quickstart.
+- [Community](https://github.com/prefecthq/marvin/blob/main/docs/community.mdx): docs page.
+- [Welcome](https://github.com/prefecthq/marvin/blob/main/docs/welcome.mdx): docs page.
+- [Agents](https://github.com/prefecthq/marvin/blob/main/docs/concepts/agents.mdx): core concept.
+- [Building A Chatbot](https://github.com/prefecthq/marvin/blob/main/docs/guides/building-a-chatbot.mdx): docs page.
+- [Cast](https://github.com/prefecthq/marvin/blob/main/docs/functions/cast.mdx): docs page.
+- [Classify](https://github.com/prefecthq/marvin/blob/main/docs/functions/classify.mdx): docs page.
+- [Cli](https://github.com/prefecthq/marvin/blob/main/docs/guides/cli.mdx): docs page.
+
+## Tutorials
+- [README](https://github.com/prefecthq/marvin/blob/main/examples/prefect_observability/README.md): install & quickstart.
+- [README](https://github.com/prefecthq/marvin/blob/main/examples/slackbot/README.md): install & quickstart.
+- [README](https://github.com/prefecthq/marvin/blob/main/examples/you_have_been_goosed/README.md): install & quickstart.
+- [Agent Mcp](https://github.com/prefecthq/marvin/blob/main/examples/agent_mcp.py): worked example.
+- [Custom Handler](https://github.com/prefecthq/marvin/blob/main/examples/custom_handler.py): worked example.
+- [Custom Prompt](https://github.com/prefecthq/marvin/blob/main/examples/custom_prompt.py): worked example.
+- [Deepseek Chat](https://github.com/prefecthq/marvin/blob/main/examples/deepseek_chat.py): worked example.
+- [English To Schema](https://github.com/prefecthq/marvin/blob/main/examples/english_to_schema.py): worked example.
+- [Hello Agent](https://github.com/prefecthq/marvin/blob/main/examples/hello_agent.py): worked example.
+- [Hello Cast](https://github.com/prefecthq/marvin/blob/main/examples/hello_cast.py): worked example.
+
+## API
+- [Create Mintlify Api Ref](https://github.com/prefecthq/marvin/blob/main/scripts/create_mintlify_api_ref.py): docs page.
+- [Classify](https://github.com/prefecthq/marvin/blob/main/src/marvin/fns/classify.py): docs page.
+- [Test Classify](https://github.com/prefecthq/marvin/blob/main/tests/ai/fns/test_classify.py): docs page.
+
+## Optional
+- [Claude](https://github.com/prefecthq/marvin/blob/main/CLAUDE.md): docs page.
+- [README](https://github.com/prefecthq/marvin/blob/main/README.md): docs page.
+
+## Migrations
+- [README](https://github.com/prefecthq/marvin/blob/main/migrations/README.md): install & quickstart.
+- [Env](https://github.com/prefecthq/marvin/blob/main/migrations/env.py): docs page.
+- [20250301 141903 Initial Schema](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250301_141903_initial_schema.py): docs page.
+- [20250302 123716 Improve Message Tracking](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250302_123716_improve_message_tracking.py): docs page.
+- [20250302 135101 Add Llmcall Message Tracking](https://github.com/prefecthq/marvin/blob/main/migrations/versions/20250302_135101_add_llmcall_message_tracking.py): docs page.
+
+## Scripts
+- [Analyze Threads](https://github.com/prefecthq/marvin/blob/main/scripts/analyze_threads.py): docs page.
+- [Backfill Asset Embeddings](https://github.com/prefecthq/marvin/blob/main/scripts/backfill_asset_embeddings.py): docs page.
+- [Check For Breakpoints](https://github.com/prefecthq/marvin/blob/main/scripts/check_for_breakpoints.py): docs page.
+- [Index Assets](https://github.com/prefecthq/marvin/blob/main/scripts/index_assets.py): docs page.
+
+## Src
+- [README](https://github.com/prefecthq/marvin/blob/main/src/marvin/_internal/integrations/README.md): install & quickstart.
+- [Database](https://github.com/prefecthq/marvin/blob/main/src/marvin/database.py): docs page.
+- [Defaults](https://github.com/prefecthq/marvin/blob/main/src/marvin/defaults.py): docs page.
+- [Init](https://github.com/prefecthq/marvin/blob/main/src/marvin/__init__.py): docs page.
+- [Instructions](https://github.com/prefecthq/marvin/blob/main/src/marvin/instructions.md): docs page.
+- [Instructions](https://github.com/prefecthq/marvin/blob/main/src/marvin/instructions.py): docs page.
+- [Prompts](https://github.com/prefecthq/marvin/blob/main/src/marvin/prompts.py): docs page.
+- [Settings](https://github.com/prefecthq/marvin/blob/main/src/marvin/settings.py): docs page.
+- [Thread](https://github.com/prefecthq/marvin/blob/main/src/marvin/thread.py): docs page.
+- [Actor](https://github.com/prefecthq/marvin/blob/main/src/marvin/agents/actor.py): docs page.
+
+## Tests
+- [README](https://github.com/prefecthq/marvin/blob/main/tests/ai/README.md): install & quickstart.
+- [README](https://github.com/prefecthq/marvin/blob/main/tests/basic/README.md): install & quickstart.
+- [Conftest](https://github.com/prefecthq/marvin/blob/main/tests/conftest.py): docs page.
+- [Init](https://github.com/prefecthq/marvin/blob/main/tests/__init__.py): docs page.
+- [Test Concurrent Execution](https://github.com/prefecthq/marvin/blob/main/tests/test_concurrent_execution.py): docs page.
+- [Conftest](https://github.com/prefecthq/marvin/blob/main/tests/basic/conftest.py): docs page.
+- [Init](https://github.com/prefecthq/marvin/blob/main/tests/ai/__init__.py): docs page.
+- [Init](https://github.com/prefecthq/marvin/blob/main/tests/basic/__init__.py): docs page.
+- [Init](https://github.com/prefecthq/marvin/blob/main/tests/beta/__init__.py): docs page.
+- [Test Instructions](https://github.com/prefecthq/marvin/blob/main/tests/basic/test_instructions.py): docs page.

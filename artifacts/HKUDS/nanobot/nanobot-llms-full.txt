@@ -1,0 +1,4553 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- SECURITY.md ---
+# Security Policy
+
+## Reporting a Vulnerability
+
+If you discover a security vulnerability in nanobot, please report it by:
+
+1. **DO NOT** open a public GitHub issue
+2. Create a private security advisory on GitHub or contact the repository maintainers
+3. Include:
+   - Description of the vulnerability
+   - Steps to reproduce
+   - Potential impact
+   - Suggested fix (if any)
+
+We aim to respond to security reports within 48 hours.
+
+## Security Best Practices
+
+### 1. API Key Management
+
+**CRITICAL**: Never commit API keys to version control.
+
+```bash
+# ✅ Good: Store in config file with restricted permissions
+chmod 600 ~/.nanobot/config.json
+
+# ❌ Bad: Hardcoding keys in code or committing them
+```
+
+**Recommendations:**
+- Store API keys in `~/.nanobot/config.json` with file permissions set to `0600`
+- Consider using environment variables for sensitive keys
+- Use OS keyring/credential manager for production deployments
+- Rotate API keys regularly
+- Use separate API keys for development and production
+
+### 2. Channel Access Control
+
+**IMPORTANT**: Always configure `allowFrom` lists for production use.
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "YOUR_BOT_TOKEN",
+      "allowFrom": ["123456789", "987654321"]
+    },
+    "whatsapp": {
+      "enabled": true,
+      "allowFrom": ["+1234567890"]
+    }
+  }
+}
+```
+
+**Security Notes:**
+- Empty `allowFrom` list will **ALLOW ALL** users (open by default for personal use)
+- Get your Telegram user ID from `@userinfobot`
+- Use full phone numbers with country code for WhatsApp
+- Review access logs regularly for unauthorized access attempts
+
+### 3. Shell Command Execution
+
+The `exec` tool can execute shell commands. While dangerous command patterns are blocked, you should:
+
+- ✅ Review all tool usage in agent logs
+- ✅ Understand what commands the agent is running
+- ✅ Use a dedicated user account with limited privileges
+- ✅ Never run nanobot as root
+- ❌ Don't disable security checks
+- ❌ Don't run on systems with sensitive data without careful review
+
+**Blocked patterns:**
+- `rm -rf /` - Root filesystem deletion
+- Fork bombs
+- Filesystem formatting (`mkfs.*`)
+- Raw disk writes
+- Other destructive operations
+
+### 4. File System Access
+
+File operations have path traversal protection, but:
+
+- ✅ Run nanobot with a dedicated user account
+- ✅ Use filesystem permissions to protect sensitive directories
+- ✅ Regularly audit file operations in logs
+- ❌ Don't give unrestricted access to sensitive files
+
+### 5. Network Security
+
+**API Calls:**
+- All external API calls use HTTPS by default
+- Timeouts are configured to prevent hanging requests
+- Consider using a firewall to restrict outbound connections if needed
+
+**WhatsApp Bridge:**
+- The bridge binds to `127.0.0.1:3001` (localhost only, not accessible from external network)
+- Set `bridgeToken` in config to enable shared-secret authentication between Python and Node.js
+- Keep authentication data in `~/.nanobot/whatsapp-auth` secure (mode 0700)
+
+### 6. Dependency Security
+
+**Critical**: Keep dependencies updated!
+
+```bash
+# Check for vulnerable dependencies
+pip install pip-audit
+pip-audit
+
+# Update to latest secure versions
+pip install --upgrade nanobot-ai
+```
+
+For Node.js dependencies (WhatsApp bridge):
+```bash
+cd bridge
+npm audit
+npm audit fix
+```
+
+**Important Notes:**
+- Keep `litellm` updated to the latest version for security fixes
+- We've updated `ws` to `>=8.17.1` to fix DoS vulnerability
+- Run `pip-audit` or `npm audit` regularly
+- Subscribe to security advisories for nanobot and its dependencies
+
+### 7. Production Deployment
+
+For production use:
+
+1. **Isolate the Environment**
+   ```bash
+   # Run in a container or VM
+   docker run --rm -it python:3.11
+   pip install nanobot-ai
+   ```
+
+2. **Use a Dedicated User**
+   ```bash
+   sudo useradd -m -s /bin/bash nanobot
+   sudo -u nanobot nanobot gateway
+   ```
+
+3. **Set Proper Permissions**
+   ```bash
+   chmod 700 ~/.nanobot
+   chmod 600 ~/.nanobot/config.json
+   chmod 700 ~/.nanobot/whatsapp-auth
+   ```
+
+4. **Enable Logging**
+   ```bash
+   # Configure log monitoring
+   tail -f ~/.nanobot/logs/nanobot.log
+   ```
+
+5. **Use Rate Limiting**
+   - Configure rate limits on your API providers
+   - Monitor usage for anomalies
+   - Set spending limits on LLM APIs
+
+6. **Regular Updates**
+   ```bash
+   # Check for updates weekly
+   pip install --upgrade nanobot-ai
+   ```
+
+### 8. Development vs Production
+
+**Development:**
+- Use separate API keys
+- Test with non-sensitive data
+- Enable verbose logging
+- Use a test Telegram bot
+
+**Production:**
+- Use dedicated API keys with spending limits
+- Restrict file system access
+- Enable audit logging
+- Regular security reviews
+- Monitor for unusual activity
+
+### 9. Data Privacy
+
+- **Logs may contain sensitive information** - secure log files appropriately
+- **LLM providers see your prompts** - review their privacy policies
+- **Chat history is stored locally** - protect the `~/.nanobot` directory
+- **API keys are in plain text** - use OS keyring for production
+
+### 10. Incident Response
+
+If you suspect a security breach:
+
+1. **Immediately revoke compromised API keys**
+2. **Review logs for unauthorized access**
+   ```bash
+   grep "Access denied" ~/.nanobot/logs/nanobot.log
+   ```
+3. **Check for unexpected file modifications**
+4. **Rotate all credentials**
+5. **Update to latest version**
+6. **Report the incident** to maintainers
+
+## Security Features
+
+### Built-in Security Controls
+
+✅ **Input Validation**
+- Path traversal protection on file operations
+- Dangerous command pattern detection
+- Input length limits on HTTP requests
+
+✅ **Authentication**
+- Allow-list based access control
+- Failed authentication attempt logging
+- Open by default (configure allowFrom for production use)
+
+✅ **Resource Protection**
+- Command execution timeouts (60s default)
+- Output truncation (10KB limit)
+- HTTP request timeouts (10-30s)
+
+✅ **Secure Communication**
+- HTTPS for all external API calls
+- TLS for Telegram API
+- WhatsApp bridge: localhost-only binding + optional token auth
+
+## Known Limitations
+
+⚠️ **Current Security Limitations:**
+
+1. **No Rate Limiting** - Users can send unlimited messages (add your own if needed)
+2. **Plain Text Config** - API keys stored in plain text (use keyring for production)
+3. **No Session Management** - No automatic session expiry
+4. **Limited Command Filtering** - Only blocks obvious dangerous patterns
+5. **No Audit Trail** - Limited security event logging (enhance as needed)
+
+## Security Checklist
+
+Before deploying nanobot:
+
+- [ ] API keys stored securely (not in code)
+- [ ] Config file permissions set to 0600
+- [ ] `allowFrom` lists configured for all channels
+- [ ] Running as non-root user
+- [ ] File system permissions properly restricted
+- [ ] Dependencies updated to latest secure versions
+- [ ] Logs monitored for security events
+- [ ] Rate limits configured on API providers
+- [ ] Backup and disaster recovery plan in place
+- [ ] Security review of custom skills/tools
+
+## Updates
+
+**Last Updated**: 2026-02-03
+
+For the latest security updates and announcements, check:
+- GitHub Security Advisories: https://github.com/HKUDS/nanobot/security/advisories
+- Release Notes: https://github.com/HKUDS/nanobot/releases
+
+## License
+
+See LICENSE file for details.
+
+
+--- COMMUNICATION.md ---
+We provide QR codes for joining the HKUDS discussion groups on **WeChat** and **Feishu**.
+
+You can join by scanning the QR codes below:
+
+<img src="https://github.com/HKUDS/.github/blob/main/profile/QR.png" alt="WeChat QR Code" width="400"/>
+
+--- README.md ---
+<div align="center">
+  <img src="nanobot_logo.png" alt="nanobot" width="500">
+  <h1>nanobot: Ultra-Lightweight Personal AI Assistant</h1>
+  <p>
+    <a href="https://pypi.org/project/nanobot-ai/"><img src="https://img.shields.io/pypi/v/nanobot-ai" alt="PyPI"></a>
+    <a href="https://pepy.tech/project/nanobot-ai"><img src="https://static.pepy.tech/badge/nanobot-ai" alt="Downloads"></a>
+    <img src="https://img.shields.io/badge/python-≥3.11-blue" alt="Python">
+    <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
+    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/Feishu-Group-E9DBFC?style=flat&logo=feishu&logoColor=white" alt="Feishu"></a>
+    <a href="./COMMUNICATION.md"><img src="https://img.shields.io/badge/WeChat-Group-C5EAB4?style=flat&logo=wechat&logoColor=white" alt="WeChat"></a>
+    <a href="https://discord.gg/MnCvHqpUGB"><img src="https://img.shields.io/badge/Discord-Community-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord"></a>
+  </p>
+</div>
+
+🐈 **nanobot** is an **ultra-lightweight** personal AI assistant inspired by [OpenClaw](https://github.com/openclaw/openclaw) 
+
+⚡️ Delivers core agent functionality in just **~4,000** lines of code — **99% smaller** than Clawdbot's 430k+ lines.
+
+📏 Real-time line count: **3,582 lines** (run `bash core_agent_lines.sh` to verify anytime)
+
+## 📢 News
+
+- **2026-02-13** 🎉 Released v0.1.3.post7 — includes security hardening and multiple improvements. All users are recommended to upgrade to the latest version. See [release notes](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post7) for more details.
+- **2026-02-12** 🧠 Redesigned memory system — Less code, more reliable. Join the [discussion](https://github.com/HKUDS/nanobot/discussions/566) about it!
+- **2026-02-10** 🎉 Released v0.1.3.post6 with improvements! Check the updates [notes](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post6) and our [roadmap](https://github.com/HKUDS/nanobot/discussions/431).
+- **2026-02-09** 💬 Added Slack, Email, and QQ support — nanobot now supports multiple chat platforms!
+- **2026-02-08** 🔧 Refactored Providers—adding a new LLM provider now takes just 2 simple steps! Check [here](#providers).
+- **2026-02-07** 🚀 Released v0.1.3.post5 with Qwen support & several key improvements! Check [here](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post5) for details.
+- **2026-02-06** ✨ Added Moonshot/Kimi provider, Discord integration, and enhanced security hardening!
+- **2026-02-05** ✨ Added Feishu channel, DeepSeek provider, and enhanced scheduled tasks support!
+- **2026-02-04** 🚀 Released v0.1.3.post4 with multi-provider & Docker support! Check [here](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post4) for details.
+- **2026-02-03** ⚡ Integrated vLLM for local LLM support and improved natural language task scheduling!
+- **2026-02-02** 🎉 nanobot officially launched! Welcome to try 🐈 nanobot!
+
+## Key Features of nanobot:
+
+🪶 **Ultra-Lightweight**: Just ~4,000 lines of core agent code — 99% smaller than Clawdbot.
+
+🔬 **Research-Ready**: Clean, readable code that's easy to understand, modify, and extend for research.
+
+⚡️ **Lightning Fast**: Minimal footprint means faster startup, lower resource usage, and quicker iterations.
+
+💎 **Easy-to-Use**: One-click to deploy and you're ready to go.
+
+## 🏗️ Architecture
+
+<p align="center">
+  <img src="nanobot_arch.png" alt="nanobot architecture" width="800">
+</p>
+
+## ✨ Features
+
+<table align="center">
+  <tr align="center">
+    <th><p align="center">📈 24/7 Real-Time Market Analysis</p></th>
+    <th><p align="center">🚀 Full-Stack Software Engineer</p></th>
+    <th><p align="center">📅 Smart Daily Routine Manager</p></th>
+    <th><p align="center">📚 Personal Knowledge Assistant</p></th>
+  </tr>
+  <tr>
+    <td align="center"><p align="center"><img src="case/search.gif" width="180" height="400"></p></td>
+    <td align="center"><p align="center"><img src="case/code.gif" width="180" height="400"></p></td>
+    <td align="center"><p align="center"><img src="case/scedule.gif" width="180" height="400"></p></td>
+    <td align="center"><p align="center"><img src="case/memory.gif" width="180" height="400"></p></td>
+  </tr>
+  <tr>
+    <td align="center">Discovery • Insights • Trends</td>
+    <td align="center">Develop • Deploy • Scale</td>
+    <td align="center">Schedule • Automate • Organize</td>
+    <td align="center">Learn • Memory • Reasoning</td>
+  </tr>
+</table>
+
+## 📦 Install
+
+**Install from source** (latest features, recommended for development)
+
+```bash
+git clone https://github.com/HKUDS/nanobot.git
+cd nanobot
+pip install -e .
+```
+
+**Install with [uv](https://github.com/astral-sh/uv)** (stable, fast)
+
+```bash
+uv tool install nanobot-ai
+```
+
+**Install from PyPI** (stable)
+
+```bash
+pip install nanobot-ai
+```
+
+## 🚀 Quick Start
+
+> [!TIP]
+> Set your API key in `~/.nanobot/config.json`.
+> Get API keys: [OpenRouter](https://openrouter.ai/keys) (Global) · [Brave Search](https://brave.com/search/api/) (optional, for web search)
+
+**1. Initialize**
+
+```bash
+nanobot onboard
+```
+
+**2. Configure** (`~/.nanobot/config.json`)
+
+For OpenRouter - recommended for global users:
+```json
+{
+  "providers": {
+    "openrouter": {
+      "apiKey": "sk-or-v1-xxx"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "anthropic/claude-opus-4-5"
+    }
+  }
+}
+```
+
+**3. Chat**
+
+```bash
+nanobot agent -m "What is 2+2?"
+```
+
+That's it! You have a working AI assistant in 2 minutes.
+
+## 🖥️ Local Models (vLLM)
+
+Run nanobot with your own local models using vLLM or any OpenAI-compatible server.
+
+**1. Start your vLLM server**
+
+```bash
+vllm serve meta-llama/Llama-3.1-8B-Instruct --port 8000
+```
+
+**2. Configure** (`~/.nanobot/config.json`)
+
+```json
+{
+  "providers": {
+    "vllm": {
+      "apiKey": "dummy",
+      "apiBase": "http://localhost:8000/v1"
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "meta-llama/Llama-3.1-8B-Instruct"
+    }
+  }
+}
+```
+
+**3. Chat**
+
+```bash
+nanobot agent -m "Hello from my local LLM!"
+```
+
+> [!TIP]
+> The `apiKey` can be any non-empty string for local servers that don't require authentication.
+
+## 💬 Chat Apps
+
+Talk to your nanobot through Telegram, Discord, WhatsApp, Feishu, Mochat, DingTalk, Slack, Email, or QQ — anytime, anywhere.
+
+| Channel | Setup |
+|---------|-------|
+| **Telegram** | Easy (just a token) |
+| **Discord** | Easy (bot token + intents) |
+| **WhatsApp** | Medium (scan QR) |
+| **Feishu** | Medium (app credentials) |
+| **Mochat** | Medium (claw token + websocket) |
+| **DingTalk** | Medium (app credentials) |
+| **Slack** | Medium (bot + app tokens) |
+| **Email** | Medium (IMAP/SMTP credentials) |
+| **QQ** | Easy (app credentials) |
+
+<details>
+<summary><b>Telegram</b> (Recommended)</summary>
+
+**1. Create a bot**
+- Open Telegram, search `@BotFather`
+- Send `/newbot`, follow prompts
+- Copy the token
+
+**2. Configure**
+
+```json
+{
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "token": "YOUR_BOT_TOKEN",
+      "allowFrom": ["YOUR_USER_ID"]
+    }
+  }
+}
+```
+
+> You can find your **User ID** in Telegram settings. It is shown as `@yourUserId`.
+> Copy this value **without the `@` symbol** and paste it into the config file.
+
+
+**3. Run**
+
+```bash
+nanobot gateway
+```
+
+</details>
+
+<details>
+<summary><b>Mochat (Claw IM)</b></summary>
+
+Uses **Socket.IO WebSocket** by default, with HTTP polling fallback.
+
+**1. Ask nanobot to set up Mochat for you**
+
+Simply send this message to nanobot (replace `xxx@xxx` with your real email):
+
+```
+Read https://raw.githubusercontent.com/HKUDS/MoChat/refs/heads/main/skills/nanobot/skill.md and register on MoChat. My Email account is xxx@xxx Bind me as your owner and DM me on MoChat.
+```
+
+nanobot will automatically register, configure `~/.nanobot/config.json`, and connect to Mochat.
+
+**2. Restart gateway**
+
+```bash
+nanobot gateway
+```
+
+That's it — nanobot handles the rest!
+
+<br>
+
+<details>
+<summary>Manual configuration (advanced)</summary>
+
+If you prefer to configure manually, add the following to `~/.nanobot/config.json`:
+
+> Keep `claw_token` private. It should only be sent in `X-Claw-Token` header to your Mochat API endpoint.
+
+```json
+{
+  "channels": {
+    "mochat": {
+      "enabled": true,
+      "base_url": "https://mochat.io",
+      "socket_url": "https://mochat.io",
+      "socket_path": "/socket.io",
+      "claw_token": "claw_xxx",
+      "agent_user_id": "6982abcdef",
+      "sessions": ["*"],
+      "panels": ["*"],
+      "reply_delay_mode": "non-mention",
+      "reply_delay_ms": 120000
+    }
+  }
+}
+```
+
+
+
+</details>
+
+</details>
+
+<details>
+<summary><b>Discord</b></summary>
+
+**1. Create a bot**
+- Go to https://discord.com/developers/applications
+- Create an application → Bot → Add Bot
+- Copy the bot token
+
+**2. Enable intents**
+- In the Bot settings, enable **MESSAGE CONTENT INTENT**
+- (Optional) Enable **SERVER MEMBERS INTENT** if you plan to use allow lists based on member data
+
+**3. Get your User ID**
+- Discord Settings → Advanced → enable **Developer Mode**
+- Right-click your avatar → **Copy User ID**
+
+**4. Configure**
+
+```json
+{
+  "channels": {
+    "discord": {
+      "enabled": true,
+      "token": "YOUR_BOT_TOKEN",
+      "allowFrom": ["YOUR_USER_ID"]
+    }
+  }
+}
+```
+
+**5. Invite the bot**
+- OAuth2 → URL Generator
+- Scopes: `bot`
+- Bot Permissions: `Send Messages`, `Read Message History`
+- Open the generated invite URL and add the bot to your server
+
+**6. Run**
+
+```bash
+nanobot gateway
+```
+
+</details>
+
+<details>
+<summary><b>WhatsApp</b></summary>
+
+Requires **Node.js ≥18**.
+
+**1. Link device**
+
+```bash
+nanobot channels login
+# Scan QR with WhatsApp → Settings → Linked Devices
+```
+
+**2. Configure**
+
+```json
+{
+  "channels": {
+    "whatsapp": {
+      "enabled": true,
+      "allowFrom": ["+1234567890"]
+    }
+  }
+}
+```
+
+**3. Run** (two terminals)
+
+```bash
+# Terminal 1
+nanobot channels login
+
+# Terminal 2
+nanobot gateway
+```
+
+</details>
+
+<details>
+<summary><b>Feishu (飞书)</b></summary>
+
+Uses **WebSocket** long connection — no public IP required.
+
+**1. Create a Feishu bot**
+- Visit [Feishu Open Platform](https://open.feishu.cn/app)
+- Create a new app → Enable **Bot** capability
+- **Permissions**: Add `im:message` (send messages)
+- **Events**: Add `im.message.receive_v1` (receive messages)
+  - Select **Long Connection** mode (requires running nanobot first to establish connection)
+- Get **App ID** and **App Secret** from "Credentials & Basic Info"
+- Publish the app
+
+**2. Configure**
+
+```json
+{
+  "channels": {
+    "feishu": {
+      "enabled": true,
+      "appId": "cli_xxx",
+      "appSecret": "xxx",
+      "encryptKey": "",
+      "verificationToken": "",
+      "allowFrom": []
+    }
+  }
+}
+```
+
+> `encryptKey` and `verificationToken` are optional for Long Connection mode.
+> `allowFrom`: Leave empty to allow all users, or add `["ou_xxx"]` to restrict access.
+
+**3. Run**
+
+```bash
+nanobot gateway
+```
+
+> [!TIP]
+> Feishu uses WebSocket to receive messages — no webhook or public IP needed!
+
+</details>
+
+<details>
+<summary><b>QQ (QQ单聊)</b></summary>
+
+Uses **botpy SDK** with WebSocket — no public IP required. Currently supports **private messages only**.
+
+**1. Register & create bot**
+- Visit [QQ Open Platform](https://q.qq.com) → Register as a developer (personal or enterprise)
+- Create a new bot application
+- Go to **开发设置 (Developer Settings)** → copy **AppID** and **AppSecret**
+
+**2. Set up sandbox for testing**
+- In the bot management console, find **沙箱配置 (Sandbox Config)**
+- Under **在消息列表配置**, click **添加成员** and add your own QQ number
+- Once added, scan the bot's QR code with mobile QQ → open the bot profile → tap "发消息" to start chatting
+
+**3. Configure**
+
+> - `allowFrom`: Leave empty for public access, or add user openids to restrict. You can find openids in the nanobot logs when a user messages the bot.
+> - For production: submit a review in the bot console and publish. See [QQ Bot Docs](https://bot.q.qq.com/wiki/) for the full publishing flow.
+
+```json
+{
+  "channels": {
+    "qq": {
+      "enabled": true,
+      "appId": "YOUR_APP_ID",
+      "secret": "YOUR_APP_SECRET",
+      "allowFrom": []
+    }
+  }
+}
+```
+
+**4. Run**
+
+```bash
+nanobot gateway
+```
+
+Now send a message to the bot from QQ — it should respond!
+
+</details>
+
+<details>
+<summary><b>DingTalk (钉钉)</b></summary>
+
+Uses **Stream Mode** — no public IP required.
+
+**1. Create a DingTalk bot**
+- Visit [DingTalk Open Platform](https://open-dev.dingtalk.com/)
+- Create a new app -> Add **Robot** capability
+- **Configuration**:
+  - Toggle **Stream Mode** ON
+- **Permissions**: Add necessary permissions for sending messages
+- Get **AppKey** (Client ID) and **AppSecret** (Client Secret) from "Credentials"
+- Publish the app
+
+**2. Configure**
+
+```json
+{
+  "channels": {
+    "dingtalk": {
+      "enabled": true,
+      "clientId": "YOUR_APP_KEY",
+      "clientSecret": "YOUR_APP_SECRET",
+      "allowFrom": []
+    }
+  }
+}
+```
+
+> `allowFrom`: Leave empty to allow all users, or add `["staffId"]` to restrict access.
+
+**3. Run**
+
+```bash
+nanobot gateway
+```
+
+</details>
+
+<details>
+<summary><b>Slack</b></summary>
+
+Uses **Socket Mode** — no public URL required.
+
+**1. Create a Slack app**
+- Go to [Slack API](https://api.slack.com/apps) → **Create New App** → "From scratch"
+- Pick a name and select your workspace
+
+**2. Configure the app**
+- **Socket Mode**: Toggle ON → Generate an **App-Level Token** with `connections:write` scope → copy it (`xapp-...`)
+- **OAuth & Permissions**: Add bot scopes: `chat:write`, `reactions:write`, `app_mentions:read`
+- **Event Subscriptions**: Toggle ON → Subscribe to bot events: `message.im`, `message.channels`, `app_mention` → Save Changes
+- **App Home**: Scroll to **Show Tabs** → Enable **Messages Tab** → Check **"Allow users to send Slash commands and messages from the messages tab"**
+- **Install App**: Click **Install to Workspace** → Authorize → copy the **Bot Token** (`xoxb-...`)
+
+**3. Configure nanobot**
+
+```json
+{
+  "channels": {
+    "slack": {
+      "enabled": true,
+      "botToken": "xoxb-...",
+      "appToken": "xapp-...",
+      "groupPolicy": "mention"
+    }
+  }
+}
+```
+
+**4. Run**
+
+```bash
+nanobot gateway
+```
+
+DM the bot directly or @mention it in a channel — it should respond!
+
+> [!TIP]
+> - `groupPolicy`: `"mention"` (default — respond only when @mentioned), `"open"` (respond to all channel messages), or `"allowlist"` (restrict to specific channels).
+> - DM policy defaults to open. Set `"dm": {"enabled": false}` to disable DMs.
+
+</details>
+
+<details>
+<summary><b>Email</b></summary>
+
+Give nanobot its own email account. It polls **IMAP** for incoming mail and replies via **SMTP** — like a personal email assistant.
+
+**1. Get credentials (Gmail example)**
+- Create a dedicated Gmail account for your bot (e.g. `my-nanobot@gmail.com`)
+- Enable 2-Step Verification → Create an [App Password](https://myaccount.google.com/apppasswords)
+- Use this app password for both IMAP and SMTP
+
+**2. Configure**
+
+> - `consentGranted` must be `true` to allow mailbox access. This is a safety gate — set `false` to fully disable.
+> - `allowFrom`: Leave empty to accept emails from anyone, or restrict to specific senders.
+> - `smtpUseTls` and `smtpUseSsl` default to `true` / `false` respectively, which is correct for Gmail (port 587 + STARTTLS). No need to set them explicitly.
+> - Set `"autoReplyEnabled": false` if you only want to read/analyze emails without sending automatic replies.
+
+```json
+{
+  "channels": {
+    "email": {
+      "enabled": true,
+      "consentGranted": true,
+      "imapHost": "imap.gmail.com",
+      "imapPort": 993,
+      "imapUsername": "my-nanobot@gmail.com",
+      "imapPassword": "your-app-password",
+      "smtpHost": "smtp.gmail.com",
+      "smtpPort": 587,
+      "smtpUsername": "my-nanobot@gmail.com",
+      "smtpPassword": "your-app-password",
+      "fromAddress": "my-nanobot@gmail.com",
+      "allowFrom": ["your-real-email@gmail.com"]
+    }
+  }
+}
+```
+
+
+**3. Run**
+
+```bash
+nanobot gateway
+```
+
+</details>
+
+## 🌐 Agent Social Network
+
+🐈 nanobot is capable of linking to the agent social network (agent community). **Just send one message and your nanobot joins automatically!**
+
+| Platform | How to Join (send this message to your bot) |
+|----------|-------------|
+| [**Moltbook**](https://www.moltbook.com/) | `Read https://moltbook.com/skill.md and follow the instructions to join Moltbook` |
+| [**ClawdChat**](https://clawdchat.ai/) | `Read https://clawdchat.ai/skill.md and follow the instructions to join ClawdChat` |
+
+Simply send the command above to your nanobot (via CLI or any chat channel), and it will handle the rest.
+
+## ⚙️ Configuration
+
+Config file: `~/.nanobot/config.json`
+
+### Providers
+
+> [!TIP]
+> - **Groq** provides free voice transcription via Whisper. If configured, Telegram voice messages will be automatically transcribed.
+> - **Zhipu Coding Plan**: If you're on Zhipu's coding plan, set `"apiBase": "https://open.bigmodel.cn/api/coding/paas/v4"` in your zhipu provider config.
+> - **MiniMax (Mainland China)**: If your API key is from MiniMax's mainland China platform (minimaxi.com), set `"apiBase": "https://api.minimaxi.com/v1"` in your minimax provider config.
+
+| Provider | Purpose | Get API Key |
+|----------|---------|-------------|
+| `openrouter` | LLM (recommended, access to all models) | [openrouter.ai](https://openrouter.ai) |
+| `anthropic` | LLM (Claude direct) | [console.anthropic.com](https://console.anthropic.com) |
+| `openai` | LLM (GPT direct) | [platform.openai.com](https://platform.openai.com) |
+| `deepseek` | LLM (DeepSeek direct) | [platform.deepseek.com](https://platform.deepseek.com) |
+| `groq` | LLM + **Voice transcription** (Whisper) | [console.groq.com](https://console.groq.com) |
+| `gemini` | LLM (Gemini direct) | [aistudio.google.com](https://aistudio.google.com) |
+| `minimax` | LLM (MiniMax direct) | [platform.minimax.io](https://platform.minimax.io) |
+| `aihubmix` | LLM (API gateway, access to all models) | [aihubmix.com](https://aihubmix.com) |
+| `dashscope` | LLM (Qwen) | [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com) |
+| `moonshot` | LLM (Moonshot/Kimi) | [platform.moonshot.cn](https://platform.moonshot.cn) |
+| `zhipu` | LLM (Zhipu GLM) | [open.bigmodel.cn](https://open.bigmodel.cn) |
+| `vllm` | LLM (local, any OpenAI-compatible server) | — |
+
+<details>
+<summary><b>Adding a New Provider (Developer Guide)</b></summary>
+
+nanobot uses a **Provider Registry** (`nanobot/providers/registry.py`) as the single source of truth.
+Adding a new provider only takes **2 steps** — no if-elif chains to touch.
+
+**Step 1.** Add a `ProviderSpec` entry to `PROVIDERS` in `nanobot/providers/registry.py`:
+
+```python
+ProviderSpec(
+    name="myprovider",                   # config field name
+    keywords=("myprovider", "mymodel"),  # model-name keywords for auto-matching
+    env_key="MYPROVIDER_API_KEY",        # env var for LiteLLM
+    display_name="My Provider",          # shown in `nanobot status`
+    litellm_prefix="myprovider",         # auto-prefix: model → myprovider/model
+    skip_prefixes=("myprovider/",),      # don't double-prefix
+)
+```
+
+**Step 2.** Add a field to `ProvidersConfig` in `nanobot/config/schema.py`:
+
+```python
+class ProvidersConfig(BaseModel):
+    ...
+    myprovider: ProviderConfig = ProviderConfig()
+```
+
+That's it! Environment variables, model prefixing, config matching, and `nanobot status` display will all work automatically.
+
+**Common `ProviderSpec` options:**
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `litellm_prefix` | Auto-prefix model names for LiteLLM | `"dashscope"` → `dashscope/qwen-max` |
+| `skip_prefixes` | Don't prefix if model already starts with these | `("dashscope/", "openrouter/")` |
+| `env_extras` | Additional env vars to set | `(("ZHIPUAI_API_KEY", "{api_key}"),)` |
+| `model_overrides` | Per-model parameter overrides | `(("kimi-k2.5", {"temperature": 1.0}),)` |
+| `is_gateway` | Can route any model (like OpenRouter) | `True` |
+| `detect_by_key_prefix` | Detect gateway by API key prefix | `"sk-or-"` |
+| `detect_by_base_keyword` | Detect gateway by API base URL | `"openrouter"` |
+| `strip_model_prefix` | Strip existing prefix before re-prefixing | `True` (for AiHubMix) |
+
+</details>
+
+
+### Security
+
+> For production deployments, set `"restrictToWorkspace": true` in your config to sandbox the agent.
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `tools.restrictToWorkspace` | `false` | When `true`, restricts **all** agent tools (shell, file read/write/edit, list) to the workspace directory. Prevents path traversal and out-of-scope access. |
+| `channels.*.allowFrom` | `[]` (allow all) | Whitelist of user IDs. Empty = allow everyone; non-empty = only listed users can interact. |
+
+
+## CLI Reference
+
+| Command | Description |
+|---------|-------------|
+| `nanobot onboard` | Initialize config & workspace |
+| `nanobot agent -m "..."` | Chat with the agent |
+| `nanobot agent` | Interactive chat mode |
+| `nanobot agent --no-markdown` | Show plain-text replies |
+| `nanobot agent --logs` | Show runtime logs during chat |
+| `nanobot gateway` | Start the gateway |
+| `nanobot status` | Show status |
+| `nanobot channels login` | Link WhatsApp (scan QR) |
+| `nanobot channels status` | Show channel status |
+
+Interactive mode exits: `exit`, `quit`, `/exit`, `/quit`, `:q`, or `Ctrl+D`.
+
+<details>
+<summary><b>Scheduled Tasks (Cron)</b></summary>
+
+```bash
+# Add a job
+nanobot cron add --name "daily" --message "Good morning!" --cron "0 9 * * *"
+nanobot cron add --name "hourly" --message "Check status" --every 3600
+
+# List jobs
+nanobot cron list
+
+# Remove a job
+nanobot cron remove <job_id>
+```
+
+</details>
+
+## 🐳 Docker
+
+> [!TIP]
+> The `-v ~/.nanobot:/root/.nanobot` flag mounts your local config directory into the container, so your config and workspace persist across container restarts.
+
+Build and run nanobot in a container:
+
+```bash
+# Build the image
+docker build -t nanobot .
+
+# Initialize config (first time only)
+docker run -v ~/.nanobot:/root/.nanobot --rm nanobot onboard
+
+# Edit config on host to add API keys
+vim ~/.nanobot/config.json
+
+# Run gateway (connects to enabled channels, e.g. Telegram/Discord/Mochat)
+docker run -v ~/.nanobot:/root/.nanobot -p 18790:18790 nanobot gateway
+
+# Or run a single command
+docker run -v ~/.nanobot:/root/.nanobot --rm nanobot agent -m "Hello!"
+docker run -v ~/.nanobot:/root/.nanobot --rm nanobot status
+```
+
+## 📁 Project Structure
+
+```
+nanobot/
+├── agent/          # 🧠 Core agent logic
+│   ├── loop.py     #    Agent loop (LLM ↔ tool execution)
+│   ├── context.py  #    Prompt builder
+│   ├── memory.py   #    Persistent memory
+│   ├── skills.py   #    Skills loader
+│   ├── subagent.py #    Background task execution
+│   └── tools/      #    Built-in tools (incl. spawn)
+├── skills/         # 🎯 Bundled skills (github, weather, tmux...)
+├── channels/       # 📱 Chat channel integrations
+├── bus/            # 🚌 Message routing
+├── cron/           # ⏰ Scheduled tasks
+├── heartbeat/      # 💓 Proactive wake-up
+├── providers/      # 🤖 LLM providers (OpenRouter, etc.)
+├── session/        # 💬 Conversation sessions
+├── config/         # ⚙️ Configuration
+└── cli/            # 🖥️ Commands
+```
+
+## 🤝 Contribute & Roadmap
+
+PRs welcome! The codebase is intentionally small and readable. 🤗
+
+**Roadmap** — Pick an item and [open a PR](https://github.com/HKUDS/nanobot/pulls)!
+
+- [x] **Voice Transcription** — Support for Groq Whisper (Issue #13)
+- [ ] **Multi-modal** — See and hear (images, voice, video)
+- [ ] **Long-term memory** — Never forget important context
+- [ ] **Better reasoning** — Multi-step planning and reflection
+- [ ] **More integrations** — Calendar and more
+- [ ] **Self-improvement** — Learn from feedback and mistakes
+
+### Contributors
+
+<a href="https://github.com/HKUDS/nanobot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=HKUDS/nanobot&max=100&columns=12&updated=20260210" alt="Contributors" />
+</a>
+
+
+## ⭐ Star History
+
+<div align="center">
+  <a href="https://star-history.com/#HKUDS/nanobot&Date">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=HKUDS/nanobot&type=Date" style="border-radius: 15px; box-shadow: 0 0 30px rgba(0, 217, 255, 0.3);" />
+    </picture>
+  </a>
+</div>
+
+<p align="center">
+  <em> Thanks for visiting ✨ nanobot!</em><br><br>
+  <img src="https://visitor-badge.laobi.icu/badge?page_id=HKUDS.nanobot&style=for-the-badge&color=00d4ff" alt="Views">
+</p>
+
+
+<p align="center">
+  <sub>nanobot is for educational, research, and technical exchange purposes only</sub>
+</p>
+
+
+## Links discovered
+- [OpenClaw](https://github.com/openclaw/openclaw)
+- [release notes](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post7)
+- [discussion](https://github.com/HKUDS/nanobot/discussions/566)
+- [notes](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post6)
+- [roadmap](https://github.com/HKUDS/nanobot/discussions/431)
+- [here](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post5)
+- [here](https://github.com/HKUDS/nanobot/releases/tag/v0.1.3.post4)
+- [uv](https://github.com/astral-sh/uv)
+- [OpenRouter](https://openrouter.ai/keys)
+- [Brave Search](https://brave.com/search/api/)
+- [Feishu Open Platform](https://open.feishu.cn/app)
+- [QQ Open Platform](https://q.qq.com)
+- [QQ Bot Docs](https://bot.q.qq.com/wiki/)
+- [DingTalk Open Platform](https://open-dev.dingtalk.com/)
+- [Slack API](https://api.slack.com/apps)
+- [App Password](https://myaccount.google.com/apppasswords)
+- [**Moltbook**](https://www.moltbook.com/)
+- [**ClawdChat**](https://clawdchat.ai/)
+- [openrouter.ai](https://openrouter.ai)
+- [console.anthropic.com](https://console.anthropic.com)
+- [platform.openai.com](https://platform.openai.com)
+- [platform.deepseek.com](https://platform.deepseek.com)
+- [console.groq.com](https://console.groq.com)
+- [aistudio.google.com](https://aistudio.google.com)
+- [platform.minimax.io](https://platform.minimax.io)
+- [aihubmix.com](https://aihubmix.com)
+- [dashscope.console.aliyun.com](https://dashscope.console.aliyun.com)
+- [platform.moonshot.cn](https://platform.moonshot.cn)
+- [open.bigmodel.cn](https://open.bigmodel.cn)
+- [open a PR](https://github.com/HKUDS/nanobot/pulls)
+- [<img src="https://img.shields.io/pypi/v/nanobot-ai" alt="PyPI">](https://pypi.org/project/nanobot-ai/)
+- [<img src="https://static.pepy.tech/badge/nanobot-ai" alt="Downloads">](https://pepy.tech/project/nanobot-ai)
+- [<img src="https://img.shields.io/badge/Feishu-Group-E9DBFC?style=flat&logo=feishu&logoColor=white" alt="Feishu">](https://github.com/HKUDS/nanobot/blob/main/COMMUNICATION.md)
+- [<img src="https://img.shields.io/badge/WeChat-Group-C5EAB4?style=flat&logo=wechat&logoColor=white" alt="WeChat">](https://github.com/HKUDS/nanobot/blob/main/COMMUNICATION.md)
+- [<img src="https://img.shields.io/badge/Discord-Community-5865F2?style=flat&logo=discord&logoColor=white" alt="Discord">](https://discord.gg/MnCvHqpUGB)
+- [<img src="https://contrib.rocks/image?repo=HKUDS/nanobot&max=100&columns=12&updated=20260210" alt="Contributors" />](https://github.com/HKUDS/nanobot/graphs/contributors)
+
+--- bridge/src/index.ts ---
+#!/usr/bin/env node
+/**
+ * nanobot WhatsApp Bridge
+ * 
+ * This bridge connects WhatsApp Web to nanobot's Python backend
+ * via WebSocket. It handles authentication, message forwarding,
+ * and reconnection logic.
+ * 
+ * Usage:
+ *   npm run build && npm start
+ *   
+ * Or with custom settings:
+ *   BRIDGE_PORT=3001 AUTH_DIR=~/.nanobot/whatsapp npm start
+ */
+
+// Polyfill crypto for Baileys in ESM
+import { webcrypto } from 'crypto';
+if (!globalThis.crypto) {
+  (globalThis as any).crypto = webcrypto;
+}
+
+import { BridgeServer } from './server.js';
+import { homedir } from 'os';
+import { join } from 'path';
+
+const PORT = parseInt(process.env.BRIDGE_PORT || '3001', 10);
+const AUTH_DIR = process.env.AUTH_DIR || join(homedir(), '.nanobot', 'whatsapp-auth');
+const TOKEN = process.env.BRIDGE_TOKEN || undefined;
+
+console.log('🐈 nanobot WhatsApp Bridge');
+console.log('========================\n');
+
+const server = new BridgeServer(PORT, AUTH_DIR, TOKEN);
+
+// Handle graceful shutdown
+process.on('SIGINT', async () => {
+  console.log('\n\nShutting down...');
+  await server.stop();
+  process.exit(0);
+});
+
+process.on('SIGTERM', async () => {
+  await server.stop();
+  process.exit(0);
+});
+
+// Start the server
+server.start().catch((error) => {
+  console.error('Failed to start bridge:', error);
+  process.exit(1);
+});
+
+
+--- bridge/src/server.ts ---
+/**
+ * WebSocket server for Python-Node.js bridge communication.
+ * Security: binds to 127.0.0.1 only; optional BRIDGE_TOKEN auth.
+ */
+
+import { WebSocketServer, WebSocket } from 'ws';
+import { WhatsAppClient, InboundMessage } from './whatsapp.js';
+
+interface SendCommand {
+  type: 'send';
+  to: string;
+  text: string;
+}
+
+interface BridgeMessage {
+  type: 'message' | 'status' | 'qr' | 'error';
+  [key: string]: unknown;
+}
+
+export class BridgeServer {
+  private wss: WebSocketServer | null = null;
+  private wa: WhatsAppClient | null = null;
+  private clients: Set<WebSocket> = new Set();
+
+  constructor(private port: number, private authDir: string, private token?: string) {}
+
+  async start(): Promise<void> {
+    // Bind to localhost only — never expose to external network
+    this.wss = new WebSocketServer({ host: '127.0.0.1', port: this.port });
+    console.log(`🌉 Bridge server listening on ws://127.0.0.1:${this.port}`);
+    if (this.token) console.log('🔒 Token authentication enabled');
+
+    // Initialize WhatsApp client
+    this.wa = new WhatsAppClient({
+      authDir: this.authDir,
+      onMessage: (msg) => this.broadcast({ type: 'message', ...msg }),
+      onQR: (qr) => this.broadcast({ type: 'qr', qr }),
+      onStatus: (status) => this.broadcast({ type: 'status', status }),
+    });
+
+    // Handle WebSocket connections
+    this.wss.on('connection', (ws) => {
+      if (this.token) {
+        // Require auth handshake as first message
+        const timeout = setTimeout(() => ws.close(4001, 'Auth timeout'), 5000);
+        ws.once('message', (data) => {
+          clearTimeout(timeout);
+          try {
+            const msg = JSON.parse(data.toString());
+            if (msg.type === 'auth' && msg.token === this.token) {
+              console.log('🔗 Python client authenticated');
+              this.setupClient(ws);
+            } else {
+              ws.close(4003, 'Invalid token');
+            }
+          } catch {
+            ws.close(4003, 'Invalid auth message');
+          }
+        });
+      } else {
+        console.log('🔗 Python client connected');
+        this.setupClient(ws);
+      }
+    });
+
+    // Connect to WhatsApp
+    await this.wa.connect();
+  }
+
+  private setupClient(ws: WebSocket): void {
+    this.clients.add(ws);
+
+    ws.on('message', async (data) => {
+      try {
+        const cmd = JSON.parse(data.toString()) as SendCommand;
+        await this.handleCommand(cmd);
+        ws.send(JSON.stringify({ type: 'sent', to: cmd.to }));
+      } catch (error) {
+        console.error('Error handling command:', error);
+        ws.send(JSON.stringify({ type: 'error', error: String(error) }));
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('🔌 Python client disconnected');
+      this.clients.delete(ws);
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      this.clients.delete(ws);
+    });
+  }
+
+  private async handleCommand(cmd: SendCommand): Promise<void> {
+    if (cmd.type === 'send' && this.wa) {
+      await this.wa.sendMessage(cmd.to, cmd.text);
+    }
+  }
+
+  private broadcast(msg: BridgeMessage): void {
+    const data = JSON.stringify(msg);
+    for (const client of this.clients) {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data);
+      }
+    }
+  }
+
+  async stop(): Promise<void> {
+    // Close all client connections
+    for (const client of this.clients) {
+      client.close();
+    }
+    this.clients.clear();
+
+    // Close WebSocket server
+    if (this.wss) {
+      this.wss.close();
+      this.wss = null;
+    }
+
+    // Disconnect WhatsApp
+    if (this.wa) {
+      await this.wa.disconnect();
+      this.wa = null;
+    }
+  }
+}
+
+
+--- bridge/src/types.d.ts ---
+declare module 'qrcode-terminal' {
+  export function generate(text: string, options?: { small?: boolean }): void;
+}
+
+
+--- bridge/src/whatsapp.ts ---
+/**
+ * WhatsApp client wrapper using Baileys.
+ * Based on OpenClaw's working implementation.
+ */
+
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import makeWASocket, {
+  DisconnectReason,
+  useMultiFileAuthState,
+  fetchLatestBaileysVersion,
+  makeCacheableSignalKeyStore,
+} from '@whiskeysockets/baileys';
+
+import { Boom } from '@hapi/boom';
+import qrcode from 'qrcode-terminal';
+import pino from 'pino';
+
+const VERSION = '0.1.0';
+
+export interface InboundMessage {
+  id: string;
+  sender: string;
+  pn: string;
+  content: string;
+  timestamp: number;
+  isGroup: boolean;
+}
+
+export interface WhatsAppClientOptions {
+  authDir: string;
+  onMessage: (msg: InboundMessage) => void;
+  onQR: (qr: string) => void;
+  onStatus: (status: string) => void;
+}
+
+export class WhatsAppClient {
+  private sock: any = null;
+  private options: WhatsAppClientOptions;
+  private reconnecting = false;
+
+  constructor(options: WhatsAppClientOptions) {
+    this.options = options;
+  }
+
+  async connect(): Promise<void> {
+    const logger = pino({ level: 'silent' });
+    const { state, saveCreds } = await useMultiFileAuthState(this.options.authDir);
+    const { version } = await fetchLatestBaileysVersion();
+
+    console.log(`Using Baileys version: ${version.join('.')}`);
+
+    // Create socket following OpenClaw's pattern
+    this.sock = makeWASocket({
+      auth: {
+        creds: state.creds,
+        keys: makeCacheableSignalKeyStore(state.keys, logger),
+      },
+      version,
+      logger,
+      printQRInTerminal: false,
+      browser: ['nanobot', 'cli', VERSION],
+      syncFullHistory: false,
+      markOnlineOnConnect: false,
+    });
+
+    // Handle WebSocket errors
+    if (this.sock.ws && typeof this.sock.ws.on === 'function') {
+      this.sock.ws.on('error', (err: Error) => {
+        console.error('WebSocket error:', err.message);
+      });
+    }
+
+    // Handle connection updates
+    this.sock.ev.on('connection.update', async (update: any) => {
+      const { connection, lastDisconnect, qr } = update;
+
+      if (qr) {
+        // Display QR code in terminal
+        console.log('\n📱 Scan this QR code with WhatsApp (Linked Devices):\n');
+        qrcode.generate(qr, { small: true });
+        this.options.onQR(qr);
+      }
+
+      if (connection === 'close') {
+        const statusCode = (lastDisconnect?.error as Boom)?.output?.statusCode;
+        const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
+
+        console.log(`Connection closed. Status: ${statusCode}, Will reconnect: ${shouldReconnect}`);
+        this.options.onStatus('disconnected');
+
+        if (shouldReconnect && !this.reconnecting) {
+          this.reconnecting = true;
+          console.log('Reconnecting in 5 seconds...');
+          setTimeout(() => {
+            this.reconnecting = false;
+            this.connect();
+          }, 5000);
+        }
+      } else if (connection === 'open') {
+        console.log('✅ Connected to WhatsApp');
+        this.options.onStatus('connected');
+      }
+    });
+
+    // Save credentials on update
+    this.sock.ev.on('creds.update', saveCreds);
+
+    // Handle incoming messages
+    this.sock.ev.on('messages.upsert', async ({ messages, type }: { messages: any[]; type: string }) => {
+      if (type !== 'notify') return;
+
+      for (const msg of messages) {
+        // Skip own messages
+        if (msg.key.fromMe) continue;
+
+        // Skip status updates
+        if (msg.key.remoteJid === 'status@broadcast') continue;
+
+        const content = this.extractMessageContent(msg);
+        if (!content) continue;
+
+        const isGroup = msg.key.remoteJid?.endsWith('@g.us') || false;
+
+        this.options.onMessage({
+          id: msg.key.id || '',
+          sender: msg.key.remoteJid || '',
+          pn: msg.key.remoteJidAlt || '',
+          content,
+          timestamp: msg.messageTimestamp as number,
+          isGroup,
+        });
+      }
+    });
+  }
+
+  private extractMessageContent(msg: any): string | null {
+    const message = msg.message;
+    if (!message) return null;
+
+    // Text message
+    if (message.conversation) {
+      return message.conversation;
+    }
+
+    // Extended text (reply, link preview)
+    if (message.extendedTextMessage?.text) {
+      return message.extendedTextMessage.text;
+    }
+
+    // Image with caption
+    if (message.imageMessage?.caption) {
+      return `[Image] ${message.imageMessage.caption}`;
+    }
+
+    // Video with caption
+    if (message.videoMessage?.caption) {
+      return `[Video] ${message.videoMessage.caption}`;
+    }
+
+    // Document with caption
+    if (message.documentMessage?.caption) {
+      return `[Document] ${message.documentMessage.caption}`;
+    }
+
+    // Voice/Audio message
+    if (message.audioMessage) {
+      return `[Voice Message]`;
+    }
+
+    return null;
+  }
+
+  async sendMessage(to: string, text: string): Promise<void> {
+    if (!this.sock) {
+      throw new Error('Not connected');
+    }
+
+    await this.sock.sendMessage(to, { text });
+  }
+
+  async disconnect(): Promise<void> {
+    if (this.sock) {
+      this.sock.end(undefined);
+      this.sock = null;
+    }
+  }
+}
+
+
+--- nanobot/skills/README.md ---
+# nanobot Skills
+
+This directory contains built-in skills that extend nanobot's capabilities.
+
+## Skill Format
+
+Each skill is a directory containing a `SKILL.md` file with:
+- YAML frontmatter (name, description, metadata)
+- Markdown instructions for the agent
+
+## Attribution
+
+These skills are adapted from [OpenClaw](https://github.com/openclaw/openclaw)'s skill system.
+The skill format and metadata structure follow OpenClaw's conventions to maintain compatibility.
+
+## Available Skills
+
+| Skill | Description |
+|-------|-------------|
+| `github` | Interact with GitHub using the `gh` CLI |
+| `weather` | Get weather info using wttr.in and Open-Meteo |
+| `summarize` | Summarize URLs, files, and YouTube videos |
+| `tmux` | Remote-control tmux sessions |
+| `skill-creator` | Create new skills |
+
+## Links discovered
+- [OpenClaw](https://github.com/openclaw/openclaw)
+
+--- nanobot/__init__.py ---
+"""
+nanobot - A lightweight AI agent framework
+"""
+
+__version__ = "0.1.0"
+__logo__ = "🐈"
+
+
+--- nanobot/__main__.py ---
+"""
+Entry point for running nanobot as a module: python -m nanobot
+"""
+
+from nanobot.cli.commands import app
+
+if __name__ == "__main__":
+    app()
+
+
+--- nanobot/channels/base.py ---
+"""Base channel interface for chat platforms."""
+
+from abc import ABC, abstractmethod
+from typing import Any
+
+from loguru import logger
+
+from nanobot.bus.events import InboundMessage, OutboundMessage
+from nanobot.bus.queue import MessageBus
+
+
+class BaseChannel(ABC):
+    """
+    Abstract base class for chat channel implementations.
+    
+    Each channel (Telegram, Discord, etc.) should implement this interface
+    to integrate with the nanobot message bus.
+    """
+    
+    name: str = "base"
+    
+    def __init__(self, config: Any, bus: MessageBus):
+        """
+        Initialize the channel.
+        
+        Args:
+            config: Channel-specific configuration.
+            bus: The message bus for communication.
+        """
+        self.config = config
+        self.bus = bus
+        self._running = False
+    
+    @abstractmethod
+    async def start(self) -> None:
+        """
+        Start the channel and begin listening for messages.
+        
+        This should be a long-running async task that:
+        1. Connects to the chat platform
+        2. Listens for incoming messages
+        3. Forwards messages to the bus via _handle_message()
+        """
+        pass
+    
+    @abstractmethod
+    async def stop(self) -> None:
+        """Stop the channel and clean up resources."""
+        pass
+    
+    @abstractmethod
+    async def send(self, msg: OutboundMessage) -> None:
+        """
+        Send a message through this channel.
+        
+        Args:
+            msg: The message to send.
+        """
+        pass
+    
+    def is_allowed(self, sender_id: str) -> bool:
+        """
+        Check if a sender is allowed to use this bot.
+        
+        Args:
+            sender_id: The sender's identifier.
+        
+        Returns:
+            True if allowed, False otherwise.
+        """
+        allow_list = getattr(self.config, "allow_from", [])
+        
+        # If no allow list, allow everyone
+        if not allow_list:
+            return True
+        
+        sender_str = str(sender_id)
+        if sender_str in allow_list:
+            return True
+        if "|" in sender_str:
+            for part in sender_str.split("|"):
+                if part and part in allow_list:
+                    return True
+        return False
+    
+    async def _handle_message(
+        self,
+        sender_id: str,
+        chat_id: str,
+        content: str,
+        media: list[str] | None = None,
+        metadata: dict[str, Any] | None = None
+    ) -> None:
+        """
+        Handle an incoming message from the chat platform.
+        
+        This method checks permissions and forwards to the bus.
+        
+        Args:
+            sender_id: The sender's identifier.
+            chat_id: The chat/channel identifier.
+            content: Message text content.
+            media: Optional list of media URLs.
+            metadata: Optional channel-specific metadata.
+        """
+        if not self.is_allowed(sender_id):
+            logger.warning(
+                f"Access denied for sender {sender_id} on channel {self.name}. "
+                f"Add them to allowFrom list in config to grant access."
+            )
+            return
+        
+        msg = InboundMessage(
+            channel=self.name,
+            sender_id=str(sender_id),
+            chat_id=str(chat_id),
+            content=content,
+            media=media or [],
+            metadata=metadata or {}
+        )
+        
+        await self.bus.publish_inbound(msg)
+    
+    @property
+    def is_running(self) -> bool:
+        """Check if the channel is running."""
+        return self._running
+
+
+--- nanobot/providers/base.py ---
+"""Base LLM provider interface."""
+
+from abc import ABC, abstractmethod
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class ToolCallRequest:
+    """A tool call request from the LLM."""
+    id: str
+    name: str
+    arguments: dict[str, Any]
+
+
+@dataclass
+class LLMResponse:
+    """Response from an LLM provider."""
+    content: str | None
+    tool_calls: list[ToolCallRequest] = field(default_factory=list)
+    finish_reason: str = "stop"
+    usage: dict[str, int] = field(default_factory=dict)
+    reasoning_content: str | None = None  # Kimi, DeepSeek-R1 etc.
+    
+    @property
+    def has_tool_calls(self) -> bool:
+        """Check if response contains tool calls."""
+        return len(self.tool_calls) > 0
+
+
+class LLMProvider(ABC):
+    """
+    Abstract base class for LLM providers.
+    
+    Implementations should handle the specifics of each provider's API
+    while maintaining a consistent interface.
+    """
+    
+    def __init__(self, api_key: str | None = None, api_base: str | None = None):
+        self.api_key = api_key
+        self.api_base = api_base
+    
+    @abstractmethod
+    async def chat(
+        self,
+        messages: list[dict[str, Any]],
+        tools: list[dict[str, Any]] | None = None,
+        model: str | None = None,
+        max_tokens: int = 4096,
+        temperature: float = 0.7,
+    ) -> LLMResponse:
+        """
+        Send a chat completion request.
+        
+        Args:
+            messages: List of message dicts with 'role' and 'content'.
+            tools: Optional list of tool definitions.
+            model: Model identifier (provider-specific).
+            max_tokens: Maximum tokens in response.
+            temperature: Sampling temperature.
+        
+        Returns:
+            LLMResponse with content and/or tool calls.
+        """
+        pass
+    
+    @abstractmethod
+    def get_default_model(self) -> str:
+        """Get the default model for this provider."""
+        pass
+
+
+--- nanobot/cli/commands.py ---
+"""CLI commands for nanobot."""
+
+import asyncio
+import os
+import signal
+from pathlib import Path
+import select
+import sys
+
+import typer
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.table import Table
+from rich.text import Text
+
+from prompt_toolkit import PromptSession
+from prompt_toolkit.formatted_text import HTML
+from prompt_toolkit.history import FileHistory
+from prompt_toolkit.patch_stdout import patch_stdout
+
+from nanobot import __version__, __logo__
+
+app = typer.Typer(
+    name="nanobot",
+    help=f"{__logo__} nanobot - Personal AI Assistant",
+    no_args_is_help=True,
+)
+
+console = Console()
+EXIT_COMMANDS = {"exit", "quit", "/exit", "/quit", ":q"}
+
+# ---------------------------------------------------------------------------
+# CLI input: prompt_toolkit for editing, paste, history, and display
+# ---------------------------------------------------------------------------
+
+_PROMPT_SESSION: PromptSession | None = None
+_SAVED_TERM_ATTRS = None  # original termios settings, restored on exit
+
+
+def _flush_pending_tty_input() -> None:
+    """Drop unread keypresses typed while the model was generating output."""
+    try:
+        fd = sys.stdin.fileno()
+        if not os.isatty(fd):
+            return
+    except Exception:
+        return
+
+    try:
+        import termios
+        termios.tcflush(fd, termios.TCIFLUSH)
+        return
+    except Exception:
+        pass
+
+    try:
+        while True:
+            ready, _, _ = select.select([fd], [], [], 0)
+            if not ready:
+                break
+            if not os.read(fd, 4096):
+                break
+    except Exception:
+        return
+
+
+def _restore_terminal() -> None:
+    """Restore terminal to its original state (echo, line buffering, etc.)."""
+    if _SAVED_TERM_ATTRS is None:
+        return
+    try:
+        import termios
+        termios.tcsetattr(sys.stdin.fileno(), termios.TCSADRAIN, _SAVED_TERM_ATTRS)
+    except Exception:
+        pass
+
+
+def _init_prompt_session() -> None:
+    """Create the prompt_toolkit session with persistent file history."""
+    global _PROMPT_SESSION, _SAVED_TERM_ATTRS
+
+    # Save terminal state so we can restore it on exit
+    try:
+        import termios
+        _SAVED_TERM_ATTRS = termios.tcgetattr(sys.stdin.fileno())
+    except Exception:
+        pass
+
+    history_file = Path.home() / ".nanobot" / "history" / "cli_history"
+    history_file.parent.mkdir(parents=True, exist_ok=True)
+
+    _PROMPT_SESSION = PromptSession(
+        history=FileHistory(str(history_file)),
+        enable_open_in_editor=False,
+        multiline=False,   # Enter submits (single line mode)
+    )
+
+
+def _print_agent_response(response: str, render_markdown: bool) -> None:
+    """Render assistant response with consistent terminal styling."""
+    content = response or ""
+    body = Markdown(content) if render_markdown else Text(content)
+    console.print()
+    console.print(f"[cyan]{__logo__} nanobot[/cyan]")
+    console.print(body)
+    console.print()
+
+
+def _is_exit_command(command: str) -> bool:
+    """Return True when input should end interactive chat."""
+    return command.lower() in EXIT_COMMANDS
+
+
+async def _read_interactive_input_async() -> str:
+    """Read user input using prompt_toolkit (handles paste, history, display).
+
+    prompt_toolkit natively handles:
+    - Multiline paste (bracketed paste mode)
+    - History navigation (up/down arrows)
+    - Clean display (no ghost characters or artifacts)
+    """
+    if _PROMPT_SESSION is None:
+        raise RuntimeError("Call _init_prompt_session() first")
+    try:
+        with patch_stdout():
+            return await _PROMPT_SESSION.prompt_async(
+                HTML("<b fg='ansiblue'>You:</b> "),
+            )
+    except EOFError as exc:
+        raise KeyboardInterrupt from exc
+
+
+
+def version_callback(value: bool):
+    if value:
+        console.print(f"{__logo__} nanobot v{__version__}")
+        raise typer.Exit()
+
+
+@app.callback()
+def main(
+    version: bool = typer.Option(
+        None, "--version", "-v", callback=version_callback, is_eager=True
+    ),
+):
+    """nanobot - Personal AI Assistant."""
+    pass
+
+
+# ============================================================================
+# Onboard / Setup
+# ============================================================================
+
+
+@app.command()
+def onboard():
+    """Initialize nanobot configuration and workspace."""
+    from nanobot.config.loader import get_config_path, load_config, save_config
+    from nanobot.config.schema import Config
+    from nanobot.utils.helpers import get_workspace_path
+    
+    config_path = get_config_path()
+    
+    if config_path.exists():
+        # Load existing config — Pydantic fills in defaults for any new fields
+        config = load_config()
+        save_config(config)
+        console.print(f"[green]✓[/green] Config refreshed at {config_path} (existing values preserved)")
+    else:
+        config = Config()
+        save_config(config)
+        console.print(f"[green]✓[/green] Created config at {config_path}")
+    
+    # Create workspace
+    workspace = get_workspace_path()
+    console.print(f"[green]✓[/green] Created workspace at {workspace}")
+    
+    # Create default bootstrap files
+    _create_workspace_templates(workspace)
+    
+    console.print(f"\n{__logo__} nanobot is ready!")
+    console.print("\nNext steps:")
+    console.print("  1. Add your API key to [cyan]~/.nanobot/config.json[/cyan]")
+    console.print("     Get one at: https://openrouter.ai/keys")
+    console.print("  2. Chat: [cyan]nanobot agent -m \"Hello!\"[/cyan]")
+    console.print("\n[dim]Want Telegram/WhatsApp? See: https://github.com/HKUDS/nanobot#-chat-apps[/dim]")
+
+
+
+
+def _create_workspace_templates(workspace: Path):
+    """Create default workspace template files."""
+    templates = {
+        "AGENTS.md": """# Agent Instructions
+
+You are a helpful AI assistant. Be concise, accurate, and friendly.
+
+## Guidelines
+
+- Always explain what you're doing before taking actions
+- Ask for clarification when the request is ambiguous
+- Use tools to help accomplish tasks
+- Remember important information in memory/MEMORY.md; past events are logged in memory/HISTORY.md
+""",
+        "SOUL.md": """# Soul
+
+I am nanobot, a lightweight AI assistant.
+
+## Personality
+
+- Helpful and friendly
+- Concise and to the point
+- Curious and eager to learn
+
+## Values
+
+- Accuracy over speed
+- User privacy and safety
+- Transparency in actions
+""",
+        "USER.md": """# User
+
+Information about the user goes here.
+
+## Preferences
+
+- Communication style: (casual/formal)
+- Timezone: (your timezone)
+- Language: (your preferred language)
+""",
+    }
+    
+    for filename, content in templates.items():
+        file_path = workspace / filename
+        if not file_path.exists():
+            file_path.write_text(content)
+            console.print(f"  [dim]Created {filename}[/dim]")
+    
+    # Create memory directory and MEMORY.md
+    memory_dir = workspace / "memory"
+    memory_dir.mkdir(exist_ok=True)
+    memory_file = memory_dir / "MEMORY.md"
+    if not memory_file.exists():
+        memory_file.write_text("""# Long-term Memory
+
+This file stores important information that should persist across sessions.
+
+## User Information
+
+(Important facts about the user)
+
+## Preferences
+
+(User preferences learned over time)
+
+## Important Notes
+
+(Things to remember)
+""")
+        console.print("  [dim]Created memory/MEMORY.md[/dim]")
+    
+    history_file = memory_dir / "HISTORY.md"
+    if not history_file.exists():
+        history_file.write_text("")
+        console.print("  [dim]Created memory/HISTORY.md[/dim]")
+
+    # Create skills directory for custom user skills
+    skills_dir = workspace / "skills"
+    skills_dir.mkdir(exist_ok=True)
+
+
+def _make_provider(config):
+    """Create LiteLLMProvider from config. Exits if no API key found."""
+    from nanobot.providers.litellm_provider import LiteLLMProvider
+    p = config.get_provider()
+    model = config.agents.defaults.model
+    if not (p and p.api_key) and not model.startswith("bedrock/"):
+        console.print("[red]Error: No API key configured.[/red]")
+        console.print("Set one in ~/.nanobot/config.json under providers section")
+        raise typer.Exit(1)
+    return LiteLLMProvider(
+        api_key=p.api_key if p else None,
+        api_base=config.get_api_base(),
+        default_model=model,
+        extra_headers=p.extra_headers if p else None,
+        provider_name=config.get_provider_name(),
+    )
+
+
+# ============================================================================
+# Gateway / Server
+# ============================================================================
+
+
+@app.command()
+def gateway(
+    port: int = typer.Option(18790, "--port", "-p", help="Gateway port"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose output"),
+):
+    """Start the nanobot gateway."""
+    from nanobot.config.loader import load_config, get_data_dir
+    from nanobot.bus.queue import MessageBus
+    from nanobot.agent.loop import AgentLoop
+    from nanobot.channels.manager import ChannelManager
+    from nanobot.session.manager import SessionManager
+    from nanobot.cron.service import CronService
+    from nanobot.cron.types import CronJob
+    from nanobot.heartbeat.service import HeartbeatService
+    
+    if verbose:
+        import logging
+        logging.basicConfig(level=logging.DEBUG)
+    
+    console.print(f"{__logo__} Starting nanobot gateway on port {port}...")
+    
+    config = load_config()
+    bus = MessageBus()
+    provider = _make_provider(config)
+    session_manager = SessionManager(config.workspace_path)
+    
+    # Create cron service first (callback set after agent creation)
+    cron_store_path = get_data_dir() / "cron" / "jobs.json"
+    cron = CronService(cron_store_path)
+    
+    # Create agent with cron service
+    agent = AgentLoop(
+        bus=bus,
+        provider=provider,
+        workspace=config.workspace_path,
+        model=config.agents.defaults.model,
+        max_iterations=config.agents.defaults.max_tool_iterations,
+        memory_window=config.agents.defaults.memory_window,
+        brave_api_key=config.tools.web.search.api_key or None,
+        exec_config=config.tools.exec,
+        cron_service=cron,
+        restrict_to_workspace=config.tools.restrict_to_workspace,
+        session_manager=session_manager,
+    )
+    
+    # Set cron callback (needs agent)
+    async def on_cron_job(job: CronJob) -> str | None:
+        """Execute a cron job through the agent."""
+        response = await agent.process_direct(
+            job.payload.message,
+            session_key=f"cron:{job.id}",
+            channel=job.payload.channel or "cli",
+            chat_id=job.payload.to or "direct",
+        )
+        if job.payload.deliver and job.payload.to:
+            from nanobot.bus.events import OutboundMessage
+            await bus.publish_outbound(OutboundMessage(
+                channel=job.payload.channel or "cli",
+                chat_id=job.payload.to,
+                content=response or ""
+            ))
+        return response
+    cron.on_job = on_cron_job
+    
+    # Create heartbeat service
+    async def on_heartbeat(prompt: str) -> str:
+        """Execute heartbeat through the agent."""
+        return await agent.process_direct(prompt, session_key="heartbeat")
+    
+    heartbeat = HeartbeatService(
+        workspace=config.workspace_path,
+        on_heartbeat=on_heartbeat,
+        interval_s=30 * 60,  # 30 minutes
+        enabled=True
+    )
+    
+    # Create channel manager
+    channels = ChannelManager(config, bus)
+    
+    if channels.enabled_channels:
+        console.print(f"[green]✓[/green] Channels enabled: {', '.join(channels.enabled_channels)}")
+    else:
+        console.print("[yellow]Warning: No channels enabled[/yellow]")
+    
+    cron_status = cron.status()
+    if cron_status["jobs"] > 0:
+        console.print(f"[green]✓[/green] Cron: {cron_status['jobs']} scheduled jobs")
+    
+    console.print(f"[green]✓[/green] Heartbeat: every 30m")
+    
+    async def run():
+        try:
+            await cron.start()
+            await heartbeat.start()
+            await asyncio.gather(
+                agent.run(),
+                channels.start_all(),
+            )
+        except KeyboardInterrupt:
+            console.print("\nShutting down...")
+            heartbeat.stop()
+            cron.stop()
+            agent.stop()
+            await channels.stop_all()
+    
+    asyncio.run(run())
+
+
+
+
+# ============================================================================
+# Agent Commands
+# ============================================================================
+
+
+@app.command()
+def agent(
+    message: str = typer.Option(None, "--message", "-m", help="Message to send to the agent"),
+    session_id: str = typer.Option("cli:direct", "--session", "-s", help="Session ID"),
+    markdown: bool = typer.Option(True, "--markdown/--no-markdown", help="Render assistant output as Markdown"),
+    logs: bool = typer.Option(False, "--logs/--no-logs", help="Show nanobot runtime logs during chat"),
+):
+    """Interact with the agent directly."""
+    from nanobot.config.loader import load_config
+    from nanobot.bus.queue import MessageBus
+    from nanobot.agent.loop import AgentLoop
+    from loguru import logger
+    
+    config = load_config()
+    
+    bus = MessageBus()
+    provider = _make_provider(config)
+
+    if logs:
+        logger.enable("nanobot")
+    else:
+        logger.disable("nanobot")
+    
+    agent_loop = AgentLoop(
+        bus=bus,
+        provider=provider,
+        workspace=config.workspace_path,
+        model=config.agents.defaults.model,
+        max_iterations=config.agents.defaults.max_tool_iterations,
+        memory_window=config.agents.defaults.memory_window,
+        brave_api_key=config.tools.web.search.api_key or None,
+        exec_config=config.tools.exec,
+        restrict_to_workspace=config.tools.restrict_to_workspace,
+    )
+    
+    # Show spinner when logs are off (no output to miss); skip when logs are on
+    def _thinking_ctx():
+        if logs:
+            from contextlib import nullcontext
+            return nullcontext()
+        # Animated spinner is safe to use with prompt_toolkit input handling
+        return console.status("[dim]nanobot is thinking...[/dim]", spinner="dots")
+
+    if message:
+        # Single message mode
+        async def run_once():
+            with _thinking_ctx():
+                response = await agent_loop.process_direct(message, session_id)
+            _print_agent_response(response, render_markdown=markdown)
+        
+        asyncio.run(run_once())
+    else:
+        # Interactive mode
+        _init_prompt_session()
+        console.print(f"{__logo__} Interactive mode (type [bold]exit[/bold] or [bold]Ctrl+C[/bold] to quit)\n")
+
+        def _exit_on_sigint(signum, frame):
+            _restore_terminal()
+            console.print("\nGoodbye!")
+            os._exit(0)
+
+        signal.signal(signal.SIGINT, _exit_on_sigint)
+        
+        async def run_interactive():
+            while True:
+                try:
+                    _flush_pending_tty_input()
+                    user_input = await _read_interactive_input_async()
+                    command = user_input.strip()
+                    if not command:
+                        continue
+
+                    if _is_exit_command(command):
+                        _restore_terminal()
+                        console.print("\nGoodbye!")
+                        break
+                    
+                    with _thinking_ctx():
+                        response = await agent_loop.process_direct(user_input, session_id)
+                    _print_agent_response(response, render_markdown=markdown)
+                except KeyboardInterrupt:
+                    _restore_terminal()
+                    console.print("\nGoodbye!")
+                    break
+                except EOFError:
+                    _restore_terminal()
+                    console.print("\nGoodbye!")
+                    break
+        
+        asyncio.run(run_interactive())
+
+
+# ============================================================================
+# Channel Commands
+# ============================================================================
+
+
+channels_app = typer.Typer(help="Manage channels")
+app.add_typer(channels_app, name="channels")
+
+
+@channels_app.command("status")
+def channels_status():
+    """Show channel status."""
+    from nanobot.config.loader import load_config
+
+    config = load_config()
+
+    table = Table(title="Channel Status")
+    table.add_column("Channel", style="cyan")
+    table.add_column("Enabled", style="green")
+    table.add_column("Configuration", style="yellow")
+
+    # WhatsApp
+    wa = config.channels.whatsapp
+    table.add_row(
+        "WhatsApp",
+        "✓" if wa.enabled else "✗",
+        wa.bridge_url
+    )
+
+    dc = config.channels.discord
+    table.add_row(
+        "Discord",
+        "✓" if dc.enabled else "✗",
+        dc.gateway_url
+    )
+
+    # Feishu
+    fs = config.channels.feishu
+    fs_config = f"app_id: {fs.app_id[:10]}..." if fs.app_id else "[dim]not configured[/dim]"
+    table.add_row(
+        "Feishu",
+        "✓" if fs.enabled else "✗",
+        fs_config
+    )
+
+    # Mochat
+    mc = config.channels.mochat
+    mc_base = mc.base_url or "[dim]not configured[/dim]"
+    table.add_row(
+        "Mochat",
+        "✓" if mc.enabled else "✗",
+        mc_base
+    )
+    
+    # Telegram
+    tg = config.channels.telegram
+    tg_config = f"token: {tg.token[:10]}..." if tg.token else "[dim]not configured[/dim]"
+    table.add_row(
+        "Telegram",
+        "✓" if tg.enabled else "✗",
+        tg_config
+    )
+
+    # Slack
+    slack = config.channels.slack
+    slack_config = "socket" if slack.app_token and slack.bot_token else "[dim]not configured[/dim]"
+    table.add_row(
+        "Slack",
+        "✓" if slack.enabled else "✗",
+        slack_config
+    )
+
+    console.print(table)
+
+
+def _get_bridge_dir() -> Path:
+    """Get the bridge directory, setting it up if needed."""
+    import shutil
+    import subprocess
+    
+    # User's bridge location
+    user_bridge = Path.home() / ".nanobot" / "bridge"
+    
+    # Check if already built
+    if (user_bridge / "dist" / "index.js").exists():
+        return user_bridge
+    
+    # Check for npm
+    if not shutil.which("npm"):
+        console.print("[red]npm not found. Please install Node.js >= 18.[/red]")
+        raise typer.Exit(1)
+    
+    # Find source bridge: first check package data, then source dir
+    pkg_bridge = Path(__file__).parent.parent / "bridge"  # nanobot/bridge (installed)
+    src_bridge = Path(__file__).parent.parent.parent / "bridge"  # repo root/bridge (dev)
+    
+    source = None
+    if (pkg_bridge / "package.json").exists():
+        source = pkg_bridge
+    elif (src_bridge / "package.json").exists():
+        source = src_bridge
+    
+    if not source:
+        console.print("[red]Bridge source not found.[/red]")
+        console.print("Try reinstalling: pip install --force-reinstall nanobot")
+        raise typer.Exit(1)
+    
+    console.print(f"{__logo__} Setting up bridge...")
+    
+    # Copy to user directory
+    user_bridge.parent.mkdir(parents=True, exist_ok=True)
+    if user_bridge.exists():
+        shutil.rmtree(user_bridge)
+    shutil.copytree(source, user_bridge, ignore=shutil.ignore_patterns("node_modules", "dist"))
+    
+    # Install and build
+    try:
+        console.print("  Installing dependencies...")
+        subprocess.run(["npm", "install"], cwd=user_bridge, check=True, capture_output=True)
+        
+        console.print("  Building...")
+        subprocess.run(["npm", "run", "build"], cwd=user_bridge, check=True, capture_output=True)
+        
+        console.print("[green]✓[/green] Bridge ready\n")
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Build failed: {e}[/red]")
+        if e.stderr:
+            console.print(f"[dim]{e.stderr.decode()[:500]}[/dim]")
+        raise typer.Exit(1)
+    
+    return user_bridge
+
+
+@channels_app.command("login")
+def channels_login():
+    """Link device via QR code."""
+    import subprocess
+    from nanobot.config.loader import load_config
+    
+    config = load_config()
+    bridge_dir = _get_bridge_dir()
+    
+    console.print(f"{__logo__} Starting bridge...")
+    console.print("Scan the QR code to connect.\n")
+    
+    env = {**os.environ}
+    if config.channels.whatsapp.bridge_token:
+        env["BRIDGE_TOKEN"] = config.channels.whatsapp.bridge_token
+    
+    try:
+        subprocess.run(["npm", "start"], cwd=bridge_dir, check=True, env=env)
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Bridge failed: {e}[/red]")
+    except FileNotFoundError:
+        console.print("[red]npm not found. Please install Node.js.[/red]")
+
+
+# ============================================================================
+# Cron Commands
+# ============================================================================
+
+cron_app = typer.Typer(help="Manage scheduled tasks")
+app.add_typer(cron_app, name="cron")
+
+
+@cron_app.command("list")
+def cron_list(
+    all: bool = typer.Option(False, "--all", "-a", help="Include disabled jobs"),
+):
+    """List scheduled jobs."""
+    from nanobot.config.loader import get_data_dir
+    from nanobot.cron.service import CronService
+    
+    store_path = get_data_dir() / "cron" / "jobs.json"
+    service = CronService(store_path)
+    
+    jobs = service.list_jobs(include_disabled=all)
+    
+    if not jobs:
+        console.print("No scheduled jobs.")
+        return
+    
+    table = Table(title="Scheduled Jobs")
+    table.add_column("ID", style="cyan")
+    table.add_column("Name")
+    table.add_column("Schedule")
+    table.add_column("Status")
+    table.add_column("Next Run")
+    
+    import time
+    for job in jobs:
+        # Format schedule
+        if job.schedule.kind == "every":
+            sched = f"every {(job.schedule.every_ms or 0) // 1000}s"
+        elif job.schedule.kind == "cron":
+            sched = job.schedule.expr or ""
+        else:
+            sched = "one-time"
+        
+        # Format next run
+        next_run = ""
+        if job.state.next_run_at_ms:
+            next_time = time.strftime("%Y-%m-%d %H:%M", time.localtime(job.state.next_run_at_ms / 1000))
+            next_run = next_time
+        
+        status = "[green]enabled[/green]" if job.enabled else "[dim]disabled[/dim]"
+        
+        table.add_row(job.id, job.name, sched, status, next_run)
+    
+    console.print(table)
+
+
+@cron_app.command("add")
+def cron_add(
+    name: str = typer.Option(..., "--name", "-n", help="Job name"),
+    message: str = typer.Option(..., "--message", "-m", help="Message for agent"),
+    every: int = typer.Option(None, "--every", "-e", help="Run every N seconds"),
+    cron_expr: str = typer.Option(None, "--cron", "-c", help="Cron expression (e.g. '0 9 * * *')"),
+    at: str = typer.Option(None, "--at", help="Run once at time (ISO format)"),
+    deliver: bool = typer.Option(False, "--deliver", "-d", help="Deliver response to channel"),
+    to: str = typer.Option(None, "--to", help="Recipient for delivery"),
+    channel: str = typer.Option(None, "--channel", help="Channel for delivery (e.g. 'telegram', 'whatsapp')"),
+):
+    """Add a scheduled job."""
+    from nanobot.config.loader import get_data_dir
+    from nanobot.cron.service import CronService
+    from nanobot.cron.types import CronSchedule
+    
+    # Determine schedule type
+    if every:
+        schedule = CronSchedule(kind="every", every_ms=every * 1000)
+    elif cron_expr:
+        schedule = CronSchedule(kind="cron", expr=cron_expr)
+    elif at:
+        import datetime
+        dt = datetime.datetime.fromisoformat(at)
+        schedule = CronSchedule(kind="at", at_ms=int(dt.timestamp() * 1000))
+    else:
+        console.print("[red]Error: Must specify --every, --cron, or --at[/red]")
+        raise typer.Exit(1)
+    
+    store_path = get_data_dir() / "cron" / "jobs.json"
+    service = CronService(store_path)
+    
+    job = service.add_job(
+        name=name,
+        schedule=schedule,
+        message=message,
+        deliver=deliver,
+        to=to,
+        channel=channel,
+    )
+    
+    console.print(f"[green]✓[/green] Added job '{job.name}' ({job.id})")
+
+
+@cron_app.command("remove")
+def cron_remove(
+    job_id: str = typer.Argument(..., help="Job ID to remove"),
+):
+    """Remove a scheduled job."""
+    from nanobot.config.loader import get_data_dir
+    from nanobot.cron.service import CronService
+    
+    store_path = get_data_dir() / "cron" / "jobs.json"
+    service = CronService(store_path)
+    
+    if service.remove_job(job_id):
+        console.print(f"[green]✓[/green] Removed job {job_id}")
+    else:
+        console.print(f"[red]Job {job_id} not found[/red]")
+
+
+@cron_app.command("enable")
+def cron_enable(
+    job_id: str = typer.Argument(..., help="Job ID"),
+    disable: bool = typer.Option(False, "--disable", help="Disable instead of enable"),
+):
+    """Enable or disable a job."""
+    from nanobot.config.loader import get_data_dir
+    from nanobot.cron.service import CronService
+    
+    store_path = get_data_dir() / "cron" / "jobs.json"
+    service = CronService(store_path)
+    
+    job = service.enable_job(job_id, enabled=not disable)
+    if job:
+        status = "disabled" if disable else "enabled"
+        console.print(f"[green]✓[/green] Job '{job.name}' {status}")
+    else:
+        console.print(f"[red]Job {job_id} not found[/red]")
+
+
+@cron_app.command("run")
+def cron_run(
+    job_id: str = typer.Argument(..., help="Job ID to run"),
+    force: bool = typer.Option(False, "--force", "-f", help="Run even if disabled"),
+):
+    """Manually run a job."""
+    from nanobot.config.loader import get_data_dir
+    from nanobot.cron.service import CronService
+    
+    store_path = get_data_dir() / "cron" / "jobs.json"
+    service = CronService(store_path)
+    
+    async def run():
+        return await service.run_job(job_id, force=force)
+    
+    if asyncio.run(run()):
+        console.print(f"[green]✓[/green] Job executed")
+    else:
+        console.print(f"[red]Failed to run job {job_id}[/red]")
+
+
+# ============================================================================
+# Status Commands
+# ============================================================================
+
+
+@app.command()
+def status():
+    """Show nanobot status."""
+    from nanobot.config.loader import load_config, get_config_path
+
+    config_path = get_config_path()
+    config = load_config()
+    workspace = config.workspace_path
+
+    console.print(f"{__logo__} nanobot Status\n")
+
+    console.print(f"Config: {config_path} {'[green]✓[/green]' if config_path.exists() else '[red]✗[/red]'}")
+    console.print(f"Workspace: {workspace} {'[green]✓[/green]' if workspace.exists() else '[red]✗[/red]'}")
+
+    if config_path.exists():
+        from nanobot.providers.registry import PROVIDERS
+
+        console.print(f"Model: {config.agents.defaults.model}")
+        
+        # Check API keys from registry
+        for spec in PROVIDERS:
+            p = getattr(config.providers, spec.name, None)
+            if p is None:
+                continue
+            if spec.is_local:
+                # Local deployments show api_base instead of api_key
+                if p.api_base:
+                    console.print(f"{spec.label}: [green]✓ {p.api_base}[/green]")
+                else:
+                    console.print(f"{spec.label}: [dim]not set[/dim]")
+            else:
+                has_key = bool(p.api_key)
+                console.print(f"{spec.label}: {'[green]✓[/green]' if has_key else '[dim]not set[/dim]'}")
+
+
+if __name__ == "__main__":
+    app()
+
+
+--- nanobot/agent/context.py ---
+"""Context builder for assembling agent prompts."""
+
+import base64
+import mimetypes
+import platform
+from pathlib import Path
+from typing import Any
+
+from nanobot.agent.memory import MemoryStore
+from nanobot.agent.skills import SkillsLoader
+
+
+class ContextBuilder:
+    """
+    Builds the context (system prompt + messages) for the agent.
+    
+    Assembles bootstrap files, memory, skills, and conversation history
+    into a coherent prompt for the LLM.
+    """
+    
+    BOOTSTRAP_FILES = ["AGENTS.md", "SOUL.md", "USER.md", "TOOLS.md", "IDENTITY.md"]
+    
+    def __init__(self, workspace: Path):
+        self.workspace = workspace
+        self.memory = MemoryStore(workspace)
+        self.skills = SkillsLoader(workspace)
+    
+    def build_system_prompt(self, skill_names: list[str] | None = None) -> str:
+        """
+        Build the system prompt from bootstrap files, memory, and skills.
+        
+        Args:
+            skill_names: Optional list of skills to include.
+        
+        Returns:
+            Complete system prompt.
+        """
+        parts = []
+        
+        # Core identity
+        parts.append(self._get_identity())
+        
+        # Bootstrap files
+        bootstrap = self._load_bootstrap_files()
+        if bootstrap:
+            parts.append(bootstrap)
+        
+        # Memory context
+        memory = self.memory.get_memory_context()
+        if memory:
+            parts.append(f"# Memory\n\n{memory}")
+        
+        # Skills - progressive loading
+        # 1. Always-loaded skills: include full content
+        always_skills = self.skills.get_always_skills()
+        if always_skills:
+            always_content = self.skills.load_skills_for_context(always_skills)
+            if always_content:
+                parts.append(f"# Active Skills\n\n{always_content}")
+        
+        # 2. Available skills: only show summary (agent uses read_file to load)
+        skills_summary = self.skills.build_skills_summary()
+        if skills_summary:
+            parts.append(f"""# Skills
+
+The following skills extend your capabilities. To use a skill, read its SKILL.md file using the read_file tool.
+Skills with available="false" need dependencies installed first - you can try installing them with apt/brew.
+
+{skills_summary}""")
+        
+        return "\n\n---\n\n".join(parts)
+    
+    def _get_identity(self) -> str:
+        """Get the core identity section."""
+        from datetime import datetime
+        import time as _time
+        now = datetime.now().strftime("%Y-%m-%d %H:%M (%A)")
+        tz = _time.strftime("%Z") or "UTC"
+        workspace_path = str(self.workspace.expanduser().resolve())
+        system = platform.system()
+        runtime = f"{'macOS' if system == 'Darwin' else system} {platform.machine()}, Python {platform.python_version()}"
+        
+        return f"""# nanobot 🐈
+
+You are nanobot, a helpful AI assistant. You have access to tools that allow you to:
+- Read, write, and edit files
+- Execute shell commands
+- Search the web and fetch web pages
+- Send messages to users on chat channels
+- Spawn subagents for complex background tasks
+
+## Current Time
+{now} ({tz})
+
+## Runtime
+{runtime}
+
+## Workspace
+Your workspace is at: {workspace_path}
+- Long-term memory: {workspace_path}/memory/MEMORY.md
+- History log: {workspace_path}/memory/HISTORY.md (grep-searchable)
+- Custom skills: {workspace_path}/skills/{{skill-name}}/SKILL.md
+
+IMPORTANT: When responding to direct questions or conversations, reply directly with your text response.
+Only use the 'message' tool when you need to send a message to a specific chat channel (like WhatsApp).
+For normal conversation, just respond with text - do not call the message tool.
+
+Always be helpful, accurate, and concise. When using tools, think step by step: what you know, what you need, and why you chose this tool.
+When remembering something important, write to {workspace_path}/memory/MEMORY.md
+To recall past events, grep {workspace_path}/memory/HISTORY.md"""
+    
+    def _load_bootstrap_files(self) -> str:
+        """Load all bootstrap files from workspace."""
+        parts = []
+        
+        for filename in self.BOOTSTRAP_FILES:
+            file_path = self.workspace / filename
+            if file_path.exists():
+                content = file_path.read_text(encoding="utf-8")
+                parts.append(f"## {filename}\n\n{content}")
+        
+        return "\n\n".join(parts) if parts else ""
+    
+    def build_messages(
+        self,
+        history: list[dict[str, Any]],
+        current_message: str,
+        skill_names: list[str] | None = None,
+        media: list[str] | None = None,
+        channel: str | None = None,
+        chat_id: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Build the complete message list for an LLM call.
+
+        Args:
+            history: Previous conversation messages.
+            current_message: The new user message.
+            skill_names: Optional skills to include.
+            media: Optional list of local file paths for images/media.
+            channel: Current channel (telegram, feishu, etc.).
+            chat_id: Current chat/user ID.
+
+        Returns:
+            List of messages including system prompt.
+        """
+        messages = []
+
+        # System prompt
+        system_prompt = self.build_system_prompt(skill_names)
+        if channel and chat_id:
+            system_prompt += f"\n\n## Current Session\nChannel: {channel}\nChat ID: {chat_id}"
+        messages.append({"role": "system", "content": system_prompt})
+
+        # History
+        messages.extend(history)
+
+        # Current message (with optional image attachments)
+        user_content = self._build_user_content(current_message, media)
+        messages.append({"role": "user", "content": user_content})
+
+        return messages
+
+    def _build_user_content(self, text: str, media: list[str] | None) -> str | list[dict[str, Any]]:
+        """Build user message content with optional base64-encoded images."""
+        if not media:
+            return text
+        
+        images = []
+        for path in media:
+            p = Path(path)
+            mime, _ = mimetypes.guess_type(path)
+            if not p.is_file() or not mime or not mime.startswith("image/"):
+                continue
+            b64 = base64.b64encode(p.read_bytes()).decode()
+            images.append({"type": "image_url", "image_url": {"url": f"data:{mime};base64,{b64}"}})
+        
+        if not images:
+            return text
+        return images + [{"type": "text", "text": text}]
+    
+    def add_tool_result(
+        self,
+        messages: list[dict[str, Any]],
+        tool_call_id: str,
+        tool_name: str,
+        result: str
+    ) -> list[dict[str, Any]]:
+        """
+        Add a tool result to the message list.
+        
+        Args:
+            messages: Current message list.
+            tool_call_id: ID of the tool call.
+            tool_name: Name of the tool.
+            result: Tool execution result.
+        
+        Returns:
+            Updated message list.
+        """
+        messages.append({
+            "role": "tool",
+            "tool_call_id": tool_call_id,
+            "name": tool_name,
+            "content": result
+        })
+        return messages
+    
+    def add_assistant_message(
+        self,
+        messages: list[dict[str, Any]],
+        content: str | None,
+        tool_calls: list[dict[str, Any]] | None = None,
+        reasoning_content: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Add an assistant message to the message list.
+        
+        Args:
+            messages: Current message list.
+            content: Message content.
+            tool_calls: Optional tool calls.
+            reasoning_content: Thinking output (Kimi, DeepSeek-R1, etc.).
+        
+        Returns:
+            Updated message list.
+        """
+        msg: dict[str, Any] = {"role": "assistant", "content": content or ""}
+        
+        if tool_calls:
+            msg["tool_calls"] = tool_calls
+        
+        # Thinking models reject history without this
+        if reasoning_content:
+            msg["reasoning_content"] = reasoning_content
+        
+        messages.append(msg)
+        return messages
+
+
+--- nanobot/channels/dingtalk.py ---
+"""DingTalk/DingDing channel implementation using Stream Mode."""
+
+import asyncio
+import json
+import time
+from typing import Any
+
+from loguru import logger
+import httpx
+
+from nanobot.bus.events import OutboundMessage
+from nanobot.bus.queue import MessageBus
+from nanobot.channels.base import BaseChannel
+from nanobot.config.schema import DingTalkConfig
+
+try:
+    from dingtalk_stream import (
+        DingTalkStreamClient,
+        Credential,
+        CallbackHandler,
+        CallbackMessage,
+        AckMessage,
+    )
+    from dingtalk_stream.chatbot import ChatbotMessage
+
+    DINGTALK_AVAILABLE = True
+except ImportError:
+    DINGTALK_AVAILABLE = False
+    # Fallback so class definitions don't crash at module level
+    CallbackHandler = object  # type: ignore[assignment,misc]
+    CallbackMessage = None  # type: ignore[assignment,misc]
+    AckMessage = None  # type: ignore[assignment,misc]
+    ChatbotMessage = None  # type: ignore[assignment,misc]
+
+
+class NanobotDingTalkHandler(CallbackHandler):
+    """
+    Standard DingTalk Stream SDK Callback Handler.
+    Parses incoming messages and forwards them to the Nanobot channel.
+    """
+
+    def __init__(self, channel: "DingTalkChannel"):
+        super().__init__()
+        self.channel = channel
+
+    async def process(self, message: CallbackMessage):
+        """Process incoming stream message."""
+        try:
+            # Parse using SDK's ChatbotMessage for robust handling
+            chatbot_msg = ChatbotMessage.from_dict(message.data)
+
+            # Extract text content; fall back to raw dict if SDK object is empty
+            content = ""
+            if chatbot_msg.text:
+                content = chatbot_msg.text.content.strip()
+            if not content:
+                content = message.data.get("text", {}).get("content", "").strip()
+
+            if not content:
+                logger.warning(
+                    f"Received empty or unsupported message type: {chatbot_msg.message_type}"
+                )
+                return AckMessage.STATUS_OK, "OK"
+
+            sender_id = chatbot_msg.sender_staff_id or chatbot_msg.sender_id
+            sender_name = chatbot_msg.sender_nick or "Unknown"
+
+            logger.info(f"Received DingTalk message from {sender_name} ({sender_id}): {content}")
+
+            # Forward to Nanobot via _on_message (non-blocking).
+            # Store reference to prevent GC before task completes.
+            task = asyncio.create_task(
+                self.channel._on_message(content, sender_id, sender_name)
+            )
+            self.channel._background_tasks.add(task)
+            task.add_done_callback(self.channel._background_tasks.discard)
+
+            return AckMessage.STATUS_OK, "OK"
+
+        except Exception as e:
+            logger.error(f"Error processing DingTalk message: {e}")
+            # Return OK to avoid retry loop from DingTalk server
+            return AckMessage.STATUS_OK, "Error"
+
+
+class DingTalkChannel(BaseChannel):
+    """
+    DingTalk channel using Stream Mode.
+
+    Uses WebSocket to receive events via `dingtalk-stream` SDK.
+    Uses direct HTTP API to send messages (SDK is mainly for receiving).
+
+    Note: Currently only supports private (1:1) chat. Group messages are
+    received but replies are sent back as private messages to the sender.
+    """
+
+    name = "dingtalk"
+
+    def __init__(self, config: DingTalkConfig, bus: MessageBus):
+        super().__init__(config, bus)
+        self.config: DingTalkConfig = config
+        self._client: Any = None
+        self._http: httpx.AsyncClient | None = None
+
+        # Access Token management for sending messages
+        self._access_token: str | None = None
+        self._token_expiry: float = 0
+
+        # Hold references to background tasks to prevent GC
+        self._background_tasks: set[asyncio.Task] = set()
+
+    async def start(self) -> None:
+        """Start the DingTalk bot with Stream Mode."""
+        try:
+            if not DINGTALK_AVAILABLE:
+                logger.error(
+                    "DingTalk Stream SDK not installed. Run: pip install dingtalk-stream"
+                )
+                return
+
+            if not self.config.client_id or not self.config.client_secret:
+                logger.error("DingTalk client_id and client_secret not configured")
+                return
+
+            self._running = True
+            self._http = httpx.AsyncClient()
+
+            logger.info(
+                f"Initializing DingTalk Stream Client with Client ID: {self.config.client_id}..."
+            )
+            credential = Credential(self.config.client_id, self.config.client_secret)
+            self._client = DingTalkStreamClient(credential)
+
+            # Register standard handler
+            handler = NanobotDingTalkHandler(self)
+            self._client.register_callback_handler(ChatbotMessage.TOPIC, handler)
+
+            logger.info("DingTalk bot started with Stream Mode")
+
+            # Reconnect loop: restart stream if SDK exits or crashes
+            while self._running:
+                try:
+                    await self._client.start()
+                except Exception as e:
+                    logger.warning(f"DingTalk stream error: {e}")
+                if self._running:
+                    logger.info("Reconnecting DingTalk stream in 5 seconds...")
+                    await asyncio.sleep(5)
+
+        except Exception as e:
+            logger.exception(f"Failed to start DingTalk channel: {e}")
+
+    async def stop(self) -> None:
+        """Stop the DingTalk bot."""
+        self._running = False
+        # Close the shared HTTP client
+        if self._http:
+            await self._http.aclose()
+            self._http = None
+        # Cancel outstanding background tasks
+        for task in self._background_tasks:
+            task.cancel()
+        self._background_tasks.clear()
+
+    async def _get_access_token(self) -> str | None:
+        """Get or refresh Access Token."""
+        if self._access_token and time.time() < self._token_expiry:
+            return self._access_token
+
+        url = "https://api.dingtalk.com/v1.0/oauth2/accessToken"
+        data = {
+            "appKey": self.config.client_id,
+            "appSecret": self.config.client_secret,
+        }
+
+        if not self._http:
+            logger.warning("DingTalk HTTP client not initialized, cannot refresh token")
+            return None
+
+        try:
+            resp = await self._http.post(url, json=data)
+            resp.raise_for_status()
+            res_data = resp.json()
+            self._access_token = res_data.get("accessToken")
+            # Expire 60s early to be safe
+            self._token_expiry = time.time() + int(res_data.get("expireIn", 7200)) - 60
+            return self._access_token
+        except Exception as e:
+            logger.error(f"Failed to get DingTalk access token: {e}")
+            return None
+
+    async def send(self, msg: OutboundMessage) -> None:
+        """Send a message through DingTalk."""
+        token = await self._get_access_token()
+        if not token:
+            return
+
+        # oToMessages/batchSend: sends to individual users (private chat)
+        # https://open.dingtalk.com/document/orgapp/robot-batch-send-messages
+        url = "https://api.dingtalk.com/v1.0/robot/oToMessages/batchSend"
+
+        headers = {"x-acs-dingtalk-access-token": token}
+
+        data = {
+            "robotCode": self.config.client_id,
+            "userIds": [msg.chat_id],  # chat_id is the user's staffId
+            "msgKey": "sampleMarkdown",
+            "msgParam": json.dumps({
+                "text": msg.content,
+                "title": "Nanobot Reply",
+            }),
+        }
+
+        if not self._http:
+            logger.warning("DingTalk HTTP client not initialized, cannot send")
+            return
+
+        try:
+            resp = await self._http.post(url, json=data, headers=headers)
+            if resp.status_code != 200:
+                logger.error(f"DingTalk send failed: {resp.text}")
+            else:
+                logger.debug(f"DingTalk message sent to {msg.chat_id}")
+        except Exception as e:
+            logger.error(f"Error sending DingTalk message: {e}")
+
+    async def _on_message(self, content: str, sender_id: str, sender_name: str) -> None:
+        """Handle incoming message (called by NanobotDingTalkHandler).
+
+        Delegates to BaseChannel._handle_message() which enforces allow_from
+        permission checks before publishing to the bus.
+        """
+        try:
+            logger.info(f"DingTalk inbound: {content} from {sender_name}")
+            await self._handle_message(
+                sender_id=sender_id,
+                chat_id=sender_id,  # For private chat, chat_id == sender_id
+                content=str(content),
+                metadata={
+                    "sender_name": sender_name,
+                    "platform": "dingtalk",
+                },
+            )
+        except Exception as e:
+            logger.error(f"Error publishing DingTalk message: {e}")
+
+
+--- nanobot/channels/discord.py ---
+"""Discord channel implementation using Discord Gateway websocket."""
+
+import asyncio
+import json
+from pathlib import Path
+from typing import Any
+
+import httpx
+import websockets
+from loguru import logger
+
+from nanobot.bus.events import OutboundMessage
+from nanobot.bus.queue import MessageBus
+from nanobot.channels.base import BaseChannel
+from nanobot.config.schema import DiscordConfig
+
+
+DISCORD_API_BASE = "https://discord.com/api/v10"
+MAX_ATTACHMENT_BYTES = 20 * 1024 * 1024  # 20MB
+
+
+class DiscordChannel(BaseChannel):
+    """Discord channel using Gateway websocket."""
+
+    name = "discord"
+
+    def __init__(self, config: DiscordConfig, bus: MessageBus):
+        super().__init__(config, bus)
+        self.config: DiscordConfig = config
+        self._ws: websockets.WebSocketClientProtocol | None = None
+        self._seq: int | None = None
+        self._heartbeat_task: asyncio.Task | None = None
+        self._typing_tasks: dict[str, asyncio.Task] = {}
+        self._http: httpx.AsyncClient | None = None
+
+    async def start(self) -> None:
+        """Start the Discord gateway connection."""
+        if not self.config.token:
+            logger.error("Discord bot token not configured")
+            return
+
+        self._running = True
+        self._http = httpx.AsyncClient(timeout=30.0)
+
+        while self._running:
+            try:
+                logger.info("Connecting to Discord gateway...")
+                async with websockets.connect(self.config.gateway_url) as ws:
+                    self._ws = ws
+                    await self._gateway_loop()
+            except asyncio.CancelledError:
+                break
+            except Exception as e:
+                logger.warning(f"Discord gateway error: {e}")
+                if self._running:
+                    logger.info("Reconnecting to Discord gateway in 5 seconds...")
+                    await asyncio.sleep(5)
+
+    async def stop(self) -> None:
+        """Stop the Discord channel."""
+        self._running = False
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+            self._heartbeat_task = None
+        for task in self._typing_tasks.values():
+            task.cancel()
+        self._typing_tasks.clear()
+        if self._ws:
+            await self._ws.close()
+            self._ws = None
+        if self._http:
+            await self._http.aclose()
+            self._http = None
+
+    async def send(self, msg: OutboundMessage) -> None:
+        """Send a message through Discord REST API."""
+        if not self._http:
+            logger.warning("Discord HTTP client not initialized")
+            return
+
+        url = f"{DISCORD_API_BASE}/channels/{msg.chat_id}/messages"
+        payload: dict[str, Any] = {"content": msg.content}
+
+        if msg.reply_to:
+            payload["message_reference"] = {"message_id": msg.reply_to}
+            payload["allowed_mentions"] = {"replied_user": False}
+
+        headers = {"Authorization": f"Bot {self.config.token}"}
+
+        try:
+            for attempt in range(3):
+                try:
+                    response = await self._http.post(url, headers=headers, json=payload)
+                    if response.status_code == 429:
+                        data = response.json()
+                        retry_after = float(data.get("retry_after", 1.0))
+                        logger.warning(f"Discord rate limited, retrying in {retry_after}s")
+                        await asyncio.sleep(retry_after)
+                        continue
+                    response.raise_for_status()
+                    return
+                except Exception as e:
+                    if attempt == 2:
+                        logger.error(f"Error sending Discord message: {e}")
+                    else:
+                        await asyncio.sleep(1)
+        finally:
+            await self._stop_typing(msg.chat_id)
+
+    async def _gateway_loop(self) -> None:
+        """Main gateway loop: identify, heartbeat, dispatch events."""
+        if not self._ws:
+            return
+
+        async for raw in self._ws:
+            try:
+                data = json.loads(raw)
+            except json.JSONDecodeError:
+                logger.warning(f"Invalid JSON from Discord gateway: {raw[:100]}")
+                continue
+
+            op = data.get("op")
+            event_type = data.get("t")
+            seq = data.get("s")
+            payload = data.get("d")
+
+            if seq is not None:
+                self._seq = seq
+
+            if op == 10:
+                # HELLO: start heartbeat and identify
+                interval_ms = payload.get("heartbeat_interval", 45000)
+                await self._start_heartbeat(interval_ms / 1000)
+                await self._identify()
+            elif op == 0 and event_type == "READY":
+                logger.info("Discord gateway READY")
+            elif op == 0 and event_type == "MESSAGE_CREATE":
+                await self._handle_message_create(payload)
+            elif op == 7:
+                # RECONNECT: exit loop to reconnect
+                logger.info("Discord gateway requested reconnect")
+                break
+            elif op == 9:
+                # INVALID_SESSION: reconnect
+                logger.warning("Discord gateway invalid session")
+                break
+
+    async def _identify(self) -> None:
+        """Send IDENTIFY payload."""
+        if not self._ws:
+            return
+
+        identify = {
+            "op": 2,
+            "d": {
+                "token": self.config.token,
+                "intents": self.config.intents,
+                "properties": {
+                    "os": "nanobot",
+                    "browser": "nanobot",
+                    "device": "nanobot",
+                },
+            },
+        }
+        await self._ws.send(json.dumps(identify))
+
+    async def _start_heartbeat(self, interval_s: float) -> None:
+        """Start or restart the heartbeat loop."""
+        if self._heartbeat_task:
+            self._heartbeat_task.cancel()
+
+        async def heartbeat_loop() -> None:
+            while self._running and self._ws:
+                payload = {"op": 1, "d": self._seq}
+                try:
+                    await self._ws.send(json.dumps(payload))
+                except Exception as e:
+                    logger.warning(f"Discord heartbeat failed: {e}")
+                    break
+                await asyncio.sleep(interval_s)
+
+        self._heartbeat_task = asyncio.create_task(heartbeat_loop())
+
+    async def _handle_message_create(self, payload: dict[str, Any]) -> None:
+        """Handle incoming Discord messages."""
+        author = payload.get("author") or {}
+        if author.get("bot"):
+            return
+
+        sender_id = str(author.get("id", ""))
+        channel_id = str(payload.get("channel_id", ""))
+        content = payload.get("content") or ""
+
+        if not sender_id or not channel_id:
+            return
+
+        if not self.is_allowed(sender_id):
+            return
+
+        content_parts = [content] if content else []
+        media_paths: list[str] = []
+        media_dir = Path.home() / ".nanobot" / "media"
+
+        for attachment in payload.get("attachments") or []:
+            url = attachment.get("url")
+            filename = attachment.get("filename") or "attachment"
+            size = attachment.get("size") or 0
+            if not url or not self._http:
+                continue
+            if size and size > MAX_ATTACHMENT_BYTES:
+                content_parts.append(f"[attachment: {filename} - too large]")
+                continue
+            try:
+                media_dir.mkdir(parents=True, exist_ok=True)
+                file_path = media_dir / f"{attachment.get('id', 'file')}_{filename.replace('/', '_')}"
+                resp = await self._http.get(url)
+                resp.raise_for_status()
+                file_path.write_bytes(resp.content)
+                media_paths.append(str(file_path))
+                content_parts.append(f"[attachment: {file_path}]")
+            except Exception as e:
+                logger.warning(f"Failed to download Discord attachment: {e}")
+                content_parts.append(f"[attachment: {filename} - download failed]")
+
+        reply_to = (payload.get("referenced_message") or {}).get("id")
+
+        await self._start_typing(channel_id)
+
+        await self._handle_message(
+            sender_id=sender_id,
+            chat_id=channel_id,
+            content="\n".join(p for p in content_parts if p) or "[empty message]",
+            media=media_paths,
+            metadata={
+                "message_id": str(payload.get("id", "")),
+                "guild_id": payload.get("guild_id"),
+                "reply_to": reply_to,
+            },
+        )
+
+    async def _start_typing(self, channel_id: str) -> None:
+        """Start periodic typing indicator for a channel."""
+        await self._stop_typing(channel_id)
+
+        async def typing_loop() -> None:
+            url = f"{DISCORD_API_BASE}/channels/{channel_id}/typing"
+            headers = {"Authorization": f"Bot {self.config.token}"}
+            while self._running:
+                try:
+                    await self._http.post(url, headers=headers)
+                except Exception:
+                    pass
+                await asyncio.sleep(8)
+
+        self._typing_tasks[channel_id] = asyncio.create_task(typing_loop())
+
+    async def _stop_typing(self, channel_id: str) -> None:
+        """Stop typing indicator for a channel."""
+        task = self._typing_tasks.pop(channel_id, None)
+        if task:
+            task.cancel()
+
+
+--- nanobot/channels/email.py ---
+"""Email channel implementation using IMAP polling + SMTP replies."""
+
+import asyncio
+import html
+import imaplib
+import re
+import smtplib
+import ssl
+from datetime import date
+from email import policy
+from email.header import decode_header, make_header
+from email.message import EmailMessage
+from email.parser import BytesParser
+from email.utils import parseaddr
+from typing import Any
+
+from loguru import logger
+
+from nanobot.bus.events import OutboundMessage
+from nanobot.bus.queue import MessageBus
+from nanobot.channels.base import BaseChannel
+from nanobot.config.schema import EmailConfig
+
+
+class EmailChannel(BaseChannel):
+    """
+    Email channel.
+
+    Inbound:
+    - Poll IMAP mailbox for unread messages.
+    - Convert each message into an inbound event.
+
+    Outbound:
+    - Send responses via SMTP back to the sender address.
+    """
+
+    name = "email"
+    _IMAP_MONTHS = (
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+    )
+
+    def __init__(self, config: EmailConfig, bus: MessageBus):
+        super().__init__(config, bus)
+        self.config: EmailConfig = config
+        self._last_subject_by_chat: dict[str, str] = {}
+        self._last_message_id_by_chat: dict[str, str] = {}
+        self._processed_uids: set[str] = set()  # Capped to prevent unbounded growth
+        self._MAX_PROCESSED_UIDS = 100000
+
+    async def start(self) -> None:
+        """Start polling IMAP for inbound emails."""
+        if not self.config.consent_granted:
+            logger.warning(
+                "Email channel disabled: consent_granted is false. "
+                "Set channels.email.consentGranted=true after explicit user permission."
+            )
+            return
+
+        if not self._validate_config():
+            return
+
+        self._running = True
+        logger.info("Starting Email channel (IMAP polling mode)...")
+
+        poll_seconds = max(5, int(self.config.poll_interval_seconds))
+        while self._running:
+            try:
+                inbound_items = await asyncio.to_thread(self._fetch_new_messages)
+                for item in inbound_items:
+                    sender = item["sender"]
+                    subject = item.get("subject", "")
+                    message_id = item.get("message_id", "")
+
+                    if subject:
+                        self._last_subject_by_chat[sender] = subject
+                    if message_id:
+                        self._last_message_id_by_chat[sender] = message_id
+
+                    await self._handle_message(
+                        sender_id=sender,
+                        chat_id=sender,
+                        content=item["content"],
+                        metadata=item.get("metadata", {}),
+                    )
+            except Exception as e:
+                logger.error(f"Email polling error: {e}")
+
+            await asyncio.sleep(poll_seconds)
+
+    async def stop(self) -> None:
+        """Stop polling loop."""
+        self._running = False
+
+    async def send(self, msg: OutboundMessage) -> None:
+        """Send email via SMTP."""
+        if not self.config.consent_granted:
+            logger.warning("Skip email send: consent_granted is false")
+            return
+
+        force_send = bool((msg.metadata or {}).get("force_send"))
+        if not self.config.auto_reply_enabled and not force_send:
+            logger.info("Skip automatic email reply: auto_reply_enabled is false")
+            return
+
+        if not self.config.smtp_host:
+            logger.warning("Email channel SMTP host not configured")
+            return
+
+        to_addr = msg.chat_id.strip()
+        if not to_addr:
+            logger.warning("Email channel missing recipient address")
+            return
+
+        base_subject = self._last_subject_by_chat.get(to_addr, "nanobot reply")
+        subject = self._reply_subject(base_subject)
+        if msg.metadata and isinstance(msg.metadata.get("subject"), str):
+            override = msg.metadata["subject"].strip()
+            if override:
+                subject = override
+
+        email_msg = EmailMessage()
+        email_msg["From"] = self.config.from_address or self.config.smtp_username or self.config.imap_username
+        email_msg["To"] = to_addr
+        email_msg["Subject"] = subject
+        email_msg.set_content(msg.content or "")
+
+        in_reply_to = self._last_message_id_by_chat.get(to_addr)
+        if in_reply_to:
+            email_msg["In-Reply-To"] = in_reply_to
+            email_msg["References"] = in_reply_to
+
+        try:
+            await asyncio.to_thread(self._smtp_send, email_msg)
+        except Exception as e:
+            logger.error(f"Error sending email to {to_addr}: {e}")
+            raise
+
+    def _validate_config(self) -> bool:
+        missing = []
+        if not self.config.imap_host:
+            missing.append("imap_host")
+        if not self.config.imap_username:
+            missing.append("imap_username")
+        if not self.config.imap_password:
+            missing.append("imap_password")
+        if not self.config.smtp_host:
+            missing.append("smtp_host")
+        if not self.config.smtp_username:
+            missing.append("smtp_username")
+        if not self.config.smtp_password:
+            missing.append("smtp_password")
+
+        if missing:
+            logger.error(f"Email channel not configured, missing: {', '.join(missing)}")
+            return False
+        return True
+
+    def _smtp_send(self, msg: EmailMessage) -> None:
+        timeout = 30
+        if self.config.smtp_use_ssl:
+            with smtplib.SMTP_SSL(
+                self.config.smtp_host,
+                self.config.smtp_port,
+                timeout=timeout,
+            ) as smtp:
+                smtp.login(self.config.smtp_username, self.config.smtp_password)
+                smtp.send_message(msg)
+            return
+
+        with smtplib.SMTP(self.config.smtp_host, self.config.smtp_port, timeout=timeout) as smtp:
+            if self.config.smtp_use_tls:
+                smtp.starttls(context=ssl.create_default_context())
+            smtp.login(self.config.smtp_username, self.config.smtp_password)
+            smtp.send_message(msg)
+
+    def _fetch_new_messages(self) -> list[dict[str, Any]]:
+        """Poll IMAP and return parsed unread messages."""
+        return self._fetch_messages(
+            search_criteria=("UNSEEN",),
+            mark_seen=self.config.mark_seen,
+            dedupe=True,
+            limit=0,
+        )
+
+    def fetch_messages_between_dates(
+        self,
+        start_date: date,
+        end_date: date,
+        limit: int = 20,
+    ) -> list[dict[str, Any]]:
+        """
+        Fetch messages in [start_date, end_date) by IMAP date search.
+
+        This is used for historical summarization tasks (e.g. "yesterday").
+        """
+        if end_date <= start_date:
+            return []
+
+        return self._fetch_messages(
+            search_criteria=(
+                "SINCE",
+                self._format_imap_date(start_date),
+                "BEFORE",
+                self._format_imap_date(end_date),
+            ),
+            mark_seen=False,
+            dedupe=False,
+            limit=max(1, int(limit)),
+        )
+
+    def _fetch_messages(
+        self,
+        search_criteria: tuple[str, ...],
+        mark_seen: bool,
+        dedupe: bool,
+        limit: int,
+    ) -> list[dict[str, Any]]:
+        """Fetch messages by arbitrary IMAP search criteria."""
+        messages: list[dict[str, Any]] = []
+        mailbox = self.config.imap_mailbox or "INBOX"
+
+        if self.config.imap_use_ssl:
+            client = imaplib.IMAP4_SSL(self.config.imap_host, self.config.imap_port)
+        else:
+            client = imaplib.IMAP4(self.config.imap_host, self.config.imap_port)
+
+        try:
+            client.login(self.config.imap_username, self.config.imap_password)
+            status, _ = client.select(mailbox)
+            if status != "OK":
+                return messages
+
+            status, data = client.search(None, *search_criteria)
+            if status != "OK" or not data:
+                return messages
+
+            ids = data[0].split()
+            if limit > 0 and len(ids) > limit:
+                ids = ids[-limit:]
+            for imap_id in ids:
+                status, fetched = client.fetch(imap_id, "(BODY.PEEK[] UID)")
+                if status != "OK" or not fetched:
+                    continue
+
+                raw_bytes = self._extract_message_bytes(fetched)
+                if raw_bytes is None:
+                    continue
+
+                uid = self._extract_uid(fetched)
+                if dedupe and uid and uid in self._processed_uids:
+                    continue
+
+                parsed = BytesParser(policy=policy.default).parsebytes(raw_bytes)
+                sender = parseaddr(parsed.get("From", ""))[1].strip().lower()
+                if not sender:
+                    continue
+
+                subject = self._decode_header_value(parsed.get("Subject", ""))
+                date_value = parsed.get("Date", "")
+                message_id = parsed.get("Message-ID", "").strip()
+                body = self._extract_text_body(parsed)
+
+                if not body:
+                    body = "(empty email body)"
+
+                body = body[: self.config.max_body_chars]
+                content = (
+                    f"Email received.\n"
+                    f"From: {sender}\n"
+                    f"Subject: {subject}\n"
+                    f"Date: {date_value}\n\n"
+                    f"{body}"
+                )
+
+                metadata = {
+                    "message_id": message_id,
+                    "subject": subject,
+                    "date": date_value,
+                    "sender_email": sender,
+                    "uid": uid,
+                }
+                messages.append(
+                    {
+                        "sender": sender,
+                        "subject": subject,
+                        "message_id": message_id,
+                        "content": content,
+                        "metadata": metadata,
+                    }
+                )
+
+                if dedupe and uid:
+                    self._processed_uids.add(uid)
+                    # mark_seen is the primary dedup; this set is a safety net
+                    if len(self._processed_uids) > self._MAX_PROCESSED_UIDS:
+                        self._processed_uids.clear()
+
+                if mark_seen:
+                    client.store(imap_id, "+FLAGS", "\\Seen")
+        finally:
+            try:
+                client.logout()
+            except Exception:
+                pass
+
+        return messages
+
+    @classmethod
+    def _format_imap_date(cls, value: date) -> str:
+        """Format date for IMAP search (always English month abbreviations)."""
+        month = cls._IMAP_MONTHS[value.month - 1]
+        return f"{value.day:02d}-{month}-{value.year}"
+
+    @staticmethod
+    def _extract_message_bytes(fetched: list[Any]) -> bytes | None:
+        for item in fetched:
+            if isinstance(item, tuple) and len(item) >= 2 and isinstance(item[1], (bytes, bytearray)):
+                return bytes(item[1])
+        return None
+
+    @staticmethod
+    def _extract_uid(fetched: list[Any]) -> str:
+        for item in fetched:
+            if isinstance(item, tuple) and item and isinstance(item[0], (bytes, bytearray)):
+                head = bytes(item[0]).decode("utf-8", errors="ignore")
+                m = re.search(r"UID\s+(\d+)", head)
+                if m:
+                    return m.group(1)
+        return ""
+
+    @staticmethod
+    def _decode_header_value(value: str) -> str:
+        if not value:
+            return ""
+        try:
+            return str(make_header(decode_header(value)))
+        except Exception:
+            return value
+
+    @classmethod
+    def _extract_text_body(cls, msg: Any) -> str:
+        """Best-effort extraction of readable body text."""
+        if msg.is_multipart():
+            plain_parts: list[str] = []
+            html_parts: list[str] = []
+            for part in msg.walk():
+                if part.get_content_disposition() == "attachment":
+                    continue
+                content_type = part.get_content_type()
+                try:
+                    payload = part.get_content()
+                except Exception:
+                    payload_bytes = part.get_payload(decode=True) or b""
+                    charset = part.get_content_charset() or "utf-8"
+                    payload = payload_bytes.decode(charset, errors="replace")
+                if not isinstance(payload, str):
+                    continue
+                if content_type == "text/plain":
+                    plain_parts.append(payload)
+                elif content_type == "text/html":
+                    html_parts.append(payload)
+            if plain_parts:
+                return "\n\n".join(plain_parts).strip()
+            if html_parts:
+                return cls._html_to_text("\n\n".join(html_parts)).strip()
+            return ""
+
+        try:
+            payload = msg.get_content()
+        except Exception:
+            payload_bytes = msg.get_payload(decode=True) or b""
+            charset = msg.get_content_charset() or "utf-8"
+            payload = payload_bytes.decode(charset, errors="replace")
+        if not isinstance(payload, str):
+            return ""
+        if msg.get_content_type() == "text/html":
+            return cls._html_to_text(payload).strip()
+        return payload.strip()
+
+    @staticmethod
+    def _html_to_text(raw_html: str) -> str:
+        text = re.sub(r"<\s*br\s*/?>", "\n", raw_html, flags=re.IGNORECASE)
+        text = re.sub(r"<\s*/\s*p\s*>", "\n", text, flags=re.IGNORECASE)
+        text = re.sub(r"<[^>]+>", "", text)
+        return html.unescape(text)
+
+    def _reply_subject(self, base_subject: str) -> str:
+        subject = (base_subject or "").strip() or "nanobot reply"
+        prefix = self.config.subject_prefix or "Re: "
+        if subject.lower().startswith("re:"):
+            return subject
+        return f"{prefix}{subject}"
+
+
+--- tests/test_cli_input.py ---
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+from prompt_toolkit.formatted_text import HTML
+
+from nanobot.cli import commands
+
+
+@pytest.fixture
+def mock_prompt_session():
+    """Mock the global prompt session."""
+    mock_session = MagicMock()
+    mock_session.prompt_async = AsyncMock()
+    with patch("nanobot.cli.commands._PROMPT_SESSION", mock_session):
+        yield mock_session
+
+
+@pytest.mark.asyncio
+async def test_read_interactive_input_async_returns_input(mock_prompt_session):
+    """Test that _read_interactive_input_async returns the user input from prompt_session."""
+    mock_prompt_session.prompt_async.return_value = "hello world"
+
+    result = await commands._read_interactive_input_async()
+    
+    assert result == "hello world"
+    mock_prompt_session.prompt_async.assert_called_once()
+    args, _ = mock_prompt_session.prompt_async.call_args
+    assert isinstance(args[0], HTML)  # Verify HTML prompt is used
+
+
+@pytest.mark.asyncio
+async def test_read_interactive_input_async_handles_eof(mock_prompt_session):
+    """Test that EOFError converts to KeyboardInterrupt."""
+    mock_prompt_session.prompt_async.side_effect = EOFError()
+
+    with pytest.raises(KeyboardInterrupt):
+        await commands._read_interactive_input_async()
+
+
+def test_init_prompt_session_creates_session():
+    """Test that _init_prompt_session initializes the global session."""
+    # Ensure global is None before test
+    commands._PROMPT_SESSION = None
+    
+    with patch("nanobot.cli.commands.PromptSession") as MockSession, \
+         patch("nanobot.cli.commands.FileHistory") as MockHistory, \
+         patch("pathlib.Path.home") as mock_home:
+        
+        mock_home.return_value = MagicMock()
+        
+        commands._init_prompt_session()
+        
+        assert commands._PROMPT_SESSION is not None
+        MockSession.assert_called_once()
+        _, kwargs = MockSession.call_args
+        assert kwargs["multiline"] is False
+        assert kwargs["enable_open_in_editor"] is False
+
+
+--- tests/test_email_channel.py ---
+from email.message import EmailMessage
+from datetime import date
+
+import pytest
+
+from nanobot.bus.events import OutboundMessage
+from nanobot.bus.queue import MessageBus
+from nanobot.channels.email import EmailChannel
+from nanobot.config.schema import EmailConfig
+
+
+def _make_config() -> EmailConfig:
+    return EmailConfig(
+        enabled=True,
+        consent_granted=True,
+        imap_host="imap.example.com",
+        imap_port=993,
+        imap_username="bot@example.com",
+        imap_password="secret",
+        smtp_host="smtp.example.com",
+        smtp_port=587,
+        smtp_username="bot@example.com",
+        smtp_password="secret",
+        mark_seen=True,
+    )
+
+
+def _make_raw_email(
+    from_addr: str = "alice@example.com",
+    subject: str = "Hello",
+    body: str = "This is the body.",
+) -> bytes:
+    msg = EmailMessage()
+    msg["From"] = from_addr
+    msg["To"] = "bot@example.com"
+    msg["Subject"] = subject
+    msg["Message-ID"] = "<m1@example.com>"
+    msg.set_content(body)
+    return msg.as_bytes()
+
+
+def test_fetch_new_messages_parses_unseen_and_marks_seen(monkeypatch) -> None:
+    raw = _make_raw_email(subject="Invoice", body="Please pay")
+
+    class FakeIMAP:
+        def __init__(self) -> None:
+            self.store_calls: list[tuple[bytes, str, str]] = []
+
+        def login(self, _user: str, _pw: str):
+            return "OK", [b"logged in"]
+
+        def select(self, _mailbox: str):
+            return "OK", [b"1"]
+
+        def search(self, *_args):
+            return "OK", [b"1"]
+
+        def fetch(self, _imap_id: bytes, _parts: str):
+            return "OK", [(b"1 (UID 123 BODY[] {200})", raw), b")"]
+
+        def store(self, imap_id: bytes, op: str, flags: str):
+            self.store_calls.append((imap_id, op, flags))
+            return "OK", [b""]
+
+        def logout(self):
+            return "BYE", [b""]
+
+    fake = FakeIMAP()
+    monkeypatch.setattr("nanobot.channels.email.imaplib.IMAP4_SSL", lambda _h, _p: fake)
+
+    channel = EmailChannel(_make_config(), MessageBus())
+    items = channel._fetch_new_messages()
+
+    assert len(items) == 1
+    assert items[0]["sender"] == "alice@example.com"
+    assert items[0]["subject"] == "Invoice"
+    assert "Please pay" in items[0]["content"]
+    assert fake.store_calls == [(b"1", "+FLAGS", "\\Seen")]
+
+    # Same UID should be deduped in-process.
+    items_again = channel._fetch_new_messages()
+    assert items_again == []
+
+
+def test_extract_text_body_falls_back_to_html() -> None:
+    msg = EmailMessage()
+    msg["From"] = "alice@example.com"
+    msg["To"] = "bot@example.com"
+    msg["Subject"] = "HTML only"
+    msg.add_alternative("<p>Hello<br>world</p>", subtype="html")
+
+    text = EmailChannel._extract_text_body(msg)
+    assert "Hello" in text
+    assert "world" in text
+
+
+@pytest.mark.asyncio
+async def test_start_returns_immediately_without_consent(monkeypatch) -> None:
+    cfg = _make_config()
+    cfg.consent_granted = False
+    channel = EmailChannel(cfg, MessageBus())
+
+    called = {"fetch": False}
+
+    def _fake_fetch():
+        called["fetch"] = True
+        return []
+
+    monkeypatch.setattr(channel, "_fetch_new_messages", _fake_fetch)
+    await channel.start()
+    assert channel.is_running is False
+    assert called["fetch"] is False
+
+
+@pytest.mark.asyncio
+async def test_send_uses_smtp_and_reply_subject(monkeypatch) -> None:
+    class FakeSMTP:
+        def __init__(self, _host: str, _port: int, timeout: int = 30) -> None:
+            self.timeout = timeout
+            self.started_tls = False
+            self.logged_in = False
+            self.sent_messages: list[EmailMessage] = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def starttls(self, context=None):
+            self.started_tls = True
+
+        def login(self, _user: str, _pw: str):
+            self.logged_in = True
+
+        def send_message(self, msg: EmailMessage):
+            self.sent_messages.append(msg)
+
+    fake_instances: list[FakeSMTP] = []
+
+    def _smtp_factory(host: str, port: int, timeout: int = 30):
+        instance = FakeSMTP(host, port, timeout=timeout)
+        fake_instances.append(instance)
+        return instance
+
+    monkeypatch.setattr("nanobot.channels.email.smtplib.SMTP", _smtp_factory)
+
+    channel = EmailChannel(_make_config(), MessageBus())
+    channel._last_subject_by_chat["alice@example.com"] = "Invoice #42"
+    channel._last_message_id_by_chat["alice@example.com"] = "<m1@example.com>"
+
+    await channel.send(
+        OutboundMessage(
+            channel="email",
+            chat_id="alice@example.com",
+            content="Acknowledged.",
+        )
+    )
+
+    assert len(fake_instances) == 1
+    smtp = fake_instances[0]
+    assert smtp.started_tls is True
+    assert smtp.logged_in is True
+    assert len(smtp.sent_messages) == 1
+    sent = smtp.sent_messages[0]
+    assert sent["Subject"] == "Re: Invoice #42"
+    assert sent["To"] == "alice@example.com"
+    assert sent["In-Reply-To"] == "<m1@example.com>"
+
+
+@pytest.mark.asyncio
+async def test_send_skips_when_auto_reply_disabled(monkeypatch) -> None:
+    class FakeSMTP:
+        def __init__(self, _host: str, _port: int, timeout: int = 30) -> None:
+            self.sent_messages: list[EmailMessage] = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def starttls(self, context=None):
+            return None
+
+        def login(self, _user: str, _pw: str):
+            return None
+
+        def send_message(self, msg: EmailMessage):
+            self.sent_messages.append(msg)
+
+    fake_instances: list[FakeSMTP] = []
+
+    def _smtp_factory(host: str, port: int, timeout: int = 30):
+        instance = FakeSMTP(host, port, timeout=timeout)
+        fake_instances.append(instance)
+        return instance
+
+    monkeypatch.setattr("nanobot.channels.email.smtplib.SMTP", _smtp_factory)
+
+    cfg = _make_config()
+    cfg.auto_reply_enabled = False
+    channel = EmailChannel(cfg, MessageBus())
+    await channel.send(
+        OutboundMessage(
+            channel="email",
+            chat_id="alice@example.com",
+            content="Should not send.",
+        )
+    )
+    assert fake_instances == []
+
+    await channel.send(
+        OutboundMessage(
+            channel="email",
+            chat_id="alice@example.com",
+            content="Force send.",
+            metadata={"force_send": True},
+        )
+    )
+    assert len(fake_instances) == 1
+    assert len(fake_instances[0].sent_messages) == 1
+
+
+@pytest.mark.asyncio
+async def test_send_skips_when_consent_not_granted(monkeypatch) -> None:
+    class FakeSMTP:
+        def __init__(self, _host: str, _port: int, timeout: int = 30) -> None:
+            self.sent_messages: list[EmailMessage] = []
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def starttls(self, context=None):
+            return None
+
+        def login(self, _user: str, _pw: str):
+            return None
+
+        def send_message(self, msg: EmailMessage):
+            self.sent_messages.append(msg)
+
+    called = {"smtp": False}
+
+    def _smtp_factory(host: str, port: int, timeout: int = 30):
+        called["smtp"] = True
+        return FakeSMTP(host, port, timeout=timeout)
+
+    monkeypatch.setattr("nanobot.channels.email.smtplib.SMTP", _smtp_factory)
+
+    cfg = _make_config()
+    cfg.consent_granted = False
+    channel = EmailChannel(cfg, MessageBus())
+    await channel.send(
+        OutboundMessage(
+            channel="email",
+            chat_id="alice@example.com",
+            content="Should not send.",
+            metadata={"force_send": True},
+        )
+    )
+    assert called["smtp"] is False
+
+
+def test_fetch_messages_between_dates_uses_imap_since_before_without_mark_seen(monkeypatch) -> None:
+    raw = _make_raw_email(subject="Status", body="Yesterday update")
+
+    class FakeIMAP:
+        def __init__(self) -> None:
+            self.search_args = None
+            self.store_calls: list[tuple[bytes, str, str]] = []
+
+        def login(self, _user: str, _pw: str):
+            return "OK", [b"logged in"]
+
+        def select(self, _mailbox: str):
+            return "OK", [b"1"]
+
+        def search(self, *_args):
+            self.search_args = _args
+            return "OK", [b"5"]
+
+        def fetch(self, _imap_id: bytes, _parts: str):
+            return "OK", [(b"5 (UID 999 BODY[] {200})", raw), b")"]
+
+        def store(self, imap_id: bytes, op: str, flags: str):
+            self.store_calls.append((imap_id, op, flags))
+            return "OK", [b""]
+
+        def logout(self):
+            return "BYE", [b""]
+
+    fake = FakeIMAP()
+    monkeypatch.setattr("nanobot.channels.email.imaplib.IMAP4_SSL", lambda _h, _p: fake)
+
+    channel = EmailChannel(_make_config(), MessageBus())
+    items = channel.fetch_messages_between_dates(
+        start_date=date(2026, 2, 6),
+        end_date=date(2026, 2, 7),
+        limit=10,
+    )
+
+    assert len(items) == 1
+    assert items[0]["subject"] == "Status"
+    # search(None, "SINCE", "06-Feb-2026", "BEFORE", "07-Feb-2026")
+    assert fake.search_args is not None
+    assert fake.search_args[1:] == ("SINCE", "06-Feb-2026", "BEFORE", "07-Feb-2026")
+    assert fake.store_calls == []
+
+
+--- tests/test_tool_validation.py ---
+from typing import Any
+
+from nanobot.agent.tools.base import Tool
+from nanobot.agent.tools.registry import ToolRegistry
+
+
+class SampleTool(Tool):
+    @property
+    def name(self) -> str:
+        return "sample"
+
+    @property
+    def description(self) -> str:
+        return "sample tool"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        return {
+            "type": "object",
+            "properties": {
+                "query": {"type": "string", "minLength": 2},
+                "count": {"type": "integer", "minimum": 1, "maximum": 10},
+                "mode": {"type": "string", "enum": ["fast", "full"]},
+                "meta": {
+                    "type": "object",
+                    "properties": {
+                        "tag": {"type": "string"},
+                        "flags": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                        },
+                    },
+                    "required": ["tag"],
+                },
+            },
+            "required": ["query", "count"],
+        }
+
+    async def execute(self, **kwargs: Any) -> str:
+        return "ok"
+
+
+def test_validate_params_missing_required() -> None:
+    tool = SampleTool()
+    errors = tool.validate_params({"query": "hi"})
+    assert "missing required count" in "; ".join(errors)
+
+
+def test_validate_params_type_and_range() -> None:
+    tool = SampleTool()
+    errors = tool.validate_params({"query": "hi", "count": 0})
+    assert any("count must be >= 1" in e for e in errors)
+
+    errors = tool.validate_params({"query": "hi", "count": "2"})
+    assert any("count should be integer" in e for e in errors)
+
+
+def test_validate_params_enum_and_min_length() -> None:
+    tool = SampleTool()
+    errors = tool.validate_params({"query": "h", "count": 2, "mode": "slow"})
+    assert any("query must be at least 2 chars" in e for e in errors)
+    assert any("mode must be one of" in e for e in errors)
+
+
+def test_validate_params_nested_object_and_array() -> None:
+    tool = SampleTool()
+    errors = tool.validate_params(
+        {
+            "query": "hi",
+            "count": 2,
+            "meta": {"flags": [1, "ok"]},
+        }
+    )
+    assert any("missing required meta.tag" in e for e in errors)
+    assert any("meta.flags[0] should be string" in e for e in errors)
+
+
+def test_validate_params_ignores_unknown_fields() -> None:
+    tool = SampleTool()
+    errors = tool.validate_params({"query": "hi", "count": 2, "extra": "x"})
+    assert errors == []
+
+
+async def test_registry_returns_validation_error() -> None:
+    reg = ToolRegistry()
+    reg.register(SampleTool())
+    result = await reg.execute("sample", {"query": "hi"})
+    assert "Invalid parameters" in result
+
+
+--- workspace/AGENTS.md ---
+# Agent Instructions
+
+You are a helpful AI assistant. Be concise, accurate, and friendly.
+
+## Guidelines
+
+- Always explain what you're doing before taking actions
+- Ask for clarification when the request is ambiguous
+- Use tools to help accomplish tasks
+- Remember important information in your memory files
+
+## Tools Available
+
+You have access to:
+- File operations (read, write, edit, list)
+- Shell commands (exec)
+- Web access (search, fetch)
+- Messaging (message)
+- Background tasks (spawn)
+
+## Memory
+
+- `memory/MEMORY.md` — long-term facts (preferences, context, relationships)
+- `memory/HISTORY.md` — append-only event log, search with grep to recall past events
+
+## Scheduled Reminders
+
+When user asks for a reminder at a specific time, use `exec` to run:
+```
+nanobot cron add --name "reminder" --message "Your message" --at "YYYY-MM-DDTHH:MM:SS" --deliver --to "USER_ID" --channel "CHANNEL"
+```
+Get USER_ID and CHANNEL from the current session (e.g., `8281248569` and `telegram` from `telegram:8281248569`).
+
+**Do NOT just write reminders to MEMORY.md** — that won't trigger actual notifications.
+
+## Heartbeat Tasks
+
+`HEARTBEAT.md` is checked every 30 minutes. You can manage periodic tasks by editing this file:
+
+- **Add a task**: Use `edit_file` to append new tasks to `HEARTBEAT.md`
+- **Remove a task**: Use `edit_file` to remove completed or obsolete tasks
+- **Rewrite tasks**: Use `write_file` to completely rewrite the task list
+
+Task format examples:
+```
+- [ ] Check calendar and remind of upcoming events
+- [ ] Scan inbox for urgent emails
+- [ ] Check weather forecast for today
+```
+
+When the user asks you to add a recurring/periodic task, update `HEARTBEAT.md` instead of creating a one-time reminder. Keep the file small to minimize token usage.
+
+
+--- workspace/HEARTBEAT.md ---
+# Heartbeat Tasks
+
+This file is checked every 30 minutes by your nanobot agent.
+Add tasks below that you want the agent to work on periodically.
+
+If this file has no tasks (only headers and comments), the agent will skip the heartbeat.
+
+## Active Tasks
+
+<!-- Add your periodic tasks below this line -->
+
+
+## Completed
+
+<!-- Move completed tasks here or delete them -->
+
+
+
+--- workspace/SOUL.md ---
+# Soul
+
+I am nanobot 🐈, a personal AI assistant.
+
+## Personality
+
+- Helpful and friendly
+- Concise and to the point
+- Curious and eager to learn
+
+## Values
+
+- Accuracy over speed
+- User privacy and safety
+- Transparency in actions
+
+## Communication Style
+
+- Be clear and direct
+- Explain reasoning when helpful
+- Ask clarifying questions when needed
+
+
+--- workspace/TOOLS.md ---
+# Available Tools
+
+This document describes the tools available to nanobot.
+
+## File Operations
+
+### read_file
+Read the contents of a file.
+```
+read_file(path: str) -> str
+```
+
+### write_file
+Write content to a file (creates parent directories if needed).
+```
+write_file(path: str, content: str) -> str
+```
+
+### edit_file
+Edit a file by replacing specific text.
+```
+edit_file(path: str, old_text: str, new_text: str) -> str
+```
+
+### list_dir
+List contents of a directory.
+```
+list_dir(path: str) -> str
+```
+
+## Shell Execution
+
+### exec
+Execute a shell command and return output.
+```
+exec(command: str, working_dir: str = None) -> str
+```
+
+**Safety Notes:**
+- Commands have a configurable timeout (default 60s)
+- Dangerous commands are blocked (rm -rf, format, dd, shutdown, etc.)
+- Output is truncated at 10,000 characters
+- Optional `restrictToWorkspace` config to limit paths
+
+## Web Access
+
+### web_search
+Search the web using Brave Search API.
+```
+web_search(query: str, count: int = 5) -> str
+```
+
+Returns search results with titles, URLs, and snippets. Requires `tools.web.search.apiKey` in config.
+
+### web_fetch
+Fetch and extract main content from a URL.
+```
+web_fetch(url: str, extractMode: str = "markdown", maxChars: int = 50000) -> str
+```
+
+**Notes:**
+- Content is extracted using readability
+- Supports markdown or plain text extraction
+- Output is truncated at 50,000 characters by default
+
+## Communication
+
+### message
+Send a message to the user (used internally).
+```
+message(content: str, channel: str = None, chat_id: str = None) -> str
+```
+
+## Background Tasks
+
+### spawn
+Spawn a subagent to handle a task in the background.
+```
+spawn(task: str, label: str = None) -> str
+```
+
+Use for complex or time-consuming tasks that can run independently. The subagent will complete the task and report back when done.
+
+## Scheduled Reminders (Cron)
+
+Use the `exec` tool to create scheduled reminders with `nanobot cron add`:
+
+### Set a recurring reminder
+```bash
+# Every day at 9am
+nanobot cron add --name "morning" --message "Good morning! ☀️" --cron "0 9 * * *"
+
+# Every 2 hours
+nanobot cron add --name "water" --message "Drink water! 💧" --every 7200
+```
+
+### Set a one-time reminder
+```bash
+# At a specific time (ISO format)
+nanobot cron add --name "meeting" --message "Meeting starts now!" --at "2025-01-31T15:00:00"
+```
+
+### Manage reminders
+```bash
+nanobot cron list              # List all jobs
+nanobot cron remove <job_id>   # Remove a job
+```
+
+## Heartbeat Task Management
+
+The `HEARTBEAT.md` file in the workspace is checked every 30 minutes.
+Use file operations to manage periodic tasks:
+
+### Add a heartbeat task
+```python
+# Append a new task
+edit_file(
+    path="HEARTBEAT.md",
+    old_text="## Example Tasks",
+    new_text="- [ ] New periodic task here\n\n## Example Tasks"
+)
+```
+
+### Remove a heartbeat task
+```python
+# Remove a specific task
+edit_file(
+    path="HEARTBEAT.md",
+    old_text="- [ ] Task to remove\n",
+    new_text=""
+)
+```
+
+### Rewrite all tasks
+```python
+# Replace the entire file
+write_file(
+    path="HEARTBEAT.md",
+    content="# Heartbeat Tasks\n\n- [ ] Task 1\n- [ ] Task 2\n"
+)
+```
+
+---
+
+## Adding Custom Tools
+
+To add custom tools:
+1. Create a class that extends `Tool` in `nanobot/agent/tools/`
+2. Implement `name`, `description`, `parameters`, and `execute`
+3. Register it in `AgentLoop._register_default_tools()`
+
+
+--- workspace/USER.md ---
+# User Profile
+
+Information about the user to help personalize interactions.
+
+## Basic Information
+
+- **Name**: (your name)
+- **Timezone**: (your timezone, e.g., UTC+8)
+- **Language**: (preferred language)
+
+## Preferences
+
+### Communication Style
+
+- [ ] Casual
+- [ ] Professional
+- [ ] Technical
+
+### Response Length
+
+- [ ] Brief and concise
+- [ ] Detailed explanations
+- [ ] Adaptive based on question
+
+### Technical Level
+
+- [ ] Beginner
+- [ ] Intermediate
+- [ ] Expert
+
+## Work Context
+
+- **Primary Role**: (your role, e.g., developer, researcher)
+- **Main Projects**: (what you're working on)
+- **Tools You Use**: (IDEs, languages, frameworks)
+
+## Topics of Interest
+
+- 
+- 
+- 
+
+## Special Instructions
+
+(Any specific instructions for how the assistant should behave)
+
+---
+
+*Edit this file to customize nanobot's behavior for your needs.*
+
+
+--- workspace/memory/MEMORY.md ---
+# Long-term Memory
+
+This file stores important information that should persist across sessions.
+
+## User Information
+
+(Important facts about the user)
+
+## Preferences
+
+(User preferences learned over time)
+
+## Project Context
+
+(Information about ongoing projects)
+
+## Important Notes
+
+(Things to remember)
+
+---
+
+*This file is automatically updated by nanobot when important information should be remembered.*
