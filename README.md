@@ -218,6 +218,13 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 - `tests/` – pytest coverage for the generator pipeline and MCP server.
 - `artifacts/` – sample outputs from previous runs.
 
+## Documentation Map
+
+- `docs/getting-started.md` - beginner onboarding and first commands.
+- `docs/architecture.md` - system design, data flow, and extension points.
+- `docs/publishing.md` - publishing and release workflow notes.
+- `docs/oracle-pack-2026-01-04.md` - repository knowledge pack reference.
+
 ## Verify your setup
 
 ```bash
