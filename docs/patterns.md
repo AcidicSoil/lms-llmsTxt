@@ -182,7 +182,7 @@ A single `POST /api/generate` route branches on `mode` to support multiple workf
 ## Pattern 9: Query-Param Handoff for CLI -> UI Flow
 
 ### What it is
-CLI prints a URL containing mode and graph path query params; the UI parses those params and auto-loads the artifact once.
+CLI ensures the UI is reachable, then prints and (by default) opens a URL containing mode and graph path query params; the UI parses those params and auto-loads the artifact once.
 
 ### Where it appears
 - `src/lms_llmsTxt/cli.py` (`build_graph_viewer_url`)

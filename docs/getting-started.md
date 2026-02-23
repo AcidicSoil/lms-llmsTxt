@@ -87,6 +87,9 @@ PYTHONPATH=src lmstxt https://github.com/pallets/flask \
 ```
 
 The CLI prints a HyperGraph URL that pre-fills `graphPath` and auto-loads the generated `repo.graph.json`.
+It also auto-starts/reuses the HyperGraph UI and opens your browser by default.
+
+Use `--ui-no-open` if you only want the URL and background UI startup behavior.
 
 ### UI-first repo generation
 

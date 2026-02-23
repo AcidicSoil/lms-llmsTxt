@@ -251,8 +251,8 @@ This section supplements the original architecture doc with the newer two-way vi
 ## A. CLI -> HyperGraph
 1. User runs `lmstxt ... --generate-graph --ui`.
 2. CLI generates repo graph artifacts.
-3. CLI prints a HyperGraph URL containing `graphPath` and `autoLoad=1`.
-4. User opens the URL.
+3. CLI ensures HyperGraph is reachable (reuses a running UI or starts a background dev server), then builds a URL containing `graphPath` and `autoLoad=1`.
+4. CLI opens the URL in the default browser (unless disabled via CLI flag); the printed URL remains available for manual use.
 5. HyperGraph UI auto-loads `repo.graph.json` and renders the graph.
 
 ## B. HyperGraph -> Local Python Generator

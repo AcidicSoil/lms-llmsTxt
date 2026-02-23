@@ -86,7 +86,7 @@ lmstxt https://github.com/owner/repo \
 
 The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
 
-To print a HyperGraph viewer handoff URL after graph generation:
+To generate graph artifacts and open them in HyperGraph automatically after generation:
 
 ```bash
 lmstxt https://github.com/owner/repo \
@@ -95,7 +95,12 @@ lmstxt https://github.com/owner/repo \
   --ui
 ```
 
-This prints a URL like `http://localhost:3000/?mode=load-repo-graph&graphPath=...&autoLoad=1`.
+The CLI will:
+- start/reuse the HyperGraph UI server (default `http://localhost:3000`)
+- auto-open the browser to the generated graph
+- print the same handoff URL for manual reuse
+
+Use `--ui-no-open` to skip auto-opening the browser.
 
 ## Private GitHub repositories
 
@@ -172,7 +177,7 @@ For manual loading, use a path like:
 ../artifacts/<owner>/<repo>/graph/repo.graph.json
 ```
 
-The CLI `--ui` flag prints a ready-to-open URL that pre-fills this path and auto-loads the graph.
+The CLI `--ui` flag now auto-starts/reuses the UI (if needed), opens the browser by default, and prints a ready-to-open URL that pre-fills this path and auto-loads the graph.
 
 ## Model Context Protocol (MCP) Server
 
