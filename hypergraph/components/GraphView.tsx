@@ -24,17 +24,17 @@ const NODE_STYLE: Record<
   NodeType,
   { fill: string; stroke: string; strokeW: number; innerDot: boolean }
 > = {
-  moc:     { fill: "#18181b", stroke: "#000000", strokeW: 0,   innerDot: true  },
-  concept: { fill: "#27272a", stroke: "#000000", strokeW: 0,   innerDot: false },
-  pattern: { fill: "#52525b", stroke: "#000000", strokeW: 0,   innerDot: false },
-  gotcha:  { fill: "#ffffff", stroke: "#d4d4d8", strokeW: 1.5, innerDot: false },
+  moc: { fill: "#18181b", stroke: "#000000", strokeW: 0, innerDot: true },
+  concept: { fill: "#27272a", stroke: "#000000", strokeW: 0, innerDot: false },
+  pattern: { fill: "#52525b", stroke: "#000000", strokeW: 0, innerDot: false },
+  gotcha: { fill: "#ffffff", stroke: "#d4d4d8", strokeW: 1.5, innerDot: false },
 };
 
 const LEGEND: { type: NodeType; label: string }[] = [
-  { type: "moc",     label: "MOC"     },
+  { type: "moc", label: "MOC" },
   { type: "concept", label: "Concept" },
   { type: "pattern", label: "Pattern" },
-  { type: "gotcha",  label: "Gotcha"  },
+  { type: "gotcha", label: "Gotcha" },
 ];
 
 export default function GraphView({
@@ -136,7 +136,9 @@ export default function GraphView({
       // ── Label — with high-contrast halo ──────────────────────────────────
       const fontSize = Math.max(10 / globalScale, 2.2);
       const weight = isSelected ? "700" : "500";
-      (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = "-0.02em";
+      (
+        ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+      ).letterSpacing = "-0.02em";
       ctx.font = `${weight} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
 
       const label = node.label ?? "";
@@ -156,9 +158,11 @@ export default function GraphView({
       ctx.fillText(label, x, ly);
 
       // Reset
-      (ctx as CanvasRenderingContext2D & { letterSpacing?: string }).letterSpacing = "0px";
+      (
+        ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+      ).letterSpacing = "0px";
     },
-    [selectedNodeId, hoveredNode]
+    [selectedNodeId, hoveredNode],
   );
 
   const nodePointerAreaPaint = useCallback(
@@ -169,7 +173,7 @@ export default function GraphView({
       ctx.fillStyle = color;
       ctx.fill();
     },
-    []
+    [],
   );
 
   return (

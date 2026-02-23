@@ -13,7 +13,7 @@ function getClient(): Hyperbrowser {
 
 const MAX_CONCURRENCY = Math.max(
   1,
-  parseInt(process.env.HYPERBROWSER_MAX_CONCURRENCY ?? "1", 10)
+  parseInt(process.env.HYPERBROWSER_MAX_CONCURRENCY ?? "1", 10),
 );
 
 /** Identify errors caused by exceeding the plan's concurrency limit. */
@@ -39,7 +39,7 @@ export class ConcurrencyPlanError extends Error {
       "Your Hyperbrowser plan only supports 1 concurrent browser. " +
         "The app is running in sequential mode, but multiple scrapes still " +
         "exceeded the limit. Upgrade at https://hyperbrowser.ai to unlock " +
-        "parallel execution."
+        "parallel execution.",
     );
     this.name = "ConcurrencyPlanError";
   }
@@ -51,10 +51,7 @@ interface ScrapeResult {
 }
 
 /** Scrape a single URL, re-throwing concurrency errors as ConcurrencyPlanError. */
-async function scrapeOne(
-  hb: Hyperbrowser,
-  url: string
-): Promise<ScrapeResult> {
+async function scrapeOne(hb: Hyperbrowser, url: string): Promise<ScrapeResult> {
   try {
     const result = await hb.scrape.startAndWait({
       url,
@@ -110,9 +107,7 @@ export async function scrapeUrls(urls: string[]): Promise<ScrapeResult[]> {
     }
   }
 
-  await Promise.all(
-    Array.from({ length: MAX_CONCURRENCY }, () => worker())
-  );
+  await Promise.all(Array.from({ length: MAX_CONCURRENCY }, () => worker()));
 
   if (errors.length > 0 && results.length === 0) {
     console.error("[hyperbrowser] All scrapes failed:", errors);

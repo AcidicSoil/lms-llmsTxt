@@ -11,10 +11,10 @@ interface FileTreePanelProps {
 }
 
 const TYPE_DOT: Record<NodeType, string> = {
-  moc:     "bg-zinc-900",
+  moc: "bg-zinc-900",
   concept: "bg-zinc-600",
   pattern: "bg-zinc-400",
-  gotcha:  "border border-zinc-300 bg-white",
+  gotcha: "border border-zinc-300 bg-white",
 };
 
 function toNodeId(filePath: string): string {
@@ -74,7 +74,11 @@ export default function FileTreePanel({
             stroke="currentColor"
             strokeWidth={2.5}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M9 5l7 7-7 7"
+            />
           </svg>
           {/* Folder icon */}
           <svg
@@ -109,7 +113,7 @@ export default function FileTreePanel({
               const nodeId = toNodeId(file.path);
               const node = graph.nodes.find((n) => n.id === nodeId);
               const isActive = nodeId === selectedNodeId;
-              const fileName = (file.path.split("/").pop() ?? file.path);
+              const fileName = file.path.split("/").pop() ?? file.path;
 
               return (
                 <button

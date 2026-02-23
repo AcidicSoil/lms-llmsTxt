@@ -70,10 +70,10 @@ export default function Home() {
   const [showLoadPanel, setShowLoadPanel] = useState(false);
   const [showRepoPanel, setShowRepoPanel] = useState(false);
   const [graphPath, setGraphPath] = useState(
-    "../artifacts/pallets/flask/graph/repo.graph.json"
+    "../artifacts/pallets/flask/graph/repo.graph.json",
   );
   const [repoUrlInput, setRepoUrlInput] = useState(
-    "https://github.com/pallets/flask"
+    "https://github.com/pallets/flask",
   );
   const [artifactPathHint, setArtifactPathHint] = useState<string | null>(null);
 
@@ -139,90 +139,99 @@ export default function Home() {
     }
   }
 
-  const handleLoadGraph = useCallback(async (pathOverride?: string) => {
-    const trimmedPath = (pathOverride ?? graphPath).trim();
-    if (!trimmedPath) {
-      setError({ message: "Graph path is required" });
-      return;
-    }
-
-    setSubmittedTopic(trimmedPath);
-    setIsLoading(true);
-    setError(null);
-    setGraph(null);
-    setFiles([]);
-    setSelectedNodeId(null);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "load-repo-graph", graphPath: trimmedPath }),
-      });
-
-      const data: GenerateResponse & { error?: string } = await res.json();
-
-      if (!res.ok || data.error) {
-      setError({ message: data.error ?? "Failed to load graph" });
-      return;
-      }
-
-      setGraph(data.graph);
-      setFiles(data.files);
-      setArtifactPathHint(trimmedPath);
-      focusMocNode(data.graph);
-    } catch (err) {
-      setError({
-        message: err instanceof Error ? err.message : "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [graphPath, focusMocNode]);
-
-  const handleGenerateRepoGraph = useCallback(async (repoUrlOverride?: string) => {
-    const repoUrl = (repoUrlOverride ?? repoUrlInput).trim();
-    if (!repoUrl) {
-      setError({ message: "Repository URL is required" });
-      return;
-    }
-
-    setSubmittedTopic(repoUrl);
-    setIsLoading(true);
-    setError(null);
-    setGraph(null);
-    setFiles([]);
-    setSelectedNodeId(null);
-    setArtifactPathHint(null);
-
-    try {
-      const res = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mode: "generate-repo-graph", repoUrl }),
-      });
-
-      const data: GenerateResponse & { error?: string } = await res.json();
-      if (!res.ok || data.error) {
-        setError({ message: data.error ?? "Failed to generate repo graph" });
+  const handleLoadGraph = useCallback(
+    async (pathOverride?: string) => {
+      const trimmedPath = (pathOverride ?? graphPath).trim();
+      if (!trimmedPath) {
+        setError({ message: "Graph path is required" });
         return;
       }
 
-      setGraph(data.graph);
-      setFiles(data.files);
-      setArtifactPathHint(data.artifactPath ?? null);
-      if (data.artifactPath) {
-        setGraphPath(data.artifactPath);
+      setSubmittedTopic(trimmedPath);
+      setIsLoading(true);
+      setError(null);
+      setGraph(null);
+      setFiles([]);
+      setSelectedNodeId(null);
+
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            mode: "load-repo-graph",
+            graphPath: trimmedPath,
+          }),
+        });
+
+        const data: GenerateResponse & { error?: string } = await res.json();
+
+        if (!res.ok || data.error) {
+          setError({ message: data.error ?? "Failed to load graph" });
+          return;
+        }
+
+        setGraph(data.graph);
+        setFiles(data.files);
+        setArtifactPathHint(trimmedPath);
+        focusMocNode(data.graph);
+      } catch (err) {
+        setError({
+          message: err instanceof Error ? err.message : "Something went wrong",
+        });
+      } finally {
+        setIsLoading(false);
       }
-      focusMocNode(data.graph);
-    } catch (err) {
-      setError({
-        message: err instanceof Error ? err.message : "Something went wrong",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [repoUrlInput, focusMocNode]);
+    },
+    [graphPath, focusMocNode],
+  );
+
+  const handleGenerateRepoGraph = useCallback(
+    async (repoUrlOverride?: string) => {
+      const repoUrl = (repoUrlOverride ?? repoUrlInput).trim();
+      if (!repoUrl) {
+        setError({ message: "Repository URL is required" });
+        return;
+      }
+
+      setSubmittedTopic(repoUrl);
+      setIsLoading(true);
+      setError(null);
+      setGraph(null);
+      setFiles([]);
+      setSelectedNodeId(null);
+      setArtifactPathHint(null);
+
+      try {
+        const res = await fetch("/api/generate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ mode: "generate-repo-graph", repoUrl }),
+        });
+
+        const data: GenerateResponse & { error?: string } = await res.json();
+        if (!res.ok || data.error) {
+          setError({ message: data.error ?? "Failed to generate repo graph" });
+          return;
+        }
+
+        setGraph(data.graph);
+        setFiles(data.files);
+        setArtifactPathHint(data.artifactPath ?? null);
+        if (data.artifactPath) {
+          setGraphPath(data.artifactPath);
+        }
+        focusMocNode(data.graph);
+      } catch (err) {
+        setError({
+          message: err instanceof Error ? err.message : "Something went wrong",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [repoUrlInput, focusMocNode],
+  );
 
   useEffect(() => {
     const mode = searchParams.get("mode");
@@ -302,12 +311,34 @@ export default function Home() {
       <div className="flex h-screen flex-col bg-white font-sans">
         {/* Top nav */}
         <nav className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 px-5 py-3">
-          <a href="https://hyperbrowser.ai" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 transition-opacity hover:opacity-70">
-            <svg width="12" height="20" viewBox="0 0 104 167" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M76.4409 0.958618L0.27832 83.6963H41.5624C47.8498 83.6963 53.3845 79.5487 55.1561 73.5091L76.4409 0.958618Z" fill="#1D1D1D"/>
-              <path d="M48.9596 93.881L27.6748 166.434L103.837 83.6959H62.5532C56.2659 83.6959 50.7312 87.8436 48.9596 93.8831V93.881Z" fill="#1D1D1D"/>
+          <a
+            href="https://hyperbrowser.ai"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 transition-opacity hover:opacity-70"
+          >
+            <svg
+              width="12"
+              height="20"
+              viewBox="0 0 104 167"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                d="M76.4409 0.958618L0.27832 83.6963H41.5624C47.8498 83.6963 53.3845 79.5487 55.1561 73.5091L76.4409 0.958618Z"
+                fill="#1D1D1D"
+              />
+              <path
+                d="M48.9596 93.881L27.6748 166.434L103.837 83.6959H62.5532C56.2659 83.6959 50.7312 87.8436 48.9596 93.8831V93.881Z"
+                fill="#1D1D1D"
+              />
             </svg>
-            <span className="text-[11px] font-semibold text-zinc-400" style={{ letterSpacing: "0.01em" }}>Hyperbrowser</span>
+            <span
+              className="text-[11px] font-semibold text-zinc-400"
+              style={{ letterSpacing: "0.01em" }}
+            >
+              Hyperbrowser
+            </span>
           </a>
           <a
             href="https://hyperbrowser.ai"
@@ -315,7 +346,15 @@ export default function Home() {
             rel="noopener noreferrer"
             className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
           >
-            <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              className="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="7.5" cy="15.5" r="5.5" />
               <path d="M21 2l-9.6 9.6M15.5 7.5l2 2" />
             </svg>
@@ -335,7 +374,8 @@ export default function Home() {
                 Hyper<span className="font-extralight">Graph</span>
               </h1>
               <p className="accent mt-2.5 text-xs font-semibold text-zinc-400">
-                Give your agent a domain to understand, not just instructions to follow
+                Give your agent a domain to understand, not just instructions to
+                follow
               </p>
             </div>
 
@@ -353,7 +393,8 @@ export default function Home() {
                     Generate repo graph
                   </p>
                   <p className="accent mt-1 text-[10px] font-semibold text-zinc-400">
-                    Run the local lms_llmsTxt pipeline and load the generated repo graph
+                    Run the local lms_llmsTxt pipeline and load the generated
+                    repo graph
                   </p>
                 </div>
                 <button
@@ -462,9 +503,21 @@ export default function Home() {
           }}
           className="flex flex-shrink-0 items-center gap-2 transition-opacity hover:opacity-60"
         >
-          <svg width="10" height="16" viewBox="0 0 104 167" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M76.4409 0.958618L0.27832 83.6963H41.5624C47.8498 83.6963 53.3845 79.5487 55.1561 73.5091L76.4409 0.958618Z" fill="#1D1D1D"/>
-            <path d="M48.9596 93.881L27.6748 166.434L103.837 83.6959H62.5532C56.2659 83.6959 50.7312 87.8436 48.9596 93.8831V93.881Z" fill="#1D1D1D"/>
+          <svg
+            width="10"
+            height="16"
+            viewBox="0 0 104 167"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M76.4409 0.958618L0.27832 83.6963H41.5624C47.8498 83.6963 53.3845 79.5487 55.1561 73.5091L76.4409 0.958618Z"
+              fill="#1D1D1D"
+            />
+            <path
+              d="M48.9596 93.881L27.6748 166.434L103.837 83.6959H62.5532C56.2659 83.6959 50.7312 87.8436 48.9596 93.8831V93.881Z"
+              fill="#1D1D1D"
+            />
           </svg>
           <span
             className="font-bold text-zinc-900"
@@ -493,7 +546,11 @@ export default function Home() {
             stroke="currentColor"
             strokeWidth={2}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v8H4zM12 12v8m0 0l-3-3m3 3l3-3" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4 4h16v8H4zM12 12v8m0 0l-3-3m3 3l3-3"
+            />
           </svg>
           Repo graph
         </button>
@@ -544,7 +601,15 @@ export default function Home() {
           rel="noopener noreferrer"
           className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
         >
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
             <circle cx="7.5" cy="15.5" r="5.5" />
             <path d="M21 2l-9.6 9.6M15.5 7.5l2 2" />
           </svg>
@@ -643,7 +708,8 @@ export default function Home() {
                 Free plan — concurrent browser limit reached
               </p>
               <p className="mt-0.5 text-[11px] text-amber-700">
-                Your Hyperbrowser plan supports only 1 concurrent browser session. Upgrade to run parallel scrapes.
+                Your Hyperbrowser plan supports only 1 concurrent browser
+                session. Upgrade to run parallel scrapes.
               </p>
             </div>
           </div>
@@ -667,7 +733,13 @@ export default function Home() {
               viewBox="0 0 24 24"
               fill="none"
             >
-              <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" />
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="2"
+              />
             </svg>
             <svg
               className="absolute inset-0 h-10 w-10 animate-spin text-zinc-900"
@@ -684,7 +756,10 @@ export default function Home() {
             </svg>
           </div>
           <div className="text-center">
-            <p className="text-sm font-bold text-zinc-900" style={{ letterSpacing: "-0.02em" }}>
+            <p
+              className="text-sm font-bold text-zinc-900"
+              style={{ letterSpacing: "-0.02em" }}
+            >
               Building{submittedTopic ? ` "${submittedTopic}"` : ""} graph
             </p>
             <p className="accent mt-1.5 text-[10px] font-semibold text-zinc-400">

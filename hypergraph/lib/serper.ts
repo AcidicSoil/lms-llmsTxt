@@ -19,18 +19,12 @@ export async function searchDocs(topic: string): Promise<string[]> {
   }
 
   const data = await res.json();
-  const blocked = [
-    "youtube.com",
-    "twitter.com",
-    "x.com",
-    "reddit.com",
-    ".pdf",
-  ];
+  const blocked = ["youtube.com", "twitter.com", "x.com", "reddit.com", ".pdf"];
 
   const urls: string[] = (data.organic ?? [])
     .map((r: { link: string }) => r.link)
     .filter(
-      (url: string) => !blocked.some((b) => url.toLowerCase().includes(b))
+      (url: string) => !blocked.some((b) => url.toLowerCase().includes(b)),
     )
     .slice(0, 8);
 

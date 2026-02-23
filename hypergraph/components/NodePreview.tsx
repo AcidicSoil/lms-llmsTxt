@@ -12,10 +12,10 @@ interface NodePreviewProps {
 }
 
 const TYPE_STYLES: Record<NodeType, string> = {
-  moc:     "bg-zinc-900 text-white border-zinc-900",
+  moc: "bg-zinc-900 text-white border-zinc-900",
   concept: "bg-zinc-700 text-white border-zinc-700",
   pattern: "bg-zinc-400 text-white border-zinc-400",
-  gotcha:  "border-zinc-300 text-zinc-500 bg-zinc-50",
+  gotcha: "border-zinc-300 text-zinc-500 bg-zinc-50",
 };
 
 function toSlug(label: string): string {
@@ -25,7 +25,13 @@ function toSlug(label: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
-function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
+function CopyButton({
+  text,
+  label = "Copy",
+}: {
+  text: string;
+  label?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -41,15 +47,35 @@ function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) 
     >
       {copied ? (
         <>
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M4.5 12.75l6 6 9-13.5"
+            />
           </svg>
           Copied
         </>
       ) : (
         <>
-          <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184" />
+          <svg
+            className="h-3 w-3"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184"
+            />
           </svg>
           {label}
         </>
@@ -110,11 +136,13 @@ export default function NodePreview({
 
   return (
     <div className="flex h-full flex-col overflow-hidden bg-white">
-
       {/* ── Editor tab strip ─────────────────────────────────────────────── */}
       <div className="flex flex-shrink-0 items-stretch border-b border-zinc-200 bg-[#f3f3f3]">
         {/* Active tab */}
-        <div className="flex min-w-0 items-center gap-1.5 border-r border-zinc-200 bg-white px-3 py-0 relative" style={{ borderTop: "1px solid #18181b" }}>
+        <div
+          className="flex min-w-0 items-center gap-1.5 border-r border-zinc-200 bg-white px-3 py-0 relative"
+          style={{ borderTop: "1px solid #18181b" }}
+        >
           {/* top accent bar */}
           <svg
             className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400"
@@ -123,9 +151,16 @@ export default function NodePreview({
             stroke="currentColor"
             strokeWidth={1.5}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
+            />
           </svg>
-          <span className="truncate font-mono text-[11px] text-zinc-600 py-2" style={{ maxWidth: "160px" }}>
+          <span
+            className="truncate font-mono text-[11px] text-zinc-600 py-2"
+            style={{ maxWidth: "160px" }}
+          >
             {slug}.md
           </span>
         </div>
@@ -134,7 +169,9 @@ export default function NodePreview({
         <div className="flex flex-1 items-center justify-end gap-2 px-3 py-1.5">
           <CopyButton text={node.content} label="Copy file" />
           <div className="h-3.5 w-px bg-zinc-300" />
-          <span className={`flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest ${TYPE_STYLES[node.type]}`}>
+          <span
+            className={`flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest ${TYPE_STYLES[node.type]}`}
+          >
             {node.type.toUpperCase()}
           </span>
         </div>
@@ -143,7 +180,13 @@ export default function NodePreview({
       {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
       <div className="flex flex-shrink-0 items-center gap-1 border-b border-zinc-100 bg-white px-4 py-1.5">
         <span className="font-mono text-[10px] text-zinc-300">skills</span>
-        <svg className="h-2.5 w-2.5 flex-shrink-0 text-zinc-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <svg
+          className="h-2.5 w-2.5 flex-shrink-0 text-zinc-200"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2.5}
+        >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
         <span className="font-mono text-[10px] text-zinc-400">{slug}.md</span>
@@ -156,11 +199,18 @@ export default function NodePreview({
         </p>
         {node.evidence && node.evidence.length > 0 && (
           <div className="mt-2 border-t border-zinc-100 pt-2">
-            <p className="mb-1 text-[10px] uppercase tracking-widest text-zinc-400">Evidence</p>
+            <p className="mb-1 text-[10px] uppercase tracking-widest text-zinc-400">
+              Evidence
+            </p>
             <ul className="space-y-1">
               {node.evidence.slice(0, 5).map((ev, idx) => (
-                <li key={`${ev.path}-${idx}`} className="text-[10px] text-zinc-500">
-                  <code className="rounded bg-zinc-100 px-1 py-0.5">{ev.path}</code>
+                <li
+                  key={`${ev.path}-${idx}`}
+                  className="text-[10px] text-zinc-500"
+                >
+                  <code className="rounded bg-zinc-100 px-1 py-0.5">
+                    {ev.path}
+                  </code>
                   {ev.start_line ? `:${ev.start_line}` : ""}
                   {ev.end_line ? `-${ev.end_line}` : ""}
                 </li>
@@ -176,7 +226,10 @@ export default function NodePreview({
           remarkPlugins={[remarkGfm]}
           components={{
             h1: ({ children }) => (
-              <h1 className="mb-5 mt-0 text-lg font-bold text-zinc-900" style={{ letterSpacing: "-0.03em" }}>
+              <h1
+                className="mb-5 mt-0 text-lg font-bold text-zinc-900"
+                style={{ letterSpacing: "-0.03em" }}
+              >
                 {children}
               </h1>
             ),
@@ -186,7 +239,10 @@ export default function NodePreview({
               </h2>
             ),
             h3: ({ children }) => (
-              <h3 className="mb-2 mt-5 text-xs font-semibold text-zinc-600" style={{ letterSpacing: "-0.01em" }}>
+              <h3
+                className="mb-2 mt-5 text-xs font-semibold text-zinc-600"
+                style={{ letterSpacing: "-0.01em" }}
+              >
                 {children}
               </h3>
             ),
@@ -239,18 +295,22 @@ export default function NodePreview({
             },
             pre: ({ children }) => <>{children}</>,
             ul: ({ children }) => (
-              <ul className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600" style={{ listStyleType: "disc" }}>
+              <ul
+                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600"
+                style={{ listStyleType: "disc" }}
+              >
                 {children}
               </ul>
             ),
             ol: ({ children }) => (
-              <ol className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600" style={{ listStyleType: "decimal" }}>
+              <ol
+                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600"
+                style={{ listStyleType: "decimal" }}
+              >
                 {children}
               </ol>
             ),
-            li: ({ children }) => (
-              <li className="leading-[1.8]">{children}</li>
-            ),
+            li: ({ children }) => <li className="leading-[1.8]">{children}</li>,
             blockquote: ({ children }) => (
               <blockquote className="mb-4 border-l-2 border-zinc-200 pl-4 text-[13px] italic text-zinc-400">
                 {children}
@@ -283,9 +343,7 @@ export default function NodePreview({
                 {children}
               </td>
             ),
-            hr: () => (
-              <hr className="my-6 border-zinc-100" />
-            ),
+            hr: () => <hr className="my-6 border-zinc-100" />,
           }}
         >
           {node.content}

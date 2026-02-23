@@ -92,6 +92,7 @@ To generate graph artifacts and open them in HyperGraph automatically after gene
 lmstxt https://github.com/owner/repo \
   --generate-graph \
   --graph-only \
+  --verbose-budget
   --ui
 ```
 

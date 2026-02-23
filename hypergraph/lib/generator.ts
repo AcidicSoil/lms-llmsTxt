@@ -55,10 +55,9 @@ Depth requirements:
 - Gotcha nodes must explain why the mistake is made and what the correct mental model is
 - This graph should give an agent enough structured knowledge to reason about novel situations in the domain`;
 
-
 export async function generateGraph(
   topic: string,
-  docs: { url: string; markdown: string }[]
+  docs: { url: string; markdown: string }[],
 ): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
   const truncatedDocs = docs
     .map((d) => `## Source: ${d.url}\n\n${d.markdown.slice(0, 4000)}`)
@@ -106,7 +105,9 @@ function resolveRepoGraphPath(graphPath: string): string {
   return absolute;
 }
 
-export async function loadRepoGraph(graphPath: string): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
+export async function loadRepoGraph(
+  graphPath: string,
+): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
   const absolute = resolveRepoGraphPath(graphPath);
   const raw = await fs.readFile(absolute, "utf-8");
   const parsed = JSON.parse(raw) as SkillGraph;
@@ -143,7 +144,7 @@ function parseGithubRepoUrl(repoUrl: string): { owner: string; repo: string } {
 async function runCommand(
   cmd: string,
   args: string[],
-  options: { cwd: string; env?: NodeJS.ProcessEnv }
+  options: { cwd: string; env?: NodeJS.ProcessEnv },
 ): Promise<{ stdout: string; stderr: string }> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, {
@@ -166,7 +167,11 @@ async function runCommand(
         return;
       }
       const detail = (stderr || stdout).trim().split("\n").slice(-8).join("\n");
-      reject(new Error(`lmstxt CLI failed (exit ${code})${detail ? `:\n${detail}` : ""}`));
+      reject(
+        new Error(
+          `lmstxt CLI failed (exit ${code})${detail ? `:\n${detail}` : ""}`,
+        ),
+      );
     });
   });
 }
@@ -174,16 +179,23 @@ async function runCommand(
 function buildPythonEnv(repoRoot: string): NodeJS.ProcessEnv {
   const env = { ...process.env };
   const repoSrc = path.join(repoRoot, "src");
-  env.PYTHONPATH = env.PYTHONPATH ? `${repoSrc}${path.delimiter}${env.PYTHONPATH}` : repoSrc;
+  env.PYTHONPATH = env.PYTHONPATH
+    ? `${repoSrc}${path.delimiter}${env.PYTHONPATH}`
+    : repoSrc;
   return env;
 }
 
-async function runLocalLmstxt(repoRoot: string, repoUrl: string): Promise<void> {
+async function runLocalLmstxt(
+  repoRoot: string,
+  repoUrl: string,
+): Promise<void> {
   const artifactsDir = path.join(repoRoot, "artifacts");
   const env = buildPythonEnv(repoRoot);
-  const pythonCandidates = [process.env.LMSTXT_PYTHON_BIN, "python3", "python"].filter(
-    (value): value is string => Boolean(value && value.trim())
-  );
+  const pythonCandidates = [
+    process.env.LMSTXT_PYTHON_BIN,
+    "python3",
+    "python",
+  ].filter((value): value is string => Boolean(value && value.trim()));
   let lastError: Error | null = null;
 
   for (const pythonBin of pythonCandidates) {
@@ -199,7 +211,7 @@ async function runLocalLmstxt(repoRoot: string, repoUrl: string): Promise<void> 
           "--output-dir",
           artifactsDir,
         ],
-        { cwd: repoRoot, env }
+        { cwd: repoRoot, env },
       );
       return;
     } catch (error) {
@@ -211,14 +223,25 @@ async function runLocalLmstxt(repoRoot: string, repoUrl: string): Promise<void> 
 }
 
 export async function generateRepoGraph(
-  repoUrl: string
-): Promise<{ graph: SkillGraph; files: GeneratedFile[]; artifactPath: string }> {
+  repoUrl: string,
+): Promise<{
+  graph: SkillGraph;
+  files: GeneratedFile[];
+  artifactPath: string;
+}> {
   const { owner, repo } = parseGithubRepoUrl(repoUrl);
   const hypergraphDir = process.cwd();
   const repoRoot = path.resolve(hypergraphDir, "..");
   await runLocalLmstxt(repoRoot, repoUrl);
 
-  const graphPath = path.join("..", "artifacts", owner, repo, "graph", "repo.graph.json");
+  const graphPath = path.join(
+    "..",
+    "artifacts",
+    owner,
+    repo,
+    "graph",
+    "repo.graph.json",
+  );
   const loaded = await loadRepoGraph(graphPath);
   return { ...loaded, artifactPath: graphPath };
 }
