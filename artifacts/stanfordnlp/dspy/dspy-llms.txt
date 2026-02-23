@@ -1,70 +1,68 @@
-<!-- llmstxt:source=dspy -->
-# DSPy: Declarative Self-Improving Python for Language Models
+# Dspy
 
-## Project Purpose
-DSPy aims to revolutionize how developers interact with large language models by replacing brittle prompting with declarative, composable Python code. It enables rapid iteration on modular AI systems such as classifiers, RAG pipelines, and agent loops, while offering built-in tools for prompt optimization, weight tuning, and self-refining behavior. The framework supports research in self-improving pipelines, computational constraints, and hybrid models combining retrieval and generation.
+> DSPy aims to revolutionize how developers interact with foundation models by shifting from prompt engineering to compositional Python programming. It enables rapid iteration on AI systems while providing automated optimization tools for prompts, weights, and execution strategies. The framework supports diverse use cases—from simple classification tasks to complex multi-hop reasoning agents—through modular components and declarative constructs. Its goal is to make large language models more predictable, maintainable, and high-performing by leveraging computational constraints and iterative refinement.
 
-## Key Concepts
-- **Declarative Self-improving Python (DSPy)**: A paradigm for building AI systems with self-refining capabilities.
-- **Adapters**: Interfaces for different input/output types.
-- **Modules**: Reusable AI components like ChainOfThought or Refine.
-- **Primitives**: Fundamental building blocks like CodeInterpreter or PythonInterpreter.
-- **Teleprompters**: Optimization frameworks like GEPA, Bootstrap, and MIPROv2.
-- **Signatures**: Define input/output fields for modular composition.
-- **Assertions**: Computational constraints to guide self-refining behavior.
-- **RAG (Retrieval-Augmented Generation)**: Integrated with DSPy’s retrieval modules.
-- **Optimizers**: Algorithms that refine prompts and weights based on performance.
+**Remember:**
+- Declarative Self-improving Python (DSPy)
+- Modular AI Systems
+- Prompt Optimization & Weight Tuning
+- Adapters (e.g., ChatAdapter, JSONAdapter)
+- Modules (e.g., ChainOfThought, BestOfN)
+- Optimizers (e.g., GEPA, BootstrapFewShot)
 
-## Architecture Overview
-DSPy is structured as a modular, Python-based framework for composing and optimizing language model pipelines. At its core, it provides a set of primitives (e.g., CodeInterpreter, PythonInterpreter) and modules (e.g., ChainOfThought, Refine) that can be chained together using declarative composition. These components interact through well-defined signatures and adapters to handle diverse input types (text, code, images, audio). The framework includes teleprompting systems (like GEPA, Bootstrap) that optimize instruction generation and model weights based on performance metrics, enabling self-improving behavior. The architecture supports integration with LMs via clients (OpenAI, Databricks, etc.) and offers utilities for caching, streaming, logging, and reliability testing. Documentation is organized into comprehensive tutorials, API references, and research papers, emphasizing both practical usage and theoretical foundations.
+## Docs
+- [README](https://github.com/stanfordnlp/dspy/blob/main/docs/README.md): install & quickstart.
+- [Tutorials](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/index.md): worked example.
+- [Ai Text Game](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/ai_text_game/index.md): worked example.
+- [Async](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/async/index.md): worked example.
+- [Build Ai Program](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/build_ai_program/index.md): worked example.
+- [Cache](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/cache/index.md): worked example.
+- [Classification](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/classification/index.md): worked example.
+- [Conversation History](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/conversation_history/index.md): worked example.
+- [Core Development](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/core_development/index.md): worked example.
+- [Deployment](https://github.com/stanfordnlp/dspy/blob/main/docs/docs/tutorials/deployment/index.md): worked example.
 
-## Important Directories
-- `dspy/`: Core DSPy modules and primitives.
-- `docs/`: Comprehensive documentation, tutorials, and API references.
-- `tests/`: Unit and integration tests for all components.
-- `.github/workflows/`: CI/CD pipelines managed via GitHub Actions.
-- `docs/scripts/`: Example scripts and demos.
-- `tests/reliability/`: Tests for system reliability and edge cases.
-- `dspy/utils/`: Helper utilities (e.g., logging, caching).
-- `dspy/predict/`: Prediction and inference components.
-- `dspy/evaluate/`: Evaluation metrics and tools.
-- `dspy/teleprompt/`: Teleprompting frameworks (GEPA, Bootstrap).
-- `dspy/adapters/`: Adapters for handling diverse input/output types.
-- `dspy/primitives/`: Fundamental building blocks.
+## Tutorials
+- [Example](https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/example.py): worked example.
+- [Test Baleen](https://github.com/stanfordnlp/dspy/blob/main/tests/examples/test_baleen.py): worked example.
+- [Test Example](https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_example.py): worked example.
 
-## Entry Points
-- `dspy`: Main module entry point.
-- `dspy.cli`: Command-line interface for interactive usage.
+## API
+- [Base Module](https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/base_module.py): docs page.
+- [Module](https://github.com/stanfordnlp/dspy/blob/main/dspy/primitives/module.py): docs page.
+- [Test Base Module](https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_base_module.py): docs page.
+- [Test Module](https://github.com/stanfordnlp/dspy/blob/main/tests/primitives/test_module.py): docs page.
 
-## Development Info
-The project uses `setuptools` for building and packaging, with Python version constraints >=3.10 and <3.15. Key dependencies include OpenAI, Pydantic, Litellm, Optuna, and GEPA (for advanced optimization). It supports optional extras: `anthropic`, `weaviate`, `mcp`, `langchain`, and `dev` for development tools like `pytest`, `ruff`, `pre-commit`. The project enforces code quality with `ruff` (linter and formatter) configured to check for style, complexity, and naming issues. Tests are organized under `tests/`, covering modules, adapters, primitives, teleprompters, and reliability. Coverage is tracked via `coverage.py`, excluding test files and `__init__.py`. CI/CD is managed via GitHub Actions with workflows for tests, docs, precommits, and releases. The project uses `uv.lock` for dependency pinning and includes `.gitignore` and `pre-commit-config.yaml` for development tooling.
+## Optional
+- [Contributing](https://github.com/stanfordnlp/dspy/blob/main/CONTRIBUTING.md): docs page.
+- [Build And Release](https://github.com/stanfordnlp/dspy/blob/main/.github/.internal_dspyai/internals/build-and-release.md): version history.
+- [Release Checklist](https://github.com/stanfordnlp/dspy/blob/main/.github/.internal_dspyai/internals/release-checklist.md): version history.
+- [README](https://github.com/stanfordnlp/dspy/blob/main/README.md): docs page.
 
-## Usage Examples
-```python
-from dspy import Program, Signature, ChainOfThought
+## .Github
+- [Pull Request Template](https://github.com/stanfordnlp/dspy/blob/main/.github/PULL_REQUEST_TEMPLATE/pull_request_template.md): docs page.
+- [Test Version](https://github.com/stanfordnlp/dspy/blob/main/.github/workflows/build_utils/test_version.py): docs page.
 
-# Define a simple signature
-@Signature
-def classify_text(text: str) -> str:
-    """Classify text as 'positive' or 'negative'."""
-    pass
+## Dspy
+- [Init](https://github.com/stanfordnlp/dspy/blob/main/dspy/__init__.py): docs page.
+- [Metadata](https://github.com/stanfordnlp/dspy/blob/main/dspy/__metadata__.py): docs page.
+- [Aggregation](https://github.com/stanfordnlp/dspy/blob/main/dspy/predict/aggregation.py): docs page.
+- [Annotation](https://github.com/stanfordnlp/dspy/blob/main/dspy/utils/annotation.py): docs page.
+- [Asyncify](https://github.com/stanfordnlp/dspy/blob/main/dspy/utils/asyncify.py): docs page.
+- [Auto Evaluation](https://github.com/stanfordnlp/dspy/blob/main/dspy/evaluate/auto_evaluation.py): docs page.
+- [Avatar Optimizer](https://github.com/stanfordnlp/dspy/blob/main/dspy/teleprompt/avatar_optimizer.py): docs page.
+- [Baml Adapter](https://github.com/stanfordnlp/dspy/blob/main/dspy/adapters/baml_adapter.py): docs page.
+- [Base](https://github.com/stanfordnlp/dspy/blob/main/dspy/adapters/base.py): docs page.
+- [Base Lm](https://github.com/stanfordnlp/dspy/blob/main/dspy/clients/base_lm.py): docs page.
 
-# Use ChainOfThought for reasoning
-classifier = ChainOfThought(classify_text)
-
-# Example usage
-result = classifier(text="I love this product!")
-print(result)  # Output: "positive"
-
-# Integrate RAG with retrieval module
-from dspy import RAG
-
-rag_pipeline = RAG(
-    retriever="some_retriever",
-    generator=classifier
-)
-
-query = "What are the benefits of Python?"
-output = rag_pipeline(query)
-print(output)
-```
+## Tests
+- [README](https://github.com/stanfordnlp/dspy/blob/main/tests/README.md): install & quickstart.
+- [README](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/README.md): install & quickstart.
+- [Conftest](https://github.com/stanfordnlp/dspy/blob/main/tests/conftest.py): docs page.
+- [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/__init__.py): docs page.
+- [Mock Interpreter](https://github.com/stanfordnlp/dspy/blob/main/tests/mock_interpreter.py): docs page.
+- [Conftest](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/conftest.py): docs page.
+- [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/reliability/__init__.py): docs page.
+- [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/test_utils/__init__.py): docs page.
+- [Init](https://github.com/stanfordnlp/dspy/blob/main/tests/utils/__init__.py): docs page.
+- [Test Adapter File](https://github.com/stanfordnlp/dspy/blob/main/tests/signatures/test_adapter_file.py): docs page.

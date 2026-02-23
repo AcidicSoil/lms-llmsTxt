@@ -1,14 +1,14 @@
 # Cliproxyapi
 
-> CLIProxyAPI serves as a universal proxy for CLI-based AI models, allowing users to access OpenAI, Gemini, Claude, Codex, Qwen, and iFlow through OAuth without exposing API keys. It supports multi-account load balancing, streaming responses, multimodal input, and integrates with popular tools like Amp CLI, VSCode extensions, and desktop apps. The project empowers developers to build custom AI tools and dashboards that abstract away the complexity of multiple LLM providers.
+> CLIProxyAPI serves as a universal proxy server that bridges CLI-based AI tools (like Claude Code, Codex, Gemini CLI) with various AI models through standardized API interfaces. It enables users to manage multiple accounts and models across providers using OAuth, while abstracting away the complexity of direct API calls or key management. The project also provides SDKs for embedding the proxy into applications and supports advanced features like model mapping, streaming responses, and multi-provider load balancing — making it ideal for developers building AI-powered CLI tools or desktop applications.
 
 **Remember:**
-- CLI Proxy
+- CLI Proxy API
 - OAuth Authentication
+- Model Fallback & Mapping
 - Multi-Account Load Balancing
-- Model Mapping
 - Translator Layer
-- Executor Layer
+- Executor Modules
 
 ## Docs
 - [Sdk Access](https://github.com/router-for-me/CLIProxyAPI/blob/main/docs/sdk-access.md): docs page.
