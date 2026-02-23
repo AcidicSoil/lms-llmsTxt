@@ -1,0 +1,379 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Flask",
+    "summary": "<div align=\"center\"><img src=\"https://raw.githubusercontent.com/pallets/flask/refs/heads/stable/docs/_static/flask-name.svg\" alt=\"\" height=\"150\"></div>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Install",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/install.rst",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Installation",
+          "url": "https://github.com/pallets/flask/blob/main/docs/installation.rst",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quickstart",
+          "url": "https://github.com/pallets/flask/blob/main/docs/quickstart.rst",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Blog",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/blog.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Database",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/database.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Deploy",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/deploy.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Factory",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/factory.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/index.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Layout",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/layout.rst",
+          "note": "worked example"
+        },
+        {
+          "title": "Next",
+          "url": "https://github.com/pallets/flask/blob/main/docs/tutorial/next.rst",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/pallets/flask/blob/main/examples/celery/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Readme",
+          "url": "https://github.com/pallets/flask/blob/main/examples/javascript/README.rst",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Readme",
+          "url": "https://github.com/pallets/flask/blob/main/examples/tutorial/README.rst",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Blog",
+          "url": "https://github.com/pallets/flask/blob/main/examples/tutorial/flaskr/templates/blog/index.html",
+          "note": "worked example"
+        },
+        {
+          "title": "Templates",
+          "url": "https://github.com/pallets/flask/blob/main/examples/celery/src/task_app/templates/index.html",
+          "note": "worked example"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/pallets/flask/blob/main/examples/javascript/LICENSE.txt",
+          "note": "worked example"
+        },
+        {
+          "title": "License",
+          "url": "https://github.com/pallets/flask/blob/main/examples/tutorial/LICENSE.txt",
+          "note": "worked example"
+        },
+        {
+          "title": "Make Celery",
+          "url": "https://github.com/pallets/flask/blob/main/examples/celery/make_celery.py",
+          "note": "worked example"
+        },
+        {
+          "title": "Requirements",
+          "url": "https://github.com/pallets/flask/blob/main/examples/celery/requirements.txt",
+          "note": "worked example"
+        },
+        {
+          "title": "Auth",
+          "url": "https://github.com/pallets/flask/blob/main/examples/tutorial/flaskr/auth.py",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Test Subclassing",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_subclassing.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Escaping Template",
+          "url": "https://github.com/pallets/flask/blob/main/tests/templates/escaping_template.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Non Escaping Template",
+          "url": "https://github.com/pallets/flask/blob/main/tests/templates/non_escaping_template.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_apps/subdomaintestmodule/__init__.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Hello",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_apps/subdomaintestmodule/static/hello.txt",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "License",
+          "url": "https://github.com/pallets/flask/blob/main/LICENSE.txt",
+          "note": "usage terms"
+        },
+        {
+          "title": "Changes",
+          "url": "https://github.com/pallets/flask/blob/main/CHANGES.rst",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/pallets/flask/blob/main/README.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/pallets/flask/blob/main/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Bug Report",
+          "url": "https://github.com/pallets/flask/blob/main/.github/ISSUE_TEMPLATE/bug-report.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Feature Request",
+          "url": "https://github.com/pallets/flask/blob/main/.github/ISSUE_TEMPLATE/feature-request.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Src",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/sansio/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "App",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/app.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Blueprints",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/blueprints.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Cli",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/cli.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Config",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/config.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Ctx",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/ctx.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Debughelpers",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/debughelpers.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Globals",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/globals.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Helpers",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/helpers.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Init",
+          "url": "https://github.com/pallets/flask/blob/main/src/flask/__init__.py",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "Static",
+          "url": "https://github.com/pallets/flask/blob/main/tests/static/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Admin",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_apps/blueprintapp/apps/admin/templates/admin/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Frontend",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_apps/blueprintapp/apps/frontend/templates/frontend/index.html",
+          "note": "docs page"
+        },
+        {
+          "title": "Conftest",
+          "url": "https://github.com/pallets/flask/blob/main/tests/conftest.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Appctx",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_appctx.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Async",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_async.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Basic",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_basic.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Blueprints",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_blueprints.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Cli",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_cli.py",
+          "note": "docs page"
+        },
+        {
+          "title": "Test Config",
+          "url": "https://github.com/pallets/flask/blob/main/tests/test_config.py",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

@@ -24,7 +24,13 @@ from .artifacts import (
 )
 from .security import validate_output_dir
 from .hashing import read_text_preview
-from .graph_resources import graph_resource_uri, read_graph_artifact_chunk, scan_graph_artifacts
+from .graph_resources import (
+    graph_resource_uri,
+    read_graph_artifact_chunk,
+    read_repo_node_chunk,
+    repo_graph_node_uri,
+    scan_graph_artifacts,
+)
 from lms_llmsTxt.github import owner_repo_from_url
 
 # Configure logging to stderr to avoid interfering with JSON-RPC on stdout
@@ -271,7 +277,14 @@ def list_graph_artifacts() -> str:
                 filename=str(p),
                 size_bytes=stats.st_size,
                 last_modified=datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc),
-                uri=graph_resource_uri(str(p)),
+                uri=(
+                    repo_graph_node_uri(
+                        str(p.parts[0]) + "--" + str(p.parts[1]),
+                        p.stem,
+                    )
+                    if len(p.parts) >= 5 and p.parts[-2] == "nodes"
+                    else graph_resource_uri(str(p))
+                ),
             )
         )
     return json.dumps([r.model_dump(mode="json") for r in results], indent=2)
@@ -355,6 +368,31 @@ def read_graph_artifact(
     )
     return result.model_dump_json(indent=2)
 
+
+@mcp.tool(
+    name="lmstxt_read_repo_graph_node",
+    annotations={
+        "title": "Read Repo Graph Node",
+        "readOnlyHint": True,
+        "idempotentHint": True,
+    },
+)
+def read_repo_graph_node(
+    repo_id: str = Field(..., description="Repository id (for example owner--repo)"),
+    node_id: str = Field(..., description="Graph node id without extension"),
+    offset: int = Field(0, description="Byte offset", ge=0),
+    limit: int = Field(10000, description="Maximum characters", ge=1, le=100000),
+) -> str:
+    effective_limit = min(limit, settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS)
+    content = read_repo_node_chunk(repo_id=repo_id, node_id=node_id, offset=offset, limit=effective_limit)
+    result = ReadArtifactResult(
+        content=content,
+        truncated=(len(content) == effective_limit),
+        total_chars=len(content),
+    )
+    return result.model_dump_json(indent=2)
+
+
 @mcp.resource("lmstxt://runs/{run_id}/{artifact_name}")
 def get_run_artifact(run_id: str, artifact_name: str) -> str:
     """
@@ -403,6 +441,19 @@ def get_graph_artifact(filename: str) -> str:
         filename,
         0,
         settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS,
+    )
+    if len(content) >= settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS:
+        content += "\n... (content truncated)"
+    return content
+
+
+@mcp.resource("repo://{repo_id}/graph/nodes/{node_id}")
+def get_repo_graph_node(repo_id: str, node_id: str) -> str:
+    content = read_repo_node_chunk(
+        repo_id=repo_id,
+        node_id=node_id,
+        offset=0,
+        limit=settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS,
     )
     if len(content) >= settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS:
         content += "\n... (content truncated)"

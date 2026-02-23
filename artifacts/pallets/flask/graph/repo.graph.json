@@ -1,0 +1,1080 @@
+{
+  "topic": "Flask",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Flask Map",
+      "type": "moc",
+      "description": "src/flask: src/flask/__init__.py src/flask/__main__.py src/flask/app.py src/flask/blueprints.py src/flask/cli.py src/flask/config.py src/flask/ctx.py src/flask/debughelpers.py src/flask/globals.py src/flask/helpers.py src/flask/json/__init__.py src/flask/json/provider.py src/flask/json/tag.... docs/patterns: docs/patterns/appdispatch.rst docs/patterns/appfactories.rst docs/patterns/caching.rst docs/patterns/celery.rst docs/patterns/deferredcallbacks.rst docs/patterns/favicon.rst docs/patterns/fi...",
+      "content": "# Flask\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[src-flask]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-patterns]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-test-apps]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-tutorial]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-tutorial]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-javascript]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-deploying]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-templates]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-celery]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-static]] to inspect related module behavior and evidence anchors.\n- Explore [[github-workflows]] to inspect related module behavior and evidence anchors.\n- Explore [[github-issue-template]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-static]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-type-check]] to inspect related module behavior and evidence anchors.\n- Explore [[readme-md]] to inspect related module behavior and evidence anchors.\n- Explore [[devcontainer-devcontainer-json]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "src-flask",
+        "docs-patterns",
+        "tests-test-apps",
+        "examples-tutorial",
+        "docs-tutorial",
+        "examples-javascript",
+        "docs-deploying",
+        "tests-templates",
+        "examples-celery",
+        "docs-static",
+        "github-workflows",
+        "github-issue-template",
+        "tests-static",
+        "tests-type-check",
+        "readme-md",
+        "devcontainer-devcontainer-json"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "625045aeac945735",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "unknown"
+      ]
+    },
+    {
+      "id": "src-flask",
+      "label": "src/flask",
+      "type": "concept",
+      "description": "src/flask/__init__.py src/flask/__main__.py src/flask/app.py src/flask/blueprints.py src/flask/cli.py src/flask/config.py src/flask/ctx.py src/flask/debughelpers.py src/flask/globals.py src/flask/helpers.py src/flask/json/__init__.py src/flask/json/provider.py src/flask/json/tag....",
+      "content": "---\ntitle: src/flask\ntype: concept\ndescription: src/flask/__init__.py src/flask/__main__.py src/flask/app.py src/flask/blueprints.py src/flask/cli.py src/flask/config.py src/flask/ctx.py src/flask/debughelpers.py src/flask/globals.py src/flask/helpers.py src/flask/json/__init__.py src/flask/json/provider.py src/flask/json/tag....\n---\n\nsrc/flask/__init__.py src/flask/__main__.py src/flask/app.py src/flask/blueprints.py src/flask/cli.py src/flask/config.py src/flask/ctx.py src/flask/debughelpers.py src/flask/globals.py src/flask/helpers.py src/flask/json/__init__.py src/flask/json/provider.py src/flask/json/tag....\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "src/flask/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/__main__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/app.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/blueprints.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/cli.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/config.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/ctx.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/flask/debughelpers.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-patterns",
+      "label": "docs/patterns",
+      "type": "concept",
+      "description": "docs/patterns/appdispatch.rst docs/patterns/appfactories.rst docs/patterns/caching.rst docs/patterns/celery.rst docs/patterns/deferredcallbacks.rst docs/patterns/favicon.rst docs/patterns/fileuploads.rst docs/patterns/flashing.rst docs/patterns/index.rst docs/patterns/javascript....",
+      "content": "---\ntitle: docs/patterns\ntype: concept\ndescription: docs/patterns/appdispatch.rst docs/patterns/appfactories.rst docs/patterns/caching.rst docs/patterns/celery.rst docs/patterns/deferredcallbacks.rst docs/patterns/favicon.rst docs/patterns/fileuploads.rst docs/patterns/flashing.rst docs/patterns/index.rst docs/patterns/javascript....\n---\n\ndocs/patterns/appdispatch.rst docs/patterns/appfactories.rst docs/patterns/caching.rst docs/patterns/celery.rst docs/patterns/deferredcallbacks.rst docs/patterns/favicon.rst docs/patterns/fileuploads.rst docs/patterns/flashing.rst docs/patterns/index.rst docs/patterns/javascript....\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/patterns/appdispatch.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/appfactories.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/caching.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/celery.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/deferredcallbacks.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/favicon.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/fileuploads.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/patterns/flashing.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "tests-test-apps",
+      "label": "tests/test_apps",
+      "type": "concept",
+      "description": "tests/test_apps/.env tests/test_apps/.flaskenv tests/test_apps/blueprintapp/__init__.py tests/test_apps/blueprintapp/apps/__init__.py tests/test_apps/blueprintapp/apps/admin/__init__.py tests/test_apps/blueprintapp/apps/admin/static/css/test.css tests/test_apps/blueprintapp/apps/...",
+      "content": "---\ntitle: tests/test_apps\ntype: concept\ndescription: tests/test_apps/.env tests/test_apps/.flaskenv tests/test_apps/blueprintapp/__init__.py tests/test_apps/blueprintapp/apps/__init__.py tests/test_apps/blueprintapp/apps/admin/__init__.py tests/test_apps/blueprintapp/apps/admin/static/css/test.css tests/test_apps/blueprintapp/apps/...\n---\n\ntests/test_apps/.env tests/test_apps/.flaskenv tests/test_apps/blueprintapp/__init__.py tests/test_apps/blueprintapp/apps/__init__.py tests/test_apps/blueprintapp/apps/admin/__init__.py tests/test_apps/blueprintapp/apps/admin/static/css/test.css tests/test_apps/blueprintapp/apps/...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/test_apps/.env",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/.flaskenv",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/apps/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/apps/admin/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/apps/admin/static/css/test.css",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/apps/admin/static/test.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/test_apps/blueprintapp/apps/admin/templates/admin/index.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "examples-tutorial",
+      "label": "examples/tutorial",
+      "type": "concept",
+      "description": "examples/tutorial/.gitignore examples/tutorial/LICENSE.txt examples/tutorial/README.rst examples/tutorial/flaskr/__init__.py examples/tutorial/flaskr/auth.py examples/tutorial/flaskr/blog.py examples/tutorial/flaskr/db.py examples/tutorial/flaskr/schema.sql examples/tutorial/flas...",
+      "content": "---\ntitle: examples/tutorial\ntype: concept\ndescription: examples/tutorial/.gitignore examples/tutorial/LICENSE.txt examples/tutorial/README.rst examples/tutorial/flaskr/__init__.py examples/tutorial/flaskr/auth.py examples/tutorial/flaskr/blog.py examples/tutorial/flaskr/db.py examples/tutorial/flaskr/schema.sql examples/tutorial/flas...\n---\n\nexamples/tutorial/.gitignore examples/tutorial/LICENSE.txt examples/tutorial/README.rst examples/tutorial/flaskr/__init__.py examples/tutorial/flaskr/auth.py examples/tutorial/flaskr/blog.py examples/tutorial/flaskr/db.py examples/tutorial/flaskr/schema.sql examples/tutorial/flas...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/tutorial/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/LICENSE.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/README.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/flaskr/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/flaskr/auth.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/flaskr/blog.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/flaskr/db.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/tutorial/flaskr/schema.sql",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-tutorial",
+      "label": "docs/tutorial",
+      "type": "concept",
+      "description": "docs/tutorial/blog.rst docs/tutorial/database.rst docs/tutorial/deploy.rst docs/tutorial/factory.rst docs/tutorial/flaskr_edit.png docs/tutorial/flaskr_index.png docs/tutorial/flaskr_login.png docs/tutorial/index.rst docs/tutorial/install.rst docs/tutorial/layout.rst docs/tutoria...",
+      "content": "---\ntitle: docs/tutorial\ntype: concept\ndescription: docs/tutorial/blog.rst docs/tutorial/database.rst docs/tutorial/deploy.rst docs/tutorial/factory.rst docs/tutorial/flaskr_edit.png docs/tutorial/flaskr_index.png docs/tutorial/flaskr_login.png docs/tutorial/index.rst docs/tutorial/install.rst docs/tutorial/layout.rst docs/tutoria...\n---\n\ndocs/tutorial/blog.rst docs/tutorial/database.rst docs/tutorial/deploy.rst docs/tutorial/factory.rst docs/tutorial/flaskr_edit.png docs/tutorial/flaskr_index.png docs/tutorial/flaskr_login.png docs/tutorial/index.rst docs/tutorial/install.rst docs/tutorial/layout.rst docs/tutoria...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/tutorial/blog.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/database.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/deploy.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/factory.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/flaskr_edit.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/flaskr_index.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/flaskr_login.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/tutorial/index.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "examples-javascript",
+      "label": "examples/javascript",
+      "type": "concept",
+      "description": "examples/javascript/.gitignore examples/javascript/LICENSE.txt examples/javascript/README.rst examples/javascript/js_example/__init__.py examples/javascript/js_example/templates/base.html examples/javascript/js_example/templates/fetch.html examples/javascript/js_example/templates...",
+      "content": "---\ntitle: examples/javascript\ntype: concept\ndescription: examples/javascript/.gitignore examples/javascript/LICENSE.txt examples/javascript/README.rst examples/javascript/js_example/__init__.py examples/javascript/js_example/templates/base.html examples/javascript/js_example/templates/fetch.html examples/javascript/js_example/templates...\n---\n\nexamples/javascript/.gitignore examples/javascript/LICENSE.txt examples/javascript/README.rst examples/javascript/js_example/__init__.py examples/javascript/js_example/templates/base.html examples/javascript/js_example/templates/fetch.html examples/javascript/js_example/templates...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/javascript/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/LICENSE.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/README.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/js_example/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/js_example/templates/base.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/js_example/templates/fetch.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/js_example/templates/jquery.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/javascript/js_example/templates/xhr.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-deploying",
+      "label": "docs/deploying",
+      "type": "concept",
+      "description": "docs/deploying/apache-httpd.rst docs/deploying/asgi.rst docs/deploying/eventlet.rst docs/deploying/gevent.rst docs/deploying/gunicorn.rst docs/deploying/index.rst docs/deploying/mod_wsgi.rst docs/deploying/nginx.rst docs/deploying/proxy_fix.rst docs/deploying/uwsgi.rst docs/deplo...",
+      "content": "---\ntitle: docs/deploying\ntype: concept\ndescription: docs/deploying/apache-httpd.rst docs/deploying/asgi.rst docs/deploying/eventlet.rst docs/deploying/gevent.rst docs/deploying/gunicorn.rst docs/deploying/index.rst docs/deploying/mod_wsgi.rst docs/deploying/nginx.rst docs/deploying/proxy_fix.rst docs/deploying/uwsgi.rst docs/deplo...\n---\n\ndocs/deploying/apache-httpd.rst docs/deploying/asgi.rst docs/deploying/eventlet.rst docs/deploying/gevent.rst docs/deploying/gunicorn.rst docs/deploying/index.rst docs/deploying/mod_wsgi.rst docs/deploying/nginx.rst docs/deploying/proxy_fix.rst docs/deploying/uwsgi.rst docs/deplo...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/deploying/apache-httpd.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/asgi.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/eventlet.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/gevent.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/gunicorn.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/index.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/mod_wsgi.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/deploying/nginx.rst",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "tests-templates",
+      "label": "tests/templates",
+      "type": "concept",
+      "description": "tests/templates/_macro.html tests/templates/context_template.html tests/templates/escaping_template.html tests/templates/mail.txt tests/templates/nested/nested.txt tests/templates/non_escaping_template.txt tests/templates/simple_template.html tests/templates/template_filter.html ...",
+      "content": "---\ntitle: tests/templates\ntype: concept\ndescription: tests/templates/_macro.html tests/templates/context_template.html tests/templates/escaping_template.html tests/templates/mail.txt tests/templates/nested/nested.txt tests/templates/non_escaping_template.txt tests/templates/simple_template.html tests/templates/template_filter.html ...\n---\n\ntests/templates/_macro.html tests/templates/context_template.html tests/templates/escaping_template.html tests/templates/mail.txt tests/templates/nested/nested.txt tests/templates/non_escaping_template.txt tests/templates/simple_template.html tests/templates/template_filter.html ...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/templates/_macro.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/context_template.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/escaping_template.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/mail.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/nested/nested.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/non_escaping_template.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/simple_template.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/templates/template_filter.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "examples-celery",
+      "label": "examples/celery",
+      "type": "concept",
+      "description": "examples/celery/README.md examples/celery/make_celery.py examples/celery/pyproject.toml examples/celery/requirements.txt examples/celery/src/task_app/__init__.py examples/celery/src/task_app/tasks.py examples/celery/src/task_app/templates/index.html examples/celery/src/task_app/v...",
+      "content": "---\ntitle: examples/celery\ntype: concept\ndescription: examples/celery/README.md examples/celery/make_celery.py examples/celery/pyproject.toml examples/celery/requirements.txt examples/celery/src/task_app/__init__.py examples/celery/src/task_app/tasks.py examples/celery/src/task_app/templates/index.html examples/celery/src/task_app/v...\n---\n\nexamples/celery/README.md examples/celery/make_celery.py examples/celery/pyproject.toml examples/celery/requirements.txt examples/celery/src/task_app/__init__.py examples/celery/src/task_app/tasks.py examples/celery/src/task_app/templates/index.html examples/celery/src/task_app/v...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/celery/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/make_celery.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/pyproject.toml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/requirements.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/src/task_app/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/src/task_app/tasks.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/src/task_app/templates/index.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/celery/src/task_app/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-static",
+      "label": "docs/_static",
+      "type": "concept",
+      "description": "docs/_static/debugger.png docs/_static/flask-icon.svg docs/_static/flask-logo.svg docs/_static/flask-name.svg docs/_static/pycharm-run-config.png",
+      "content": "---\ntitle: docs/_static\ntype: concept\ndescription: docs/_static/debugger.png docs/_static/flask-icon.svg docs/_static/flask-logo.svg docs/_static/flask-name.svg docs/_static/pycharm-run-config.png\n---\n\ndocs/_static/debugger.png docs/_static/flask-icon.svg docs/_static/flask-logo.svg docs/_static/flask-name.svg docs/_static/pycharm-run-config.png\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/_static/debugger.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/_static/flask-icon.svg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/_static/flask-logo.svg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/_static/flask-name.svg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/_static/pycharm-run-config.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-workflows",
+      "label": ".github/workflows",
+      "type": "concept",
+      "description": ".github/workflows/lock.yaml .github/workflows/pre-commit.yaml .github/workflows/publish.yaml .github/workflows/tests.yaml",
+      "content": "---\ntitle: .github/workflows\ntype: concept\ndescription: .github/workflows/lock.yaml .github/workflows/pre-commit.yaml .github/workflows/publish.yaml .github/workflows/tests.yaml\n---\n\n.github/workflows/lock.yaml .github/workflows/pre-commit.yaml .github/workflows/publish.yaml .github/workflows/tests.yaml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/workflows/lock.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/pre-commit.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/publish.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/tests.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-issue-template",
+      "label": ".github/ISSUE_TEMPLATE",
+      "type": "concept",
+      "description": ".github/ISSUE_TEMPLATE/bug-report.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature-request.md",
+      "content": "---\ntitle: .github/ISSUE_TEMPLATE\ntype: concept\ndescription: .github/ISSUE_TEMPLATE/bug-report.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature-request.md\n---\n\n.github/ISSUE_TEMPLATE/bug-report.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature-request.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/ISSUE_TEMPLATE/bug-report.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/ISSUE_TEMPLATE/config.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/ISSUE_TEMPLATE/feature-request.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "tests-static",
+      "label": "tests/static",
+      "type": "concept",
+      "description": "tests/static/config.json tests/static/config.toml tests/static/index.html",
+      "content": "---\ntitle: tests/static\ntype: concept\ndescription: tests/static/config.json tests/static/config.toml tests/static/index.html\n---\n\ntests/static/config.json tests/static/config.toml tests/static/index.html\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/static/config.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/static/config.toml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/static/index.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "tests-type-check",
+      "label": "tests/type_check",
+      "type": "concept",
+      "description": "tests/type_check/typing_app_decorators.py tests/type_check/typing_error_handler.py tests/type_check/typing_route.py",
+      "content": "---\ntitle: tests/type_check\ntype: concept\ndescription: tests/type_check/typing_app_decorators.py tests/type_check/typing_error_handler.py tests/type_check/typing_route.py\n---\n\ntests/type_check/typing_app_decorators.py tests/type_check/typing_error_handler.py tests/type_check/typing_route.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/type_check/typing_app_decorators.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/type_check/typing_error_handler.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/type_check/typing_route.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "readme-md",
+      "label": "README.md",
+      "type": "concept",
+      "description": "README.md <div align=\"center\"><img src=\"https://raw.githubusercontent.com/pallets/flask/refs/heads/stable/docs/_static/flask-name.svg\" alt=\"\" height=\"150\"></div> # Flask Flask is a lightweig...",
+      "content": "---\ntitle: README.md\ntype: concept\ndescription: README.md <div align=\"center\"><img src=\"https://raw.githubusercontent.com/pallets/flask/refs/heads/stable/docs/_static/flask-name.svg\" alt=\"\" height=\"150\"></div> # Flask Flask is a lightweig...\n---\n\nREADME.md <div align=\"center\"><img src=\"https://raw.githubusercontent.com/pallets/flask/refs/heads/stable/docs/_static/flask-name.svg\" alt=\"\" height=\"150\"></div> # Flask Flask is a lightweig...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "devcontainer-devcontainer-json",
+      "label": ".devcontainer/devcontainer.json",
+      "type": "concept",
+      "description": ".devcontainer/devcontainer.json",
+      "content": "---\ntitle: .devcontainer/devcontainer.json\ntype: concept\ndescription: .devcontainer/devcontainer.json\n---\n\n.devcontainer/devcontainer.json\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".devcontainer/devcontainer.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "devcontainer-on-create-command-sh",
+      "label": ".devcontainer/on-create-command.sh",
+      "type": "concept",
+      "description": ".devcontainer/on-create-command.sh",
+      "content": "---\ntitle: .devcontainer/on-create-command.sh\ntype: concept\ndescription: .devcontainer/on-create-command.sh\n---\n\n.devcontainer/on-create-command.sh\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".devcontainer/on-create-command.sh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "editorconfig",
+      "label": ".editorconfig",
+      "type": "concept",
+      "description": ".editorconfig",
+      "content": "---\ntitle: .editorconfig\ntype: concept\ndescription: .editorconfig\n---\n\n.editorconfig\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".editorconfig",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-pull-request-template-md",
+      "label": ".github/pull_request_template.md",
+      "type": "concept",
+      "description": ".github/pull_request_template.md",
+      "content": "---\ntitle: .github/pull_request_template.md\ntype: concept\ndescription: .github/pull_request_template.md\n---\n\n.github/pull_request_template.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/pull_request_template.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "gitignore",
+      "label": ".gitignore",
+      "type": "concept",
+      "description": ".gitignore",
+      "content": "---\ntitle: .gitignore\ntype: concept\ndescription: .gitignore\n---\n\n.gitignore\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-02-23T11:12:15.728816Z"
+}

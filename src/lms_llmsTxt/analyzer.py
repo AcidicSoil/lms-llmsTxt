@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from collections import defaultdict
-from typing import Dict, Iterable, List, Tuple
+from typing import Any, Dict, Iterable, List, Tuple
 
 import requests
 
@@ -260,6 +260,48 @@ def render_llms_markdown(
     return "\n".join(out).strip()
 
 
+def _pred_get(prediction: Any, key: str, default: Any = None) -> Any:
+    if prediction is None:
+        return default
+    if isinstance(prediction, dict):
+        return prediction.get(key, default)
+    return getattr(prediction, key, default)
+
+
+def _as_text(value: Any, default: str = "") -> str:
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text if text else default
+
+
+def _as_list_of_text(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        cleaned = value.strip()
+        return [cleaned] if cleaned else []
+    if isinstance(value, (list, tuple, set)):
+        out: list[str] = []
+        for item in value:
+            text = _as_text(item)
+            if text:
+                out.append(text)
+        return out
+    text = _as_text(value)
+    return [text] if text else []
+
+
+def _readme_lead_sentence(readme_content: str) -> str:
+    if not readme_content:
+        return ""
+    text = " ".join(line.strip() for line in readme_content.splitlines() if line.strip())
+    if not text:
+        return ""
+    sentence = text.split(".")[0].strip()
+    return (sentence + ".") if sentence and not sentence.endswith(".") else sentence
+
+
 class RepositoryAnalyzer(dspy.Module):
     """DSPy module that synthesizes an llms.txt summary for a GitHub repository."""
 
@@ -317,11 +359,39 @@ class RepositoryAnalyzer(dspy.Module):
                 file_tree=file_tree, package_files=package_files
             )
 
+        project_purpose = _as_text(_pred_get(repo_analysis, "project_purpose"))
+        if not project_purpose:
+            project_purpose = _as_text(
+                repo_digest.architecture_summary if repo_digest else "",
+                default=_readme_lead_sentence(readme_content) or "Project overview unavailable.",
+            )
+            logger.debug("Analyzer missing project_purpose; using fallback summary.")
+
+        key_concepts = _as_list_of_text(_pred_get(repo_analysis, "key_concepts"))
+        if not key_concepts and repo_digest is not None:
+            key_concepts = [sub.get("name", "") for sub in repo_digest.subsystems[:6] if sub.get("name")]
+            if not key_concepts:
+                key_concepts = repo_digest.key_dependencies[:6]
+            logger.debug("Analyzer missing key_concepts; using digest-derived concepts.")
+
+        entry_points = _as_list_of_text(_pred_get(structure_analysis, "entry_points"))
+        if not entry_points and repo_digest is not None:
+            entry_points = repo_digest.entry_points[:10]
+            logger.debug("Analyzer missing entry_points; using digest entry points.")
+
+        important_directories = _as_list_of_text(_pred_get(structure_analysis, "important_directories"))
+        if not important_directories and repo_digest is not None:
+            important_directories = [sub.get("name", "") for sub in repo_digest.subsystems[:8] if sub.get("name")]
+
+        development_info = _as_text(_pred_get(structure_analysis, "development_info"))
+        if not development_info and repo_digest is not None:
+            development_info = _as_text(repo_digest.architecture_summary, default="Repository architecture summary unavailable.")
+
         self.generate_examples(
             repo_info=(
-                f"Purpose: {repo_analysis.project_purpose}\n\n"
-                f"Concepts: {', '.join(repo_analysis.key_concepts or [])}\n\n"
-                f"Entry points: {', '.join(structure_analysis.entry_points or [])}\n"
+                f"Purpose: {project_purpose}\n\n"
+                f"Concepts: {', '.join(key_concepts)}\n\n"
+                f"Entry points: {', '.join(entry_points)}\n"
             )
         )
 
@@ -343,13 +413,20 @@ class RepositoryAnalyzer(dspy.Module):
 
         llms_txt_content = render_llms_markdown(
             project_name=project_name,
-            project_purpose=repo_analysis.project_purpose or "",
-            remember_bullets=repo_analysis.key_concepts or [],
+            project_purpose=project_purpose,
+            remember_bullets=key_concepts,
             buckets=buckets,
         )
 
         return dspy.Prediction(
             llms_txt_content=llms_txt_content,
-            analysis=repo_analysis,
-            structure=structure_analysis,
+            analysis=dspy.Prediction(
+                project_purpose=project_purpose,
+                key_concepts=key_concepts,
+            ),
+            structure=dspy.Prediction(
+                important_directories=important_directories,
+                entry_points=entry_points,
+                development_info=development_info,
+            ),
         )

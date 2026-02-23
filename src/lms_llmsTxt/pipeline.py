@@ -123,17 +123,26 @@ def run_generation(
         current_budget = budget
         while True:
             try:
-                result = analyzer(
-                    repo_url=working_material.repo_url,
-                    file_tree=working_material.file_tree,
-                    readme_content=working_material.readme_content,
-                    package_files=working_material.package_files,
-                    default_branch=working_material.default_branch,
-                    is_private=working_material.is_private,
-                    github_token=config.github_token,
-                    link_style=config.link_style,
-                    repo_digest=repo_digest,
-                )
+                analyzer_kwargs = {
+                    "repo_url": working_material.repo_url,
+                    "file_tree": working_material.file_tree,
+                    "readme_content": working_material.readme_content,
+                    "package_files": working_material.package_files,
+                    "default_branch": working_material.default_branch,
+                    "is_private": working_material.is_private,
+                    "github_token": config.github_token,
+                    "link_style": config.link_style,
+                    "repo_digest": repo_digest,
+                }
+                try:
+                    result = analyzer(**analyzer_kwargs)
+                except TypeError as call_exc:
+                    # Some test/mocked DSPy module variants expose forward() only.
+                    if callable(getattr(analyzer, "forward", None)):
+                        logger.debug("Analyzer is not directly callable; invoking forward()")
+                        result = analyzer.forward(**analyzer_kwargs)
+                    else:
+                        raise call_exc
                 llms_text = result.llms_txt_content
                 break
             except Exception as exc:

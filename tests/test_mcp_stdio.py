@@ -2,15 +2,33 @@ import subprocess
 import json
 import os
 import sys
+import shutil
 import pytest
+
+
+def _resolve_mcp_command() -> list[str]:
+    explicit = os.environ.get("LMSTXT_MCP_BIN")
+    if explicit:
+        return [explicit]
+
+    local_bin = os.path.join(".venv", "bin", "lmstxt-mcp")
+    if os.path.exists(local_bin):
+        return [local_bin]
+
+    path_bin = shutil.which("lmstxt-mcp")
+    if path_bin:
+        return [path_bin]
+
+    # Module execution works in editable/dev installs and CI where scripts are absent.
+    return [sys.executable, "-m", "lms_llmsTxt_mcp.server"]
+
 
 @pytest.mark.integration
 def test_mcp_stdio_server():
     """
     Launches the installed lmstxt-mcp CLI and verifies JSON-RPC communication.
     """
-    # Verify the command exists in the path/venv
-    cmd = ["venv_test/bin/lmstxt-mcp"]
+    cmd = _resolve_mcp_command()
     
     # We need to run this in the context where the package is installed
     # subprocess.Popen will use the current environment variables
@@ -52,8 +70,8 @@ def test_mcp_stdio_server():
         resp = json.loads(response_line)
         assert resp.get("id") == 1
         assert "result" in resp
-        # Matches FastMCP("lms-lmstxt")
-        assert resp["result"]["serverInfo"]["name"] == "lms-lmstxt"
+        # Matches FastMCP server initialization in src/lms_llmsTxt_mcp/server.py
+        assert resp["result"]["serverInfo"]["name"] == "lms-llmsTxt"
 
         # 2. Initialized Notification
         notify_req = {

@@ -154,9 +154,14 @@ This package includes a FastMCP server that exposes the generator as an MCP tool
   - `lmstxt_list_runs`: View recent generation history and status.
   - `lmstxt_read_artifact`: Read generated files with pagination support.
   - `lmstxt_list_all_artifacts`: List all persistent `.txt` artifacts on disk.
+  - `lmstxt_list_graph_artifacts`: List discovered graph artifacts (`repo.graph.json`, `repo.force.json`, `nodes/*.md`).
+  - `lmstxt_read_graph_artifact`: Read graph artifact content with pagination.
+  - `lmstxt_read_repo_graph_node`: Read a graph node by repo id and node id.
 - **Resources**:
   - **Run-specific**: `lmstxt://runs/{run_id}/{artifact_name}`
   - **Persistent Directory**: `lmstxt://artifacts/{filename}` (e.g., `lmstxt://artifacts/owner/repo/repo-llms.txt`)
+  - **Graph file**: `lmstxt://graphs/{filename}`
+  - **Repo graph node**: `repo://{repo_id}/graph/nodes/{node_id}` (for example `repo://owner--repo/graph/nodes/moc`)
 
 ### Running the Server
 
@@ -228,6 +233,37 @@ uv run pytest
 ```
 
 All tests should pass, confirming URL validation, fallback handling, and MCP resource exposure.
+
+## Reliability Validation (2026-02-23)
+
+An end-to-end run was executed against `https://github.com/pallets/flask`:
+
+```bash
+PYTHONPATH=src python3 -m lms_llmsTxt.cli https://github.com/pallets/flask \
+  --generate-graph \
+  --graph-only \
+  --verbose-budget \
+  --output-dir artifacts
+```
+
+Observed results:
+
+- Artifacts generated:
+  - `artifacts/pallets/flask/flask-llms.txt`
+  - `artifacts/pallets/flask/graph/repo.graph.json`
+  - `artifacts/pallets/flask/graph/repo.force.json`
+  - `artifacts/pallets/flask/graph/nodes/*.md`
+- Sanitization check: no `<think>`, `<analysis>`, or `Reasoning:` markers found in generated outputs.
+- Graph grounding check: `repo.graph.json` contained `21` nodes and `0` nodes with missing evidence.
+- Runtime mode: generation completed through the primary analyzer path (no fallback artifact emitted).
+
+### Failure-Rate SLO Baseline
+
+- Artifact delivery SLO: `>= 99%` successful artifact generation per invocation (`llms.txt` + graph artifacts when `--generate-graph` is used).
+- Sanitization SLO: `100%` of generated artifacts must be free of reasoning tags (`<think>`, `<analysis>`, `Reasoning:`).
+- Graph evidence SLO: `100%` graph nodes should include at least one evidence entry.
+
+Current baseline run met all three SLO checks above in primary-path mode.
 
 ## Build & verify a local package
 

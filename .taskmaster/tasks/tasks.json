@@ -2,14 +2,14 @@
   "chore-dist-name": {
     "tasks": [
       {
-        "id": 1,
+        "id": "1",
         "title": "Foundation: Core Models and Reasoning Primitives",
         "description": "Implement the foundational data models and utility functions for reasoning sanitization, context budgeting, and graph schemas.",
         "details": "Create `src/lms_llmsTxt/reasoning.py`, `context_budget.py`, `retry_policy.py`, and `graph_models.py`. Use Pydantic v2 for data validation. In `reasoning.py`, implement regex-based sanitizers for `<think>`, `<analysis>`, and 'Reasoning:' prefixes. In `context_budget.py`, use `tiktoken` (cl100k_base encoding) for accurate token estimation. Define `ContextBudget` with fields for `max_context`, `reserved_output`, and `headroom_ratio` (default 0.1). Define `RepoSkillGraph` and `GraphNodeEvidence` in `graph_models.py` following the existing HyperGraph schema.",
         "testStrategy": "Unit tests for `sanitize_final_output` with various reasoning-heavy mock strings. Validation tests for `ContextBudget` to ensure headroom is correctly calculated. Schema validation for graph models.",
         "priority": "high",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -17,8 +17,10 @@
             "description": "Create regex-based sanitizers to strip out reasoning tokens and prefixes from LLM outputs.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt/reasoning.py`. Implement regex-based sanitization functions, specifically `sanitize_final_output`, to identify and remove `<think>...</think>` blocks, `<analysis>...</analysis>` blocks, and 'Reasoning:' prefixes. Ensure the regex handles multiline strings and edge cases gracefully.",
-            "status": "pending",
-            "testStrategy": "Write unit tests for `sanitize_final_output` using various reasoning-heavy mock strings, including multiline blocks, empty blocks, and strings without reasoning tags."
+            "status": "done",
+            "testStrategy": "Write unit tests for `sanitize_final_output` using various reasoning-heavy mock strings, including multiline blocks, empty blocks, and strings without reasoning tags.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.160Z"
           },
           {
             "id": 2,
@@ -26,8 +28,10 @@
             "description": "Create the ContextBudget model and token counting utilities using tiktoken.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt/context_budget.py`. Define a `ContextBudget` model using Pydantic v2 with fields for `max_context` (int), `reserved_output` (int), and `headroom_ratio` (float, default 0.1). Implement a token counting utility using the `tiktoken` library with the `cl100k_base` encoding.",
-            "status": "pending",
-            "testStrategy": "Write validation tests for `ContextBudget` to ensure headroom and available context are correctly calculated. Test the token counting utility against known string lengths."
+            "status": "done",
+            "testStrategy": "Write validation tests for `ContextBudget` to ensure headroom and available context are correctly calculated. Test the token counting utility against known string lengths.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.174Z"
           },
           {
             "id": 3,
@@ -35,8 +39,10 @@
             "description": "Implement standard retry behaviors and backoff strategies for resilient LLM invocations.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt/retry_policy.py`. Define Pydantic v2 models or configuration classes for retry policies, specifying parameters such as maximum retry attempts, base delay, maximum delay, and exponential backoff multipliers.",
-            "status": "pending",
-            "testStrategy": "Unit tests to verify retry policy configuration defaults, bounds checking (e.g., max retries > 0), and validation logic."
+            "status": "done",
+            "testStrategy": "Unit tests to verify retry policy configuration defaults, bounds checking (e.g., max retries > 0), and validation logic.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.184Z"
           },
           {
             "id": 4,
@@ -44,22 +50,28 @@
             "description": "Create the foundational data structures for the repository skill graph and evidence tracking.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt/graph_models.py`. Define `RepoSkillGraph` and `GraphNodeEvidence` models using Pydantic v2. Ensure these models follow the existing HyperGraph schema requirements, including strict type hints and field descriptions for downstream JSON schema generation.",
-            "status": "pending",
-            "testStrategy": "Schema validation tests for graph models to ensure correct serialization/deserialization, type enforcement, and handling of missing optional fields."
+            "status": "done",
+            "testStrategy": "Schema validation tests for graph models to ensure correct serialization/deserialization, type enforcement, and handling of missing optional fields.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.191Z"
           }
-        ]
+        ],
+        "complexity": 4,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the foundation task into subtasks for 1) reasoning sanitization with regex, 2) context budgeting using tiktoken, 3) retry policy definitions, and 4) graph model schemas using Pydantic v2.",
+        "updatedAt": "2026-02-23T11:07:27.191Z"
       },
       {
-        "id": 2,
+        "id": "2",
         "title": "Deterministic Context Compaction Ladder",
         "description": "Implement a multi-stage compaction engine to reduce repository material size before model invocation.",
         "details": "Implement `src/lms_llmsTxt/context_compaction.py`. Create a `CompactionLadder` class that applies transformations in order: 1. Prune deep file tree branches, 2. Truncate README to first 2k tokens, 3. Filter non-essential package files (e.g., lockfiles), 4. Final deterministic truncation of the largest remaining blobs. Use the `ContextBudget` from Task 1 to determine the target size. Ensure the process is idempotent and logs the reduction percentage at each step.",
         "testStrategy": "Unit tests using synthetic 'oversized' repository material. Assert that the output of `compact_material` is strictly under the token limit provided in the budget.",
         "priority": "high",
         "dependencies": [
-          1
+          "1"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -67,8 +79,10 @@
             "description": "Create the `CompactionLadder` class, integrate `ContextBudget`, and implement the first stage to prune deep file tree branches.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt/context_compaction.py`. Define the `CompactionLadder` class initialized with a `ContextBudget` (from Task 1). Implement the first transformation method to prune deep directory branches (e.g., depth > threshold) from the repository material. Establish the logging mechanism to record token reduction percentages.",
-            "status": "pending",
-            "testStrategy": "Unit test initializing the ladder with a mock budget and verifying deep branches are removed from a synthetic file tree while maintaining idempotency."
+            "status": "done",
+            "testStrategy": "Unit test initializing the ladder with a mock budget and verifying deep branches are removed from a synthetic file tree while maintaining idempotency.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.212Z"
           },
           {
             "id": 2,
@@ -78,8 +92,10 @@
               1
             ],
             "details": "Implement a method in `CompactionLadder` that identifies README files (e.g., README.md, README.txt) within the repository material and truncates their content to the first 2000 tokens. Ensure the truncation is deterministic and logs the reduction percentage for this specific step.",
-            "status": "pending",
-            "testStrategy": "Unit test with a mock README exceeding 2k tokens, asserting the output is truncated to exactly 2k tokens and the reduction metric is correctly logged."
+            "status": "done",
+            "testStrategy": "Unit test with a mock README exceeding 2k tokens, asserting the output is truncated to exactly 2k tokens and the reduction metric is correctly logged.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.231Z"
           },
           {
             "id": 3,
@@ -89,8 +105,10 @@
               1
             ],
             "details": "Implement a filtering method in `CompactionLadder` that removes files matching known non-essential patterns (e.g., `package-lock.json`, `yarn.lock`, `poetry.lock`, minified files). Calculate the tokens saved by this removal and log the reduction percentage.",
-            "status": "pending",
-            "testStrategy": "Unit test providing a mix of essential source files and non-essential lockfiles, verifying only essential files remain in the compacted material."
+            "status": "done",
+            "testStrategy": "Unit test providing a mix of essential source files and non-essential lockfiles, verifying only essential files remain in the compacted material.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.235Z"
           },
           {
             "id": 4,
@@ -102,23 +120,29 @@
               3
             ],
             "details": "Implement the final fallback method in `CompactionLadder`. If the total token count still exceeds the `ContextBudget` after stages 1-3, identify the largest remaining file blobs and truncate them deterministically (e.g., keeping the top and bottom N lines) until the budget is met. Ensure the entire pipeline is idempotent.",
-            "status": "pending",
-            "testStrategy": "Unit test with oversized synthetic repository material that passes through all stages. Assert that the final output is strictly under the token limit provided in the budget."
+            "status": "done",
+            "testStrategy": "Unit test with oversized synthetic repository material that passes through all stages. Assert that the final output is strictly under the token limit provided in the budget.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.244Z"
           }
-        ]
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Generate subtasks for each stage of the compaction ladder: tree pruning, README truncation, file filtering, and final deterministic blob truncation, including integration with the ContextBudget.",
+        "updatedAt": "2026-02-23T11:07:27.244Z"
       },
       {
-        "id": 3,
+        "id": "3",
         "title": "Repository Digest Engine (Map/Reduce)",
         "description": "Implement a typed extraction pipeline to generate high-signal repository digests from chunked inputs.",
         "details": "Implement `src/lms_llmsTxt/repo_digest.py`. Define a `ChunkCapsule` Pydantic model. Use a Map/Reduce pattern: 'Map' extracts semantic metadata (exported symbols, main purpose, dependencies) from file chunks using a DSPy `TypedPredictor`. 'Reduce' merges these capsules into a single `RepoDigest`. This avoids 'context stuffing' by summarizing chunks individually before the final generation. Use `dspy.Signature` to enforce the extraction rubric.",
         "testStrategy": "Snapshot tests for `reduce_capsules` to ensure stability. Integration test with a small repo fixture to verify the digest contains expected semantic keys.",
         "priority": "high",
         "dependencies": [
-          1,
-          2
+          "1",
+          "2"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -126,8 +150,10 @@
             "description": "Create the Pydantic models for the digest engine and implement the file chunking logic.",
             "dependencies": [],
             "details": "Implement `src/lms_llmsTxt/repo_digest.py`. Define the `ChunkCapsule` Pydantic model (fields for exported symbols, main purpose, dependencies, and provenance/line numbers) and the `RepoDigest` model. Implement a chunking utility that reads repository files and splits them into manageable text chunks while preserving file path and line number provenance for the Map phase.",
-            "status": "pending",
-            "testStrategy": "Unit tests to verify that the chunking utility correctly splits files at appropriate boundaries and retains accurate provenance metadata."
+            "status": "done",
+            "testStrategy": "Unit tests to verify that the chunking utility correctly splits files at appropriate boundaries and retains accurate provenance metadata.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.259Z"
           },
           {
             "id": 2,
@@ -137,8 +163,10 @@
               1
             ],
             "details": "In `src/lms_llmsTxt/repo_digest.py`, define a `dspy.Signature` that enforces the extraction rubric for file chunks. Implement a DSPy `TypedPredictor` that takes a raw text chunk as input and outputs a validated `ChunkCapsule`. The prompt instructions must guide the LLM to accurately identify exported symbols, the chunk's main purpose, and its dependencies.",
-            "status": "pending",
-            "testStrategy": "Unit tests mocking the DSPy LLM backend to ensure the `TypedPredictor` correctly populates a `ChunkCapsule` from sample chunk text."
+            "status": "done",
+            "testStrategy": "Unit tests mocking the DSPy LLM backend to ensure the `TypedPredictor` correctly populates a `ChunkCapsule` from sample chunk text.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.276Z"
           },
           {
             "id": 3,
@@ -149,8 +177,10 @@
               2
             ],
             "details": "Implement the `reduce_capsules` function. This function must take an array of `ChunkCapsule` objects and intelligently merge them into a final `RepoDigest`. The logic should handle deduplication of exported symbols and dependencies, and synthesize the overall repository purpose. This step is critical to avoid 'context stuffing' by summarizing the already-extracted semantic data rather than raw text.",
-            "status": "pending",
-            "testStrategy": "Snapshot tests for `reduce_capsules` using a predefined list of mock `ChunkCapsule` objects to ensure stable, deterministic merging."
+            "status": "done",
+            "testStrategy": "Snapshot tests for `reduce_capsules` using a predefined list of mock `ChunkCapsule` objects to ensure stable, deterministic merging.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.280Z"
           },
           {
             "id": 4,
@@ -162,22 +192,28 @@
               3
             ],
             "details": "Create an integration test suite that executes the full pipeline (chunking -> Map extraction -> Reduce merging) on a small, controlled repository fixture. Verify that the final `RepoDigest` contains the expected semantic keys, accurate provenance mapping, and correctly summarizes the fixture repository without losing critical signals.",
-            "status": "pending",
-            "testStrategy": "Integration test with a small repo fixture asserting the presence of specific exported symbols, dependencies, and accurate provenance in the final `RepoDigest`."
+            "status": "done",
+            "testStrategy": "Integration test with a small repo fixture asserting the presence of specific exported symbols, dependencies, and accurate provenance in the final `RepoDigest`.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.292Z"
           }
-        ]
+        ],
+        "complexity": 8,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Create subtasks for the Map/Reduce digest engine, separating the chunking mechanism, the DSPy Map predictor for semantic extraction, the Reduce logic for merging capsules, and integration testing.",
+        "updatedAt": "2026-02-23T11:07:27.292Z"
       },
       {
-        "id": 4,
+        "id": "4",
         "title": "Production-Safe DSPy Analyzer Enhancement",
         "description": "Update the RepositoryAnalyzer to use production-safe predictors and digest-aware inputs.",
         "details": "Modify `src/lms_llmsTxt/analyzer.py`. Replace `dspy.ChainOfThought` with `dspy.Predict` for the final artifact generation to minimize token waste and reasoning contamination. Update the signature to accept `RepoDigest` instead of raw file blobs. Implement a 'safe mode' that explicitly requests the model to omit any conversational filler or internal thought blocks, relying on the Task 1 sanitizer as a secondary guard.",
         "testStrategy": "Mock DSPy calls and verify that the prompt sent to the LLM uses the digest structure. Assert that the output is passed through the canonicalization layer.",
         "priority": "medium",
         "dependencies": [
-          3
+          "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -185,8 +221,10 @@
             "description": "Modify the DSPy signature in the analyzer to accept a RepoDigest object instead of raw file blobs.",
             "dependencies": [],
             "details": "Edit `src/lms_llmsTxt/analyzer.py` to change the input field of the DSPy signature. It must now expect a structured `RepoDigest` input rather than raw text or file blobs. Ensure type hints and docstrings are updated to reflect this new data structure.",
-            "status": "pending",
-            "testStrategy": "Unit test the signature instantiation to ensure it correctly accepts, parses, and processes a mock `RepoDigest` object without throwing validation errors."
+            "status": "done",
+            "testStrategy": "Unit test the signature instantiation to ensure it correctly accepts, parses, and processes a mock `RepoDigest` object without throwing validation errors.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:12:36.053Z"
           },
           {
             "id": 2,
@@ -196,8 +234,10 @@
               1
             ],
             "details": "Update the instruction string in the DSPy signature within `src/lms_llmsTxt/analyzer.py`. Explicitly request the model to omit conversational filler, `<think>` tags, or internal reasoning blocks, ensuring strict adherence to output constraints. Note that Task 1's sanitizer will act as a secondary guard.",
-            "status": "pending",
-            "testStrategy": "Mock the DSPy call and inspect the generated prompt string to verify that the 'safe mode' constraints are clearly included in the instructions sent to the LLM."
+            "status": "done",
+            "testStrategy": "Mock the DSPy call and inspect the generated prompt string to verify that the 'safe mode' constraints are clearly included in the instructions sent to the LLM.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:12:36.056Z"
           },
           {
             "id": 3,
@@ -208,24 +248,30 @@
               2
             ],
             "details": "In `src/lms_llmsTxt/analyzer.py`, locate the final artifact generation step and replace the `dspy.ChainOfThought` module with `dspy.Predict`. Ensure the output from the predictor is correctly passed through the canonicalization layer before being returned.",
-            "status": "pending",
-            "testStrategy": "Run an integration test mocking the DSPy predictor to ensure `dspy.Predict` is invoked instead of `dspy.ChainOfThought`, and assert that the final output is correctly canonicalized."
+            "status": "done",
+            "testStrategy": "Run an integration test mocking the DSPy predictor to ensure `dspy.Predict` is invoked instead of `dspy.ChainOfThought`, and assert that the final output is correctly canonicalized.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:12:36.062Z"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Divide the analyzer enhancement into subtasks for updating the DSPy signature to use RepoDigest, implementing the 'safe mode' prompt constraints, and swapping ChainOfThought for Predict.",
+        "updatedAt": "2026-02-23T11:12:36.062Z"
       },
       {
-        "id": 5,
+        "id": "5",
         "title": "Orchestration Pipeline with Progressive Retries",
         "description": "Enhance the main generation pipeline with budget preflights, retry logic, and final sanitization.",
         "details": "Update `src/lms_llmsTxt/pipeline.py`. Implement a loop that: 1. Preflights the budget. 2. Compacts material if needed. 3. Calls the Analyzer. 4. Catches context-length (413) or provider-specific payload errors. On error, use `retry_policy.py` to reduce the budget (e.g., 0.7x multiplier) and retry up to 3 times. If all retries fail, trigger the existing fallback markdown generator. Apply `sanitize_final_output` before saving any `llms.txt` artifact.",
         "testStrategy": "Integration test using a mocked LLM provider that throws a context-limit error on the first call. Verify the pipeline retries with a smaller budget and eventually succeeds or falls back gracefully.",
         "priority": "high",
         "dependencies": [
-          1,
-          2,
-          4
+          "1",
+          "2",
+          "4"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -233,8 +279,10 @@
             "description": "Set up the core generation loop in the pipeline that orchestrates the budget preflight and material compaction.",
             "dependencies": [],
             "details": "Update `src/lms_llmsTxt/pipeline.py` to establish the main execution loop. Before invoking the Analyzer, calculate the current context size. If the material exceeds the initial budget, invoke the `CompactionLadder` (from Task 2) to reduce the repository material size appropriately.",
-            "status": "pending",
-            "testStrategy": "Unit test the loop initialization. Provide a mock repository size that exceeds the budget and verify that the compaction ladder is called exactly once before proceeding."
+            "status": "done",
+            "testStrategy": "Unit test the loop initialization. Provide a mock repository size that exceeds the budget and verify that the compaction ladder is called exactly once before proceeding.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.201Z"
           },
           {
             "id": 2,
@@ -244,8 +292,10 @@
               1
             ],
             "details": "Implement `src/lms_llmsTxt/retry_policy.py`. Create logic to catch HTTP 413 (Payload Too Large) and provider-specific context errors. On failure, apply a 0.7x multiplier to the `ContextBudget` and retry the compaction and analyzer steps. Limit the retries to a maximum of 3 attempts.",
-            "status": "pending",
-            "testStrategy": "Mock an LLM provider to throw a 413 error. Assert that the retry policy catches the error, reduces the budget by 0.7x, and retries exactly 3 times before propagating the failure."
+            "status": "done",
+            "testStrategy": "Mock an LLM provider to throw a 413 error. Assert that the retry policy catches the error, reduces the budget by 0.7x, and retries exactly 3 times before propagating the failure.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.212Z"
           },
           {
             "id": 3,
@@ -255,8 +305,10 @@
               2
             ],
             "details": "Update the exception handling block in `pipeline.py`. If the retry policy exhausts its 3 attempts without success, catch the final `MaxRetriesExceeded` exception and route the repository data to the existing fallback markdown generator to ensure an artifact is still produced.",
-            "status": "pending",
-            "testStrategy": "Simulate a persistent context-limit error across all 3 retries. Verify that the pipeline does not crash, but instead invokes the fallback markdown generator and returns a valid fallback artifact."
+            "status": "done",
+            "testStrategy": "Simulate a persistent context-limit error across all 3 retries. Verify that the pipeline does not crash, but instead invokes the fallback markdown generator and returns a valid fallback artifact.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.216Z"
           },
           {
             "id": 4,
@@ -268,23 +320,29 @@
               3
             ],
             "details": "In `pipeline.py`, take the successful output from either the Analyzer or the fallback generator and pass it through `sanitize_final_output` to strip out any `<think>` tags or conversational filler. Finally, write the sanitized content to the `llms.txt` file.",
-            "status": "pending",
-            "testStrategy": "Provide a mock output containing `<think>` tags and conversational filler. Run it through the final pipeline stage and assert the saved `llms.txt` file is clean, properly formatted, and written to the correct path."
+            "status": "done",
+            "testStrategy": "Provide a mock output containing `<think>` tags and conversational filler. Run it through the final pipeline stage and assert the saved `llms.txt` file is clean, properly formatted, and written to the correct path.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.225Z"
           }
-        ]
+        ],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Generate subtasks for the orchestration pipeline, focusing on the main execution loop, the progressive retry logic with budget reduction, the fallback mechanism, and end-to-end error handling.",
+        "updatedAt": "2026-02-23T11:07:45.225Z"
       },
       {
-        "id": 6,
+        "id": "6",
         "title": "Grounded Repository Knowledge Graph Builder",
         "description": "Implement the logic to transform repository digests into evidence-backed SkillGraph artifacts.",
         "details": "Implement `src/lms_llmsTxt/graph_builder.py`. Use the `RepoDigest` to identify 12–30 key semantic nodes. For each node, generate a markdown file and a entry in `repo.graph.json`. Crucially, every node must include an `evidence` array containing file paths and line numbers derived from the `ChunkCapsule` provenance. Ensure a single 'Map of Content' (MOC) node is created as the entry point.",
         "testStrategy": "Validation test to ensure 100% of nodes in a generated graph have non-empty evidence. Verify the graph JSON adheres to the `RepoSkillGraph` schema.",
         "priority": "medium",
         "dependencies": [
-          1,
-          3
+          "1",
+          "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -292,8 +350,10 @@
             "description": "Develop the logic to parse the RepoDigest and identify 12-30 key semantic nodes representing the repository's core concepts.",
             "dependencies": [],
             "details": "Create the core extraction function in `src/lms_llmsTxt/graph_builder.py`. It should process the `RepoDigest` and extract 12-30 distinct semantic nodes. Define the base Pydantic models for the nodes, ensuring they capture the title, summary, and core concepts of the repository components.",
-            "status": "pending",
-            "testStrategy": "Unit test to verify that the extraction logic returns between 12 and 30 well-formed nodes given a valid RepoDigest fixture."
+            "status": "done",
+            "testStrategy": "Unit test to verify that the extraction logic returns between 12 and 30 well-formed nodes given a valid RepoDigest fixture.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.316Z"
           },
           {
             "id": 2,
@@ -303,8 +363,10 @@
               1
             ],
             "details": "Enhance the node generation logic to trace semantic concepts back to their source `ChunkCapsule`s. Populate an `evidence` array for every node, containing exact file paths and line numbers. This is critical to ensure the graph is grounded in the actual codebase and not hallucinated.",
-            "status": "pending",
-            "testStrategy": "Validation test to ensure 100% of generated nodes have a non-empty `evidence` array with valid file paths and line numbers."
+            "status": "done",
+            "testStrategy": "Validation test to ensure 100% of generated nodes have a non-empty `evidence` array with valid file paths and line numbers.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.321Z"
           },
           {
             "id": 3,
@@ -314,8 +376,10 @@
               1
             ],
             "details": "Implement logic to synthesize a root MOC node. This node should summarize the entire repository's architecture and contain structured links/edges to the 12-30 semantic nodes extracted previously, establishing the graph's navigational hierarchy.",
-            "status": "pending",
-            "testStrategy": "Unit test to verify the MOC node is created, is flagged as the entry point, and contains edges pointing to all other generated semantic nodes."
+            "status": "done",
+            "testStrategy": "Unit test to verify the MOC node is created, is flagged as the entry point, and contains edges pointing to all other generated semantic nodes.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.329Z"
           },
           {
             "id": 4,
@@ -327,22 +391,28 @@
               3
             ],
             "details": "Implement the file writing logic in `src/lms_llmsTxt/graph_builder.py`. Write the overall graph structure to `repo.graph.json` adhering strictly to the `RepoSkillGraph` schema. Generate an individual markdown file for each node (including the MOC) containing its description, relationships, and formatted evidence links.",
-            "status": "pending",
-            "testStrategy": "Integration test to verify that `repo.graph.json` matches the `RepoSkillGraph` schema and that the corresponding markdown files are correctly created on disk."
+            "status": "done",
+            "testStrategy": "Integration test to verify that `repo.graph.json` matches the `RepoSkillGraph` schema and that the corresponding markdown files are correctly created on disk.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.348Z"
           }
-        ]
+        ],
+        "complexity": 7,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Break down the graph builder task into subtasks for semantic node extraction, evidence provenance mapping, Map of Content (MOC) generation, and artifact serialization.",
+        "updatedAt": "2026-02-23T11:07:27.348Z"
       },
       {
-        "id": 7,
+        "id": "7",
         "title": "MCP Graph Resource Exposure",
         "description": "Expose the generated graph artifacts as MCP resources for tool-based consumption.",
         "details": "Implement `src/lms_llmsTxt_mcp/graph_resources.py`. Register new MCP resource URIs (e.g., `repo://{id}/graph/nodes/{node_id}`). Implement chunked reading for large graph JSON files to prevent MCP payload limit errors. Ensure the MCP server can discover and serve the `repo.graph.json` and associated markdown files from the local artifact storage.",
         "testStrategy": "Use the MCP Inspector to verify that graph resources are listed and can be read in chunks. Assert that node markdown is correctly served via the URI scheme.",
         "priority": "medium",
         "dependencies": [
-          6
+          "6"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -350,8 +420,10 @@
             "description": "Create the foundation for discovering graph artifacts in local storage and registering them as MCP resources.",
             "dependencies": [],
             "details": "Create `src/lms_llmsTxt_mcp/graph_resources.py`. Implement directory scanning logic to locate `repo.graph.json` and any associated markdown files within the local artifact storage. Register the base MCP resource URIs for the repository graph so the MCP server is aware of their existence.",
-            "status": "pending",
-            "testStrategy": "Create a mock artifact directory with dummy JSON and markdown files. Verify that the discovery function correctly identifies them and registers the expected base URIs."
+            "status": "done",
+            "testStrategy": "Create a mock artifact directory with dummy JSON and markdown files. Verify that the discovery function correctly identifies them and registers the expected base URIs.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.362Z"
           },
           {
             "id": 2,
@@ -361,8 +433,10 @@
               1
             ],
             "details": "In `src/lms_llmsTxt_mcp/graph_resources.py`, implement the URI routing logic to match patterns like `repo://{id}/graph/nodes/{node_id}`. Write the handler to extract the repository and node IDs, locate the specific markdown file for that node, and serve its contents back through the MCP protocol.",
-            "status": "pending",
-            "testStrategy": "Write unit tests for the URI router using valid, invalid, and missing node URIs. Assert that valid requests return the correct markdown content and invalid ones return appropriate 404/error responses."
+            "status": "done",
+            "testStrategy": "Write unit tests for the URI router using valid, invalid, and missing node URIs. Assert that valid requests return the correct markdown content and invalid ones return appropriate 404/error responses.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.380Z"
           },
           {
             "id": 3,
@@ -372,22 +446,28 @@
               1
             ],
             "details": "Enhance the resource serving logic to handle large `repo.graph.json` files. Implement a chunked reading mechanism (e.g., streaming or pagination depending on MCP protocol specifics) to ensure that large JSON payloads do not trigger memory or protocol payload limit errors during tool-based consumption.",
-            "status": "pending",
-            "testStrategy": "Generate a synthetic `repo.graph.json` file that exceeds standard payload limits (e.g., >10MB). Use the MCP Inspector to request the resource and verify it is successfully transmitted in chunks without errors."
+            "status": "done",
+            "testStrategy": "Generate a synthetic `repo.graph.json` file that exceeds standard payload limits (e.g., >10MB). Use the MCP Inspector to request the resource and verify it is successfully transmitted in chunks without errors.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.391Z"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Create subtasks for exposing graph artifacts via MCP, including URI routing, implementing chunked file reading for large graphs, and local artifact discovery.",
+        "updatedAt": "2026-02-23T11:07:27.391Z"
       },
       {
-        "id": 8,
+        "id": "8",
         "title": "Hypergraph UI Integration for Repo Graphs",
         "description": "Adapt the Hypergraph frontend to load and visualize the repository-specific knowledge graph.",
         "details": "Modify `hypergraph/app/api/generate/route.ts` to support a 'load-repo-graph' mode. Update `hypergraph/lib/generator.ts` to ingest the pre-built `repo.graph.json` instead of triggering a new topic scrape. Update the UI to render the 'evidence' links in the node preview panel, allowing users to see the source code context for each semantic node.",
         "testStrategy": "Frontend integration test: Load a fixture `repo.graph.json` and verify the force-directed graph renders and node clicks open the correct markdown content with evidence links.",
         "priority": "low",
         "dependencies": [
-          6
+          "6"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -395,8 +475,10 @@
             "description": "Modify the API generation route to handle a new request type that signals the loading of a pre-existing repository graph.",
             "dependencies": [],
             "details": "Update hypergraph/app/api/generate/route.ts to parse a 'mode' parameter. If 'load-repo-graph' is specified, bypass the standard scraping logic and prepare the response for local file ingestion.",
-            "status": "pending",
-            "testStrategy": "Unit test the API route with a mock request containing the 'load-repo-graph' flag and verify it returns the correct status."
+            "status": "done",
+            "testStrategy": "Unit test the API route with a mock request containing the 'load-repo-graph' flag and verify it returns the correct status.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.418Z"
           },
           {
             "id": 2,
@@ -406,8 +488,10 @@
               1
             ],
             "details": "Modify hypergraph/lib/generator.ts to accept a file path or raw JSON object representing repo.graph.json. Ensure the data structure is mapped correctly to the internal graph state used by the frontend.",
-            "status": "pending",
-            "testStrategy": "Integration test to ensure the generator correctly parses a sample repo.graph.json and produces a valid graph object."
+            "status": "done",
+            "testStrategy": "Integration test to ensure the generator correctly parses a sample repo.graph.json and produces a valid graph object.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.423Z"
           },
           {
             "id": 3,
@@ -417,23 +501,29 @@
               2
             ],
             "details": "Modify the node preview panel component to iterate over the 'evidence' array in the node data. Render clickable links or text labels showing file paths and line numbers derived from the ChunkCapsule provenance.",
-            "status": "pending",
-            "testStrategy": "Manual UI verification using a fixture graph to ensure evidence links appear in the side panel when a node is selected."
+            "status": "done",
+            "testStrategy": "Manual UI verification using a fixture graph to ensure evidence links appear in the side panel when a node is selected.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.432Z"
           }
-        ]
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Divide the UI integration into subtasks for updating the Next.js API routes, modifying the graph generator to ingest local JSON, and updating the frontend components to display evidence links.",
+        "updatedAt": "2026-02-23T11:07:27.432Z"
       },
       {
-        "id": 9,
+        "id": "9",
         "title": "Optional: LCM-Style Session Memory Store",
         "description": "Implement an immutable session store for long-horizon repository analysis workflows.",
         "details": "Implement `src/lms_llmsTxt_mcp/session_memory.py`. Create an append-only event log using SQLite or a simple JSONL file. Implement `build_active_context` which selects the most recent raw events and relevant summary nodes (from the Digest engine) to stay within the `ContextBudget`. This supports multi-turn interactions where the model remembers previous analysis steps without re-processing the whole repo.",
         "testStrategy": "Unit tests for append-only semantics. Verify that `build_active_context` correctly prunes older raw events while keeping summary nodes when the budget is tight.",
         "priority": "low",
         "dependencies": [
-          1,
-          3
+          "1",
+          "3"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -441,8 +531,10 @@
             "description": "Create the foundational storage mechanism for the session memory using SQLite or JSONL.",
             "dependencies": [],
             "details": "Implement the storage layer in `src/lms_llmsTxt_mcp/session_memory.py`. Choose either SQLite or a simple JSONL file format to serve as an append-only log. Define the schema or data structure for storing raw events and summary nodes, strictly enforcing immutability (only inserts are allowed, no updates or deletes).",
-            "status": "pending",
-            "testStrategy": "Unit tests to verify append-only semantics, ensuring data can be written and read successfully, and that attempts to modify or delete existing records fail or are unsupported."
+            "status": "done",
+            "testStrategy": "Unit tests to verify append-only semantics, ensuring data can be written and read successfully, and that attempts to modify or delete existing records fail or are unsupported.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.445Z"
           },
           {
             "id": 2,
@@ -452,8 +544,10 @@
               1
             ],
             "details": "Create functions to log different types of events (e.g., user queries, model responses, tool executions, and digest summaries). Ensure each event is timestamped, categorized by type, and properly serialized before being appended to the storage backend created in the previous step.",
-            "status": "pending",
-            "testStrategy": "Integration tests to simulate a multi-turn interaction and verify that all events are correctly logged in sequence with appropriate metadata and timestamps."
+            "status": "done",
+            "testStrategy": "Integration tests to simulate a multi-turn interaction and verify that all events are correctly logged in sequence with appropriate metadata and timestamps.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.452Z"
           },
           {
             "id": 3,
@@ -464,24 +558,30 @@
               2
             ],
             "details": "Implement the `build_active_context` function in `src/lms_llmsTxt_mcp/session_memory.py`. It must retrieve events from the log and use the `ContextBudget` (from Task 1) to select the most recent raw events and relevant summary nodes (from the Digest engine). The logic must strictly adhere to the token budget by dropping older raw events first while preserving high-signal summary nodes to maintain long-horizon memory.",
-            "status": "pending",
-            "testStrategy": "Unit tests with mock event logs of varying sizes. Verify that `build_active_context` correctly drops older raw events and prioritizes summary nodes when the token budget is tight, ensuring the total token count stays within the ContextBudget limit."
+            "status": "done",
+            "testStrategy": "Unit tests with mock event logs of varying sizes. Verify that `build_active_context` correctly drops older raw events and prioritizes summary nodes when the token budget is tight, ensuring the total token count stays within the ContextBudget limit.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:27.455Z"
           }
-        ]
+        ],
+        "complexity": 6,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Generate subtasks for the session memory store, separating the append-only storage implementation, the event logging mechanism, and the budget-aware context pruning logic.",
+        "updatedAt": "2026-02-23T11:07:27.455Z"
       },
       {
-        "id": 10,
+        "id": "10",
         "title": "CLI Integration and Final Validation",
         "description": "Expose new capabilities via CLI flags and perform end-to-end system validation.",
         "details": "Update the main CLI entry point to include `--graph` (to trigger graph generation) and `--budget-limit` flags. Add verbose logging for the compaction ladder and retry attempts. Conduct a final end-to-end test on a large public repository (e.g., `pallets/flask`) to verify stability, sanitization, and graph accuracy. Ensure all 'TODO' failure-rate SLOs are documented in the final README.",
         "testStrategy": "E2E CLI run on a medium-sized repo. Verify `llms.txt`, `llms-full.txt`, and `repo.graph.json` are all generated correctly and sanitized. Check that no `<think>` tags remain in any output.",
         "priority": "medium",
         "dependencies": [
-          5,
-          7,
-          8
+          "5",
+          "7",
+          "8"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -489,8 +589,10 @@
             "description": "Update the main CLI entry point to support the new --graph and --budget-limit arguments.",
             "dependencies": [],
             "details": "Modify the CLI argument parser to include '--graph' for triggering graph generation and '--budget-limit' to enforce token or cost constraints. Ensure these flags are correctly passed to the underlying RepositoryAnalyzer and Digest Engine.",
-            "status": "pending",
-            "testStrategy": "Run the CLI with --help to verify flags are registered. Execute a dry run with --budget-limit to ensure the value is parsed and respected by the pipeline."
+            "status": "done",
+            "testStrategy": "Run the CLI with --help to verify flags are registered. Execute a dry run with --budget-limit to ensure the value is parsed and respected by the pipeline.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.227Z"
           },
           {
             "id": 2,
@@ -500,8 +602,10 @@
               1
             ],
             "details": "Integrate structured logging within the compaction logic to report input/output token counts. Add logs to the retry mechanism to capture error types and attempt numbers, ensuring visibility into the pipeline's resilience.",
-            "status": "pending",
-            "testStrategy": "Execute a processing run on a small repository and verify that logs correctly display compaction steps and any simulated retry events in the console output."
+            "status": "done",
+            "testStrategy": "Execute a processing run on a small repository and verify that logs correctly display compaction steps and any simulated retry events in the console output.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:07:45.233Z"
           },
           {
             "id": 3,
@@ -512,16 +616,26 @@
               2
             ],
             "details": "Run the full CLI pipeline against 'pallets/flask'. Verify the integrity of llms.txt, llms-full.txt, and repo.graph.json. Confirm the absence of <think> tags and document the observed failure rates and SLOs in the project README.",
-            "status": "pending",
-            "testStrategy": "Manual inspection of generated artifacts from the Flask repo run. Use grep to ensure no forbidden tags exist and validate the JSON schema of the generated graph."
+            "status": "done",
+            "testStrategy": "Manual inspection of generated artifacts from the Flask repo run. Use grep to ensure no forbidden tags exist and validate the JSON schema of the generated graph.",
+            "parentId": "undefined",
+            "updatedAt": "2026-02-23T11:12:36.066Z"
           }
-        ]
+        ],
+        "complexity": 5,
+        "recommendedSubtasks": 3,
+        "expansionPrompt": "Break down the CLI integration into subtasks for adding new CLI flags, implementing verbose logging for the compaction/retry pipeline, and conducting the final E2E validation on a large repository.",
+        "updatedAt": "2026-02-23T11:12:36.066Z"
       }
     ],
     "metadata": {
-      "created": "2026-02-23T09:55:55.300Z",
-      "updated": "2026-02-23T09:55:55.300Z",
-      "description": "Tasks for chore-dist-name context"
+      "version": "1.0.0",
+      "lastModified": "2026-02-23T11:12:36.066Z",
+      "taskCount": 10,
+      "completedCount": 10,
+      "tags": [
+        "chore-dist-name"
+      ]
     }
   }
 }

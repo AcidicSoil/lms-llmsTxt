@@ -2,14 +2,32 @@ import subprocess
 import json
 import os
 import sys
+import shutil
 import pytest
+
+
+def _resolve_mcp_command() -> list[str]:
+    explicit = os.environ.get("LMSTXT_MCP_BIN")
+    if explicit:
+        return [explicit]
+
+    local_bin = os.path.join(".venv", "bin", "lmstxt-mcp")
+    if os.path.exists(local_bin):
+        return [local_bin]
+
+    path_bin = shutil.which("lmstxt-mcp")
+    if path_bin:
+        return [path_bin]
+
+    return [sys.executable, "-m", "lms_llmsTxt_mcp.server"]
+
 
 @pytest.mark.integration
 def test_mcp_stdio_server_tool_execution():
     """
     Launches the installed lmstxt-mcp CLI and verifies actual tool execution via JSON-RPC.
     """
-    cmd = ["venv_test/bin/lmstxt-mcp"]
+    cmd = _resolve_mcp_command()
     
     process = subprocess.Popen(
         cmd,
