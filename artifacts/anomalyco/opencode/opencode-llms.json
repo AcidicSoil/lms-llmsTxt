@@ -1,0 +1,584 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Opencode",
+    "summary": "<p align=\"center\"> <a href=\"https://opencode.ai\"> <picture> <source srcset=\"packages/console/app/src/asset/logo-ornate-dark.svg\" media=\"(prefers-color-scheme: dark)\"> <source srcset=\"packages/console/app/src/asset/logo-ornate-light.svg\" media=\"(prefers-color-scheme: light)\"> <img src=\"packages/console/app/src/asset/logo-ornate-light.svg\" alt=\"OpenCode logo\">"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "Quickstart",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/docs/quickstart.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/docs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/installation/index.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Uninstall",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/cli/cmd/uninstall.ts",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Docs",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/docs/index.mdx",
+          "note": "docs page"
+        },
+        {
+          "title": "Docs",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/src/content/docs/index.mdx",
+          "note": "docs page"
+        },
+        {
+          "title": "Ar",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/src/content/docs/ar/index.mdx",
+          "note": "docs page"
+        },
+        {
+          "title": "Bs",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/src/content/docs/bs/index.mdx",
+          "note": "docs page"
+        },
+        {
+          "title": "Da",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/src/content/docs/da/index.mdx",
+          "note": "docs page"
+        },
+        {
+          "title": "De",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/src/content/docs/de/index.mdx",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Example",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/plugin/src/example.ts",
+          "note": "worked example"
+        },
+        {
+          "title": "Example",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/example/example.ts",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sdks/vscode/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/provider/sdk/copilot/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Canonicalize Node Modules",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/nix/scripts/canonicalize-node-modules.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Esbuild",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sdks/vscode/esbuild.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Sst Env.D",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sdks/vscode/sst-env.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Api",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/function/src/api.ts",
+          "note": "API reference"
+        },
+        {
+          "title": "Extension",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sdks/vscode/src/extension.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sst Env.D",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/sst-env.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Build",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/script/build.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Client",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/sdk/js/src/client.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Contributing",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Security",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/SECURITY.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/changelog.ts",
+          "note": "version history"
+        },
+        {
+          "title": "Benchmark.Sql",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/console/core/src/schema/benchmark.sql.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Changelog",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/console/app/src/lib/changelog.ts",
+          "note": "version history"
+        },
+        {
+          "title": "Changelog.Json",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/console/app/src/routes/changelog.json.ts",
+          "note": "version history"
+        },
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.github/pull_request_template.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ar",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.ar.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Br",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.br.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Bs",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.bs.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Da",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.da.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.De",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.de.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Es",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.es.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Fr",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.fr.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.It",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.it.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ja",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.ja.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ko",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.ko.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.No",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.no.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Pl",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.pl.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Ru",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.ru.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Th",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.th.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Tr",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.tr.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Uk",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.uk.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Zh",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.zh.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Zht",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/README.zht.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Stats",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/STATS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Normalize Bun Binaries",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/nix/scripts/normalize-bun-binaries.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Project",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/specs/project.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Sst Env.D",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sst-env.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sst.Config",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/sst.config.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Opencode",
+      "links": [
+        {
+          "title": "Env.D",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/env.d.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Ai Deps",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/command/ai-deps.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Commit",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/command/commit.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Duplicate Pr",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/agent/duplicate-pr.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Github Pr Search",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/tool/github-pr-search.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Github Pr Search",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/tool/github-pr-search.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Github Triage",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/tool/github-triage.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Github Triage",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/tool/github-triage.txt",
+          "note": "docs page"
+        },
+        {
+          "title": "Issues",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/command/issues.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Learn",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/.opencode/command/learn.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Github",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/github/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/github/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sst Env.D",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/github/sst-env.d.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Infra",
+      "links": [
+        {
+          "title": "App",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/infra/app.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Console",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/infra/console.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Enterprise",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/infra/enterprise.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Secret",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/infra/secret.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Stage",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/infra/stage.ts",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Packages",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/app/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/containers/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/desktop/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/enterprise/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/slack/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/web/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/console/app/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/desktop/src-tauri/icons/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/packages/opencode/src/acp/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Script",
+      "links": [
+        {
+          "title": "Beta",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/beta.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Duplicate Pr",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/duplicate-pr.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Format",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/format.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Generate",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/generate.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Publish",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/publish.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Stats",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/stats.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Sync Zed",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/sync-zed.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Version",
+          "url": "https://github.com/anomalyco/opencode/blob/dev/script/version.ts",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

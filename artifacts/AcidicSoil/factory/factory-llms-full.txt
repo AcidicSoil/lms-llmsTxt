@@ -1,0 +1,3274 @@
+<!-- llmstxt:source=heuristic -->
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- docs/cli/getting-started/how-to-talk-to-a-droid.mdx ---
+---
+title: How to Talk to a Droid
+description: Proven techniques for writing prompts that get high-quality results from Factory's AI agents.
+keywords: ['prompts', 'prompting', 'how to', 'tips', 'best practices', 'communication', 'instructions', 'context', 'effective prompts']
+---
+
+Droid works best with clear, specific instructions. Like pairing with a skilled engineer, the quality of your communication directly affects the results. This guide shows practical patterns that get better outcomes with fewer iterations.
+
+## Core principles
+
+**Be explicit about what you want.** Instead of "can you improve the auth system?" try "add rate limiting to login attempts with exponential backoff following the pattern in middleware/rateLimit.ts." Droid performs best when you clearly state your goal.
+
+**Provide context upfront.** Include error messages, file paths, screenshots, or relevant documentation. If you're implementing something from a Jira ticket or design doc, paste the link—droid can automatically read context from platforms you've integrated in Factory's dashboard.
+
+**Choose your approach.** For complex features, consider using Specification Mode for automatic planning. For routine tasks, droid can proceed directly while still showing you all changes for review. See the [Planning versus doing](#planning-versus-doing) section for detailed guidance.
+
+**Define success.** Tell droid how to verify the work is complete—run specific tests, check that a service starts cleanly, or confirm a UI matches a mockup.
+
+## Writing effective prompts
+
+The best prompts are direct and include relevant details:
+
+```
+Add comprehensive error handling to the payment processor in src/payments/processor.ts.
+Catch gateway timeouts and retry up to 3 times with exponential backoff.
+Similar retry logic exists in src/notifications/sender.ts.
+Run the payment integration tests to verify it works.
+```
+
+```
+Run the build and fix all TypeScript errors. Focus on the auth module first.
+```
+
+```
+Review my uncommitted changes with git diff and suggest improvements before I commit.
+```
+
+```
+The login form allows empty submissions. Add client-side validation and return proper error messages.
+Check that localhost:3000/login shows validation errors when fields are empty.
+```
+
+```
+Refactor the database connection logic into a separate module but don't change any query interfaces.
+```
+
+Notice these examples:
+
+- State the goal clearly in the first sentence
+- Include specific files or commands when known
+- Mention related code that might help
+- Explain how to test the result
+- Keep it conversational but direct
+
+## Planning versus doing
+
+For complex features, use [Specification Mode](/cli/user-guides/specification-mode) which automatically provides planning and review before implementation:
+
+```
+Add user preferences API with key-value storage following REST conventions.
+Include validation and comprehensive tests.
+```
+
+For straightforward tasks, droid can proceed directly while still showing you changes for approval:
+
+```
+Fix the failing test in tests/auth.test.ts line 42
+```
+
+```
+Add logging to the startup sequence with appropriate log levels.
+```
+
+## Managing context
+
+**Use AGENTS.md files** to document build commands, testing procedures, and coding standards. Droid reads these automatically, so you don't have to repeat project conventions. See the [AGENTS.md guide](/cli/configuration/agents-md) for detailed setup instructions.
+
+**Mention specific files** when you know where the code lives. Use `@filename` to reference files directly, or include file paths in your prompts. This focuses droid's attention and saves time.
+
+**Set boundaries** for changes. "Only modify files in the auth directory" or "don't change the public API" helps contain the scope.
+
+**Reference external resources** by including URLs to tickets, docs, designs, or specs. Droid can fetch and use this information.
+
+## Common workflows
+
+**Understanding code:**
+
+```
+Explain how user authentication flows through this system.
+```
+
+```
+What are the main components in the frontend and how do they interact?
+```
+
+**Implementing features:**
+
+```
+Add a PATCH /users/:id endpoint with email uniqueness validation.
+Update the OpenAPI spec and add integration tests.
+Similar patterns exist in src/routes/users/get.ts.
+```
+
+**Fixing bugs:**
+
+```
+Users report file uploads fail randomly. Error in browser console: "Network timeout".
+Upload logic is in src/upload/handler.ts. Check for timeout handling.
+```
+
+**Code review:**
+
+```
+Look at git diff and review these changes for security issues and maintainability.
+```
+
+**Refactoring:**
+
+```
+Extract the email sending logic into a separate service class.
+Keep the same interfaces but make it testable in isolation.
+```
+
+## Enterprise integration
+
+Reference your team's tools by pasting links to tickets or documents:
+
+```
+Implement the feature described in this Jira ticket: https://company.atlassian.net/browse/PROJ-123
+Follow our security standards from the compliance docs.
+```
+
+If you've integrated these platforms in Factory's dashboard, droid can automatically read context from Jira, Notion, Slack, and other sources. For additional tool connections, droid also supports MCP integrations.
+
+For security-sensitive work:
+
+```
+Add file upload functionality with proper validation to prevent directory traversal attacks.
+Follow the security patterns used in our document upload feature.
+```
+
+## Session management
+
+Start new conversations when context gets cluttered or when switching to unrelated tasks. Fresh context often works better than accumulated noise from failed attempts.
+
+For large projects, break work into phases:
+
+```
+First implement the database schema changes. Don't add the API endpoints yet.
+```
+
+Then in a follow-up:
+
+```
+Now add the REST endpoints using the new schema. Include validation and error handling.
+```
+
+## Advanced techniques
+
+**Test-driven development:**
+
+```
+Write comprehensive tests for the user registration flow first.
+Don't implement the actual registration logic yet.
+```
+
+**Plan-driven development:**
+
+```
+Create a markdown file outlining the plan for updating both backend API and React components.
+Include the shared data structure and implementation order.
+Then implement each part following the documented plan.
+```
+
+## Examples of good prompts
+
+Here are real examples that work well:
+
+```
+Run git blame on the file I have open and figure out who added the rate limiting logic.
+```
+
+```
+Look at git diff staged and remove any debug statements before I commit.
+```
+
+```
+Convert these 5 React components to use TypeScript. Use proper interfaces for props.
+```
+
+```
+Find the commit that introduced the caching mechanism and explain how it works.
+```
+
+```
+Add input validation to all the forms in the admin panel. Return 400 with clear error messages.
+```
+
+```
+Check the production logs for any errors in the last hour and suggest fixes for the most common ones.
+```
+
+## What doesn't work well
+
+Avoid vague requests:
+
+- "Make the app better" → too broad
+- "Fix the database" → not specific enough
+- "Can you help with the frontend?" → unclear goal
+
+Don't make droid guess:
+
+- If you know the file path, include it
+- If you know the command to run, mention it
+- If there's related code, point to it
+
+## Getting better results
+
+Treat droid like a capable teammate. Provide the same context and guidance you'd give a colleague working on the task. Be specific about quality standards and business requirements.
+
+Remember that droid learns your organization's patterns over time. The more consistently you use it within your codebase, the better it becomes at following your conventions.
+
+Most importantly, review the changes droid proposes. You maintain full control through the approval workflow, so take time to understand modifications and provide feedback for better future results.
+
+Ready to try these patterns? Head back to the [Quickstart](/cli/getting-started/quickstart) and practice with your own code.
+
+
+## Links discovered
+- [Specification Mode](https://github.com/AcidicSoil/factory/blob/main/cli/user-guides/specification-mode.md)
+- [AGENTS.md guide](https://github.com/AcidicSoil/factory/blob/main/cli/configuration/agents-md.md)
+- [Quickstart](https://github.com/AcidicSoil/factory/blob/main/cli/getting-started/quickstart.md)
+
+--- docs/README.md ---
+# Mintlify Starter Kit (test)
+
+Click on `Use this template` to copy the Mintlify starter kit. The starter kit contains examples including
+
+- Guide pages
+- Navigation
+- Customizations
+- API Reference pages
+- Use of popular components
+
+### Development
+
+Install the [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the documentation changes locally. To install, use the following command
+
+```
+npm i -g mintlify
+```
+
+Run the following command at the root of your documentation (where mint.json is)
+
+```
+mintlify dev
+```
+
+### Publishing Changes
+
+Install our Github App to auto propagate changes from your repo to your deployment. Changes will be deployed to production automatically after pushing to the default branch. Find the link to install on your dashboard.
+
+#### Troubleshooting
+
+- Mintlify dev isn't running - Run `mintlify install` it'll re-install dependencies.
+- Page loads as a 404 - Make sure you are running in a folder with `mint.json`
+
+
+## Links discovered
+- [Mintlify CLI](https://www.npmjs.com/package/mintlify)
+
+--- docs/cli/getting-started/common-use-cases.mdx ---
+---
+title: Common Use Cases
+description: Practical, day‑one workflows you can run in the interactive terminal UI.
+keywords: ['use cases', 'examples', 'workflows', 'prompts', 'tasks', 'coding', 'refactoring', 'debugging', 'testing', 'code review', 'documentation']
+---
+
+Droid excels at real-world development tasks. This guide shows practical workflows you can use immediately, with specific prompts that get great results.
+
+## Understanding a new codebase
+
+**Start with the big picture:**
+
+```
+Analyze this codebase and explain the overall architecture.
+What technologies and frameworks does this project use?
+Where are the main entry points and how is testing set up?
+```
+
+**Drill down into specifics:**
+
+```
+Explain how user authentication flows through this system.
+What are the main components in the frontend and how do they interact?
+Show me where the API routes are defined and list the key handlers.
+```
+
+**Navigate by domain:**
+
+```
+Where does payment processing happen? Walk me through a typical payment flow.
+Find all the database models and explain their relationships.
+Show me the error handling patterns used throughout this codebase.
+```
+
+Droid leverages organizational knowledge and can read through your entire project structure to provide comprehensive explanations with relevant file references and architectural insights.
+
+## Fixing bugs and debugging
+
+**From error message to solution:**
+
+```
+I'm seeing this error in production:
+TypeError: Cannot read properties of undefined (reading 'title')
+at src/components/PostCard.tsx:37:14
+
+Help me reproduce locally and fix it. Explain the root cause first.
+```
+
+**Using logs for debugging:**
+
+```
+Here are the server logs from the last hour showing 500 errors.
+Find the failing code path and propose a fix with proper error handling.
+```
+
+**Systematic debugging:**
+
+```
+Users report that file uploads fail randomly with "Network timeout" errors.
+The upload logic is in src/upload/handler.ts.
+Add logging to diagnose the issue and implement retry logic.
+```
+
+Droid will analyze error patterns, create failing tests to reproduce issues, propose minimal fixes, and verify the solution works.
+
+## Building features
+
+**Enterprise workflow integration:**
+
+```
+Implement the feature described in this Jira ticket: https://company.atlassian.net/browse/PROJ-123
+Follow our security standards and include comprehensive error handling.
+```
+
+**API development:**
+
+```
+Add a PATCH /users/:id endpoint with email uniqueness validation.
+Return 200 on success, 400 on invalid payload, 404 if user missing.
+Update the OpenAPI spec and add integration tests.
+Similar patterns exist in src/routes/users/get.ts.
+```
+
+**Using Specification Mode:**
+For complex features, use [Specification Mode](/cli/user-guides/specification-mode) to automatically get planning before implementation. This ensures proper architecture and reduces iterations.
+
+## Working with tests
+
+**Test-driven development:**
+
+```
+Write comprehensive tests for the user registration flow first.
+Don't implement the actual registration logic yet.
+Include tests for validation, duplicate emails, and password requirements.
+```
+
+**Fixing failing tests:**
+
+```
+Run tests and fix the first failing test.
+Explain the root cause before making changes.
+Show me the diff before applying any fixes.
+```
+
+**Improving test coverage:**
+
+```
+Identify untested critical paths in the payment processing module.
+Propose specific test cases and implement them with proper mocks.
+```
+
+## Code review
+
+**Interactive review workflow:**
+
+Use the `/review` command for guided code review workflows:
+
+```
+/review
+# Choose from:
+# - Review against a base branch (PR-style)
+# - Review uncommitted changes
+# - Review a specific commit
+# - Custom review instructions
+```
+
+**Direct review prompts:**
+
+```
+Review my uncommitted changes and suggest improvements before I commit.
+```
+
+```
+Review this PR for security vulnerabilities, performance issues, and code quality.
+Focus on SQL injection risks and authentication bypass scenarios.
+```
+
+```
+Review the last 3 commits for consistency with our coding standards.
+Flag any deviations from the patterns in AGENTS.md.
+```
+
+[Learn more about code review →](/cli/features/code-review)
+
+## Safe refactoring
+
+**Structure improvements:**
+
+```
+Refactor the authentication module into smaller files with no behavior change.
+Keep the public API identical and run all tests after each change.
+```
+
+**Dependency updates:**
+
+```
+Replace the deprecated bcrypt library with bcryptjs project-wide.
+Update all imports and ensure compatibility across the codebase.
+Show a summary of all files changed.
+```
+
+**Code quality:**
+
+```
+Extract the shared date utility functions into a separate module.
+Update imports across the repository and run tests to confirm identical behavior.
+```
+
+## Documentation and communication
+
+**API documentation:**
+
+```
+Generate comprehensive OpenAPI specification for the payments service.
+Include request/response examples and error codes.
+Create a TypeScript SDK based on the spec.
+```
+
+**Code explanations:**
+
+```
+Explain the relationship between the AutoScroller and ViewUpdater classes using a diagram.
+Document the data flow and key methods for new team members.
+```
+
+**Release management:**
+
+```
+Summarize all changes in this branch and draft a pull request description.
+Include breaking changes and migration notes for API consumers.
+```
+
+## Enterprise integration
+
+**Team tool integration:**
+If you've integrated platforms through Factory's dashboard, droid can automatically read context when you paste links to specific tickets or documents:
+
+```
+Read this Jira ticket and implement the feature: https://company.atlassian.net/browse/PROJ-123
+Include all the acceptance criteria and follow our security standards.
+```
+
+```
+Use the requirements from this Notion spec to implement the user preferences API: https://notion.so/team/user-prefs-spec
+Follow the data structure and validation rules outlined in the document.
+```
+
+**Security-focused development:**
+
+```
+Add file upload functionality with proper validation to prevent directory traversal attacks.
+Follow the security patterns used in our existing document upload feature.
+Include rate limiting and file type validation.
+```
+
+**Compliance considerations:**
+
+```
+Review this authentication implementation for GDPR compliance.
+Ensure proper data encryption and user consent handling.
+Add audit logging for all user data access.
+```
+
+## Getting the most value
+
+**Be specific and direct:** Instead of "fix the login bug," try "fix the authentication timeout where users get logged out after 5 minutes instead of the configured 30 minutes."
+
+**Provide verification steps:** Tell droid how to confirm success—run specific tests, check that services start cleanly, or verify UI behavior.
+
+**Use organizational knowledge:** Reference team conventions, existing patterns, and established practices. Droid learns from your codebase and can help maintain consistency.
+
+**Leverage the review workflow:** Always review proposed changes before approval. The transparent diff view helps you understand modifications and provide feedback for better future results.
+
+## Next steps
+
+Ready to try these workflows? Head to the [Quickstart](/cli/getting-started/quickstart) to get droid running, or dive into [Specification Mode](/cli/user-guides/specification-mode) for complex feature development.
+For more communication tips, see [How to Talk to a Droid](/cli/getting-started/how-to-talk-to-a-droid) to learn proven prompting patterns that get better results.
+For more communication tips, see [How to Talk to a Droid](/cli/getting-started/how-to-talk-to-a-droid) to learn proven prompting patterns that get better results.
+
+
+## Links discovered
+- [Specification Mode](https://github.com/AcidicSoil/factory/blob/main/cli/user-guides/specification-mode.md)
+- [Learn more about code review →](https://github.com/AcidicSoil/factory/blob/main/cli/features/code-review.md)
+- [Quickstart](https://github.com/AcidicSoil/factory/blob/main/cli/getting-started/quickstart.md)
+- [How to Talk to a Droid](https://github.com/AcidicSoil/factory/blob/main/cli/getting-started/how-to-talk-to-a-droid.md)
+
+--- docs/cli/byok/overview.mdx ---
+---
+title: Bring Your Own Key (BYOK)
+sidebarTitle: Overview
+description: Connect your own API keys, use open source models, or run local models
+keywords: ['byok', 'bring your own key', 'own api key', 'api key', 'custom models', 'local models', 'open source', 'self-hosted', 'use own key', 'personal key', 'own key']
+---
+
+Factory CLI supports custom model configurations through BYOK (Bring Your Own Key). Use your own OpenAI or Anthropic keys, connect to any open source model providers, or run models locally on your hardware. Once configured, switch between models using the `/model` command.
+
+<Note>
+  Your API keys remain local and are not uploaded to Factory servers. Custom models are only available in the CLI and won't appear in Factory's web or mobile platforms.
+</Note>
+
+<img src="/images/custom_models.png" alt="Model selector showing custom models" />
+
+[Install the CLI with the 5-minute quickstart →](/cli/getting-started/quickstart)
+
+---
+
+## Configuration Reference
+
+Add custom models to `~/.factory/settings.json` under the `customModels` array:
+
+```json
+{
+  "customModels": [
+    {
+      "model": "your-model-id",
+      "displayName": "My Custom Model",
+      "baseUrl": "https://api.provider.com/v1",
+      "apiKey": "${PROVIDER_API_KEY}",
+      "provider": "generic-chat-completion-api",
+      "maxOutputTokens": 16384
+    }
+  ]
+}
+```
+
+<Tip>
+  In `settings.json` (and `settings.local.json`), `apiKey` supports environment variable references using `${VAR_NAME}` syntax. For example, `"apiKey": "${PROVIDER_API_KEY}"` reads from the environment variable named `PROVIDER_API_KEY` (for example: `export PROVIDER_API_KEY=your_key_here`).
+</Tip>
+
+<Note>
+  **Legacy support**: Custom models in `~/.factory/config.json` using snake_case field names (`custom_models`, `base_url`, etc.) are still supported for backwards compatibility. Both files are loaded and merged, with `settings.json` taking priority. Env var expansion for `apiKey` applies to `settings.json`/`settings.local.json` and not to legacy `config.json`.
+</Note>
+
+### Supported Fields
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `model` | `string` | ✓ | Model identifier sent via API (e.g., `claude-sonnet-4-5-20250929`, `gpt-5-codex`, `qwen3:4b`) |
+| `displayName` | `string` | | Human-friendly name shown in model selector |
+| `baseUrl` | `string` | ✓ | API endpoint base URL |
+| `apiKey` | `string` | ✓ | Your API key for the provider. Can't be empty. Supports `${VAR_NAME}` in `settings.json`/`settings.local.json` (e.g., `${PROVIDER_API_KEY}` uses the `PROVIDER_API_KEY` environment variable). |
+| `provider` | `string` | ✓ | One of: `anthropic`, `openai`, or `generic-chat-completion-api` |
+| `maxOutputTokens` | `number` | | Maximum output tokens for model responses |
+| `supportsImages` | `boolean` | | Whether the model supports image inputs |
+| `extraArgs` | `object` | | Additional provider-specific arguments to include in API requests |
+| `extraHeaders` | `object` | | Additional HTTP headers to send with requests |
+
+### Using extraArgs
+
+Pass provider-specific parameters like temperature or top_p:
+
+```json
+{
+  "customModels": [
+    {
+      "model": "your-model",
+      "displayName": "Custom Model",
+      "baseUrl": "https://your-provider.com/v1",
+      "apiKey": "YOUR_API_KEY",
+      "provider": "generic-chat-completion-api",
+      "extraArgs": {
+        "temperature": 0.7,
+        "top_p": 0.9
+      }
+    }
+  ]
+}
+```
+
+### Using extraHeaders
+
+Add custom HTTP headers to API requests:
+
+```json
+{
+  "customModels": [
+    {
+      "model": "your-model",
+      "displayName": "Custom Model",
+      "baseUrl": "https://your-provider.com/v1",
+      "apiKey": "YOUR_API_KEY",
+      "provider": "generic-chat-completion-api",
+      "extraHeaders": {
+        "X-Custom-Header": "value",
+        "Authorization": "Bearer YOUR_TOKEN"
+      }
+    }
+  ]
+}
+```
+
+---
+
+## Understanding Providers
+
+Factory supports three provider types that determine API compatibility:
+
+| Provider | API Format | Use For | Documentation |
+|----------|------------|---------|---------------|
+| `anthropic` | Anthropic Messages API (v1/messages) | Anthropic models on their official API or compatible proxies | [Anthropic Messages API](https://docs.claude.com/en/api/messages) |
+| `openai` | OpenAI Responses API | OpenAI models on their official API or compatible proxies. Required for the newest models like GPT-5 and GPT-5-Codex. | [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses) |
+| `generic-chat-completion-api` | OpenAI Chat Completions API | OpenRouter, Fireworks, Together AI, Ollama, vLLM, and most open-source providers | [OpenAI Chat Completions API](https://platform.openai.com/docs/api-reference/chat) |
+
+<Warning>
+  Factory is actively verifying Droid's performance on popular models, but we cannot guarantee that all custom models will work out of the box. Only Anthropic and OpenAI models accessed via their official APIs are fully tested and benchmarked.
+</Warning>
+
+<Note>
+  **Model Size Consideration**: Models below 30 billion parameters have shown significantly lower performance on agentic coding tasks. While these smaller models can be useful for experimentation and learning, they are generally not recommended for production coding work or complex software engineering tasks.
+</Note>
+
+---
+
+## Prompt Caching
+
+Factory CLI automatically uses prompt caching when available to reduce API costs:
+
+- **Official providers (`anthropic`, `openai`)**: Factory attempts to use prompt caching via the official APIs. Caching behavior follows each provider's implementation and requirements.
+- **Generic providers (`generic-chat-completion-api`)**: Prompt caching support varies by provider and cannot be guaranteed. Some providers may support caching, while others may not.
+
+### Verifying Prompt Caching
+
+To check if prompt caching is working correctly with your custom model:
+
+1. Run a conversation with your custom model
+2. Use the `/cost` command in Droid CLI to view cost breakdowns
+3. Look for cache hit rates and savings in the output
+
+If you're not seeing expected caching savings, consult your provider's documentation about their prompt caching support and requirements.
+
+---
+
+## Quick Start
+
+Choose a provider from the left navigation to see specific configuration examples:
+
+- **[Baseten](/cli/byok/baseten)** - Deploy and serve custom models
+- **[DeepInfra](/cli/byok/deepinfra)** - Cost-effective inference for open-source models
+- **[Fireworks AI](/cli/byok/fireworks)** - High-performance inference for open-source models
+- **[Google Gemini](/cli/byok/google-gemini)** - Access Google's Gemini models
+- **[Groq](/cli/byok/groq)** - Ultra-fast inference with Groq's LPU™ Inference Engine
+- **[Hugging Face](/cli/byok/huggingface)** - Connect to models on HF Inference API
+- **[Ollama](/cli/byok/ollama)** - Run models locally or in the cloud
+- **[OpenAI & Anthropic](/cli/byok/openai-anthropic)** - Use your own API keys for official models
+- **[OpenRouter](/cli/byok/openrouter)** - Access multiple providers through a single interface
+
+---
+
+## Using Custom Models
+
+Once configured, access your custom models in the CLI:
+
+1. Use the `/model` command
+2. Your custom models appear in a separate "Custom models" section below Factory-provided models
+3. Select any model to start using it
+
+Custom models display with the name you set in `displayName`, making it easy to identify different providers and configurations.
+
+---
+
+## Troubleshooting
+
+### Model not appearing in selector
+- Check JSON syntax in `~/.factory/settings.json` (or `config.json` if using legacy format)
+- Settings changes are detected automatically via file watching
+- Verify all required fields are present
+
+### "Invalid provider" error
+- Provider must be exactly `anthropic`, `openai`, or `generic-chat-completion-api`
+- Check for typos and ensure proper capitalization
+
+### Authentication errors
+- Verify your API key is valid and has available credits
+- Check that the API key has proper permissions
+- Confirm the base URL matches your provider's documentation
+
+### Local model won't connect
+- Ensure your local server is running (e.g., `ollama serve`)
+- Verify the base URL is correct and includes `/v1/` suffix if required
+- Check that the model is pulled/available locally
+
+### Rate limiting or quota errors
+- Check your provider's rate limits and usage quotas
+- Monitor your usage through your provider's dashboard
+
+---
+
+## Billing
+
+- You pay your provider directly with no Factory markup or usage fees
+- Track costs and usage in your provider's dashboard
+
+
+## Links discovered
+- [Install the CLI with the 5-minute quickstart →](https://github.com/AcidicSoil/factory/blob/main/cli/getting-started/quickstart.md)
+- [Anthropic Messages API](https://docs.claude.com/en/api/messages)
+- [OpenAI Responses API](https://platform.openai.com/docs/api-reference/responses)
+- [OpenAI Chat Completions API](https://platform.openai.com/docs/api-reference/chat)
+- [Baseten](https://github.com/AcidicSoil/factory/blob/main/cli/byok/baseten.md)
+- [DeepInfra](https://github.com/AcidicSoil/factory/blob/main/cli/byok/deepinfra.md)
+- [Fireworks AI](https://github.com/AcidicSoil/factory/blob/main/cli/byok/fireworks.md)
+- [Google Gemini](https://github.com/AcidicSoil/factory/blob/main/cli/byok/google-gemini.md)
+- [Groq](https://github.com/AcidicSoil/factory/blob/main/cli/byok/groq.md)
+- [Hugging Face](https://github.com/AcidicSoil/factory/blob/main/cli/byok/huggingface.md)
+- [Ollama](https://github.com/AcidicSoil/factory/blob/main/cli/byok/ollama.md)
+- [OpenAI & Anthropic](https://github.com/AcidicSoil/factory/blob/main/cli/byok/openai-anthropic.md)
+- [OpenRouter](https://github.com/AcidicSoil/factory/blob/main/cli/byok/openrouter.md)
+
+--- docs/cli/droid-exec/overview.mdx ---
+---
+title: "Droid Exec (Headless)"
+description: Non-interactive execution mode for CI/CD pipelines and automation scripts.
+keywords: ['droid exec', 'headless', 'ci/cd', 'automation', 'pipeline', 'github actions', 'scripts', 'batch', 'non-interactive']
+---
+
+Droid Exec is Factory's headless execution mode designed for automation workflows. Unlike the interactive CLI, `droid exec` runs as a one-shot command that completes a task and exits, making it ideal for CI/CD pipelines, shell scripts, and batch processing.
+
+<Tip>
+  Explore the [Droid Exec cookbooks](/guides/droid-exec/code-review).
+</Tip>
+
+## Summary and goals
+
+Droid Exec is a one-shot task runner designed to:
+
+- Produce readable logs, and structured artifacts when requested
+- Enforce opt-in for mutations/command execution (secure-by-default)
+- Fail fast on permission violations with clear errors
+- Support simple composition for batch and parallel work
+
+<CardGroup cols={2}>
+  <Card title="Non-Interactive" icon="terminal">
+    Single run execution that writes to stdout/stderr for CI/CD integration
+  </Card>
+  <Card title="Secure by Default" icon="lock">
+    Read-only by default with explicit opt-in for mutations via autonomy levels
+  </Card>
+  <Card title="Composable" icon="puzzle">
+    Designed for shell scripting, parallel execution, and pipeline integration
+  </Card>
+  <Card title="Clean Output" icon="file-export">
+    Structured output formats and artifacts for automated processing
+  </Card>
+</CardGroup>
+
+## Execution model
+
+- Non-interactive single run that writes to stdout/stderr.
+- Default is spec-mode: the agent is only allowed to execute read-only operations.
+- Add `--auto` to enable edits and commands; risk tiers gate what can run.
+
+CLI help (excerpt):
+
+```
+Usage: droid exec [options] [prompt]
+
+Execute a single command (non-interactive mode)
+
+Arguments:
+  prompt                          The prompt to execute
+
+Options:
+  -o, --output-format <format>    Output format (default: "text")
+  --input-format <format>         Input format: stream-json for multi-turn sessions
+  -f, --file <path>               Read prompt from file
+  --auto <level>                  Autonomy level: low|medium|high
+  --skip-permissions-unsafe       Skip ALL permission checks - allows all permissions (unsafe)
+  -s, --session-id <id>           Existing session to continue (requires a prompt)
+  -m, --model <id>                Model ID to use
+  -r, --reasoning-effort <level>  Reasoning effort (defaults per model)
+  --spec-model <id>               Model ID to use for spec mode
+  --use-spec                      Start in spec mode
+  --enabled-tools <ids>           Enable specific tools (comma or space separated list)
+  --disabled-tools <ids>          Disable specific tools (comma or space separated list)
+  --list-tools                    List available tools for the selected model and exit
+  --cwd <path>                    Working directory path
+  -h, --help                      display help for command
+```
+
+Supported models (examples):
+
+- claude-opus-4-6
+- claude-opus-4-6-fast
+- claude-opus-4-5-20251101
+- claude-sonnet-4-5-20250929
+- claude-haiku-4-5-20251001
+- gpt-5.1-codex
+- gpt-5.1-codex-max
+- gpt-5.1
+- gpt-5.2
+- gpt-5.2-codex
+- gpt-5.3-codex
+- gemini-3-pro-preview
+- gemini-3-flash-preview
+- glm-4.7
+- kimi-k2.5
+- minimax-m2.5
+
+<Note>
+See the [model table](/pricing#pricing-table) for the full list of available models and their costs.
+</Note>
+
+## Installation
+
+<Steps>
+  <Step title="Install Droid CLI">
+    <CodeGroup>
+    ```bash macOS/Linux
+    curl -fsSL https://app.factory.ai/cli | sh
+    ```
+
+    ```powershell Windows
+    irm https://app.factory.ai/cli/windows | iex
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Get Factory API Key">
+    Generate your API key from the [Factory Settings Page](https://app.factory.ai/settings/api-keys)
+  </Step>
+
+  <Step title="Set Environment Variable">
+    Export your API key as an environment variable:
+    ```bash
+    export FACTORY_API_KEY=fk-...
+    ```
+  </Step>
+</Steps>
+
+## Quickstart
+
+- Direct prompt:
+  - `droid exec "analyze code quality"`
+  - `droid exec "fix the bug in src/main.js" --auto low`
+- From file:
+  - `droid exec -f prompt.md`
+- Pipe:
+  - `echo "summarize repo structure" | droid exec`
+- Session continuation:
+  - `droid exec --session-id <session-id> "continue with next steps"`
+
+## Autonomy Levels
+
+Droid exec uses a tiered autonomy system to control what operations the agent can perform. By default, it runs in read-only mode, requiring explicit flags to enable modifications.
+
+### DEFAULT (no flags) - Read-only Mode
+The safest mode for reviewing planned changes without execution:
+- ✅ Reading files or logs: cat, less, head, tail, systemctl status
+- ✅ Display commands: echo, pwd
+- ✅ Information gathering: whoami, date, uname, ps, top
+- ✅ Git read operations: git status, git log, git diff
+- ✅ Directory listing: ls, find (without -delete or -exec)
+- ❌ No modifications to files or system
+- **Use case:** Safe for reviewing what changes would be made
+
+```bash
+# Analyze and plan refactoring without making changes
+droid exec "Analyze the authentication system and create a detailed plan for migrating from session-based auth to OAuth2. List all files that would need changes and describe the modifications required."
+
+# Review code quality and generate report
+droid exec "Review the codebase for security vulnerabilities, performance issues, and code smells. Generate a prioritized list of improvements needed."
+
+# Understand project structure
+droid exec "Analyze the project architecture and create a dependency graph showing how modules interact with each other."
+```
+
+### `--auto low` - Low-risk Operations
+Enables basic file operations while blocking system changes:
+- ✅ File creation/editing in project directories
+- ❌ No system modifications or package installations
+- **Use case:** Documentation updates, code formatting, adding comments
+
+```bash
+# Safe file operations
+droid exec --auto low "add JSDoc comments to all functions"
+droid exec --auto low "fix typos in README.md"
+```
+
+### `--auto medium` - Development Operations
+Operations that may have significant side effects, but these side effects are typically harmless and straightforward to recover from.
+Adds common development tasks to low-risk operations:
+- Installing packages from trusted sources: npm install, pip install (without sudo)
+- Network requests to trusted endpoints: curl, wget to known APIs
+- Git operations that modify local repositories: git commit, git checkout, git pull (but not git push)
+- Building code with tools like make, npm run build, mvn compile
+- ❌ No git push, sudo commands, or production changes
+- **Use case:** Local development, testing, dependency management
+
+```bash
+# Development tasks
+droid exec --auto medium "install deps, run tests, fix issues"
+droid exec --auto medium "update packages and resolve conflicts"
+```
+
+### `--auto high` - Production Operations
+Commands that may have security implications such as data transfers between untrusted sources or execution of unknown code, or major side effects such as irreversible data loss or modifications of production systems/deployments.
+- Running arbitrary/untrusted code: curl | bash, eval, executing downloaded scripts
+- Exposing ports or modifying firewall rules that could allow external access
+- Git push operations that modify remote repositories: git push, git push --force
+- Irreversible actions to production deployments, database migrations, or other sensitive operations
+- Commands that access or modify sensitive information like passwords or keys
+- ❌ Still blocks: sudo rm -rf /, system-wide changes
+- **Use case:** CI/CD pipelines, automated deployments
+
+```bash
+# Full workflow automation
+droid exec --auto high "fix bug, test, commit, and push to main"
+droid exec --auto high "deploy to staging after running tests"
+```
+
+### `--skip-permissions-unsafe` - Bypass All Checks
+<Warning>
+  DANGEROUS: This mode allows ALL operations without confirmation. Only use in completely isolated environments like Docker containers or throwaway VMs.
+</Warning>
+
+- ⚠️ Allows ALL operations without confirmation
+- ⚠️ Can execute irreversible operations
+- Cannot be combined with --auto flags
+- **Use case:** Isolated environments
+
+```bash
+# In a disposable Docker container for CI testing
+docker run --rm -v $(pwd):/workspace alpine:latest sh -c "
+  apk add curl bash &&
+  curl -fsSL https://app.factory.ai/cli | sh &&
+  droid exec --skip-permissions-unsafe 'Install all system dependencies, modify system configs, run integration tests that require root access, and clean up test databases'
+"
+
+# In ephemeral GitHub Actions runner for rapid iteration
+# where the runner is destroyed after each job
+droid exec --skip-permissions-unsafe "Modify /etc/hosts for test domains, install custom kernel modules, run privileged container tests, and reset network interfaces"
+
+# In a temporary VM for security testing
+droid exec --skip-permissions-unsafe "Run penetration testing tools, modify firewall rules, test privilege escalation scenarios, and generate security audit reports"
+```
+
+### Fail-fast Behavior
+
+If a requested action exceeds the current autonomy level, droid exec will:
+1. Stop immediately with a clear error message
+2. Return a non-zero exit code
+3. Not perform any partial changes
+
+This ensures predictable behavior in automation scripts and CI/CD pipelines.
+
+## Output formats and artifacts
+
+Droid exec supports three output formats for different use cases:
+
+### text (default)
+Human-readable output for direct consumption or logs:
+
+```bash
+$ droid exec --auto low "create a python file that prints 'hello world'"
+Perfect! I've created a Python file named `hello_world.py` in your home directory that prints 'hello world' when executed.
+```
+
+### json
+Structured JSON output for parsing in scripts and automation:
+
+```bash
+$ droid exec "summarize this repository" --output-format json
+{
+  "type": "result",
+  "subtype": "success",
+  "is_error": false,
+  "duration_ms": 5657,
+  "num_turns": 1,
+  "result": "This is a Factory documentation repository containing guides for CLI tools, web platform features, and onboarding procedures...",
+  "session_id": "8af22e0a-d222-42c6-8c7e-7a059e391b0b"
+}
+```
+
+Use JSON format when you need to:
+- Parse the result in a script
+- Check success/failure programmatically
+- Extract session IDs for continuation
+- Process results in a pipeline
+
+### stream-json / debug
+Streaming JSONL messages showing the agent's execution in real-time. Each line is a separate JSON event that can be parsed independently:
+
+```bash
+$ droid exec "run ls command" --output-format stream-json
+{"type":"system","subtype":"init","cwd":"/path/to/dir","session_id":"abc-123","tools":["Read","Execute",...],"model":"claude-sonnet-4-5-20250929"}
+{"type":"message","role":"user","id":"msg-1","text":"run ls command","timestamp":1762517060816,"session_id":"abc-123"}
+{"type":"message","role":"assistant","id":"msg-2","text":"I'll run the ls command to list the contents...","timestamp":1762517062000,"session_id":"abc-123"}
+{"type":"tool_call","id":"call-1","messageId":"msg-2","toolId":"Execute","toolName":"Execute","parameters":{"command":"ls -la"},"timestamp":1762517062500,"session_id":"abc-123"}
+{"type":"tool_result","id":"call-1","messageId":"msg-3","toolId":"Execute","isError":false,"value":"total 16\ndrwxr-xr-x@ 8 user staff...","timestamp":1762517063000,"session_id":"abc-123"}
+{"type":"completion","finalText":"The ls command has been executed successfully. Here are the directory contents...","numTurns":1,"durationMs":3000,"session_id":"abc-123","timestamp":1762517064000}
+```
+
+<Note>
+The `debug` format is a deprecated alias for `stream-json` and works identically.
+</Note>
+
+### stream-jsonrpc (multi-turn)
+For SDK integration and multi-turn conversations, use the JSON-RPC streaming protocol:
+
+```bash
+droid exec --input-format stream-jsonrpc --output-format stream-jsonrpc --auto low
+```
+
+This mode reads JSONL messages from stdin and outputs JSON-RPC formatted responses, enabling:
+- Multi-turn conversations within a single exec invocation
+- Dynamic mode switching during execution
+- Full tool access like the interactive TUI
+
+Send messages via stdin in JSONL format and receive structured JSON-RPC responses.
+
+Key event types:
+- **system** - Session initialization with available tools and model
+- **message** - User or assistant text messages
+- **tool_call** - Agent calling a tool (Read, Execute, etc.)
+- **tool_result** - Result from tool execution
+- **completion** - Final event with the complete response in `finalText`
+
+The **completion event** is always emitted last and contains:
+- `finalText` - The agent's final response text
+- `numTurns` - Number of assistant turns taken
+- `durationMs` - Total execution time in milliseconds
+- `session_id` - Session identifier for continuation
+
+Stream-JSON format is useful for:
+- Monitoring agent behavior in real-time
+- Streaming progress updates to users
+- Troubleshooting execution issues
+- Understanding tool usage patterns
+- Extracting the final result from `completion.finalText`
+
+Example parsing in shell script:
+```bash
+# Extract just the final result
+droid exec "analyze code" --output-format stream-json | \
+  jq -r 'select(.type == "completion") | .finalText'
+
+# Monitor tool calls in real-time
+droid exec "complex task" --output-format stream-json | \
+  jq -r 'select(.type == "tool_call") | "\(.toolName): \(.parameters.command // .parameters.file_path // "")"'
+```
+
+For automated pipelines, you can also direct the agent to write specific artifacts:
+
+```bash
+droid exec --auto low "Analyze dependencies and write to deps.json"
+droid exec --auto low "Generate metrics report in CSV format to metrics.csv"
+```
+
+## Working directory
+
+- Use `--cwd` to scope execution:
+
+```
+droid exec --cwd /home/runner/work/repo "Map internal packages and dump graphviz DOT to deps.dot"
+```
+
+## Models and reasoning effort
+
+Choose a model with `-m` and adjust reasoning with `-r`. See the [model table](/pricing#pricing-table) for available models.
+
+```bash
+droid exec -m claude-sonnet-4-5-20250929 -r medium -f plan.md
+```
+
+Use `--use-spec` to start in specification mode, where the agent plans before executing:
+
+```bash
+droid exec --use-spec --auto low "refactor the auth module"
+```
+
+You can also use a different model for the spec phase:
+
+```bash
+droid exec --use-spec --spec-model claude-haiku-4-5-20251001 --auto medium "implement feature X"
+```
+
+### Tool controls
+
+List available tools for a model:
+
+```bash
+droid exec --list-tools
+droid exec --model gpt-5-codex --list-tools --output-format json
+```
+
+Enable or disable specific tools:
+
+```bash
+# Enable additional tools
+droid exec --enabled-tools ApplyPatch "refactor files"
+
+# Disable specific tools
+droid exec --auto medium --disabled-tools execute-cli "run edits only"
+```
+
+### Custom models
+
+You can configure custom models to use with droid exec by adding them to your `~/.factory/settings.json` file:
+
+```json
+{
+  "customModels": [
+    {
+      "model": "gpt-5.1-codex-custom",
+      "displayName": "My Custom Model",
+      "baseUrl": "https://api.openai.com/v1",
+      "apiKey": "your-api-key-here",
+      "provider": "openai"
+    }
+  ]
+}
+```
+
+To use a custom model, use the `custom:` prefix followed by the display name (with spaces replaced by dashes) and the index:
+
+```bash
+droid exec --model "custom:My-Custom-Model-0" "analyze this codebase"
+```
+
+If you have multiple custom models configured:
+
+```json
+{
+  "customModels": [
+    {
+      "model": "kimi-k2",
+      "displayName": "Kimi K2 [Groq]",
+      "baseUrl": "https://api.groq.com/openai/v1",
+      "apiKey": "your-groq-key",
+      "provider": "generic-chat-completion-api",
+      "maxOutputTokens": 16384
+    },
+    {
+      "model": "openai/gpt-oss-20b",
+      "displayName": "GPT-OSS-20B [OpenRouter]",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "YOUR_OPENROUTER_KEY",
+      "provider": "generic-chat-completion-api",
+      "maxOutputTokens": 32000
+    }
+  ]
+}
+```
+
+You would reference them as:
+- `--model "custom:Kimi-K2-[Groq]-0"`
+- `--model "custom:GPT-OSS-20B-[OpenRouter]-1"`
+
+The index corresponds to the position in the `customModels` array (0-based).
+
+<Note>
+Reasoning effort (`-r` / `--reasoning-effort`) is not yet supported for custom models, but coming soon.
+</Note>
+
+## Batch and parallel patterns
+
+Shell loops (bounded concurrency):
+
+```bash
+# Process files in parallel (GNU xargs -P)
+find src -name "*.ts" -print0 | xargs -0 -P 4 -I {} \
+  droid exec --auto low "Refactor file: {} to use modern TS patterns"
+```
+
+Background job parallelization:
+
+```bash
+# Process multiple directories in parallel with job control
+for path in packages/ui packages/models apps/factory-app; do
+  (
+    cd "$path" &&
+    droid exec --auto low "Run targeted analysis and write report.md"
+  ) &
+done
+wait  # Wait for all background jobs to complete
+```
+
+Chunked inputs:
+
+```bash
+# Split large file lists into manageable chunks
+git diff --name-only origin/main...HEAD | split -l 50 - /tmp/files_
+for f in /tmp/files_*; do
+  list=$(tr '\n' ' ' < "$f")
+  droid exec --auto low "Review changed files: $list and write to review.json"
+done
+rm /tmp/files_*  # Clean up temporary files
+```
+
+Workflow Automation (CI/CD):
+
+```yaml
+# Dead code detection and cleanup suggestions
+name: Code Cleanup Analysis
+on:
+  schedule:
+    - cron: '0 1 * * 0' # Weekly on Sundays
+  workflow_dispatch:
+jobs:
+  cleanup-analysis:
+    strategy:
+      matrix:
+        module: ['src/components', 'src/services', 'src/utils', 'src/hooks']
+    steps:
+      - uses: actions/checkout@v4
+      - run: droid exec --cwd "${{ matrix.module }}" --auto low "Identify unused exports, dead code, and deprecated patterns. Generate cleanup recommendations in cleanup-report.md"
+```
+
+## Unique usage examples
+
+License header enforcer:
+
+```bash
+git ls-files "*.ts" | xargs -I {} \
+  droid exec --auto low "Ensure {} begins with the Apache-2.0 header; add it if missing"
+```
+
+API contract drift check (read-only):
+
+```bash
+droid exec "Compare openapi.yaml operations to our TypeScript client methods and write drift.md with any mismatches"
+```
+
+Security sweep:
+
+```bash
+droid exec --auto low "Run a quick audit for sync child_process usage and propose fixes; write findings to sec-audit.csv"
+```
+
+## Exit behavior
+
+- 0: success
+- Non-zero: failure (permission violation, tool error, unmet objective). Treat non-zero as failed in CI.
+
+## Best practices
+
+- Favor `--auto low`; keep mutations minimal and commit/push in scripted steps.
+- Avoid `--skip-permissions-unsafe` unless fully sandboxed.
+- Ask the agent to emit artifacts your pipeline can verify.
+- Use `--cwd` to constrain scope in monorepos.
+
+
+## Links discovered
+- [Droid Exec cookbooks](https://github.com/AcidicSoil/factory/blob/main/guides/droid-exec/code-review.md)
+- [model table](https://github.com/AcidicSoil/factory/blob/main/pricing#pricing-table.md)
+- [Factory Settings Page](https://app.factory.ai/settings/api-keys)
+
+--- docs/cli/getting-started/overview.mdx ---
+---
+title: Overview
+sidebarTitle: Overview
+description: Meet `droid` — the power of Factory in your terminal
+keywords: ['droid', 'cli', 'terminal', 'command line', 'factory cli', 'droid cli', 'install', 'setup', 'getting started', 'ai coding', 'ai agent', 'coding assistant']
+---
+## Get started in 30 seconds
+
+<CodeGroup>
+
+```bash macOS/Linux
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+```powershell Windows
+irm https://app.factory.ai/cli/windows | iex
+```
+
+```bash npm
+npm install -g droid
+```
+
+</CodeGroup>
+
+Then navigate to your project and start the droid CLI.
+
+<CodeGroup>
+```bash
+# Navigate to your project
+cd /path/to/your/project
+
+# Start interactive session
+droid
+```
+
+</CodeGroup>
+
+You're now connected to Factory's development agent from your terminal. [Try the 5-minute quickstart →](/cli/getting-started/quickstart)
+
+<Note>
+  **Quick tip:** Press `!` to toggle bash mode and run shell commands directly without AI interpretation. Press `Esc` to return to normal mode. See the [CLI Reference](/reference/cli-reference#bash-mode) for details.
+</Note>
+
+## What `droid` brings to your workflow
+
+- **End-to-end feature development**: From planning to implementation to testing - droid handles the complete development lifecycle while keeping you in control through transparent review workflows.
+- **Deep codebase understanding**: Leverages your organization's shared knowledge across repositories, documentation, and issue tracking to provide contextually aware assistance that improves over time.
+- **Engineering system integration**: Connects directly to your existing tools — with native integrations to Jira, Notion, Slack, and many more tools — so development work stays synchronized with your team's processes.
+- **Production-ready automation**: Deploy the same workflows locally during development or in CI/CD pipelines, with enterprise security and compliance built-in from day one.
+
+## Why teams choose Factory
+
+- **Built for enterprise**: On-premise deployment options, SOC-2 compliance, and air-gapped environments. We prioritize security and quality over racing to the lowest price point.
+- **Your tools, enhanced**: Works within your existing terminal, IDE, and development environment. No need to switch editors or learn new interfaces — droid integrates where you're already productive.
+- **Transparent and controllable**: Every decision droid makes is visible and reviewable. You maintain full oversight of code changes with our native diff viewer and approval workflows.
+- **Model flexibility**: Not locked into a single AI provider. Factory allows you to route tasks to the best model for each job while maintaining consistent behavior and memory across your organization.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/cli/getting-started/quickstart"
+  >
+    See droid in action with practical examples
+  </Card>
+  <Card
+    title="Common Use Cases"
+    icon="lightbulb"
+    href="/cli/getting-started/common-use-cases"
+  >
+    Step-by-step guides for common workflows
+  </Card>
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/cli/configuration/ide-integrations"
+  >
+    Add droid to your IDE
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/cli/configuration/settings"
+  >
+    Customize droid for your workflow
+  </Card>
+</CardGroup>
+
+## Additional resources
+
+<CardGroup cols={2}>
+  <Card
+    title="AGENTS.md Guide"
+    icon="file-lines"
+    href="/cli/configuration/agents-md"
+  >
+    Configure project-specific guidance and conventions
+  </Card>
+  <Card
+    title="CLI Reference"
+    icon="terminal"
+    href="/reference/cli-reference"
+  >
+    Complete reference for droid commands
+  </Card>
+  {false && (
+    <>
+      <Card
+        title="CI/CD Integration"
+        icon="diagram-project"
+        href="/cli/configuration/ci-cd"
+      >
+        Use droid in your continuous integration pipelines
+      </Card>
+      <Card
+        title="Pricing & Usage"
+        icon="credit-card"
+        href="/cli/account/tokens-and-pricing"
+      >
+        Understand usage tracking and billing
+      </Card>
+    </>
+  )}
+</CardGroup>
+```
+
+
+## Links discovered
+- [Try the 5-minute quickstart →](https://github.com/AcidicSoil/factory/blob/main/cli/getting-started/quickstart.md)
+- [CLI Reference](https://github.com/AcidicSoil/factory/blob/main/reference/cli-reference#bash-mode.md)
+
+--- docs/web/agent-readiness/overview.mdx ---
+---
+title: Overview
+keywords:
+  [
+    "agent readiness",
+    "readiness model",
+    "autonomous development",
+    "readiness levels",
+  ]
+---
+
+Autonomous software organizations build systems that maintain and improve themselves with minimal human intervention. Developers describe what they want built through whatever medium makes sense, and the system executes that vision with quality and precision.
+
+The **Agent Readiness Model** measures how close your organization is to this state, and helps remediate gaps to get you there faster.
+
+---
+
+## Getting Started
+
+There are four ways to interact with Agent Readiness:
+
+1. **CLI:** Run the `/readiness-report` [slash command](/cli/features/readiness-report) to evaluate a repository's readiness level
+2. **Web Dashboard:** View your organization's readiness scores in the [Agent Readiness dashboard](/web/agent-readiness/dashboard)
+3. **API:** Programmatically access readiness reports via the [Readiness Reports API](/reference/readiness-reports-api)
+4. **Remediation (Coming Soon):** Automatically fix failing criteria directly from the CLI or dashboard
+
+---
+
+## What Autonomous Development Looks Like
+
+What does it look like when an organization reaches high agent readiness? Here are concrete examples of workflows that become possible when the technical foundation is in place.
+
+### Code from Conversation
+
+A developer describes what they need built, and the system executes through deployment.
+
+**Input:** "Refactor the authentication module to support OAuth2 with PKCE, maintaining backward compatibility."
+
+**The system:**
+
+- Generates idiomatic code following established patterns
+- Validates against linters, type checkers, and test suites
+- Handles the pull request and code review process
+- Updates documentation and notifies stakeholders
+- Deploys and monitors for issues
+
+### Design to Implementation
+
+A designer shares a mockup, and the system implements it without handoffs.
+
+**Input:** Figma mockup of a new dashboard.
+
+**The system:**
+
+- Interprets the visual specification and design system
+- Implements UI components with proper styling and responsiveness
+- Connects to existing APIs or creates new endpoints
+- Adds loading states, error handling, and accessibility
+- Generates tests for user interactions
+- Deploys to staging for design review
+
+### Bug to Deployed Fix
+
+A customer reports an issue, and the system diagnoses, fixes, and deploys autonomously.
+
+**Input:** Bug report through support system.
+
+**The system:**
+
+- Triages based on error logs and impact
+- Creates a ticket with reproduction steps and diagnostic context
+- Identifies the root cause from code analysis
+- Generates a fix and comprehensive tests
+- Opens a PR and assigns a developer for review
+- Notifies support when the fix is deployed
+
+---
+
+## The 5 Readiness Levels
+
+Repositories progress through five distinct levels, each representing a qualitative shift in how autonomous agents can operate within your codebase.
+
+| Level | Name         | Description                                                                                                                            | Example Criteria                                                     |
+| :---- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------- |
+| **1** | Functional   | Code runs, but requires manual setup and lacks automated validation. Basic tooling that every repository should have.                  | README, linter, type checker, unit tests                             |
+| **2** | Documented   | Basic documentation and process exist. Workflows are written down and some automation is in place.                                     | AGENTS.md, devcontainer, pre-commit hooks, branch protection         |
+| **3** | Standardized | Clear processes are defined, documented, and enforced through automation. Development is standardized across the organization.         | Integration tests, secret scanning, distributed tracing, metrics     |
+| **4** | Optimized    | Fast feedback loops and data-driven improvement. Systems are designed for productivity and measured continuously.                      | Fast CI feedback, regular deployment frequency, flaky test detection |
+| **5** | Autonomous   | Systems are self-improving with sophisticated orchestration. Complex requirements decompose automatically into parallelized execution. | Self-improving systems                                               |
+
+---
+
+## How Scoring Works
+
+### Level Progression
+
+To unlock a level, you must pass **80% of the criteria** from the previous level. This creates a gated progression system:
+
+1. All repositories start at Level 1
+2. Pass 80% of Level 1 criteria → Unlock Level 2
+3. Pass 80% of Level 2 criteria → Unlock Level 3
+4. And so on...
+
+### Evaluation Scopes
+
+Criteria are evaluated at two different scopes:
+
+- **Repository Scope:** Evaluated once for the entire repository (e.g., CODEOWNERS file exists, branch protection enabled)
+- **Application Scope:** Evaluated per application in monorepos (e.g., linter configured, unit tests exist for each app)
+
+For monorepos with multiple applications, application-scoped criteria show scores like `3 / 4` (3 out of 4 apps pass).
+
+---
+
+## The Technical Pillars
+
+The Agent Readiness Model organizes criteria into nine technical pillars that form the foundation for autonomous operation.
+
+### Style & Validation
+
+Linters, type checkers, and formatters catch obvious errors instantly. Agents avoid wasting cycles on syntax errors, style inconsistencies, and type mismatches.
+
+- **Example criteria:** Linter configuration, type checker, code formatter, pre-commit hooks
+
+### Build System
+
+Clear, deterministic build commands let agents verify their changes compile and run before committing. No guessing about which commands to run or which flags to pass.
+
+- **Example criteria:** Build command documented, dependencies pinned, VCS CLI tools
+
+### Testing
+
+Fast unit and integration tests create tight feedback loops. Agents learn whether their changes work correctly by running tests, seeing failures, and iterating.
+
+- **Example criteria:** Unit tests exist, integration tests exist, tests runnable locally
+
+### Documentation
+
+Explicit instructions house the tribal knowledge that "everyone just knows." How to set up the environment, run tests, deploy changes, debug issues. Agents need written instructions that are discoverable, accurate, and maintained.
+
+- **Example criteria:** AGENTS.md, README, documentation freshness
+
+### Development Environment
+
+Reproducible environments ensure consistency. When developers and agents work in identical environments, entire classes of problems disappear. No more "works on my machine."
+
+- **Example criteria:** Devcontainer, environment template, local services setup
+
+### Debugging & Observability
+
+Structured logging, tracing, and metrics give agents runtime visibility into what code actually does. Good observability turns "it failed" into "it failed because X was null when calling Y after receiving Z."
+
+- **Example criteria:** Structured logging, distributed tracing, metrics collection
+
+### Security
+
+Branch protection, secret scanning, and code owners prevent agents from introducing security issues or bypassing required reviews. Agents move fast—automated guardrails ensure they move fast safely.
+
+- **Example criteria:** Branch protection, secret scanning, CODEOWNERS
+
+### Task Discovery
+
+Infrastructure for agents to find and scope work autonomously. Well-structured issues and templates help agents understand what needs to be done.
+
+- **Example criteria:** Issue templates, issue labeling system, PR templates
+
+### Product & Experimentation
+
+Tools for measuring impact, running experiments, and understanding user behavior. Agents can see whether features are actually used and measure the impact of their changes.
+
+- **Example criteria:** Product analytics instrumentation, experiment infrastructure
+
+
+## Links discovered
+- [slash command](https://github.com/AcidicSoil/factory/blob/main/cli/features/readiness-report.md)
+- [Agent Readiness dashboard](https://github.com/AcidicSoil/factory/blob/main/web/agent-readiness/dashboard.md)
+- [Readiness Reports API](https://github.com/AcidicSoil/factory/blob/main/reference/readiness-reports-api.md)
+
+--- docs/web/getting-started/overview.mdx ---
+---
+title: Overview
+sidebarTitle: Overview
+description: If it can be done on a computer, it can be done with a Droid.
+keywords: ['factory app', 'desktop app', 'droid', 'factory bridge', 'bridge', 'cloud templates', 'cloud workspaces', 'local machine', 'download', 'install', 'mac', 'windows', 'ai coding', 'coding assistant']
+---
+
+<Note>
+  **Research Preview**: The Factory App is now available for download on Mac and Windows.
+</Note>
+
+## Download and start in 30 seconds
+
+<CardGroup cols={3}>
+  <Card title="Mac (Apple Silicon)" icon="apple" href="https://app.factory.ai/api/desktop?platform=darwin&architecture=arm64">
+    Download for M1/M2/M3
+  </Card>
+  <Card title="Mac (Intel)" icon="apple" href="https://app.factory.ai/api/desktop?platform=darwin&architecture=x64">
+    Download for Intel
+  </Card>
+  <Card title="Windows" icon="windows" href="https://app.factory.ai/api/desktop?platform=win32">
+    Download for Windows
+  </Card>
+</CardGroup>
+
+Install, sign in, set your working directory, and start building. [Try the quickstart →](/web/getting-started/quickstart)
+
+## What the Factory App brings to your workflow
+
+- **Native desktop experience**: A dedicated app with Droid built-in — no browser tabs, no setup complexity. Just download and start coding.
+- **Local machine connection**: Work directly on your local filesystem with full access to your development environment, tools, and workflows.
+- **Deep codebase understanding**: Droid leverages your project context, documentation, and team knowledge to provide contextually aware assistance.
+- **Engineering system integration**: Connect to Jira, Notion, Slack, Linear, PagerDuty, and more — so development work stays synchronized with your team.
+
+## Why teams choose Factory
+
+- **Built for enterprise**: SOC-2 compliance, on-premise deployment options, and security-first design.
+- **Transparent and controllable**: Every change Droid proposes is visible and reviewable before approval.
+- **Model flexibility**: Choose from multiple AI models and route tasks to the best model for each job.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Quickstart"
+    icon="rocket"
+    href="/web/getting-started/quickstart"
+  >
+    Get up and running in 5 minutes
+  </Card>
+  <Card
+    title="Integrations"
+    icon="plug"
+    href="/web/integrations/linear"
+  >
+    Connect Slack, Linear, and other tools
+  </Card>
+</CardGroup>
+
+
+## Links discovered
+- [Try the quickstart →](https://github.com/AcidicSoil/factory/blob/main/web/getting-started/quickstart.md)
+
+--- docs/cli/getting-started/quickstart.mdx ---
+---
+title: "Quickstart"
+description: "Get productive with droid in 5 minutes using the interactive terminal UI."
+keywords: ['quickstart', 'tutorial', 'getting started', 'droid', 'cli', 'install droid', 'setup', 'first steps', 'beginner', 'start']
+---
+
+This quickstart guide will have you collaborating with Factory's development agent in just a few minutes. You'll experience how droid understands your codebase, makes thoughtful changes, and integrates with your existing workflow.
+
+## Before you begin
+
+Make sure you have:
+
+- A terminal open in a code project
+- Git repository (recommended for full workflow demonstration)
+
+## Step 1: Install and start droid
+
+<CodeGroup>
+
+```bash macOS/Linux
+curl -fsSL https://app.factory.ai/cli | sh
+```
+
+```bash Homebrew
+brew install --cask droid
+```
+
+```powershell Windows
+irm https://app.factory.ai/cli/windows | iex
+```
+
+```bash npm
+npm install -g droid
+```
+
+</CodeGroup>
+
+<Note>
+  **Linux users:** Ensure `xdg-utils` is installed for proper functionality. Install with: `sudo apt-get install xdg-utils`
+</Note>
+
+Then navigate to your project and start the droid CLI.
+
+<CodeGroup>
+```bash
+# Navigate to your project
+cd /path/to/your/project
+
+# Start interactive session
+droid
+```
+
+</CodeGroup>
+
+<img
+  src="/images/droid_tui_intro.png"
+  alt="Droid CLI"
+  height="450"
+  className="rounded-lg"
+/>
+
+You'll see droid's welcome screen in a full-screen terminal interface. If prompted, sign in via your browser to connect to Factory's development agent.
+
+## Step 2: Explore your codebase
+
+Let's start by having droid understand your project. Try one of these questions:
+
+```
+
+> analyze this codebase and explain the overall architecture
+
+```
+
+```
+
+> what technologies and frameworks does this project use?
+
+```
+
+```
+
+> where are the main entry points and how is testing set up?
+
+```
+
+Droid reads your files contextually and leverages organizational knowledge to provide comprehensive insights about your project structure and conventions.
+
+## Step 3: Make your first code change
+
+Now let's see droid in action with a simple modification:
+
+```
+
+> add comprehensive logging to the main application startup
+
+```
+
+Droid will:
+
+1. Analyze your current logging setup
+2. Propose specific changes with a clear plan
+3. Show you exactly what will be modified
+4. Wait for your approval before making changes
+
+This transparent review process ensures you maintain full control over all code modifications.
+
+## Step 4: Experience enterprise workflows
+
+Try a more complex task that showcases droid's enterprise capabilities:
+
+```
+
+> audit this codebase for security vulnerabilities and create a remediation plan
+
+```
+
+Or provide context from your team's tools by pasting a link:
+
+```
+
+> implement the feature described in this Jira ticket: https://company.atlassian.net/browse/PROJ-123
+
+```
+
+If you've integrated these platforms through Factory's dashboard, droid can automatically read context from Jira, Notion, Slack, and other sources. Droid can also connect to additional tools via MCP integrations for even more capabilities.
+
+## Step 5: Handle version control
+
+Droid makes Git operations conversational and intelligent:
+
+```
+
+> review my uncommitted changes and suggest improvements before I commit
+
+```
+
+```
+
+> create a well-structured commit with a descriptive message following our team conventions
+
+```
+
+```
+
+> analyze the last few commits and identify any potential issues or patterns
+
+```
+
+## Essential controls
+
+Here are the key interactions you'll use daily:
+
+| Action           | What it does                   | How to use                     |
+| ---------------- | ------------------------------ | ------------------------------ |
+| Send message     | Submit a task or question      | Type and press **Enter**       |
+| Multi-line input | Write longer prompts           | **Shift\+Enter** for new lines |
+| Approve changes  | Accept proposed modifications  | Accept change in the TUI       |
+| Reject changes   | Decline proposed modifications | Reject change in the TUI       |
+| Switch modes     | Toggle between modes           | **Shift\+Tab**                 |
+| View shortcuts   | See all available commands     | Press **?**                    |
+| Exit session     | Leave droid                    | **Ctrl\+C** or type `exit`     |
+
+### Useful slash commands
+
+Quick shortcuts to common actions:
+
+- `/review` - Start AI-powered code review workflow ([learn more](/cli/features/code-review))
+- `/settings` - Configure droid behavior, models, and preferences
+- `/model` - Switch between AI models mid-session
+- `/mcp` - Manage Model Context Protocol servers
+- `/account` - Open your Factory account settings in browser
+- `/billing` - View and manage your billing settings
+- `/help` - See all available commands
+
+[Learn how to create custom slash commands →](/cli/configuration/custom-slash-commands)
+
+## Collaboration best practices
+
+**Be specific with context:**
+Instead of: "fix the bug"
+Try: "fix the authentication timeout issue where users get logged out after 5 minutes instead of the configured 30 minutes"
+
+**Use spec mode for complex features:**
+For larger features, use [Specification Mode](/cli/user-guides/specification-mode) which automatically provides planning before implementation without needing to explicitly request it.
+
+**Leverage organizational knowledge:**
+
+```
+
+> following our team's coding standards, implement the user preferences feature described in ticket PROJ-123
+
+```
+
+**Use the review workflow:**
+Always review droid's proposed changes before approval. The transparent diff view helps you understand exactly what will be modified.
+
+## Pro tips for enterprise teams
+
+**Security-first approach:**
+Droid automatically considers security implications and will flag potential vulnerabilities during code generation.
+
+**Compliance integration:**
+Connect your compliance tools through MCP to ensure all changes meet your organization's standards.
+
+**Team knowledge sharing:**
+Droid learns from your organization's patterns and can help maintain consistency across team members and projects.
+
+## What's next?
+
+<CardGroup cols={2}>
+  <Card
+    title="Common Use Cases"
+    icon="lightbulb"
+    href="/cli/getting-started/common-use-cases"
+  >
+    Explore real-world scenarios and workflows
+  </Card>
+  <Card
+    title="Configuration"
+    icon="gear"
+    href="/cli/configuration/settings"
+  >
+    Customize droid for your team's workflow
+  </Card>
+  <Card
+    title="AGENTS.md Guide"
+    icon="file-text"
+    href="/cli/configuration/agents-md"
+  >
+    Document your project conventions and commands
+  </Card>
+  <Card
+    title="IDE Integration"
+    icon="code"
+    href="/cli/configuration/ide-integrations"
+  >
+    Use droid within your favorite editor
+  </Card>
+</CardGroup>
+```
+
+
+## Links discovered
+- [learn more](https://github.com/AcidicSoil/factory/blob/main/cli/features/code-review.md)
+- [Learn how to create custom slash commands →](https://github.com/AcidicSoil/factory/blob/main/cli/configuration/custom-slash-commands.md)
+- [Specification Mode](https://github.com/AcidicSoil/factory/blob/main/cli/user-guides/specification-mode.md)
+
+--- docs/web/getting-started/quickstart.mdx ---
+---
+title: "Quickstart"
+description: "Get up and running with the Factory App in 5 minutes"
+keywords: ['quickstart', 'getting started', 'factory app', 'desktop app', 'droid', 'factory bridge', 'bridge', 'cloud templates', 'setup', 'install', 'download', 'local machine', 'working directory']
+---
+
+<Note>
+  **Research Preview**: The Factory App is now available for download on Mac and Windows.
+</Note>
+
+## Step 1: Download and Install
+
+<Steps>
+  <Step title="Download Factory">
+    <CardGroup cols={3}>
+      <Card title="Mac (Apple Silicon)" icon="apple" href="https://app.factory.ai/api/desktop?platform=darwin&architecture=arm64">
+        M1/M2/M3
+      </Card>
+      <Card title="Mac (Intel)" icon="apple" href="https://app.factory.ai/api/desktop?platform=darwin&architecture=x64">
+        Intel
+      </Card>
+      <Card title="Windows" icon="windows" href="https://app.factory.ai/api/desktop?platform=win32">
+        Windows x64
+      </Card>
+    </CardGroup>
+  </Step>
+
+  <Step title="Install">
+    - **Mac**: Open the `.dmg` file and drag Factory to Applications
+    - **Windows**: Run the installer
+  </Step>
+
+  <Step title="Sign In">
+    Launch Factory and sign in with your account.
+  </Step>
+</Steps>
+
+## Step 2: Connect to Your Codebase
+
+<Steps>
+  <Step title="Set Your Working Directory">
+    Set your working directory to your project folder. Factory connects directly to your local machine.
+  </Step>
+
+  <Step title="Select Your Model">
+    Choose your preferred AI model from the model selector. You can change this anytime.
+  </Step>
+</Steps>
+
+## Step 3: Start Building
+
+<Steps>
+  <Step title="Ask Droid Anything">
+    Start with something simple:
+
+    ```
+    Analyze this codebase and explain the architecture
+    ```
+
+    Or jump straight into coding:
+
+    ```
+    Add error handling to the user authentication flow
+    ```
+
+    Droid will analyze your codebase, propose changes, and show you exactly what will be modified before applying anything.
+  </Step>
+</Steps>
+
+## Example Workflows
+
+### Feature Development
+```
+Implement a dark mode toggle following our existing theme patterns
+```
+
+### Bug Fixing
+```
+Fix the authentication timeout issue where users get logged out after 5 minutes
+```
+
+### Code Review
+```
+Review this PR and suggest improvements for error handling and edge cases
+```
+
+### Security Audit
+```
+Audit this codebase for security vulnerabilities and create a remediation plan
+```
+
+## Tips
+
+- **Be specific**: Include relevant details like file names, error messages, or ticket numbers
+- **Use context**: Reference team tools with '@' mentions or paste links directly
+- **Review changes**: Always review Droid's proposed changes before approval
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Integrations" icon="plug" href="/web/integrations/linear">
+    Connect Slack, Linear, and other tools
+  </Card>
+  <Card title="CLI" icon="terminal" href="/cli/getting-started/overview">
+    Use Droid from your terminal
+  </Card>
+</CardGroup>
+
+
+--- examples/droid-code-review-workflow/README.md ---
+# Droid Code Review Workflow
+
+This directory contains a sample GitHub Actions workflow that uses Droid to automatically review pull requests in your repository.
+
+## How to use
+
+1.  **Copy the workflow file**:
+
+    Copy the `droid-code-review.yml` file from this directory into your own repository's `.github/workflows/` directory.
+
+2.  **Configure Secrets**:
+
+    This workflow requires one secret to be added to your repository:
+
+    *   `FACTORY_API_KEY`: Your Factory AI API key.
+
+    To get your API key, sign in to Factory, click your profile in the top right, go to **Settings** → **API Keys**, and create a key there. Once created, you won’t be able to view the key again, but you can always generate new ones.
+
+    To add it:
+
+    *   Go to your repository's **Settings** tab.
+    *   In the **Security** section of the sidebar, select **Secrets and variables** > **Actions**.
+    *   Click **New repository secret**.
+    *   Name the secret `FACTORY_API_KEY` and paste your API key into the **Value** field.
+
+    **Note on `GH_TOKEN`**: This workflow uses the built-in `secrets.GITHUB_TOKEN` to interact with the GitHub API. GitHub prevents creating secrets with a `GITHUB_` prefix. For this reason, the workflow assigns `secrets.GITHUB_TOKEN` to an environment variable named `GH_TOKEN`, which the Droid agent then uses. You do not need to create this secret yourself.
+    *   Your GitHub Token will need `contents: read`, `pull requests: read and write` and `issues: write` access
+
+4.  **Create a pull request**:
+
+    Once the workflow file and API key are in place, Droid will automatically review any new pull requests you create.
+
+
+--- examples/power-user-skills/README.md ---
+# Power User Skills
+
+Example skills for power users to customize their Droid experience.
+
+## Available Skills
+
+### prompt-refiner-claude
+Refine prompts for Claude models (Opus, Sonnet, Haiku) using Anthropic's best practices.
+
+**Location:** `prompt-refiner-claude/SKILL.md`
+
+**Usage:** Invoke when preparing complex tasks for Claude models. The skill helps structure prompts using XML tags, proper ordering, and Claude-specific patterns.
+
+### prompt-refiner-gpt
+Refine prompts for GPT models (GPT-5, GPT-5.1, Codex) using OpenAI's best practices.
+
+**Location:** `prompt-refiner-gpt/SKILL.md`
+
+**Usage:** Invoke when preparing complex tasks for GPT models. The skill helps with role framing, numbered procedures, and output specifications.
+
+### memory-capture
+Capture and organize memories, decisions, and learnings.
+
+**Location:** `memory-capture/SKILL.md`
+
+**Usage:** Invoke when you want to save decisions, preferences, or learnings for future sessions.
+
+## Installation
+
+Copy any skill you want to use to your personal or project skills directory:
+
+### Personal (applies to all projects)
+```bash
+mkdir -p ~/.factory/skills/prompt-refiner-claude
+cp prompt-refiner-claude/SKILL.md ~/.factory/skills/prompt-refiner-claude/
+```
+
+### Project (applies to current project only)
+```bash
+mkdir -p .factory/skills/prompt-refiner-claude
+cp prompt-refiner-claude/SKILL.md .factory/skills/prompt-refiner-claude/
+```
+
+## Customization
+
+These skills are starting points. Customize them for your needs:
+
+1. **Add team-specific patterns** to the prompt refiners
+2. **Adjust memory categories** to match your workflow
+3. **Add model-specific examples** from your actual work
+4. **Include project conventions** in the refinement criteria
+
+## Related Documentation
+
+- [Skills Guide](/cli/configuration/skills) - How skills work
+- [Power User Setup](/guides/power-user/setup-checklist) - Complete setup guide
+- [Prompt Crafting](/guides/power-user/prompt-crafting) - Model-specific prompting
+- [Memory Management](/guides/power-user/memory-management) - Building persistent memory
+
+
+## Links discovered
+- [Skills Guide](https://github.com/AcidicSoil/factory/blob/main/cli/configuration/skills.md)
+- [Power User Setup](https://github.com/AcidicSoil/factory/blob/main/guides/power-user/setup-checklist.md)
+- [Prompt Crafting](https://github.com/AcidicSoil/factory/blob/main/guides/power-user/prompt-crafting.md)
+- [Memory Management](https://github.com/AcidicSoil/factory/blob/main/guides/power-user/memory-management.md)
+
+--- examples/power-user-skills/memory-capture/SKILL.md ---
+---
+name: memory-capture
+description: Capture and organize memories, decisions, and learnings to a memories.md file. Use when you want to save context for future sessions.
+---
+
+# Memory Capture
+
+Help users capture important decisions, preferences, and learnings to their memories file for future reference.
+
+## When to Use
+
+Invoke this skill when the user wants to:
+- Record a decision they made
+- Save a preference for future sessions
+- Document something they learned
+- Create a note about the project or codebase
+
+## Memory Locations
+
+- **Personal memories**: `~/.factory/memories.md` - preferences that apply across all projects
+- **Project memories**: `.factory/memories.md` - decisions specific to the current project
+
+## Capture Process
+
+### Step 1: Understand What to Remember
+
+Ask the user to clarify:
+- What specifically should be remembered?
+- Is this a personal preference or project-specific?
+- What's the context (why is this worth remembering)?
+
+### Step 2: Categorize the Memory
+
+Common categories:
+
+**For Personal Memories:**
+- Code style preferences
+- Tool preferences
+- Communication style
+- Workflow patterns
+
+**For Project Memories:**
+- Architecture decisions
+- Design choices
+- Domain knowledge
+- Known issues
+- Team conventions
+
+### Step 3: Format the Entry
+
+Use this format:
+
+```markdown
+### [Date]: [Short Title]
+**Category**: [Decision/Preference/Learning/Context]
+**Summary**: [One sentence description]
+**Details**: [Full explanation if needed]
+**Reasoning**: [Why this matters - optional]
+```
+
+For simpler entries:
+```markdown
+- [Date] [Category]: [Description]
+```
+
+### Step 4: Append to Memories File
+
+Add the formatted entry to the appropriate memories file.
+
+If the file doesn't exist, create it with proper structure:
+
+**For Personal (~/.factory/memories.md):**
+```markdown
+# My Development Memory
+
+## Preferences
+[preferences entries]
+
+## Learnings
+[learning entries]
+```
+
+**For Project (.factory/memories.md):**
+```markdown
+# Project Memory
+
+## Decisions
+[decision entries]
+
+## Context
+[context entries]
+
+## Known Issues
+[issue entries]
+```
+
+## Example Captures
+
+### Architecture Decision
+
+User says: "Remember that we chose PostgreSQL over MongoDB for this project"
+
+Capture as:
+```markdown
+### 2024-02-15: Database Selection
+**Category**: Architecture Decision
+**Summary**: Chose PostgreSQL over MongoDB for the primary database
+**Reasoning**: 
+- Strong relational data model fits our domain
+- ACID compliance needed for financial transactions
+- Team has more PostgreSQL experience
+- Better tooling for complex queries and reporting
+```
+
+### Personal Preference
+
+User says: "I prefer early returns over nested conditionals"
+
+Capture as:
+```markdown
+## Code Style Preferences
+
+- [2024-02-15] I prefer early returns over nested conditionals for better readability
+```
+
+### Domain Knowledge
+
+User says: "Note that free tier users are limited to 3 team members"
+
+Capture as:
+```markdown
+### Business Rules
+
+- Free tier: Limited to 3 team members
+- Pro tier: Up to 20 team members
+- Enterprise: Unlimited team members
+```
+
+### Technical Context
+
+User says: "The auth service has a known issue with refresh tokens (#234)"
+
+Capture as:
+```markdown
+## Known Issues
+
+- [ ] Auth refresh token race condition (#234) - Can cause session loss during concurrent requests
+```
+
+## Tips
+
+1. **Keep entries scannable** - Use headers and bullet points
+2. **Include dates** - Context matters, decisions may change
+3. **Note the "why"** - Future you will want to know
+4. **Link to issues/PRs** - For traceability
+5. **Review periodically** - Archive outdated memories
+
+---
+
+## Alternative Implementations
+
+This skill is one of three ways to capture memories. Choose based on your workflow:
+
+### Option 1: This Skill (Interactive)
+
+Droid invokes this skill when you ask to remember something. Best when you want help categorizing and formatting memories.
+
+**Usage:** "Remember that we chose PostgreSQL for ACID compliance"
+
+### Option 2: Hook (Automatic)
+
+A [UserPromptSubmit hook](/cli/configuration/hooks-guide) that triggers on phrases like "remember this:". Best for zero-friction capture.
+
+See the [Memory Management guide](/guides/power-user/memory-management#automatic-memory-capture) for the hook implementation.
+
+**Usage:** "Remember this: we use the repository pattern for data access"
+
+### Option 3: Custom Slash Command (Manual)
+
+A [custom slash command](/cli/configuration/custom-slash-commands) for quick, consistent capture.
+
+Create `~/.factory/commands/remember.md`:
+
+```markdown
+---
+description: Save a memory to your memories file
+argument-hint: <what to remember>
+---
+
+Add this to my memories file (~/.factory/memories.md):
+
+$ARGUMENTS
+
+Format it appropriately based on whether it's a preference, decision, or learning. Include today's date.
+```
+
+**Usage:** `/remember we chose PostgreSQL for ACID compliance`
+
+### Comparison
+
+| Approach | Trigger | Best For |
+|----------|---------|----------|
+| **Skill** | Droid decides | Interactive categorization |
+| **Hook** | Automatic on keywords | Zero-friction capture |
+| **Slash Command** | You type `/remember` | Quick manual capture |
+
+
+## Links discovered
+- [UserPromptSubmit hook](https://github.com/AcidicSoil/factory/blob/main/cli/configuration/hooks-guide.md)
+- [Memory Management guide](https://github.com/AcidicSoil/factory/blob/main/guides/power-user/memory-management#automatic-memory-capture.md)
+- [custom slash command](https://github.com/AcidicSoil/factory/blob/main/cli/configuration/custom-slash-commands.md)
+
+--- examples/power-user-skills/prompt-refiner-claude/SKILL.md ---
+---
+name: prompt-refiner-claude
+description: Refine prompts for Claude models (Opus, Sonnet, Haiku) using Anthropic's best practices. Use when preparing complex tasks for Claude.
+---
+
+# Claude Prompt Refiner
+
+Refine prompts to get better results from Claude models by applying Anthropic's recommended patterns.
+
+## When to Use
+
+Invoke this skill when you have a task for Claude that:
+- Involves multiple steps or files
+- Requires specific output formatting
+- Needs careful reasoning or analysis
+- Would benefit from structured context
+
+## Refinement Process
+
+### Step 1: Analyze the Draft Prompt
+
+Review the user's prompt for:
+- [ ] Clear outcome definition
+- [ ] Sufficient context
+- [ ] Explicit constraints
+- [ ] Success criteria
+
+Ask clarifying questions if any of these are missing.
+
+### Step 2: Apply Claude-Specific Patterns
+
+**Structure with XML tags:**
+Claude responds exceptionally well to XML-style tags for organizing complex prompts:
+
+- `<context>` - Background information, codebase state, environment
+- `<task>` - The specific action to take
+- `<requirements>` - Must-have criteria
+- `<constraints>` - Limitations and boundaries
+- `<examples>` - Sample inputs/outputs if helpful
+- `<output_format>` - How to structure the response
+
+**Ordering matters:**
+1. Context first (what exists)
+2. Task second (what to do)
+3. Requirements third (how to do it)
+4. Examples last (clarifying edge cases)
+
+### Step 3: Enhance for Reasoning
+
+For complex tasks, add thinking prompts:
+- "Think through the approach before implementing"
+- "Consider these edge cases: ..."
+- "Explain your reasoning for key decisions"
+
+### Step 4: Output the Refined Prompt
+
+Present the improved prompt with:
+- Clear section headers
+- XML tags where beneficial
+- Specific, measurable criteria
+- An explanation of what changed and why
+
+## Example Transformations
+
+### Example 1: Vague Task
+
+**Before:**
+```
+Add caching to the API
+```
+
+**After:**
+```
+<context>
+The /api/products endpoint currently queries the database on every request.
+Average response time is 200ms. We use Redis for other caching in the app.
+</context>
+
+<task>
+Add Redis caching to the /api/products endpoint to reduce database load.
+</task>
+
+<requirements>
+- Cache TTL of 5 minutes
+- Cache invalidation when products are updated
+- Graceful fallback to database if Redis is unavailable
+- Add cache hit/miss metrics logging
+</requirements>
+
+<constraints>
+- Don't change the response format
+- Must pass existing integration tests
+- Use our existing Redis connection from src/lib/redis.ts
+</constraints>
+```
+
+### Example 2: Code Review Request
+
+**Before:**
+```
+Review this PR
+```
+
+**After:**
+```
+<context>
+This PR adds user authentication to our Next.js application.
+Our stack: Next.js 14, TypeScript, Prisma, PostgreSQL.
+Security is critical - this handles user sessions and passwords.
+</context>
+
+<task>
+Review the changes in this PR for security issues, code quality, and adherence to our patterns.
+</task>
+
+<requirements>
+Focus on:
+1. Security vulnerabilities (auth bypass, injection, etc.)
+2. Error handling and edge cases
+3. TypeScript type safety
+4. Test coverage for critical paths
+</requirements>
+
+<output_format>
+Organize your review as:
+## Critical Issues (must fix before merge)
+## Recommendations (should consider)
+## Minor Suggestions (nice to have)
+## What Looks Good (positive feedback)
+</output_format>
+```
+
+### Example 3: Feature Implementation
+
+**Before:**
+```
+Add dark mode
+```
+
+**After:**
+```
+<context>
+React application using Tailwind CSS for styling.
+Currently only has light mode. Design tokens are in tailwind.config.js.
+User preference should persist across sessions.
+</context>
+
+<task>
+Implement dark mode toggle with system preference detection and persistence.
+</task>
+
+<requirements>
+- Toggle component in the header
+- Detect system preference on first visit
+- Persist user choice in localStorage
+- Smooth transition between modes
+- Update all existing components to support both modes
+</requirements>
+
+<constraints>
+- Use Tailwind's built-in dark mode support
+- Don't add new dependencies
+- Ensure WCAG AA contrast ratios in both modes
+</constraints>
+
+<examples>
+Current light mode colors:
+- Background: bg-white
+- Text: text-gray-900
+- Primary: text-blue-600
+
+Expected dark mode equivalents:
+- Background: dark:bg-gray-900
+- Text: dark:text-gray-100
+- Primary: dark:text-blue-400
+</examples>
+```
+
+## Tips for Best Results
+
+1. **Be specific about scope** - "the auth module" → "src/auth/session.ts"
+2. **Include file paths** when relevant
+3. **Reference existing patterns** - "follow the pattern in UserService.ts"
+4. **State what NOT to do** - constraints prevent unwanted changes
+5. **Define done** - what does success look like?
+
+
+--- examples/power-user-skills/prompt-refiner-gpt/SKILL.md ---
+---
+name: prompt-refiner-gpt
+description: Refine prompts for GPT models (GPT-5, GPT-5.1, Codex) using OpenAI's best practices. Use when preparing complex tasks for GPT.
+---
+
+# GPT Prompt Refiner
+
+Refine prompts to get better results from GPT models by applying OpenAI's recommended patterns.
+
+## When to Use
+
+Invoke this skill when you have a task for GPT that:
+- Requires a specific persona or expertise
+- Involves procedural steps
+- Needs structured output
+- Benefits from explicit examples
+
+## Refinement Process
+
+### Step 1: Analyze the Draft Prompt
+
+Review the user's prompt for:
+- [ ] Clear role/persona definition
+- [ ] Step-by-step breakdown (if procedural)
+- [ ] Output format specification
+- [ ] Concrete examples
+
+Ask clarifying questions if any of these are missing.
+
+### Step 2: Apply GPT-Specific Patterns
+
+**Role framing:**
+GPT models respond well to clear role definitions. Start with:
+"You are a [specific role] working on [specific context]..."
+
+**Numbered procedures:**
+Break complex tasks into numbered steps that build on each other.
+
+**Output specification:**
+Be explicit about format: "Return as JSON", "Format as markdown with headers", etc.
+
+**Chain of thought:**
+For reasoning tasks, add: "Think through this step by step."
+
+### Step 3: Structure the Prompt
+
+**Effective order for GPT:**
+1. Role definition (who/what)
+2. Context (background info)
+3. Task (what to do)
+4. Steps (how to do it, if procedural)
+5. Output format (what to return)
+6. Examples (optional clarification)
+
+### Step 4: Output the Refined Prompt
+
+Present the improved prompt with:
+- Clear role statement
+- Numbered steps where applicable
+- Explicit output requirements
+- An explanation of what changed and why
+
+## Example Transformations
+
+### Example 1: Security Review
+
+**Before:**
+```
+Review this code for security issues
+```
+
+**After:**
+```
+You are a senior security engineer conducting a security audit of a Node.js payment processing service.
+
+Context: This service handles credit card transactions and communicates with Stripe's API. It runs in AWS ECS with access to a PostgreSQL database.
+
+Task: Review the code in src/payments/ for security vulnerabilities.
+
+Complete these steps:
+1. Check for proper input validation on all endpoints
+2. Verify secrets are not hardcoded or logged
+3. Review authentication and authorization logic
+4. Check for SQL injection and XSS vulnerabilities
+5. Verify proper error handling that doesn't leak sensitive info
+6. Review rate limiting and abuse prevention
+
+Output format:
+Return a security report in markdown with these sections:
+- **Critical**: Issues that must be fixed before deployment
+- **High**: Significant risks that should be addressed soon
+- **Medium**: Improvements to consider
+- **Recommendations**: General security enhancements
+
+For each issue, include:
+- File and line number
+- Description of the vulnerability
+- OWASP category if applicable
+- Recommended fix with code example
+```
+
+### Example 2: Refactoring Task
+
+**Before:**
+```
+Refactor this function to be cleaner
+```
+
+**After:**
+```
+You are a senior TypeScript developer focused on code quality and maintainability.
+
+Context: This function in src/utils/dataProcessor.ts handles data transformation for our analytics pipeline. It currently has high cyclomatic complexity and is difficult to test.
+
+Task: Refactor the processData function to improve readability and testability.
+
+Steps:
+1. Analyze the current function and identify code smells
+2. Extract logical units into smaller, focused functions
+3. Add TypeScript types for all parameters and return values
+4. Ensure each extracted function is independently testable
+5. Preserve all existing behavior (no functional changes)
+6. Add JSDoc comments for public functions
+
+Output format:
+1. Brief analysis of issues in the current code (3-5 bullet points)
+2. The refactored code
+3. List of extracted functions with their responsibilities
+4. Example test cases for the new functions
+```
+
+### Example 3: API Design
+
+**Before:**
+```
+Design an API for user management
+```
+
+**After:**
+```
+You are an API architect designing a RESTful API for a B2B SaaS application.
+
+Context: We need user management endpoints for our multi-tenant application. Users belong to organizations, and permissions are role-based (admin, member, viewer).
+
+Task: Design a complete REST API for user management operations.
+
+Requirements:
+1. CRUD operations for users
+2. Organization membership management
+3. Role assignment and permission checking
+4. Invitation flow for new users
+5. Password reset functionality
+
+Constraints:
+- Follow REST best practices
+- Use consistent naming conventions
+- Support pagination for list endpoints
+- Include proper error responses
+
+Output format:
+For each endpoint, provide:
+- HTTP method and path
+- Request body schema (if applicable)
+- Response schema
+- Possible error codes
+- Example request/response
+
+Use OpenAPI 3.0 YAML format for the specification.
+```
+
+### Example 4: Debugging
+
+**Before:**
+```
+Why is this test failing?
+```
+
+**After:**
+```
+You are a senior developer debugging a failing test in a React application.
+
+Context: The test in UserProfile.test.tsx is failing intermittently in CI but passes locally. The component fetches user data and displays it.
+
+Task: Analyze the test and identify the root cause of the flaky failure.
+
+Think through this step by step:
+1. What async operations does the test involve?
+2. Are there any race conditions?
+3. Is the test properly waiting for state updates?
+4. Are mocks set up correctly?
+5. Could there be timing issues with the test environment?
+
+Output format:
+1. Most likely root cause (1-2 sentences)
+2. Evidence supporting your diagnosis
+3. Recommended fix with code
+4. How to verify the fix works
+```
+
+## Tips for Best Results
+
+1. **Define the role clearly** - "senior security engineer" > "developer"
+2. **Number your steps** - GPT follows ordered lists reliably
+3. **Specify output format explicitly** - JSON, markdown, etc.
+4. **Use "Think through this step by step"** for reasoning tasks
+5. **Provide examples** when the expected format is complex
+6. **Include constraints** to prevent scope creep
+
+
+--- .github/scripts/parse-changelog.js ---
+#!/usr/bin/env node
+
+const fs = require('fs');
+const path = require('path');
+
+function parseChangelog(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  
+  // Extract the first <Update> block
+  const updateMatch = content.match(/<Update\s+label="([^"]+)"\s+rss=\{\{\s*title:\s*"([^"]+)",\s*description:\s*"([^"]+)"\s*\}\}>([\s\S]*?)<\/Update>/);
+  
+  if (!updateMatch) {
+    console.error('No update block found');
+    process.exit(1);
+  }
+  
+  const [, date, title, description, body] = updateMatch;
+  
+  // Extract version number
+  const versionMatch = body.match(/`([^`]+)`/);
+  const version = versionMatch ? versionMatch[1] : '';
+  
+  // Extract sections
+  const newFeaturesMatch = body.match(/## New features\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  const bugFixesMatch = body.match(/## Bug fixes\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  const enhancementsMatch = body.match(/## New features and enhancements\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  const stabilityMatch = body.match(/## Bug fixes and stability\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  
+  // Extract bullet points
+  function extractBullets(text) {
+    if (!text) return [];
+    const bullets = [];
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('* **')) {
+        // Extract bold title and description
+        const match = trimmed.match(/\*\s+\*\*([^*]+)\*\*:?\s*-?\s*(.*)/);
+        if (match) {
+          bullets.push(`• ${match[1]}${match[2] ? ': ' + match[2] : ''}`);
+        }
+      } else if (trimmed.startsWith('* ')) {
+        bullets.push(`• ${trimmed.substring(2)}`);
+      }
+    }
+    return bullets;
+  }
+  
+  const newFeatures = extractBullets(newFeaturesMatch?.[1] || enhancementsMatch?.[1] || '');
+  const bugFixes = extractBullets(bugFixesMatch?.[1] || stabilityMatch?.[1] || '');
+  
+  // Get changelog URL
+  const fileName = path.basename(filePath, '.mdx');
+  const changelogUrl = `https://docs.factory.ai/changelog/${fileName}`;
+  
+  // Build Discord message
+  let message = `📝 **New Factory Changelog`;
+  if (version) {
+    message += `: ${version}**`;
+  } else {
+    message += `**`;
+  }
+  message += ` (${date})\n\n`;
+  
+  if (newFeatures.length > 0) {
+    message += `**New features**\n`;
+    message += newFeatures.slice(0, 5).join('\n') + '\n\n';
+  }
+  
+  if (bugFixes.length > 0) {
+    message += `**Bug fixes**\n`;
+    message += bugFixes.slice(0, 5).join('\n') + '\n\n';
+  }
+  
+  message += `View full changelog: ${changelogUrl}`;
+  
+  // Trim message to Discord's 2000 character limit
+  if (message.length > 2000) {
+    message = message.substring(0, 1950) + '...\n\n' + `View full changelog: ${changelogUrl}`;
+  }
+  
+  return message;
+}
+
+// Main execution
+if (require.main === module) {
+  const filePath = process.argv[2];
+  if (!filePath) {
+    console.error('Usage: node parse-changelog.js <path-to-changelog.mdx>');
+    process.exit(1);
+  }
+  
+  try {
+    const message = parseChangelog(filePath);
+    console.log(message);
+  } catch (error) {
+    console.error('Error parsing changelog:', error.message);
+    process.exit(1);
+  }
+}
+
+module.exports = { parseChangelog };
+
+
+--- README.md ---
+# Factory
+
+The agent-native development platform. Works across CLI, Web, Slack/Teams, Linear/Jira and Mobile.
+
+Our agent, Droid, is top performing in terminal benchmarks.
+
+<p align="left">
+  <img src="docs/images/droid_ascii.gif" alt="Droid logo" height="220" />
+</p>
+
+<p align="left"><strong>The agent-native development platform built for shipping software faster.</strong></p>
+
+## Getting Started
+
+- [CLI Quickstart](https://docs.factory.ai/cli/getting-started/quickstart)
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=Factory.factory-vscode-extension)
+
+## Quick Links
+
+- [Factory Website](https://factory.ai)
+- [Documentation](https://docs.factory.ai)
+- [CLI Overview](https://docs.factory.ai/cli/getting-started/overview)
+- [Community Builds](./community-builds.md)
+
+## Community & Contributions
+
+- Join the community on [GitHub Discussions](https://github.com/Factory-AI/factory/discussions)
+- Share your workflows by opening a PR against [`community-builds.md`](./community-builds.md)
+- Bug/issue/feature request? [Open an issue](https://github.com/Factory-AI/factory/issues) or send a pull request
+
+## Community Builds
+
+- [here-now](https://github.com/fredrivett/here-now) - Minimal webpage hit counter — show how many people are here/now by [fredrivett](https://github.com/fredrivett)
+- [factory-mcp](https://github.com/iannuttall/factory-mcp) - Community-built Factory MCP integration to search our docs by [iannuttall](https://github.com/iannuttall)
+- [Factory CLI with ChatGPT Codex / Claude subscription via CLIProxyAPI](https://gist.github.com/chandika/c4b64c5b8f5e29f6112021d46c159fdd) - Guide to run Factory CLI against Claude Code Max or ChatGPT Codex through CLIProxyAPI by [chandika](https://github.com/chandika)
+- [Factory CLI with Claude subscription via CLIProxyAPI](https://gist.github.com/ben-vargas/9f1a14ac5f78d10eba56be437b7c76e5) - Setup instructions for using Factory CLI with Claude Code Max through CLIProxyAPI by [ben-vargas](https://github.com/ben-vargas)
+- [GrayPane – Flight Search & Alerts](https://github.com/punitarani/flights-tracker) - Check available flights, monitor price trends, plan upcoming trips, and create personalized alerts by [Punit Arani](https://github.com/punitarani)
+
+## License
+
+Copyright © 2025 Factory AI. All rights reserved.
+
+
+## Links discovered
+- [CLI Quickstart](https://docs.factory.ai/cli/getting-started/quickstart)
+- [VS Code Extension](https://marketplace.visualstudio.com/items?itemName=Factory.factory-vscode-extension)
+- [Factory Website](https://factory.ai)
+- [Documentation](https://docs.factory.ai)
+- [CLI Overview](https://docs.factory.ai/cli/getting-started/overview)
+- [Community Builds](https://github.com/AcidicSoil/factory/blob/main/community-builds.md)
+- [GitHub Discussions](https://github.com/Factory-AI/factory/discussions)
+- [`community-builds.md`](https://github.com/AcidicSoil/factory/blob/main/community-builds.md)
+- [Open an issue](https://github.com/Factory-AI/factory/issues)
+- [here-now](https://github.com/fredrivett/here-now)
+- [fredrivett](https://github.com/fredrivett)
+- [factory-mcp](https://github.com/iannuttall/factory-mcp)
+- [iannuttall](https://github.com/iannuttall)
+- [Factory CLI with ChatGPT Codex / Claude subscription via CLIProxyAPI](https://gist.github.com/chandika/c4b64c5b8f5e29f6112021d46c159fdd)
+- [chandika](https://github.com/chandika)
+- [Factory CLI with Claude subscription via CLIProxyAPI](https://gist.github.com/ben-vargas/9f1a14ac5f78d10eba56be437b7c76e5)
+- [ben-vargas](https://github.com/ben-vargas)
+- [GrayPane – Flight Search & Alerts](https://github.com/punitarani/flights-tracker)
+- [Punit Arani](https://github.com/punitarani)
+
+--- community-builds.md ---
+# Community builds
+
+A curated list of community-built examples and projects using Factory. To add yours, open a PR to this file.
+
+- [here-now](https://github.com/fredrivett/here-now) - Minimal webpage hit counter — show how many people are here/now by [fredrivett](https://github.com/fredrivett)
+- [factory-mcp](https://github.com/iannuttall/factory-mcp) - Community-built Factory MCP integration to search our docs by [iannuttall](https://github.com/iannuttall)
+- [Factory CLI with ChatGPT Codex / Claude subscription via CLIProxyAPI](https://gist.github.com/chandika/c4b64c5b8f5e29f6112021d46c159fdd) - Guide to run Factory CLI against Claude Code Max or ChatGPT Codex through CLIProxyAPI by [chandika](https://github.com/chandika)
+- [Factory CLI with Claude subscription via CLIProxyAPI](https://gist.github.com/ben-vargas/9f1a14ac5f78d10eba56be437b7c76e5) - Setup instructions for using Factory CLI with Claude Code Max through CLIProxyAPI by [ben-vargas](https://github.com/ben-vargas)
+- [GrayPane – Flight Search & Alerts](https://github.com/punitarani/flights-tracker) - Check available flights, monitor price trends, plan upcoming trips, and create personalized alerts by [Punit Arani](https://github.com/punitarani)
+
+
+## Links discovered
+- [here-now](https://github.com/fredrivett/here-now)
+- [fredrivett](https://github.com/fredrivett)
+- [factory-mcp](https://github.com/iannuttall/factory-mcp)
+- [iannuttall](https://github.com/iannuttall)
+- [Factory CLI with ChatGPT Codex / Claude subscription via CLIProxyAPI](https://gist.github.com/chandika/c4b64c5b8f5e29f6112021d46c159fdd)
+- [chandika](https://github.com/chandika)
+- [Factory CLI with Claude subscription via CLIProxyAPI](https://gist.github.com/ben-vargas/9f1a14ac5f78d10eba56be437b7c76e5)
+- [ben-vargas](https://github.com/ben-vargas)
+- [GrayPane – Flight Search & Alerts](https://github.com/punitarani/flights-tracker)
+- [Punit Arani](https://github.com/punitarani)
+
+--- .github/scripts/get-reddit-token.js ---
+#!/usr/bin/env node
+
+/**
+ * Script to get Reddit refresh token for posting changelogs
+ * Run: node .github/scripts/get-reddit-token.js
+ * 
+ * You'll need:
+ * - Reddit app client ID
+ * - Reddit app secret
+ * - Your Reddit username
+ * - Your Reddit password
+ */
+
+const readline = require('readline');
+const https = require('https');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout
+});
+
+function question(prompt) {
+  return new Promise((resolve) => {
+    rl.question(prompt, resolve);
+  });
+}
+
+function makeRequest(options, data) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(body));
+        } catch (e) {
+          resolve(body);
+        }
+      });
+    });
+    
+    req.on('error', reject);
+    if (data) req.write(data);
+    req.end();
+  });
+}
+
+async function getRefreshToken() {
+  console.log('\n🤖 Reddit OAuth Token Generator for Factory Changelog Bot\n');
+  console.log('This will generate a refresh token for posting to Reddit as your account.\n');
+  
+  const clientId = await question('Enter your Reddit app CLIENT ID: ');
+  const clientSecret = await question('Enter your Reddit app SECRET: ');
+  const username = await question('Enter your Reddit USERNAME: ');
+  const password = await question('Enter your Reddit PASSWORD: ');
+  
+  console.log('\n🔄 Requesting access token...\n');
+  
+  // Create Basic Auth header
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  
+  // Request token
+  const tokenData = `grant_type=password&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+  
+  const options = {
+    hostname: 'www.reddit.com',
+    path: '/api/v1/access_token',
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'FactoryChangelogBot/1.0'
+    }
+  };
+  
+  try {
+    const response = await makeRequest(options, tokenData);
+    
+    if (response.error) {
+      console.error('❌ Error:', response.error);
+      if (response.error === 'invalid_grant') {
+        console.error('Invalid username or password. Please check your credentials.');
+      }
+      process.exit(1);
+    }
+    
+    if (response.access_token) {
+      console.log('✅ Success! Here are your credentials:\n');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('Add these as GitHub Secrets in your repository:');
+      console.log('(Settings → Secrets and variables → Actions → New repository secret)');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log(`REDDIT_CLIENT_ID = ${clientId}`);
+      console.log(`REDDIT_CLIENT_SECRET = ${clientSecret}`);
+      console.log(`REDDIT_USERNAME = ${username}`);
+      console.log(`REDDIT_PASSWORD = ${password}`);
+      console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+      console.log('⚠️  Keep these credentials secure! They give full access to your Reddit account.\n');
+    } else {
+      console.error('❌ Unexpected response:', response);
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  }
+  
+  rl.close();
+}
+
+getRefreshToken();
+
+
+--- .github/scripts/post-to-reddit.js ---
+#!/usr/bin/env node
+
+/**
+ * Posts changelog updates to Reddit
+ * Usage: node post-to-reddit.js <changelog-file-path>
+ */
+
+const https = require('https');
+const fs = require('fs');
+const path = require('path');
+
+function makeRequest(options, data) {
+  return new Promise((resolve, reject) => {
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        try {
+          resolve({ status: res.statusCode, data: JSON.parse(body) });
+        } catch (e) {
+          resolve({ status: res.statusCode, data: body });
+        }
+      });
+    });
+    
+    req.on('error', reject);
+    if (data) req.write(data);
+    req.end();
+  });
+}
+
+async function getAccessToken(clientId, clientSecret, username, password) {
+  const auth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+  const tokenData = `grant_type=password&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+  
+  const options = {
+    hostname: 'www.reddit.com',
+    path: '/api/v1/access_token',
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'FactoryChangelogBot/1.0 (by /u/' + username + ')'
+    }
+  };
+  
+  const response = await makeRequest(options, tokenData);
+  
+  if (response.data.error) {
+    throw new Error(`Reddit OAuth error: ${response.data.error}`);
+  }
+  
+  return response.data.access_token;
+}
+
+function parseChangelog(filePath) {
+  const content = fs.readFileSync(filePath, 'utf-8');
+  
+  // Extract the first <Update> block
+  const updateMatch = content.match(/<Update\s+label="([^"]+)"\s+rss=\{\{\s*title:\s*"([^"]+)",\s*description:\s*"([^"]+)"\s*\}\}>([\s\S]*?)<\/Update>/);
+  
+  if (!updateMatch) {
+    throw new Error('No update block found');
+  }
+  
+  const [, date, title, description, body] = updateMatch;
+  
+  // Extract version number
+  const versionMatch = body.match(/`([^`]+)`/);
+  const version = versionMatch ? versionMatch[1] : '';
+  
+  // Extract sections
+  const newFeaturesMatch = body.match(/## New features\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  const bugFixesMatch = body.match(/## Bug fixes\s*([\s\S]*?)(?=##|\s*<\/Update>|$)/);
+  
+  // Extract bullet points
+  function extractBullets(text) {
+    if (!text) return [];
+    const bullets = [];
+    const lines = text.split('\n');
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (trimmed.startsWith('* **')) {
+        // Extract bold title and description
+        const match = trimmed.match(/\*\s+\*\*([^*]+)\*\*:?\s*-?\s*(.*)/);
+        if (match) {
+          bullets.push(`**${match[1]}**${match[2] ? ' - ' + match[2] : ''}`);
+        }
+      } else if (trimmed.startsWith('* ')) {
+        bullets.push(trimmed.substring(2));
+      }
+    }
+    return bullets;
+  }
+  
+  const newFeatures = extractBullets(newFeaturesMatch?.[1] || '');
+  const bugFixes = extractBullets(bugFixesMatch?.[1] || '');
+  
+  return { date, title, description, version, newFeatures, bugFixes };
+}
+
+function formatRedditPost(changelog, changelogUrl) {
+  const { date, version, newFeatures, bugFixes } = changelog;
+  
+  // Build Reddit post body (Markdown format)
+  let body = '';
+  
+  if (newFeatures.length > 0) {
+    body += `## New features\n\n`;
+    body += newFeatures.map(f => `* ${f}`).join('\n') + '\n\n';
+  }
+  
+  if (bugFixes.length > 0) {
+    body += `## Bug fixes\n\n`;
+    body += bugFixes.map(f => `* ${f}`).join('\n') + '\n\n';
+  }
+  
+  body += `---\n\n`;
+  body += `[View full changelog](${changelogUrl})`;
+  
+  // Create title
+  let postTitle = `Factory CLI ${version} Released`;
+  if (newFeatures.length > 0) {
+    // Add first feature to title
+    const firstFeature = newFeatures[0].replace(/\*\*/g, '').split(' - ')[0];
+    postTitle += ` - ${firstFeature}`;
+    if (newFeatures.length > 1) {
+      postTitle += ` and more`;
+    }
+  }
+  
+  // Limit title to 300 chars (Reddit limit)
+  if (postTitle.length > 297) {
+    postTitle = postTitle.substring(0, 297) + '...';
+  }
+  
+  return { title: postTitle, body };
+}
+
+async function postToReddit(subreddit, title, body, accessToken) {
+  // Reddit API expects form-encoded data, not JSON
+  const params = new URLSearchParams({
+    sr: subreddit,
+    kind: 'self',
+    title: title,
+    text: body,
+    sendreplies: 'false',
+    api_type: 'json'
+  });
+  const postData = params.toString();
+  
+  const options = {
+    hostname: 'oauth.reddit.com',
+    path: '/api/submit',
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'User-Agent': 'FactoryChangelogBot/1.0'
+    }
+  };
+  
+  const response = await makeRequest(options, postData);
+  
+  if (response.data.json?.errors?.length > 0) {
+    throw new Error(`Reddit API error: ${JSON.stringify(response.data.json.errors)}`);
+  }
+  
+  if (response.data.json?.data?.url) {
+    return response.data.json.data.url;
+  }
+  
+  throw new Error(`Unexpected Reddit response: ${JSON.stringify(response.data)}`);
+}
+
+async function main() {
+  const filePath = process.argv[2];
+  if (!filePath) {
+    console.error('Usage: node post-to-reddit.js <path-to-changelog.mdx>');
+    process.exit(1);
+  }
+  
+  // Get credentials from environment
+  const clientId = process.env.REDDIT_CLIENT_ID;
+  const clientSecret = process.env.REDDIT_CLIENT_SECRET;
+  const username = process.env.REDDIT_USERNAME;
+  const password = process.env.REDDIT_PASSWORD;
+  const subreddit = process.env.REDDIT_SUBREDDIT || 'FactoryAi';
+  
+  if (!clientId || !clientSecret || !username || !password) {
+    console.error('Missing required environment variables:');
+    console.error('REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_USERNAME, REDDIT_PASSWORD');
+    process.exit(1);
+  }
+  
+  try {
+    console.log('📝 Parsing changelog...');
+    const changelog = parseChangelog(filePath);
+    console.log(`Found version: ${changelog.version}`);
+    
+    // Get changelog URL
+    const fileName = path.basename(filePath, '.mdx');
+    const changelogUrl = `https://docs.factory.ai/changelog/${fileName}`;
+    
+    console.log('🔑 Getting Reddit access token...');
+    const accessToken = await getAccessToken(clientId, clientSecret, username, password);
+    
+    console.log('📤 Formatting post...');
+    const { title, body } = formatRedditPost(changelog, changelogUrl);
+    
+    console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Post Preview:');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`Title: ${title}`);
+    console.log('\nBody:');
+    console.log(body);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    
+    console.log(`🚀 Posting to r/${subreddit}...`);
+    const postUrl = await postToReddit(subreddit, title, body, accessToken);
+    
+    console.log(`✅ Successfully posted to Reddit!`);
+    console.log(`🔗 ${postUrl}`);
+    
+  } catch (error) {
+    console.error('❌ Error:', error.message);
+    process.exit(1);
+  }
+}
+
+main();
+
+
+## Links discovered
+- [View full changelog](https://github.com/AcidicSoil/factory/blob/main/.github/scripts/${changelogUrl}.md)

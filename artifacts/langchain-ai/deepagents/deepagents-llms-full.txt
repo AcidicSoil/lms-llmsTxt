@@ -1,0 +1,3781 @@
+# llms-full (private-aware)
+> Built from GitHub files and website pages. Large files may be truncated.
+
+--- libs/cli/examples/skills/langgraph-docs/SKILL.md ---
+---
+name: langgraph-docs
+description: Use this skill for requests related to LangGraph in order to fetch relevant documentation to provide accurate, up-to-date guidance.
+---
+
+# langgraph-docs
+
+## Overview
+
+This skill explains how to access LangGraph Python documentation to help answer questions and guide implementation.
+
+## Instructions
+
+### 1. Fetch the Documentation Index
+
+Use the fetch_url tool to read the following URL:
+https://docs.langchain.com/llms.txt
+
+This provides a structured list of all available documentation with descriptions.
+
+### 2. Select Relevant Documentation
+
+Based on the question, identify 2-4 most relevant documentation URLs from the index. Prioritize:
+- Specific how-to guides for implementation questions
+- Core concept pages for understanding questions
+- Tutorials for end-to-end examples
+- Reference docs for API details
+
+### 3. Fetch Selected Documentation
+
+Use the fetch_url tool to read the selected documentation URLs.
+
+### 4. Provide Accurate Guidance
+
+After reading the documentation, complete the users request.
+
+
+--- examples/README.md ---
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="../.github/images/logo-dark.svg">
+    <source media="(prefers-color-scheme: dark)" srcset="../.github/images/logo-light.svg">
+    <img alt="Deep Agents" src="../.github/images/logo-dark.svg" height="40"/>
+  </picture>
+</p>
+
+<h3 align="center">Examples</h3>
+
+<p align="center">
+  Agents, patterns, and applications you can build with Deep Agents.
+</p>
+
+| Example | Description |
+|---------|-------------|
+| [deep_research](deep_research/) | Multi-step web research agent using Tavily for URL discovery, parallel sub-agents, and strategic reflection |
+| [content-builder-agent](content-builder-agent/) | Content writing agent that demonstrates memory (`AGENTS.md`), skills, and subagents for blog posts, LinkedIn posts, and tweets with generated images |
+| [text-to-sql-agent](text-to-sql-agent/) | Natural language to SQL agent with planning, skill-based workflows, and the Chinook demo database |
+| [ralph_mode](ralph_mode/) | Autonomous looping pattern that runs with fresh context each iteration, using the filesystem for persistence |
+| [downloading_agents](downloading_agents/) | Shows how agents are just folders—download a zip, unzip, and run |
+
+Each example has its own README with setup instructions.
+
+## Contributing an Example
+
+When adding a new example:
+
+- **Use uv** for dependency management with a `pyproject.toml` and `uv.lock`
+- **Pin to deepagents version** - use a specific version or version range in dependencies
+- **Include a README** with clear setup and usage instructions
+- **Add tests** if the example has non-trivial logic
+- **Keep it focused** - each example should demonstrate one concept or use-case
+- **Follow the structure** of existing examples (see `deep_research/` or `text-to-sql-agent/` as references)
+
+
+## Links discovered
+- [deep_research](https://github.com/langchain-ai/deepagents/blob/main/examples/deep_research.md)
+- [content-builder-agent](https://github.com/langchain-ai/deepagents/blob/main/examples/content-builder-agent.md)
+- [text-to-sql-agent](https://github.com/langchain-ai/deepagents/blob/main/examples/text-to-sql-agent.md)
+- [ralph_mode](https://github.com/langchain-ai/deepagents/blob/main/examples/ralph_mode.md)
+- [downloading_agents](https://github.com/langchain-ai/deepagents/blob/main/examples/downloading_agents.md)
+
+--- examples/content-builder-agent/README.md ---
+# Content Builder Agent
+
+<img width="1255" height="756" alt="content-cover-image" src="https://github.com/user-attachments/assets/4ebe0aba-2780-4644-8a00-ed4b96680dc9" />
+
+A content writing agent for writing blog posts, LinkedIn posts, and tweets with cover images included.
+
+**This example demonstrates how to define an agent through three filesystem primitives:**
+- **Memory** (`AGENTS.md`) – persistent context like brand voice and style guidelines
+- **Skills** (`skills/*/SKILL.md`) – workflows for specific tasks, loaded on demand
+- **Subagents** (`subagents.yaml`) – specialized agents for delegated tasks like research
+
+The `content_writer.py` script shows how to combine these into a working agent.
+
+## Quick Start
+
+```bash
+# Set API keys
+export ANTHROPIC_API_KEY="..."
+export GOOGLE_API_KEY="..."      # For image generation
+export TAVILY_API_KEY="..."      # For web search (optional)
+
+# Run (uv automatically installs dependencies on first run)
+cd examples/content-builder-agent
+uv run python content_writer.py "Write a blog post about prompt engineering"
+```
+
+**More examples:**
+```bash
+uv run python content_writer.py "Create a LinkedIn post about AI agents"
+uv run python content_writer.py "Write a Twitter thread about the future of coding"
+```
+
+## How It Works
+
+The agent is configured by files on disk, not code:
+
+```
+content-builder-agent/
+├── AGENTS.md                    # Brand voice & style guide
+├── subagents.yaml               # Subagent definitions
+├── skills/
+│   ├── blog-post/
+│   │   └── SKILL.md             # Blog writing workflow
+│   └── social-media/
+│       └── SKILL.md             # Social media workflow
+└── content_writer.py            # Wires it together (includes tools)
+```
+
+| File | Purpose | When Loaded |
+|------|---------|-------------|
+| `AGENTS.md` | Brand voice, tone, writing standards | Always (system prompt) |
+| `subagents.yaml` | Research and other delegated tasks | Always (defines `task` tool) |
+| `skills/*/SKILL.md` | Content-specific workflows | On demand |
+
+**What's in the skills?** Each skill teaches the agent a specific workflow:
+- **Blog posts:** Structure (hook → context → main content → CTA), SEO best practices, research-first approach
+- **Social media:** Platform-specific formats (LinkedIn character limits, Twitter thread structure), hashtag usage
+- **Image generation:** Detailed prompt engineering guides with examples for different content types (technical posts, announcements, thought leadership)
+
+## Architecture
+
+```python
+agent = create_deep_agent(
+    memory=["./AGENTS.md"],                        # ← Middleware loads into system prompt
+    skills=["./skills/"],                          # ← Middleware loads on demand
+    tools=[generate_cover, generate_social_image], # ← Image generation tools
+    subagents=load_subagents("./subagents.yaml"),  # ← See note below
+    backend=FilesystemBackend(root_dir="./"),
+)
+```
+
+The `memory` and `skills` parameters are handled natively by deepagents middleware. Tools are defined in the script and passed directly.
+
+**Note on subagents:** Unlike `memory` and `skills`, subagents must be defined in code. We use a small `load_subagents()` helper to externalize config to YAML. You can also define them inline:
+
+```python
+subagents=[
+    {
+        "name": "researcher",
+        "description": "Research topics before writing...",
+        "model": "anthropic:claude-haiku-4-5-20251001",
+        "system_prompt": "You are a research assistant...",
+        "tools": [web_search],
+    }
+],
+```
+
+**Flow:**
+1. Agent receives task → loads relevant skill (blog-post or social-media)
+2. Delegates research to `researcher` subagent → saves to `research/`
+3. Writes content following skill workflow → saves to `blogs/` or `linkedin/`
+4. Generates cover image with Gemini → saves alongside content
+
+## Output
+
+```
+blogs/
+└── prompt-engineering/
+    ├── post.md       # Blog content
+    └── hero.png      # Generated cover image
+
+linkedin/
+└── ai-agents/
+    ├── post.md       # Post content
+    └── image.png     # Generated image
+
+research/
+└── prompt-engineering.md   # Research notes
+```
+
+## Customizing
+
+**Change the voice:** Edit `AGENTS.md` to modify brand tone and style.
+
+**Add a content type:** Create `skills/<name>/SKILL.md` with YAML frontmatter:
+```yaml
+---
+name: newsletter
+description: Use this skill when writing email newsletters
+---
+# Newsletter Skill
+...
+```
+
+**Add a subagent:** Add to `subagents.yaml`:
+```yaml
+editor:
+  description: Review and improve drafted content
+  model: anthropic:claude-haiku-4-5-20251001
+  system_prompt: |
+    You are an editor. Review the content and suggest improvements...
+  tools: []
+```
+
+**Add a tool:** Define it in `content_writer.py` with the `@tool` decorator and add to `tools=[]`.
+
+## Security Note
+
+This agent has filesystem access and can read, write, and delete files on your machine. Review generated content before publishing and avoid running in directories with sensitive data.
+
+## Requirements
+
+- Python 3.11+
+- `ANTHROPIC_API_KEY` - For the main agent
+- `GOOGLE_API_KEY` - For image generation (uses Gemini's [Imagen / "nano banana"](https://ai.google.dev/gemini-api/docs/image-generation) via `gemini-2.5-flash-image`)
+- `TAVILY_API_KEY` - For web search (optional, research still works without it)
+
+
+## Links discovered
+- [Imagen / "nano banana"](https://ai.google.dev/gemini-api/docs/image-generation)
+
+--- examples/deep_research/README.md ---
+# 🚀 Deep Research
+
+## 🚀 Quickstart
+
+**Prerequisites**: Install [uv](https://docs.astral.sh/uv/) package manager:
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh
+```
+
+Ensure you are in the `deep_research` directory:
+
+```bash
+cd examples/deep_research
+```
+
+Install packages:
+
+```bash
+uv sync
+```
+
+Set your API keys in your environment:
+
+```bash
+export ANTHROPIC_API_KEY=your_anthropic_api_key_here  # Required for Claude model
+export GOOGLE_API_KEY=your_google_api_key_here        # Required for Gemini model ([get one here](https://ai.google.dev/gemini-api/docs))
+export TAVILY_API_KEY=your_tavily_api_key_here        # Required for web search ([get one here](https://www.tavily.com/)) with a generous free tier
+export LANGSMITH_API_KEY=your_langsmith_api_key_here  # [LangSmith API key](https://smith.langchain.com/settings) (free to sign up)
+```
+
+## Usage Options
+
+You can run this example in two ways:
+
+### Option 1: Jupyter Notebook
+
+Run the interactive notebook to step through the research agent:
+
+```bash
+uv run jupyter notebook research_agent.ipynb
+```
+
+### Option 2: LangGraph Server
+
+Run a local [LangGraph server](https://langchain-ai.github.io/langgraph/tutorials/langgraph-platform/local-server/) with a web interface:
+
+```bash
+langgraph dev
+```
+
+LangGraph server will open a new browser window with the Studio interface, which you can submit your search query to:
+
+<img width="2869" height="1512" alt="Screenshot 2025-11-17 at 11 42 59 AM" src="https://github.com/user-attachments/assets/03090057-c199-42fe-a0f7-769704c2124b" />
+
+You can also connect the LangGraph server to a [UI specifically designed for deepagents](https://github.com/langchain-ai/deep-agents-ui):
+
+```bash
+git clone https://github.com/langchain-ai/deep-agents-ui.git
+cd deep-agents-ui
+yarn install
+yarn dev
+```
+
+Then follow the instructions in the [deep-agents-ui README](https://github.com/langchain-ai/deep-agents-ui?tab=readme-ov-file#connecting-to-a-langgraph-server) to connect the UI to the running LangGraph server.
+
+This provides a user-friendly chat interface and visualization of files in state.
+
+<img width="2039" height="1495" alt="Screenshot 2025-11-17 at 1 11 27 PM" src="https://github.com/user-attachments/assets/d559876b-4c90-46fb-8e70-c16c93793fa8" />
+
+## 📚 Resources
+
+- **[Deep Research Course](https://academy.langchain.com/courses/deep-research-with-langgraph)** - Full course on deep research with LangGraph
+
+### Custom Model
+
+By default, `deepagents` uses `"claude-sonnet-4-5-20250929"`. You can customize this by passing any [LangChain model object](https://python.langchain.com/docs/integrations/chat/). See the Deep Agents package [README](https://github.com/langchain-ai/deepagents?tab=readme-ov-file#model) for more details.
+
+```python
+from langchain.chat_models import init_chat_model
+from deepagents import create_deep_agent
+
+# Using Claude
+model = init_chat_model(model="anthropic:claude-sonnet-4-5-20250929", temperature=0.0)
+
+# Using Gemini
+from langchain_google_genai import ChatGoogleGenerativeAI
+model = ChatGoogleGenerativeAI(model="gemini-3-pro-preview")
+
+agent = create_deep_agent(
+    model=model,
+)
+```
+
+### Custom Instructions
+
+The deep research agent uses custom instructions defined in `research_agent/prompts.py` that complement (rather than duplicate) the default middleware instructions. You can modify these in any way you want.
+
+| Instruction Set | Purpose |
+|----------------|---------|
+| `RESEARCH_WORKFLOW_INSTRUCTIONS` | Defines the 5-step research workflow: save request → plan with TODOs → delegate to sub-agents → synthesize → respond. Includes research-specific planning guidelines like batching similar tasks and scaling rules for different query types. |
+| `SUBAGENT_DELEGATION_INSTRUCTIONS` | Provides concrete delegation strategies with examples: simple queries use 1 sub-agent, comparisons use 1 per element, multi-faceted research uses 1 per aspect. Sets limits on parallel execution (max 3 concurrent) and iteration rounds (max 3). |
+| `RESEARCHER_INSTRUCTIONS` | Guides individual research sub-agents to conduct focused web searches. Includes hard limits (2-3 searches for simple queries, max 5 for complex), emphasizes using `think_tool` after each search for strategic reflection, and defines stopping criteria. |
+
+### Custom Tools
+
+The deep research agent adds the following custom tools beyond the built-in deepagent tools. You can also use your own tools, including via MCP servers. See the Deep Agents package [README](https://github.com/langchain-ai/deepagents?tab=readme-ov-file#mcp) for more details.
+
+| Tool Name | Description |
+|-----------|-------------|
+| `tavily_search` | Web search tool that uses Tavily purely as a URL discovery engine. Performs searches using Tavily API to find relevant URLs, fetches full webpage content via HTTP with proper User-Agent headers (avoiding 403 errors), converts HTML to markdown, and returns the complete content without summarization to preserve all information for the agent's analysis. Works with both Claude and Gemini models. |
+| `think_tool` | Strategic reflection mechanism that helps the agent pause and assess progress between searches, analyze findings, identify gaps, and plan next steps. |
+
+
+## Links discovered
+- [uv](https://docs.astral.sh/uv/)
+- [get one here](https://ai.google.dev/gemini-api/docs)
+- [get one here](https://www.tavily.com/)
+- [LangSmith API key](https://smith.langchain.com/settings)
+- [LangGraph server](https://langchain-ai.github.io/langgraph/tutorials/langgraph-platform/local-server/)
+- [UI specifically designed for deepagents](https://github.com/langchain-ai/deep-agents-ui)
+- [deep-agents-ui README](https://github.com/langchain-ai/deep-agents-ui?tab=readme-ov-file#connecting-to-a-langgraph-server)
+- [Deep Research Course](https://academy.langchain.com/courses/deep-research-with-langgraph)
+- [LangChain model object](https://python.langchain.com/docs/integrations/chat/)
+- [README](https://github.com/langchain-ai/deepagents?tab=readme-ov-file#model)
+- [README](https://github.com/langchain-ai/deepagents?tab=readme-ov-file#mcp)
+
+--- examples/downloading_agents/README.md ---
+# Downloading Agents
+
+Agents are just folders. This means you can share, download, and run them instantly.
+
+## Why This Works
+
+- **Agents are folders** — An agent is just an `AGENTS.md` file (memory/instructions) plus a `skills/` directory. No code required.
+- **Single artifact** — Package skills and memory together in one zip. Everything the agent needs to run.
+- **Run in seconds** — Download, unzip, and run with deepagents-cli. No setup, no configuration.
+
+## Prerequisites
+
+```bash
+uv tool install deepagents-cli==0.0.13
+```
+
+## Quick Start
+
+```bash
+# Create a project folder
+mkdir my-project && cd my-project && git init
+
+# Download the agent
+curl -L https://raw.githubusercontent.com/langchain-ai/deepagents/main/examples/downloading_agents/content-writer.zip -o agent.zip
+
+# Unzip to .deepagents
+unzip agent.zip -d .deepagents
+
+# Run it
+deepagents
+```
+
+## What's Inside
+
+```
+.deepagents/
+├── AGENTS.md                    # Agent memory & instructions
+└── skills/
+    ├── blog-post/SKILL.md       # Blog writing workflow
+    └── social-media/SKILL.md    # LinkedIn/Twitter workflow
+```
+
+## One-Liner
+
+```bash
+git init && curl -L https://raw.githubusercontent.com/langchain-ai/deepagents/main/examples/downloading_agents/content-writer.zip -o agent.zip && unzip agent.zip -d .deepagents && rm agent.zip && deepagents
+```
+
+
+--- examples/ralph_mode/README.md ---
+# Ralph Mode for Deep Agents
+
+![Ralph Mode Diagram](ralph_mode_diagram.png)
+
+## What is Ralph?
+
+Ralph is an autonomous looping pattern created by [Geoff Huntley](https://ghuntley.com) that went viral in late 2025. The original implementation is literally one line:
+
+```bash
+while :; do cat PROMPT.md | agent ; done
+```
+
+Each loop starts with **fresh context**—the simplest pattern for context management. No conversation history to manage, no token limits to worry about. Just start fresh every iteration.
+
+The filesystem and git allow the agent to track progress over time. This serves as its memory and worklog.
+
+## Quick Start
+
+```bash
+# Install uv (if you don't have it)
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Create a virtual environment
+uv venv
+source .venv/bin/activate
+
+# Install the CLI
+uv pip install deepagents-cli
+
+# Download the script (or copy from examples/ralph_mode/ if you have the repo)
+curl -O https://raw.githubusercontent.com/langchain-ai/deepagents/main/examples/ralph_mode/ralph_mode.py
+
+# Run Ralph
+python ralph_mode.py "Build a Python programming course for beginners. Use git."
+```
+
+## Usage
+
+```bash
+# Unlimited iterations (Ctrl+C to stop)
+python ralph_mode.py "Build a Python course"
+
+# With iteration limit
+python ralph_mode.py "Build a REST API" --iterations 5
+
+# With specific model
+python ralph_mode.py "Create a CLI tool" --model claude-sonnet-4-6
+
+# With a specific working directory
+python ralph_mode.py "Build a web app" --work-dir ./my-project
+
+# Run in a remote sandbox (Modal, Daytona, or Runloop)
+python ralph_mode.py "Build an app" --sandbox modal
+python ralph_mode.py "Build an app" --sandbox daytona --sandbox-setup ./setup.sh
+
+# Reuse an existing sandbox instance
+python ralph_mode.py "Build an app" --sandbox modal --sandbox-id my-sandbox
+
+# Auto-approve specific shell commands (or "recommended" for safe defaults)
+python ralph_mode.py "Build an app" --shell-allow-list recommended
+python ralph_mode.py "Build an app" --shell-allow-list "ls,cat,grep,pwd"
+
+# Pass model parameters
+python ralph_mode.py "Build an app" --model-params '{"temperature": 0.5}'
+
+# Disable streaming output
+python ralph_mode.py "Build an app" --no-stream
+```
+
+### Remote sandboxes
+
+Ralph supports running agent code in isolated remote environments via the
+`--sandbox` flag. The agent runs locally but executes all code operations in the
+remote sandbox. See the
+[sandbox documentation](https://docs.langchain.com/oss/python/deepagents/cli/overview)
+for provider setup (API keys, etc.) and the
+[sandboxes concept guide](https://docs.langchain.com/oss/python/deepagents/sandboxes)
+for architecture details.
+
+Supported providers: **Modal**, **Daytona**, **Runloop**.
+
+## How It Works
+
+1. **You provide a task** — declarative, what you want (not how)
+2. **Agent runs** — creates files, makes progress
+3. **Loop repeats** — same prompt, but files persist
+4. **You stop it** — Ctrl+C when satisfied
+
+## Credits
+
+- Original Ralph concept by [Geoff Huntley](https://ghuntley.com)
+- [Brief History of Ralph](https://www.humanlayer.dev/blog/brief-history-of-ralph) by HumanLayer
+
+
+## Links discovered
+- [Ralph Mode Diagram](https://github.com/langchain-ai/deepagents/blob/main/examples/ralph_mode/ralph_mode_diagram.png)
+- [Geoff Huntley](https://ghuntley.com)
+- [sandbox documentation](https://docs.langchain.com/oss/python/deepagents/cli/overview)
+- [sandboxes concept guide](https://docs.langchain.com/oss/python/deepagents/sandboxes)
+- [Brief History of Ralph](https://www.humanlayer.dev/blog/brief-history-of-ralph)
+
+--- examples/text-to-sql-agent/README.md ---
+# Text-to-SQL Deep Agent
+
+A natural language to SQL query agent powered by LangChain's **Deep Agents** framework.  This is an advanced version of a text-to-SQL agent with planning, filesystem, and subagent capabilities.
+
+## What is Deep Agents?
+
+Deep Agents is a sophisticated agent framework built on LangGraph that provides:
+
+- **Planning capabilities** - Break down complex tasks with `write_todos` tool
+- **Filesystem backend** - Save and retrieve context with file operations
+- **Subagent spawning** - Delegate specialized tasks to focused agents
+- **Context management** - Prevent context window overflow on complex tasks
+
+## Demo Database
+
+Uses the [Chinook database](https://github.com/lerocha/chinook-database) - a sample database representing a digital media store.
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11 or higher
+- Anthropic API key ([get one here](https://console.anthropic.com/))
+- (Optional) LangSmith API key for tracing ([sign up here](https://smith.langchain.com/))
+
+### Installation
+
+1. Clone the deepagents repository and navigate to this example:
+
+```bash
+git clone https://github.com/langchain-ai/deepagents.git
+cd deepagents/examples/text-to-sql-agent
+```
+
+1. Download the Chinook database:
+
+```bash
+# Download the SQLite database file
+curl -L -o chinook.db https://github.com/lerocha/chinook-database/raw/master/ChinookDatabase/DataSources/Chinook_Sqlite.sqlite
+```
+
+1. Create a virtual environment and install dependencies:
+
+```bash
+# Using uv (recommended)
+uv venv --python 3.11
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+uv pip install -e .
+```
+
+1. Set up your environment variables:
+
+```bash
+cp .env.example .env
+# Edit .env and add your API keys
+```
+
+Required in `.env`:
+
+```
+ANTHROPIC_API_KEY=your_anthropic_api_key_here
+```
+
+Optional:
+
+```
+LANGCHAIN_TRACING_V2=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=your_langsmith_api_key_here
+LANGCHAIN_PROJECT=text2sql-deepagent
+```
+
+## Usage
+
+### Command Line Interface
+
+Run the agent from the command line with a natural language question:
+
+```bash
+python agent.py "What are the top 5 best-selling artists?"
+```
+
+```bash
+python agent.py "Which employee generated the most revenue by country?"
+```
+
+```bash
+python agent.py "How many customers are from Canada?"
+```
+
+### Programmatic Usage
+
+You can also use the agent in your Python code:
+
+```python
+from agent import create_sql_deep_agent
+
+# Create the agent
+agent = create_sql_deep_agent()
+
+# Ask a question
+result = agent.invoke({
+    "messages": [{"role": "user", "content": "What are the top 5 best-selling artists?"}]
+})
+
+print(result["messages"][-1].content)
+```
+
+## How the Deep Agent Works
+
+### Architecture
+
+```
+User Question
+     ↓
+Deep Agent (with planning)
+     ├─ write_todos (plan the approach)
+     ├─ SQL Tools
+     │  ├─ list_tables
+     │  ├─ get_schema
+     │  ├─ query_checker
+     │  └─ execute_query
+     ├─ Filesystem Tools (optional)
+     │  ├─ ls
+     │  ├─ read_file
+     │  ├─ write_file
+     │  └─ edit_file
+     └─ Subagent Spawning (optional)
+     ↓
+SQLite Database (Chinook)
+     ↓
+Formatted Answer
+```
+
+### Configuration
+
+Deep Agents uses **progressive disclosure** with memory files and skills:
+
+**AGENTS.md** (always loaded) - Contains:
+
+- Agent identity and role
+- Core principles and safety rules
+- General guidelines
+- Communication style
+
+**skills/** (loaded on-demand) - Specialized workflows:
+
+- **query-writing** - How to write and execute SQL queries (simple and complex)
+- **schema-exploration** - How to discover database structure and relationships
+
+The agent sees skill descriptions in its context but only loads the full SKILL.md instructions when it determines which skill is needed for the current task. This **progressive disclosure** pattern keeps context efficient while providing deep expertise when needed.
+
+## Example Queries
+
+### Simple Query
+
+```
+"How many customers are from Canada?"
+```
+
+The agent will directly query and return the count.
+
+### Complex Query with Planning
+
+```
+"Which employee generated the most revenue and from which countries?"
+```
+
+The agent will:
+
+1. Use `write_todos` to plan the approach
+2. Identify required tables (Employee, Invoice, Customer)
+3. Plan the JOIN structure
+4. Execute the query
+5. Format results with analysis
+
+## Deep Agent Output Example
+
+The Deep Agent shows its reasoning process:
+
+```
+Question: Which employee generated the most revenue by country?
+
+[Planning Step]
+Using write_todos:
+- [ ] List tables in database
+- [ ] Examine Employee and Invoice schemas
+- [ ] Plan multi-table JOIN query
+- [ ] Execute and aggregate by employee and country
+- [ ] Format results
+
+[Execution Steps]
+1. Listing tables...
+2. Getting schema for: Employee, Invoice, InvoiceLine, Customer
+3. Generating SQL query...
+4. Executing query...
+5. Formatting results...
+
+[Final Answer]
+Employee Jane Peacock (ID: 3) generated the most revenue...
+Top countries: USA ($1000), Canada ($500)...
+```
+
+## Project Structure
+
+```
+text-to-sql-agent/
+├── agent.py                      # Core Deep Agent implementation with CLI
+├── AGENTS.md                     # Agent identity and general instructions (always loaded)
+├── skills/                       # Specialized workflows (loaded on-demand)
+│   ├── query-writing/
+│   │   └── SKILL.md             # SQL query writing workflow
+│   └── schema-exploration/
+│       └── SKILL.md             # Database structure discovery workflow
+├── chinook.db                    # Sample SQLite database (downloaded, gitignored)
+├── pyproject.toml                # Project configuration and dependencies
+├── uv.lock                       # Locked dependency versions
+├── .env.example                  # Environment variable template
+├── .gitignore                    # Git ignore rules
+├── text-to-sql-langsmith-trace.png  # LangSmith trace example image
+└── README.md                     # This file
+```
+
+## Requirements
+
+All dependencies are specified in `pyproject.toml`:
+
+- deepagents >= 0.3.5
+- langchain >= 1.2.3
+- langchain-anthropic >= 1.3.1
+- langchain-community >= 0.3.0
+- langgraph >= 1.0.6
+- sqlalchemy >= 2.0.0
+- python-dotenv >= 1.0.0
+- tavily-python >= 0.5.0
+- rich >= 13.0.0
+
+## LangSmith Integration
+
+### Setup
+
+1. Sign up for a free account at [LangSmith](https://smith.langchain.com/)
+2. Create an API key from your account settings
+3. Add these variables to your `.env` file:
+
+```
+LANGCHAIN_TRACING_V2=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com
+LANGCHAIN_API_KEY=your_langsmith_api_key_here
+LANGCHAIN_PROJECT=text2sql-deepagent
+```
+
+### What You'll See
+
+When configured, every query is automatically traced:
+
+![Deep Agent LangSmith Trace Example](text-to-sql-langsmith-trace.png)
+
+You can view:
+
+- Complete execution trace with all tool calls
+- Planning steps (write_todos)
+- Filesystem operations
+- Token usage and costs
+- Generated SQL queries
+- Error messages and retry attempts
+
+View your traces at: <https://smith.langchain.com/>
+
+## Resources
+
+- [Deep Agents Documentation](https://docs.langchain.com/oss/python/deepagents/overview)
+- [LangChain](https://www.langchain.com/)
+- [Claude Sonnet 4.5](https://www.anthropic.com/claude)
+- [Chinook Database](https://github.com/lerocha/chinook-database)
+
+## License
+
+MIT
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+
+## Links discovered
+- [Chinook database](https://github.com/lerocha/chinook-database)
+- [get one here](https://console.anthropic.com/)
+- [sign up here](https://smith.langchain.com/)
+- [LangSmith](https://smith.langchain.com/)
+- [Deep Agent LangSmith Trace Example](https://github.com/langchain-ai/deepagents/blob/main/examples/text-to-sql-agent/text-to-sql-langsmith-trace.png)
+- [Deep Agents Documentation](https://docs.langchain.com/oss/python/deepagents/overview)
+- [LangChain](https://www.langchain.com/)
+- [Claude Sonnet 4.5](https://www.anthropic.com/claude)
+- [Chinook Database](https://github.com/lerocha/chinook-database)
+
+--- examples/deep_research/agent.py ---
+"""Research Agent - Standalone script for LangGraph deployment.
+
+This module creates a deep research agent with custom tools and prompts
+for conducting web research with strategic thinking and context management.
+"""
+
+from datetime import datetime
+
+from langchain.chat_models import init_chat_model
+from langchain_google_genai import ChatGoogleGenerativeAI
+from deepagents import create_deep_agent
+
+from research_agent.prompts import (
+    RESEARCHER_INSTRUCTIONS,
+    RESEARCH_WORKFLOW_INSTRUCTIONS,
+    SUBAGENT_DELEGATION_INSTRUCTIONS,
+)
+from research_agent.tools import tavily_search, think_tool
+
+# Limits
+max_concurrent_research_units = 3
+max_researcher_iterations = 3
+
+# Get current date
+current_date = datetime.now().strftime("%Y-%m-%d")
+
+# Combine orchestrator instructions (RESEARCHER_INSTRUCTIONS only for sub-agents)
+INSTRUCTIONS = (
+    RESEARCH_WORKFLOW_INSTRUCTIONS
+    + "\n\n"
+    + "=" * 80
+    + "\n\n"
+    + SUBAGENT_DELEGATION_INSTRUCTIONS.format(
+        max_concurrent_research_units=max_concurrent_research_units,
+        max_researcher_iterations=max_researcher_iterations,
+    )
+)
+
+# Create research sub-agent
+research_sub_agent = {
+    "name": "research-agent",
+    "description": "Delegate research to the sub-agent researcher. Only give this researcher one topic at a time.",
+    "system_prompt": RESEARCHER_INSTRUCTIONS.format(date=current_date),
+    "tools": [tavily_search, think_tool],
+}
+
+# Model Gemini 3 
+# model = ChatGoogleGenerativeAI(model="gemini-3-pro-preview", temperature=0.0)
+
+# Model Claude 4.5
+model = init_chat_model(model="anthropic:claude-sonnet-4-5-20250929", temperature=0.0)
+
+# Create the agent
+agent = create_deep_agent(
+    model=model,
+    tools=[tavily_search, think_tool],
+    system_prompt=INSTRUCTIONS,
+    subagents=[research_sub_agent],
+)
+
+
+--- examples/text-to-sql-agent/agent.py ---
+import argparse
+import os
+import sys
+
+from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+from dotenv import load_dotenv
+from langchain_anthropic import ChatAnthropic
+from langchain_community.agent_toolkits import SQLDatabaseToolkit
+from langchain_community.utilities import SQLDatabase
+from rich.console import Console
+from rich.panel import Panel
+
+# Load environment variables
+load_dotenv()
+
+console = Console()
+
+
+def create_sql_deep_agent():
+    """Create and return a text-to-SQL Deep Agent"""
+
+    # Get base directory
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+
+    # Connect to Chinook database
+    db_path = os.path.join(base_dir, "chinook.db")
+    db = SQLDatabase.from_uri(f"sqlite:///{db_path}", sample_rows_in_table_info=3)
+
+    # Initialize Claude Sonnet 4.5 for toolkit initialization
+    model = ChatAnthropic(model="claude-sonnet-4-5-20250929", temperature=0)
+
+    # Create SQL toolkit and get tools
+    toolkit = SQLDatabaseToolkit(db=db, llm=model)
+    sql_tools = toolkit.get_tools()
+
+    # Create the Deep Agent with all parameters
+    agent = create_deep_agent(
+        model=model,  # Claude Sonnet 4.5 with temperature=0
+        memory=["./AGENTS.md"],  # Agent identity and general instructions
+        skills=[
+            "./skills/"
+        ],  # Specialized workflows (query-writing, schema-exploration)
+        tools=sql_tools,  # SQL database tools
+        subagents=[],  # No subagents needed
+        backend=FilesystemBackend(root_dir=base_dir),  # Persistent file storage
+    )
+
+    return agent
+
+
+def main():
+    """Main entry point for the SQL Deep Agent CLI"""
+    parser = argparse.ArgumentParser(
+        description="Text-to-SQL Deep Agent powered by LangChain Deep Agents and Claude Sonnet 4.5",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  python agent.py "What are the top 5 best-selling artists?"
+  python agent.py "Which employee generated the most revenue by country?"
+  python agent.py "How many customers are from Canada?"
+        """,
+    )
+    parser.add_argument(
+        "question",
+        type=str,
+        help="Natural language question to answer using the Chinook database",
+    )
+
+    args = parser.parse_args()
+
+    # Display the question
+    console.print(
+        Panel(f"[bold cyan]Question:[/bold cyan] {args.question}", border_style="cyan")
+    )
+    console.print()
+
+    # Create the agent
+    console.print("[dim]Creating SQL Deep Agent...[/dim]")
+    agent = create_sql_deep_agent()
+
+    # Invoke the agent
+    console.print("[dim]Processing query...[/dim]\n")
+
+    try:
+        result = agent.invoke(
+            {"messages": [{"role": "user", "content": args.question}]}
+        )
+
+        # Extract and display the final answer
+        final_message = result["messages"][-1]
+        answer = (
+            final_message.content
+            if hasattr(final_message, "content")
+            else str(final_message)
+        )
+
+        console.print(
+            Panel(f"[bold green]Answer:[/bold green]\n\n{answer}", border_style="green")
+        )
+
+    except Exception as e:
+        console.print(
+            Panel(f"[bold red]Error:[/bold red]\n\n{str(e)}", border_style="red")
+        )
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
+
+
+--- examples/content-builder-agent/AGENTS.md ---
+# Content Writer Agent
+
+You are a content writer for a technology company. Your job is to create engaging, informative content that educates readers about AI, software development, and emerging technologies.
+
+## Brand Voice
+
+- **Professional but approachable**: Write like a knowledgeable colleague, not a textbook
+- **Clear and direct**: Avoid jargon unless necessary; explain technical concepts simply
+- **Confident but not arrogant**: Share expertise without being condescending
+- **Engaging**: Use concrete examples, analogies, and stories to illustrate points
+
+## Writing Standards
+
+1. **Use active voice**: "The agent processes requests" not "Requests are processed by the agent"
+2. **Lead with value**: Start with what matters to the reader, not background
+3. **One idea per paragraph**: Keep paragraphs focused and scannable
+4. **Concrete over abstract**: Use specific examples, numbers, and case studies
+5. **End with action**: Every piece should leave the reader knowing what to do next
+
+## Content Pillars
+
+Our content focuses on:
+- AI agents and automation
+- Developer tools and productivity
+- Software architecture and best practices
+- Emerging technologies and trends
+
+## Formatting Guidelines
+
+- Use headers (H2, H3) to break up long content
+- Include code examples where relevant (with syntax highlighting)
+- Add bullet points for lists of 3+ items
+- Keep sentences under 25 words when possible
+- Include a clear call-to-action at the end
+
+## Research Requirements
+
+Before writing on any topic:
+1. Use the `researcher` subagent for in-depth topic research
+2. Gather at least 3 credible sources
+3. Identify the key points readers need to understand
+4. Find concrete examples or case studies to illustrate concepts
+
+
+--- examples/text-to-sql-agent/AGENTS.md ---
+# Text-to-SQL Agent Instructions
+
+You are a Deep Agent designed to interact with a SQL database.
+
+## Your Role
+
+Given a natural language question, you will:
+1. Explore the available database tables
+2. Examine relevant table schemas
+3. Generate syntactically correct SQL queries
+4. Execute queries and analyze results
+5. Format answers in a clear, readable way
+
+## Database Information
+
+- Database type: SQLite (Chinook database)
+- Contains data about a digital media store: artists, albums, tracks, customers, invoices, employees
+
+## Query Guidelines
+
+- Always limit results to 5 rows unless the user specifies otherwise
+- Order results by relevant columns to show the most interesting data
+- Only query relevant columns, not SELECT *
+- Double-check your SQL syntax before executing
+- If a query fails, analyze the error and rewrite
+
+## Safety Rules
+
+**NEVER execute these statements:**
+- INSERT
+- UPDATE
+- DELETE
+- DROP
+- ALTER
+- TRUNCATE
+- CREATE
+
+**You have READ-ONLY access. Only SELECT queries are allowed.**
+
+## Planning for Complex Questions
+
+For complex analytical questions:
+1. Use the `write_todos` tool to break down the task into steps
+2. List which tables you'll need to examine
+3. Plan your SQL query structure
+4. Execute and verify results
+5. Use filesystem tools to save intermediate results if needed
+
+## Example Approach
+
+**Simple question:** "How many customers are from Canada?"
+- List tables → Find Customer table → Query schema → Execute COUNT query
+
+**Complex question:** "Which employee generated the most revenue and from which countries?"
+- Use write_todos to plan
+- Examine Employee, Invoice, InvoiceLine, Customer tables
+- Join tables appropriately
+- Aggregate by employee and country
+- Format results clearly
+
+
+--- libs/cli/CHANGELOG.md ---
+# Changelog
+
+## [0.0.25](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.24...deepagents-cli==0.0.25) (2026-02-20)
+
+### Features
+
+* Set openrouter headers, default to `gemini-3.1-pro-preview` ([#1455](https://github.com/langchain-ai/deepagents/issues/1455)) ([95c0b71](https://github.com/langchain-ai/deepagents/commit/95c0b71c2fafbec8424d92e7698563045a787866)), closes [#1454](https://github.com/langchain-ai/deepagents/issues/1454)
+
+### Bug Fixes
+
+* Duplicate paste issue ([#1460](https://github.com/langchain-ai/deepagents/issues/1460)) ([9177515](https://github.com/langchain-ai/deepagents/commit/9177515c8a968882e980d229fb546c9753475de7)), closes [#1425](https://github.com/langchain-ai/deepagents/issues/1425)
+* Remove model fallback to env variables ([#1458](https://github.com/langchain-ai/deepagents/issues/1458)) ([c9b4275](https://github.com/langchain-ai/deepagents/commit/c9b4275e22fda5aa35b3ddce924277ec8aaa9e1f))
+
+## [0.0.24](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.23...deepagents-cli==0.0.24) (2026-02-20)
+
+### Features
+
+* add single-click link opening for rich-style hyperlinks ([#1433](https://github.com/langchain-ai/deepagents/issues/1433)) ([ef1fd31](https://github.com/langchain-ai/deepagents/commit/ef1fd3115d77cd769e664d2ad0345623f9ce4019))
+* display model name and context window size using `/tokens` ([#1441](https://github.com/langchain-ai/deepagents/issues/1441)) ([ff7ef0f](https://github.com/langchain-ai/deepagents/commit/ff7ef0f87e6dfc6c581edb34b1a57be7ff6e059c))
+* refresh local context after summarization events ([#1384](https://github.com/langchain-ai/deepagents/issues/1384)) ([dcb9583](https://github.com/langchain-ai/deepagents/commit/dcb95839de360f03d2fc30c9144096874b24006f))
+* windowed thread hydration and configurable thread limit ([#1435](https://github.com/langchain-ai/deepagents/issues/1435)) ([9da8d0b](https://github.com/langchain-ai/deepagents/commit/9da8d0b5c86441e87b85ee6f8db1d23848a823ed))
+* add per-command `timeout` override to `execute()` ([#1154](https://github.com/langchain-ai/deepagents/issues/1154)) ([49277d4](https://github.com/langchain-ai/deepagents/commit/49277d45a026c86b5bf176142dcb1dfc2c7643ae))
+
+### Bug Fixes
+
+* escape `Rich` markup in shell command display ([#1413](https://github.com/langchain-ai/deepagents/issues/1413)) ([c330290](https://github.com/langchain-ai/deepagents/commit/c33029032a1e2072dab2d06e93953f2acaa6d400))
+* load root-level `AGENTS.md` into agent system prompt ([#1445](https://github.com/langchain-ai/deepagents/issues/1445)) ([047fa2c](https://github.com/langchain-ai/deepagents/commit/047fa2cadfb9f005410c21a6e1e3b3d59eadda7d))
+* prevent crash when quitting with queued messages ([#1421](https://github.com/langchain-ai/deepagents/issues/1421)) ([a3c9ae6](https://github.com/langchain-ai/deepagents/commit/a3c9ae681501cd3efca82573a8d20a0dc8c9b338))
+
+## [0.0.23](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.22...deepagents-cli==0.0.23) (2026-02-18)
+
+### Features
+
+* add drag-and-drop image attachment to chat input ([#1386](https://github.com/langchain-ai/deepagents/issues/1386)) ([cd3d89b](https://github.com/langchain-ai/deepagents/commit/cd3d89b4419b4c164915ff745afff99cb11b55a5))
+* add skill deletion command ([#580](https://github.com/langchain-ai/deepagents/issues/580)) ([40a8d86](https://github.com/langchain-ai/deepagents/commit/40a8d866f952e0cf8d856e2fa360de771721b99a))
+* add visual mode indicators to chat input ([#1371](https://github.com/langchain-ai/deepagents/issues/1371)) ([1ea6159](https://github.com/langchain-ai/deepagents/commit/1ea6159b068b8c7d721d90a5c196e2eb9877c1c5))
+* dismiss completion dropdown on `esc` ([#1362](https://github.com/langchain-ai/deepagents/issues/1362)) ([961b7fc](https://github.com/langchain-ai/deepagents/commit/961b7fc764a7fbf63466d78c1d80b154b5d1692b))
+* expand local context & implement via bash for sandbox support ([#1295](https://github.com/langchain-ai/deepagents/issues/1295)) ([de8bc7c](https://github.com/langchain-ai/deepagents/commit/de8bc7cbbd7780ef250b3838f61ace85d4465c0a))
+* show sdk version alongside cli version ([#1378](https://github.com/langchain-ai/deepagents/issues/1378)) ([e99b4c8](https://github.com/langchain-ai/deepagents/commit/e99b4c864afd01d68c3829304fb93cc0530eedee))
+* strip mode-trigger prefix from chat input text ([#1373](https://github.com/langchain-ai/deepagents/issues/1373)) ([6879eff](https://github.com/langchain-ai/deepagents/commit/6879effb37c2160ef3835cd2d058b79f9d3a5a99))
+
+### Bug Fixes
+
+* path hardening ([#918](https://github.com/langchain-ai/deepagents/issues/918)) ([fc34a14](https://github.com/langchain-ai/deepagents/commit/fc34a144a2791c75f8b4c11f67dd1adbc029c81e))
+* only navigate prompt history at input boundaries ([#1385](https://github.com/langchain-ai/deepagents/issues/1385)) ([6d82d6d](https://github.com/langchain-ai/deepagents/commit/6d82d6de290e73b897a58d724f3dfc7a32a06cba))
+* substitute image base64 for placeholder in result block ([#1381](https://github.com/langchain-ai/deepagents/issues/1381)) ([54f4d8e](https://github.com/langchain-ai/deepagents/commit/54f4d8e834c4aad672d78b4130cd43f2454424fa))
+
+### Performance Improvements
+
+* defer more heavy imports to speed up startup ([#1389](https://github.com/langchain-ai/deepagents/issues/1389)) ([4dd10d5](https://github.com/langchain-ai/deepagents/commit/4dd10d5c9f3cfe13cd7b9ac18a1799c0832976ff))
+
+## [0.0.22](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.21...deepagents-cli==0.0.22) (2026-02-17)
+
+### Features
+
+* add `langchain-openrouter` ([#1340](https://github.com/langchain-ai/deepagents/issues/1340)) ([5b35247](https://github.com/langchain-ai/deepagents/commit/5b35247b126ed328e9562ac3a3c2acd184b39011))
+* update system & default prompt ([#1293](https://github.com/langchain-ai/deepagents/issues/1293)) ([2aeb092](https://github.com/langchain-ai/deepagents/commit/2aeb092e027affd9eaa8a78b33101e1fd930d444))
+* warn when ripgrep is not installed ([#1337](https://github.com/langchain-ai/deepagents/issues/1337)) ([0367efa](https://github.com/langchain-ai/deepagents/commit/0367efa323b7a29c015d6a3fbb5af8894dc724b8))
+* **infra:** ensure dep group version match for CLI ([#1316](https://github.com/langchain-ai/deepagents/issues/1316)) ([db05de1](https://github.com/langchain-ai/deepagents/commit/db05de1b0c92208b9752f3f03fa5fa54813ab4ef))
+* **sdk:** enable type checking in deepagents and resolve most linting issues ([#991](https://github.com/langchain-ai/deepagents/issues/991)) ([5c90376](https://github.com/langchain-ai/deepagents/commit/5c90376c02754c67d448908e55d1e953f54b8acd))
+
+### Bug Fixes
+
+* handle `None` selection endpoint, `IndexError` in clipboard copy ([#1342](https://github.com/langchain-ai/deepagents/issues/1342)) ([5754031](https://github.com/langchain-ai/deepagents/commit/57540316cf928da3dcf4401fb54a5d0102045d67))
+
+### Performance Improvements
+
+* defer heavy imports ([#1361](https://github.com/langchain-ai/deepagents/issues/1361)) ([dd992e4](https://github.com/langchain-ai/deepagents/commit/dd992e48feb3e3a9fc6fd93f56e9d8a9cb51c7bf))
+
+## [0.0.21](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.20...deepagents-cli==0.0.21) (2026-02-11)
+
+### Features
+
+* support piped stdin as prompt input ([#1254](https://github.com/langchain-ai/deepagents/issues/1254)) ([cca61ff](https://github.com/langchain-ai/deepagents/commit/cca61ff5edb5e2424bfc54b2ac33b59a520fdd6a))
+* add `/threads` command switcher ([#1262](https://github.com/langchain-ai/deepagents/issues/1262)) ([45bf38d](https://github.com/langchain-ai/deepagents/commit/45bf38d7c5ca7ca05ec58c320494a692e419b632)), closes [#1111](https://github.com/langchain-ai/deepagents/issues/1111)
+* make thread link clickable when switching ([#1296](https://github.com/langchain-ai/deepagents/issues/1296)) ([9409520](https://github.com/langchain-ai/deepagents/commit/9409520d524c576c3b0b9686c96a1749ee9dcbbb)), closes [#1291](https://github.com/langchain-ai/deepagents/issues/1291)
+* add `/trace` command to open LangSmith thread, link in switcher ([#1291](https://github.com/langchain-ai/deepagents/issues/1291)) ([fbbd45b](https://github.com/langchain-ai/deepagents/commit/fbbd45b51be2cf09726a3cd0adfcb09cb2b1ff46))
+* add `/changelog`, `/feedback`, `/docs` ([#1261](https://github.com/langchain-ai/deepagents/issues/1261)) ([4561afb](https://github.com/langchain-ai/deepagents/commit/4561afbea17bb11f7fc02ae9f19db15229656280))
+* show langsmith thread url on session teardown ([#1285](https://github.com/langchain-ai/deepagents/issues/1285)) ([899fd1c](https://github.com/langchain-ai/deepagents/commit/899fd1cdea6f7b2003992abd3f6173d630849a90))
+
+### Bug Fixes
+
+* fix stale model settings during model hot-swap ([#1257](https://github.com/langchain-ai/deepagents/issues/1257)) ([55c119c](https://github.com/langchain-ai/deepagents/commit/55c119cb6ce73db7cae0865172f00ab8fc9f8fc1))
+
+## [0.0.20](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.19...deepagents-cli==0.0.20) (2026-02-10)
+
+### Features
+
+* `--quiet` flag to suppress non-agent output w/ `-n` ([#1201](https://github.com/langchain-ai/deepagents/issues/1201)) ([3e96792](https://github.com/langchain-ai/deepagents/commit/3e967926655cf5249a1bc5ca3edd48da9dd3061b))
+* add docs link to `/help` ([#1098](https://github.com/langchain-ai/deepagents/issues/1098)) ([8f8fc98](https://github.com/langchain-ai/deepagents/commit/8f8fc98bd403d96d6ed95fce8906d9c881236613))
+* built-in skills, ship `skill-creator` as first ([#1191](https://github.com/langchain-ai/deepagents/issues/1191)) ([42823a8](https://github.com/langchain-ai/deepagents/commit/42823a88d1eb7242a5d9b3eba981f24b3ea9e274))
+* enrich built-in skill metadata with license and compatibility info ([#1193](https://github.com/langchain-ai/deepagents/issues/1193)) ([b8179c2](https://github.com/langchain-ai/deepagents/commit/b8179c23f9130c92cb1fb7c6b34d98cc32ec092a))
+* implement message queue for CLI ([#1197](https://github.com/langchain-ai/deepagents/issues/1197)) ([c4678d7](https://github.com/langchain-ai/deepagents/commit/c4678d7641785ac4f17045eb75d55f9dc44f37fe))
+* model switcher & arbitrary chat model support ([#1127](https://github.com/langchain-ai/deepagents/issues/1127)) ([28fc311](https://github.com/langchain-ai/deepagents/commit/28fc311da37881257e409149022f0717f78013ef))
+* non-interactive mode w/ shell allow-listing ([#909](https://github.com/langchain-ai/deepagents/issues/909)) ([433bd2c](https://github.com/langchain-ai/deepagents/commit/433bd2cb493d6c4b59f2833e4304eead0304195a))
+* support custom working directories and LangSmith sandbox templates ([#1099](https://github.com/langchain-ai/deepagents/issues/1099)) ([21e7150](https://github.com/langchain-ai/deepagents/commit/21e715054ea5cf48cab05319b2116509fbacd899))
+
+### Bug Fixes
+
+* `-m` initial prompt submission ([#1184](https://github.com/langchain-ai/deepagents/issues/1184)) ([a702e82](https://github.com/langchain-ai/deepagents/commit/a702e82a0f61edbadd78eff6906ecde20b601798))
+* align skill-creator example scripts with agent skills spec ([#1177](https://github.com/langchain-ai/deepagents/issues/1177)) ([199d176](https://github.com/langchain-ai/deepagents/commit/199d17676ac1bfee645908a6c58193291e522890))
+* harden dictionary iteration and HITL fallback handling ([#1151](https://github.com/langchain-ai/deepagents/issues/1151)) ([8b21fc6](https://github.com/langchain-ai/deepagents/commit/8b21fc6105d808ad25c53de96f339ab21efb4474))
+* per-subcommand help screens, short flags, and skills enhancements ([#1190](https://github.com/langchain-ai/deepagents/issues/1190)) ([3da1e8b](https://github.com/langchain-ai/deepagents/commit/3da1e8bc20bf39aba80f6507b9abc2352de38484))
+* port skills behavior from SDK ([#1192](https://github.com/langchain-ai/deepagents/issues/1192)) ([ad9241d](https://github.com/langchain-ai/deepagents/commit/ad9241da6e7e23e4430756a1d5a3afb6c6bfebcc)), closes [#1189](https://github.com/langchain-ai/deepagents/issues/1189)
+* rewrite skills create template to match spec guidance ([#1178](https://github.com/langchain-ai/deepagents/issues/1178)) ([f08ad52](https://github.com/langchain-ai/deepagents/commit/f08ad520172bd114e4cebf69138a10cbf98e157a))
+* terminal virtualize scrolling to stop perf issues ([#965](https://github.com/langchain-ai/deepagents/issues/965)) ([5633c82](https://github.com/langchain-ai/deepagents/commit/5633c825832a0e8bd645681db23e97af31879b65))
+* update splash thread ID on `/clear` ([#1204](https://github.com/langchain-ai/deepagents/issues/1204)) ([23651ed](https://github.com/langchain-ai/deepagents/commit/23651edbc236e4a68fb0d9496506e6293b836cd9))
+* **deepagents:** refactor summarization middleware ([#1138](https://github.com/langchain-ai/deepagents/issues/1138)) ([e87001e](https://github.com/langchain-ai/deepagents/commit/e87001eace2852c2df47095ffd2611f09fdda2f5))
+
+## [0.0.19](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.18...deepagents-cli==0.0.19) (2026-02-06)
+
+### Features
+
+* add click support and hover styling to autocomplete popup ([#1130](https://github.com/langchain-ai/deepagents/issues/1130)) ([b1cc83d](https://github.com/langchain-ai/deepagents/commit/b1cc83d277e01614b0cc4141993cde40ce68d632))
+* add per-command `timeout` override to `execute` tool ([#1158](https://github.com/langchain-ai/deepagents/issues/1158)) ([cb390ef](https://github.com/langchain-ai/deepagents/commit/cb390ef7a89966760f08c5aceb2211220e8653b8))
+* highlight file mentions and support CJK parsing ([#558](https://github.com/langchain-ai/deepagents/issues/558)) ([cebe333](https://github.com/langchain-ai/deepagents/commit/cebe333246f8bea6b04d6283985e102c2ed5d744))
+* make thread id in splash clickable ([#1159](https://github.com/langchain-ai/deepagents/issues/1159)) ([6087fb2](https://github.com/langchain-ai/deepagents/commit/6087fb276f39ed9a388d722ff1be88d94debf49f))
+* use LocalShellBackend, gives shell to subagents ([#1107](https://github.com/langchain-ai/deepagents/issues/1107)) ([b57ea39](https://github.com/langchain-ai/deepagents/commit/b57ea3906680818b94ecca88b92082d4dea63694))
+
+### Bug Fixes
+
+* disable iTerm2 cursor guide during execution ([#1123](https://github.com/langchain-ai/deepagents/issues/1123)) ([4eb7d42](https://github.com/langchain-ai/deepagents/commit/4eb7d426eaefa41f74cc6056ae076f475a0a400d))
+* dismiss modal screens on escape key ([#1128](https://github.com/langchain-ai/deepagents/issues/1128)) ([27047a0](https://github.com/langchain-ai/deepagents/commit/27047a085de99fcb9977816663e61114c2b008ac))
+* hide resume hint on app error and improve startup message ([#1135](https://github.com/langchain-ai/deepagents/issues/1135)) ([4e25843](https://github.com/langchain-ai/deepagents/commit/4e258430468b56c3e79499f6b7c5ab7b9cd6f45b))
+* propagate app errors instead of masking ([#1126](https://github.com/langchain-ai/deepagents/issues/1126)) ([79a1984](https://github.com/langchain-ai/deepagents/commit/79a1984629847ce067b6ce78ad14797889724244))
+* remove Interactive Features from --help output ([#1161](https://github.com/langchain-ai/deepagents/issues/1161)) ([a296789](https://github.com/langchain-ai/deepagents/commit/a2967898933b77dd8da6458553f49e717fa732e6))
+* rename `SystemMessage` -&gt; `AppMessage` ([#1113](https://github.com/langchain-ai/deepagents/issues/1113)) ([f576262](https://github.com/langchain-ai/deepagents/commit/f576262aeee54499e9970acf76af93553fccfefd))
+* unify spinner API to support dynamic status text ([#1124](https://github.com/langchain-ai/deepagents/issues/1124)) ([bb55608](https://github.com/langchain-ai/deepagents/commit/bb55608b7172f55df38fef88918b2fded894e3ce))
+* update help text to include `Esc` key for rejection ([#1122](https://github.com/langchain-ai/deepagents/issues/1122)) ([8f4bcf5](https://github.com/langchain-ai/deepagents/commit/8f4bcf52547dcd3e38d4d75ce395eb973a7ee2c0))
+
+## [0.0.18](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.17...deepagents-cli==0.0.18) (2026-02-05)
+
+### Features
+
+* add langsmith sandbox integration ([#1077](https://github.com/langchain-ai/deepagents/issues/1077)) ([7d17be0](https://github.com/langchain-ai/deepagents/commit/7d17be00b59e586c55517eaca281342e1a6559ff))
+* resume thread enhancements ([#1065](https://github.com/langchain-ai/deepagents/issues/1065)) ([e6663b0](https://github.com/langchain-ai/deepagents/commit/e6663b0b314582583afd32cb906a6d502cd8f16b))
+* support  .`agents/skills` dir alias ([#1059](https://github.com/langchain-ai/deepagents/issues/1059)) ([ec1db17](https://github.com/langchain-ai/deepagents/commit/ec1db172c12bc8b8f85bb03138e442353d4b1013))
+
+### Bug Fixes
+
+* `Ctrl+E` for tool output toggle ([#1100](https://github.com/langchain-ai/deepagents/issues/1100)) ([9fa9d72](https://github.com/langchain-ai/deepagents/commit/9fa9d727dbf6b8996a61f2f764675dbc2e23c1b6))
+* consolidate tool output expand/collapse hint placement ([#1102](https://github.com/langchain-ai/deepagents/issues/1102)) ([70db34b](https://github.com/langchain-ai/deepagents/commit/70db34b5f15a7e81ff586dd0adb2bdfd9ac5d4e9))
+* delete `/exit` ([#1052](https://github.com/langchain-ai/deepagents/issues/1052)) ([8331b77](https://github.com/langchain-ai/deepagents/commit/8331b7790fcf0474e109c3c29f810f4ced0f1745)), closes [#836](https://github.com/langchain-ai/deepagents/issues/836) [#651](https://github.com/langchain-ai/deepagents/issues/651)
+* installed default prompt not updated following upgrade ([#1082](https://github.com/langchain-ai/deepagents/issues/1082)) ([bffd956](https://github.com/langchain-ai/deepagents/commit/bffd95610730c668406c485ad941835a5307c226))
+* replace silent exception handling with proper logging ([#708](https://github.com/langchain-ai/deepagents/issues/708)) ([20faf7a](https://github.com/langchain-ai/deepagents/commit/20faf7ac244d97e688f1cc4121d480ed212fe97c))
+* show full shell command in error output ([#1097](https://github.com/langchain-ai/deepagents/issues/1097)) ([23bb1d8](https://github.com/langchain-ai/deepagents/commit/23bb1d8af85eec8739aea17c3bb3616afb22072a)), closes [#1080](https://github.com/langchain-ai/deepagents/issues/1080)
+* support `-h`/`--help` flags ([#1106](https://github.com/langchain-ai/deepagents/issues/1106)) ([26bebf5](https://github.com/langchain-ai/deepagents/commit/26bebf592ab56ffdc5eeff55bb7c2e542ef8f706))
+
+## [0.0.17](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.16...deepagents-cli==0.0.17) (2026-02-03)
+
+### Features
+
+* add expandable shell command display in HITL approval ([#976](https://github.com/langchain-ai/deepagents/issues/976)) ([fb8a007](https://github.com/langchain-ai/deepagents/commit/fb8a007123d18025beb1a011f2050e1085dcf69b))
+* model identity ([#770](https://github.com/langchain-ai/deepagents/issues/770)) ([e54a0ee](https://github.com/langchain-ai/deepagents/commit/e54a0ee43c7dfc7fd14c3f43d37cc0ee5e85c5a8))
+* sandbox provider interface ([#900](https://github.com/langchain-ai/deepagents/issues/900)) ([d431cfd](https://github.com/langchain-ai/deepagents/commit/d431cfd4a56713434e84f4fa1cdf4a160b43db95))
+
+## [0.0.16](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.15...deepagents-cli==0.0.16) (2026-02-02)
+
+### Features
+
+* add configurable timeout to `ShellMiddleware` ([#961](https://github.com/langchain-ai/deepagents/issues/961)) ([bc5e417](https://github.com/langchain-ai/deepagents/commit/bc5e4178a76d795922beab93b87e90ccaf99fba6))
+* add timeout formatting to enhance `shell` command display ([#987](https://github.com/langchain-ai/deepagents/issues/987)) ([cbbfd49](https://github.com/langchain-ai/deepagents/commit/cbbfd49011c9cf93741a024f6efeceeca830820e))
+* display thread ID at splash ([#988](https://github.com/langchain-ai/deepagents/issues/988)) ([e61b9e8](https://github.com/langchain-ai/deepagents/commit/e61b9e8e7af417bf5f636180631dbd47a5bb31bb))
+
+### Bug Fixes
+
+* improve clipboard copy/paste on macOS ([#960](https://github.com/langchain-ai/deepagents/issues/960)) ([3e1c604](https://github.com/langchain-ai/deepagents/commit/3e1c604474bd98ce1e0ac802df6fb049dd049682))
+* make `pyperclip` hard dep ([#985](https://github.com/langchain-ai/deepagents/issues/985)) ([0f5d4ad](https://github.com/langchain-ai/deepagents/commit/0f5d4ad9e63d415c9b80cd15fa0f89fc2f91357b)), closes [#960](https://github.com/langchain-ai/deepagents/issues/960)
+* revert, improve clipboard copy/paste on macOS ([#964](https://github.com/langchain-ai/deepagents/issues/964)) ([4991992](https://github.com/langchain-ai/deepagents/commit/4991992a5a60fd9588e2110b46440337affc80da))
+* update timeout message for long-running commands in `ShellMiddleware` ([#986](https://github.com/langchain-ai/deepagents/issues/986)) ([dcbe128](https://github.com/langchain-ai/deepagents/commit/dcbe12805a3650e63da89df0774dd7e0181dbaa6))
+
+---
+
+## Prior Releases
+
+Versions prior to 0.0.16 were released without release-please and do not have changelog entries. Refer to the [releases page](https://github.com/langchain-ai/deepagents/releases?q=deepagents-cli) for details on previous versions.
+
+
+## Links discovered
+- [0.0.25](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.24...deepagents-cli==0.0.25)
+- [#1455](https://github.com/langchain-ai/deepagents/issues/1455)
+- [95c0b71](https://github.com/langchain-ai/deepagents/commit/95c0b71c2fafbec8424d92e7698563045a787866)
+- [#1454](https://github.com/langchain-ai/deepagents/issues/1454)
+- [#1460](https://github.com/langchain-ai/deepagents/issues/1460)
+- [9177515](https://github.com/langchain-ai/deepagents/commit/9177515c8a968882e980d229fb546c9753475de7)
+- [#1425](https://github.com/langchain-ai/deepagents/issues/1425)
+- [#1458](https://github.com/langchain-ai/deepagents/issues/1458)
+- [c9b4275](https://github.com/langchain-ai/deepagents/commit/c9b4275e22fda5aa35b3ddce924277ec8aaa9e1f)
+- [0.0.24](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.23...deepagents-cli==0.0.24)
+- [#1433](https://github.com/langchain-ai/deepagents/issues/1433)
+- [ef1fd31](https://github.com/langchain-ai/deepagents/commit/ef1fd3115d77cd769e664d2ad0345623f9ce4019)
+- [#1441](https://github.com/langchain-ai/deepagents/issues/1441)
+- [ff7ef0f](https://github.com/langchain-ai/deepagents/commit/ff7ef0f87e6dfc6c581edb34b1a57be7ff6e059c)
+- [#1384](https://github.com/langchain-ai/deepagents/issues/1384)
+- [dcb9583](https://github.com/langchain-ai/deepagents/commit/dcb95839de360f03d2fc30c9144096874b24006f)
+- [#1435](https://github.com/langchain-ai/deepagents/issues/1435)
+- [9da8d0b](https://github.com/langchain-ai/deepagents/commit/9da8d0b5c86441e87b85ee6f8db1d23848a823ed)
+- [#1154](https://github.com/langchain-ai/deepagents/issues/1154)
+- [49277d4](https://github.com/langchain-ai/deepagents/commit/49277d45a026c86b5bf176142dcb1dfc2c7643ae)
+- [#1413](https://github.com/langchain-ai/deepagents/issues/1413)
+- [c330290](https://github.com/langchain-ai/deepagents/commit/c33029032a1e2072dab2d06e93953f2acaa6d400)
+- [#1445](https://github.com/langchain-ai/deepagents/issues/1445)
+- [047fa2c](https://github.com/langchain-ai/deepagents/commit/047fa2cadfb9f005410c21a6e1e3b3d59eadda7d)
+- [#1421](https://github.com/langchain-ai/deepagents/issues/1421)
+- [a3c9ae6](https://github.com/langchain-ai/deepagents/commit/a3c9ae681501cd3efca82573a8d20a0dc8c9b338)
+- [0.0.23](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.22...deepagents-cli==0.0.23)
+- [#1386](https://github.com/langchain-ai/deepagents/issues/1386)
+- [cd3d89b](https://github.com/langchain-ai/deepagents/commit/cd3d89b4419b4c164915ff745afff99cb11b55a5)
+- [#580](https://github.com/langchain-ai/deepagents/issues/580)
+- [40a8d86](https://github.com/langchain-ai/deepagents/commit/40a8d866f952e0cf8d856e2fa360de771721b99a)
+- [#1371](https://github.com/langchain-ai/deepagents/issues/1371)
+- [1ea6159](https://github.com/langchain-ai/deepagents/commit/1ea6159b068b8c7d721d90a5c196e2eb9877c1c5)
+- [#1362](https://github.com/langchain-ai/deepagents/issues/1362)
+- [961b7fc](https://github.com/langchain-ai/deepagents/commit/961b7fc764a7fbf63466d78c1d80b154b5d1692b)
+- [#1295](https://github.com/langchain-ai/deepagents/issues/1295)
+- [de8bc7c](https://github.com/langchain-ai/deepagents/commit/de8bc7cbbd7780ef250b3838f61ace85d4465c0a)
+- [#1378](https://github.com/langchain-ai/deepagents/issues/1378)
+- [e99b4c8](https://github.com/langchain-ai/deepagents/commit/e99b4c864afd01d68c3829304fb93cc0530eedee)
+- [#1373](https://github.com/langchain-ai/deepagents/issues/1373)
+- [6879eff](https://github.com/langchain-ai/deepagents/commit/6879effb37c2160ef3835cd2d058b79f9d3a5a99)
+- [#918](https://github.com/langchain-ai/deepagents/issues/918)
+- [fc34a14](https://github.com/langchain-ai/deepagents/commit/fc34a144a2791c75f8b4c11f67dd1adbc029c81e)
+- [#1385](https://github.com/langchain-ai/deepagents/issues/1385)
+- [6d82d6d](https://github.com/langchain-ai/deepagents/commit/6d82d6de290e73b897a58d724f3dfc7a32a06cba)
+- [#1381](https://github.com/langchain-ai/deepagents/issues/1381)
+- [54f4d8e](https://github.com/langchain-ai/deepagents/commit/54f4d8e834c4aad672d78b4130cd43f2454424fa)
+- [#1389](https://github.com/langchain-ai/deepagents/issues/1389)
+- [4dd10d5](https://github.com/langchain-ai/deepagents/commit/4dd10d5c9f3cfe13cd7b9ac18a1799c0832976ff)
+- [0.0.22](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.21...deepagents-cli==0.0.22)
+- [#1340](https://github.com/langchain-ai/deepagents/issues/1340)
+- [5b35247](https://github.com/langchain-ai/deepagents/commit/5b35247b126ed328e9562ac3a3c2acd184b39011)
+- [#1293](https://github.com/langchain-ai/deepagents/issues/1293)
+- [2aeb092](https://github.com/langchain-ai/deepagents/commit/2aeb092e027affd9eaa8a78b33101e1fd930d444)
+- [#1337](https://github.com/langchain-ai/deepagents/issues/1337)
+- [0367efa](https://github.com/langchain-ai/deepagents/commit/0367efa323b7a29c015d6a3fbb5af8894dc724b8)
+- [#1316](https://github.com/langchain-ai/deepagents/issues/1316)
+- [db05de1](https://github.com/langchain-ai/deepagents/commit/db05de1b0c92208b9752f3f03fa5fa54813ab4ef)
+- [#991](https://github.com/langchain-ai/deepagents/issues/991)
+- [5c90376](https://github.com/langchain-ai/deepagents/commit/5c90376c02754c67d448908e55d1e953f54b8acd)
+- [#1342](https://github.com/langchain-ai/deepagents/issues/1342)
+- [5754031](https://github.com/langchain-ai/deepagents/commit/57540316cf928da3dcf4401fb54a5d0102045d67)
+- [#1361](https://github.com/langchain-ai/deepagents/issues/1361)
+- [dd992e4](https://github.com/langchain-ai/deepagents/commit/dd992e48feb3e3a9fc6fd93f56e9d8a9cb51c7bf)
+- [0.0.21](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.20...deepagents-cli==0.0.21)
+- [#1254](https://github.com/langchain-ai/deepagents/issues/1254)
+- [cca61ff](https://github.com/langchain-ai/deepagents/commit/cca61ff5edb5e2424bfc54b2ac33b59a520fdd6a)
+- [#1262](https://github.com/langchain-ai/deepagents/issues/1262)
+- [45bf38d](https://github.com/langchain-ai/deepagents/commit/45bf38d7c5ca7ca05ec58c320494a692e419b632)
+- [#1111](https://github.com/langchain-ai/deepagents/issues/1111)
+- [#1296](https://github.com/langchain-ai/deepagents/issues/1296)
+- [9409520](https://github.com/langchain-ai/deepagents/commit/9409520d524c576c3b0b9686c96a1749ee9dcbbb)
+- [#1291](https://github.com/langchain-ai/deepagents/issues/1291)
+- [fbbd45b](https://github.com/langchain-ai/deepagents/commit/fbbd45b51be2cf09726a3cd0adfcb09cb2b1ff46)
+- [#1261](https://github.com/langchain-ai/deepagents/issues/1261)
+- [4561afb](https://github.com/langchain-ai/deepagents/commit/4561afbea17bb11f7fc02ae9f19db15229656280)
+- [#1285](https://github.com/langchain-ai/deepagents/issues/1285)
+- [899fd1c](https://github.com/langchain-ai/deepagents/commit/899fd1cdea6f7b2003992abd3f6173d630849a90)
+- [#1257](https://github.com/langchain-ai/deepagents/issues/1257)
+- [55c119c](https://github.com/langchain-ai/deepagents/commit/55c119cb6ce73db7cae0865172f00ab8fc9f8fc1)
+- [0.0.20](https://github.com/langchain-ai/deepagents/compare/deepagents-cli==0.0.19...deepagents-cli==0.0.20)
+- [#1201](https://github.com/langchain-ai/deepagents/issues/1201)
+- [3e96792](https://github.com/langchain-ai/deepagents/commit/3e967926655cf5249a1bc5ca3edd48da9dd3061b)
+- [#1098](https://github.com/langchain-ai/deepagents/issues/1098)
+- [8f8fc98](https://github.com/langchain-ai/deepagents/commit/8f8fc98bd403d96d6ed95fce8906d9c881236613)
+- [#1191](https://github.com/langchain-ai/deepagents/issues/1191)
+- [42823a8](https://github.com/langchain-ai/deepagents/commit/42823a88d1eb7242a5d9b3eba981f24b3ea9e274)
+- [#1193](https://github.com/langchain-ai/deepagents/issues/1193)
+- [b8179c2](https://github.com/langchain-ai/deepagents/commit/b8179c23f9130c92cb1fb7c6b34d98cc32ec092a)
+- [#1197](https://github.com/langchain-ai/deepagents/issues/1197)
+- [c4678d7](https://github.com/langchain-ai/deepagents/commit/c4678d7641785ac4f17045eb75d55f9dc44f37fe)
+- [#1127](https://github.com/langchain-ai/deepagents/issues/1127)
+- [28fc311](https://github.com/langchain-ai/deepagents/commit/28fc311da37881257e409149022f0717f78013ef)
+- [#909](https://github.com/langchain-ai/deepagents/issues/909)
+- [433bd2c](https://github.com/langchain-ai/deepagents/commit/433bd2cb493d6c4b59f2833e4304eead0304195a)
+- [#1099](https://github.com/langchain-ai/deepagents/issues/1099)
+- [21e7150](https://github.com/langchain-ai/deepagents/commit/21e715054ea5cf48cab05319b2116509fbacd899)
+- [#1184](https://github.com/langchain-ai/deepagents/issues/1184)
+- [a702e82](https://github.com/langchain-ai/deepagents/commit/a702e82a0f61edbadd78eff6906ecde20b601798)
+- [#1177](https://github.com/langchain-ai/deepagents/issues/1177)
+
+--- libs/cli/tests/integration_tests/benchmarks/__init__.py ---
+
+
+--- libs/cli/tests/integration_tests/benchmarks/test_startup_benchmarks.py ---
+"""Benchmarks for CLI startup and import performance.
+
+The CLI defers heavy dependencies (langchain, agent, sessions, etc.) so that
+fast-path commands like `--help` and `--version` stay snappy. These tests guard
+that invariant: if a top-level import is accidentally re-added, the relevant
+test will fail before the regression reaches users.
+
+Run with::
+
+    make benchmark          # uses the `benchmark` pytest marker
+    uv run --group test pytest tests/ -m benchmark -v
+
+Each test spawns a **fresh subprocess** so `sys.modules` is clean and measured
+times reflect a cold-start import.
+
+If a test fails
+~~~~~~~~~~~~~~~~
+- **Import isolation failure** — a module in `HEAVY_MODULES` was loaded
+    when it shouldn't be. Move the offending import inside the function that
+    needs it (see `main.cli_main` for examples of deferred imports).
+- **Timing failure** — an import or CLI command exceeded its threshold.
+    Profile with `python -X importtime -c "import deepagents_cli.main"`
+    to find the slow import.
+- **Deferred-import failure** — a heavy module was *not* loaded when it
+    should have been. The deferred import is likely wired incorrectly; check
+    that the lazy import path still executes.
+"""
+
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+import textwrap
+
+import pytest
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+# Modules considered "heavy" — importing any of these at startup defeats
+# the purpose of the deferred-import optimisation.
+HEAVY_MODULES = frozenset(
+    {
+        "langchain",
+        "langchain.chat_models",
+        "langchain_core",
+        "langchain_core.messages",
+        "langchain_core.language_models",
+        "langchain_core.runnables",
+        "langchain_openai",
+        "langchain_anthropic",
+        "deepagents_cli.agent",
+        "deepagents_cli.sessions",
+        "deepagents_cli.integrations.sandbox_factory",
+        "deepagents_cli.tools",
+    }
+)
+
+
+def _run_python(code: str, *, timeout: int = 60) -> subprocess.CompletedProcess[str]:
+    """Run *code* in a **fresh** Python interpreter and return the result.
+
+    Args:
+        code: Python source code to execute.
+        timeout: Maximum seconds to wait.
+
+    Returns:
+        Completed process with captured stdout/stderr.
+    """
+    return subprocess.run(
+        [sys.executable, "-c", textwrap.dedent(code)],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+
+
+def _get_loaded_modules(import_statement: str) -> set[str]:
+    """Return the set of ``sys.modules`` keys after executing *import_statement*.
+
+    Runs in a subprocess so the module cache is completely fresh.
+
+    Args:
+        import_statement: A valid Python import statement.
+
+    Returns:
+        Set of module names present in ``sys.modules``.
+    """
+    result = _run_python(f"""
+        import json, sys
+        {import_statement}
+        print(json.dumps(sorted(sys.modules.keys())))
+    """)
+    assert result.returncode == 0, (
+        f"Subprocess failed ({result.returncode}):\n{result.stderr}"
+    )
+    return set(json.loads(result.stdout))
+
+
+# ---------------------------------------------------------------------------
+# Benchmark marker — matches ``make benchmark`` (pytest -m benchmark)
+# ---------------------------------------------------------------------------
+
+pytestmark = pytest.mark.benchmark
+
+
+# ---------------------------------------------------------------------------
+# 1. Module-level import isolation
+#
+# Verify that importing lightweight entry-point modules does NOT pull in the
+# heavy langchain / agent / sessions stack.
+# ---------------------------------------------------------------------------
+
+
+class TestImportIsolation:
+    """Guard that lightweight entry points don't pull in the heavy stack.
+
+    Without deferred imports, `deepagents --help` takes 3+ seconds because
+    langchain, agent, and sessions all load eagerly. These tests catch any
+    accidental top-level import that would re-introduce that latency.
+    """
+
+    @pytest.mark.parametrize(
+        "import_stmt",
+        [
+            "from deepagents_cli.main import parse_args",
+            "from deepagents_cli.main import check_cli_dependencies",
+            "import deepagents_cli.ui",
+            "import deepagents_cli.skills.commands",
+        ],
+        ids=[
+            "main.parse_args",
+            "main.check_cli_dependencies",
+            "ui",
+            "skills.commands",
+        ],
+    )
+    def test_no_heavy_imports_on_lightweight_path(self, import_stmt: str) -> None:
+        """Importing lightweight CLI modules must not load heavy deps.
+
+        Args:
+            import_stmt: The import statement to test in isolation.
+        """
+        loaded = _get_loaded_modules(import_stmt)
+        leaked = HEAVY_MODULES & loaded
+        assert not leaked, (
+            f"Heavy modules loaded when running `{import_stmt}`: {sorted(leaked)}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 2. CLI command timing
+#
+# Measure wall-clock time for common "fast-path" CLI invocations that should
+# NOT need the agent/LLM stack.
+# ---------------------------------------------------------------------------
+
+
+class TestCLIStartupTime:
+    """End-to-end wall-clock check for commands that should never need the LLM stack.
+
+    Complements `TestImportIsolation` with a user-facing timing gate: even if
+    individual imports stay light, a slow composition of many small imports
+    could still hurt perceived startup.
+    """
+
+    @staticmethod
+    def _time_cli_command(args: str) -> float:
+        """Return wall-clock seconds to run `python -m deepagents_cli <args>`.
+
+        Args:
+            args: CLI arguments string (e.g., `"--help"`).
+
+        Returns:
+            Elapsed wall-clock time in seconds.
+        """
+        code = f"""
+            import time, subprocess, sys
+            start = time.perf_counter()
+            subprocess.run(
+                [sys.executable, "-m", "deepagents_cli", {args!r}],
+                capture_output=True,
+                text=True,
+                timeout=30,
+            )
+            elapsed = time.perf_counter() - start
+            print(elapsed)
+        """
+        result = _run_python(code)
+        assert result.returncode == 0, f"Timing harness failed:\n{result.stderr}"
+        return float(result.stdout.strip())
+
+    def test_help_under_threshold(self) -> None:
+        """`deepagents --help` should complete well under 10 s.
+
+        A generous threshold to avoid flaky CI; the real goal is catching
+        regressions where a heavy import is accidentally re-added at
+        module level.
+        """
+        elapsed = self._time_cli_command("--help")
+        assert elapsed < 10, f"`deepagents --help` took {elapsed:.2f}s — expected < 10s"
+
+    def test_version_under_threshold(self) -> None:
+        """`deepagents --version` should complete well under 10 s."""
+        elapsed = self._time_cli_command("--version")
+        assert elapsed < 10, (
+            f"`deepagents --version` took {elapsed:.2f}s — expected < 10s"
+        )
+
+
+# ---------------------------------------------------------------------------
+# 3. Import time measurement
+#
+# Measure absolute import times for key modules so regressions show up
+# clearly in `pytest --durations`.
+# ---------------------------------------------------------------------------
+
+
+class TestImportTiming:
+    """Catch order-of-magnitude import regressions in key modules.
+
+    The 10 s threshold is generous to avoid CI flakiness; the real value
+    is that `pytest --durations` surfaces the numbers for trend analysis.
+    """
+
+    @pytest.mark.parametrize(
+        "module",
+        [
+            "deepagents_cli.main",
+            "deepagents_cli.ui",
+            "deepagents_cli.config",
+            "deepagents_cli.skills.commands",
+            "deepagents_cli.tool_display",
+        ],
+        ids=[
+            "main",
+            "ui",
+            "config",
+            "skills.commands",
+            "tool_display",
+        ],
+    )
+    def test_module_import_time(self, module: str) -> None:
+        """Import *module* in a fresh process and assert it finishes quickly.
+
+        Args:
+            module: Fully qualified module name to import.
+        """
+        code = f"""
+            import time
+            start = time.perf_counter()
+            import {module}
+            elapsed = time.perf_counter() - start
+            print(elapsed)
+        """
+        result = _run_python(code)
+        assert result.returncode == 0, f"Failed to import {module}:\n{result.stderr}"
+        elapsed = float(result.stdout.strip())
+        # 10 s is generous; the point is to catch order-of-magnitude
+        # regressions, not enforce a tight budget.
+        assert elapsed < 10, f"Importing {module} took {elapsed:.2f}s — expected < 10s"
+
+
+# ---------------------------------------------------------------------------
+# 4. Deferred import paths
+#
+# Verify that heavy modules ARE loaded once we actually exercise code paths
+# that need them. This ensures the deferred imports are wired correctly and
+# nothing is silently broken.
+# ---------------------------------------------------------------------------
+
+
+class TestDeferredImportsWork:
+    """Verify the heavy modules *do* load when the code paths that need them run.
+
+    Deferred imports can silently break (e.g., a renamed module, a missing
+    re-export). Without these tests, the failure would surface only at
+    runtime when a user starts a session — not in CI.
+    """
+
+    def test_agent_import_loads_langchain(self) -> None:
+        """Importing ``deepagents_cli.agent`` should pull in langchain."""
+        loaded = _get_loaded_modules("import deepagents_cli.agent")
+        langchain_modules = {m for m in loaded if m.startswith("langchain")}
+        assert langchain_modules, (
+            "`deepagents_cli.agent` should transitively load `langchain` modules"
+        )
+
+    def test_sessions_import_available(self) -> None:
+        """`deepagents_cli.sessions` should be importable."""
+        result = _run_python("import deepagents_cli.sessions")
+        assert result.returncode == 0, (
+            f"Cannot import `deepagents_cli.sessions`:\n{result.stderr}"
+        )
+
+    def test_tool_display_loads_sdk_backends(self) -> None:
+        """`tool_display` should load SDK backends."""
+        loaded = _get_loaded_modules("import deepagents_cli.tool_display")
+        assert "deepagents.backends" in loaded, (
+            "`tool_display` should import SDK `backends` for `DEFAULT_EXECUTE_TIMEOUT`"
+        )
+
+
+--- AGENTS.md ---
+# Global development guidelines for the Deep Agents monorepo
+
+This document provides context to understand the Deep Agents Python project and assist with development.
+
+## Project architecture and context
+
+### Monorepo structure
+
+This is a Python monorepo with multiple independently versioned packages that use `uv`.
+
+```txt
+deepagents/
+├── libs/
+│   ├── deepagents/  # SDK
+│   ├── cli/         # CLI tool
+│   ├── acp/         # Agent Context Protocol support
+│   └── harbor/      # Evaluation/benchmark framework
+│   └── partners/    # Integration packages
+│       └── daytona/
+│       └── ...
+├── .github/         # CI/CD workflows and templates
+└── README.md        # Information about Deep Agents
+```
+
+### Development tools & commands
+
+- `uv` – Fast Python package installer and resolver (replaces pip/poetry)
+- `make` – Task runner for common development commands. Feel free to look at the `Makefile` for available commands and usage patterns.
+- `ruff` – Fast Python linter and formatter
+- `ty` – Static type checking
+
+#### Suppressing ruff lint rules
+
+Prefer inline `# noqa: RULE` over `[tool.ruff.lint.per-file-ignores]` for individual exceptions. `per-file-ignores` silences a rule for the *entire* file — If you add it for one violation, all future violations of that rule in the same file are silently ignored. Inline `# noqa` is precise to the line, self-documenting, and keeps the safety net intact for the rest of the file.
+
+Reserve `per-file-ignores` for **categorical policy** that applies to a whole class of files (e.g., `"tests/**" = ["D1", "S101"]` — tests don't need docstrings, `assert` is expected). These are not exceptions; they are different rules for a different context.
+
+```toml
+# GOOD – categorical policy in pyproject.toml
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D1", "S101"]
+
+# BAD – single-line exception buried in pyproject.toml
+"deepagents_cli/agent.py" = ["PLR2004"]
+```
+
+```python
+# GOOD – precise, self-documenting inline suppression
+timeout = 30  # noqa: PLR2004  # default HTTP timeout, not arbitrary
+```
+
+- `pytest` – Testing framework
+
+This monorepo uses `uv` for dependency management. Local development uses editable installs: `[tool.uv.sources]`
+
+Each package in `libs/` has its own `pyproject.toml` and `uv.lock`.
+
+```bash
+# Run unit tests (no network)
+make test
+
+# Run specific test file
+uv run --group test pytest tests/unit_tests/test_specific.py
+```
+
+```bash
+# Lint code
+make lint
+
+# Format code
+make format
+```
+
+#### Key config files
+
+- pyproject.toml: Main workspace configuration with dependency groups
+- uv.lock: Locked dependencies for reproducible builds
+- Makefile: Development tasks
+
+#### Commit standards
+
+Suggest PR titles that follow Conventional Commits format. Refer to .github/workflows/pr_lint for allowed types and scopes. Note that all commit/PR titles should be in lowercase with the exception of proper nouns/named entities. All PR titles should include a scope with no exceptions. For example:
+
+```txt
+feat(sdk): add new chat completion feature
+fix(cli): resolve type hinting issue
+chore(harbor): update infrastructure dependencies
+```
+
+#### Pull request guidelines
+
+- Always add a disclaimer to the PR description mentioning how AI agents are involved with the contribution.
+- Describe the "why" of the changes, why the proposed solution is the right one. Limit prose.
+- Highlight areas of the proposed changes that require careful review.
+
+## Core development principles
+
+### Maintain stable public interfaces
+
+CRITICAL: Always attempt to preserve function signatures, argument positions, and names for exported/public methods. Do not make breaking changes.
+
+You should warn the developer for any function signature changes, regardless of whether they look breaking or not.
+
+**Before making ANY changes to public APIs:**
+
+- Check if the function/class is exported in `__init__.py`
+- Look for existing usage patterns in tests and examples
+- Use keyword-only arguments for new parameters: `*, new_param: str = "default"`
+- Mark experimental features clearly with docstring warnings (using MkDocs Material admonitions, like `!!! warning`)
+
+Ask: "Would this change break someone's code if they used it last week?"
+
+### Code quality standards
+
+All Python code MUST include type hints and return types.
+
+```python title="Example"
+def filter_unknown_users(users: list[str], known_users: set[str]) -> list[str]:
+    """Single line description of the function.
+
+    Any additional context about the function can go here.
+
+    Args:
+        users: List of user identifiers to filter.
+        known_users: Set of known/valid user identifiers.
+
+    Returns:
+        List of users that are not in the `known_users` set.
+    """
+```
+
+- Use descriptive, self-explanatory variable names.
+- Follow existing patterns in the codebase you're modifying
+- Attempt to break up complex functions (>20 lines) into smaller, focused functions where it makes sense
+- Avoid using the `any` type
+- Prefer single word variable names where possible
+
+### Testing requirements
+
+Every new feature or bugfix MUST be covered by unit tests.
+
+- Unit tests: `tests/unit_tests/` (no network calls allowed)
+- Integration tests: `tests/integration_tests/` (network calls permitted)
+- We use `pytest` as the testing framework; if in doubt, check other existing tests for examples.
+- The testing file structure should mirror the source code structure.
+- Avoid mocks as much as possible
+- Test actual implementation, do not duplicate logic into tests
+
+Ensure the following:
+
+- Does the test suite fail if your new logic is broken?
+- Edge cases and error conditions are tested
+- Tests are deterministic (no flaky tests)
+
+### Security and risk assessment
+
+- No `eval()`, `exec()`, or `pickle` on user-controlled input
+- Proper exception handling (no bare `except:`) and use a `msg` variable for error messages
+- Remove unreachable/commented code before committing
+- Race conditions or resource leaks (file handles, sockets, threads).
+- Ensure proper resource cleanup (file handles, connections)
+
+### Documentation standards
+
+Use Google-style docstrings with Args section for all public functions.
+
+```python title="Example"
+def send_email(to: str, msg: str, *, priority: str = "normal") -> bool:
+    """Send an email to a recipient with specified priority.
+
+    Any additional context about the function can go here.
+
+    Args:
+        to: The email address of the recipient.
+        msg: The message body to send.
+        priority: Email priority level.
+
+    Returns:
+        `True` if email was sent successfully, `False` otherwise.
+
+    Raises:
+        InvalidEmailError: If the email address format is invalid.
+        SMTPConnectionError: If unable to connect to email server.
+    """
+```
+
+- Types go in function signatures, NOT in docstrings
+  - If a default is present, DO NOT repeat it in the docstring unless there is post-processing or it is set conditionally.
+- Focus on "why" rather than "what" in descriptions
+- Document all parameters, return values, and exceptions
+- Keep descriptions concise but clear
+- Ensure American English spelling (e.g., "behavior", not "behaviour")
+- Do NOT use Sphinx-style double backtick formatting (` ``code`` `). Use single backticks (`` `code` ``) for inline code references in docstrings and comments.
+
+## Package-specific guidance
+
+### Deep Agents CLI (`libs/cli/`)
+
+`deepagents-cli` uses [Textual](https://textual.textualize.io/) for its terminal UI framework.
+
+**Key Textual resources:**
+
+- **Guide:** https://textual.textualize.io/guide/
+- **Widget gallery:** https://textual.textualize.io/widget_gallery/
+- **CSS reference:** https://textual.textualize.io/styles/
+- **API reference:** https://textual.textualize.io/api/
+
+**Textual patterns used in this codebase:**
+
+- **Workers** (`@work` decorator) for async operations - see [Workers guide](https://textual.textualize.io/guide/workers/)
+- **Message passing** for widget communication - see [Events guide](https://textual.textualize.io/guide/events/)
+- **Reactive attributes** for state management - see [Reactivity guide](https://textual.textualize.io/guide/reactivity/)
+
+**Startup performance:**
+
+The CLI must stay fast to launch. Never import heavy packages (e.g., `deepagents`, LangChain, LangGraph) at module level or in the argument-parsing path. These imports pull in large dependency trees and add seconds to every invocation, including trivial commands like `deepagents -v`.
+
+- Keep top-level imports in `main.py` and other entry-point modules minimal.
+- Defer heavy imports to the point where they are actually needed (inside functions/methods).
+- To read another package's version without importing it, use `importlib.metadata.version("package-name")`.
+
+**Building chat/streaming interfaces:**
+
+- Blog post: [Anatomy of a Textual User Interface](https://textual.textualize.io/blog/2024/09/15/anatomy-of-a-textual-user-interface/) - demonstrates building an AI chat interface with streaming responses
+
+**Testing Textual apps:**
+
+- Use `textual.pilot` for async UI testing - see [Testing guide](https://textual.textualize.io/guide/testing/)
+- Snapshot testing available for visual regression - see repo `notes/snapshot_testing.md`
+
+## Additional resources
+
+- **Documentation:** https://docs.langchain.com/oss/python/deepagents/overview and source at https://github.com/langchain-ai/docs or `../docs/`. Prefer the local install and use file search tools for best results. If needed, use the docs MCP server as defined in `.mcp.json` for programmatic access.
+- **Contributing Guide:** [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+- **CLI Release Process:** See `.github/RELEASING.md` for the full CLI release workflow (release-please, version bumping, troubleshooting failed releases, and label management).
+
+
+## Links discovered
+- [Textual](https://textual.textualize.io/)
+- [Workers guide](https://textual.textualize.io/guide/workers/)
+- [Events guide](https://textual.textualize.io/guide/events/)
+- [Reactivity guide](https://textual.textualize.io/guide/reactivity/)
+- [Anatomy of a Textual User Interface](https://textual.textualize.io/blog/2024/09/15/anatomy-of-a-textual-user-interface/)
+- [Testing guide](https://textual.textualize.io/guide/testing/)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- README.md ---
+<div align="center">
+  <a href="https://docs.langchain.com/oss/python/deepagents/overview#deep-agents-overview">
+    <picture>
+      <source media="(prefers-color-scheme: light)" srcset=".github/images/logo-dark.svg">
+      <source media="(prefers-color-scheme: dark)" srcset=".github/images/logo-light.svg">
+      <img alt="Deep Agents Logo" src=".github/images/logo-dark.svg" width="80%">
+    </picture>
+  </a>
+</div>
+
+<div align="center">
+  <h3>The batteries-included agent harness.</h3>
+</div>
+
+<div align="center">
+  <a href="https://opensource.org/licenses/MIT" target="_blank"><img src="https://img.shields.io/pypi/l/deepagents" alt="PyPI - License"></a>
+  <a href="https://pypistats.org/packages/deepagents" target="_blank"><img src="https://img.shields.io/pepy/dt/deepagents" alt="PyPI - Downloads"></a>
+  <a href="https://pypi.org/project/deepagents/#history" target="_blank"><img src="https://img.shields.io/pypi/v/deepagents?label=%20" alt="Version"></a>
+  <a href="https://x.com/langchain" target="_blank"><img src="https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain" alt="Twitter / X"></a>
+</div>
+
+<br>
+
+Deep Agents is an agent harness. An opinionated, ready-to-run agent out of the box. Instead of wiring up prompts, tools, and context management yourself, you get a working agent immediately and customize what you need.
+
+**What's included:**
+
+- **Planning** — `write_todos` for task breakdown and progress tracking
+- **Filesystem** — `read_file`, `write_file`, `edit_file`, `ls`, `glob`, `grep` for reading and writing context
+- **Shell access** — `execute` for running commands (with sandboxing)
+- **Sub-agents** — `task` for delegating work with isolated context windows
+- **Smart defaults** — Prompts that teach the model how to use these tools effectively
+- **Context management** — Auto-summarization when conversations get long, large outputs saved to files
+
+> [!NOTE]
+> Looking for the JS/TS library? Check out [deepagents.js](https://github.com/langchain-ai/deepagentsjs).
+
+## Quickstart
+
+```bash
+pip install deepagents
+# or
+uv add deepagents
+```
+
+```python
+from deepagents import create_deep_agent
+
+agent = create_deep_agent()
+result = agent.invoke({"messages": [{"role": "user", "content": "Research LangGraph and write a summary"}]})
+```
+
+The agent can plan, read/write files, and manage its own context. Add tools, customize prompts, or swap models as needed.
+
+## Customization
+
+Add your own tools, swap models, customize prompts, configure sub-agents, and more. See the [documentation](https://docs.langchain.com/oss/python/deepagents/overview) for full details.
+
+```python
+from langchain.chat_models import init_chat_model
+
+agent = create_deep_agent(
+    model=init_chat_model("openai:gpt-4o"),
+    tools=[my_custom_tool],
+    system_prompt="You are a research assistant.",
+)
+```
+
+MCP is supported via [`langchain-mcp-adapters`](https://github.com/langchain-ai/langchain-mcp-adapters).
+
+## Deep Agents CLI
+
+Try Deep Agents instantly from the terminal:
+
+```bash
+uv tool install deepagents-cli
+deepagents
+```
+
+The CLI adds conversation resume, web search, remote sandboxes (Modal, Runloop, Daytona, & more), persistent memory, custom skills, headless mode, and human-in-the-loop approval. See the [CLI documentation](https://docs.langchain.com/oss/python/deepagents/cli) for more.
+
+## LangGraph Native
+
+`create_deep_agent` returns a compiled [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) graph. Use it with streaming, Studio, checkpointers, or any LangGraph feature.
+
+## FAQ
+
+### Why should I use this?
+
+- **100% open source** — MIT licensed, fully extensible
+- **Provider agnostic** — Works with Claude, OpenAI, Google, or any LangChain-compatible model
+- **Built on LangGraph** — Production-ready runtime with streaming, persistence, and checkpointing
+- **Batteries included** — Planning, file access, sub-agents, and context management work out of the box
+- **Get started in seconds** — `pip install deepagents` or `uv add deepagents` and you have a working agent
+- **Customize in minutes** — Add tools, swap models, tune prompts when you need to
+
+---
+
+## Documentation
+
+- [docs.langchain.com](https://docs.langchain.com/oss/python/deepagents/overview) – Comprehensive documentation, including conceptual overviews and guides
+- [reference.langchain.com/python](https://reference.langchain.com/python/deepagents/) – API reference docs for Deep Agents packages
+- [Chat LangChain](https://chat.langchain.com/) – Chat with the LangChain documentation and get answers to your questions
+
+**Discussions**: Visit the [LangChain Forum](https://forum.langchain.com) to connect with the community and share all of your technical questions, ideas, and feedback.
+
+## Additional resources
+
+- **[Examples](examples/)** — Working agents and patterns
+- [API Reference](https://reference.langchain.com/python/deepagents/) – Detailed reference on navigating base packages and integrations for LangChain.
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview) – Learn how to contribute to LangChain projects and find good first issues.
+- [Code of Conduct](https://github.com/langchain-ai/langchain/?tab=coc-ov-file) – Our community guidelines and standards for participation.
+
+## Packages
+
+This is a monorepo containing all Deep Agents packages:
+
+| Package | PyPI | Description |
+| ------- | ---- | ----------- |
+| [`deepagents`](libs/deepagents/) | [![Version](https://img.shields.io/pypi/v/deepagents?label=%20)](https://pypi.org/project/deepagents/) | Core SDK — `create_deep_agent`, middleware, backends |
+| [`deepagents-cli`](libs/cli/) | [![Version](https://img.shields.io/pypi/v/deepagents-cli?label=%20)](https://pypi.org/project/deepagents-cli/) | Interactive terminal interface with TUI, web search, and sandboxes |
+| [`deepagents-acp`](libs/acp/) | [![Version](https://img.shields.io/pypi/v/deepagents-acp?label=%20)](https://pypi.org/project/deepagents-acp/) | [Agent Client Protocol](https://agentclientprotocol.com) integration for editors like Zed |
+| [`deepagents-harbor`](libs/harbor/) | - | [Harbor](https://harborframework.com) evaluation and benchmark framework |
+| [`langchain-daytona`](libs/partners/daytona/) | [![Version](https://img.shields.io/pypi/v/langchain-daytona?label=%20)](https://pypi.org/project/langchain-daytona/) | Daytona sandbox integration |
+| [`langchain-modal`](libs/partners/modal/) | [![Version](https://img.shields.io/pypi/v/langchain-modal?label=%20)](https://pypi.org/project/langchain-modal/) | Modal sandbox integration |
+| [`langchain-runloop`](libs/partners/runloop/) | [![Version](https://img.shields.io/pypi/v/langchain-runloop?label=%20)](https://pypi.org/project/langchain-runloop/) | Runloop sandbox integration |
+
+---
+
+## Acknowledgements
+
+This project was primarily inspired by Claude Code, and initially was largely an attempt to see what made Claude Code general purpose, and make it even more so.
+
+## Security
+
+Deep Agents follows a "trust the LLM" model. The agent can do anything its tools allow. Enforce boundaries at the tool/sandbox level, not by expecting the model to self-police.
+
+
+## Links discovered
+- [deepagents.js](https://github.com/langchain-ai/deepagentsjs)
+- [documentation](https://docs.langchain.com/oss/python/deepagents/overview)
+- [`langchain-mcp-adapters`](https://github.com/langchain-ai/langchain-mcp-adapters)
+- [CLI documentation](https://docs.langchain.com/oss/python/deepagents/cli)
+- [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview)
+- [docs.langchain.com](https://docs.langchain.com/oss/python/deepagents/overview)
+- [reference.langchain.com/python](https://reference.langchain.com/python/deepagents/)
+- [Chat LangChain](https://chat.langchain.com/)
+- [LangChain Forum](https://forum.langchain.com)
+- [Examples](https://github.com/langchain-ai/deepagents/blob/main/examples.md)
+- [API Reference](https://reference.langchain.com/python/deepagents/)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+- [Code of Conduct](https://github.com/langchain-ai/langchain/?tab=coc-ov-file)
+- [`deepagents`](https://github.com/langchain-ai/deepagents/blob/main/libs/deepagents.md)
+- [![Version](https://img.shields.io/pypi/v/deepagents?label=%20)
+- [`deepagents-cli`](https://github.com/langchain-ai/deepagents/blob/main/libs/cli.md)
+- [![Version](https://img.shields.io/pypi/v/deepagents-cli?label=%20)
+- [`deepagents-acp`](https://github.com/langchain-ai/deepagents/blob/main/libs/acp.md)
+- [![Version](https://img.shields.io/pypi/v/deepagents-acp?label=%20)
+- [Agent Client Protocol](https://agentclientprotocol.com)
+- [`deepagents-harbor`](https://github.com/langchain-ai/deepagents/blob/main/libs/harbor.md)
+- [Harbor](https://harborframework.com)
+- [`langchain-daytona`](https://github.com/langchain-ai/deepagents/blob/main/libs/partners/daytona.md)
+- [![Version](https://img.shields.io/pypi/v/langchain-daytona?label=%20)
+- [`langchain-modal`](https://github.com/langchain-ai/deepagents/blob/main/libs/partners/modal.md)
+- [![Version](https://img.shields.io/pypi/v/langchain-modal?label=%20)
+- [`langchain-runloop`](https://github.com/langchain-ai/deepagents/blob/main/libs/partners/runloop.md)
+- [![Version](https://img.shields.io/pypi/v/langchain-runloop?label=%20)
+- [<img src="https://img.shields.io/pypi/l/deepagents" alt="PyPI - License">](https://opensource.org/licenses/MIT)
+- [<img src="https://img.shields.io/pepy/dt/deepagents" alt="PyPI - Downloads">](https://pypistats.org/packages/deepagents)
+- [<img src="https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain" alt="Twitter / X">](https://x.com/langchain)
+
+--- .github/PULL_REQUEST_TEMPLATE.md ---
+(Replace this entire block of text)
+
+Read the full contributing guidelines: https://docs.langchain.com/oss/python/contributing/overview
+If you paste a large clearly AI generated description here your PR may be IGNORED or CLOSED!
+
+Thank you for contributing to Deep Agents! Follow these steps to have your pull request considered as ready for review.
+
+1. PR title: Should follow the format: TYPE(SCOPE): DESCRIPTION
+
+  - Examples:
+    - fix(sdk): resolve flag parsing error
+    - feat(cli): add multi-tenant support
+    - test(acp): update API usage tests
+  - Allowed TYPE and SCOPE values: https://github.com/langchain-ai/deepagents/blob/main/.github/workflows/pr_lint.yml#L15-L26
+
+2. PR description:
+
+  - Write 1-2 sentences summarizing the change.
+  - If this PR addresses a specific issue, please include "Fixes #ISSUE_NUMBER" in the description to automatically close the issue when the PR is merged.
+  - If there are any breaking changes, please clearly describe them.
+  - If this PR depends on another PR being merged first, please include "Depends on #PR_NUMBER" in the description.
+
+3. Run `make format`, `make lint` and `make test` from the root of the package(s) you've modified.
+
+  - We will not consider a PR unless these three are passing in CI.
+
+4. How did you verify your code works?
+
+Additional guidelines:
+
+  - We ask that if you use generative AI for your contribution, you include a disclaimer.
+  - PRs should not touch more than one package unless absolutely necessary.
+  - Do not update the `uv.lock` files or add dependencies to `pyproject.toml` files (even optional ones) unless you have explicit permission to do so by a maintainer.
+
+## Social handles (optional)
+<!-- If you'd like a shoutout on release, add your socials below -->
+Twitter: @
+LinkedIn: https://linkedin.com/in/
+
+
+--- .github/RELEASING.md ---
+# CLI Release Process
+
+This document describes the release process for the CLI package (`libs/cli`) in the Deep Agents monorepo using [release-please](https://github.com/googleapis/release-please).
+
+## Overview
+
+CLI releases are managed via release-please, which:
+
+1. Analyzes conventional commits on the `main` branch
+2. Creates/updates a release PR with changelog and version bump
+3. When merged, creates a draft GitHub release for review
+4. Publishing the draft triggers PyPI publication
+
+## How It Works
+
+### Automatic Release PRs
+
+When commits land on `main`, release-please analyzes them and either:
+
+- **Creates a new release PR** if releasable changes exist
+- **Updates an existing release PR** with additional changes
+- **Does nothing** if no releasable commits are found (e.g. commits with type `chore`, `refactor`, etc.)
+
+Release PRs are created on branches named `release-please--branches--main--components--<package>`.
+
+### Triggering a Release
+
+To release the CLI:
+
+1. Merge conventional commits to `main` (see [Commit Format](#commit-format))
+2. Wait for release-please to create/update the release PR
+3. Review the generated changelog in the PR
+4. Merge the release PR — this creates a **draft** GitHub release
+5. Review and edit the release notes in the GitHub UI
+6. Click "Publish release" — this triggers PyPI publication
+
+### Version Bumping
+
+Version bumps are determined by commit types:
+
+| Commit Type                    | Version Bump  | Example                                  |
+| ------------------------------ | ------------- | ---------------------------------------- |
+| `fix:`                         | Patch (0.0.x) | `fix(cli): resolve config loading issue` |
+| `feat:`                        | Minor (0.x.0) | `feat(cli): add new export command`      |
+| `feat!:` or `BREAKING CHANGE:` | Major (x.0.0) | `feat(cli)!: redesign config format`     |
+
+> [!NOTE]
+> While version is < 1.0.0, `bump-minor-pre-major` and `bump-patch-for-minor-pre-major` are enabled, so breaking changes bump minor and features bump patch.
+
+## Commit Format
+
+All commits must follow [Conventional Commits](https://www.conventionalcommits.org/) format with types and scopes defined in `.github/workflows/pr_lint.yml`:
+
+```text
+<type>(<scope>): <description>
+
+[optional body]
+
+[optional footer(s)]
+```
+
+### Examples
+
+```bash
+# Patch release
+fix(cli): resolve type hinting issue
+
+# Minor release
+feat(cli): add new chat completion feature
+
+# Major release (breaking change)
+feat(cli)!: redesign configuration format
+
+BREAKING CHANGE: Config files now use TOML instead of JSON.
+```
+
+## Configuration Files
+
+### `release-please-config.json`
+
+Defines release-please behavior for each package.
+
+### `.release-please-manifest.json`
+
+Tracks the current version of each package:
+
+```json
+{
+  "libs/cli": "0.0.17"
+}
+```
+
+This file is automatically updated by release-please when releases are created.
+
+## Release Workflow
+
+### Detection Mechanism
+
+The release-please workflow (`.github/workflows/release-please.yml`) detects a CLI release by checking if `libs/cli/CHANGELOG.md` was modified in the commit. This file is always updated by release-please when merging a release PR.
+
+### Lockfile Updates
+
+When release-please creates or updates a release PR, the `update-lockfiles` job automatically regenerates `uv.lock` files since release-please updates `pyproject.toml` versions but doesn't regenerate lockfiles. An up-to-date lockfile is necessary for the cli since it depends on the SDK, and `libs/harbor` depends on the CLI.
+
+### Release Pipeline
+
+The release workflow (`.github/workflows/release.yml`) runs when a release PR is merged:
+
+1. **Build** - Creates distribution package
+2. **Collect Contributors** - Gathers PR authors for release notes, including social media handles. Excludes members of `langchain-ai`.
+3. **Release Notes** - Extracts changelog or generates from git log
+4. **Test PyPI** - Publishes to test.pypi.org for validation
+5. **Pre-release Checks** - Runs tests against the built package
+6. **Mark Release** - Creates a **draft** GitHub release with the built artifacts
+
+When you publish the draft release, `.github/workflows/release-publish.yml` triggers and publishes to PyPI.
+
+### Release PR Labels
+
+Release-please uses labels to track the state of release PRs:
+
+| Label | Meaning |
+| ----- | ------- |
+| `autorelease: pending` | Release PR has been merged but not yet tagged/released |
+| `autorelease: tagged` | Release PR has been successfully tagged and released |
+
+Because `skip-github-release: true` is set in the release-please config (we create releases via our own workflow instead of release-please), our `release.yml` workflow must update these labels manually. After successfully creating the GitHub release and tag, the `mark-release` job transitions the label from `pending` to `tagged`.
+
+This label transition signals to release-please that the merged PR has been fully processed, allowing it to create new release PRs for subsequent commits.
+
+## Manual Release
+
+For hotfixes or exceptional cases, you can trigger a release manually. Use the `hotfix` commit type so as to not trigger a further PR update/version bump.
+
+1. Go to **Actions** > **Package Release**
+2. Click **Run workflow**
+3. Select the package to release (`deepagents-cli` only for exception/recovery/hotfix scenarios; otherwise use release-please)
+4. (Optionally enable `dangerous-nonmain-release` for hotfix branches)
+
+> [!WARNING]
+> Manual releases should be rare. Prefer the standard release-please flow for the CLI. Manual dispatch bypasses the changelog detection in `release-please.yml` and skips the lockfile update job. Only use it for recovery scenarios (e.g., the release workflow failed after the release PR was already merged).
+
+## Troubleshooting
+
+### "Found release tag with component X, but not configured in manifest" Warnings
+
+You may see warnings in the release-please logs like:
+
+```txt
+⚠ Found release tag with component 'deepagents=', but not configured in manifest
+```
+
+This is **harmless**. Release-please scans existing tags in the repository and warns when it finds tags for packages that aren't in the current configuration. The `deepagents` SDK package has existing release tags (`deepagents==0.x.x`) but is not currently managed by release-please.
+
+These warnings will disappear once the SDK is added to `release-please-config.json`. Until then, they can be safely ignored—they don't affect CLI releases.
+
+### Unexpected Commit Authors in Release PRs
+
+When viewing a release-please PR on GitHub, you may see commits attributed to contributors who didn't directly push to that PR. For example:
+
+```txt
+johndoe and others added 3 commits 4 minutes ago
+```
+
+This is a **GitHub UI quirk** caused by force pushes/rebasing, not actual commits to the PR branch.
+
+**What's happening:**
+
+1. release-please rebases its branch onto the latest `main`
+2. The PR branch now includes commits from `main` as parent commits
+3. GitHub's UI shows all "new" commits that appeared after the force push, including rebased parents
+
+**The actual PR commits** are only:
+
+- The release commit (e.g., `release(deepagents-cli): 0.0.18`)
+- The lockfile update commit (e.g., `chore: update lockfiles`)
+
+Other commits shown are just the base that the PR branch was rebased onto. This is normal behavior and doesn't indicate unauthorized access.
+
+### Release PR Stuck with "autorelease: pending" Label
+
+If a release PR shows `autorelease: pending` after the release workflow completed, the label update step may have failed. This can block release-please from creating new release PRs.
+
+**To fix manually:**
+
+```bash
+# Find the PR number for the release commit
+gh pr list --state merged --search "release(deepagents-cli)" --limit 5
+
+# Update the label
+gh pr edit <PR_NUMBER> --remove-label "autorelease: pending" --add-label "autorelease: tagged"
+```
+
+The label update is non-fatal in the workflow (`|| true`), so the release itself succeeded—only the label needs fixing.
+
+### Yanking a Release
+
+If you need to yank (retract) a release:
+
+#### 1. Yank from PyPI
+
+Using the PyPI web interface or a CLI tool.
+
+#### 2. Delete GitHub Release/Tag (optional)
+
+```bash
+# Delete the GitHub release
+gh release delete "deepagents-cli==<VERSION>" --yes
+
+# Delete the git tag
+git tag -d "deepagents-cli==<VERSION>"
+git push origin --delete "deepagents-cli==<VERSION>"
+```
+
+#### 3. Fix the Manifest
+
+Edit `.release-please-manifest.json` to the last good version:
+
+```json
+{
+  "libs/cli": "0.0.15"
+}
+```
+
+Also update `libs/cli/pyproject.toml` and `_version.py` to match.
+
+### Release Failed: CLI SDK Pin Mismatch
+
+If the release workflow fails at the "Verify CLI pins latest SDK version" step with:
+
+```txt
+CLI SDK pin does not match SDK version!
+SDK version (libs/deepagents/pyproject.toml): 0.4.2
+CLI SDK pin (libs/cli/pyproject.toml): 0.4.1
+```
+
+This means the CLI's pinned `deepagents` dependency in `libs/cli/pyproject.toml` doesn't match the current SDK version. This can happen when the SDK is released independently and the CLI's pin isn't updated before the CLI release PR is merged.
+
+**To fix:**
+
+1. **Hotfix the pin on `main`:**
+
+   ```bash
+   # Update the pin in libs/cli/pyproject.toml
+   # e.g., change deepagents==0.4.1 to deepagents==0.4.2
+   cd libs/cli && uv lock
+   git add libs/cli/pyproject.toml libs/cli/uv.lock
+   git commit -m "hotfix(cli): bump SDK pin to <VERSION>"
+   git push origin main
+   ```
+
+2. **Manually trigger the release** (the push to `main` won't re-trigger the release because the commit doesn't modify `libs/cli/CHANGELOG.md`):
+   - Go to **Actions** > **Package Release**
+   - Click **Run workflow**
+   - Select `main` branch and `deepagents-cli` package
+
+3. **Publish the draft release** once the workflow completes
+
+4. **Fix the `autorelease: pending` label** if the original automated release left it on the merged release PR. The failed workflow skipped the `mark-release` job, so the label was never swapped. See [Release PR Stuck with "autorelease: pending" Label](#release-pr-stuck-with-autorelease-pending-label) for the fix. **If you skip this step, release-please will not create new release PRs.**
+
+### Re-releasing a Version
+
+PyPI does not allow re-uploading the same version. If a release failed partway:
+
+1. If already on PyPI: bump the version and release again
+2. If only on test PyPI: the workflow uses `skip-existing: true`, so re-running should work
+3. If the GitHub release exists but PyPI publish failed: delete the release/tag and re-run the workflow
+
+### "Untagged, merged release PRs outstanding" Error
+
+If release-please logs show:
+
+```txt
+⚠ There are untagged, merged release PRs outstanding - aborting
+```
+
+This means a release PR was merged but its merge commit doesn't have the expected tag. This can happen if:
+
+- The release workflow failed and the tag was manually created on a different commit (e.g., a hotfix)
+- Someone manually moved or recreated a tag
+
+**To diagnose**, compare the tag's commit with the release PR's merge commit:
+
+```bash
+# Find what commit the tag points to
+git ls-remote --tags origin | grep "deepagents-cli==<VERSION>"
+
+# Find the release PR's merge commit
+gh pr view <PR_NUMBER> --json mergeCommit --jq '.mergeCommit.oid'
+```
+
+If these differ, release-please is confused.
+
+**To fix**, move the tag and update the GitHub release:
+
+```bash
+# 1. Delete the remote tag
+git push origin :refs/tags/deepagents-cli==<VERSION>
+
+# 2. Delete local tag if it exists
+git tag -d deepagents-cli==<VERSION> 2>/dev/null || true
+
+# 3. Create tag on the correct commit (the release PR's merge commit)
+git tag deepagents-cli==<VERSION> <MERGE_COMMIT_SHA>
+
+# 4. Push the new tag
+git push origin deepagents-cli==<VERSION>
+
+# 5. Update the GitHub release's target_commitish to match
+#    (moving a tag doesn't update this field automatically)
+gh api -X PATCH repos/langchain-ai/deepagents/releases/$(gh api repos/langchain-ai/deepagents/releases --jq '.[] | select(.tag_name == "deepagents-cli==<VERSION>") | .id') \
+  -f target_commitish=<MERGE_COMMIT_SHA>
+```
+
+After fixing, the next push to main should properly create new release PRs.
+
+> [!NOTE]
+> Moving a tag will put the associated GitHub release back into draft state. If the package was already published to PyPI, you can safely re-publish the draft — the publish workflow uses `skip-existing: true`, so it will succeed without re-uploading.
+
+## References
+
+- [release-please documentation](https://github.com/googleapis/release-please)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/)
+
+
+## Links discovered
+- [release-please](https://github.com/googleapis/release-please)
+- [Conventional Commits](https://www.conventionalcommits.org/)
+- [release-please documentation](https://github.com/googleapis/release-please)
+- [PyPI Trusted Publishing](https://docs.pypi.org/trusted-publishers/)
+
+--- .github/scripts/check_extras_sync.py ---
+"""Check that optional extras stay in sync with required dependencies (openai).
+
+When a package appears in both [project.dependencies] and
+[project.optional-dependencies], we ensure their version constraints match.
+This prevents silent version drift (e.g. bumping a required dep but
+forgetting the corresponding extra).
+"""
+
+import sys
+import tomllib
+from pathlib import Path
+from re import compile as re_compile
+
+# Matches the package name at the start of a PEP 508 dependency string.
+# Handles both hyphenated and underscored names (PEP 503 normalizes these).
+_NAME_RE = re_compile(r"^([A-Za-z0-9]([A-Za-z0-9._-]*[A-Za-z0-9])?)")
+
+
+def _normalize(name: str) -> str:
+    """PEP 503 normalize a package name for comparison.
+
+    Returns:
+        Lowercased, underscore-normalized package name.
+    """
+    return name.lower().replace("-", "_").replace(".", "_")
+
+
+def _parse_dep(dep: str) -> tuple[str, str]:
+    """Return (normalized_name, version_spec) from a PEP 508 string.
+
+    Returns:
+        Tuple of normalized package name and version specifier.
+
+    Raises:
+        ValueError: If the dependency string cannot be parsed.
+    """
+    match = _NAME_RE.match(dep)
+    if not match:
+        msg = f"Cannot parse dependency: {dep}"
+        raise ValueError(msg)
+    name = match.group(1)
+    version_spec = dep[match.end() :].strip()
+    return _normalize(name), version_spec
+
+
+def main(pyproject_path: Path) -> int:
+    """Check extras sync and return exit code (0 = pass, 1 = mismatch).
+
+    Returns:
+        0 if all extras match, 1 if there are mismatches.
+    """
+    with pyproject_path.open("rb") as f:
+        data = tomllib.load(f)
+
+    required: dict[str, str] = {}
+    for dep in data.get("project", {}).get("dependencies", []):
+        name, spec = _parse_dep(dep)
+        required[name] = spec
+
+    mismatches: list[str] = []
+    optional = data.get("project", {}).get("optional-dependencies", {})
+    for group, deps in optional.items():
+        for dep in deps:
+            name, spec = _parse_dep(dep)
+            if name in required and spec != required[name]:
+                mismatches.append(
+                    f"  [{group}] {name}: extra has '{spec}' "
+                    f"but required dep has '{required[name]}'"
+                )
+
+    if mismatches:
+        print("Extra / required dependency version mismatch:")
+        print("\n".join(mismatches))
+        print(
+            "\nUpdate the optional extras in [project.optional-dependencies] "
+            "to match [project.dependencies]."
+        )
+        return 1
+
+    print("All extras are in sync with required dependencies.")
+    return 0
+
+
+if __name__ == "__main__":
+    path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("pyproject.toml")
+    raise SystemExit(main(path))
+
+
+## Links discovered
+- [A-Za-z0-9](https://github.com/langchain-ai/deepagents/blob/main/.github/scripts/[A-Za-z0-9._-]*[A-Za-z0-9])
+
+--- libs/acp/README.md ---
+# Deep Agents ACP integration
+
+This repo contains an [Agent Client Protocol (ACP)](https://agentclientprotocol.com/overview/introduction) connector that allows you to run a Python [DeepAgent](https://docs.langchain.com/oss/python/deepagents/overview) within a text editor that supports ACP such as [Zed](https://zed.dev/).
+
+![Deep Agents ACP Demo](./static/img/deepagentsacp.gif)
+
+It includes an example coding agent that uses Anthropic's Claude models to write code with its built-in filesystem tools and shell, but you can also connect any Deep Agent with additional tools or different agent architectures!
+
+## Getting started
+
+First, make sure you have [Zed](https://zed.dev/) and [`uv`](https://docs.astral.sh/uv/) installed.
+
+Next, clone this repo:
+
+```sh
+git clone git@github.com:langchain-ai/deepagents.git
+```
+
+Then, navigate into the newly created folder and run `uv sync`:
+
+```sh
+cd deepagents/libs/acp
+uv sync
+```
+
+Rename the `.env.example` file to `.env` and add your [Anthropic](https://claude.com/platform/api) API key. You may also optionally set up tracing for your DeepAgent using [LangSmith](https://smith.langchain.com/) by populating the other env vars in the example file:
+
+```ini
+ANTHROPIC_API_KEY=""
+
+# Set up LangSmith tracing for your DeepAgent (optional)
+
+# LANGSMITH_TRACING=true
+# LANGSMITH_API_KEY=""
+# LANGSMITH_PROJECT="deepagents-acp"
+```
+
+Finally, add this to your Zed `settings.json`:
+
+```json
+{
+  "agent_servers": {
+    "DeepAgents": {
+      "type": "custom",
+      "command": "/your/absolute/path/to/deepagents-acp/run_demo_agent.sh"
+    }
+  }
+}
+```
+
+You must also make sure that the `run_demo_agent.sh` entrypoint file is executable - this should be the case by default, but if you see permissions issues, run:
+
+```sh
+chmod +x run_demo_agent.sh
+```
+
+Now, open Zed's Agents Panel (e.g. with `CMD + Shift + ?`). You should see an option to create a new DeepAgent thread:
+
+![](./static/img/newdeepagent.png)
+
+And that's it! You can now use the DeepAgent in Zed to interact with your project.
+
+If you need to upgrade your version of DeepAgents, run:
+
+```sh
+uv upgrade deepagents-acp
+```
+
+## Launch a custom DeepAgent with ACP
+
+```sh
+uv add deepagents-acp
+```
+
+```python
+import asyncio
+
+from acp import run_agent
+from deepagents import create_deep_agent
+from langgraph.checkpoint.memory import MemorySaver
+
+from deepagents_acp.server import AgentServerACP
+
+
+async def get_weather(city: str) -> str:
+    """Get weather for a given city."""
+    return f"It's always sunny in {city}!"
+
+
+async def main() -> None:
+    agent = create_deep_agent(
+        tools=[get_weather],
+        system_prompt="You are a helpful assistant",
+        checkpointer=MemorySaver(),
+    )
+    server = AgentServerACP(agent)
+    await run_agent(server)
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
+### Launch with Toad
+
+```sh
+uv tool install -U batrachian-toad --python 3.14
+
+toad acp "python path/to/your_server.py" .
+# or
+toad acp "uv run python path/to/your_server.py" .
+```
+
+
+## Links discovered
+- [Agent Client Protocol (ACP)](https://agentclientprotocol.com/overview/introduction)
+- [DeepAgent](https://docs.langchain.com/oss/python/deepagents/overview)
+- [Zed](https://zed.dev/)
+- [Deep Agents ACP Demo](https://github.com/langchain-ai/deepagents/blob/main/libs/acp/static/img/deepagentsacp.gif)
+- [`uv`](https://docs.astral.sh/uv/)
+- [Anthropic](https://claude.com/platform/api)
+- [LangSmith](https://smith.langchain.com/)
+
+--- libs/cli/README.md ---
+# 🧠🤖 Deep Agents CLI
+
+[![PyPI - Version](https://img.shields.io/pypi/v/deepagents-cli?label=%20)](https://pypi.org/project/deepagents-cli/#history)
+[![PyPI - License](https://img.shields.io/pypi/l/deepagents-cli)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pepy/dt/deepagents-cli)](https://pypistats.org/packages/deepagents-cli)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/langchain-ai/deepagents/main/libs/cli/images/cli.png" alt="Deep Agents CLI" width="600"/>
+</p>
+
+## Quick Install
+
+```bash
+uv tool install deepagents-cli
+deepagents
+```
+
+## 🤔 What is this?
+
+Using an LLM to call tools in a loop is the simplest form of an agent. This architecture, however, can yield agents that are "shallow" and fail to plan and act over longer, more complex tasks.
+
+Applications like "Deep Research", "Manus", and "Claude Code" have gotten around this limitation by implementing a combination of four things: a **planning tool**, **sub agents**, access to a **file system**, and a **detailed prompt**.
+
+`deepagents` is a Python package that implements these in a general purpose way so that you can easily create a Deep Agent for your application. For a full overview and quickstart of Deep Agents, the best resource is our [docs](https://docs.langchain.com/oss/python/deepagents/overview).
+
+**Acknowledgements: This project was primarily inspired by Claude Code, and initially was largely an attempt to see what made Claude Code general purpose, and make it even more so.**
+
+## 📖 Resources
+
+- **[CLI Documentation](https://docs.langchain.com/oss/python/deepagents/cli/overview)** — Full documentation
+- **[CLI Source](https://github.com/langchain-ai/deepagents/tree/main/libs/cli)** — Full source code
+- **[Deep Agents SDK](https://github.com/langchain-ai/deepagents)** — The underlying agent harness
+- **[Chat LangChain](https://chat.langchain.com)** - Chat interactively with the docs
+
+## 📕 Releases & Versioning
+
+See our [Releases](https://docs.langchain.com/oss/python/release-policy) and [Versioning](https://docs.langchain.com/oss/python/versioning) policies.
+
+## 💁 Contributing
+
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+
+For detailed information on how to contribute, see the [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview).
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/deepagents-cli?label=%20)
+- [![PyPI - License](https://img.shields.io/pypi/l/deepagents-cli)
+- [![PyPI - Downloads](https://img.shields.io/pepy/dt/deepagents-cli)
+- [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)
+- [docs](https://docs.langchain.com/oss/python/deepagents/overview)
+- [CLI Documentation](https://docs.langchain.com/oss/python/deepagents/cli/overview)
+- [CLI Source](https://github.com/langchain-ai/deepagents/tree/main/libs/cli)
+- [Deep Agents SDK](https://github.com/langchain-ai/deepagents)
+- [Chat LangChain](https://chat.langchain.com)
+- [Releases](https://docs.langchain.com/oss/python/release-policy)
+- [Versioning](https://docs.langchain.com/oss/python/versioning)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- libs/deepagents/README.md ---
+# 🧠🤖 Deep Agents
+
+[![PyPI - Version](https://img.shields.io/pypi/v/deepagents?label=%20)](https://pypi.org/project/deepagents/#history)
+[![PyPI - License](https://img.shields.io/pypi/l/deepagents)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pepy/dt/deepagents)](https://pypistats.org/packages/deepagents)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+
+Looking for the JS/TS version? Check out [Deep Agents.js](https://github.com/langchain-ai/deepagentsjs).
+
+To help you ship LangChain apps to production faster, check out [LangSmith](https://smith.langchain.com).
+LangSmith is a unified developer platform for building, testing, and monitoring LLM applications.
+
+## Quick Install
+
+```bash
+pip install deepagents
+# or
+uv add deepagents
+```
+
+## 🤔 What is this?
+
+Using an LLM to call tools in a loop is the simplest form of an agent. This architecture, however, can yield agents that are "shallow" and fail to plan and act over longer, more complex tasks.
+
+Applications like "Deep Research", "Manus", and "Claude Code" have gotten around this limitation by implementing a combination of four things: a **planning tool**, **sub agents**, access to a **file system**, and a **detailed prompt**.
+
+`deepagents` is a Python package that implements these in a general purpose way so that you can easily create a Deep Agent for your application. For a full overview and quickstart of Deep Agents, the best resource is our [docs](https://docs.langchain.com/oss/python/deepagents/overview).
+
+**Acknowledgements: This project was primarily inspired by Claude Code, and initially was largely an attempt to see what made Claude Code general purpose, and make it even more so.**
+
+## 📖 Resources
+
+- **[Documentation](https://docs.langchain.com/oss/python/deepagents)** — Full documentation
+- **[API Reference](https://reference.langchain.com/python/deepagents/)** — Full SDK reference documentation
+- **[Chat LangChain](https://chat.langchain.com)** - Chat interactively with the docs
+
+## 📕 Releases & Versioning
+
+See our [Releases](https://docs.langchain.com/oss/python/release-policy) and [Versioning](https://docs.langchain.com/oss/python/versioning) policies.
+
+## 💁 Contributing
+
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+
+For detailed information on how to contribute, see the [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview).
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/deepagents?label=%20)
+- [![PyPI - License](https://img.shields.io/pypi/l/deepagents)
+- [![PyPI - Downloads](https://img.shields.io/pepy/dt/deepagents)
+- [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)
+- [Deep Agents.js](https://github.com/langchain-ai/deepagentsjs)
+- [LangSmith](https://smith.langchain.com)
+- [docs](https://docs.langchain.com/oss/python/deepagents/overview)
+- [Documentation](https://docs.langchain.com/oss/python/deepagents)
+- [API Reference](https://reference.langchain.com/python/deepagents/)
+- [Chat LangChain](https://chat.langchain.com)
+- [Releases](https://docs.langchain.com/oss/python/release-policy)
+- [Versioning](https://docs.langchain.com/oss/python/versioning)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- libs/harbor/README.md ---
+# Building Deep Agent Harnesses for Terminal Bench 2.0 with Harbor
+
+## Overview
+
+This repository demonstrates how to evaluate and improve your Deep Agent harness using [Harbor](https://harborframework.com/) and [LangSmith](https://www.langchain.com/langsmith/observability).
+
+### What is Harbor?
+
+Harbor is an evaluation framework that simplifies running agents on challenging benchmarks. It provides:
+
+- **Sandbox environments** (Docker, Modal, Daytona, E2B, etc.)
+- **Automatic test execution** and verification
+- **Reward scoring** (0.0 - 1.0 based on test pass rate)
+- **Trajectory logging** in ATIF format [(Agent Trajectory Interchange Format)](https://harborframework.com/docs/trajectory-format)
+
+### What is Terminal Bench 2.0?
+
+[Terminal Bench 2.0](https://github.com/laude-institute/terminal-bench-2) is an evaluation benchmark that measures agent capabilities across several domains, testing how well an agent operates using a computer environment, primarily via the terminal. The benchmark includes 90+ tasks across domains like software engineering, biology, security, gaming, and more.
+
+**Example tasks:**
+
+- `path-tracing`: Reverse-engineer C program from rendered image
+- `chess-best-move`: Find optimal move using chess engine
+- `git-multibranch`: Complex git operations with merge conflicts
+- `sqlite-with-gcov`: Build SQLite with code coverage, analyze reports
+
+### The Deep Agent Architecture
+
+The Deep Agent harness ships with design patterns validated as good defaults across agentic tasks:
+
+1. **Detailed System Prompt**: Expansive, instructional prompts with tool guidance and examples
+2. **Planning Middleware**: The `write_todos` tool helps the agent structure thinking and track progress
+3. **Filesystem**: Provides `ls`, `read_file`, `write_file`, `edit_file`, `glob`, `grep` for context management
+4. **SubAgents**: The `task` tool spawns specialized subagents for isolated work
+
+## Quick Start
+
+```bash
+# Install dependencies
+uv sync
+
+# Configure API keys - Choose one approach:
+
+# Option 1: Use .env file (recommended for local development)
+cp .env.example .env
+# Edit .env and add your keys - they'll be automatically loaded
+
+# Option 2: Export directly (useful for CI/CD or quick testing)
+export ANTHROPIC_API_KEY="sk-ant-..."  # Required: For Claude model
+export LANGSMITH_API_KEY="lsv2_..."    # Required: For tracing
+export LANGSMITH_TRACING_V2=true       # Required: Enable LangSmith tracing
+export LANGSMITH_ENDPOINT="https://api.smith.langchain.com"  # Optional: Default shown
+# export DAYTONA_API_KEY="..."  # Optional: Only if using --env daytona
+
+# Run via Docker (1 task)
+uv run harbor run --agent-import-path deepagents_harbor:DeepAgentsWrapper \
+  --dataset terminal-bench@2.0 -n 1 --jobs-dir jobs/terminal-bench --env docker
+
+# Run via Daytona (10 tasks)
+uv run harbor run --agent-import-path deepagents_harbor:DeepAgentsWrapper \
+  --dataset terminal-bench@2.0 -n 10 --jobs-dir jobs/terminal-bench --env daytona
+```
+
+## LangSmith Integration
+
+LangSmith provides tracing and observability for agent runs. The workflow:
+
+```txt
+Deep Agents → Harbor (evaluate) → LangSmith (analyze) → Improve → Repeat
+```
+
+### Prerequisites
+
+Ensure your LangSmith credentials are configured (see Quick Start for .env or export options):
+
+```bash
+# Required environment variables:
+LANGSMITH_API_KEY=lsv2_...
+LANGSMITH_TRACING_V2=true
+LANGSMITH_ENDPOINT=https://api.smith.langchain.com  # Optional: defaults to this
+```
+
+### Step 1: Create Dataset and Experiment
+
+```bash
+# Create dataset from Harbor tasks
+python scripts/harbor_langsmith.py create-dataset terminal-bench --version 2.0
+
+# Create experiment session (outputs session ID and URL)
+python scripts/harbor_langsmith.py create-experiment terminal-bench --name deepagents-baseline-v1
+```
+
+### Step 2: Run Benchmark with Tracing
+
+```bash
+# Option 1: For experiments (enables side-by-side comparison in LangSmith)
+export LANGSMITH_EXPERIMENT="deepagents-baseline-v1"
+make run-terminal-bench-daytona  # Runs 10 tasks on Daytona
+
+# Option 2: For development (simpler project view in LangSmith)
+export LANGSMITH_PROJECT="deepagents-development"
+make run-terminal-bench-daytona
+
+# Option 3: Run harbor directly (customize -n for number of tasks)
+export LANGSMITH_EXPERIMENT="deepagents-baseline-v1"
+uv run harbor run \
+  --agent-import-path deepagents_harbor:DeepAgentsWrapper \
+  --dataset terminal-bench@2.0 -n 10 --jobs-dir jobs/terminal-bench --env daytona
+```
+
+### Step 3: Add Feedback Scores
+
+After the benchmark completes, push reward scores to LangSmith for filtering and analysis:
+
+```bash
+python scripts/harbor_langsmith.py add-feedback jobs/terminal-bench/2025-12-02__16-25-40 \
+  --project-name deepagents-baseline-v1
+```
+
+This matches trials to traces and adds `harbor_reward` feedback (0.0-1.0) from Harbor's test results.
+
+## Analyzing Results
+
+LangSmith captures every LLM call, tool invocation, and performance metric. Combined with Harbor reward scores (added via Step 3), you can filter runs by performance and identify patterns in successful vs. failed runs.
+
+### Common Patterns & Fixes
+
+After running evaluations, analyze failed runs in LangSmith to identify improvement opportunities:
+
+| Pattern                    | Symptom                                              | Potential Fix                              |
+|----------------------------|------------------------------------------------------|--------------------------------------------|
+| **Poor Planning**          | Agent jumps into coding without reading requirements | Add upfront planning requirement to prompt |
+| **Incorrect Tool Usage**   | Uses `bash cat` instead of `read_file`               | Improve tool descriptions with examples    |
+| **No Incremental Testing** | Writes 200 lines, then tests once                    | Prompt to test after each logical unit     |
+| **Hallucinated Paths**     | Reads files before checking existence                | Add "always `ls` before read" rule         |
+| **Wrong Model**            | Model fails on complex reasoning                     | Use more capable model for hard tasks      |
+
+### Agent-Assisted Analysis
+
+Use LangSmith's Insights Agent or your own agent to analyze trajectory data across runs. Task it with identifying common failure patterns, grouping errors by category, and suggesting prompt or tool improvements.
+
+## Available Environments
+
+Harbor supports multiple sandbox environments. Use the `--env` flag to select:
+
+- `docker` - Local Docker containers (good for testing)
+- `daytona` - Daytona cloud sandboxes (requires DAYTONA_API_KEY)
+- `modal` - Modal cloud compute
+- `runloop` - Runloop sandboxes
+
+Makefile shortcuts are available for common workflows:
+
+- `make run-terminal-bench-docker` - Run 1 task locally with Docker
+- `make run-terminal-bench-daytona` - Run 10 tasks on Daytona
+- `make run-terminal-bench-modal` - Run 4 tasks on Modal
+- `make run-terminal-bench-runloop` - Run 10 tasks on Runloop
+
+## Resources
+
+- [Deep Agents Documentation](https://docs.langchain.com/oss/python/deepagents/overview)
+- [Harbor GitHub](https://github.com/laude-institute/harbor)
+- [LangSmith](https://smith.langchain.com)
+
+
+## Links discovered
+- [Harbor](https://harborframework.com/)
+- [LangSmith](https://www.langchain.com/langsmith/observability)
+- [(Agent Trajectory Interchange Format)](https://harborframework.com/docs/trajectory-format)
+- [Terminal Bench 2.0](https://github.com/laude-institute/terminal-bench-2)
+- [Deep Agents Documentation](https://docs.langchain.com/oss/python/deepagents/overview)
+- [Harbor GitHub](https://github.com/laude-institute/harbor)
+- [LangSmith](https://smith.langchain.com)
+
+--- libs/cli/tests/README.md ---
+# Deep Agents CLI Tests
+
+## API Keys
+
+### Required
+
+- **`ANTHROPIC_API_KEY`** - Required for integration tests that use Anthropic models
+
+### Optional
+
+- **`LANGSMITH_API_KEY`** or **`LANGCHAIN_API_KEY`** - Enables LangSmith tracing for test runs
+
+
+--- libs/deepagents/tests/README.md ---
+# Deep Agents SDK Tests
+
+## API Keys
+
+### Required
+
+- **`ANTHROPIC_API_KEY`** - Required for integration tests using `ChatAnthropic`
+
+### Optional
+
+- **`LANGSMITH_API_KEY`** or **`LANGCHAIN_API_KEY`** - Enables LangSmith tracing for test runs
+
+## Test Utilities
+
+Shared test utilities are in `tests/utils.py`:
+
+- Mock tools (`get_weather`, `get_soccer_scores`, etc.)
+- Middleware classes (`ResearchMiddleware`, `WeatherToolMiddleware`, etc.)
+- Assertion helpers (`assert_all_deepagent_qualities`)
+
+
+--- libs/partners/daytona/README.md ---
+# langchain-daytona
+
+[![PyPI - Version](https://img.shields.io/pypi/v/langchain-daytona?label=%20)](https://pypi.org/project/langchain-daytona/#history)
+[![PyPI - License](https://img.shields.io/pypi/l/langchain-daytona)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-daytona)](https://pypistats.org/packages/langchain-daytona)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+
+Looking for the JS/TS version? Check out [LangChain.js](https://github.com/langchain-ai/langchainjs).
+
+## Quick Install
+
+```bash
+pip install langchain_daytona
+```
+
+```python
+from daytona import Daytona
+
+from langchain_daytona import DaytonaSandbox
+
+sandbox = Daytona().create()
+backend = DaytonaSandbox(sandbox)
+result = backend.execute("echo hello")
+print(result.output)
+```
+
+## 🤔 What is this?
+
+Daytona sandbox integration for Deep Agents.
+
+## 📕 Releases & Versioning
+
+See our [Releases](https://docs.langchain.com/oss/python/release-policy) and [Versioning](https://docs.langchain.com/oss/python/versioning) policies.
+
+## 💁 Contributing
+
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+
+For detailed information on how to contribute, see the [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview).
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/langchain-daytona?label=%20)
+- [![PyPI - License](https://img.shields.io/pypi/l/langchain-daytona)
+- [![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-daytona)
+- [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)
+- [LangChain.js](https://github.com/langchain-ai/langchainjs)
+- [Releases](https://docs.langchain.com/oss/python/release-policy)
+- [Versioning](https://docs.langchain.com/oss/python/versioning)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- libs/partners/modal/README.md ---
+# langchain-modal
+
+[![PyPI - Version](https://img.shields.io/pypi/v/langchain-modal?label=%20)](https://pypi.org/project/langchain-modal/#history)
+[![PyPI - License](https://img.shields.io/pypi/l/langchain-modal)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-modal)](https://pypistats.org/packages/langchain-modal)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+
+Looking for the JS/TS version? Check out [LangChain.js](https://github.com/langchain-ai/langchainjs).
+
+## Quick Install
+
+```bash
+pip install langchain-modal
+```
+
+```python
+import modal
+
+from langchain_modal import ModalSandbox
+
+sandbox = ModalSandbox(modal.Sandbox.create(app=modal.App.lookup("your-app")))
+result = sandbox.execute("echo hello")
+print(result.output)
+```
+
+## 🤔 What is this?
+
+Modal sandbox integration for Deep Agents.
+
+## 📕 Releases & Versioning
+
+See our [Releases](https://docs.langchain.com/oss/python/release-policy) and [Versioning](https://docs.langchain.com/oss/python/versioning) policies.
+
+## 💁 Contributing
+
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+
+For detailed information on how to contribute, see the [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview).
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/langchain-modal?label=%20)
+- [![PyPI - License](https://img.shields.io/pypi/l/langchain-modal)
+- [![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-modal)
+- [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)
+- [LangChain.js](https://github.com/langchain-ai/langchainjs)
+- [Releases](https://docs.langchain.com/oss/python/release-policy)
+- [Versioning](https://docs.langchain.com/oss/python/versioning)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- libs/partners/runloop/README.md ---
+# langchain-runloop
+
+[![PyPI - Version](https://img.shields.io/pypi/v/langchain-runloop?label=%20)](https://pypi.org/project/langchain-runloop/#history)
+[![PyPI - License](https://img.shields.io/pypi/l/langchain-runloop)](https://opensource.org/licenses/MIT)
+[![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-runloop)](https://pypistats.org/packages/langchain-runloop)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)](https://x.com/langchain)
+
+Looking for the JS/TS version? Check out [LangChain.js](https://github.com/langchain-ai/langchainjs).
+
+## Quick Install
+
+```bash
+pip install langchain-runloop
+```
+
+```python
+import os
+
+from runloop_api_client import RunloopSDK
+
+from langchain_runloop import RunloopSandbox
+
+api_key = os.environ["RUNLOOP_API_KEY"]
+client = RunloopSDK(bearer_token=api_key)
+
+devbox = client.devbox.create()
+sandbox = RunloopSandbox(devbox=devbox)
+
+try:
+    result = sandbox.execute("echo hello")
+    print(result.output)
+finally:
+    devbox.shutdown()
+```
+
+## 🤔 What is this?
+
+Runloop sandbox integration for Deep Agents.
+
+## 📕 Releases & Versioning
+
+See our [Releases](https://docs.langchain.com/oss/python/release-policy) and [Versioning](https://docs.langchain.com/oss/python/versioning) policies.
+
+## 💁 Contributing
+
+As an open-source project in a rapidly developing field, we are extremely open to contributions, whether it be in the form of a new feature, improved infrastructure, or better documentation.
+
+For detailed information on how to contribute, see the [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview).
+
+
+## Links discovered
+- [![PyPI - Version](https://img.shields.io/pypi/v/langchain-runloop?label=%20)
+- [![PyPI - License](https://img.shields.io/pypi/l/langchain-runloop)
+- [![PyPI - Downloads](https://img.shields.io/pepy/dt/langchain-runloop)
+- [![Twitter](https://img.shields.io/twitter/url/https/twitter.com/langchain.svg?style=social&label=Follow%20%40LangChain)
+- [LangChain.js](https://github.com/langchain-ai/langchainjs)
+- [Releases](https://docs.langchain.com/oss/python/release-policy)
+- [Versioning](https://docs.langchain.com/oss/python/versioning)
+- [Contributing Guide](https://docs.langchain.com/oss/python/contributing/overview)
+
+--- libs/cli/deepagents_cli/agent.py ---
+"""Agent management and creation for the CLI."""
+
+from __future__ import annotations
+
+import os
+import shutil
+import tempfile
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
+
+from deepagents import create_deep_agent
+from deepagents.backends import CompositeBackend, LocalShellBackend
+from deepagents.backends.filesystem import FilesystemBackend
+from deepagents.middleware import MemoryMiddleware, SkillsMiddleware
+from langgraph.checkpoint.memory import InMemorySaver
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Sequence
+
+    from deepagents.backends.sandbox import SandboxBackendProtocol
+    from deepagents.middleware.subagents import CompiledSubAgent, SubAgent
+    from langchain.agents.middleware import InterruptOnConfig
+    from langchain.agents.middleware.types import AgentState
+    from langchain.messages import ToolCall
+    from langchain.tools import BaseTool
+    from langchain_core.language_models import BaseChatModel
+    from langgraph.checkpoint.base import BaseCheckpointSaver
+    from langgraph.pregel import Pregel
+    from langgraph.runtime import Runtime
+
+from deepagents_cli.config import (
+    COLORS,
+    config,
+    console,
+    get_default_coding_instructions,
+    get_glyphs,
+    settings,
+)
+from deepagents_cli.integrations.sandbox_factory import get_default_working_dir
+from deepagents_cli.local_context import LocalContextMiddleware, _ExecutableBackend
+from deepagents_cli.subagents import list_subagents
+
+DEFAULT_AGENT_NAME = "agent"
+"""The default agent name used when no `-a` flag is provided."""
+
+
+def list_agents() -> None:
+    """List all available agents."""
+    agents_dir = settings.user_deepagents_dir
+
+    if not agents_dir.exists() or not any(agents_dir.iterdir()):
+        console.print("[yellow]No agents found.[/yellow]")
+        console.print(
+            "[dim]Agents will be created in ~/.deepagents/ "
+            "when you first use them.[/dim]",
+            style=COLORS["dim"],
+        )
+        return
+
+    console.print("\n[bold]Available Agents:[/bold]\n", style=COLORS["primary"])
+
+    for agent_path in sorted(agents_dir.iterdir()):
+        if agent_path.is_dir():
+            agent_name = agent_path.name
+            agent_md = agent_path / "AGENTS.md"
+            is_default = agent_name == DEFAULT_AGENT_NAME
+            default_label = " [dim](default)[/dim]" if is_default else ""
+
+            bullet = get_glyphs().bullet
+            if agent_md.exists():
+                console.print(
+                    f"  {bullet} [bold]{agent_name}[/bold]{default_label}",
+                    style=COLORS["primary"],
+                )
+                console.print(f"    {agent_path}", style=COLORS["dim"])
+            else:
+                console.print(
+                    f"  {bullet} [bold]{agent_name}[/bold]{default_label}"
+                    " [dim](incomplete)[/dim]",
+                    style=COLORS["tool"],
+                )
+                console.print(f"    {agent_path}", style=COLORS["dim"])
+
+    console.print()
+
+
+def reset_agent(agent_name: str, source_agent: str | None = None) -> None:
+    """Reset an agent to default or copy from another agent."""
+    agents_dir = settings.user_deepagents_dir
+    agent_dir = agents_dir / agent_name
+
+    if source_agent:
+        source_dir = agents_dir / source_agent
+        source_md = source_dir / "AGENTS.md"
+
+        if not source_md.exists():
+            console.print(
+                f"[bold red]Error:[/bold red] Source agent '{source_agent}' not found "
+                "or has no AGENTS.md"
+            )
+            return
+
+        source_content = source_md.read_text()
+        action_desc = f"contents of agent '{source_agent}'"
+    else:
+        source_content = get_default_coding_instructions()
+        action_desc = "default"
+
+    if agent_dir.exists():
+        shutil.rmtree(agent_dir)
+        console.print(
+            f"Removed existing agent directory: {agent_dir}", style=COLORS["tool"]
+        )
+
+    agent_dir.mkdir(parents=True, exist_ok=True)
+    agent_md = agent_dir / "AGENTS.md"
+    agent_md.write_text(source_content)
+
+    console.print(
+        f"{get_glyphs().checkmark} Agent '{agent_name}' reset to {action_desc}",
+        style=COLORS["primary"],
+    )
+    console.print(f"Location: {agent_dir}\n", style=COLORS["dim"])
+
+
+def get_system_prompt(assistant_id: str, sandbox_type: str | None = None) -> str:
+    """Get the base system prompt for the agent.
+
+    Loads the immutable system prompt from `system_prompt.md` and
+    interpolates dynamic sections (model identity, working directory,
+    skills path).
+
+    Args:
+        assistant_id: The agent identifier for path references
+        sandbox_type: Type of sandbox provider
+            (`'daytona'`, `'langsmith'`, `'modal'`, `'runloop'`).
+
+            If `None`, agent is operating in local mode.
+
+    Returns:
+        The system prompt string
+
+    Example:
+        ```txt
+        You are running as model {MODEL} (provider: {PROVIDER}).
+
+        Your context window is {CONTEXT_WINDOW} tokens.
+
+        ... {CONDITIONAL SECTIONS} ...
+        ```
+    """
+    template = (Path(__file__).parent / "system_prompt.md").read_text()
+
+    skills_path = f"~/.deepagents/{assistant_id}/skills/"
+
+    # Build model identity section
+    model_identity_section = ""
+    if settings.model_name:
+        model_identity_section = (
+            f"### Model Identity\n\nYou are running as model `{settings.model_name}`"
+        )
+        if settings.model_provider:
+            model_identity_section += f" (provider: {settings.model_provider})"
+        model_identity_section += ".\n"
+        if settings.model_context_limit:
+            model_identity_section += (
+                f"Your context window is {settings.model_context_limit:,} tokens.\n"
+            )
+        model_identity_section += "\n"
+
+    # Build working directory section (local vs sandbox)
+    if sandbox_type:
+        working_dir = get_default_working_dir(sandbox_type)
+        working_dir_section = (
+            f"### Current Working Directory\n\n"
+            f"You are operating in a **remote Linux sandbox** at `{working_dir}`.\n\n"
+            f"All code execution and file operations happen in this sandbox "
+            f"environment.\n\n"
+            f"**Important:**\n"
+            f"- The CLI is running locally on the user's machine, but you execute "
+            f"code remotely\n"
+            f"- Use `{working_dir}` as your working directory for all operations\n\n"
+        )
+    else:
+        cwd = Path.cwd()
+        working_dir_section = (
+            f"### Current Working Directory\n\n"
+            f"The filesystem backend is currently operating in: `{cwd}`\n\n"
+            f"### File System and Paths\n\n"
+            f"**IMPORTANT - Path Handling:**\n"
+            f"- All file paths must be absolute paths (e.g., `{cwd}/file.txt`)\n"
+            f"- Use the working directory to construct absolute paths\n"
+            f"- Example: To create a file in your working directory, "
+            f"use `{cwd}/research_project/file.md`\n"
+            f"- Never use relative paths - always construct full absolute paths\n\n"
+        )
+
+    return (
+        template.replace("{model_identity_section}", model_identity_section)
+        .replace("{working_dir_section}", working_dir_section)
+        .replace("{skills_path}", skills_path)
+    )
+
+
+def _format_write_file_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format write_file tool call for approval prompt.
+
+    Returns:
+        Formatted description string for the write_file tool call.
+    """
+    args = tool_call["args"]
+    file_path = args.get("file_path", "unknown")
+    content = args.get("content", "")
+
+    action = "Overwrite" if Path(file_path).exists() else "Create"
+    line_count = len(content.splitlines())
+
+    return f"File: {file_path}\nAction: {action} file\nLines: {line_count}"
+
+
+def _format_edit_file_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format edit_file tool call for approval prompt.
+
+    Returns:
+        Formatted description string for the edit_file tool call.
+    """
+    args = tool_call["args"]
+    file_path = args.get("file_path", "unknown")
+    replace_all = bool(args.get("replace_all", False))
+
+    scope = "all occurrences" if replace_all else "single occurrence"
+    return f"File: {file_path}\nAction: Replace text ({scope})"
+
+
+def _format_web_search_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format web_search tool call for approval prompt.
+
+    Returns:
+        Formatted description string for the web_search tool call.
+    """
+    args = tool_call["args"]
+    query = args.get("query", "unknown")
+    max_results = args.get("max_results", 5)
+
+    return (
+        f"Query: {query}\nMax results: {max_results}\n\n"
+        f"{get_glyphs().warning}  This will use Tavily API credits"
+    )
+
+
+def _format_fetch_url_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format fetch_url tool call for approval prompt.
+
+    Returns:
+        Formatted description string for the fetch_url tool call.
+    """
+    args = tool_call["args"]
+    url = args.get("url", "unknown")
+    timeout = args.get("timeout", 30)
+
+    return (
+        f"URL: {url}\nTimeout: {timeout}s\n\n"
+        f"{get_glyphs().warning}  Will fetch and convert web content to markdown"
+    )
+
+
+def _format_task_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format task (subagent) tool call for approval prompt.
+
+    The task tool signature is: task(description: str, subagent_type: str)
+    The description contains all instructions that will be sent to the subagent.
+
+    Returns:
+        Formatted description string for the task tool call.
+    """
+    args = tool_call["args"]
+    description = args.get("description", "unknown")
+    subagent_type = args.get("subagent_type", "unknown")
+
+    # Truncate description if too long for display
+    description_preview = description
+    if len(description) > 500:  # noqa: PLR2004  # Subagent description length threshold
+        description_preview = description[:500] + "..."
+
+    glyphs = get_glyphs()
+    separator = glyphs.box_horizontal * 40
+    warning_msg = "Subagent will have access to file operations and shell commands"
+    return (
+        f"Subagent Type: {subagent_type}\n\n"
+        f"Task Instructions:\n"
+        f"{separator}\n"
+        f"{description_preview}\n"
+        f"{separator}\n\n"
+        f"{glyphs.warning}  {warning_msg}"
+    )
+
+
+def _format_execute_description(
+    tool_call: ToolCall, _state: AgentState[Any], _runtime: Runtime[Any]
+) -> str:
+    """Format execute tool call for approval prompt.
+
+    Returns:
+        Formatted description string for the execute tool call.
+    """
+    args = tool_call["args"]
+    command = args.get("command", "N/A")
+    return f"Execute Command: {command}\nWorking Directory: {Path.cwd()}"
+
+
+def _add_interrupt_on() -> dict[str, InterruptOnConfig]:
+    """Configure human-in-the-loop interrupt settings for all gated tools.
+
+    Every tool that can have side effects or access external resources
+    (shell execution, file writes/edits, web search, URL fetch, task
+    delegation) is gated behind an approval prompt unless auto-approve
+    is enabled.
+
+    Returns:
+        Dictionary mapping tool names to their interrupt configuration.
+    """
+    execute_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_execute_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    write_file_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_write_file_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    edit_file_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_edit_file_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    web_search_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_web_search_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    fetch_url_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_fetch_url_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    task_interrupt_config: InterruptOnConfig = {
+        "allowed_decisions": ["approve", "reject"],
+        "description": _format_task_description,  # type: ignore[typeddict-item]  # Callable description narrower than TypedDict expects
+    }
+
+    return {
+        "execute": execute_interrupt_config,
+        "write_file": write_file_interrupt_config,
+        "edit_file": edit_file_interrupt_config,
+        "web_search": web_search_interrupt_config,
+        "fetch_url": fetch_url_interrupt_config,
+        "task": task_interrupt_config,
+    }
+
+
+def create_cli_agent(
+    model: str | BaseChatModel,
+    assistant_id: str,
+    *,
+    tools: Sequence[BaseTool | Callable | dict[str, Any]] | None = None,
+    sandbox: SandboxBackendProtocol | None = None,
+    sandbox_type: str | None = None,
+    system_prompt: str | None = None,
+    auto_approve: bool = False,
+    enable_memory: bool = True,
+    enable_skills: bool = True,
+    enable_shell: bool = True,
+    checkpointer: BaseCheckpointSaver | None = None,
+) -> tuple[Pregel, CompositeBackend]:
+    """Create a CLI-configured agent with flexible options.
+
+    This is the main entry point for creating a deepagents CLI agent, usable
+    both internally and from external code (e.g., benchmarking frameworks).
+
+    Args:
+        model: LLM model to use (e.g., `'anthropic:claude-sonnet-4-5-20250929'`)
+        assistant_id: Agent identifier for memory/state storage
+        tools: Additional tools to provide to agent
+        sandbox: Optional sandbox backend for remote execution
+            (e.g., `ModalBackend`).
+
+            If `None`, uses local filesystem + shell.
+        sandbox_type: Type of sandbox provider
+            (`'daytona'`, `'langsmith'`, `'modal'`, `'runloop'`).
+            Used for system prompt generation.
+        system_prompt: Override the default system prompt.
+
+            If `None`, generates one based on `sandbox_type` and `assistant_id`.
+        auto_approve: If `True`, no tools trigger human-in-the-loop
+            interrupts — all calls (shell execution, file writes/edits,
+            web search, URL fetch) run automatically.
+
+            If `False`, tools pause for user confirmation via the approval menu.
+            See `_add_interrupt_on` for the full list of gated tools.
+        enable_memory: Enable `MemoryMiddleware` for persistent memory
+        enable_skills: Enable `SkillsMiddleware` for custom agent skills
+        enable_shell: Enable shell execution via `LocalShellBackend`
+            (only in local mode). When enabled, the `execute` tool is available.
+        checkpointer: Optional checkpointer for session persistence.
+
+            If `None`, uses `InMemorySaver` (no persistence across
+            CLI invocations).
+
+    Returns:
+        2-tuple of `(agent_graph, backend)`
+
+            - `agent_graph`: Configured LangGraph Pregel instance ready
+                for execution
+            - `composite_backend`: `CompositeBackend` for file operations
+    """
+    tools = tools or []
+
+    # Setup agent directory for persistent memory (if enabled)
+    if enable_memory or enable_skills:
+        agent_dir = settings.ensure_agent_dir(assistant_id)
+        agent_md = agent_dir / "AGENTS.md"
+        if not agent_md.exists():
+            # Create empty file for user customizations
+            # Base instructions are loaded fresh from get_system_prompt()
+            agent_md.touch()
+
+    # Skills directories (if enabled)
+    skills_dir = None
+    project_skills_dir = None
+    if enable_skills:
+        skills_dir = settings.ensure_user_skills_dir(assistant_id)
+        project_skills_dir = settings.get_project_skills_dir()
+
+    # Load custom subagents from filesystem
+    custom_subagents: list[SubAgent | CompiledSubAgent] = []
+    user_agents_dir = settings.get_user_agents_dir(assistant_id)
+    project_agents_dir = settings.get_project_agents_dir()
+
+    for subagent_meta in list_subagents(
+        user_agents_dir=user_agents_dir,
+        project_agents_dir=project_agents_dir,
+    ):
+        subagent: SubAgent = {
+            "name": subagent_meta["name"],
+            "description": subagent_meta["description"],
+            "system_prompt": subagent_meta["system_prompt"],
+        }
+        if subagent_meta["model"]:
+            subagent["model"] = subagent_meta["model"]
+        custom_subagents.append(subagent)
+
+    # Build middleware stack based on enabled features
+    agent_middleware = []
+
+    # Add memory middleware
+    if enable_memory:
+        memory_sources = [str(settings.get_user_agent_md_path(assistant_id))]
+        memory_sources.extend(str(p) for p in settings.get_project_agent_md_path())
+
+        agent_middleware.append(
+            MemoryMiddleware(
+                backend=FilesystemBackend(),
+                sources=memory_sources,
+            )
+        )
+
+    # Add skills middleware
+    if enable_skills:
+        # Built-in first (lowest precedence), then user, then project (highest)
+        sources = [str(settings.get_built_in_skills_dir())]
+        sources.append(str(skills_dir))
+        if project_skills_dir:
+            sources.append(str(project_skills_dir))
+
+        agent_middleware.append(
+            SkillsMiddleware(
+                backend=FilesystemBackend(),
+                sources=sources,
+            )
+        )
+
+    # CONDITIONAL SETUP: Local vs Remote Sandbox
+    if sandbox is None:
+        # ========== LOCAL MODE ==========
+        if enable_shell:
+            # Create environment for shell commands
+            # Restore user's original LANGSMITH_PROJECT so their code traces separately
+            shell_env = os.environ.copy()
+            if settings.user_langchain_project:
+                shell_env["LANGSMITH_PROJECT"] = settings.user_langchain_project
+
+            # Use LocalShellBackend for filesystem + shell execution.
+            # The SDK's FilesystemMiddleware exposes per-command timeout
+            # on the execute tool natively.
+            backend = LocalShellBackend(
+                root_dir=Path.cwd(),
+                inherit_env=True,
+                env=shell_env,
+            )
+        else:
+            # No shell access - use plain FilesystemBackend
+            backend = FilesystemBackend()
+    else:
+        # ========== REMOTE SANDBOX MODE ==========
+        backend = sandbox  # Remote sandbox (ModalBackend, etc.)
+        # Note: Shell middleware not used in sandbox mode
+        # File operations and execute tool are provided by the sandbox backend
+
+    # Local context middleware (git info, directory tree, etc.)
+    # Uses backend.execute() so it works in both local shell and remote sandbox modes.
+    # Only enabled when the backend supports shell execution.
+    if isinstance(backend, _ExecutableBackend):
+        agent_middleware.append(LocalContextMiddleware(backend=backend))
+
+    # Get or use custom system prompt
+    if system_prompt is None:
+        system_prompt = get_system_prompt(
+            assistant_id=assistant_id, sandbox_type=sandbox_type
+        )
+
+    # Configure interrupt_on based on auto_approve setting
+    interrupt_on: dict[str, bool | InterruptOnConfig] | None = None
+    if auto_approve:  # noqa: SIM108  # if-else more readable for interrupt_on config
+        # No interrupts - all tools run automatically
+        interrupt_on = {}
+    else:
+        # Full HITL for destructive operations
+        interrupt_on = _add_interrupt_on()  # type: ignore[assignment]  # InterruptOnConfig is compatible at runtime
+
+    # Set up composite backend with routing
+    # For local FilesystemBackend, route large tool results to /tmp to avoid polluting
+    # the working directory. For sandbox backends, no special routing is needed.
+    if sandbox is None:
+        # Local mode: Route large results to a unique temp directory
+        large_results_backend = FilesystemBackend(
+            root_dir=tempfile.mkdtemp(prefix="deepagents_large_results_"),
+            virtual_mode=True,
+        )
+        conversation_history_backend = FilesystemBackend(
+            root_dir=tempfile.mkdtemp(prefix="deepagents_conversation_history_"),
+            virtual_mode=True,
+        )
+        composite_backend = CompositeBackend(
+            default=backend,
+            routes={
+                "/large_tool_results/": large_results_backend,
+                "/conversation_history/": conversation_history_backend,
+            },
+        )
+    else:
+        # Sandbox mode: No special routing needed
+        composite_backend = CompositeBackend(
+            default=backend,
+            routes={},
+        )
+
+    # Create the agent
+    # Use provided checkpointer or fallback to InMemorySaver
+    final_checkpointer = checkpointer if checkpointer is not None else InMemorySaver()
+    agent = create_deep_agent(
+        model=model,
+        system_prompt=system_prompt,
+        tools=tools,
+        backend=composite_backend,
+        middleware=agent_middleware,
+        interrupt_on=interrupt_on,
+        checkpointer=final_checkpointer,
+        subagents=custom_subagents or None,
+    ).with_config(config)
+    return agent, composite_backend
+
+
+## Links discovered
+- [dim](https://github.com/langchain-ai/deepagents/blob/main/libs/cli/deepagents_cli/default.md)
+- [dim](https://github.com/langchain-ai/deepagents/blob/main/libs/cli/deepagents_cli/incomplete.md)

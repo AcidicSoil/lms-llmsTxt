@@ -1,0 +1,173 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1771837217803,
+  "projectRoot": "/home/user/projects/temp/lms-llmsTxt",
+  "techStack": {
+    "languages": [
+      {
+        "name": "JavaScript/TypeScript",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "package.json"
+        ]
+      },
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [
+      {
+        "name": "pytest",
+        "version": null,
+        "category": "testing"
+      }
+    ],
+    "packageManager": "pnpm",
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {
+      "code:s": "codefetch -t 5 --include-dir src --exclude-dirs __pycache__ --exclude-files *.pyc -o src.md",
+      "code:d": "codefetch --include-dir docs --exclude-dirs __pycache__ -o docs_codebase.md",
+      "code:art": "node scripts/codefetch-artifacts.mjs",
+      "code:b": "bash scripts/codefetch-artifacts.sh",
+      "code": "pnpm code:s && pnpm code:d && pnpm code:t",
+      "code:t": "codefetch -t 5 --include-dir tests --exclude-dirs __pycache__ -o tests.md"
+    }
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "docs",
+      "scripts",
+      "src",
+      "tests"
+    ],
+    "gitBranches": {
+      "defaultBranch": "main",
+      "branchingStrategy": null
+    }
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "artifacts": {
+      "path": "artifacts",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1771837217793,
+      "keyFiles": [
+        "ai-llms.json",
+        "collect_AGENTS\\.md_rsync.log",
+        "repos.md"
+      ]
+    },
+    "codefetch": {
+      "path": "codefetch",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1771837217793,
+      "keyFiles": [
+        "agentic-repos.md",
+        "docs_codebase.md",
+        "lms-llmstxt.md",
+        "lms-llmstxt_docs.md",
+        "src.md"
+      ]
+    },
+    "docs": {
+      "path": "docs",
+      "purpose": "Documentation",
+      "fileCount": 2,
+      "lastAccessed": 1771837217798,
+      "keyFiles": [
+        "oracle-pack-2026-01-04.md",
+        "publishing.md"
+      ]
+    },
+    "logs": {
+      "path": "logs",
+      "purpose": null,
+      "fileCount": 51,
+      "lastAccessed": 1771837217799,
+      "keyFiles": [
+        "EvolutionAPI-evo-ai.log",
+        "MervinPraison-PraisonAI.log",
+        "Unity-Technologies-Graphics.log",
+        "a2aproject-A2A.log",
+        "agentic-dev-library-crew.log"
+      ]
+    },
+    "oracle-out": {
+      "path": "oracle-out",
+      "purpose": null,
+      "fileCount": 20,
+      "lastAccessed": 1771837217800,
+      "keyFiles": [
+        "01-permissions-validate-output-dir.md",
+        "02-observability-server-logging.md",
+        "03-failure-modes-run-generation.md",
+        "04-feature-flags-appconfig.md",
+        "05-failure-modes-fetch-models.md"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 7,
+      "lastAccessed": 1771837217801,
+      "keyFiles": [
+        "agents.md.sh",
+        "basic-llms-txt.sh",
+        "codefetch-artifacts.mjs",
+        "codefetch-artifacts.sh",
+        "llms-full.sh"
+      ]
+    },
+    "src": {
+      "path": "src",
+      "purpose": "Source code",
+      "fileCount": 0,
+      "lastAccessed": 1771837217801,
+      "keyFiles": []
+    },
+    "tests": {
+      "path": "tests",
+      "purpose": "Test files",
+      "fileCount": 19,
+      "lastAccessed": 1771837217801,
+      "keyFiles": [
+        "smoke_test.py",
+        "test_analyzer.py",
+        "test_analyzer_integration.py",
+        "test_full_builder.py",
+        "test_llmstxt_mcp_artifacts.py"
+      ]
+    },
+    "tests/fixtures": {
+      "path": "tests/fixtures",
+      "purpose": "Test fixtures",
+      "fileCount": 0,
+      "lastAccessed": 1771837217802,
+      "keyFiles": []
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

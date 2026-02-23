@@ -1,0 +1,209 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Factory",
+    "summary": "The agent-native development platform. Works across CLI, Web, Slack/Teams, Linear/Jira and Mobile. Our agent, Droid, is top performing in terminal benchmarks. <p align=\"left\"> <img src=\"docs/images/droid_ascii.gif\" alt=\"Droid logo\" height=\"220\" /> </p> <p align=\"left\"><strong>The agent-native development platform built for shipping software faster.</strong></p>"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "How To Talk To A Droid",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/getting-started/how-to-talk-to-a-droid.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Common Use Cases",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/getting-started/common-use-cases.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/byok/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/droid-exec/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/getting-started/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/web/agent-readiness/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Overview",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/web/getting-started/overview.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quickstart",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/cli/getting-started/quickstart.mdx",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Quickstart",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/docs/web/getting-started/quickstart.mdx",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/examples/droid-code-review-workflow/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/examples/power-user-skills/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/examples/power-user-skills/memory-capture/SKILL.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/examples/power-user-skills/prompt-refiner-claude/SKILL.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/examples/power-user-skills/prompt-refiner-gpt/SKILL.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Parse Changelog",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/.github/scripts/parse-changelog.js",
+          "note": "version history"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Community Builds",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/community-builds.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Github",
+      "links": [
+        {
+          "title": "Get Reddit Token",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/.github/scripts/get-reddit-token.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Post To Reddit",
+          "url": "https://github.com/AcidicSoil/factory/blob/main/.github/scripts/post-to-reddit.js",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}
