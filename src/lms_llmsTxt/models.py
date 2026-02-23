@@ -23,4 +23,7 @@ class GenerationArtifacts:
     llms_full_path: str | None = None
     ctx_path: str | None = None
     json_path: str | None = None
+    graph_json_path: str | None = None
+    force_graph_path: str | None = None
+    graph_nodes_dir: str | None = None
     used_fallback: bool = False

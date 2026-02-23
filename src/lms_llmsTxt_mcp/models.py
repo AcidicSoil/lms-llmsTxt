@@ -2,7 +2,14 @@ from datetime import datetime, timezone
 from typing import Literal, List, Optional
 from pydantic import BaseModel, Field
 
-ArtifactName = Literal["llms.txt", "llms-full.txt", "llms-ctx.txt", "llms.json"]
+ArtifactName = Literal[
+    "llms.txt",
+    "llms-full.txt",
+    "llms-ctx.txt",
+    "llms.json",
+    "repo.graph.json",
+    "repo.force.json",
+]
 RunStatus = Literal["pending", "processing", "completed", "failed"]
 
 def _utc_now() -> datetime:

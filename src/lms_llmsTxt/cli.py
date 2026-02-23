@@ -51,6 +51,41 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Enable DSPy's LM cache (useful for repeated experiments).",
     )
+    parser.add_argument(
+        "--max-context-tokens",
+        type=int,
+        help="Maximum context tokens budget for prompt construction.",
+    )
+    parser.add_argument(
+        "--max-output-tokens",
+        type=int,
+        help="Reserved output token budget.",
+    )
+    parser.add_argument(
+        "--context-headroom",
+        type=float,
+        help="Headroom ratio reserved from context window (e.g. 0.15).",
+    )
+    parser.add_argument(
+        "--generate-graph",
+        action="store_true",
+        help="Generate repository graph artifacts (repo.graph.json, repo.force.json, nodes/*.md).",
+    )
+    parser.add_argument(
+        "--graph-only",
+        action="store_true",
+        help="Skip llms-full generation and only produce llms.txt (+ optional graph artifacts).",
+    )
+    parser.add_argument(
+        "--enable-session-memory",
+        action="store_true",
+        help="Record append-only generation events for LCM-style session memory.",
+    )
+    parser.add_argument(
+        "--verbose-budget",
+        action="store_true",
+        help="Log context budget and retry reductions.",
+    )
     return parser
 
 
@@ -75,6 +110,16 @@ def main(argv: list[str] | None = None) -> int:
         config.link_style = args.link_style
     if args.no_ctx:
         config.enable_ctx = False
+    if args.max_context_tokens is not None:
+        config.max_context_tokens = args.max_context_tokens
+    if args.max_output_tokens is not None:
+        config.max_output_tokens = args.max_output_tokens
+    if args.context_headroom is not None:
+        config.context_headroom_ratio = args.context_headroom
+    if args.generate_graph:
+        config.enable_repo_graph = True
+    if args.enable_session_memory:
+        config.enable_session_memory = True
 
     try:
         artifacts = run_generation(
@@ -82,6 +127,10 @@ def main(argv: list[str] | None = None) -> int:
             config=config,
             stamp=bool(args.stamp),
             cache_lm=bool(args.cache_lm),
+            generate_graph=bool(args.generate_graph),
+            graph_only=bool(args.graph_only),
+            verbose_budget=bool(args.verbose_budget),
+            enable_session_memory=bool(args.enable_session_memory),
         )
     except Exception as exc:
         parser.error(str(exc))
@@ -99,6 +148,12 @@ def main(argv: list[str] | None = None) -> int:
         summary += f"\n  - {artifacts.ctx_path}"
     if artifacts.json_path:
         summary += f"\n  - {artifacts.json_path}"
+    if artifacts.graph_json_path:
+        summary += f"\n  - {artifacts.graph_json_path}"
+    if artifacts.force_graph_path:
+        summary += f"\n  - {artifacts.force_graph_path}"
+    if artifacts.graph_nodes_dir:
+        summary += f"\n  - {artifacts.graph_nodes_dir}"
     if artifacts.used_fallback:
         summary += "\n(note) LM call failed; fallback JSON/schema output was used."
 

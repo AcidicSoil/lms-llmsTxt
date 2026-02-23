@@ -1,0 +1,93 @@
+{
+	"meta": {
+		"generatedAt": "2026-02-23T09:57:08.150Z",
+		"tasksAnalyzed": 10,
+		"totalTasks": 10,
+		"analysisCount": 10,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": true
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Foundation: Core Models and Reasoning Primitives",
+			"complexityScore": 4,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the foundation task into subtasks for 1) reasoning sanitization with regex, 2) context budgeting using tiktoken, 3) retry policy definitions, and 4) graph model schemas using Pydantic v2.",
+			"reasoning": "This is a foundational task focused on defining data structures and basic utility functions. While it touches multiple domains (sanitization, token counting, schemas), the technical complexity is relatively low as it relies on well-established libraries like Pydantic and tiktoken."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Deterministic Context Compaction Ladder",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Generate subtasks for each stage of the compaction ladder: tree pruning, README truncation, file filtering, and final deterministic blob truncation, including integration with the ContextBudget.",
+			"reasoning": "Implementing a multi-stage compaction engine requires careful algorithmic design to ensure determinism and idempotency. Accurately managing token limits across complex file trees without losing critical context adds moderate complexity."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Repository Digest Engine (Map/Reduce)",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Create subtasks for the Map/Reduce digest engine, separating the chunking mechanism, the DSPy Map predictor for semantic extraction, the Reduce logic for merging capsules, and integration testing.",
+			"reasoning": "This is highly complex. Implementing a Map/Reduce pattern with LLMs via DSPy involves intricate prompt engineering, handling chunking logic, managing multiple API calls, and reliably merging complex semantic data without context stuffing."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Production-Safe DSPy Analyzer Enhancement",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Divide the analyzer enhancement into subtasks for updating the DSPy signature to use RepoDigest, implementing the 'safe mode' prompt constraints, and swapping ChainOfThought for Predict.",
+			"reasoning": "Modifying existing DSPy signatures and swapping modules is straightforward. The primary challenge lies in prompt tuning for 'safe mode' to ensure the model strictly adheres to output constraints without reasoning contamination."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Orchestration Pipeline with Progressive Retries",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Generate subtasks for the orchestration pipeline, focusing on the main execution loop, the progressive retry logic with budget reduction, the fallback mechanism, and end-to-end error handling.",
+			"reasoning": "Orchestrating the pipeline with stateful retries, dynamic budget reduction, and error handling across different API providers requires robust control flow. Integration testing for context-limit errors adds to the effort."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Grounded Repository Knowledge Graph Builder",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down the graph builder task into subtasks for semantic node extraction, evidence provenance mapping, Map of Content (MOC) generation, and artifact serialization.",
+			"reasoning": "Generating structured graphs from summaries is challenging, but the main complexity here is maintaining accurate provenance (evidence mapping) from chunked capsules to the final graph nodes, ensuring line numbers and file paths remain accurate."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "MCP Graph Resource Exposure",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Create subtasks for exposing graph artifacts via MCP, including URI routing, implementing chunked file reading for large graphs, and local artifact discovery.",
+			"reasoning": "Standard MCP resource implementation is well-documented. The slight increase in complexity comes from implementing chunked reading to safely handle large JSON payloads without hitting MCP protocol limits."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Hypergraph UI Integration for Repo Graphs",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Divide the UI integration into subtasks for updating the Next.js API routes, modifying the graph generator to ingest local JSON, and updating the frontend components to display evidence links.",
+			"reasoning": "This is a full-stack task requiring changes to Next.js API routes, state management for the new 'load-repo-graph' mode, and UI component updates. It requires context switching between backend logic and frontend React components."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Optional: LCM-Style Session Memory Store",
+			"complexityScore": 6,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Generate subtasks for the session memory store, separating the append-only storage implementation, the event logging mechanism, and the budget-aware context pruning logic.",
+			"reasoning": "Implementing a custom memory management system requires careful design. The complexity lies in the `build_active_context` function, which must intelligently prune old events while retaining critical summaries to strictly adhere to the context budget."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "CLI Integration and Final Validation",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down the CLI integration into subtasks for adding new CLI flags, implementing verbose logging for the compaction/retry pipeline, and conducting the final E2E validation on a large repository.",
+			"reasoning": "Wiring CLI flags and adding logging is low complexity. However, conducting a comprehensive end-to-end test on a large public repository like Flask will likely uncover edge cases, requiring debugging and fine-tuning of the entire pipeline."
+		}
+	]
+}

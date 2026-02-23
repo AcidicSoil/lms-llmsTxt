@@ -53,6 +53,35 @@ class AppConfig:
     enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
     lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
     lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))
+    max_context_tokens: int = field(
+        default_factory=lambda: int(os.getenv("MAX_CONTEXT_TOKENS", "32768"))
+    )
+    max_output_tokens: int = field(
+        default_factory=lambda: int(os.getenv("MAX_OUTPUT_TOKENS", "4096"))
+    )
+    context_headroom_ratio: float = field(
+        default_factory=lambda: float(os.getenv("CONTEXT_HEADROOM_RATIO", "0.15"))
+    )
+    max_file_tree_lines: int = field(
+        default_factory=lambda: int(os.getenv("MAX_FILE_TREE_LINES", "1200"))
+    )
+    max_readme_chars: int = field(
+        default_factory=lambda: int(os.getenv("MAX_README_CHARS", "24000"))
+    )
+    max_package_chars: int = field(
+        default_factory=lambda: int(os.getenv("MAX_PACKAGE_CHARS", "18000"))
+    )
+    retry_reduction_steps: tuple[float, ...] = field(
+        default_factory=lambda: tuple(
+            float(part.strip())
+            for part in os.getenv("RETRY_REDUCTION_STEPS", "0.70,0.50").split(",")
+            if part.strip()
+        )
+    )
+    enable_repo_graph: bool = field(default_factory=lambda: _env_flag("ENABLE_REPO_GRAPH", False))
+    enable_session_memory: bool = field(
+        default_factory=lambda: _env_flag("ENABLE_SESSION_MEMORY", False)
+    )
 
     def ensure_output_root(self, owner: str, repo: str) -> Path:
         """Return ``<output_root>/<owner>/<repo>`` and create it if missing."""

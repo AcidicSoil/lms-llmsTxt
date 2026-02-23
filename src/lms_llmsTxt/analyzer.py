@@ -15,10 +15,12 @@ except ImportError:
 
 from .signatures import (
     AnalyzeCodeStructure,
+    AnalyzeRepositoryFromDigest,
     AnalyzeRepository,
     GenerateLLMsTxt,
     GenerateUsageExamples,
 )
+from .repo_digest import RepoDigest
 
 logger = logging.getLogger(__name__)
 
@@ -261,32 +263,59 @@ def render_llms_markdown(
 class RepositoryAnalyzer(dspy.Module):
     """DSPy module that synthesizes an llms.txt summary for a GitHub repository."""
 
-    def __init__(self) -> None:
+    def __init__(self, production_mode: bool = True) -> None:
         super().__init__()
-        self.analyze_repo = dspy.ChainOfThought(AnalyzeRepository)
-        self.analyze_structure = dspy.ChainOfThought(AnalyzeCodeStructure)
-        self.generate_examples = dspy.ChainOfThought(GenerateUsageExamples)
-        self.generate_llms_txt = dspy.ChainOfThought(GenerateLLMsTxt)
+        self.production_mode = production_mode
+        predictor = getattr(dspy, "Predict", dspy.ChainOfThought) if production_mode else dspy.ChainOfThought
+        self.analyze_repo = predictor(AnalyzeRepository)
+        self.analyze_repo_digest = predictor(AnalyzeRepositoryFromDigest)
+        self.analyze_structure = predictor(AnalyzeCodeStructure)
+        self.generate_examples = predictor(GenerateUsageExamples)
+        self.generate_llms_txt = predictor(GenerateLLMsTxt)
 
     def forward(
         self,
-        repo_url: str,
-        file_tree: str,
-        readme_content: str,
-        package_files: str,
+        repo_url: str | None = None,
+        file_tree: str = "",
+        readme_content: str = "",
+        package_files: str = "",
         default_branch: str | None = None,
         is_private: bool = False,
         github_token: str | None = None,
         link_style: str = "blob",
+        repo_digest: RepoDigest | None = None,
     ):
-        repo_analysis = self.analyze_repo(
-            repo_url=repo_url,
-            file_tree=file_tree,
-            readme_content=readme_content,
-        )
-        structure_analysis = self.analyze_structure(
-            file_tree=file_tree, package_files=package_files
-        )
+        effective_repo_url = repo_url or "https://github.com/unknown/repo"
+        if repo_digest is not None:
+            digest_summary = (
+                f"Architecture: {repo_digest.architecture_summary}\n"
+                f"Primary language: {repo_digest.primary_language}\n"
+                f"Entry points: {', '.join(repo_digest.entry_points[:10])}\n"
+                f"Dependencies: {', '.join(repo_digest.key_dependencies[:20])}\n"
+            )
+            repo_analysis = self.analyze_repo_digest(
+                digest_summary=digest_summary,
+                repo_url=effective_repo_url,
+            )
+            structure_analysis = dspy.Prediction(
+                important_directories=[s.get("name", "") for s in repo_digest.subsystems[:8]],
+                entry_points=repo_digest.entry_points[:10],
+                development_info=repo_digest.architecture_summary,
+            )
+            file_tree = file_tree or "\n".join(
+                path
+                for sub in repo_digest.subsystems
+                for path in sub.get("paths", [])[:6]
+            )
+        else:
+            repo_analysis = self.analyze_repo(
+                repo_url=effective_repo_url,
+                file_tree=file_tree,
+                readme_content=readme_content,
+            )
+            structure_analysis = self.analyze_structure(
+                file_tree=file_tree, package_files=package_files
+            )
 
         self.generate_examples(
             repo_info=(
@@ -297,13 +326,13 @@ class RepositoryAnalyzer(dspy.Module):
         )
 
         try:
-            _, repo = owner_repo_from_url(repo_url)
+            _, repo = owner_repo_from_url(effective_repo_url)
             project_name = repo.replace("-", " ").replace("_", " ").title()
         except Exception:
             project_name = "Project"
 
         buckets = build_dynamic_buckets(
-            repo_url,
+            effective_repo_url,
             file_tree,
             default_ref=default_branch,
             validate_urls=True,

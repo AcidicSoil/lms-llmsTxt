@@ -13,6 +13,9 @@ except ImportError:
         class ChainOfThought:
             def __init__(self, signature): pass
             def __call__(self, **kwargs): return MockDSPy.Prediction()
+        class Predict:
+            def __init__(self, signature): pass
+            def __call__(self, **kwargs): return MockDSPy.Prediction()
         class Prediction:
             def __init__(self, **kwargs):
                 for k, v in kwargs.items():
@@ -97,3 +100,14 @@ class GenerateLLMsTxt(dspy.Signature):
     llms_txt_content: str = dspy.OutputField(
         desc="Complete llms.txt content following the standard format"
     )
+
+
+class AnalyzeRepositoryFromDigest(dspy.Signature):
+    """Generate project summary from a reduced repository digest."""
+
+    digest_summary: str = dspy.InputField(desc="Compact digest of repository structure")
+    repo_url: str = dspy.InputField(desc="GitHub repository URL")
+
+    project_purpose: str = dspy.OutputField(desc="Purpose summary in 1-3 sentences")
+    key_concepts: List[str] = dspy.OutputField(desc="Key concepts as list")
+    architecture_overview: str = dspy.OutputField(desc="Architecture overview paragraph")

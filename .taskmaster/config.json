@@ -1,22 +1,25 @@
 {
   "models": {
     "main": {
-      "provider": "gemini-cli",
-      "modelId": "gemini-3-flash-preview",
-      "maxTokens": 1048576,
-      "temperature": 0.2
+      "provider": "openai-compatible",
+      "modelId": "claude-opus-4-6-thinking",
+      "maxTokens": 65536,
+      "temperature": 0.2,
+      "baseURL": "http://127.0.0.1:8317/v1"
     },
     "research": {
-      "provider": "gemini-cli",
-      "modelId": "gemini-3-flash-preview",
-      "maxTokens": 1048576,
-      "temperature": 0.1
+      "provider": "openai-compatible",
+      "modelId": "gemini-3-flash",
+      "maxTokens": 65536,
+      "temperature": 0.1,
+      "baseURL": "http://127.0.0.1:8317/v1"
     },
     "fallback": {
-      "provider": "gemini-cli",
-      "modelId": "gemini-3-flash-preview",
+      "provider": "openai-compatible",
+      "modelId": "gemini-3.1-pro-high",
       "maxTokens": 1048576,
-      "temperature": 0.2
+      "temperature": 0.2,
+      "baseURL": "http://127.0.0.1:8317/v1"
     }
   },
   "global": {
