@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import JSZip from "jszip";
 import TopicInput from "@/components/TopicInput";
 import GraphView from "@/components/GraphView";
@@ -58,18 +59,36 @@ interface AppError {
 }
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const autoLoadHandledRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [graph, setGraph] = useState<SkillGraph | null>(null);
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [submittedTopic, setSubmittedTopic] = useState<string>("");
+  const [showLoadPanel, setShowLoadPanel] = useState(false);
+  const [showRepoPanel, setShowRepoPanel] = useState(false);
+  const [graphPath, setGraphPath] = useState(
+    "../artifacts/pallets/flask/graph/repo.graph.json"
+  );
+  const [repoUrlInput, setRepoUrlInput] = useState(
+    "https://github.com/pallets/flask"
+  );
+  const [artifactPathHint, setArtifactPathHint] = useState<string | null>(null);
 
   const selectedNode: GraphNode | null =
     graph?.nodes.find((n) => n.id === selectedNodeId) ?? null;
 
   const graphData = graph ? buildForceGraphData(graph) : null;
   const hasResults = isLoading || !!graphData || !!error;
+
+  const focusMocNode = useCallback((nextGraph: SkillGraph) => {
+    const indexNode = nextGraph.nodes.find((n) => n.type === "moc");
+    if (indexNode) {
+      setSelectedNodeId(indexNode.id);
+    }
+  }, []);
 
   async function handleSubmit(topic: string) {
     setSubmittedTopic(topic);
@@ -78,6 +97,8 @@ export default function Home() {
     setGraph(null);
     setFiles([]);
     setSelectedNodeId(null);
+    setArtifactPathHint(null);
+    setArtifactPathHint(null);
 
     try {
       const res = await fetch("/api/generate", {
@@ -108,11 +129,7 @@ export default function Home() {
 
       setGraph(data.graph);
       setFiles(data.files);
-
-      const indexNode = data.graph.nodes.find((n) => n.type === "moc");
-      if (indexNode) {
-        setSelectedNodeId(indexNode.id);
-      }
+      focusMocNode(data.graph);
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : "Something went wrong",
@@ -121,6 +138,106 @@ export default function Home() {
       setIsLoading(false);
     }
   }
+
+  const handleLoadGraph = useCallback(async (pathOverride?: string) => {
+    const trimmedPath = (pathOverride ?? graphPath).trim();
+    if (!trimmedPath) {
+      setError({ message: "Graph path is required" });
+      return;
+    }
+
+    setSubmittedTopic(trimmedPath);
+    setIsLoading(true);
+    setError(null);
+    setGraph(null);
+    setFiles([]);
+    setSelectedNodeId(null);
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "load-repo-graph", graphPath: trimmedPath }),
+      });
+
+      const data: GenerateResponse & { error?: string } = await res.json();
+
+      if (!res.ok || data.error) {
+      setError({ message: data.error ?? "Failed to load graph" });
+      return;
+      }
+
+      setGraph(data.graph);
+      setFiles(data.files);
+      setArtifactPathHint(trimmedPath);
+      focusMocNode(data.graph);
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [graphPath, focusMocNode]);
+
+  const handleGenerateRepoGraph = useCallback(async (repoUrlOverride?: string) => {
+    const repoUrl = (repoUrlOverride ?? repoUrlInput).trim();
+    if (!repoUrl) {
+      setError({ message: "Repository URL is required" });
+      return;
+    }
+
+    setSubmittedTopic(repoUrl);
+    setIsLoading(true);
+    setError(null);
+    setGraph(null);
+    setFiles([]);
+    setSelectedNodeId(null);
+    setArtifactPathHint(null);
+
+    try {
+      const res = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "generate-repo-graph", repoUrl }),
+      });
+
+      const data: GenerateResponse & { error?: string } = await res.json();
+      if (!res.ok || data.error) {
+        setError({ message: data.error ?? "Failed to generate repo graph" });
+        return;
+      }
+
+      setGraph(data.graph);
+      setFiles(data.files);
+      setArtifactPathHint(data.artifactPath ?? null);
+      if (data.artifactPath) {
+        setGraphPath(data.artifactPath);
+      }
+      focusMocNode(data.graph);
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : "Something went wrong",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [repoUrlInput, focusMocNode]);
+
+  useEffect(() => {
+    const mode = searchParams.get("mode");
+    const graphPathParam = searchParams.get("graphPath");
+    const autoLoad = searchParams.get("autoLoad") === "1";
+    if (mode !== "load-repo-graph" || !graphPathParam) {
+      return;
+    }
+    setShowLoadPanel(true);
+    setGraphPath(graphPathParam);
+    if (autoLoad && !autoLoadHandledRef.current) {
+      autoLoadHandledRef.current = true;
+      void handleLoadGraph(graphPathParam);
+    }
+  }, [searchParams, handleLoadGraph]);
 
   async function handleDownload() {
     if (!graph || files.length === 0) return;
@@ -229,6 +346,82 @@ export default function Home() {
               variant="hero"
             />
 
+            <div className="mt-6 rounded-xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-zinc-500">
+                    Generate repo graph
+                  </p>
+                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400">
+                    Run the local lms_llmsTxt pipeline and load the generated repo graph
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowRepoPanel((prev) => !prev)}
+                  className="rounded-full border border-zinc-200 px-3 py-1 text-[10px] font-semibold text-zinc-500 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white"
+                >
+                  {showRepoPanel ? "Hide" : "Show"}
+                </button>
+              </div>
+              {showRepoPanel && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={repoUrlInput}
+                    onChange={(e) => setRepoUrlInput(e.target.value)}
+                    placeholder="https://github.com/<owner>/<repo>"
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+                    disabled={isLoading}
+                  />
+                  <button
+                    onClick={() => void handleGenerateRepoGraph()}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Generate repo graph
+                  </button>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-6 rounded-xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[11px] font-semibold text-zinc-500">
+                    Load repo graph
+                  </p>
+                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400">
+                    Use an existing repo.graph.json from artifacts
+                  </p>
+                </div>
+                <button
+                  onClick={() => setShowLoadPanel((prev) => !prev)}
+                  className="rounded-full border border-zinc-200 px-3 py-1 text-[10px] font-semibold text-zinc-500 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white"
+                >
+                  {showLoadPanel ? "Hide" : "Show"}
+                </button>
+              </div>
+              {showLoadPanel && (
+                <div className="mt-3 flex flex-col gap-2">
+                  <input
+                    type="text"
+                    value={graphPath}
+                    onChange={(e) => setGraphPath(e.target.value)}
+                    placeholder="../artifacts/<owner>/<repo>/graph/repo.graph.json"
+                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+                    disabled={isLoading}
+                  />
+                  <button
+                    onClick={() => void handleLoadGraph()}
+                    disabled={isLoading}
+                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    Load graph
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* Example chips */}
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {EXAMPLE_TOPICS.map((t) => (
@@ -264,7 +457,8 @@ export default function Home() {
             setFiles([]);
             setError(null);
             setSelectedNodeId(null);
-            setSubmittedTopic(""); 
+            setSubmittedTopic("");
+            setArtifactPathHint(null);
           }}
           className="flex flex-shrink-0 items-center gap-2 transition-opacity hover:opacity-60"
         >
@@ -288,6 +482,40 @@ export default function Home() {
             initialValue={submittedTopic}
           />
         </div>
+        <button
+          onClick={() => setShowRepoPanel((prev) => !prev)}
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+        >
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4h16v8H4zM12 12v8m0 0l-3-3m3 3l3-3" />
+          </svg>
+          Repo graph
+        </button>
+        <button
+          onClick={() => setShowLoadPanel((prev) => !prev)}
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+        >
+          <svg
+            className="h-3.5 w-3.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 4v8m0 0l-3.5-3.5M12 12l3.5-3.5M4 14v2a2 2 0 002 2h12a2 2 0 002-2v-2"
+            />
+          </svg>
+          Load graph
+        </button>
         {files.length > 0 && (
           <button
             onClick={handleDownload}
@@ -323,6 +551,55 @@ export default function Home() {
           Get API Key
         </a>
       </header>
+
+      {showRepoPanel && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-5 py-3">
+          <input
+            type="text"
+            value={repoUrlInput}
+            onChange={(e) => setRepoUrlInput(e.target.value)}
+            placeholder="https://github.com/<owner>/<repo>"
+            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+            disabled={isLoading}
+          />
+          <button
+            onClick={() => void handleGenerateRepoGraph()}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Generate repo graph
+          </button>
+        </div>
+      )}
+
+      {showLoadPanel && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-5 py-3">
+          <input
+            type="text"
+            value={graphPath}
+            onChange={(e) => setGraphPath(e.target.value)}
+            placeholder="../artifacts/<owner>/<repo>/graph/repo.graph.json"
+            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+            disabled={isLoading}
+          />
+          <button
+            onClick={() => void handleLoadGraph()}
+            disabled={isLoading}
+            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Load repo graph
+          </button>
+        </div>
+      )}
+
+      {artifactPathHint && (
+        <div className="border-b border-zinc-200 bg-zinc-50 px-5 py-2 text-xs text-zinc-600">
+          Artifact path:{" "}
+          <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-zinc-700">
+            {artifactPathHint}
+          </code>
+        </div>
+      )}
 
       {/* Error bar */}
       {error && !error.isPlanLimit && (

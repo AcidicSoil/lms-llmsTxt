@@ -86,6 +86,17 @@ lmstxt https://github.com/owner/repo \
 
 The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
 
+To print a HyperGraph viewer handoff URL after graph generation:
+
+```bash
+lmstxt https://github.com/owner/repo \
+  --generate-graph \
+  --graph-only \
+  --ui
+```
+
+This prints a URL like `http://localhost:3000/?mode=load-repo-graph&graphPath=...&autoLoad=1`.
+
 ## Private GitHub repositories
 
 To run against a private repository you own, the GitHub API calls must be authenticated. The CLI reads a token from `GITHUB_ACCESS_TOKEN` or `GH_TOKEN` and sends it as a `Bearer` token.
@@ -139,6 +150,29 @@ If you run the MCP server, the same env vars must be present in the process envi
 
 > [!IMPORTANT]
 > The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
+
+## Graph visualizer (HyperGraph)
+
+Use the built-in HyperGraph UI to inspect and generate `repo.graph.json` artifacts.
+
+```bash
+npm --prefix hypergraph install
+npm run ui:dev
+```
+
+Open <http://localhost:3000>. You now have three flows:
+
+- **Topic graph**: existing HyperGraph topic generation (Hyperbrowser + OpenAI).
+- **Generate repo graph**: run the local `lms_llmsTxt` pipeline from the UI using a GitHub repo URL.
+- **Load repo graph**: inspect an existing artifact path.
+
+For manual loading, use a path like:
+
+```
+../artifacts/<owner>/<repo>/graph/repo.graph.json
+```
+
+The CLI `--ui` flag prints a ready-to-open URL that pre-fills this path and auto-loads the graph.
 
 ## Model Context Protocol (MCP) Server
 

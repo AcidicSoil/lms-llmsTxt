@@ -1,20 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchDocs } from "@/lib/serper";
 import { scrapeUrls, ConcurrencyPlanError } from "@/lib/hyperbrowser";
-import { generateGraph, loadRepoGraph } from "@/lib/generator";
+import { generateGraph, generateRepoGraph, loadRepoGraph } from "@/lib/generator";
 
 export const maxDuration = 60;
+export const runtime = "nodejs";
 
 export async function POST(req: NextRequest) {
   try {
-    const { topic, mode, graphPath } = await req.json();
+    const { topic, mode, graphPath, repoUrl } = await req.json();
 
     if (mode === "load-repo-graph") {
       if (!graphPath || typeof graphPath !== "string") {
         return NextResponse.json({ error: "graphPath is required in load-repo-graph mode" }, { status: 400 });
       }
-      const { graph, files } = await loadRepoGraph(graphPath);
-      return NextResponse.json({ graph, files });
+      try {
+        const { graph, files } = await loadRepoGraph(graphPath);
+        return NextResponse.json({ graph, files });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Invalid graph path" },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (mode === "generate-repo-graph") {
+      if (!repoUrl || typeof repoUrl !== "string") {
+        return NextResponse.json({ error: "repoUrl is required in generate-repo-graph mode" }, { status: 400 });
+      }
+      try {
+        const { graph, files, artifactPath } = await generateRepoGraph(repoUrl);
+        return NextResponse.json({ graph, files, artifactPath });
+      } catch (error) {
+        return NextResponse.json(
+          { error: error instanceof Error ? error.message : "Repo graph generation failed" },
+          { status: 400 }
+        );
+      }
     }
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {

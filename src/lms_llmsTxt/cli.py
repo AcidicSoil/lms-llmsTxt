@@ -3,9 +3,49 @@ import logging
 import sys
 from pathlib import Path
 from textwrap import dedent
+from urllib.parse import urlencode
 
 from .config import AppConfig
 from .pipeline import run_generation
+
+
+def _project_root() -> Path:
+    return Path(__file__).resolve().parents[2]
+
+
+def _default_hypergraph_dir() -> Path:
+    return _project_root() / "hypergraph"
+
+
+def build_graph_viewer_url(
+    graph_json_path: str | Path,
+    *,
+    ui_base_url: str = "http://localhost:3000",
+    hypergraph_dir: Path | None = None,
+) -> str:
+    graph_path = Path(graph_json_path).resolve()
+    viewer_root = (hypergraph_dir or _default_hypergraph_dir()).resolve()
+    graph_path_arg = str(graph_path)
+
+    try:
+        graph_path_arg = str(graph_path.relative_to(viewer_root))
+    except ValueError:
+        # Prefer relative path from the visualizer working directory when possible.
+        try:
+            graph_path_arg = str(graph_path.relative_to(viewer_root.parent))
+            graph_path_arg = str(Path("..") / graph_path_arg)
+        except ValueError:
+            graph_path_arg = str(graph_path)
+
+    base = ui_base_url.rstrip("/")
+    query = urlencode(
+        {
+            "mode": "load-repo-graph",
+            "graphPath": graph_path_arg,
+            "autoLoad": "1",
+        }
+    )
+    return f"{base}/?{query}"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -86,6 +126,16 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Log context budget and retry reductions.",
     )
+    parser.add_argument(
+        "--ui",
+        action="store_true",
+        help="Print a HyperGraph visualizer URL for the generated repo graph artifact.",
+    )
+    parser.add_argument(
+        "--ui-base-url",
+        default="http://localhost:3000",
+        help="Base URL for the HyperGraph UI used by --ui (default: http://localhost:3000).",
+    )
     return parser
 
 
@@ -120,6 +170,8 @@ def main(argv: list[str] | None = None) -> int:
         config.enable_repo_graph = True
     if args.enable_session_memory:
         config.enable_session_memory = True
+    if args.ui and not args.generate_graph:
+        parser.error("--ui requires --generate-graph so repo.graph.json is produced.")
 
     try:
         artifacts = run_generation(
@@ -156,6 +208,11 @@ def main(argv: list[str] | None = None) -> int:
         summary += f"\n  - {artifacts.graph_nodes_dir}"
     if artifacts.used_fallback:
         summary += "\n(note) LM call failed; fallback JSON/schema output was used."
+    if args.ui:
+        if not artifacts.graph_json_path:
+            parser.error("--ui was requested, but no repo graph artifact was generated.")
+        summary += "\nGraph viewer:"
+        summary += f"\n  - {build_graph_viewer_url(artifacts.graph_json_path, ui_base_url=args.ui_base_url)}"
 
     print(summary)
     return 0

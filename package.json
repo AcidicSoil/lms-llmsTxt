@@ -2,6 +2,9 @@
   "name": "codefetch-runner",
   "private": true,
   "scripts": {
+    "ui:dev": "npm --prefix hypergraph run dev",
+    "ui:build": "npm --prefix hypergraph run build",
+    "ui:start": "npm --prefix hypergraph run start",
     "code:s": "codefetch -t 5 --include-dir src --exclude-dirs __pycache__ --exclude-files *.pyc -o src.md",
     "code:d": "codefetch --include-dir docs --exclude-dirs __pycache__ -o docs_codebase.md",
     "code:art": "node scripts/codefetch-artifacts.mjs",

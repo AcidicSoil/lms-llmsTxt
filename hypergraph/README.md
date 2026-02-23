@@ -35,6 +35,15 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) and enter any technical topic.
 
+## Local `lms-llmsTxt` repo integration
+
+When this app is used inside the `lms-llmsTxt` repository, it also supports:
+
+- **Generate repo graph**: runs the local Python `lms_llmsTxt` CLI against a GitHub repo URL and then loads the generated `repo.graph.json`.
+- **Load repo graph**: opens an existing artifact path such as `../artifacts/<owner>/<repo>/graph/repo.graph.json`.
+
+This is additive to the original topic-generation flow.
+
 ## Environment variables
 
 ```bash

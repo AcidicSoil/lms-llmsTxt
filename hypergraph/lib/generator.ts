@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import type { GraphNode, SkillGraph, GeneratedFile } from "@/types/graph";
 import { promises as fs } from "node:fs";
+import { spawn } from "node:child_process";
 import path from "node:path";
 
 const openai = new OpenAI();
@@ -94,10 +95,19 @@ export async function generateGraph(
   return { graph: parsed, files };
 }
 
-export async function loadRepoGraph(graphPath: string): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
+function resolveRepoGraphPath(graphPath: string): string {
   const absolute = path.isAbsolute(graphPath)
     ? graphPath
     : path.resolve(process.cwd(), graphPath);
+  const artifactsRoot = path.resolve(process.cwd(), "..", "artifacts");
+  if (!absolute.startsWith(`${artifactsRoot}${path.sep}`)) {
+    throw new Error("Graph path must be within the artifacts directory");
+  }
+  return absolute;
+}
+
+export async function loadRepoGraph(graphPath: string): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
+  const absolute = resolveRepoGraphPath(graphPath);
   const raw = await fs.readFile(absolute, "utf-8");
   const parsed = JSON.parse(raw) as SkillGraph;
   if (!parsed.nodes || parsed.nodes.length === 0) {
@@ -108,6 +118,109 @@ export async function loadRepoGraph(graphPath: string): Promise<{ graph: SkillGr
     content: node.content,
   }));
   return { graph: parsed, files };
+}
+
+function parseGithubRepoUrl(repoUrl: string): { owner: string; repo: string } {
+  let parsed: URL;
+  try {
+    parsed = new URL(repoUrl);
+  } catch {
+    throw new Error("Repository URL must be a valid URL");
+  }
+  if (parsed.hostname !== "github.com") {
+    throw new Error("Repository URL must be a github.com URL");
+  }
+  const parts = parsed.pathname.replace(/^\/+|\/+$/g, "").split("/");
+  if (parts.length < 2 || !parts[0] || !parts[1]) {
+    throw new Error("Repository URL must be https://github.com/<owner>/<repo>");
+  }
+  return {
+    owner: parts[0],
+    repo: parts[1].replace(/\.git$/i, ""),
+  };
+}
+
+async function runCommand(
+  cmd: string,
+  args: string[],
+  options: { cwd: string; env?: NodeJS.ProcessEnv }
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    const child = spawn(cmd, args, {
+      cwd: options.cwd,
+      env: options.env,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    let stdout = "";
+    let stderr = "";
+    child.stdout.on("data", (chunk) => {
+      stdout += String(chunk);
+    });
+    child.stderr.on("data", (chunk) => {
+      stderr += String(chunk);
+    });
+    child.on("error", (error) => reject(error));
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve({ stdout, stderr });
+        return;
+      }
+      const detail = (stderr || stdout).trim().split("\n").slice(-8).join("\n");
+      reject(new Error(`lmstxt CLI failed (exit ${code})${detail ? `:\n${detail}` : ""}`));
+    });
+  });
+}
+
+function buildPythonEnv(repoRoot: string): NodeJS.ProcessEnv {
+  const env = { ...process.env };
+  const repoSrc = path.join(repoRoot, "src");
+  env.PYTHONPATH = env.PYTHONPATH ? `${repoSrc}${path.delimiter}${env.PYTHONPATH}` : repoSrc;
+  return env;
+}
+
+async function runLocalLmstxt(repoRoot: string, repoUrl: string): Promise<void> {
+  const artifactsDir = path.join(repoRoot, "artifacts");
+  const env = buildPythonEnv(repoRoot);
+  const pythonCandidates = [process.env.LMSTXT_PYTHON_BIN, "python3", "python"].filter(
+    (value): value is string => Boolean(value && value.trim())
+  );
+  let lastError: Error | null = null;
+
+  for (const pythonBin of pythonCandidates) {
+    try {
+      await runCommand(
+        pythonBin,
+        [
+          "-m",
+          "lms_llmsTxt.cli",
+          repoUrl,
+          "--generate-graph",
+          "--graph-only",
+          "--output-dir",
+          artifactsDir,
+        ],
+        { cwd: repoRoot, env }
+      );
+      return;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  throw lastError ?? new Error("Unable to execute local lmstxt CLI");
+}
+
+export async function generateRepoGraph(
+  repoUrl: string
+): Promise<{ graph: SkillGraph; files: GeneratedFile[]; artifactPath: string }> {
+  const { owner, repo } = parseGithubRepoUrl(repoUrl);
+  const hypergraphDir = process.cwd();
+  const repoRoot = path.resolve(hypergraphDir, "..");
+  await runLocalLmstxt(repoRoot, repoUrl);
+
+  const graphPath = path.join("..", "artifacts", owner, repo, "graph", "repo.graph.json");
+  const loaded = await loadRepoGraph(graphPath);
+  return { ...loaded, artifactPath: graphPath };
 }
 
 function slugify(text: string): string {

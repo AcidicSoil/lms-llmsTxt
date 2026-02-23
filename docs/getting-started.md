@@ -48,6 +48,15 @@ PYTHONPATH=src lmstxt https://github.com/pallets/flask --graph-only --generate-g
 
 You should see generated files under `artifacts/<owner>/<repo>/`.
 
+### 6) Start the graph visualizer (repo root)
+
+```bash
+npm --prefix hypergraph install
+npm run ui:dev
+```
+
+Open `http://localhost:3000`.
+
 ## First Commands You Will Use
 
 ### Run targeted tests
@@ -67,6 +76,27 @@ pytest
 ```bash
 lmstxt-mcp
 ```
+
+### CLI -> Visualizer handoff
+
+```bash
+PYTHONPATH=src lmstxt https://github.com/pallets/flask \
+  --graph-only \
+  --generate-graph \
+  --ui
+```
+
+The CLI prints a HyperGraph URL that pre-fills `graphPath` and auto-loads the generated `repo.graph.json`.
+
+### UI-first repo generation
+
+In HyperGraph (`http://localhost:3000`):
+
+1. Open **Generate repo graph**
+2. Enter a GitHub repo URL (for example `https://github.com/pallets/flask`)
+3. Run generation and inspect the resulting graph directly in the viewer
+
+You can also use **Load repo graph** with a path like `../artifacts/<owner>/<repo>/graph/repo.graph.json`.
 
 ## Project Tour
 

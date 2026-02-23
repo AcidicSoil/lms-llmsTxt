@@ -29,6 +29,7 @@ export interface GeneratedFile {
 export interface GenerateResponse {
   graph: SkillGraph;
   files: GeneratedFile[];
+  artifactPath?: string;
 }
 
 export interface ForceGraphNode {
