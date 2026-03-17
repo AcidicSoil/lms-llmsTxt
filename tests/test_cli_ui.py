@@ -137,7 +137,7 @@ def test_main_ui_no_open_skips_browser(monkeypatch: pytest.MonkeyPatch, capsys: 
 def test_ensure_hypergraph_ui_running_reuses_existing(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: True)
 
-    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3010")
 
     assert status.reused_existing is True
     assert status.ready is True

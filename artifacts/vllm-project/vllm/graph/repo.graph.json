@@ -1,0 +1,1528 @@
+{
+  "topic": "Vllm",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Vllm Map",
+      "type": "moc",
+      "description": "vllm/model_executor: vllm/model_executor/__init__.py vllm/model_executor/custom_op.py vllm/model_executor/kernels/__init__.py vllm/model_executor/kernels/linear/__init__.py vllm/model_executor/kernels/linear/mixed_precision/MPLinearKernel.py vllm/model_executor/kernels/linear/mixed_precision/__init__... vllm/v1: vllm/v1/__init__.py vllm/v1/attention/__init__.py vllm/v1/attention/backend.py vllm/v1/attention/backends/__init__.py vllm/v1/attention/backends/cpu_attn.py vllm/v1/attention/backends/fa...",
+      "content": "# Vllm\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[vllm-model-executor]] to inspect related module behavior and evidence anchors.\n- Explore [[vllm-v1]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-v1]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-models]] to inspect related module behavior and evidence anchors.\n- Explore [[vllm-entrypoints]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-entrypoints]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-kernels]] to inspect related module behavior and evidence anchors.\n- Explore [[csrc-quantization]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-evals]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-online-serving]] to inspect related module behavior and evidence anchors.\n- Explore [[vllm-distributed]] to inspect related module behavior and evidence anchors.\n- Explore [[vllm-transformers-utils]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-assets]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-offline-inference]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-compile]] to inspect related module behavior and evidence anchors.\n- Explore [[benchmarks-kernels]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "vllm-model-executor",
+        "vllm-v1",
+        "tests-v1",
+        "tests-models",
+        "vllm-entrypoints",
+        "tests-entrypoints",
+        "tests-kernels",
+        "csrc-quantization",
+        "tests-evals",
+        "examples-online-serving",
+        "vllm-distributed",
+        "vllm-transformers-utils",
+        "docs-assets",
+        "examples-offline-inference",
+        "tests-compile",
+        "benchmarks-kernels"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "21f582f0b5deb829",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-model-executor",
+      "label": "vllm/model_executor",
+      "type": "concept",
+      "description": "vllm/model_executor/__init__.py vllm/model_executor/custom_op.py vllm/model_executor/kernels/__init__.py vllm/model_executor/kernels/linear/__init__.py vllm/model_executor/kernels/linear/mixed_precision/MPLinearKernel.py vllm/model_executor/kernels/linear/mixed_precision/__init__...",
+      "content": "---\ntitle: vllm/model_executor\ntype: concept\ndescription: vllm/model_executor/__init__.py vllm/model_executor/custom_op.py vllm/model_executor/kernels/__init__.py vllm/model_executor/kernels/linear/__init__.py vllm/model_executor/kernels/linear/mixed_precision/MPLinearKernel.py vllm/model_executor/kernels/linear/mixed_precision/__init__...\n---\n\nvllm/model_executor/__init__.py vllm/model_executor/custom_op.py vllm/model_executor/kernels/__init__.py vllm/model_executor/kernels/linear/__init__.py vllm/model_executor/kernels/linear/mixed_precision/MPLinearKernel.py vllm/model_executor/kernels/linear/mixed_precision/__init__...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/model_executor/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/custom_op.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/linear/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/linear/mixed_precision/MPLinearKernel.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/linear/mixed_precision/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/linear/mixed_precision/allspark.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/model_executor/kernels/linear/mixed_precision/conch.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-v1",
+      "label": "vllm/v1",
+      "type": "concept",
+      "description": "vllm/v1/__init__.py vllm/v1/attention/__init__.py vllm/v1/attention/backend.py vllm/v1/attention/backends/__init__.py vllm/v1/attention/backends/cpu_attn.py vllm/v1/attention/backends/fa_utils.py vllm/v1/attention/backends/flash_attn.py vllm/v1/attention/backends/flash_attn_diffk...",
+      "content": "---\ntitle: vllm/v1\ntype: concept\ndescription: vllm/v1/__init__.py vllm/v1/attention/__init__.py vllm/v1/attention/backend.py vllm/v1/attention/backends/__init__.py vllm/v1/attention/backends/cpu_attn.py vllm/v1/attention/backends/fa_utils.py vllm/v1/attention/backends/flash_attn.py vllm/v1/attention/backends/flash_attn_diffk...\n---\n\nvllm/v1/__init__.py vllm/v1/attention/__init__.py vllm/v1/attention/backend.py vllm/v1/attention/backends/__init__.py vllm/v1/attention/backends/cpu_attn.py vllm/v1/attention/backends/fa_utils.py vllm/v1/attention/backends/flash_attn.py vllm/v1/attention/backends/flash_attn_diffk...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/v1/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backend.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backends/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backends/cpu_attn.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backends/fa_utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backends/flash_attn.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/v1/attention/backends/flash_attn_diffkv.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-v1",
+      "label": "tests/v1",
+      "type": "concept",
+      "description": "tests/v1/__init__.py tests/v1/attention/test_attention_backends.py tests/v1/attention/test_attention_backends_selection.py tests/v1/attention/test_attention_splitting.py tests/v1/attention/test_batch_reordering.py tests/v1/attention/test_chunked_local_attention.py tests/v1/attent...",
+      "content": "---\ntitle: tests/v1\ntype: concept\ndescription: tests/v1/__init__.py tests/v1/attention/test_attention_backends.py tests/v1/attention/test_attention_backends_selection.py tests/v1/attention/test_attention_splitting.py tests/v1/attention/test_batch_reordering.py tests/v1/attention/test_chunked_local_attention.py tests/v1/attent...\n---\n\ntests/v1/__init__.py tests/v1/attention/test_attention_backends.py tests/v1/attention/test_attention_backends_selection.py tests/v1/attention/test_attention_splitting.py tests/v1/attention/test_batch_reordering.py tests/v1/attention/test_chunked_local_attention.py tests/v1/attent...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/v1/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_attention_backends.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_attention_backends_selection.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_attention_splitting.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_batch_reordering.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_chunked_local_attention.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_mamba_update_block_table.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/v1/attention/test_mla_backends.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-models",
+      "label": "tests/models",
+      "type": "concept",
+      "description": "tests/models/__init__.py tests/models/fixtures/audioflamingo3/expected_results_batched.json tests/models/fixtures/audioflamingo3/expected_results_single.json tests/models/fixtures/mistral_small_3_chat.json tests/models/fixtures/pixtral_chat.json tests/models/fixtures/qwen2_5_math...",
+      "content": "---\ntitle: tests/models\ntype: concept\ndescription: tests/models/__init__.py tests/models/fixtures/audioflamingo3/expected_results_batched.json tests/models/fixtures/audioflamingo3/expected_results_single.json tests/models/fixtures/mistral_small_3_chat.json tests/models/fixtures/pixtral_chat.json tests/models/fixtures/qwen2_5_math...\n---\n\ntests/models/__init__.py tests/models/fixtures/audioflamingo3/expected_results_batched.json tests/models/fixtures/audioflamingo3/expected_results_single.json tests/models/fixtures/mistral_small_3_chat.json tests/models/fixtures/pixtral_chat.json tests/models/fixtures/qwen2_5_math...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/models/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/fixtures/audioflamingo3/expected_results_batched.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/fixtures/audioflamingo3/expected_results_single.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/fixtures/mistral_small_3_chat.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/fixtures/pixtral_chat.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/fixtures/qwen2_5_math_prm_reward_step.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/language/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/models/language/generation/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-entrypoints",
+      "label": "vllm/entrypoints",
+      "type": "concept",
+      "description": "vllm/entrypoints/__init__.py vllm/entrypoints/anthropic/__init__.py vllm/entrypoints/anthropic/api_router.py vllm/entrypoints/anthropic/protocol.py vllm/entrypoints/anthropic/serving.py vllm/entrypoints/api_server.py vllm/entrypoints/chat_utils.py vllm/entrypoints/cli/__init__.py...",
+      "content": "---\ntitle: vllm/entrypoints\ntype: concept\ndescription: vllm/entrypoints/__init__.py vllm/entrypoints/anthropic/__init__.py vllm/entrypoints/anthropic/api_router.py vllm/entrypoints/anthropic/protocol.py vllm/entrypoints/anthropic/serving.py vllm/entrypoints/api_server.py vllm/entrypoints/chat_utils.py vllm/entrypoints/cli/__init__.py...\n---\n\nvllm/entrypoints/__init__.py vllm/entrypoints/anthropic/__init__.py vllm/entrypoints/anthropic/api_router.py vllm/entrypoints/anthropic/protocol.py vllm/entrypoints/anthropic/serving.py vllm/entrypoints/api_server.py vllm/entrypoints/chat_utils.py vllm/entrypoints/cli/__init__.py...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/entrypoints/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/anthropic/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/anthropic/api_router.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/anthropic/protocol.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/anthropic/serving.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/api_server.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/chat_utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/entrypoints/cli/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-entrypoints",
+      "label": "tests/entrypoints",
+      "type": "concept",
+      "description": "tests/entrypoints/__init__.py tests/entrypoints/anthropic/__init__.py tests/entrypoints/anthropic/test_anthropic_messages_conversion.py tests/entrypoints/conftest.py tests/entrypoints/instrumentator/__init__.py tests/entrypoints/instrumentator/test_basic.py tests/entrypoints/inst...",
+      "content": "---\ntitle: tests/entrypoints\ntype: concept\ndescription: tests/entrypoints/__init__.py tests/entrypoints/anthropic/__init__.py tests/entrypoints/anthropic/test_anthropic_messages_conversion.py tests/entrypoints/conftest.py tests/entrypoints/instrumentator/__init__.py tests/entrypoints/instrumentator/test_basic.py tests/entrypoints/inst...\n---\n\ntests/entrypoints/__init__.py tests/entrypoints/anthropic/__init__.py tests/entrypoints/anthropic/test_anthropic_messages_conversion.py tests/entrypoints/conftest.py tests/entrypoints/instrumentator/__init__.py tests/entrypoints/instrumentator/test_basic.py tests/entrypoints/inst...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/entrypoints/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/anthropic/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/anthropic/test_anthropic_messages_conversion.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/conftest.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/instrumentator/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/instrumentator/test_basic.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/instrumentator/test_metrics.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/entrypoints/instrumentator/test_optional_middleware.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-kernels",
+      "label": "tests/kernels",
+      "type": "concept",
+      "description": "tests/kernels/__init__.py tests/kernels/allclose_default.py tests/kernels/attention/conftest.py tests/kernels/attention/test_aiter_flash_attn.py tests/kernels/attention/test_attention.py tests/kernels/attention/test_attention_selector.py tests/kernels/attention/test_cache.py test...",
+      "content": "---\ntitle: tests/kernels\ntype: concept\ndescription: tests/kernels/__init__.py tests/kernels/allclose_default.py tests/kernels/attention/conftest.py tests/kernels/attention/test_aiter_flash_attn.py tests/kernels/attention/test_attention.py tests/kernels/attention/test_attention_selector.py tests/kernels/attention/test_cache.py test...\n---\n\ntests/kernels/__init__.py tests/kernels/allclose_default.py tests/kernels/attention/conftest.py tests/kernels/attention/test_aiter_flash_attn.py tests/kernels/attention/test_attention.py tests/kernels/attention/test_attention_selector.py tests/kernels/attention/test_cache.py test...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/kernels/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/allclose_default.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/conftest.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/test_aiter_flash_attn.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/test_attention.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/test_attention_selector.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/test_cache.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/kernels/attention/test_cascade_flash_attn.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "csrc-quantization",
+      "label": "csrc/quantization",
+      "type": "concept",
+      "description": "csrc/quantization/activation_kernels.cu csrc/quantization/awq/dequantize.cuh csrc/quantization/awq/gemm_kernels.cu csrc/quantization/cutlass_w4a8/get_group_starts.cuh csrc/quantization/cutlass_w4a8/w4a8_grouped_mm_entry.cu csrc/quantization/cutlass_w4a8/w4a8_mm_entry.cu csrc/quan...",
+      "content": "---\ntitle: csrc/quantization\ntype: concept\ndescription: csrc/quantization/activation_kernels.cu csrc/quantization/awq/dequantize.cuh csrc/quantization/awq/gemm_kernels.cu csrc/quantization/cutlass_w4a8/get_group_starts.cuh csrc/quantization/cutlass_w4a8/w4a8_grouped_mm_entry.cu csrc/quantization/cutlass_w4a8/w4a8_mm_entry.cu csrc/quan...\n---\n\ncsrc/quantization/activation_kernels.cu csrc/quantization/awq/dequantize.cuh csrc/quantization/awq/gemm_kernels.cu csrc/quantization/cutlass_w4a8/get_group_starts.cuh csrc/quantization/cutlass_w4a8/w4a8_grouped_mm_entry.cu csrc/quantization/cutlass_w4a8/w4a8_mm_entry.cu csrc/quan...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "csrc/quantization/activation_kernels.cu",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/awq/dequantize.cuh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/awq/gemm_kernels.cu",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/cutlass_w4a8/get_group_starts.cuh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/cutlass_w4a8/w4a8_grouped_mm_entry.cu",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/cutlass_w4a8/w4a8_mm_entry.cu",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/cutlass_w4a8/w4a8_utils.cu",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/quantization/cutlass_w4a8/w4a8_utils.cuh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-evals",
+      "label": "tests/evals",
+      "type": "concept",
+      "description": "tests/evals/gpt_oss/README.md tests/evals/gpt_oss/__init__.py tests/evals/gpt_oss/configs/gpt-oss-20b-baseline.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-bf16.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-mxfp8-cutlass.yaml tests/evals/gpt_oss/c...",
+      "content": "---\ntitle: tests/evals\ntype: concept\ndescription: tests/evals/gpt_oss/README.md tests/evals/gpt_oss/__init__.py tests/evals/gpt_oss/configs/gpt-oss-20b-baseline.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-bf16.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-mxfp8-cutlass.yaml tests/evals/gpt_oss/c...\n---\n\ntests/evals/gpt_oss/README.md tests/evals/gpt_oss/__init__.py tests/evals/gpt_oss/configs/gpt-oss-20b-baseline.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-bf16.yaml tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-mxfp8-cutlass.yaml tests/evals/gpt_oss/c...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/evals/gpt_oss/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-baseline.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-bf16.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-flashinfer-mxfp4-mxfp8-cutlass.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-marlin.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-rocm-baseline.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/evals/gpt_oss/configs/gpt-oss-20b-sm100-fi-mxfp4-mxfp8-trtllm.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-online-serving",
+      "label": "examples/online_serving",
+      "type": "concept",
+      "description": "examples/online_serving/api_client.py examples/online_serving/chart-helm/.helmignore examples/online_serving/chart-helm/Chart.yaml examples/online_serving/chart-helm/README.md examples/online_serving/chart-helm/ct.yaml examples/online_serving/chart-helm/lintconf.yaml examples/onl...",
+      "content": "---\ntitle: examples/online_serving\ntype: concept\ndescription: examples/online_serving/api_client.py examples/online_serving/chart-helm/.helmignore examples/online_serving/chart-helm/Chart.yaml examples/online_serving/chart-helm/README.md examples/online_serving/chart-helm/ct.yaml examples/online_serving/chart-helm/lintconf.yaml examples/onl...\n---\n\nexamples/online_serving/api_client.py examples/online_serving/chart-helm/.helmignore examples/online_serving/chart-helm/Chart.yaml examples/online_serving/chart-helm/README.md examples/online_serving/chart-helm/ct.yaml examples/online_serving/chart-helm/lintconf.yaml examples/onl...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/online_serving/api_client.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/.helmignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/Chart.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/ct.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/lintconf.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/templates/_helpers.tpl",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/online_serving/chart-helm/templates/configmap.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-distributed",
+      "label": "vllm/distributed",
+      "type": "concept",
+      "description": "vllm/distributed/__init__.py vllm/distributed/communication_op.py vllm/distributed/device_communicators/__init__.py vllm/distributed/device_communicators/all2all.py vllm/distributed/device_communicators/all_reduce_utils.py vllm/distributed/device_communicators/base_device_communi...",
+      "content": "---\ntitle: vllm/distributed\ntype: concept\ndescription: vllm/distributed/__init__.py vllm/distributed/communication_op.py vllm/distributed/device_communicators/__init__.py vllm/distributed/device_communicators/all2all.py vllm/distributed/device_communicators/all_reduce_utils.py vllm/distributed/device_communicators/base_device_communi...\n---\n\nvllm/distributed/__init__.py vllm/distributed/communication_op.py vllm/distributed/device_communicators/__init__.py vllm/distributed/device_communicators/all2all.py vllm/distributed/device_communicators/all_reduce_utils.py vllm/distributed/device_communicators/base_device_communi...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/distributed/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/communication_op.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/all2all.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/all_reduce_utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/base_device_communicator.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/cpu_communicator.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/distributed/device_communicators/cuda_communicator.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-transformers-utils",
+      "label": "vllm/transformers_utils",
+      "type": "concept",
+      "description": "vllm/transformers_utils/__init__.py vllm/transformers_utils/chat_templates/__init__.py vllm/transformers_utils/chat_templates/registry.py vllm/transformers_utils/chat_templates/template_basic.jinja vllm/transformers_utils/chat_templates/template_blip2.jinja vllm/transformers_util...",
+      "content": "---\ntitle: vllm/transformers_utils\ntype: concept\ndescription: vllm/transformers_utils/__init__.py vllm/transformers_utils/chat_templates/__init__.py vllm/transformers_utils/chat_templates/registry.py vllm/transformers_utils/chat_templates/template_basic.jinja vllm/transformers_utils/chat_templates/template_blip2.jinja vllm/transformers_util...\n---\n\nvllm/transformers_utils/__init__.py vllm/transformers_utils/chat_templates/__init__.py vllm/transformers_utils/chat_templates/registry.py vllm/transformers_utils/chat_templates/template_basic.jinja vllm/transformers_utils/chat_templates/template_blip2.jinja vllm/transformers_util...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/transformers_utils/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/registry.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/template_basic.jinja",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/template_blip2.jinja",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/template_chatml.jinja",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/template_deepseek_ocr.jinja",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/transformers_utils/chat_templates/template_deepseek_vl2.jinja",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "docs-assets",
+      "label": "docs/assets",
+      "type": "concept",
+      "description": "docs/assets/contributing/dockerfile-stages-dependency.png docs/assets/contributing/load-pattern-examples.png docs/assets/deployment/anything-llm-chat-with-doc.png docs/assets/deployment/anything-llm-chat-without-doc.png docs/assets/deployment/anything-llm-provider.png docs/assets...",
+      "content": "---\ntitle: docs/assets\ntype: concept\ndescription: docs/assets/contributing/dockerfile-stages-dependency.png docs/assets/contributing/load-pattern-examples.png docs/assets/deployment/anything-llm-chat-with-doc.png docs/assets/deployment/anything-llm-chat-without-doc.png docs/assets/deployment/anything-llm-provider.png docs/assets...\n---\n\ndocs/assets/contributing/dockerfile-stages-dependency.png docs/assets/contributing/load-pattern-examples.png docs/assets/deployment/anything-llm-chat-with-doc.png docs/assets/deployment/anything-llm-chat-without-doc.png docs/assets/deployment/anything-llm-provider.png docs/assets...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/assets/contributing/dockerfile-stages-dependency.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/contributing/load-pattern-examples.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/anything-llm-chat-with-doc.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/anything-llm-chat-without-doc.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/anything-llm-provider.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/anything-llm-upload-doc.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/architecture_helm_deployment.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/assets/deployment/chatbox-chat.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-offline-inference",
+      "label": "examples/offline_inference",
+      "type": "concept",
+      "description": "examples/offline_inference/async_llm_streaming.py examples/offline_inference/audio_language.py examples/offline_inference/automatic_prefix_caching.py examples/offline_inference/batch_llm_inference.py examples/offline_inference/chat_with_tools.py examples/offline_inference/context...",
+      "content": "---\ntitle: examples/offline_inference\ntype: concept\ndescription: examples/offline_inference/async_llm_streaming.py examples/offline_inference/audio_language.py examples/offline_inference/automatic_prefix_caching.py examples/offline_inference/batch_llm_inference.py examples/offline_inference/chat_with_tools.py examples/offline_inference/context...\n---\n\nexamples/offline_inference/async_llm_streaming.py examples/offline_inference/audio_language.py examples/offline_inference/automatic_prefix_caching.py examples/offline_inference/batch_llm_inference.py examples/offline_inference/chat_with_tools.py examples/offline_inference/context...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/offline_inference/async_llm_streaming.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/audio_language.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/automatic_prefix_caching.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/batch_llm_inference.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/chat_with_tools.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/context_extension.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/data_parallel.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/offline_inference/disaggregated-prefill-v1/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-compile",
+      "label": "tests/compile",
+      "type": "concept",
+      "description": "tests/compile/README.md tests/compile/__init__.py tests/compile/backend.py tests/compile/conftest.py tests/compile/correctness_e2e/__init__.py tests/compile/correctness_e2e/test_async_tp.py tests/compile/correctness_e2e/test_sequence_parallel.py tests/compile/fullgraph/__init__.p...",
+      "content": "---\ntitle: tests/compile\ntype: concept\ndescription: tests/compile/README.md tests/compile/__init__.py tests/compile/backend.py tests/compile/conftest.py tests/compile/correctness_e2e/__init__.py tests/compile/correctness_e2e/test_async_tp.py tests/compile/correctness_e2e/test_sequence_parallel.py tests/compile/fullgraph/__init__.p...\n---\n\ntests/compile/README.md tests/compile/__init__.py tests/compile/backend.py tests/compile/conftest.py tests/compile/correctness_e2e/__init__.py tests/compile/correctness_e2e/test_async_tp.py tests/compile/correctness_e2e/test_sequence_parallel.py tests/compile/fullgraph/__init__.p...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/compile/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/backend.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/conftest.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/correctness_e2e/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/correctness_e2e/test_async_tp.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/correctness_e2e/test_sequence_parallel.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/compile/fullgraph/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "benchmarks-kernels",
+      "label": "benchmarks/kernels",
+      "type": "concept",
+      "description": "benchmarks/kernels/bench_concat_mla_q.py benchmarks/kernels/bench_cp_gather_fp8.py benchmarks/kernels/benchmark_2d_silu_mul_fp8_quant.py benchmarks/kernels/benchmark_activation.py benchmarks/kernels/benchmark_block_fp8_gemm.py benchmarks/kernels/benchmark_cutlass_moe_fp8.py bench...",
+      "content": "---\ntitle: benchmarks/kernels\ntype: concept\ndescription: benchmarks/kernels/bench_concat_mla_q.py benchmarks/kernels/bench_cp_gather_fp8.py benchmarks/kernels/benchmark_2d_silu_mul_fp8_quant.py benchmarks/kernels/benchmark_activation.py benchmarks/kernels/benchmark_block_fp8_gemm.py benchmarks/kernels/benchmark_cutlass_moe_fp8.py bench...\n---\n\nbenchmarks/kernels/bench_concat_mla_q.py benchmarks/kernels/bench_cp_gather_fp8.py benchmarks/kernels/benchmark_2d_silu_mul_fp8_quant.py benchmarks/kernels/benchmark_activation.py benchmarks/kernels/benchmark_block_fp8_gemm.py benchmarks/kernels/benchmark_cutlass_moe_fp8.py bench...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "benchmarks/kernels/bench_concat_mla_q.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/bench_cp_gather_fp8.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_2d_silu_mul_fp8_quant.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_activation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_block_fp8_gemm.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_cutlass_moe_fp8.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_cutlass_moe_nvfp4.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "benchmarks/kernels/benchmark_device_communicators.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-pooling",
+      "label": "examples/pooling",
+      "type": "concept",
+      "description": "examples/pooling/classify/classification_online.py examples/pooling/classify/vision_classification_online.py examples/pooling/embed/embed_jina_embeddings_v3_offline.py examples/pooling/embed/embed_matryoshka_fy_offline.py examples/pooling/embed/embedding_requests_base64_online.py...",
+      "content": "---\ntitle: examples/pooling\ntype: concept\ndescription: examples/pooling/classify/classification_online.py examples/pooling/classify/vision_classification_online.py examples/pooling/embed/embed_jina_embeddings_v3_offline.py examples/pooling/embed/embed_matryoshka_fy_offline.py examples/pooling/embed/embedding_requests_base64_online.py...\n---\n\nexamples/pooling/classify/classification_online.py examples/pooling/classify/vision_classification_online.py examples/pooling/embed/embed_jina_embeddings_v3_offline.py examples/pooling/embed/embed_matryoshka_fy_offline.py examples/pooling/embed/embedding_requests_base64_online.py...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/pooling/classify/classification_online.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/classify/vision_classification_online.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/embed_jina_embeddings_v3_offline.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/embed_matryoshka_fy_offline.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/embedding_requests_base64_online.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/embedding_requests_bytes_online.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/openai_embedding_client.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/pooling/embed/openai_embedding_long_text/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "buildkite-lm-eval-harness",
+      "label": ".buildkite/lm-eval-harness",
+      "type": "concept",
+      "description": ".buildkite/lm-eval-harness/configs/DeepSeek-V2-Lite-Chat.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct-FBGEMM-nonuniform.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-Channelw...",
+      "content": "---\ntitle: .buildkite/lm-eval-harness\ntype: concept\ndescription: .buildkite/lm-eval-harness/configs/DeepSeek-V2-Lite-Chat.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct-FBGEMM-nonuniform.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-Channelw...\n---\n\n.buildkite/lm-eval-harness/configs/DeepSeek-V2-Lite-Chat.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct-FBGEMM-nonuniform.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct.yaml .buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-Channelw...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".buildkite/lm-eval-harness/configs/DeepSeek-V2-Lite-Chat.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct-FBGEMM-nonuniform.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-70B-Instruct.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-Channelwise-compressed-tensors.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-FBGEMM-nonuniform.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-FP8-compressed-tensors.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-FP8.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".buildkite/lm-eval-harness/configs/Meta-Llama-3-8B-Instruct-INT8-compressed-tensors-asym.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "csrc-cpu",
+      "label": "csrc/cpu",
+      "type": "concept",
+      "description": "csrc/cpu/activation.cpp csrc/cpu/cpu_arch_macros.h csrc/cpu/cpu_attn.cpp csrc/cpu/cpu_attn_amx.hpp csrc/cpu/cpu_attn_impl.hpp csrc/cpu/cpu_attn_neon.hpp csrc/cpu/cpu_attn_neon_bfmmla.hpp csrc/cpu/cpu_attn_vec.hpp csrc/cpu/cpu_attn_vec16.hpp csrc/cpu/cpu_attn_vxe.hpp csrc/cpu/cpu_...",
+      "content": "---\ntitle: csrc/cpu\ntype: concept\ndescription: csrc/cpu/activation.cpp csrc/cpu/cpu_arch_macros.h csrc/cpu/cpu_attn.cpp csrc/cpu/cpu_attn_amx.hpp csrc/cpu/cpu_attn_impl.hpp csrc/cpu/cpu_attn_neon.hpp csrc/cpu/cpu_attn_neon_bfmmla.hpp csrc/cpu/cpu_attn_vec.hpp csrc/cpu/cpu_attn_vec16.hpp csrc/cpu/cpu_attn_vxe.hpp csrc/cpu/cpu_...\n---\n\ncsrc/cpu/activation.cpp csrc/cpu/cpu_arch_macros.h csrc/cpu/cpu_attn.cpp csrc/cpu/cpu_attn_amx.hpp csrc/cpu/cpu_attn_impl.hpp csrc/cpu/cpu_attn_neon.hpp csrc/cpu/cpu_attn_neon_bfmmla.hpp csrc/cpu/cpu_attn_vec.hpp csrc/cpu/cpu_attn_vec16.hpp csrc/cpu/cpu_attn_vxe.hpp csrc/cpu/cpu_...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "csrc/cpu/activation.cpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_arch_macros.h",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn.cpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn_amx.hpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn_impl.hpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn_neon.hpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn_neon_bfmmla.hpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "csrc/cpu/cpu_attn_vec.hpp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "vllm-lora",
+      "label": "vllm/lora",
+      "type": "concept",
+      "description": "vllm/lora/__init__.py vllm/lora/layers/__init__.py vllm/lora/layers/base.py vllm/lora/layers/base_linear.py vllm/lora/layers/column_parallel_linear.py vllm/lora/layers/fused_moe.py vllm/lora/layers/logits_processor.py vllm/lora/layers/replicated_linear.py vllm/lora/layers/row_par...",
+      "content": "---\ntitle: vllm/lora\ntype: concept\ndescription: vllm/lora/__init__.py vllm/lora/layers/__init__.py vllm/lora/layers/base.py vllm/lora/layers/base_linear.py vllm/lora/layers/column_parallel_linear.py vllm/lora/layers/fused_moe.py vllm/lora/layers/logits_processor.py vllm/lora/layers/replicated_linear.py vllm/lora/layers/row_par...\n---\n\nvllm/lora/__init__.py vllm/lora/layers/__init__.py vllm/lora/layers/base.py vllm/lora/layers/base_linear.py vllm/lora/layers/column_parallel_linear.py vllm/lora/layers/fused_moe.py vllm/lora/layers/logits_processor.py vllm/lora/layers/replicated_linear.py vllm/lora/layers/row_par...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "vllm/lora/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/base.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/base_linear.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/column_parallel_linear.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/fused_moe.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/logits_processor.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "vllm/lora/layers/replicated_linear.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-03-15T00:00:49.176836Z"
+}

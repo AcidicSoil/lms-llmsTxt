@@ -1,0 +1,856 @@
+{
+  "topic": "Katana",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Katana Map",
+      "type": "moc",
+      "description": "pkg/engine: pkg/engine/common/base.go pkg/engine/common/error.go pkg/engine/common/http.go pkg/engine/engine.go pkg/engine/headless/TODOS.md pkg/engine/headless/browser/browser.go pkg/engine/headless/browser/cookie/cookie.go pkg/engine/headless/browser/cookie/cookie_test.go pkg/engine/headle... pkg/utils: pkg/utils/extensions/extensions.go pkg/utils/extensions/extensions_test.go pkg/utils/filters/filters.go pkg/utils/filters/filters_test.go pkg/utils/filters/simple.go pkg/utils/formfields.go pkg...",
+      "content": "# Katana\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[pkg-engine]] to inspect related module behavior and evidence anchors.\n- Explore [[pkg-utils]] to inspect related module behavior and evidence anchors.\n- Explore [[github-workflows]] to inspect related module behavior and evidence anchors.\n- Explore [[pkg-output]] to inspect related module behavior and evidence anchors.\n- Explore [[internal-runner]] to inspect related module behavior and evidence anchors.\n- Explore [[github-issue-template]] to inspect related module behavior and evidence anchors.\n- Explore [[pkg-types]] to inspect related module behavior and evidence anchors.\n- Explore [[cmd-integration-test]] to inspect related module behavior and evidence anchors.\n- Explore [[internal-testutils]] to inspect related module behavior and evidence anchors.\n- Explore [[readme-md]] to inspect related module behavior and evidence anchors.\n- Explore [[cmd-functional-test]] to inspect related module behavior and evidence anchors.\n- Explore [[pkg-navigation]] to inspect related module behavior and evidence anchors.\n- Explore [[github-maintainer-guide-md]] to inspect related module behavior and evidence anchors.\n- Explore [[github-pull-request-template-md]] to inspect related module behavior and evidence anchors.\n- Explore [[github-dependabot-yml]] to inspect related module behavior and evidence anchors.\n- Explore [[github-release-yml]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "pkg-engine",
+        "pkg-utils",
+        "github-workflows",
+        "pkg-output",
+        "internal-runner",
+        "github-issue-template",
+        "pkg-types",
+        "cmd-integration-test",
+        "internal-testutils",
+        "readme-md",
+        "cmd-functional-test",
+        "pkg-navigation",
+        "github-maintainer-guide-md",
+        "github-pull-request-template-md",
+        "github-dependabot-yml",
+        "github-release-yml"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "15d442424fe6f8f3",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "unknown"
+      ]
+    },
+    {
+      "id": "pkg-engine",
+      "label": "pkg/engine",
+      "type": "concept",
+      "description": "pkg/engine/common/base.go pkg/engine/common/error.go pkg/engine/common/http.go pkg/engine/engine.go pkg/engine/headless/TODOS.md pkg/engine/headless/browser/browser.go pkg/engine/headless/browser/cookie/cookie.go pkg/engine/headless/browser/cookie/cookie_test.go pkg/engine/headle...",
+      "content": "---\ntitle: pkg/engine\ntype: concept\ndescription: pkg/engine/common/base.go pkg/engine/common/error.go pkg/engine/common/http.go pkg/engine/engine.go pkg/engine/headless/TODOS.md pkg/engine/headless/browser/browser.go pkg/engine/headless/browser/cookie/cookie.go pkg/engine/headless/browser/cookie/cookie_test.go pkg/engine/headle...\n---\n\npkg/engine/common/base.go pkg/engine/common/error.go pkg/engine/common/http.go pkg/engine/engine.go pkg/engine/headless/TODOS.md pkg/engine/headless/browser/browser.go pkg/engine/headless/browser/cookie/cookie.go pkg/engine/headless/browser/cookie/cookie_test.go pkg/engine/headle...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "pkg/engine/common/base.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/common/error.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/common/http.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/engine.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/headless/TODOS.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/headless/browser/browser.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/headless/browser/cookie/cookie.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/engine/headless/browser/cookie/cookie_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "pkg-utils",
+      "label": "pkg/utils",
+      "type": "concept",
+      "description": "pkg/utils/extensions/extensions.go pkg/utils/extensions/extensions_test.go pkg/utils/filters/filters.go pkg/utils/filters/filters_test.go pkg/utils/filters/simple.go pkg/utils/formfields.go pkg/utils/formfields_test.go pkg/utils/formfill.go pkg/utils/formfill_test.go pkg/utils/js...",
+      "content": "---\ntitle: pkg/utils\ntype: concept\ndescription: pkg/utils/extensions/extensions.go pkg/utils/extensions/extensions_test.go pkg/utils/filters/filters.go pkg/utils/filters/filters_test.go pkg/utils/filters/simple.go pkg/utils/formfields.go pkg/utils/formfields_test.go pkg/utils/formfill.go pkg/utils/formfill_test.go pkg/utils/js...\n---\n\npkg/utils/extensions/extensions.go pkg/utils/extensions/extensions_test.go pkg/utils/filters/filters.go pkg/utils/filters/filters_test.go pkg/utils/filters/simple.go pkg/utils/formfields.go pkg/utils/formfields_test.go pkg/utils/formfill.go pkg/utils/formfill_test.go pkg/utils/js...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "pkg/utils/extensions/extensions.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/extensions/extensions_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/filters/filters.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/filters/filters_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/filters/simple.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/formfields.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/formfields_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/utils/formfill.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-workflows",
+      "label": ".github/workflows",
+      "type": "concept",
+      "description": ".github/workflows/build-test.yml .github/workflows/codeql-analysis.yml .github/workflows/compat-checks.yaml .github/workflows/dep-auto-merge.yml .github/workflows/discussion-triage.yml .github/workflows/dockerhub-push.yml .github/workflows/functional-test.yml .github/workflows/re...",
+      "content": "---\ntitle: .github/workflows\ntype: concept\ndescription: .github/workflows/build-test.yml .github/workflows/codeql-analysis.yml .github/workflows/compat-checks.yaml .github/workflows/dep-auto-merge.yml .github/workflows/discussion-triage.yml .github/workflows/dockerhub-push.yml .github/workflows/functional-test.yml .github/workflows/re...\n---\n\n.github/workflows/build-test.yml .github/workflows/codeql-analysis.yml .github/workflows/compat-checks.yaml .github/workflows/dep-auto-merge.yml .github/workflows/discussion-triage.yml .github/workflows/dockerhub-push.yml .github/workflows/functional-test.yml .github/workflows/re...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/workflows/build-test.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/codeql-analysis.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/compat-checks.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/dep-auto-merge.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/discussion-triage.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/dockerhub-push.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/functional-test.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/release-binary.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "pkg-output",
+      "label": "pkg/output",
+      "type": "concept",
+      "description": "pkg/output/custom_field.go pkg/output/error.go pkg/output/fields.go pkg/output/fields_test.go pkg/output/file_writer.go pkg/output/format_json.go pkg/output/format_screen.go pkg/output/format_template.go pkg/output/options.go pkg/output/output.go pkg/output/responses.go pkg/outpu...",
+      "content": "---\ntitle: pkg/output\ntype: concept\ndescription: pkg/output/custom_field.go pkg/output/error.go pkg/output/fields.go pkg/output/fields_test.go pkg/output/file_writer.go pkg/output/format_json.go pkg/output/format_screen.go pkg/output/format_template.go pkg/output/options.go pkg/output/output.go pkg/output/responses.go pkg/outpu...\n---\n\npkg/output/custom_field.go pkg/output/error.go pkg/output/fields.go pkg/output/fields_test.go pkg/output/file_writer.go pkg/output/format_json.go pkg/output/format_screen.go pkg/output/format_template.go pkg/output/options.go pkg/output/output.go pkg/output/responses.go pkg/outpu...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "pkg/output/custom_field.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/error.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/fields.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/fields_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/file_writer.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/format_json.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/format_screen.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/output/format_template.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "internal-runner",
+      "label": "internal/runner",
+      "type": "concept",
+      "description": "internal/runner/banner.go internal/runner/executer.go internal/runner/healthcheck.go internal/runner/options.go internal/runner/runner.go",
+      "content": "---\ntitle: internal/runner\ntype: concept\ndescription: internal/runner/banner.go internal/runner/executer.go internal/runner/healthcheck.go internal/runner/options.go internal/runner/runner.go\n---\n\ninternal/runner/banner.go internal/runner/executer.go internal/runner/healthcheck.go internal/runner/options.go internal/runner/runner.go\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "internal/runner/banner.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/runner/executer.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/runner/healthcheck.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/runner/options.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/runner/runner.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-issue-template",
+      "label": ".github/ISSUE_TEMPLATE",
+      "type": "concept",
+      "description": ".github/ISSUE_TEMPLATE/README.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature_request.md.disabled .github/ISSUE_TEMPLATE/issue-report.md.disabled",
+      "content": "---\ntitle: .github/ISSUE_TEMPLATE\ntype: concept\ndescription: .github/ISSUE_TEMPLATE/README.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature_request.md.disabled .github/ISSUE_TEMPLATE/issue-report.md.disabled\n---\n\n.github/ISSUE_TEMPLATE/README.md .github/ISSUE_TEMPLATE/config.yml .github/ISSUE_TEMPLATE/feature_request.md.disabled .github/ISSUE_TEMPLATE/issue-report.md.disabled\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/ISSUE_TEMPLATE/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/ISSUE_TEMPLATE/config.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/ISSUE_TEMPLATE/feature_request.md.disabled",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/ISSUE_TEMPLATE/issue-report.md.disabled",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "pkg-types",
+      "label": "pkg/types",
+      "type": "concept",
+      "description": "pkg/types/crawler_options.go pkg/types/default.go pkg/types/options.go pkg/types/options_test.go",
+      "content": "---\ntitle: pkg/types\ntype: concept\ndescription: pkg/types/crawler_options.go pkg/types/default.go pkg/types/options.go pkg/types/options_test.go\n---\n\npkg/types/crawler_options.go pkg/types/default.go pkg/types/options.go pkg/types/options_test.go\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "pkg/types/crawler_options.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/types/default.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/types/options.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/types/options_test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "cmd-integration-test",
+      "label": "cmd/integration-test",
+      "type": "concept",
+      "description": "cmd/integration-test/filters.go cmd/integration-test/integration-test.go cmd/integration-test/library.go",
+      "content": "---\ntitle: cmd/integration-test\ntype: concept\ndescription: cmd/integration-test/filters.go cmd/integration-test/integration-test.go cmd/integration-test/library.go\n---\n\ncmd/integration-test/filters.go cmd/integration-test/integration-test.go cmd/integration-test/library.go\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "cmd/integration-test/filters.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "cmd/integration-test/integration-test.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "cmd/integration-test/library.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "internal-testutils",
+      "label": "internal/testutils",
+      "type": "concept",
+      "description": "internal/testutils/helper.go internal/testutils/integration.go internal/testutils/testutils.go",
+      "content": "---\ntitle: internal/testutils\ntype: concept\ndescription: internal/testutils/helper.go internal/testutils/integration.go internal/testutils/testutils.go\n---\n\ninternal/testutils/helper.go internal/testutils/integration.go internal/testutils/testutils.go\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "internal/testutils/helper.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/testutils/integration.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "internal/testutils/testutils.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "readme-md",
+      "label": "README.md",
+      "type": "concept",
+      "description": "README.md <h1 align=\"center\"> <img src=\"https://user-images.githubusercontent.com/8293321/196779266-421c79d4-643a-4f73-9b54-3da379bbac09.png\" alt=\"katana\" width=\"200px\"> <br> </h1> <h4 align...",
+      "content": "---\ntitle: README.md\ntype: concept\ndescription: README.md <h1 align=\"center\"> <img src=\"https://user-images.githubusercontent.com/8293321/196779266-421c79d4-643a-4f73-9b54-3da379bbac09.png\" alt=\"katana\" width=\"200px\"> <br> </h1> <h4 align...\n---\n\nREADME.md <h1 align=\"center\"> <img src=\"https://user-images.githubusercontent.com/8293321/196779266-421c79d4-643a-4f73-9b54-3da379bbac09.png\" alt=\"katana\" width=\"200px\"> <br> </h1> <h4 align...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "cmd-functional-test",
+      "label": "cmd/functional-test",
+      "type": "concept",
+      "description": "cmd/functional-test/main.go cmd/functional-test/run.sh",
+      "content": "---\ntitle: cmd/functional-test\ntype: concept\ndescription: cmd/functional-test/main.go cmd/functional-test/run.sh\n---\n\ncmd/functional-test/main.go cmd/functional-test/run.sh\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "cmd/functional-test/main.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "cmd/functional-test/run.sh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "pkg-navigation",
+      "label": "pkg/navigation",
+      "type": "concept",
+      "description": "pkg/navigation/request.go pkg/navigation/response.go",
+      "content": "---\ntitle: pkg/navigation\ntype: concept\ndescription: pkg/navigation/request.go pkg/navigation/response.go\n---\n\npkg/navigation/request.go pkg/navigation/response.go\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "pkg/navigation/request.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "pkg/navigation/response.go",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-maintainer-guide-md",
+      "label": ".github/MAINTAINER_GUIDE.md",
+      "type": "concept",
+      "description": ".github/MAINTAINER_GUIDE.md",
+      "content": "---\ntitle: .github/MAINTAINER_GUIDE.md\ntype: concept\ndescription: .github/MAINTAINER_GUIDE.md\n---\n\n.github/MAINTAINER_GUIDE.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/MAINTAINER_GUIDE.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-pull-request-template-md",
+      "label": ".github/PULL_REQUEST_TEMPLATE.md",
+      "type": "concept",
+      "description": ".github/PULL_REQUEST_TEMPLATE.md",
+      "content": "---\ntitle: .github/PULL_REQUEST_TEMPLATE.md\ntype: concept\ndescription: .github/PULL_REQUEST_TEMPLATE.md\n---\n\n.github/PULL_REQUEST_TEMPLATE.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/PULL_REQUEST_TEMPLATE.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-dependabot-yml",
+      "label": ".github/dependabot.yml",
+      "type": "concept",
+      "description": ".github/dependabot.yml",
+      "content": "---\ntitle: .github/dependabot.yml\ntype: concept\ndescription: .github/dependabot.yml\n---\n\n.github/dependabot.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/dependabot.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "github-release-yml",
+      "label": ".github/release.yml",
+      "type": "concept",
+      "description": ".github/release.yml",
+      "content": "---\ntitle: .github/release.yml\ntype: concept\ndescription: .github/release.yml\n---\n\n.github/release.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/release.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "gitignore",
+      "label": ".gitignore",
+      "type": "concept",
+      "description": ".gitignore",
+      "content": "---\ntitle: .gitignore\ntype: concept\ndescription: .gitignore\n---\n\n.gitignore\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "goreleaser-linux-yml",
+      "label": ".goreleaser/linux.yml",
+      "type": "concept",
+      "description": ".goreleaser/linux.yml",
+      "content": "---\ntitle: .goreleaser/linux.yml\ntype: concept\ndescription: .goreleaser/linux.yml\n---\n\n.goreleaser/linux.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".goreleaser/linux.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "goreleaser-mac-yml",
+      "label": ".goreleaser/mac.yml",
+      "type": "concept",
+      "description": ".goreleaser/mac.yml",
+      "content": "---\ntitle: .goreleaser/mac.yml\ntype: concept\ndescription: .goreleaser/mac.yml\n---\n\n.goreleaser/mac.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".goreleaser/mac.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "goreleaser-windows-yml",
+      "label": ".goreleaser/windows.yml",
+      "type": "concept",
+      "description": ".goreleaser/windows.yml",
+      "content": "---\ntitle: .goreleaser/windows.yml\ntype: concept\ndescription: .goreleaser/windows.yml\n---\n\n.goreleaser/windows.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".goreleaser/windows.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-03-15T13:48:39.568854Z"
+}

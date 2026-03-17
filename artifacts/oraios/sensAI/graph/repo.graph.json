@@ -1,0 +1,842 @@
+{
+  "topic": "Sensai",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Sensai Map",
+      "type": "moc",
+      "description": "src/sensai: src/sensai/LICENSE src/sensai/__init__.py src/sensai/catboost.py src/sensai/clustering/__init__.py src/sensai/clustering/clustering_base.py src/sensai/clustering/greedy_clustering.py src/sensai/clustering/sklearn_clustering.py src/sensai/columngen.py src/sensai/data/__init__.py s... examples/dengue-fever-time-series: examples/dengue-fever-time-series/.gitignore examples/dengue-fever-time-series/README.md examples/dengue-fever-time-series/data/dengue_features_test.csv examples/dengue-...",
+      "content": "# Sensai\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[src-sensai]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-dengue-fever-time-series]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-base]] to inspect related module behavior and evidence anchors.\n- Explore [[data-raw]] to inspect related module behavior and evidence anchors.\n- Explore [[data-ground-truth]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-resources]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-2-notebooks]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-frameworks]] to inspect related module behavior and evidence anchors.\n- Explore [[github-workflows]] to inspect related module behavior and evidence anchors.\n- Explore [[readme-md]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-1-supervised-learning]] to inspect related module behavior and evidence anchors.\n- Explore [[tests-backwardscompat]] to inspect related module behavior and evidence anchors.\n- Explore [[bumpversion-cfg]] to inspect related module behavior and evidence anchors.\n- Explore [[coveragerc]] to inspect related module behavior and evidence anchors.\n- Explore [[editorconfig]] to inspect related module behavior and evidence anchors.\n- Explore [[gitattributes]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "src-sensai",
+        "examples-dengue-fever-time-series",
+        "tests-base",
+        "data-raw",
+        "data-ground-truth",
+        "tests-resources",
+        "docs-2-notebooks",
+        "tests-frameworks",
+        "github-workflows",
+        "readme-md",
+        "docs-1-supervised-learning",
+        "tests-backwardscompat",
+        "bumpversion-cfg",
+        "coveragerc",
+        "editorconfig",
+        "gitattributes"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "82642f9e769b57bf",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "python"
+      ]
+    },
+    {
+      "id": "src-sensai",
+      "label": "src/sensai",
+      "type": "concept",
+      "description": "src/sensai/LICENSE src/sensai/__init__.py src/sensai/catboost.py src/sensai/clustering/__init__.py src/sensai/clustering/clustering_base.py src/sensai/clustering/greedy_clustering.py src/sensai/clustering/sklearn_clustering.py src/sensai/columngen.py src/sensai/data/__init__.py s...",
+      "content": "---\ntitle: src/sensai\ntype: concept\ndescription: src/sensai/LICENSE src/sensai/__init__.py src/sensai/catboost.py src/sensai/clustering/__init__.py src/sensai/clustering/clustering_base.py src/sensai/clustering/greedy_clustering.py src/sensai/clustering/sklearn_clustering.py src/sensai/columngen.py src/sensai/data/__init__.py s...\n---\n\nsrc/sensai/LICENSE src/sensai/__init__.py src/sensai/catboost.py src/sensai/clustering/__init__.py src/sensai/clustering/clustering_base.py src/sensai/clustering/greedy_clustering.py src/sensai/clustering/sklearn_clustering.py src/sensai/columngen.py src/sensai/data/__init__.py s...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "src/sensai/LICENSE",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/catboost.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/clustering/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/clustering/clustering_base.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/clustering/greedy_clustering.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/clustering/sklearn_clustering.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/sensai/columngen.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-dengue-fever-time-series",
+      "label": "examples/dengue-fever-time-series",
+      "type": "concept",
+      "description": "examples/dengue-fever-time-series/.gitignore examples/dengue-fever-time-series/README.md examples/dengue-fever-time-series/data/dengue_features_test.csv examples/dengue-fever-time-series/data/dengue_features_train.csv examples/dengue-fever-time-series/data/dengue_labels_train.csv...",
+      "content": "---\ntitle: examples/dengue-fever-time-series\ntype: concept\ndescription: examples/dengue-fever-time-series/.gitignore examples/dengue-fever-time-series/README.md examples/dengue-fever-time-series/data/dengue_features_test.csv examples/dengue-fever-time-series/data/dengue_features_train.csv examples/dengue-fever-time-series/data/dengue_labels_train.csv...\n---\n\nexamples/dengue-fever-time-series/.gitignore examples/dengue-fever-time-series/README.md examples/dengue-fever-time-series/data/dengue_features_test.csv examples/dengue-fever-time-series/data/dengue_features_train.csv examples/dengue-fever-time-series/data/dengue_labels_train.csv...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/dengue-fever-time-series/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/data/dengue_features_test.csv",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/data/dengue_features_train.csv",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/data/dengue_labels_train.csv",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/dengai/data.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/dengai/features.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/dengue-fever-time-series/dengai/models/glm.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-base",
+      "label": "tests/base",
+      "type": "concept",
+      "description": "tests/base/test_data_transformation.py tests/base/test_ensemble.py tests/base/test_evaluation.py tests/base/test_feature_collector_registry.py tests/base/test_featuregen.py tests/base/test_sklearn.py tests/base/test_tracking.py tests/base/test_util.py tests/base/test_util_datastr...",
+      "content": "---\ntitle: tests/base\ntype: concept\ndescription: tests/base/test_data_transformation.py tests/base/test_ensemble.py tests/base/test_evaluation.py tests/base/test_feature_collector_registry.py tests/base/test_featuregen.py tests/base/test_sklearn.py tests/base/test_tracking.py tests/base/test_util.py tests/base/test_util_datastr...\n---\n\ntests/base/test_data_transformation.py tests/base/test_ensemble.py tests/base/test_evaluation.py tests/base/test_feature_collector_registry.py tests/base/test_featuregen.py tests/base/test_sklearn.py tests/base/test_tracking.py tests/base/test_util.py tests/base/test_util_datastr...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/base/test_data_transformation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_ensemble.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_evaluation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_feature_collector_registry.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_featuregen.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_sklearn.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_tracking.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/base/test_util.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "data-raw",
+      "label": "data/raw",
+      "type": "concept",
+      "description": "data/raw/boston_housing.csv data/raw/mnist_train.csv.zip data/raw/sample/sample.cpg data/raw/sample/sample.dbf data/raw/sample/sample.prj data/raw/sample/sample.shp data/raw/sample/sample.shx",
+      "content": "---\ntitle: data/raw\ntype: concept\ndescription: data/raw/boston_housing.csv data/raw/mnist_train.csv.zip data/raw/sample/sample.cpg data/raw/sample/sample.dbf data/raw/sample/sample.prj data/raw/sample/sample.shp data/raw/sample/sample.shx\n---\n\ndata/raw/boston_housing.csv data/raw/mnist_train.csv.zip data/raw/sample/sample.cpg data/raw/sample/sample.dbf data/raw/sample/sample.prj data/raw/sample/sample.shp data/raw/sample/sample.shx\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "data/raw/boston_housing.csv",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/mnist_train.csv.zip",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/sample/sample.cpg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/sample/sample.dbf",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/sample/sample.prj",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/sample/sample.shp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/raw/sample/sample.shx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "data-ground-truth",
+      "label": "data/ground_truth",
+      "type": "concept",
+      "description": "data/ground_truth/sample/sample.cpg data/ground_truth/sample/sample.dbf data/ground_truth/sample/sample.prj data/ground_truth/sample/sample.shp data/ground_truth/sample/sample.shx",
+      "content": "---\ntitle: data/ground_truth\ntype: concept\ndescription: data/ground_truth/sample/sample.cpg data/ground_truth/sample/sample.dbf data/ground_truth/sample/sample.prj data/ground_truth/sample/sample.shp data/ground_truth/sample/sample.shx\n---\n\ndata/ground_truth/sample/sample.cpg data/ground_truth/sample/sample.dbf data/ground_truth/sample/sample.prj data/ground_truth/sample/sample.shp data/ground_truth/sample/sample.shx\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "data/ground_truth/sample/sample.cpg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/ground_truth/sample/sample.dbf",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/ground_truth/sample/sample.prj",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/ground_truth/sample/sample.shp",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "data/ground_truth/sample/sample.shx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-resources",
+      "label": "tests/resources",
+      "type": "concept",
+      "description": "tests/resources/backward_compatibility/regression_model_Linear.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_RandomForest.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_SkLearnMLP.v0.2.0.pickle tests/resources/diabetes.tab.txt tests/...",
+      "content": "---\ntitle: tests/resources\ntype: concept\ndescription: tests/resources/backward_compatibility/regression_model_Linear.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_RandomForest.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_SkLearnMLP.v0.2.0.pickle tests/resources/diabetes.tab.txt tests/...\n---\n\ntests/resources/backward_compatibility/regression_model_Linear.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_RandomForest.v0.2.0.pickle tests/resources/backward_compatibility/regression_model_SkLearnMLP.v0.2.0.pickle tests/resources/diabetes.tab.txt tests/...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/resources/backward_compatibility/regression_model_Linear.v0.2.0.pickle",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/resources/backward_compatibility/regression_model_RandomForest.v0.2.0.pickle",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/resources/backward_compatibility/regression_model_SkLearnMLP.v0.2.0.pickle",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/resources/diabetes.tab.txt",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/resources/torch_mlp.pickle",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "docs-2-notebooks",
+      "label": "docs/2-notebooks",
+      "type": "concept",
+      "description": "docs/2-notebooks/.gitignore docs/2-notebooks/0_intro.md docs/2-notebooks/notebooks_to_copy.json",
+      "content": "---\ntitle: docs/2-notebooks\ntype: concept\ndescription: docs/2-notebooks/.gitignore docs/2-notebooks/0_intro.md docs/2-notebooks/notebooks_to_copy.json\n---\n\ndocs/2-notebooks/.gitignore docs/2-notebooks/0_intro.md docs/2-notebooks/notebooks_to_copy.json\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/2-notebooks/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/2-notebooks/0_intro.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/2-notebooks/notebooks_to_copy.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-frameworks",
+      "label": "tests/frameworks",
+      "type": "concept",
+      "description": "tests/frameworks/geoanalytics/test_geoanalytics.py tests/frameworks/lightgbm/test_lightgbm.py tests/frameworks/torch/test_torch.py",
+      "content": "---\ntitle: tests/frameworks\ntype: concept\ndescription: tests/frameworks/geoanalytics/test_geoanalytics.py tests/frameworks/lightgbm/test_lightgbm.py tests/frameworks/torch/test_torch.py\n---\n\ntests/frameworks/geoanalytics/test_geoanalytics.py tests/frameworks/lightgbm/test_lightgbm.py tests/frameworks/torch/test_torch.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/frameworks/geoanalytics/test_geoanalytics.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/frameworks/lightgbm/test_lightgbm.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/frameworks/torch/test_torch.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "github-workflows",
+      "label": ".github/workflows",
+      "type": "concept",
+      "description": ".github/workflows/ci.yaml .github/workflows/release.yaml",
+      "content": "---\ntitle: .github/workflows\ntype: concept\ndescription: .github/workflows/ci.yaml .github/workflows/release.yaml\n---\n\n.github/workflows/ci.yaml .github/workflows/release.yaml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/workflows/ci.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/release.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "readme-md",
+      "label": "README.md",
+      "type": "concept",
+      "description": "README.md <p align=\"center\" style=\"text-align:center\"> <img src=\"resources/sensai-logo.svg#gh-light-mode-only\" style=\"width:400px\"> <img src=\"resources/sensai-logo-dark-mode.svg#gh-dark-mode...",
+      "content": "---\ntitle: README.md\ntype: concept\ndescription: README.md <p align=\"center\" style=\"text-align:center\"> <img src=\"resources/sensai-logo.svg#gh-light-mode-only\" style=\"width:400px\"> <img src=\"resources/sensai-logo-dark-mode.svg#gh-dark-mode...\n---\n\nREADME.md <p align=\"center\" style=\"text-align:center\"> <img src=\"resources/sensai-logo.svg#gh-light-mode-only\" style=\"width:400px\"> <img src=\"resources/sensai-logo-dark-mode.svg#gh-dark-mode...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "docs-1-supervised-learning",
+      "label": "docs/1-supervised-learning",
+      "type": "concept",
+      "description": "docs/1-supervised-learning/.gitignore docs/1-supervised-learning/1-vector-models.ipynb",
+      "content": "---\ntitle: docs/1-supervised-learning\ntype: concept\ndescription: docs/1-supervised-learning/.gitignore docs/1-supervised-learning/1-vector-models.ipynb\n---\n\ndocs/1-supervised-learning/.gitignore docs/1-supervised-learning/1-vector-models.ipynb\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/1-supervised-learning/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/1-supervised-learning/1-vector-models.ipynb",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-backwardscompat",
+      "label": "tests/backwardscompat",
+      "type": "concept",
+      "description": "tests/backwardscompat/create_test_models.py tests/backwardscompat/test_models.py",
+      "content": "---\ntitle: tests/backwardscompat\ntype: concept\ndescription: tests/backwardscompat/create_test_models.py tests/backwardscompat/test_models.py\n---\n\ntests/backwardscompat/create_test_models.py tests/backwardscompat/test_models.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/backwardscompat/create_test_models.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/backwardscompat/test_models.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "bumpversion-cfg",
+      "label": ".bumpversion.cfg",
+      "type": "concept",
+      "description": ".bumpversion.cfg",
+      "content": "---\ntitle: .bumpversion.cfg\ntype: concept\ndescription: .bumpversion.cfg\n---\n\n.bumpversion.cfg\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".bumpversion.cfg",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "coveragerc",
+      "label": ".coveragerc",
+      "type": "concept",
+      "description": ".coveragerc",
+      "content": "---\ntitle: .coveragerc\ntype: concept\ndescription: .coveragerc\n---\n\n.coveragerc\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".coveragerc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "editorconfig",
+      "label": ".editorconfig",
+      "type": "concept",
+      "description": ".editorconfig",
+      "content": "---\ntitle: .editorconfig\ntype: concept\ndescription: .editorconfig\n---\n\n.editorconfig\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".editorconfig",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "gitattributes",
+      "label": ".gitattributes",
+      "type": "concept",
+      "description": ".gitattributes",
+      "content": "---\ntitle: .gitattributes\ntype: concept\ndescription: .gitattributes\n---\n\n.gitattributes\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".gitattributes",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "gitignore",
+      "label": ".gitignore",
+      "type": "concept",
+      "description": ".gitignore",
+      "content": "---\ntitle: .gitignore\ntype: concept\ndescription: .gitignore\n---\n\n.gitignore\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "gitlab-ci-yml",
+      "label": ".gitlab-ci.yml",
+      "type": "concept",
+      "description": ".gitlab-ci.yml",
+      "content": "---\ntitle: .gitlab-ci.yml\ntype: concept\ndescription: .gitlab-ci.yml\n---\n\n.gitlab-ci.yml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".gitlab-ci.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "readthedocs-yaml",
+      "label": ".readthedocs.yaml",
+      "type": "concept",
+      "description": ".readthedocs.yaml",
+      "content": "---\ntitle: .readthedocs.yaml\ntype: concept\ndescription: .readthedocs.yaml\n---\n\n.readthedocs.yaml\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".readthedocs.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "changelog-md",
+      "label": "CHANGELOG.md",
+      "type": "concept",
+      "description": "CHANGELOG.md",
+      "content": "---\ntitle: CHANGELOG.md\ntype: concept\ndescription: CHANGELOG.md\n---\n\nCHANGELOG.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "CHANGELOG.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-03-07T18:05:55.961469Z"
+}

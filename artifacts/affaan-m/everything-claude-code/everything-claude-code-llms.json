@@ -1,0 +1,909 @@
+{
+  "schema": {
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "title": "llmsTxtDocument",
+    "type": "object",
+    "required": [
+      "project",
+      "remember",
+      "sections"
+    ],
+    "properties": {
+      "project": {
+        "type": "object",
+        "required": [
+          "name",
+          "summary"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "remember": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "string"
+        }
+      },
+      "sections": {
+        "type": "array",
+        "minItems": 1,
+        "items": {
+          "type": "object",
+          "required": [
+            "title",
+            "links"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 1
+            },
+            "links": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "title",
+                  "url",
+                  "note"
+                ],
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "format": "uri"
+                  },
+                  "note": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "project": {
+    "name": "Everything Claude Code",
+    "summary": "**Language:** English | [\u7b80\u4f53\u4e2d\u6587](README.zh-CN.md) | [\u7e41\u9ad4\u4e2d\u6587](docs/zh-TW/README.md) | [\u65e5\u672c\u8a9e](docs/ja-JP/README.md) | [\ud55c\uad6d\uc5b4](docs/ko-KR/README.md)"
+  },
+  "remember": [
+    "Start with Docs for install & onboarding",
+    "Check Tutorials for end-to-end workflows",
+    "Review API references before integrating"
+  ],
+  "sections": [
+    {
+      "title": "Docs",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ja-JP/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ko-KR/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/zh-CN/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/zh-TW/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ja-JP/commands/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ja-JP/plugins/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ja-JP/rules/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/ja-JP/skills/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/zh-CN/hooks/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/docs/zh-CN/plugins/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": "Tutorials",
+      "links": [
+        {
+          "title": "Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/CLAUDE.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Django Api Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/django-api-CLAUDE.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Go Microservice Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/go-microservice-CLAUDE.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Rust Api Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/rust-api-CLAUDE.md",
+          "note": "worked example"
+        },
+        {
+          "title": "Saas Nextjs Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/saas-nextjs-CLAUDE.md",
+          "note": "worked example"
+        },
+        {
+          "title": "User Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/examples/user-CLAUDE.md",
+          "note": "worked example"
+        }
+      ]
+    },
+    {
+      "title": "API",
+      "links": [
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/api-design/SKILL.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/claude-api/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/x-api/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Api Reference",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/api-reference.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Capture",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/capture.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Capture Reference",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/capture-reference.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Editor",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/editor.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Generative",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/generative.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Rtstream",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/rtstream.md",
+          "note": "API reference"
+        },
+        {
+          "title": "Rtstream Reference",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/videodb/reference/rtstream-reference.md",
+          "note": "API reference"
+        }
+      ]
+    },
+    {
+      "title": "Concepts",
+      "links": [
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/android-clean-architecture/SKILL.md",
+          "note": "core concept"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/liquid-glass-design/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Optional",
+      "links": [
+        {
+          "title": "Changelog",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/CHANGELOG.md",
+          "note": "version history"
+        },
+        {
+          "title": "Contributing",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/CONTRIBUTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Security Reviewer",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/security-reviewer.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Cloud Infrastructure Security",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/security-review/cloud-infrastructure-security.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Common Security",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/rules/common-security.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Golang Security",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/rules/golang-security.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Insaits Security Monitor",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/insaits-security-monitor.py",
+          "note": "security policy"
+        },
+        {
+          "title": "Insaits Security Wrapper",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/insaits-security-wrapper.js",
+          "note": "security policy"
+        },
+        {
+          "title": "Kotlin Security",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/rules/kotlin-security.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Php Security",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/rules/php-security.md",
+          "note": "security policy"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.claude/skills/everything-claude-code/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.codex/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Pull Request Template",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.github/PULL_REQUEST_TEMPLATE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/AGENTS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Claude",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/CLAUDE.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Of Conduct",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/CODE_OF_CONDUCT.md",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/README.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Readme.Zh Cn",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/README.zh-CN.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Sponsoring",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/SPONSORING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Sponsors",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/SPONSORS.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Troubleshooting",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/TROUBLESHOOTING.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Commitlint.Config",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commitlint.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Eslint.Config",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/eslint.config.js",
+          "note": "docs page"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/hooks/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/plugins/README.md",
+          "note": "install & quickstart"
+        }
+      ]
+    },
+    {
+      "title": ".Agents",
+      "links": [
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/article-writing/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/backend-patterns/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/coding-standards/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/content-engine/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/crosspost/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/deep-research/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/dmux-workflows/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/e2e-testing/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/eval-harness/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.agents/skills/exa-search/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Claude Plugin",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.claude-plugin/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Plugin Schema Notes",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.claude-plugin/PLUGIN_SCHEMA_NOTES.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Cursor",
+      "links": [
+        {
+          "title": "Adapter",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/adapter.js",
+          "note": "docs page"
+        },
+        {
+          "title": "After File Edit",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/after-file-edit.js",
+          "note": "docs page"
+        },
+        {
+          "title": "After Mcp Execution",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/after-mcp-execution.js",
+          "note": "docs page"
+        },
+        {
+          "title": "After Shell Execution",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/after-shell-execution.js",
+          "note": "docs page"
+        },
+        {
+          "title": "After Tab File Edit",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/after-tab-file-edit.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Before Mcp Execution",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/before-mcp-execution.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Before Read File",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/before-read-file.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Before Shell Execution",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/before-shell-execution.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Before Submit Prompt",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/before-submit-prompt.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Before Tab File Read",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.cursor/hooks/before-tab-file-read.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": ".Opencode",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Index",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/index.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Migration",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/MIGRATION.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Fix",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/commands/build-fix.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Check Coverage",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/tools/check-coverage.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Checkpoint",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/commands/checkpoint.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Review",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/commands/code-review.md",
+          "note": "docs page"
+        },
+        {
+          "title": "E2E",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/commands/e2e.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Ecc Hooks",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/plugins/ecc-hooks.ts",
+          "note": "docs page"
+        },
+        {
+          "title": "Eval",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/.opencode/commands/eval.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Agents",
+      "links": [
+        {
+          "title": "Architect",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/architect.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Error Resolver",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/build-error-resolver.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Chief Of Staff",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/chief-of-staff.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Reviewer",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/code-reviewer.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Database Reviewer",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/database-reviewer.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Doc Updater",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/doc-updater.md",
+          "note": "docs page"
+        },
+        {
+          "title": "E2E Runner",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/e2e-runner.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Go Build Resolver",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/go-build-resolver.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Go Reviewer",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/go-reviewer.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Harness Optimizer",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/agents/harness-optimizer.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Commands",
+      "links": [
+        {
+          "title": "Aside",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/aside.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Build Fix",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/build-fix.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Checkpoint",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/checkpoint.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Claw",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/claw.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Code Review",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/code-review.md",
+          "note": "docs page"
+        },
+        {
+          "title": "E2E",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/e2e.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Eval",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/eval.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Evolve",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/evolve.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Go Build",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/go-build.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Go Review",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/commands/go-review.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Contexts",
+      "links": [
+        {
+          "title": "Dev",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/contexts/dev.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Research",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/contexts/research.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Review",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/contexts/review.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Rules",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Agents",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/common/agents.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/common/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/golang/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/kotlin/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/perl/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/php/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/python/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/swift/coding-style.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Coding Style",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/rules/typescript/coding-style.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Scripts",
+      "links": [
+        {
+          "title": "Claw",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/claw.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Orchestrate Worktrees",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/orchestrate-worktrees.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Orchestration Status",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/orchestration-status.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Setup Package Manager",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/setup-package-manager.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill Create Output",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/skill-create-output.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Auto Tmux Dev",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/auto-tmux-dev.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Catalog",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/ci/catalog.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Check Console Log",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/check-console-log.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Check Hook Enabled",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/check-hook-enabled.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Cost Tracker",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/scripts/hooks/cost-tracker.js",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Skills",
+      "links": [
+        {
+          "title": "README",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/visa-doc-translate/README.md",
+          "note": "install & quickstart"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/agent-harness-construction/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/agentic-engineering/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/ai-first-engineering/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/article-writing/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/autonomous-loops/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/backend-patterns/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/blueprint/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/carrier-relationship-management/SKILL.md",
+          "note": "docs page"
+        },
+        {
+          "title": "Skill",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/skills/clickhouse-io/SKILL.md",
+          "note": "docs page"
+        }
+      ]
+    },
+    {
+      "title": "Tests",
+      "links": [
+        {
+          "title": "Codex Config.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/codex-config.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Opencode Config.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/opencode-config.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Run All",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/run-all.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Claw.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/scripts/claw.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Evaluate Session.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/hooks/evaluate-session.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Hooks.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/hooks/hooks.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Hooks.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/integration/hooks.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Orchestration Session.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/lib/orchestration-session.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Orchestration Status.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/scripts/orchestration-status.test.js",
+          "note": "docs page"
+        },
+        {
+          "title": "Package Manager.Test",
+          "url": "https://github.com/affaan-m/everything-claude-code/blob/main/tests/lib/package-manager.test.js",
+          "note": "docs page"
+        }
+      ]
+    }
+  ]
+}

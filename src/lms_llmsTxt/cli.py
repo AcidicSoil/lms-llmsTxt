@@ -41,7 +41,7 @@ class UIRuntimeStatus:
 def build_graph_viewer_url(
     graph_json_path: str | Path,
     *,
-    ui_base_url: str = "http://localhost:3000",
+    ui_base_url: str = "http://localhost:3010",
     hypergraph_dir: Path | None = None,
 ) -> str:
     graph_path = Path(graph_json_path).resolve()
@@ -284,8 +284,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--ui-base-url",
-        default="http://localhost:3000",
-        help="Base URL for the HyperGraph UI used by --ui (default: http://localhost:3000).",
+        default="http://localhost:3010",
+        help="Base URL for the HyperGraph UI used by --ui (default: http://localhost:3010).",
     )
     parser.add_argument(
         "--ui-no-open",

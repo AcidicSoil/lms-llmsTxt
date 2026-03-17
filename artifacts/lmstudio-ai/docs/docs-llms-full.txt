@@ -1,7 +1,7 @@
 # llms-full (private-aware)
 > Built from GitHub files and website pages. Large files may be truncated.
 
---- 1_python/1_getting-started/_authentication.md ---
+--- 1_python/1_getting-started/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -238,7 +238,7 @@ the scan explicitly, and passing in the reported API server details when creatin
 ## Links discovered
 - [here](https://github.com/lmstudio-ai/lmstudio-python)
 
---- 1_developer/2_rest/_quickstart.md ---
+--- 1_developer/2_rest/quickstart.md ---
 ---
 title: Get up and running with the LM Studio API
 sidebar_title: Quickstart
@@ -451,7 +451,7 @@ variants:
           "integrations": [
             {
               "type": "plugin",
-              "id": "mcp/playwright".
+              "id": "mcp/playwright",
               "allowed_tools": ["browser_navigate"]
             }
           ],
@@ -735,6 +735,29 @@ index: 2
 
 ---
 
+###### LM Studio 0.4.1
+
+### Anthropic-compatible API
+
+- New Anthropic-compatible endpoint: `POST /v1/messages`.
+  - Use Claude code models with LM Studio
+  - See docs for more details: [/docs/developer/anthropic-compat](/docs/developer/anthropic-compat).
+
+---
+
+###### LM Studio 0.4.0
+
+### LM Studio native v1 REST API
+
+- Official release of LM Studio's native v1 REST API at `/api/v1/*` endpoints.
+  - [MCP via API](/docs/developer/core/mcp)
+  - [Stateful chats](/docs/developer/rest/stateful-chats)
+  - [Authentication](/docs/developer/core/authentication) configuration with API tokens
+  - Model [download](/docs/developer/rest/download), [load](/docs/developer/rest/load) and [unload](/docs/developer/rest/unload) endpoints
+  - See [overview](/docs/developer/rest) page for more details and [comparison](/docs/developer/rest#inference-endpoint-comparison) with OpenAI-compatible endpoints.
+
+---
+
 ###### LM Studio 0.3.29 • 2025‑10‑06
 
 ### OpenAI `/v1/responses` and variant listing
@@ -963,6 +986,15 @@ lms get deepseek-r1 --mlx
 
 
 ## Links discovered
+- [/docs/developer/anthropic-compat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
+- [MCP via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/mcp.md)
+- [Stateful chats](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/stateful-chats.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [overview](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
+- [comparison](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest#inference-endpoint-comparison.md)
 - [/docs/developer/openai-compat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
 - [/blog/lmstudio-v0.3.29](https://github.com/lmstudio-ai/docs/blob/main/blog/lmstudio-v0.3.29)
 - [/docs/cli/local-models/load](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/load.md)
@@ -1082,6 +1114,49 @@ description: ".embed() - API reference for generating embeddings from a loaded e
 ---
 
 `.embed()` is a method that generates embeddings from a loaded embedding model.
+
+--- 5_lmlink/1_basics/faq.md ---
+---
+title: "Frequently Asked Questions"
+sidebar_title: "FAQ"
+description: "Answers to common questions about LM Link."
+index: 3
+---
+
+## Q&A
+
+Got questions about LM Link? We cover some of the most common questions below.
+
+#### Q: Does LM Link open up my computer to the public internet?
+A: No! All your devices in the LM Link network communicate with each other using Tailscale’s internal end-to-end encrypted connections. None of your devices are ever exposed to the public Internet.
+
+#### Q: Can I use remote models with LM Studio's local server?
+A: Yes. Any model in your LM Link network can be used as if they are local. This means that any tool that already connects to your local LM Studio will be able to use remote models as well, just by pointing to localhost:1234 as usual.
+
+#### Q: Can I use remote models through the LM Studio API/SDKs?
+A: Yes. Any model in your LM Link network can be used as if they are local. Just specify the model key as usual. If the model can be found on a remote device, it can be used through LM Link.
+
+#### Q: Will LM Link interfere with my existing Tailscale VPN?
+A: No. LM Link is an entirely separate and self-contained utilization of Tailscale VPN primitives. LM Link will coexist with other Tailscale utilization on your machine or network, with no interference or interplay. 
+
+#### Q: Can the LM Studio Hub see my chats?
+A: No. The LM Studio Hub is only used to facilitate discovery between LM Studio/llmster instances. All communication afterwards, including chats and model listing, happens within Tailscale’s end-to-end encrypted connection.
+
+#### Q: How can I disable LM Link?
+A: In the LM Studio app, go to Settings -> LM Link -> Enable LM Link - OFF. If you are using llmster (our headless daemon), run `lms link disable`.
+
+#### Q: Why does a device show up as “disconnected”?
+A: LM Link uses end-to-end encrypted tunnels to connect to each other. If a device shows up as “disconnected”, it is possible that device has crashed but has not reported to the discovery server. Please make sure LM Studio/llmster is indeed running on that device. If the error persists, please report a bug at [bugs@lmstudio.ai](mailto:bugs@lmstudio.ai).
+
+#### Q: If I have the same model on multiple devices, how do I choose which one to use?
+A: If you are loading the model via LM Studio or `lms load`, the same model on different devices will show up as separate entries, with the device name identified. If you are loading models via API/SDK, you can set a preferred device from the in-app LM Link page, or use command `lms link set-preferred-device`. Once set, the model will always load on your preferred device.
+
+#### Q: Can linked devices do anything besides LM Studio tasks on my computer?
+A: No. LM Link only lets LM Studio/llmster talk to each other for model and API access. It does not expose your operating system, files, or other services to linked devices.
+
+#### Q: Can I use my existing Tailscale network?
+A: Not at the moment. When you enable LM Link we create a dedicated network programmatically and take full control over the ACL. This will not work well with any existing Tailscale networks. If you wish, you can DIY several aspects of the LM Link feature set yourself.
+
 
 --- CONTRIBUTING.md ---
 
@@ -1461,28 +1536,28 @@ bash run.sh
 
 
 --- _assets/nvidia-spark-playbook/js/run.js ---
-const { LMStudioClient } = require('@lmstudio/sdk');
+const { LMStudioClient } = require("@lmstudio/sdk");
 
 async function main() {
- // Connect to Remote LM Studio on port 1234, replace {SPARK_LOCAL_IP} with the IP address of your DGX Spark on your local network
- const client = new LMStudioClient({ baseUrl: 'ws://{SPARK_LOCAL_IP}:1234' });
+  // Connect to Remote LM Studio on port 1234, replace {SPARK_LOCAL_IP} with the IP address of your DGX Spark on your local network
+  const client = new LMStudioClient({ baseUrl: "ws://{SPARK_LOCAL_IP}:1234" });
 
- // Get model reference (uses already loaded model if available)
- const model = await client.llm.model('openai/gpt-oss-120b');
+  // Get model reference (uses already loaded model if available)
+  const model = await client.llm.model("openai/gpt-oss-120b");
 
- const prompt = "List three cool project ideas that I can run with a local LLM";
+  const prompt = "List three cool project ideas that I can run with a local LLM";
 
- console.log("Sending prompt:", prompt);
- console.log("\nResponse:");
+  console.log("Sending prompt:", prompt);
+  console.log("\nResponse:");
 
- // Send the prompt and stream the response
- const prediction = model.respond(prompt);
+  // Send the prompt and stream the response
+  const prediction = model.respond(prompt);
 
- for await (const fragment of prediction) {
-   process.stdout.write(fragment.content);
- }
+  for await (const fragment of prediction) {
+    process.stdout.write(fragment.content);
+  }
 
- console.log("\nDone!");
+  console.log("\nDone!");
 }
 
 main().catch(console.error);
@@ -1607,6 +1682,12 @@ You can attach documents to your chat messages and interact with them entirely o
 
 Read more about how to use this feature in the [Chat with Documents](app/basics/rag) guide.
 
+## Run LM Studio without the GUI (llmster)
+
+llmster is the headless version of LM Studio, no desktop app required. It's ideal for servers, CI environments, or any machine where you don't need a GUI.
+
+Learn more: [Headless Mode](/docs/developer/core/headless).
+
 ## Use LM Studio's API from your own apps and scripts
 
 LM Studio provides a REST API that you can use to interact with your local models from your own apps and scripts.
@@ -1630,6 +1711,7 @@ Join the LM Studio community on [Discord](https://discord.gg/aPQfnNkxGC) to ask 
 - [Add to LM Studio Button](https://github.com/lmstudio-ai/docs/blob/main/docs/app/plugins/mcp/deeplink.md)
 - [Download an LLM](https://github.com/lmstudio-ai/docs/blob/main/0_app/0_root/app/basics/download-model.md)
 - [Chat with Documents](https://github.com/lmstudio-ai/docs/blob/main/0_app/0_root/app/basics/rag.md)
+- [Headless Mode](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/headless.md)
 - [OpenAI Compatibility API](https://github.com/lmstudio-ai/docs/blob/main/0_app/0_root/api/openai-api.md)
 - [LM Studio REST API (beta)](https://github.com/lmstudio-ai/docs/blob/main/0_app/0_root/api/rest-api.md)
 - [Discord](https://discord.gg/aPQfnNkxGC)
@@ -1982,7 +2064,7 @@ New in 0.3.15: You can [import](/docs/app/presets/import) Presets from file or U
 
 Below is the anatomy of the Preset manager:
 
-<img src="/assets/docs/preset-widget-anatomy.png" style="width:70%" data-caption="The anatomy of the Preset manager in the settings sidebar.">
+<img src="/assets/docs/preset-widget-anatomy.webp" style="width:70%" data-caption="The anatomy of the Preset manager in the settings sidebar.">
 
 ## Importing, Publishing, and Updating Downloaded Presets
 
@@ -2082,6 +2164,12 @@ You can drag and drop chats in and out of folders, and even drag folders into fo
 ### Duplicate chats
 
 You can duplicate a whole chat conversation by clicking the `•••` menu and selecting "Duplicate". If the chat has any files in it, they will be duplicated too.
+
+### Split view in chat
+
+You can view two chats side by side by dragging and dropping chat tabs to either half of the window. Alternatively, use the split view icon at the top right of a chat window to split left or right. 
+
+Close one side of the split view with the 'x' button in the top right of each pane.
 
 ## FAQ
 
@@ -2226,7 +2314,7 @@ lmstudio://add_mcp?name=hf-mcp-server&config=eyJ1cmwiOiJodHRwczovL2h1Z2dpbmdmYWN
 ---
 title: LM Studio Developer Docs
 sidebar_title: Introduction
-description: Build with LM Studio's local APIs and SDKs — TypeScript, Python, REST, and OpenAI‑compatible endpoints.
+description: Build with LM Studio's local APIs and SDKs — TypeScript, Python, REST, and OpenAI and Anthropic-compatible endpoints.
 index: 1
 ---
 
@@ -2235,7 +2323,9 @@ index: 1
 
 - TypeScript SDK: [lmstudio-js](/docs/typescript)
 - Python SDK: [lmstudio-python](/docs/python)
+- LM Studio REST API: [Stateful Chats, MCPs via API](/docs/developer/rest)
 - OpenAI‑compatible: [Chat, Responses, Embeddings](/docs/developer/openai-compat)
+- Anthropic-compatible: [Messages](/docs/developer/anthropic-compat)
 - LM Studio CLI: [`lms`](/docs/cli)
 
 :::split:::
@@ -2243,11 +2333,38 @@ index: 1
 ## What you can build
 
 - Chat and text generation with streaming
+- Tool calling and local agents with MCP
 - Structured output (JSON schema)
-- Tool calling and local agents
 - Embeddings and tokenization
-- Model management (JIT load, TTL, auto‑evict)
+- Model management (load, download, list)
 ```
+
+## Install `llmster` for headless deployments
+
+`llmster` is LM Studio's core, packaged as a daemon for headless deployment on servers, cloud instances, or CI. The daemon runs standalone, and it is not dependent on the LM Studio GUI.
+
+**Mac / Linux**
+
+```bash
+curl -fsSL https://lmstudio.ai/install.sh | bash
+```
+
+**Windows**
+
+```powershell
+irm https://lmstudio.ai/install.ps1 | iex
+```
+
+**Basic usage**
+
+```bash
+lms daemon up          # Start the daemon
+lms get <model>        # Download a model
+lms server start       # Start the local server
+lms chat               # Open an interactive session
+```
+
+Learn more: [Headless deployments](/blog/0.4.0#deploy-on-servers-deploy-in-ci-deploy-anywhere)
 
 ## Super quick start
 
@@ -2286,43 +2403,217 @@ with lms.Client() as client:
 
 Full docs: [lmstudio-python](/docs/python), Source: [GitHub](https://github.com/lmstudio-ai/lmstudio-python)
 
-### Try a minimal HTTP request (OpenAI‑compatible)
+### HTTP (LM Studio REST API)
 
 ```bash
 lms server start --port 1234
 ```
 
 ```bash
-curl http://localhost:1234/v1/chat/completions \
+curl http://localhost:1234/api/v1/chat \
   -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $LM_API_TOKEN" \
   -d '{
     "model": "openai/gpt-oss-20b",
-    "messages": [{"role": "user", "content": "Who are you, and what can you do?"}]
+    "input": "Who are you, and what can you do?"
   }'
 ```
 
-Full docs: [OpenAI‑compatible endpoints](/docs/developer/openai-compat)
+Full docs: [LM Studio REST API](/docs/developer/rest)
 
 ## Helpful links
 
-- API Changelog: [/docs/developer/api-changelog](/docs/developer/api-changelog)
-- Local server basics: [/docs/developer/core](/docs/developer/core)
-- CLI reference: [/docs/cli](/docs/cli)
-- Community: [Discord](https://discord.gg/lmstudio)
+- [API Changelog](/docs/developer/api-changelog)
+- [Local server basics](/docs/developer/core/server)
+- [CLI reference](/docs/cli)
+- [Discord Community](https://discord.gg/lmstudio)
 
 
 ## Links discovered
 - [lmstudio-js](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [lmstudio-python](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
+- [Stateful Chats, MCPs via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [Chat, Responses, Embeddings](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Messages](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 - [`lms`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
+- [Headless deployments](https://github.com/lmstudio-ai/docs/blob/main/blog/0.4.0#deploy-on-servers-deploy-in-ci-deploy-anywhere)
 - [GitHub](https://github.com/lmstudio-ai/lmstudio-js)
 - [GitHub](https://github.com/lmstudio-ai/lmstudio-python)
-- [OpenAI‑compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
-- [/docs/developer/api-changelog](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/api-changelog.md)
-- [/docs/developer/core](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core.md)
-- [/docs/cli](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
-- [Discord](https://discord.gg/lmstudio)
+- [LM Studio REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
+- [API Changelog](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/api-changelog.md)
+- [Local server basics](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/server.md)
+- [CLI reference](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
+- [Discord Community](https://discord.gg/lmstudio)
+
+--- 1_developer/2_rest/index.md ---
+---
+title: LM Studio API
+sidebar_title: Overview
+description: LM Studio's REST API for local inference and model management
+fullPage: false
+index: 1
+---
+
+LM Studio offers a powerful REST API with first-class support for local inference and model management. In addition to our native API, we provide OpenAI-compatible endpoints ([learn more](/docs/developer/openai-compat)) and Anthropic-compatible endpoints ([learn more](/docs/developer/anthropic-compat)).
+
+## What's new
+Previously, there was a [v0 REST API](/docs/developer/rest/endpoints). With LM Studio 0.4.0, we have officially released our native v1 REST API at `/api/v1/*` endpoints and recommend using it.
+
+The v1 REST API includes enhanced features such as:
+- [MCP via API](/docs/developer/core/mcp)
+- [Stateful chats](/docs/developer/rest/stateful-chats)
+- [Authentication](/docs/developer/core/authentication) configuration with API tokens
+- Model [download](/docs/developer/rest/download), [load](/docs/developer/rest/load) and [unload](/docs/developer/rest/unload) endpoints
+
+## Supported endpoints
+The following endpoints are available in LM Studio's v1 REST API.
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Docs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/api/v1/chat</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/chat">Chat</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models</code></td>
+      <td><apimethod method="GET" /></td>
+      <td><a href="/docs/developer/rest/list">List Models</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/load</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/load">Load</a></td>
+    </tr>
+    <tr>
+        <td><code>/api/v1/models/unload</code></td>
+        <td><apimethod method="POST" /></td>
+        <td><a href="/docs/developer/rest/unload">Unload</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/download</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/rest/download">Download</a></td>
+    </tr>
+    <tr>
+      <td><code>/api/v1/models/download/status</code></td>
+      <td><apimethod method="GET" /></td>
+      <td><a href="/docs/developer/rest/download-status">Download Status</a></td>
+    </tr>
+  </tbody>
+</table>
+
+## Inference endpoint comparison
+The table below compares the features of LM Studio's `/api/v1/chat` endpoint with OpenAI-compatible and Anthropic-compatible inference endpoints.
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Feature</th>
+      <th><a href="/docs/developer/rest/chat"><code>/api/v1/chat</code></a></th>
+      <th><a href="/docs/developer/openai-compat/responses"><code>/v1/responses</code></a></th>
+      <th><a href="/docs/developer/openai-compat/chat-completions"><code>/v1/chat/completions</code></a></th>
+      <th><a href="/docs/developer/anthropic-compat/messages"><code>/v1/messages</code></a></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Streaming</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Stateful chat</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Remote MCPs</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>MCPs you have in LM Studio</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Custom tools</td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Include assistant messages in the request</td>
+      <td>❌</td>
+      <td>✅</td>
+      <td>✅</td>
+      <td>✅</td>
+    </tr>
+    <tr>
+      <td>Model load streaming events</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Prompt processing streaming events</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+    <tr>
+      <td>Specify context length in the request</td>
+      <td>✅</td>
+      <td>❌</td>
+      <td>❌</td>
+      <td>❌</td>
+    </tr>
+  </tbody>
+</table>
+
+---
+
+Please report bugs by opening an issue on [Github](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues).
+
+
+## Links discovered
+- [learn more](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [learn more](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
+- [v0 REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/endpoints.md)
+- [MCP via API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/mcp.md)
+- [Stateful chats](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/stateful-chats.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [Github](https://github.com/lmstudio-ai/lmstudio-bug-tracker/issues)
+- [Chat](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/chat.md)
+- [List Models](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/list.md)
+- [Load](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/load.md)
+- [Unload](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/unload.md)
+- [Download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
+- [Download Status](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download-status.md)
+- [<code>/api/v1/chat</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/chat.md)
+- [<code>/v1/responses</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
+- [<code>/v1/chat/completions</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/chat-completions.md)
+- [<code>/v1/messages</code>](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
 
 --- 1_developer/3_openai-compat/index.md ---
 ---
@@ -2417,6 +2708,13 @@ const client = new OpenAI({
    }'
 ```
 
+
+## Using Codex with LM Studio
+
+Codex is supported because LM Studio implements the OpenAI-compatible `POST /v1/responses` endpoint.
+
+See: [Use Codex with LM Studio](/docs/integrations/codex) and [Responses](/docs/developer/openai-compat/responses).
+
 ---
 
 Other OpenAI client libraries should have similar options to set the base URL.
@@ -2425,12 +2723,116 @@ If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstud
 
 
 ## Links discovered
+- [Use Codex with LM Studio](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/codex.md)
+- [Responses](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
 - [Discord](https://discord.gg/lmstudio)
 - [Models](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/models.md)
-- [Responses](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
 - [Chat Completions](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/chat-completions.md)
 - [Embeddings](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/embeddings.md)
 - [Completions](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/completions.md)
+
+--- 1_developer/4_anthropic-compat/index.md ---
+---
+title: Anthropic Compatibility Endpoints
+sidebar_title: Overview
+description: Send Messages requests using the Anthropic-compatible API.
+index: 1
+---
+
+### Supported endpoints
+
+<table class="flexible-cols">
+  <thead>
+    <tr>
+      <th>Endpoint</th>
+      <th>Method</th>
+      <th>Docs</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>/v1/messages</code></td>
+      <td><apimethod method="POST" /></td>
+      <td><a href="/docs/developer/anthropic-compat/messages">Messages</a></td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+
+## Using Claude Code with LM Studio
+
+For a full walkthrough, see: [Use Claude Code with LM Studio](/docs/integrations/claude-code).
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:1234
+export ANTHROPIC_AUTH_TOKEN=lmstudio
+claude --model openai/gpt-oss-20b
+```
+
+## Authentication headers
+
+When Require Authentication is enabled, LM Studio accepts both `x-api-key` and the standard `Authorization: Bearer <token>` header. To learn more about enabling auth in LM Studio, checkout [Authentication](/docs/developer/core/authentication).
+
+## Set the base URL to point to LM Studio
+
+Point your Anthropic client (or any HTTP request) at your local LM Studio server.
+
+Note: The following examples assume the server port is `1234`.
+
+### cURL example
+
+```diff
+- curl https://api.anthropic.com/v1/messages \
++ curl http://localhost:1234/v1/messages \
+   -H "Content-Type: application/json" \
++  -H "x-api-key: $LM_API_TOKEN" \
+   -d '{
+-    "model": "claude-4-5-sonnet",
++    "model": "ibm/granite-4-micro",
+     "max_tokens": 256,
+     "messages": [
+       {"role": "user", "content": "Write a haiku about local LLMs."}
+     ]
+   }'
+```
+
+### Python example
+
+```python
+from anthropic import Anthropic
+
+client = Anthropic(
+    base_url="http://localhost:1234",
+    api_key="lmstudio",
+)
+
+message = client.messages.create(
+    max_tokens=1024,
+    messages=[
+        {
+            "role": "user",
+            "content": "Hello from LM Studio",
+        }
+    ],
+    model="ibm/granite-4-micro",
+)
+
+print(message.content)
+```
+
+If you have not enabled Require Authentication, the `x-api-key` header is optional.
+For the Python example, you can also omit `api_key` when authentication is disabled.
+
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio) and enter the developers channel.
+
+
+## Links discovered
+- [Use Claude Code with LM Studio](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/claude-code.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [Discord](https://discord.gg/lmstudio)
+- [Messages](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
 
 --- 1_developer/0_core/0_server/index.md ---
 ---
@@ -2443,7 +2845,7 @@ index: 1
 
 You can serve local LLMs from LM Studio's Developer tab, either on `localhost` or on the network.
 
-LM Studio's APIs can be used through [REST API](/docs/developer/rest), client libraries like [lmstudio-js](/docs/typescript) and [lmstudio-python](/docs/python), and [OpenAI compatibility endpoints](/docs/developer/openai-compat)
+LM Studio's APIs can be used through [REST API](/docs/developer/rest), client libraries like [lmstudio-js](/docs/typescript) and [lmstudio-python](/docs/python), and compatibility endpoints like [OpenAI-compatible](/docs/developer/openai-compat) and [Anthropic-compatible](/docs/developer/anthropic-compat).
 
 <img src="/assets/docs/server.png" style="" data-caption="Load and serve LLMs from LM Studio" />
 
@@ -2467,18 +2869,22 @@ lms server start
 - [LM Studio REST API](/docs/developer/rest)
 - [TypeScript SDK](/docs/typescript) - `lmstudio-js`
 - [Python SDK](/docs/python) - `lmstudio-python`
-- [OpenAI compatibility endpoints](/docs/developer/openai-compat)
+- [OpenAI-compatible endpoints](/docs/developer/openai-compat)
+- [Anthropic-compatible endpoints](/docs/developer/anthropic-compat)
 
 
 ## Links discovered
 - [REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [lmstudio-js](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [lmstudio-python](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
-- [OpenAI compatibility endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [OpenAI-compatible](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Anthropic-compatible](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 - [LM Studio's CLI](https://github.com/lmstudio-ai/docs/blob/main/docs/cli.md)
 - [LM Studio REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest.md)
 - [TypeScript SDK](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript.md)
 - [Python SDK](https://github.com/lmstudio-ai/docs/blob/main/docs/python.md)
+- [OpenAI-compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat.md)
+- [Anthropic-compatible endpoints](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat.md)
 
 --- 1_developer/_embeddings.md ---
 ---
@@ -2490,7 +2896,7 @@ description: Use embedding models in LM Studio
 
 lorem ipsum dolor sit amet, consectetur adipiscing elit. nullam auctor, nunc nec suscipit ultricies, nunc nunc ultricies nunc, nec suscipit nunc nunc nec. nullam.
 
---- 1_developer/0_core/_authentication.md ---
+--- 1_developer/0_core/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -2539,7 +2945,7 @@ To edit the permissions of an existing API Token, click on the Edit button next 
 ### Using API Tokens with REST API:
 
 ```lms_noticechill
-The example below requires [allowing calling servers from mcp.json](/docs/developer/core/server/settings) to be enabled and the [tiktoken MCP](https://gitmcp.io/openai/tiktoken) in mcp.json.
+The example below requires [allowing calling servers from mcp.json](/docs/developer/core/server/settings) to be enabled and the [Playwright MCP](https://github.com/microsoft/playwright-mcp) in mcp.json.
 ```
 
 ```bash
@@ -2549,16 +2955,15 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "model": "ibm/granite-4-micro",
-    "input": "What is the first line in the tiktoken documentation?",
+    "input": "Open lmstudio.ai",
     "integrations": [
       {
         "type": "plugin",
-        "id": "mcp/tiktoken",
-        "allowed_tools": [
-          "fetch_tiktoken_documentation"
-        ]
+        "id": "mcp/playwright",
+        "allowed_tools": ["browser_navigate"]
       }
-    ]
+    ],
+    "context_length": 8000
   }'
 ```
 
@@ -2574,11 +2979,11 @@ To use API tokens with the TypeScript SDK, see the [TS SDK guide](/docs/typescri
 ## Links discovered
 - [LM Studio 0.4.0](https://github.com/lmstudio-ai/docs/blob/main/download.md)
 - [allowing calling servers from mcp.json](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/server/settings.md)
-- [tiktoken MCP](https://gitmcp.io/openai/tiktoken)
+- [Playwright MCP](https://github.com/microsoft/playwright-mcp)
 - [Python SDK guide](https://github.com/lmstudio-ai/docs/blob/main/docs/python/getting-started/authentication.md)
 - [TS SDK guide](https://github.com/lmstudio-ai/docs/blob/main/docs/typescript/authentication.md)
 
---- 1_developer/2_rest/_chat.md ---
+--- 1_developer/2_rest/chat.md ---
 ---
 title: "Chat with a model"
 description: "Send a message to a model and receive a response. Supports MCP integration."
@@ -2598,9 +3003,45 @@ api_info:
   optional: false
   description: Unique identifier for the model to use.
 - name: input
-  type: string
+  type: string | array<object>
   optional: false
   description: Message to send to the model.
+  children:
+    - name: Input text
+      unstyledName: true
+      type: string
+      description: Text content of the message.
+    - name: Input object
+      unstyledName: true
+      type: object
+      description: Object representing a message with additional metadata.
+      children:
+        - name: Text Input
+          type: object
+          optional: true
+          description: Text input to provide user messages
+          children:
+            - name: type
+              type: '"message"'
+              optional: false
+              description: Type of input item.
+            - name: content
+              type: string
+              description: Text content of the message.
+              optional: false
+        - name: Image Input
+          type: object
+          optional: true
+          description: Image input to provide user messages
+          children:
+            - name: type
+              type: '"image"'
+              optional: false
+              description: Type of input item.
+            - name: data_url
+              type: string
+              description: Image data as a base64-encoded data URL.
+              optional: false
 - name: system_prompt
   type: string
   optional: true
@@ -2703,9 +3144,8 @@ api_info:
 ```
 :::split:::
 ```lms_code_snippet
-title: Example Request
 variants:
-  curl:
+  Request with MCP:
     language: bash
     code: |
       curl http://localhost:1234/api/v1/chat \
@@ -2732,6 +3172,28 @@ variants:
             }
           ],
           "context_length": 8000,
+          "temperature": 0
+        }'
+  Request with Images:
+    language: bash
+    code: |
+      # Image is a small red square encoded as a base64 data URL
+      curl http://localhost:1234/api/v1/chat \
+        -H "Authorization: Bearer $LM_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        -d '{
+          "model": "qwen/qwen3-vl-4b",
+          "input": [
+            {
+              "type": "text",
+              "content": "Describe this image in two sentences"
+            },
+            {
+              "type": "image",
+              "data_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAFUlEQVR42mP8z8BQz0AEYBxVSF+FABJADveWkH6oAAAAAElFTkSuQmCC"
+            }
+          ],
+          "context_length": 2048,
           "temperature": 0
         }'
 ```
@@ -2803,6 +3265,47 @@ variants:
         - name: content
           type: string
           description: Text content of the reasoning.
+    - name: Invalid tool call
+      unstyledName: true
+      type: object
+      description: An invalid tool call made by the model - due to invalid tool name or tool arguments.
+      children:
+        - name: type
+          type: '"invalid_tool_call"'
+          description: Type of output item.
+        - name: reason
+          type: string
+          description: Reason why the tool call was invalid.
+        - name: metadata
+          type: object
+          description: Metadata about the invalid tool call.
+          children:
+            - name: type
+              type: '"invalid_name" | "invalid_arguments"'
+              description: Type of error that occurred.
+            - name: tool_name
+              type: string
+              description: Name of the tool that was attempted to be called.
+            - name: arguments
+              type: object
+              optional: true
+              description: Arguments that were passed to the tool (only present for `invalid_arguments` errors).
+            - name: provider_info
+              type: object
+              optional: true
+              description: Information about the tool provider (only present for `invalid_arguments` errors).
+              children:
+                - name: type
+                  type: '"plugin" | "ephemeral_mcp"'
+                  description: Provider type.
+                - name: plugin_id
+                  type: string
+                  optional: true
+                  description: Identifier of the plugin (when `type` is `"plugin"`).
+                - name: server_label
+                  type: string
+                  optional: true
+                  description: Label of the MCP server (when `type` is `"ephemeral_mcp"`).
 - name: stats
   type: object
   description: Token usage and performance metrics.
@@ -2833,9 +3336,8 @@ variants:
 ```
 :::split:::
 ```lms_code_snippet
-title: Response
 variants:
-  json:
+  Request with MCP:
     language: json
     code: |
       {
@@ -2885,6 +3387,26 @@ variants:
           "model_load_time_seconds": 2.656
         },
         "response_id": "resp_4ef013eba0def1ed23f19dde72b67974c579113f544086de"
+      }
+  Request with Images:
+    language: json
+    code: |
+      {
+        "model_instance_id": "qwen/qwen3-vl-4b",
+        "output": [
+          {
+            "type": "message",
+            "content": "This image is a solid, vibrant red square that fills the entire frame, with no discernible texture, pattern, or other elements. It presents a minimalist, uniform visual field of pure red, evoking a sense of boldness or urgency."
+          }
+        ],
+        "stats": {
+          "input_tokens": 17,
+          "total_output_tokens": 50,
+          "reasoning_output_tokens": 0,
+          "tokens_per_second": 51.03762685242662,
+          "time_to_first_token_seconds": 0.814
+        },
+        "response_id": "resp_0182bd7c479d7451f9a35471f9c26b34de87a7255856b9a4"
       }
 ```
 ````
@@ -2969,198 +3491,6 @@ Using this endpoint with chat‑tuned models may produce unexpected tokens. Pref
 - Prompt template is not applied
 - See OpenAI docs: https://platform.openai.com/docs/api-reference/completions
 
-
---- 1_developer/2_rest/_download.md ---
----
-title: "Download a model"
-description: "Download LLMs and embedding models"
-fullPage: true
-index: 8
-api_info:
-  method: POST
----
-
-````lms_hstack
-`POST /api/v1/models/download`
-
-**Request body**
-```lms_params
-- name: model
-  type: string
-  optional: false
-  description: The model to download. Accepts [model catalog](https://lmstudio.ai/models) identifiers (e.g., `openai/gpt-oss-20b`) and exact Hugging Face links (e.g., `https://huggingface.co/lmstudio-community/gpt-oss-20b-GGUF`)
-- name: quantization
-  type: string
-  optional: true
-  description: Quantization level of the model to download (e.g., `Q4_K_M`). Only supported for Hugging Face links.
-```
-:::split:::
-```lms_code_snippet
-title: Example Request
-variants:
-  curl:
-    language: bash
-    code: |
-      curl http://localhost:1234/api/v1/models/download \
-        -H "Authorization: Bearer $LM_API_TOKEN" \
-        -H "Content-Type: application/json" \
-        -d '{
-          "model": "ibm/granite-4-micro"
-        }'
-```
-````
-
-````lms_hstack
-**Response fields**
-
-Returns a download job status object. The response varies based on the download status.
-
-```lms_params
-- name: job_id
-  type: string
-  optional: true
-  description: Unique identifier for the download job. Absent when `status` is `already_downloaded`.
-- name: status
-  type: '"downloading" | "paused" | "completed" | "failed" | "already_downloaded"'
-  description: Current status of the download.
-- name: bytes_per_second
-  type: number
-  optional: true
-  description: Current download speed in bytes per second. Present when `status` is `downloading`.
-- name: estimated_completion
-  type: string
-  optional: true
-  description: Estimated completion time in ISO 8601 format. Present when `status` is `downloading`.
-- name: completed_at
-  type: string
-  optional: true
-  description: Download completion time in ISO 8601 format. Present when `status` is `completed`.
-- name: total_size_bytes
-  type: number
-  optional: true
-  description: Total size of the download in bytes. Absent when `status` is `already_downloaded`.
-- name: downloaded_bytes
-  type: number
-  optional: true
-  description: Number of bytes downloaded so far. Absent when `status` is `already_downloaded`.
-- name: started_at
-  type: string
-  optional: true
-  description: Download start time in ISO 8601 format. Absent when `status` is `already_downloaded`.
-```
-:::split:::
-```lms_code_snippet
-title: Response
-variants:
-  json:
-    language: json
-    code: |
-      {
-        "job_id": "job_493c7c9ded",
-        "status": "downloading",
-        "total_size_bytes": 2279145003,
-        "downloaded_bytes": 948,
-        "bytes_per_second": 7834.710743801653,
-        "estimated_completion": "2025-10-07T00:21:47.030Z",
-        "started_at": "2025-10-03T15:33:23.496Z"
-      }
-```
-````
-
-
-## Links discovered
-- [model catalog](https://lmstudio.ai/models)
-
---- 1_developer/2_rest/_download-status.md ---
----
-title: "Get download status"
-description: "Get the status of model downloads"
-fullPage: true
-index: 9
-api_info:
-  method: GET
----
-
-````lms_hstack
-`GET /api/v1/models/download/status/:job_id`
-
-**Path parameters**
-```lms_params
-- name: job_id
-  type: string
-  optional: false
-  description: The unique identifier of the download job. `job_id` is returned by the [download](/docs/developer/rest/download) endpoint when a download is initiated.
-```
-:::split:::
-```lms_code_snippet
-title: Example Request
-variants:
-  curl:
-    language: bash
-    code: |
-      curl -H "Authorization: Bearer $LM_API_TOKEN" \
-        http://localhost:1234/api/v1/models/download/status/job_493c7c9ded
-```
-````
-
-````lms_hstack
-**Response fields**
-
-Returns a single download job status object. The response varies based on the download status.
-
-```lms_params
-- name: job_id
-  type: string
-  description: Unique identifier for the download job.
-- name: status
-  type: '"downloading" | "paused" | "completed" | "failed"'
-  description: Current status of the download.
-- name: bytes_per_second
-  type: number
-  optional: true
-  description: Current download speed in bytes per second. Present when `status` is `downloading`.
-- name: estimated_completion
-  type: string
-  optional: true
-  description: Estimated completion time in ISO 8601 format. Present when `status` is `downloading`.
-- name: completed_at
-  type: string
-  optional: true
-  description: Download completion time in ISO 8601 format. Present when `status` is `completed`.
-- name: total_size_bytes
-  type: number
-  optional: true
-  description: Total size of the download in bytes.
-- name: downloaded_bytes
-  type: number
-  optional: true
-  description: Number of bytes downloaded so far.
-- name: started_at
-  type: string
-  optional: true
-  description: Download start time in ISO 8601 format.
-```
-:::split:::
-```lms_code_snippet
-title: Response
-variants:
-  json:
-    language: json
-    code: |
-      {
-        "job_id": "job_493c7c9ded",
-        "status": "completed",
-        "total_size_bytes": 2279145003,
-        "downloaded_bytes": 2279145003,
-        "started_at": "2025-10-03T15:33:23.496Z",
-        "completed_at": "2025-10-03T15:43:12.102Z"
-      }
-```
-````
-
-
-## Links discovered
-- [download](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/rest/download.md)
 
 --- 1_python/index.md ---
 ---
@@ -4742,7 +5072,7 @@ index: 1
 
 Plugins extend LM Studio's functionality by providing "hook functions" that execute at specific points during operation.
 
-Plugins are currently written in JavaScript/TypeScript and run on Node.js v20.18.0. Python support is in development.
+Plugins are currently written in JavaScript/TypeScript and run on Node.js v22.21.1. Python support is in development.
 
 ## Getting Started
 
@@ -4762,7 +5092,7 @@ lms dev
 
 Your plugin will appear in LM Studio's plugin list. Development mode automatically rebuilds and reloads your plugin when you make code changes.
 
-You only need `lms dev` during development. When the plugin is installed, LM Studio automatically runs them as needed. Learn more about distributing and installing plugins in the [Sharing Plugins](./plugins/sharing) section.
+You only need `lms dev` during development. When the plugin is installed, LM Studio automatically runs them as needed. Learn more about distributing and installing plugins in the [Sharing Plugins](./plugins/publish-plugins) section.
 
 ## Next Steps
 
@@ -4792,13 +5122,12 @@ You only need `lms dev` during development. When the plugin is installed, LM Stu
 
 
 ## Links discovered
-- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/sharing.md)
+- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/publish-plugins.md)
 - [Tools Providers](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/tools-provider.md)
 - [Prompt Preprocessors](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/prompt-preprocessor.md)
 - [Generators](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/generator.md)
 - [Custom Configurations](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/custom-configuration.md)
 - [Third-Party Dependencies](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/dependencies.md)
-- [Sharing Plugins](https://github.com/lmstudio-ai/docs/blob/main/2_typescript/3_plugins/plugins/publish-plugins.md)
 
 --- 2_typescript/4_embedding/index.md ---
 ---
@@ -5116,7 +5445,7 @@ lms push --private
 Private artifact is in test. Get in touch if you are interested.
 
 
---- 2_typescript/_authentication.md ---
+--- 2_typescript/authentication.md ---
 ---
 title: Authentication
 sidebar_title: Authentication
@@ -5208,6 +5537,8 @@ lms --help
 | See models loaded into memory | `lms ps` | [Guide](/docs/cli/local-models/ps) |
 | Control the server | `lms server start` | [Guide](/docs/cli/serve/server-start) |
 | Manage the inference runtime | `lms runtime` | [Guide](/docs/cli/runtime) |
+| Manage the headless daemon | `lms daemon` | [Guide](/docs/cli/daemon/daemon-up) |
+| Manage LM Link | `lms link` | [Guide](/docs/cli/link/link-enable) |
 
 
 ### Verify the installation
@@ -5311,6 +5642,8 @@ Learn more about [`lms load and unload`](/docs/cli/local-models/load).
 - [Guide](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/ps.md)
 - [Guide](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/serve/server-start.md)
 - [Guide](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/runtime.md)
+- [Guide](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/daemon/daemon-up.md)
+- [Guide](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/link/link-enable.md)
 - [`lms server`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/serve/server-start.md)
 - [`lms ls`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/ls.md)
 - [`lms ps`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/ps.md)
@@ -5405,7 +5738,7 @@ cat my_file.txt | lms chat -p "Summarize this, please"
 ```
 
 
---- 3_cli/3_develop-and-publish/clone.md ---
+--- 3_cli/5_develop-and-publish/clone.md ---
 ---
 title: "`lms clone`"
 sidebar_title: "`lms clone`"
@@ -5442,7 +5775,196 @@ lms clone alice/sample-plugin ./my-folder
 ```
 
 
---- 3_cli/3_develop-and-publish/dev.md ---
+--- 3_cli/2_daemon/daemon-down.md ---
+---
+title: "`lms daemon down`"
+sidebar_title: "`lms daemon down`"
+description: Stop llmster from the CLI.
+index: 2
+---
+
+The `lms daemon down` command stops the running llmster.
+
+```shell
+lms daemon down
+```
+
+```lms_info
+`lms daemon down` only works if llmster is running. It will not stop LM Studio if it is running as a GUI app.
+```
+
+### Learn more
+
+To find out more about llmster, see [Headless Mode](/docs/developer/core/headless).
+
+
+## Links discovered
+- [Headless Mode](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/headless.md)
+
+--- 3_cli/2_daemon/daemon-status.md ---
+---
+title: "`lms daemon status`"
+sidebar_title: "`lms daemon status`"
+description: Check whether llmster is running.
+index: 3
+---
+
+The `lms daemon status` command reports whether llmster is currently running.
+
+### Flags
+
+```lms_params
+- name: "--json"
+  type: "flag"
+  optional: true
+  description: "Output the status in JSON format"
+```
+
+## Check daemon status
+
+```shell
+lms daemon status
+```
+
+### JSON output
+
+For scripting or automation:
+
+```shell
+lms daemon status --json
+```
+
+Example output when running:
+```json
+{"status":"running","pid":12345,"isDaemon":true}
+```
+
+Example output when not running:
+```json
+{"status":"not-running"}
+```
+
+### Start or stop the daemon
+
+- [`lms daemon up`](/docs/cli/daemon/daemon-up) — start the daemon.
+- [`lms daemon down`](/docs/cli/daemon/daemon-down) — stop the daemon.
+
+To find out more about llmster, see [Headless Mode](/docs/developer/core/headless).
+
+## Links discovered
+- [`lms daemon up`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/daemon/daemon-up.md)
+- [`lms daemon down`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/daemon/daemon-down.md)
+- [Headless Mode](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/headless.md)
+
+--- 3_cli/2_daemon/daemon-up.md ---
+---
+title: "`lms daemon up`"
+sidebar_title: "`lms daemon up`"
+description: Start llmster from the CLI.
+index: 1
+---
+
+The `lms daemon up` command starts llmster
+
+### Flags
+
+```lms_params
+- name: "--json"
+  type: "flag"
+  optional: true
+  description: "Output the result in JSON format"
+```
+
+## Start the daemon
+
+```shell
+lms daemon up
+```
+
+If the daemon is not already running, this starts it and prints the PID. If it is already running, it reports the current status.
+
+### JSON output
+
+For scripting or automation:
+
+```shell
+lms daemon up --json
+```
+
+Example output:
+```json
+{"status":"running","pid":26754,"isDaemon":true,"version":"0.4.4+1"}
+```
+
+### Check the daemon status
+
+See [`lms daemon status`](/docs/cli/daemon/daemon-status) to check whether the daemon is running.
+
+### Learn more
+
+To find out more about llmster, see [Headless Mode](/docs/developer/core/headless).
+
+
+## Links discovered
+- [`lms daemon status`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/daemon/daemon-status.md)
+- [Headless Mode](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/headless.md)
+
+--- 3_cli/2_daemon/daemon-update.md ---
+---
+title: "`lms daemon update`"
+sidebar_title: "`lms daemon update`"
+description: Update llmster to the latest version.
+index: 4
+---
+
+The `lms daemon update` command fetches and installs the latest version of llmster.
+
+### Flags
+
+```lms_params
+- name: "--beta"
+  type: "flag"
+  optional: true
+  description: "Update to the latest beta release"
+```
+
+## Update the daemon
+
+Stop the daemon first:
+
+```shell
+lms daemon down
+```
+
+Then run the update:
+
+```shell
+lms daemon update
+```
+
+Fetches the latest stable release and installs it.
+
+### Update to the beta channel
+
+```shell
+lms daemon update --beta
+```
+
+### After updating
+
+Start the daemon again to use the new version:
+
+```shell
+lms daemon up
+```
+
+To find out more about llmster, see [Headless Mode](/docs/developer/core/headless).
+
+
+## Links discovered
+- [Headless Mode](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/headless.md)
+
+--- 3_cli/5_develop-and-publish/dev.md ---
 ---
 title: "`lms dev` (Beta)"
 sidebar_title: "`lms dev`"
@@ -5564,356 +6086,358 @@ lms get --always-show-download-options
 ```
 
 
---- 3_cli/0_local-models/import.md ---
+--- 4_integrations/index.md ---
 ---
-title: "`lms import`"
-sidebar_title: "`lms import`"
-description: Import a local model file into your LM Studio models directory.
-index: 6
+title: Integrations
+sidebar_title: Introduction
+description: Use LM Studio with external tools and apps.
+index: 1 
 ---
 
-Use `lms import` to bring an existing model file into LM Studio without downloading it.
+Use LM Studio as a seamless, drop-in local backend for your favorite tools. 
 
-### Flags 
-```lms_params
-- name: "<file-path>"
-  type: "string"
-  optional: false
-  description: "Path to the model file to import"
-- name: "--user-repo"
-  type: "string"
-  optional: true
-  description: "Set the target folder as <user>/<repo>. Skips the categorization prompts."
-- name: "-y, --yes"
-  type: "flag"
-  optional: true
-  description: "Skip confirmations and try to infer the model location from the file name"
-- name: "-c, --copy"
-  type: "flag"
-  optional: true
-  description: "Copy the file instead of moving it"
-- name: "-L, --hard-link"
-  type: "flag"
-  optional: true
-  description: "Create a hard link instead of moving or copying the file"
-- name: "-l, --symbolic-link"
-  type: "flag"
-  optional: true
-  description: "Create a symbolic link instead of moving or copying the file"
-- name: "--dry-run"
-  type: "flag"
-  optional: true
-  description: "Do not perform the import, just show what would be done"
-```
+Whether you are using an IDE extension or a custom automation script, simply point your base URL to `http://localhost:1234` to power your workflows with LM Studio and maintain complete control over your data privacy.
 
-Only one of `--copy`, `--hard-link`, or `--symbolic-link` can be used at a time. If none is provided, `lms import` moves the file by default.
+We provide guides below for popular tools and are constantly expanding this list to include new integrations.
 
-### Import a model file
+## Available Integrations
 
-```shell
-lms import ~/Downloads/model.gguf
-```
-
-### Keep the original file
-
-```shell
-lms import ~/Downloads/model.gguf --copy
-```
-
-### Pick the target folder yourself
-
-Use `--user-repo` to skip prompts and place the model in the chosen namespace:
-
-```shell
-lms import ~/Downloads/model.gguf --user-repo my-user/custom-models
-```
-
-### Dry run before importing
-
-```shell
-lms import ~/Downloads/model.gguf --dry-run
-```
+- [Claude Code](/docs/integrations/claude-code)
+- [Codex](/docs/integrations/codex)
 
 
---- 3_cli/0_local-models/load.md ---
+## Links discovered
+- [Claude Code](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/claude-code.md)
+- [Codex](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/codex.md)
+
+--- 4_integrations/claude-code.md ---
 ---
-title: "`lms load`"
-sidebar_title: "`lms load`"
-description: Load or unload models, set context length, GPU offload, TTL, or estimate memory usage without loading.
+title: Claude Code
+description: Use Claude Code with LM Studio
+index: 2 
+---
+
+Claude Code can talk to LM Studio via the Anthropic-compatible `POST /v1/messages` endpoint.
+See: [Anthropic-compatible Messages endpoint](/docs/developer/anthropic-compat/messages).
+
+<img src="/assets/docs/claude-code.webp" style="width: 100%;" data-caption="Claude Code configured to use LM Studio via the Anthropic-compatible API" />
+
+```lms_protip
+Have a powerful LLM rig? Use [LM Link](/docs/integrations/lmlink) to run Claude Code from your laptop while the model runs on your rig.
+```
+
+### 1) Start LM Studio's local server
+
+Make sure LM Studio is running as a server (default port `1234`).
+
+You can start it from the app, or from the terminal with `lms`:
+
+```bash
+lms server start --port 1234
+```
+
+### 2) Configure Claude Code
+
+Set these environment variables so the `claude` CLI points to your local LM Studio:
+
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:1234
+export ANTHROPIC_AUTH_TOKEN=lmstudio
+```
+
+
+Notes:
+- If Require Authentication is enabled, set `ANTHROPIC_AUTH_TOKEN` to your LM Studio API token. To learn more, see: [Authentication](/docs/developer/core/authentication).
+
+### 3) Run Claude Code against a local model
+
+```bash
+claude --model openai/gpt-oss-20b
+```
+
+```lms_protip
+Use a model (and server/model settings) with more than ~25k context length. Tools like Claude Code can consume a lot of context.
+```
+
+### 4) If Require Authentication is enabled, use your LM Studio API token
+
+If you turned on "Require Authentication" in LM Studio, create an API token and set:
+
+```bash
+export LM_API_TOKEN=<LMSTUDIO_TOKEN>
+export ANTHROPIC_AUTH_TOKEN=$LM_API_TOKEN
+```
+
+When Require Authentication is enabled, LM Studio accepts both `x-api-key` and `Authorization: Bearer <token>`.
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio)
+
+
+## Links discovered
+- [Anthropic-compatible Messages endpoint](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/anthropic-compat/messages.md)
+- [LM Link](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/lmlink.md)
+- [Authentication](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/authentication.md)
+- [Discord](https://discord.gg/lmstudio)
+
+--- 4_integrations/codex.md ---
+---
+title: Codex
+description: Use Codex with LM Studio
 index: 3
 ---
 
-The `lms load` command loads a model into memory. You can optionally set parameters such as context length, GPU offload, and TTL. This guide also covers unloading models with `lms unload`.
+Codex can talk to LM Studio via the OpenAI-compatible `POST /v1/responses` endpoint.
+See: [OpenAI-compatible Responses endpoint](/docs/developer/openai-compat/responses).
 
-### Flags 
-```lms_params
-- name: "[path]"
-  type: "string"
-  optional: true
-  description: "The path of the model to load. If not provided, you will be prompted to select one"
-- name: "--ttl"
-  type: "number"
-  optional: true
-  description: "If provided, when the model is not used for this number of seconds, it will be unloaded"
-- name: "--gpu"
-  type: "string"
-  optional: true
-  description: "How much to offload to the GPU. Values: 0-1, off, max"
-- name: "--context-length"
-  type: "number"
-  optional: true
-  description: "The number of tokens to consider as context when generating text"
-- name: "--identifier"
-  type: "string"
-  optional: true
-  description: "The identifier to assign to the loaded model for API reference"
-- name: "--estimate-only"
-  type: "boolean"
-  optional: true
-  description: "Print a resource (memory) estimate and exit without loading the model"
+<img src="/assets/docs/codex.webp" style="width: 100%;" data-caption="Codex configured to use LM Studio via the OpenAI-compatible API" />
+
+```lms_protip
+Have a powerful LLM rig? Use [LM Link](/docs/integrations/lmlink) to run Codex from your laptop while the model runs on your rig.
 ```
 
-## Load a model
+### 1) Start LM Studio's local server
 
-Load a model into memory by running the following command:
+Make sure LM Studio is running as a server (default port `1234`).
 
-```shell
-lms load <model_key>
+You can start it from the app, or from the terminal with `lms`:
+
+```bash
+lms server start --port 1234
 ```
 
-You can find the `model_key` by first running [`lms ls`](/docs/cli/local-models/ls) to list your locally downloaded models.
+### 2) Run Codex against a local model
 
-### Set a custom identifier
-
-Optionally, you can assign a custom identifier to the loaded model for API reference:
-
-```shell
-lms load <model_key> --identifier "my-custom-identifier"
-```
-
-You will then be able to refer to this model by the identifier `my_model` in subsequent commands and API calls (`model` parameter).
-
-### Set context length
-
-You can set the context length when loading a model using the `--context-length` flag:
-
-```shell
-lms load <model_key> --context-length 4096
-```
-
-This determines how many tokens the model will consider as context when generating text.
-
-### Set GPU offload
-
-Control GPU memory usage with the `--gpu` flag:
-
-```shell
-lms load <model_key> --gpu 0.5    # Offload 50% of layers to GPU
-lms load <model_key> --gpu max    # Offload all layers to GPU
-lms load <model_key> --gpu off    # Disable GPU offloading
-```
-
-If not specified, LM Studio will automatically determine optimal GPU usage.
-
-### Set TTL
-
-Set an auto-unload timer with the `--ttl` flag (in seconds):
-
-```shell
-lms load <model_key> --ttl 3600   # Unload after 1 hour of inactivity
-```
-
-### Estimate resources without loading
-
-Preview memory requirements before loading a model using `--estimate-only`:
-
-```shell
-lms load --estimate-only <model_key>
-```
-
-Optional flags such as `--context-length` and `--gpu` are honored and reflected in the estimate. The estimator accounts for factors like context length, flash attention, and whether the model is vision‑enabled.
+Run Codex as you normally would, but with the `--oss` flag to point it to LM Studio.
 
 Example:
 
 ```bash
-$ lms load --estimate-only gpt-oss-120b
-Model: openai/gpt-oss-120b
-Estimated GPU Memory:   65.68 GB
-Estimated Total Memory: 65.68 GB
-
-Estimate: This model may be loaded based on your resource guardrails settings.
+codex --oss
 ```
 
-## Unload models
 
-Use `lms unload` to remove models from memory.
+By default, Codex will download and use [openai/gpt-oss-20b](https://lmstudio.ai/models/openai/gpt-oss-20b).
 
-### Flags 
-```lms_params
-- name: "[model_key]"
-  type: "string"
-  optional: true
-  description: "The key of the model to unload. If not provided, you will be prompted to select one"
-- name: "--all"
-  type: "flag"
-  optional: true
-  description: "Unload all currently loaded models"
-- name: "--host"
-  type: "string"
-  optional: true
-  description: "The host address of a remote LM Studio instance to connect to"
+```lms_protip
+Use a model (and server/model settings) with more than ~25k context length. Tools like Codex can consume a lot of context.
 ```
 
-### Unload a specific model
+You can also use any other model you have available in LM Studio. For example:
 
-```shell
-lms unload <model_key>
+```bash
+codex --oss -m ibm/granite-4-micro
 ```
 
-If no model key is provided, you will be prompted to select from currently loaded models.
-
-### Unload all models
-
-```shell
-lms unload --all
-```
-
-### Unload from a remote LM Studio instance
-
-```shell
-lms unload <model_key> --host <host>
-```
-
-## Operate on a remote LM Studio instance
-
-`lms load` supports the `--host` flag to connect to a remote LM Studio instance. 
-
-```shell
-lms load <model_key> --host <host>
-```
-
-For this to work, the remote LM Studio instance must be running and accessible from your local machine, e.g. be accessible on the same subnet.
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio)
 
 
 ## Links discovered
-- [`lms ls`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/local-models/ls.md)
+- [OpenAI-compatible Responses endpoint](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/openai-compat/responses.md)
+- [LM Link](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/lmlink.md)
+- [openai/gpt-oss-20b](https://lmstudio.ai/models/openai/gpt-oss-20b)
+- [Discord](https://discord.gg/lmstudio)
 
---- 3_cli/1_serve/log-stream.md ---
+--- 4_integrations/lmlink.md ---
 ---
-title: "`lms log stream`"
-sidebar_title: "`lms log stream`"
-description: Stream logs from LM Studio. Useful for debugging prompts sent to the model.
-index: 4
+title: Using LM Link with Integrations
+sidebar_title: Working with LM Link
+description: Use a remote device's model with coding tools like Claude Code and Codex via LM Link
+index: 1
 ---
 
-`lms log stream` lets you inspect the exact strings LM Studio sends to and receives from models, and (new in 0.3.26) stream server logs. This is useful for debugging prompt templates, model IO, and server operations.
+With [LM Link](/docs/lmlink), your coding tools can run models on a remote device (like a dedicated LLM rig on your network) while you work from your laptop
 
-### Flags
+<img src="/assets/docs/lmlink-claudecode.gif" style="width: 100%;" data-caption="Claude Code using a model loaded on a remote device via LM Link" />
 
-```lms_params
-- name: "-s, --source"
-  type: "string"
-  optional: true
-  description: "Source of logs: model or server (default: model)"
-- name: "--stats"
-  type: "flag"
-  optional: true
-  description: "Print prediction stats when available"
-- name: "--filter"
-  type: "string"
-  optional: true
-  description: "Filter for model source: input, output, or both"
-- name: "--json"
-  type: "flag"
-  optional: true
-  description: "Output logs as JSON (newline separated)"
-```
+## Use your integration as normal
 
-### Quick start
+Start LM Studio's server on your local machine and configure your tool to point to it. Model loads are routed to the device the model is loaded on or the preferred device if set.
 
-Stream model IO (default):
-
-```shell
-lms log stream
-```
-
-Stream server logs:
-
-```shell
-lms log stream --source server
-```
-
-### Filter model logs
+Your local machine handles the API surface at `localhost:1234`, while the model runs on the device the model is present on.
 
 ```bash
-# Only the formatted user input
-lms log stream --source model --filter input
-
-# Only the model output (emitted once the message completes)
-lms log stream --source model --filter output
-
-# Both directions
-lms log stream --source model --filter input,output
+lms server start --port 1234
 ```
 
-### JSON output and stats
+### Claude Code
 
-Emit JSON:
+```bash
+export ANTHROPIC_BASE_URL=http://localhost:1234
+export ANTHROPIC_AUTH_TOKEN=lmstudio
+claude --model qwen3-8b
+```
 
-  ```shell
-  lms log stream --source model --filter input,output --json
-  ```
+See the full [Claude Code](/docs/integrations/claude-code) guide.
 
-Include prediction stats:
+### Codex
 
-  ```shell
-  lms log stream --source model --filter output --stats
-  ```
+```bash
+codex --oss -m qwen3-8b
+```
 
 
---- 3_cli/3_develop-and-publish/login.md ---
+See the full [Codex](/docs/integrations/codex) guide.
+
+## Set a preferred device
+
+To use a model on a specific remote device, set the device as the preferred device.
+
+
+See [set a preferred device](/docs/lmlink/basics/preferred-device) for more details.
+
+
+If you're running into trouble, hop onto our [Discord](https://discord.gg/lmstudio)
+
+
+## Links discovered
+- [LM Link](https://github.com/lmstudio-ai/docs/blob/main/docs/lmlink.md)
+- [Claude Code](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/claude-code.md)
+- [Codex](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/codex.md)
+- [set a preferred device](https://github.com/lmstudio-ai/docs/blob/main/docs/lmlink/basics/preferred-device.md)
+- [Discord](https://discord.gg/lmstudio)
+
+--- 5_lmlink/index.md ---
 ---
-title: "`lms login`"
-sidebar_title: "`lms login`"
-description: Authenticate with LM Studio Hub (beta).
-index: 4
+title: "LM Link"
+sidebar_title: "Introduction"
+description: "Use LM Link to access your local models wherever you are, over a secure and end-to-end encrypted connection."
+index: 1
 ---
 
-Use `lms login` to authenticate the CLI with LM Studio Hub.
+<img src="/assets/docs/lmlink-animation.gif" style="width: 75%;" data-caption="Introducing LM Link" />
 
-### Sign in with the browser
+LM Link is a new feature in LM Studio that provides a way to access local models across devices, wherever you are. Links are custom made, end-to-end encrypted networks intended for loading and serving LLMs across devices you own, made possible in partnership with Tailscale. 
 
-```shell
+## What can I do with LM Link?
+LM Link unlocks the full potential of your hardware by sharing compute across connected devices. For example, you might have a powerful desktop in your home office, and a lightweight laptop you carry on the go. With LM Link, you can run large open-weight models on a powerful machine, and use them seamlessly from your laptop as if they were local. All communication and data transfer between devices is always end-to-end encrypted, thanks to Tailscale. 
+
+## Use Cases
+
+LM Link use cases span individuals as well as teams. 
+
+You can manage a private link to keep your prized gaming GPU busy even when you're on the go. Moreover, LM Link allows you to set up LLM serving in a server and start using it with just few clicks.
+
+## Use LM Link with
+
+- **CLI** — manage LM Link from the terminal with [`lms link`](/docs/cli/link/link-enable)
+- **REST API** — use remote models via the REST API with [LM Link](/docs/developer/core/lmlink)
+- **Integrations** — use remote models with coding tools like Claude Code and Codex via [LM Link](/docs/integrations/lmlink)
+
+
+## Links discovered
+- [`lms link`](https://github.com/lmstudio-ai/docs/blob/main/docs/cli/link/link-enable.md)
+- [LM Link](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/lmlink.md)
+- [LM Link](https://github.com/lmstudio-ai/docs/blob/main/docs/integrations/lmlink.md)
+
+--- 5_lmlink/1_basics/index.md ---
+---
+title: "Setup a link"
+sidebar_title: "Setup a link"
+description: "Provision your first link"
+index: 1
+---
+
+## Requesting Access
+
+<img src="/assets/docs/lmlink-sidebar.gif"/>
+
+To get started, find the LM Link icon in the LM Studio app, just above the Settings gear icon. LM Link is a network between your devices, so log-in is required to associate devices to users in order to facilitate discovery.
+
+A custom link is **automatically provisioned** for you the first time you access the feature. 
+
+Once your first device has joined the link, [add another device](/docs/lmlink/basics/add-device) to experience the power of LM Link!
+
+
+## Links discovered
+- [add another device](https://github.com/lmstudio-ai/docs/blob/main/docs/lmlink/basics/add-device.md)
+
+--- 5_lmlink/1_basics/add-device.md ---
+---
+title: Add a Device
+sidebar_title: Add a device
+description: Connect a new device to your LM Link.
+index: 2
+---
+
+## Add a new device
+
+<img src="/assets/docs/lmlink-adddevice.png" style="" data-caption="Add Device modal in LM Link" />
+
+### Machines with GUI
+To begin using LM Link, add an additional device to the link:
+
+1. Download and install LM Studio on the device, at [https://lmstudio.ai/download](https://lmstudio.ai/download)
+2. Click on LM Link in the sidebar and follow the steps to enable LM Link.
+
+Once LM Link is enabled, your devices will connect to each other automatically.
+
+### Machines without GUI
+To add a headless machine, connect remotely by using llmster in the terminal:
+
+1. Install `llmster` on the headless machine
+```bash
+curl -fsSL https://lmstudio.ai/install.sh | bash
+```
+2. Log in from the terminal 
+```bash
 lms login
 ```
+3. Follow the instructions in your terminal output to complete login.
+4. Once logged in, run the following command:
+```bash
+lms link enable
+```
 
-The CLI opens a browser window for authentication. If a browser cannot be opened automatically, copy the printed URL into your browser.
+Your devices will automatically discover each other over the link, and your headless machine will immediately appear on the LM Link page for your other device. Once connected, models from remote machines will appear locally for loading and inference. 
 
-### "CI style" login with pre-authenticated keys
+## Load models on remote machines
+
+<img src="/assets/docs/lmlink-useremotemodels.png" style="" data-caption="Load models on remote devices with LM Link" />
+
+When using LM Link, the model loader shows both local models and remote models on linked devices. 
+
+You can filter the model loader to display only local or remote models, or to display all available models at once. Remote models can be loaded and configured with the same familiar controls, either in the GUI or by using lms in the terminal.
+
+If you have the same model on multiple devices, they will show up as separate entries, with the associated device name identified. If you are loading models via API/SDK, you can [set a preferred device](/docs/lmlink/basics/preferred-device) to specify which device to load the model from when multiple options are available.
+
+Using LM Studio’s parallel requests, you can also serve multiple clients simultaneously across your LM Link network.
+
+
+## Links discovered
+- [https://lmstudio.ai/download](https://lmstudio.ai/download)
+- [set a preferred device](https://github.com/lmstudio-ai/docs/blob/main/docs/lmlink/basics/preferred-device.md)
+
+--- 5_lmlink/1_basics/preferred-device.md ---
+---
+title: Set a preferred device 
+sidebar_title: Set a preferred device 
+description: Choose a preferred device to load models via LM Link
+index: 2
+---
+
+## Choosing a preferred device
+
+When the same model is available on multiple devices in the link, LM Link uses the preferred device to load and use the model. This setting is per-machine: each device on the link independently controls which remote machine it prefers.
+
+This is especially relevant when accessing remote models via the SDK or [REST API](/docs/developer/core/lmlink).
+
+### Machines with GUI
+
+In the app, head to the LM Link page, select the device and toggle the "Set as preferred device" option.
+
+<img src="/assets/docs/lmlink-preferred.png" style="width: 75%;" data-caption="Set a device as your preferred device" />
+
+
+### Machines without GUI
+
+To set a preferred device from the terminal, use the following command:
 
 ```bash
-lms login --with-pre-authenticated-keys \
-  --key-id <KEY_ID> \
-  --public-key <PUBLIC_KEY> \
-  --private-key <PRIVATE_KEY> 
+lms link set-preferred-device
 ```
 
-### Advanced Flags
-```lms_params
-- name: "--with-pre-authenticated-keys"
-  type: "flag"
-  optional: true
-  description: "Authenticate using pre-generated keys (CI/CD). Requires --key-id, --public-key, and --private-key."
-- name: "--key-id"
-  type: "string"
-  optional: true
-  description: "Key ID to use with --with-pre-authenticated-keys"
-- name: "--public-key"
-  type: "string"
-  optional: true
-  description: "Public key to use with --with-pre-authenticated-keys"
-- name: "--private-key"
-  type: "string"
-  optional: true
-  description: "Private key to use with --with-pre-authenticated-keys"
-```
+
+
+
+## Links discovered
+- [REST API](https://github.com/lmstudio-ai/docs/blob/main/docs/developer/core/lmlink.md)

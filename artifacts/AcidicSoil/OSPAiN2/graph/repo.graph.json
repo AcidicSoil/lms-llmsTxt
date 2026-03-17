@@ -1,0 +1,1528 @@
+{
+  "topic": "Ospain2",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Ospain2 Map",
+      "type": "moc",
+      "description": ".cursor/rules: .cursor/rules/010-documentation-context.md .cursor/rules/020-tasks-workflow.md .cursor/rules/200-cursor-rules.md .cursor/rules/adv-tool-call-opt.mdc .cursor/rules/ai_providers.mdc .cursor/rules/ai_services.mdc .cursor/rules/architecture.mdc .cursor/rules/changeset.mdc .cursor/rul... t2p/src: t2p/src/commands/note.js t2p/src/commands/note.js.map t2p/src/commands/note.ts t2p/src/commands/todo.js t2p/src/commands/todo.js.map t2p/src/commands/todo.ts t2p/src/commands/todo.ts.new t2p/s...",
+      "content": "# Ospain2\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[cursor-rules]] to inspect related module behavior and evidence anchors.\n- Explore [[t2p-src]] to inspect related module behavior and evidence anchors.\n- Explore [[t2p-dist]] to inspect related module behavior and evidence anchors.\n- Explore [[out-components]] to inspect related module behavior and evidence anchors.\n- Explore [[out-rules]] to inspect related module behavior and evidence anchors.\n- Explore [[src-components]] to inspect related module behavior and evidence anchors.\n- Explore [[out-services]] to inspect related module behavior and evidence anchors.\n- Explore [[mcp-servers-shared]] to inspect related module behavior and evidence anchors.\n- Explore [[agents-system-src]] to inspect related module behavior and evidence anchors.\n- Explore [[src-services]] to inspect related module behavior and evidence anchors.\n- Explore [[cursor-memory]] to inspect related module behavior and evidence anchors.\n- Explore [[agents-system-docs]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-h3]] to inspect related module behavior and evidence anchors.\n- Explore [[src-rules]] to inspect related module behavior and evidence anchors.\n- Explore [[cursor-mcp-servers]] to inspect related module behavior and evidence anchors.\n- Explore [[docs-frontend]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "cursor-rules",
+        "t2p-src",
+        "t2p-dist",
+        "out-components",
+        "out-rules",
+        "src-components",
+        "out-services",
+        "mcp-servers-shared",
+        "agents-system-src",
+        "src-services",
+        "cursor-memory",
+        "agents-system-docs",
+        "docs-h3",
+        "src-rules",
+        "cursor-mcp-servers",
+        "docs-frontend"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "631f7301fafd5c0c",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "unknown"
+      ]
+    },
+    {
+      "id": "cursor-rules",
+      "label": ".cursor/rules",
+      "type": "concept",
+      "description": ".cursor/rules/010-documentation-context.md .cursor/rules/020-tasks-workflow.md .cursor/rules/200-cursor-rules.md .cursor/rules/adv-tool-call-opt.mdc .cursor/rules/ai_providers.mdc .cursor/rules/ai_services.mdc .cursor/rules/architecture.mdc .cursor/rules/changeset.mdc .cursor/rul...",
+      "content": "---\ntitle: .cursor/rules\ntype: concept\ndescription: .cursor/rules/010-documentation-context.md .cursor/rules/020-tasks-workflow.md .cursor/rules/200-cursor-rules.md .cursor/rules/adv-tool-call-opt.mdc .cursor/rules/ai_providers.mdc .cursor/rules/ai_services.mdc .cursor/rules/architecture.mdc .cursor/rules/changeset.mdc .cursor/rul...\n---\n\n.cursor/rules/010-documentation-context.md .cursor/rules/020-tasks-workflow.md .cursor/rules/200-cursor-rules.md .cursor/rules/adv-tool-call-opt.mdc .cursor/rules/ai_providers.mdc .cursor/rules/ai_services.mdc .cursor/rules/architecture.mdc .cursor/rules/changeset.mdc .cursor/rul...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".cursor/rules/010-documentation-context.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/020-tasks-workflow.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/200-cursor-rules.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/adv-tool-call-opt.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/ai_providers.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/ai_services.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/architecture.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/rules/changeset.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "t2p-src",
+      "label": "t2p/src",
+      "type": "concept",
+      "description": "t2p/src/commands/note.js t2p/src/commands/note.js.map t2p/src/commands/note.ts t2p/src/commands/todo.js t2p/src/commands/todo.js.map t2p/src/commands/todo.ts t2p/src/commands/todo.ts.new t2p/src/index.js t2p/src/index.js.map t2p/src/index.ts t2p/src/progress.js t2p/src/progress.j...",
+      "content": "---\ntitle: t2p/src\ntype: concept\ndescription: t2p/src/commands/note.js t2p/src/commands/note.js.map t2p/src/commands/note.ts t2p/src/commands/todo.js t2p/src/commands/todo.js.map t2p/src/commands/todo.ts t2p/src/commands/todo.ts.new t2p/src/index.js t2p/src/index.js.map t2p/src/index.ts t2p/src/progress.js t2p/src/progress.j...\n---\n\nt2p/src/commands/note.js t2p/src/commands/note.js.map t2p/src/commands/note.ts t2p/src/commands/todo.js t2p/src/commands/todo.js.map t2p/src/commands/todo.ts t2p/src/commands/todo.ts.new t2p/src/index.js t2p/src/index.js.map t2p/src/index.ts t2p/src/progress.js t2p/src/progress.j...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "t2p/src/commands/note.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/note.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/note.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/todo.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/todo.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/todo.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/commands/todo.ts.new",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/src/index.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "t2p-dist",
+      "label": "t2p/dist",
+      "type": "concept",
+      "description": "t2p/dist/@utils/terminal-executor.d.ts t2p/dist/@utils/terminal-executor.js t2p/dist/@utils/terminal-executor.js.map t2p/dist/@utils/terminal.utils.d.ts t2p/dist/@utils/terminal.utils.js t2p/dist/@utils/terminal.utils.js.map t2p/dist/commands/note.d.ts t2p/dist/commands/note.js t...",
+      "content": "---\ntitle: t2p/dist\ntype: concept\ndescription: t2p/dist/@utils/terminal-executor.d.ts t2p/dist/@utils/terminal-executor.js t2p/dist/@utils/terminal-executor.js.map t2p/dist/@utils/terminal.utils.d.ts t2p/dist/@utils/terminal.utils.js t2p/dist/@utils/terminal.utils.js.map t2p/dist/commands/note.d.ts t2p/dist/commands/note.js t...\n---\n\nt2p/dist/@utils/terminal-executor.d.ts t2p/dist/@utils/terminal-executor.js t2p/dist/@utils/terminal-executor.js.map t2p/dist/@utils/terminal.utils.d.ts t2p/dist/@utils/terminal.utils.js t2p/dist/@utils/terminal.utils.js.map t2p/dist/commands/note.d.ts t2p/dist/commands/note.js t...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "t2p/dist/@utils/terminal-executor.d.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/@utils/terminal-executor.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/@utils/terminal-executor.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/@utils/terminal.utils.d.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/@utils/terminal.utils.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/@utils/terminal.utils.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/commands/note.d.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "t2p/dist/commands/note.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "out-components",
+      "label": "out/components",
+      "type": "concept",
+      "description": "out/components/RuleMatrixContainer.js out/components/RuleMatrixContainer.js.map out/components/RuleMatrixDashboard.js out/components/RuleMatrixDashboard.js.map out/components/SecureChat.js out/components/SecureChat.js.map out/components/TaskMasterUI.js out/components/TaskMasterUI...",
+      "content": "---\ntitle: out/components\ntype: concept\ndescription: out/components/RuleMatrixContainer.js out/components/RuleMatrixContainer.js.map out/components/RuleMatrixDashboard.js out/components/RuleMatrixDashboard.js.map out/components/SecureChat.js out/components/SecureChat.js.map out/components/TaskMasterUI.js out/components/TaskMasterUI...\n---\n\nout/components/RuleMatrixContainer.js out/components/RuleMatrixContainer.js.map out/components/RuleMatrixDashboard.js out/components/RuleMatrixDashboard.js.map out/components/SecureChat.js out/components/SecureChat.js.map out/components/TaskMasterUI.js out/components/TaskMasterUI...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "out/components/RuleMatrixContainer.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/RuleMatrixContainer.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/RuleMatrixDashboard.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/RuleMatrixDashboard.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/SecureChat.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/SecureChat.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/TaskMasterUI.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/components/TaskMasterUI.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "out-rules",
+      "label": "out/rules",
+      "type": "concept",
+      "description": "out/rules/documentation/RuleDocumentationGenerator.js out/rules/documentation/RuleDocumentationGenerator.js.map out/rules/index.js out/rules/index.js.map out/rules/manager/RuleTypeManager.js out/rules/manager/RuleTypeManager.js.map out/rules/organizer/RuleOrganizer.js out/rules/o...",
+      "content": "---\ntitle: out/rules\ntype: concept\ndescription: out/rules/documentation/RuleDocumentationGenerator.js out/rules/documentation/RuleDocumentationGenerator.js.map out/rules/index.js out/rules/index.js.map out/rules/manager/RuleTypeManager.js out/rules/manager/RuleTypeManager.js.map out/rules/organizer/RuleOrganizer.js out/rules/o...\n---\n\nout/rules/documentation/RuleDocumentationGenerator.js out/rules/documentation/RuleDocumentationGenerator.js.map out/rules/index.js out/rules/index.js.map out/rules/manager/RuleTypeManager.js out/rules/manager/RuleTypeManager.js.map out/rules/organizer/RuleOrganizer.js out/rules/o...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "out/rules/documentation/RuleDocumentationGenerator.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/documentation/RuleDocumentationGenerator.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/index.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/index.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/manager/RuleTypeManager.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/manager/RuleTypeManager.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/organizer/RuleOrganizer.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/rules/organizer/RuleOrganizer.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "src-components",
+      "label": "src/components",
+      "type": "concept",
+      "description": "src/components/AbsorptionDashboard/AbsorptionDashboard.tsx src/components/AbsorptionDashboard/README.md src/components/AbsorptionDashboard/__tests__/AbsorptionDashboard.test.tsx src/components/AbsorptionDashboard/index.tsx src/components/ResearchPanel.tsx src/components/RuleMatri...",
+      "content": "---\ntitle: src/components\ntype: concept\ndescription: src/components/AbsorptionDashboard/AbsorptionDashboard.tsx src/components/AbsorptionDashboard/README.md src/components/AbsorptionDashboard/__tests__/AbsorptionDashboard.test.tsx src/components/AbsorptionDashboard/index.tsx src/components/ResearchPanel.tsx src/components/RuleMatri...\n---\n\nsrc/components/AbsorptionDashboard/AbsorptionDashboard.tsx src/components/AbsorptionDashboard/README.md src/components/AbsorptionDashboard/__tests__/AbsorptionDashboard.test.tsx src/components/AbsorptionDashboard/index.tsx src/components/ResearchPanel.tsx src/components/RuleMatri...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "src/components/AbsorptionDashboard/AbsorptionDashboard.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/AbsorptionDashboard/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/AbsorptionDashboard/__tests__/AbsorptionDashboard.test.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/AbsorptionDashboard/index.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/ResearchPanel.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/RuleMatrixContainer.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/RuleMatrixDashboard.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/components/SecureChat.tsx",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "out-services",
+      "label": "out/services",
+      "type": "concept",
+      "description": "out/services/ContextWatcher.js out/services/ContextWatcher.js.map out/services/DebugMcpService.js out/services/DebugMcpService.js.map out/services/KnowledgeGraphService.js out/services/KnowledgeGraphService.js.map out/services/NotionService.js out/services/NotionService.js.map ou...",
+      "content": "---\ntitle: out/services\ntype: concept\ndescription: out/services/ContextWatcher.js out/services/ContextWatcher.js.map out/services/DebugMcpService.js out/services/DebugMcpService.js.map out/services/KnowledgeGraphService.js out/services/KnowledgeGraphService.js.map out/services/NotionService.js out/services/NotionService.js.map ou...\n---\n\nout/services/ContextWatcher.js out/services/ContextWatcher.js.map out/services/DebugMcpService.js out/services/DebugMcpService.js.map out/services/KnowledgeGraphService.js out/services/KnowledgeGraphService.js.map out/services/NotionService.js out/services/NotionService.js.map ou...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "out/services/ContextWatcher.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/ContextWatcher.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/DebugMcpService.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/DebugMcpService.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/KnowledgeGraphService.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/KnowledgeGraphService.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/NotionService.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/services/NotionService.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "mcp-servers-shared",
+      "label": "mcp-servers/shared",
+      "type": "concept",
+      "description": "mcp-servers/shared/cache/disk-cache.js mcp-servers/shared/cache/disk-cache.js.map mcp-servers/shared/cache/disk-cache.ts mcp-servers/shared/cache/memory-cache.js mcp-servers/shared/cache/memory-cache.js.map mcp-servers/shared/cache/memory-cache.ts mcp-servers/shared/cache/semanti...",
+      "content": "---\ntitle: mcp-servers/shared\ntype: concept\ndescription: mcp-servers/shared/cache/disk-cache.js mcp-servers/shared/cache/disk-cache.js.map mcp-servers/shared/cache/disk-cache.ts mcp-servers/shared/cache/memory-cache.js mcp-servers/shared/cache/memory-cache.js.map mcp-servers/shared/cache/memory-cache.ts mcp-servers/shared/cache/semanti...\n---\n\nmcp-servers/shared/cache/disk-cache.js mcp-servers/shared/cache/disk-cache.js.map mcp-servers/shared/cache/disk-cache.ts mcp-servers/shared/cache/memory-cache.js mcp-servers/shared/cache/memory-cache.js.map mcp-servers/shared/cache/memory-cache.ts mcp-servers/shared/cache/semanti...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "mcp-servers/shared/cache/disk-cache.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/disk-cache.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/disk-cache.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/memory-cache.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/memory-cache.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/memory-cache.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/semantic-cache.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/shared/cache/semantic-cache.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "agents-system-src",
+      "label": "agents-system/src",
+      "type": "concept",
+      "description": "agents-system/src/agents_system/__init__.py agents-system/src/agents_system/core/__init__.py agents-system/src/agents_system/core/agent.py agents-system/src/agents_system/core/manager.py agents-system/src/agents_system/core/master_player.py agents-system/src/agents_system/core/sc...",
+      "content": "---\ntitle: agents-system/src\ntype: concept\ndescription: agents-system/src/agents_system/__init__.py agents-system/src/agents_system/core/__init__.py agents-system/src/agents_system/core/agent.py agents-system/src/agents_system/core/manager.py agents-system/src/agents_system/core/master_player.py agents-system/src/agents_system/core/sc...\n---\n\nagents-system/src/agents_system/__init__.py agents-system/src/agents_system/core/__init__.py agents-system/src/agents_system/core/agent.py agents-system/src/agents_system/core/manager.py agents-system/src/agents_system/core/master_player.py agents-system/src/agents_system/core/sc...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "agents-system/src/agents_system/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/core/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/core/agent.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/core/manager.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/core/master_player.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/core/schema.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/direct_control.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/src/agents_system/examples/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "src-services",
+      "label": "src/services",
+      "type": "concept",
+      "description": "src/services/ContextWatcher.ts src/services/DebugMcpService.ts src/services/DynamicLayerManager.ts src/services/KnowledgeGraphService.ts src/services/MCPMonitoringService.ts src/services/NotionService.ts src/services/RateLimitService.ts src/services/TaskMaster.ts src/services/__t...",
+      "content": "---\ntitle: src/services\ntype: concept\ndescription: src/services/ContextWatcher.ts src/services/DebugMcpService.ts src/services/DynamicLayerManager.ts src/services/KnowledgeGraphService.ts src/services/MCPMonitoringService.ts src/services/NotionService.ts src/services/RateLimitService.ts src/services/TaskMaster.ts src/services/__t...\n---\n\nsrc/services/ContextWatcher.ts src/services/DebugMcpService.ts src/services/DynamicLayerManager.ts src/services/KnowledgeGraphService.ts src/services/MCPMonitoringService.ts src/services/NotionService.ts src/services/RateLimitService.ts src/services/TaskMaster.ts src/services/__t...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "src/services/ContextWatcher.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/DebugMcpService.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/DynamicLayerManager.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/KnowledgeGraphService.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/MCPMonitoringService.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/NotionService.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/RateLimitService.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/services/TaskMaster.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "cursor-memory",
+      "label": ".cursor/memory",
+      "type": "concept",
+      "description": ".cursor/memory/absorption-feature.mdc .cursor/memory/ai-misconception-tracker.mdc .cursor/memory/component-absorption.mdc .cursor/memory/documentation-enforcer.mdc .cursor/memory/engineering-workflow-example.mdc .cursor/memory/feature-visualization.mdc .cursor/memory/horizon-map....",
+      "content": "---\ntitle: .cursor/memory\ntype: concept\ndescription: .cursor/memory/absorption-feature.mdc .cursor/memory/ai-misconception-tracker.mdc .cursor/memory/component-absorption.mdc .cursor/memory/documentation-enforcer.mdc .cursor/memory/engineering-workflow-example.mdc .cursor/memory/feature-visualization.mdc .cursor/memory/horizon-map....\n---\n\n.cursor/memory/absorption-feature.mdc .cursor/memory/ai-misconception-tracker.mdc .cursor/memory/component-absorption.mdc .cursor/memory/documentation-enforcer.mdc .cursor/memory/engineering-workflow-example.mdc .cursor/memory/feature-visualization.mdc .cursor/memory/horizon-map....\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".cursor/memory/absorption-feature.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/ai-misconception-tracker.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/component-absorption.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/documentation-enforcer.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/engineering-workflow-example.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/feature-visualization.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/horizon-map.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/memory/implementation-structure.mdc",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "agents-system-docs",
+      "label": "agents-system/docs",
+      "type": "concept",
+      "description": "agents-system/docs/TODO.md agents-system/docs/agent-competition-flow.md agents-system/docs/agent-competition-frontend-guidelines.md agents-system/docs/agent-competition-implementation-plan.md agents-system/docs/agent-competition-system-prd.md agents-system/docs/agent-competition-...",
+      "content": "---\ntitle: agents-system/docs\ntype: concept\ndescription: agents-system/docs/TODO.md agents-system/docs/agent-competition-flow.md agents-system/docs/agent-competition-frontend-guidelines.md agents-system/docs/agent-competition-implementation-plan.md agents-system/docs/agent-competition-system-prd.md agents-system/docs/agent-competition-...\n---\n\nagents-system/docs/TODO.md agents-system/docs/agent-competition-flow.md agents-system/docs/agent-competition-frontend-guidelines.md agents-system/docs/agent-competition-implementation-plan.md agents-system/docs/agent-competition-system-prd.md agents-system/docs/agent-competition-...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "agents-system/docs/TODO.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-flow.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-frontend-guidelines.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-implementation-plan.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-system-prd.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-system.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/agent-competition-tech-stack.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "agents-system/docs/api-reference.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-h3",
+      "label": "docs/H3",
+      "type": "concept",
+      "description": "docs/H3/ai-training/README.md docs/H3/ai-training/data-preparation.py docs/H3/ai-training/evaluate.py docs/H3/ai-training/inference.py docs/H3/ai-training/train.py docs/H3/ai-training/training-workflow.md docs/H3/sovereign-agent/README.md docs/H3/sovereign-agent/agent-creed.js do...",
+      "content": "---\ntitle: docs/H3\ntype: concept\ndescription: docs/H3/ai-training/README.md docs/H3/ai-training/data-preparation.py docs/H3/ai-training/evaluate.py docs/H3/ai-training/inference.py docs/H3/ai-training/train.py docs/H3/ai-training/training-workflow.md docs/H3/sovereign-agent/README.md docs/H3/sovereign-agent/agent-creed.js do...\n---\n\ndocs/H3/ai-training/README.md docs/H3/ai-training/data-preparation.py docs/H3/ai-training/evaluate.py docs/H3/ai-training/inference.py docs/H3/ai-training/train.py docs/H3/ai-training/training-workflow.md docs/H3/sovereign-agent/README.md docs/H3/sovereign-agent/agent-creed.js do...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/H3/ai-training/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/ai-training/data-preparation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/ai-training/evaluate.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/ai-training/inference.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/ai-training/train.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/ai-training/training-workflow.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/sovereign-agent/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/H3/sovereign-agent/agent-creed.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "src-rules",
+      "label": "src/rules",
+      "type": "concept",
+      "description": "src/rules/documentation/RuleDocumentationGenerator.ts src/rules/index.ts src/rules/manager/RuleTypeManager.ts src/rules/organizer/RuleOrganizer.ts src/rules/relationship/RuleRelationshipManager.ts src/rules/tests/KnowledgeGraphIntegration.test.ts src/rules/tests/NLPProcessor.test...",
+      "content": "---\ntitle: src/rules\ntype: concept\ndescription: src/rules/documentation/RuleDocumentationGenerator.ts src/rules/index.ts src/rules/manager/RuleTypeManager.ts src/rules/organizer/RuleOrganizer.ts src/rules/relationship/RuleRelationshipManager.ts src/rules/tests/KnowledgeGraphIntegration.test.ts src/rules/tests/NLPProcessor.test...\n---\n\nsrc/rules/documentation/RuleDocumentationGenerator.ts src/rules/index.ts src/rules/manager/RuleTypeManager.ts src/rules/organizer/RuleOrganizer.ts src/rules/relationship/RuleRelationshipManager.ts src/rules/tests/KnowledgeGraphIntegration.test.ts src/rules/tests/NLPProcessor.test...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "src/rules/documentation/RuleDocumentationGenerator.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/index.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/manager/RuleTypeManager.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/organizer/RuleOrganizer.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/relationship/RuleRelationshipManager.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/tests/KnowledgeGraphIntegration.test.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/tests/NLPProcessor.test.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "src/rules/tests/RuleMatrixVisualizer.test.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "cursor-mcp-servers",
+      "label": ".cursor/mcp-servers",
+      "type": "concept",
+      "description": ".cursor/mcp-servers/clear-thought/config.json .cursor/mcp-servers/clear-thought/templates/problem_decomposition.md .cursor/mcp-servers/notion-integration/.env.template .cursor/mcp-servers/notion-integration/README.md .cursor/mcp-servers/notion-integration/index.js .cursor/mcp-ser...",
+      "content": "---\ntitle: .cursor/mcp-servers\ntype: concept\ndescription: .cursor/mcp-servers/clear-thought/config.json .cursor/mcp-servers/clear-thought/templates/problem_decomposition.md .cursor/mcp-servers/notion-integration/.env.template .cursor/mcp-servers/notion-integration/README.md .cursor/mcp-servers/notion-integration/index.js .cursor/mcp-ser...\n---\n\n.cursor/mcp-servers/clear-thought/config.json .cursor/mcp-servers/clear-thought/templates/problem_decomposition.md .cursor/mcp-servers/notion-integration/.env.template .cursor/mcp-servers/notion-integration/README.md .cursor/mcp-servers/notion-integration/index.js .cursor/mcp-ser...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".cursor/mcp-servers/clear-thought/config.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/clear-thought/templates/problem_decomposition.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/.env.template",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/index.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/index.test.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/package-lock.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".cursor/mcp-servers/notion-integration/package.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-frontend",
+      "label": "docs/frontend",
+      "type": "concept",
+      "description": "docs/frontend/architecture.md docs/frontend/frontend-implementation-plan.md docs/frontend/frontend-rebuild.md docs/frontend/frontend-setup.md docs/frontend/frontend-wireframes.md docs/frontend/index.md docs/frontend/predictive-optimization.md docs/frontend/progress.md docs/fronte...",
+      "content": "---\ntitle: docs/frontend\ntype: concept\ndescription: docs/frontend/architecture.md docs/frontend/frontend-implementation-plan.md docs/frontend/frontend-rebuild.md docs/frontend/frontend-setup.md docs/frontend/frontend-wireframes.md docs/frontend/index.md docs/frontend/predictive-optimization.md docs/frontend/progress.md docs/fronte...\n---\n\ndocs/frontend/architecture.md docs/frontend/frontend-implementation-plan.md docs/frontend/frontend-rebuild.md docs/frontend/frontend-setup.md docs/frontend/frontend-wireframes.md docs/frontend/index.md docs/frontend/predictive-optimization.md docs/frontend/progress.md docs/fronte...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/frontend/architecture.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/frontend-implementation-plan.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/frontend-rebuild.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/frontend-setup.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/frontend-wireframes.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/index.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/predictive-optimization.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/frontend/progress.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "mcp-servers-content-summarizer",
+      "label": "mcp-servers/content-summarizer",
+      "type": "concept",
+      "description": "mcp-servers/content-summarizer/.env.example mcp-servers/content-summarizer/.gitignore mcp-servers/content-summarizer/README.md mcp-servers/content-summarizer/content-summarizer-server.js mcp-servers/content-summarizer/content-summarizer-server.js.map mcp-servers/content-summarize...",
+      "content": "---\ntitle: mcp-servers/content-summarizer\ntype: concept\ndescription: mcp-servers/content-summarizer/.env.example mcp-servers/content-summarizer/.gitignore mcp-servers/content-summarizer/README.md mcp-servers/content-summarizer/content-summarizer-server.js mcp-servers/content-summarizer/content-summarizer-server.js.map mcp-servers/content-summarize...\n---\n\nmcp-servers/content-summarizer/.env.example mcp-servers/content-summarizer/.gitignore mcp-servers/content-summarizer/README.md mcp-servers/content-summarizer/content-summarizer-server.js mcp-servers/content-summarizer/content-summarizer-server.js.map mcp-servers/content-summarize...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "mcp-servers/content-summarizer/.env.example",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/.gitignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/content-summarizer-server.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/content-summarizer-server.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/content-summarizer-server.ts",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/index.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "mcp-servers/content-summarizer/index.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "out-mcp",
+      "label": "out/mcp",
+      "type": "concept",
+      "description": "out/mcp/cli.js out/mcp/cli.js.map out/mcp/client.js out/mcp/client.js.map out/mcp/index.js out/mcp/index.js.map out/mcp/local-server.js out/mcp/local-server.js.map out/mcp/server.js out/mcp/server.js.map out/mcp/tools/knowledge-graph-tool.js out/mcp/tools/knowledge-graph-tool.js....",
+      "content": "---\ntitle: out/mcp\ntype: concept\ndescription: out/mcp/cli.js out/mcp/cli.js.map out/mcp/client.js out/mcp/client.js.map out/mcp/index.js out/mcp/index.js.map out/mcp/local-server.js out/mcp/local-server.js.map out/mcp/server.js out/mcp/server.js.map out/mcp/tools/knowledge-graph-tool.js out/mcp/tools/knowledge-graph-tool.js....\n---\n\nout/mcp/cli.js out/mcp/cli.js.map out/mcp/client.js out/mcp/client.js.map out/mcp/index.js out/mcp/index.js.map out/mcp/local-server.js out/mcp/local-server.js.map out/mcp/server.js out/mcp/server.js.map out/mcp/tools/knowledge-graph-tool.js out/mcp/tools/knowledge-graph-tool.js....\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "out/mcp/cli.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/cli.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/client.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/client.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/index.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/index.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/local-server.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "out/mcp/local-server.js.map",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "docs-ui",
+      "label": "docs/ui",
+      "type": "concept",
+      "description": "docs/ui/README.md docs/ui/brainstorm.html docs/ui/design_schematics.md docs/ui/index.html docs/ui/launch.bat docs/ui/launch.sh docs/ui/package.json docs/ui/script.js docs/ui/serve.py docs/ui/styles.css docs/ui/ui-mockup.md",
+      "content": "---\ntitle: docs/ui\ntype: concept\ndescription: docs/ui/README.md docs/ui/brainstorm.html docs/ui/design_schematics.md docs/ui/index.html docs/ui/launch.bat docs/ui/launch.sh docs/ui/package.json docs/ui/script.js docs/ui/serve.py docs/ui/styles.css docs/ui/ui-mockup.md\n---\n\ndocs/ui/README.md docs/ui/brainstorm.html docs/ui/design_schematics.md docs/ui/index.html docs/ui/launch.bat docs/ui/launch.sh docs/ui/package.json docs/ui/script.js docs/ui/serve.py docs/ui/styles.css docs/ui/ui-mockup.md\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "docs/ui/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/brainstorm.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/design_schematics.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/index.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/launch.bat",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/launch.sh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/package.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "docs/ui/script.js",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    },
+    {
+      "id": "scripts-backup-scripts",
+      "label": "scripts/backup-scripts",
+      "type": "concept",
+      "description": "scripts/backup-scripts/QUICK_START.md scripts/backup-scripts/README.md scripts/backup-scripts/backup-config.json scripts/backup-scripts/github-backup.ps1 scripts/backup-scripts/github-backup.sh scripts/backup-scripts/setup-schedule.ps1 scripts/backup-scripts/setup-schedule.sh scr...",
+      "content": "---\ntitle: scripts/backup-scripts\ntype: concept\ndescription: scripts/backup-scripts/QUICK_START.md scripts/backup-scripts/README.md scripts/backup-scripts/backup-config.json scripts/backup-scripts/github-backup.ps1 scripts/backup-scripts/github-backup.sh scripts/backup-scripts/setup-schedule.ps1 scripts/backup-scripts/setup-schedule.sh scr...\n---\n\nscripts/backup-scripts/QUICK_START.md scripts/backup-scripts/README.md scripts/backup-scripts/backup-config.json scripts/backup-scripts/github-backup.ps1 scripts/backup-scripts/github-backup.sh scripts/backup-scripts/setup-schedule.ps1 scripts/backup-scripts/setup-schedule.sh scr...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "scripts/backup-scripts/QUICK_START.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/backup-config.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/github-backup.ps1",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/github-backup.sh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/setup-schedule.ps1",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/setup-schedule.sh",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "scripts/backup-scripts/test-backup.ps1",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "unknown"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-03-17T16:30:45.452127Z"
+}

@@ -1,0 +1,1493 @@
+{
+  "topic": "Browser Use",
+  "nodes": [
+    {
+      "id": "moc",
+      "label": "Browser Use Map",
+      "type": "moc",
+      "description": "tests/ci: tests/ci/browser/iframe_template.html tests/ci/browser/test_cdp_headers.py tests/ci/browser/test_cloud_browser.py tests/ci/browser/test_cross_origin_click.py tests/ci/browser/test_dom_serializer.py tests/ci/browser/test_navigation.py tests/ci/browser/test_navigation_slow_pages.py... browser_use/llm: browser_use/llm/README.md browser_use/llm/__init__.py browser_use/llm/anthropic/chat.py browser_use/llm/anthropic/serializer.py browser_use/llm/aws/__init__.py browser_use/llm/aws/chat_anth...",
+      "content": "# Browser Use\n\nThis map summarizes repository structure and important exploration paths. Start with subsystem nodes and follow evidence-backed links to inspect source files.\n\n## Domain Clusters\n- Explore [[tests-ci]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-llm]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-models]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-browser]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-skill-cli]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-features]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-agent]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-dom]] to inspect related module behavior and evidence anchors.\n- Explore [[github-workflows]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-custom-functions]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-use-cases]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-actor]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-code-use]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-apps]] to inspect related module behavior and evidence anchors.\n- Explore [[browser-use-tools]] to inspect related module behavior and evidence anchors.\n- Explore [[examples-integrations]] to inspect related module behavior and evidence anchors.\n\n## Explorations Needed\n- Which subsystems should be prioritized for onboarding documentation?\n- Which dependencies are high-risk and need version guardrails?\n- Where should integration tests be expanded based on current topology?\n",
+      "links": [
+        "tests-ci",
+        "browser-use-llm",
+        "examples-models",
+        "browser-use-browser",
+        "browser-use-skill-cli",
+        "examples-features",
+        "browser-use-agent",
+        "browser-use-dom",
+        "github-workflows",
+        "examples-custom-functions",
+        "examples-use-cases",
+        "browser-use-actor",
+        "browser-use-code-use",
+        "examples-apps",
+        "browser-use-tools",
+        "examples-integrations"
+      ],
+      "evidence": [
+        {
+          "path": "repo_digest",
+          "start_line": null,
+          "end_line": null,
+          "artifact_ref": "0a538e6a9bf69369",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json"
+      ],
+      "tags": [
+        "moc",
+        "python"
+      ]
+    },
+    {
+      "id": "tests-ci",
+      "label": "tests/ci",
+      "type": "concept",
+      "description": "tests/ci/browser/iframe_template.html tests/ci/browser/test_cdp_headers.py tests/ci/browser/test_cloud_browser.py tests/ci/browser/test_cross_origin_click.py tests/ci/browser/test_dom_serializer.py tests/ci/browser/test_navigation.py tests/ci/browser/test_navigation_slow_pages.py...",
+      "content": "---\ntitle: tests/ci\ntype: concept\ndescription: tests/ci/browser/iframe_template.html tests/ci/browser/test_cdp_headers.py tests/ci/browser/test_cloud_browser.py tests/ci/browser/test_cross_origin_click.py tests/ci/browser/test_dom_serializer.py tests/ci/browser/test_navigation.py tests/ci/browser/test_navigation_slow_pages.py...\n---\n\ntests/ci/browser/iframe_template.html tests/ci/browser/test_cdp_headers.py tests/ci/browser/test_cloud_browser.py tests/ci/browser/test_cross_origin_click.py tests/ci/browser/test_dom_serializer.py tests/ci/browser/test_navigation.py tests/ci/browser/test_navigation_slow_pages.py...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "tests/ci/browser/iframe_template.html",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_cdp_headers.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_cloud_browser.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_cross_origin_click.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_dom_serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_navigation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_navigation_slow_pages.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "tests/ci/browser/test_output_paths.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-llm",
+      "label": "browser_use/llm",
+      "type": "concept",
+      "description": "browser_use/llm/README.md browser_use/llm/__init__.py browser_use/llm/anthropic/chat.py browser_use/llm/anthropic/serializer.py browser_use/llm/aws/__init__.py browser_use/llm/aws/chat_anthropic.py browser_use/llm/aws/chat_bedrock.py browser_use/llm/aws/serializer.py browser_use/...",
+      "content": "---\ntitle: browser_use/llm\ntype: concept\ndescription: browser_use/llm/README.md browser_use/llm/__init__.py browser_use/llm/anthropic/chat.py browser_use/llm/anthropic/serializer.py browser_use/llm/aws/__init__.py browser_use/llm/aws/chat_anthropic.py browser_use/llm/aws/chat_bedrock.py browser_use/llm/aws/serializer.py browser_use/...\n---\n\nbrowser_use/llm/README.md browser_use/llm/__init__.py browser_use/llm/anthropic/chat.py browser_use/llm/anthropic/serializer.py browser_use/llm/aws/__init__.py browser_use/llm/aws/chat_anthropic.py browser_use/llm/aws/chat_bedrock.py browser_use/llm/aws/serializer.py browser_use/...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/llm/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/anthropic/chat.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/anthropic/serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/aws/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/aws/chat_anthropic.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/aws/chat_bedrock.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/llm/aws/serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-models",
+      "label": "examples/models",
+      "type": "concept",
+      "description": "examples/models/aws.py examples/models/azure_openai.py examples/models/browser_use_llm.py examples/models/bu_oss.py examples/models/cerebras_example.py examples/models/claude-4-sonnet.py examples/models/deepseek-chat.py examples/models/gemini-3.py examples/models/gemini.py exampl...",
+      "content": "---\ntitle: examples/models\ntype: concept\ndescription: examples/models/aws.py examples/models/azure_openai.py examples/models/browser_use_llm.py examples/models/bu_oss.py examples/models/cerebras_example.py examples/models/claude-4-sonnet.py examples/models/deepseek-chat.py examples/models/gemini-3.py examples/models/gemini.py exampl...\n---\n\nexamples/models/aws.py examples/models/azure_openai.py examples/models/browser_use_llm.py examples/models/bu_oss.py examples/models/cerebras_example.py examples/models/claude-4-sonnet.py examples/models/deepseek-chat.py examples/models/gemini-3.py examples/models/gemini.py exampl...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/models/aws.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/azure_openai.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/browser_use_llm.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/bu_oss.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/cerebras_example.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/claude-4-sonnet.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/deepseek-chat.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/models/gemini-3.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-browser",
+      "label": "browser_use/browser",
+      "type": "concept",
+      "description": "browser_use/browser/__init__.py browser_use/browser/cloud/cloud.py browser_use/browser/cloud/views.py browser_use/browser/demo_mode.py browser_use/browser/events.py browser_use/browser/profile.py browser_use/browser/python_highlights.py browser_use/browser/session.py browser_use/...",
+      "content": "---\ntitle: browser_use/browser\ntype: concept\ndescription: browser_use/browser/__init__.py browser_use/browser/cloud/cloud.py browser_use/browser/cloud/views.py browser_use/browser/demo_mode.py browser_use/browser/events.py browser_use/browser/profile.py browser_use/browser/python_highlights.py browser_use/browser/session.py browser_use/...\n---\n\nbrowser_use/browser/__init__.py browser_use/browser/cloud/cloud.py browser_use/browser/cloud/views.py browser_use/browser/demo_mode.py browser_use/browser/events.py browser_use/browser/profile.py browser_use/browser/python_highlights.py browser_use/browser/session.py browser_use/...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/browser/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/cloud/cloud.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/cloud/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/demo_mode.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/events.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/profile.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/python_highlights.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/browser/session.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-skill-cli",
+      "label": "browser_use/skill_cli",
+      "type": "concept",
+      "description": "browser_use/skill_cli/README.md browser_use/skill_cli/__init__.py browser_use/skill_cli/__main__.py browser_use/skill_cli/api_key.py browser_use/skill_cli/commands/__init__.py browser_use/skill_cli/commands/agent.py browser_use/skill_cli/commands/browser.py browser_use/skill_cli/...",
+      "content": "---\ntitle: browser_use/skill_cli\ntype: concept\ndescription: browser_use/skill_cli/README.md browser_use/skill_cli/__init__.py browser_use/skill_cli/__main__.py browser_use/skill_cli/api_key.py browser_use/skill_cli/commands/__init__.py browser_use/skill_cli/commands/agent.py browser_use/skill_cli/commands/browser.py browser_use/skill_cli/...\n---\n\nbrowser_use/skill_cli/README.md browser_use/skill_cli/__init__.py browser_use/skill_cli/__main__.py browser_use/skill_cli/api_key.py browser_use/skill_cli/commands/__init__.py browser_use/skill_cli/commands/agent.py browser_use/skill_cli/commands/browser.py browser_use/skill_cli/...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/skill_cli/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/__main__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/api_key.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/commands/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/commands/agent.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/commands/browser.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/skill_cli/commands/cloud_session.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-features",
+      "label": "examples/features",
+      "type": "concept",
+      "description": "examples/features/add_image_context.py examples/features/blocked_domains.py examples/features/csv_file_generation.py examples/features/custom_output.py examples/features/custom_system_prompt.py examples/features/download_file.py examples/features/fallback_model.py examples/featur...",
+      "content": "---\ntitle: examples/features\ntype: concept\ndescription: examples/features/add_image_context.py examples/features/blocked_domains.py examples/features/csv_file_generation.py examples/features/custom_output.py examples/features/custom_system_prompt.py examples/features/download_file.py examples/features/fallback_model.py examples/featur...\n---\n\nexamples/features/add_image_context.py examples/features/blocked_domains.py examples/features/csv_file_generation.py examples/features/custom_output.py examples/features/custom_system_prompt.py examples/features/download_file.py examples/features/fallback_model.py examples/featur...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/features/add_image_context.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/blocked_domains.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/csv_file_generation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/custom_output.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/custom_system_prompt.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/download_file.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/fallback_model.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/features/follow_up_task.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-agent",
+      "label": "browser_use/agent",
+      "type": "concept",
+      "description": "browser_use/agent/cloud_events.py browser_use/agent/gif.py browser_use/agent/judge.py browser_use/agent/message_manager/service.py browser_use/agent/message_manager/utils.py browser_use/agent/message_manager/views.py browser_use/agent/prompts.py browser_use/agent/service.py brows...",
+      "content": "---\ntitle: browser_use/agent\ntype: concept\ndescription: browser_use/agent/cloud_events.py browser_use/agent/gif.py browser_use/agent/judge.py browser_use/agent/message_manager/service.py browser_use/agent/message_manager/utils.py browser_use/agent/message_manager/views.py browser_use/agent/prompts.py browser_use/agent/service.py brows...\n---\n\nbrowser_use/agent/cloud_events.py browser_use/agent/gif.py browser_use/agent/judge.py browser_use/agent/message_manager/service.py browser_use/agent/message_manager/utils.py browser_use/agent/message_manager/views.py browser_use/agent/prompts.py browser_use/agent/service.py brows...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/agent/cloud_events.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/gif.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/judge.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/message_manager/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/message_manager/utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/message_manager/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/prompts.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/agent/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-dom",
+      "label": "browser_use/dom",
+      "type": "concept",
+      "description": "browser_use/dom/enhanced_snapshot.py browser_use/dom/markdown_extractor.py browser_use/dom/playground/extraction.py browser_use/dom/playground/multi_act.py browser_use/dom/serializer/clickable_elements.py browser_use/dom/serializer/code_use_serializer.py browser_use/dom/serialize...",
+      "content": "---\ntitle: browser_use/dom\ntype: concept\ndescription: browser_use/dom/enhanced_snapshot.py browser_use/dom/markdown_extractor.py browser_use/dom/playground/extraction.py browser_use/dom/playground/multi_act.py browser_use/dom/serializer/clickable_elements.py browser_use/dom/serializer/code_use_serializer.py browser_use/dom/serialize...\n---\n\nbrowser_use/dom/enhanced_snapshot.py browser_use/dom/markdown_extractor.py browser_use/dom/playground/extraction.py browser_use/dom/playground/multi_act.py browser_use/dom/serializer/clickable_elements.py browser_use/dom/serializer/code_use_serializer.py browser_use/dom/serialize...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/dom/enhanced_snapshot.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/markdown_extractor.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/playground/extraction.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/playground/multi_act.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/serializer/clickable_elements.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/serializer/code_use_serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/serializer/eval_serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/dom/serializer/html_serializer.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "github-workflows",
+      "label": ".github/workflows",
+      "type": "concept",
+      "description": ".github/workflows/build-base-image.yml.disabled .github/workflows/claude.yml .github/workflows/cloud_evals.yml .github/workflows/docker.yml .github/workflows/eval-on-pr.yml .github/workflows/install-script.yml .github/workflows/lint.yml .github/workflows/package.yaml .github/work...",
+      "content": "---\ntitle: .github/workflows\ntype: concept\ndescription: .github/workflows/build-base-image.yml.disabled .github/workflows/claude.yml .github/workflows/cloud_evals.yml .github/workflows/docker.yml .github/workflows/eval-on-pr.yml .github/workflows/install-script.yml .github/workflows/lint.yml .github/workflows/package.yaml .github/work...\n---\n\n.github/workflows/build-base-image.yml.disabled .github/workflows/claude.yml .github/workflows/cloud_evals.yml .github/workflows/docker.yml .github/workflows/eval-on-pr.yml .github/workflows/install-script.yml .github/workflows/lint.yml .github/workflows/package.yaml .github/work...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": ".github/workflows/build-base-image.yml.disabled",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/claude.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/cloud_evals.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/docker.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/eval-on-pr.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/install-script.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/lint.yml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": ".github/workflows/package.yaml",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-custom-functions",
+      "label": "examples/custom-functions",
+      "type": "concept",
+      "description": "examples/custom-functions/2fa.py examples/custom-functions/action_filters.py examples/custom-functions/actor_use.py examples/custom-functions/advanced_search.py examples/custom-functions/cua.py examples/custom-functions/file_upload.py examples/custom-functions/notification.py exa...",
+      "content": "---\ntitle: examples/custom-functions\ntype: concept\ndescription: examples/custom-functions/2fa.py examples/custom-functions/action_filters.py examples/custom-functions/actor_use.py examples/custom-functions/advanced_search.py examples/custom-functions/cua.py examples/custom-functions/file_upload.py examples/custom-functions/notification.py exa...\n---\n\nexamples/custom-functions/2fa.py examples/custom-functions/action_filters.py examples/custom-functions/actor_use.py examples/custom-functions/advanced_search.py examples/custom-functions/cua.py examples/custom-functions/file_upload.py examples/custom-functions/notification.py exa...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/custom-functions/2fa.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/action_filters.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/actor_use.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/advanced_search.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/cua.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/file_upload.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/notification.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/custom-functions/onepassword_2fa.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-use-cases",
+      "label": "examples/use-cases",
+      "type": "concept",
+      "description": "examples/use-cases/apply_to_job.py examples/use-cases/buy_groceries.py examples/use-cases/captcha.py examples/use-cases/check_appointment.py examples/use-cases/extract_pdf_content.py examples/use-cases/find_influencer_profiles.py examples/use-cases/onepassword.py examples/use-cas...",
+      "content": "---\ntitle: examples/use-cases\ntype: concept\ndescription: examples/use-cases/apply_to_job.py examples/use-cases/buy_groceries.py examples/use-cases/captcha.py examples/use-cases/check_appointment.py examples/use-cases/extract_pdf_content.py examples/use-cases/find_influencer_profiles.py examples/use-cases/onepassword.py examples/use-cas...\n---\n\nexamples/use-cases/apply_to_job.py examples/use-cases/buy_groceries.py examples/use-cases/captcha.py examples/use-cases/check_appointment.py examples/use-cases/extract_pdf_content.py examples/use-cases/find_influencer_profiles.py examples/use-cases/onepassword.py examples/use-cas...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/use-cases/apply_to_job.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/buy_groceries.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/captcha.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/check_appointment.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/extract_pdf_content.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/find_influencer_profiles.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/onepassword.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/use-cases/pcpartpicker.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-actor",
+      "label": "browser_use/actor",
+      "type": "concept",
+      "description": "browser_use/actor/README.md browser_use/actor/__init__.py browser_use/actor/element.py browser_use/actor/mouse.py browser_use/actor/page.py browser_use/actor/playground/flights.py browser_use/actor/playground/mixed_automation.py browser_use/actor/playground/playground.py browser_...",
+      "content": "---\ntitle: browser_use/actor\ntype: concept\ndescription: browser_use/actor/README.md browser_use/actor/__init__.py browser_use/actor/element.py browser_use/actor/mouse.py browser_use/actor/page.py browser_use/actor/playground/flights.py browser_use/actor/playground/mixed_automation.py browser_use/actor/playground/playground.py browser_...\n---\n\nbrowser_use/actor/README.md browser_use/actor/__init__.py browser_use/actor/element.py browser_use/actor/mouse.py browser_use/actor/page.py browser_use/actor/playground/flights.py browser_use/actor/playground/mixed_automation.py browser_use/actor/playground/playground.py browser_...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/actor/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/element.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/mouse.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/page.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/playground/flights.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/playground/mixed_automation.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/actor/playground/playground.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-code-use",
+      "label": "browser_use/code_use",
+      "type": "concept",
+      "description": "browser_use/code_use/README.md browser_use/code_use/__init__.py browser_use/code_use/formatting.py browser_use/code_use/namespace.py browser_use/code_use/notebook_export.py browser_use/code_use/service.py browser_use/code_use/system_prompt.md browser_use/code_use/utils.py browser...",
+      "content": "---\ntitle: browser_use/code_use\ntype: concept\ndescription: browser_use/code_use/README.md browser_use/code_use/__init__.py browser_use/code_use/formatting.py browser_use/code_use/namespace.py browser_use/code_use/notebook_export.py browser_use/code_use/service.py browser_use/code_use/system_prompt.md browser_use/code_use/utils.py browser...\n---\n\nbrowser_use/code_use/README.md browser_use/code_use/__init__.py browser_use/code_use/formatting.py browser_use/code_use/namespace.py browser_use/code_use/notebook_export.py browser_use/code_use/service.py browser_use/code_use/system_prompt.md browser_use/code_use/utils.py browser...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/code_use/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/formatting.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/namespace.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/notebook_export.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/system_prompt.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/code_use/utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-apps",
+      "label": "examples/apps",
+      "type": "concept",
+      "description": "examples/apps/ad-use/README.md examples/apps/ad-use/ad_generator.py examples/apps/ad-use/output/ad_20250908_150030.png examples/apps/ad-use/output/landing_page_20250908_150030.png examples/apps/msg-use/README.md examples/apps/msg-use/login.py examples/apps/msg-use/scheduler.py ex...",
+      "content": "---\ntitle: examples/apps\ntype: concept\ndescription: examples/apps/ad-use/README.md examples/apps/ad-use/ad_generator.py examples/apps/ad-use/output/ad_20250908_150030.png examples/apps/ad-use/output/landing_page_20250908_150030.png examples/apps/msg-use/README.md examples/apps/msg-use/login.py examples/apps/msg-use/scheduler.py ex...\n---\n\nexamples/apps/ad-use/README.md examples/apps/ad-use/ad_generator.py examples/apps/ad-use/output/ad_20250908_150030.png examples/apps/ad-use/output/landing_page_20250908_150030.png examples/apps/msg-use/README.md examples/apps/msg-use/login.py examples/apps/msg-use/scheduler.py ex...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/apps/ad-use/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/ad-use/ad_generator.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/ad-use/output/ad_20250908_150030.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/ad-use/output/landing_page_20250908_150030.png",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/msg-use/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/msg-use/login.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/msg-use/scheduler.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/apps/news-use/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-tools",
+      "label": "browser_use/tools",
+      "type": "concept",
+      "description": "browser_use/tools/extraction/__init__.py browser_use/tools/extraction/schema_utils.py browser_use/tools/extraction/views.py browser_use/tools/registry/service.py browser_use/tools/registry/views.py browser_use/tools/service.py browser_use/tools/utils.py browser_use/tools/views.py",
+      "content": "---\ntitle: browser_use/tools\ntype: concept\ndescription: browser_use/tools/extraction/__init__.py browser_use/tools/extraction/schema_utils.py browser_use/tools/extraction/views.py browser_use/tools/registry/service.py browser_use/tools/registry/views.py browser_use/tools/service.py browser_use/tools/utils.py browser_use/tools/views.py\n---\n\nbrowser_use/tools/extraction/__init__.py browser_use/tools/extraction/schema_utils.py browser_use/tools/extraction/views.py browser_use/tools/registry/service.py browser_use/tools/registry/views.py browser_use/tools/service.py browser_use/tools/utils.py browser_use/tools/views.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/tools/extraction/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/extraction/schema_utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/extraction/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/registry/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/registry/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/utils.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tools/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-integrations",
+      "label": "examples/integrations",
+      "type": "concept",
+      "description": "examples/integrations/agentmail/2fa.py examples/integrations/agentmail/email_tools.py examples/integrations/discord/discord_api.py examples/integrations/discord/discord_example.py examples/integrations/gmail_2fa_integration.py examples/integrations/slack/README.md examples/integr...",
+      "content": "---\ntitle: examples/integrations\ntype: concept\ndescription: examples/integrations/agentmail/2fa.py examples/integrations/agentmail/email_tools.py examples/integrations/discord/discord_api.py examples/integrations/discord/discord_example.py examples/integrations/gmail_2fa_integration.py examples/integrations/slack/README.md examples/integr...\n---\n\nexamples/integrations/agentmail/2fa.py examples/integrations/agentmail/email_tools.py examples/integrations/discord/discord_api.py examples/integrations/discord/discord_example.py examples/integrations/gmail_2fa_integration.py examples/integrations/slack/README.md examples/integr...\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/integrations/agentmail/2fa.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/agentmail/email_tools.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/discord/discord_api.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/discord/discord_example.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/gmail_2fa_integration.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/slack/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/slack/slack_api.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/integrations/slack/slack_example.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-mcp",
+      "label": "browser_use/mcp",
+      "type": "concept",
+      "description": "browser_use/mcp/.dxtignore browser_use/mcp/__init__.py browser_use/mcp/__main__.py browser_use/mcp/client.py browser_use/mcp/controller.py browser_use/mcp/manifest.json browser_use/mcp/server.py",
+      "content": "---\ntitle: browser_use/mcp\ntype: concept\ndescription: browser_use/mcp/.dxtignore browser_use/mcp/__init__.py browser_use/mcp/__main__.py browser_use/mcp/client.py browser_use/mcp/controller.py browser_use/mcp/manifest.json browser_use/mcp/server.py\n---\n\nbrowser_use/mcp/.dxtignore browser_use/mcp/__init__.py browser_use/mcp/__main__.py browser_use/mcp/client.py browser_use/mcp/controller.py browser_use/mcp/manifest.json browser_use/mcp/server.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/mcp/.dxtignore",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/__main__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/client.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/controller.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/manifest.json",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/mcp/server.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-browser",
+      "label": "examples/browser",
+      "type": "concept",
+      "description": "examples/browser/cloud_browser.py examples/browser/custom_headers.py examples/browser/parallel_browser.py examples/browser/playwright_integration.py examples/browser/real_browser.py examples/browser/save_cookies.py examples/browser/using_cdp.py",
+      "content": "---\ntitle: examples/browser\ntype: concept\ndescription: examples/browser/cloud_browser.py examples/browser/custom_headers.py examples/browser/parallel_browser.py examples/browser/playwright_integration.py examples/browser/real_browser.py examples/browser/save_cookies.py examples/browser/using_cdp.py\n---\n\nexamples/browser/cloud_browser.py examples/browser/custom_headers.py examples/browser/parallel_browser.py examples/browser/playwright_integration.py examples/browser/real_browser.py examples/browser/save_cookies.py examples/browser/using_cdp.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/browser/cloud_browser.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/custom_headers.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/parallel_browser.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/playwright_integration.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/real_browser.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/save_cookies.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/browser/using_cdp.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "examples-cloud",
+      "label": "examples/cloud",
+      "type": "concept",
+      "description": "examples/cloud/01_basic_task.py examples/cloud/02_fast_mode_gemini.py examples/cloud/03_structured_output.py examples/cloud/04_proxy_usage.py examples/cloud/05_search_api.py examples/cloud/README.md examples/cloud/env.example",
+      "content": "---\ntitle: examples/cloud\ntype: concept\ndescription: examples/cloud/01_basic_task.py examples/cloud/02_fast_mode_gemini.py examples/cloud/03_structured_output.py examples/cloud/04_proxy_usage.py examples/cloud/05_search_api.py examples/cloud/README.md examples/cloud/env.example\n---\n\nexamples/cloud/01_basic_task.py examples/cloud/02_fast_mode_gemini.py examples/cloud/03_structured_output.py examples/cloud/04_proxy_usage.py examples/cloud/05_search_api.py examples/cloud/README.md examples/cloud/env.example\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "examples/cloud/01_basic_task.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/02_fast_mode_gemini.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/03_structured_output.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/04_proxy_usage.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/05_search_api.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/README.md",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "examples/cloud/env.example",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    },
+    {
+      "id": "browser-use-tokens",
+      "label": "browser_use/tokens",
+      "type": "concept",
+      "description": "browser_use/tokens/__init__.py browser_use/tokens/custom_pricing.py browser_use/tokens/mappings.py browser_use/tokens/service.py browser_use/tokens/tests/test_cost.py browser_use/tokens/views.py",
+      "content": "---\ntitle: browser_use/tokens\ntype: concept\ndescription: browser_use/tokens/__init__.py browser_use/tokens/custom_pricing.py browser_use/tokens/mappings.py browser_use/tokens/service.py browser_use/tokens/tests/test_cost.py browser_use/tokens/views.py\n---\n\nbrowser_use/tokens/__init__.py browser_use/tokens/custom_pricing.py browser_use/tokens/mappings.py browser_use/tokens/service.py browser_use/tokens/tests/test_cost.py browser_use/tokens/views.py\n\nKey symbols: n/a\n",
+      "links": [],
+      "evidence": [
+        {
+          "path": "browser_use/tokens/__init__.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tokens/custom_pricing.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tokens/mappings.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tokens/service.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tokens/tests/test_cost.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        },
+        {
+          "path": "browser_use/tokens/views.py",
+          "start_line": 1,
+          "end_line": 1,
+          "artifact_ref": "repo_digest",
+          "excerpt": null
+        }
+      ],
+      "artifacts": [
+        "repo.graph.json",
+        "repo.force.json"
+      ],
+      "tags": [
+        "subsystem",
+        "python"
+      ]
+    }
+  ],
+  "schema_version": "1.0",
+  "generated_at": "2026-03-15T05:05:33.245012Z"
+}
