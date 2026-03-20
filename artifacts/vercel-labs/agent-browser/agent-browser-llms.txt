@@ -1,38 +1,73 @@
+<!-- Generated via fallback path (no LM). -->
+
 # Agent Browser
 
-> agent-browser empowers AI agents to automate web tasks with precision, using a fast Rust CLI that interfaces with Chromium via Playwright. It enables AI-driven workflows such as navigating sites, interacting with elements using semantic or ref-based selectors, and capturing snapshots for deterministic LLM interactions. The tool supports isolated sessions, network interception, authentication handling, and real-time streaming for human-AI collaboration — all while being cross-platform and performant.
+> Headless browser automation CLI for AI agents. Fast native Rust CLI.
 
 **Remember:**
-- Headless browser automation
-- Semantic locators (ARIA roles, text, labels)
-- Snapshot-based element refs (@e1, @e2)
-- Agent mode with JSON output for AI integration
-- Daemon-client architecture (Rust CLI + Node.js daemon)
-- CDP mode for remote browser control
+- Start with Docs for install & onboarding
+- Check Tutorials for end-to-end workflows
+- Review API references before integrating
 
 ## Docs
 - [Postinstall](https://github.com/vercel-labs/agent-browser/blob/main/scripts/postinstall.js): install & quickstart.
-- [Next.Config](https://github.com/vercel-labs/agent-browser/blob/main/docs/next.config.ts): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/installation/page.mdx): install & quickstart.
+- [Docs Navigation](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/docs-navigation.ts): docs page.
+- [Mdx To Markdown](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/mdx-to-markdown.ts): docs page.
+- [Page](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/app/page.mdx): docs page.
+- [Page Metadata](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/page-metadata.ts): docs page.
+- [Page Titles](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/page-titles.ts): docs page.
+- [Rate Limit](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/rate-limit.ts): docs page.
+- [Search Index](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/search-index.ts): docs page.
+- [Utils](https://github.com/vercel-labs/agent-browser/blob/main/docs/src/lib/utils.ts): docs page.
+
+## Tutorials
+- [README](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/README.md): install & quickstart.
+- [Next.Config](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/next.config.ts): worked example.
+- [Agent Browser Sandbox](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/lib/agent-browser-sandbox.ts): worked example.
+- [Constants](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/lib/constants.ts): worked example.
+- [Create Snapshot](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/scripts/create-snapshot.ts): worked example.
+- [Rate Limit](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/lib/rate-limit.ts): worked example.
+- [Utils](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/lib/utils.ts): worked example.
+- [Browse](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/app/actions/browse.ts): worked example.
+- [Route](https://github.com/vercel-labs/agent-browser/blob/main/examples/environments/app/api/browse/route.ts): API reference.
+
+## API
+- [Authentication](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/authentication.md): API reference.
+- [Commands](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/commands.md): API reference.
+- [Issue Taxonomy](https://github.com/vercel-labs/agent-browser/blob/main/skills/dogfood/references/issue-taxonomy.md): API reference.
+- [Profiling](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/profiling.md): API reference.
+- [Proxy Support](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/proxy-support.md): API reference.
+- [Session Management](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/session-management.md): API reference.
+- [Slack Tasks](https://github.com/vercel-labs/agent-browser/blob/main/skills/slack/references/slack-tasks.md): API reference.
+- [Snapshot Refs](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/snapshot-refs.md): API reference.
+- [Video Recording](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/references/video-recording.md): API reference.
 
 ## Optional
+- [README](https://github.com/vercel-labs/agent-browser/blob/main/benchmarks/README.md): install & quickstart.
+- [Changelog](https://github.com/vercel-labs/agent-browser/blob/main/CHANGELOG.md): version history.
+- [Bench](https://github.com/vercel-labs/agent-browser/blob/main/benchmarks/bench.ts): docs page.
+- [Scenarios](https://github.com/vercel-labs/agent-browser/blob/main/benchmarks/scenarios.ts): docs page.
+- [README](https://github.com/vercel-labs/agent-browser/blob/main/.changeset/README.md): install & quickstart.
 - [Agents](https://github.com/vercel-labs/agent-browser/blob/main/AGENTS.md): docs page.
 - [README](https://github.com/vercel-labs/agent-browser/blob/main/README.md): docs page.
-- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
-- [Serverless.Test](https://github.com/vercel-labs/agent-browser/blob/main/test/serverless.test.ts): docs page.
-- [Vitest.Config](https://github.com/vercel-labs/agent-browser/blob/main/vitest.config.ts): docs page.
+- [Agent Browser](https://github.com/vercel-labs/agent-browser/blob/main/bin/agent-browser.js): docs page.
+
+## Cli
+- [Drag Probe](https://github.com/vercel-labs/agent-browser/blob/main/cli/src/native/test_fixtures/drag_probe.html): docs page.
+- [Html5 Drag Probe](https://github.com/vercel-labs/agent-browser/blob/main/cli/src/native/test_fixtures/html5_drag_probe.html): docs page.
+- [Pointer Capture Probe](https://github.com/vercel-labs/agent-browser/blob/main/cli/src/native/test_fixtures/pointer_capture_probe.html): docs page.
 
 ## Scripts
+- [Check Version Sync](https://github.com/vercel-labs/agent-browser/blob/main/scripts/check-version-sync.js): docs page.
 - [Copy Native](https://github.com/vercel-labs/agent-browser/blob/main/scripts/copy-native.js): docs page.
 - [Sync Version](https://github.com/vercel-labs/agent-browser/blob/main/scripts/sync-version.js): docs page.
 
-## Src
-- [Actions](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.ts): docs page.
-- [Actions.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/actions.test.ts): docs page.
-- [Browser](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.ts): docs page.
-- [Browser.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/browser.test.ts): docs page.
-- [Daemon](https://github.com/vercel-labs/agent-browser/blob/main/src/daemon.ts): docs page.
-- [Protocol](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.ts): docs page.
-- [Protocol.Test](https://github.com/vercel-labs/agent-browser/blob/main/src/protocol.test.ts): docs page.
-- [Snapshot](https://github.com/vercel-labs/agent-browser/blob/main/src/snapshot.ts): docs page.
-- [Stream Server](https://github.com/vercel-labs/agent-browser/blob/main/src/stream-server.ts): docs page.
-- [Types](https://github.com/vercel-labs/agent-browser/blob/main/src/types.ts): docs page.
+## Skills
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/agent-browser/SKILL.md): docs page.
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/dogfood/SKILL.md): docs page.
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/electron/SKILL.md): docs page.
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/slack/SKILL.md): docs page.
+- [Skill](https://github.com/vercel-labs/agent-browser/blob/main/skills/vercel-sandbox/SKILL.md): docs page.
+- [Dogfood Report Template](https://github.com/vercel-labs/agent-browser/blob/main/skills/dogfood/templates/dogfood-report-template.md): docs page.
+- [Slack Report Template](https://github.com/vercel-labs/agent-browser/blob/main/skills/slack/templates/slack-report-template.md): docs page.
