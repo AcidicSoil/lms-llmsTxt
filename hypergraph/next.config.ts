@@ -1,11 +1,10 @@
+import path from "node:path";
 import type { NextConfig } from "next";
-const path = require("path");
-module.exports = {
-  turbopack: {
-    root: path.join(__dirname, ".."),
-  },
-};
+
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: path.resolve(process.cwd(), ".."),
+  },
   serverExternalPackages: ["@hyperbrowser/sdk"],
 };
 

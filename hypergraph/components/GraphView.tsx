@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import type { ForceGraphData, NodeType } from "@/types/graph";
+import type { ForceGraphMethods, LinkObject, NodeObject } from "react-force-graph-2d";
 
 const ForceGraph2D = dynamic(() => import("react-force-graph-2d"), {
   ssr: false,
@@ -14,8 +15,18 @@ interface GraphViewProps {
   selectedNodeId: string | null;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnyNode = any;
+type GraphNodeObject = NodeObject;
+type GraphLinkObject = LinkObject;
+type GraphMethods = ForceGraphMethods;
+
+type ChargeForce = {
+  strength: (value: number) => ChargeForce;
+  distanceMax: (value: number) => ChargeForce;
+};
+
+type LinkForce = {
+  distance: (fn: (link: GraphLinkObject) => number) => LinkForce;
+};
 
 const R = 3.5; // base radius multiplier, reduced to avoid clutter
 
@@ -43,8 +54,7 @@ export default function GraphView({
   selectedNodeId,
 }: GraphViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const graphRef = useRef<any>(null);
+  const graphRef = useRef<GraphMethods | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
 
@@ -60,16 +70,39 @@ export default function GraphView({
   }, []);
 
   useEffect(() => {
-    if (graphRef.current && data.nodes.length > 0) {
+    if (!graphRef.current) {
+      return;
+    }
+
+    const chargeForce = graphRef.current.d3Force("charge") as ChargeForce | undefined;
+    chargeForce?.strength(-350);
+    chargeForce?.distanceMax(500);
+
+    const linkForce = graphRef.current.d3Force("link") as LinkForce | undefined;
+    linkForce?.distance((link: GraphLinkObject) => {
+      const sourceType =
+        typeof link.source === "object" && link.source !== null && "type" in link.source
+          ? link.source.type
+          : undefined;
+      const targetType =
+        typeof link.target === "object" && link.target !== null && "type" in link.target
+          ? link.target.type
+          : undefined;
+      return sourceType === "moc" || targetType === "moc" ? 180 : 90;
+    });
+
+    graphRef.current.d3ReheatSimulation();
+
+    if (data.nodes.length > 0) {
       setTimeout(() => graphRef.current?.zoomToFit(400, 60), 500);
     }
   }, [data]);
 
   const nodeCanvasObject = useCallback(
-    (node: AnyNode, ctx: CanvasRenderingContext2D, globalScale: number) => {
-      const type = node.type as NodeType;
+    (node: GraphNodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
+      const type = typeof node.type === "string" ? (node.type as NodeType) : "concept";
       const style = NODE_STYLE[type] ?? NODE_STYLE.concept;
-      const size = (node.val ?? 1) * R;
+      const size = (typeof node.val === "number" ? node.val : 1) * R;
       const x = node.x ?? 0;
       const y = node.y ?? 0;
       const isSelected = node.id === selectedNodeId;
@@ -166,8 +199,8 @@ export default function GraphView({
   );
 
   const nodePointerAreaPaint = useCallback(
-    (node: AnyNode, color: string, ctx: CanvasRenderingContext2D) => {
-      const size = (node.val ?? 1) * R;
+    (node: GraphNodeObject, color: string, ctx: CanvasRenderingContext2D) => {
+      const size = (typeof node.val === "number" ? node.val : 1) * R;
       ctx.beginPath();
       ctx.arc(node.x ?? 0, node.y ?? 0, size + 8, 0, 2 * Math.PI);
       ctx.fillStyle = color;
@@ -194,8 +227,12 @@ export default function GraphView({
         graphData={data}
         nodeCanvasObject={nodeCanvasObject}
         nodePointerAreaPaint={nodePointerAreaPaint}
-        onNodeClick={(node: AnyNode) => onNodeClick(node.id)}
-        onNodeHover={(node: AnyNode) => setHoveredNode(node?.id ?? null)}
+        onNodeClick={(node) => {
+          if (node.id != null) {
+            onNodeClick(String(node.id));
+          }
+        }}
+        onNodeHover={(node) => setHoveredNode(node?.id != null ? String(node.id) : null)}
         linkColor={() => "rgba(161,161,170,0.4)"}
         linkWidth={1.2}
         linkDirectionalParticles={2}
@@ -206,21 +243,6 @@ export default function GraphView({
         d3VelocityDecay={0.2}
         cooldownTicks={100}
         onEngineStop={() => graphRef.current?.zoomToFit(400, 60)}
-        d3Force={(d3Force, forceName) => {
-          if (forceName === "charge") {
-            d3Force.strength(-350); // Increase repulsion (default is usually -30 or so)
-            d3Force.distanceMax(500);
-          }
-          if (forceName === "link") {
-            d3Force.distance((link: any) => {
-              // Push MOC nodes much further away from their children
-              if (link.source.type === "moc" || link.target.type === "moc") {
-                return 180;
-              }
-              return 90; // Standard distance for other links
-            });
-          }
-        }}
       />
 
       {/* Legend */}
