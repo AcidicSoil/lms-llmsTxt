@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
@@ -88,6 +89,7 @@ def run_generation(
     fallback_payload = None
     used_fallback = False
     project_name = repo.replace("-", " ").replace("_", " ").title()
+    analyzer_trace = None
 
     model_loaded = False
 
@@ -144,6 +146,7 @@ def run_generation(
                     else:
                         raise call_exc
                 llms_text = result.llms_txt_content
+                analyzer_trace = getattr(result, "trace", None)
                 break
             except Exception as exc:
                 err_class = classify_generation_error(exc)
@@ -210,6 +213,13 @@ def run_generation(
     llms_txt_path = repo_root / f"{base_name}-llms.txt"
     logger.info("Writing llms.txt to %s", llms_txt_path)
     _write_text(llms_txt_path, sanitized.text or llms_text, stamp)
+
+    trace_path: Optional[Path] = None
+    if analyzer_trace is not None:
+        trace_path = repo_root / f"{base_name}-trace.json"
+        trace_payload = asdict(analyzer_trace) if is_dataclass(analyzer_trace) else analyzer_trace
+        trace_path.write_text(json.dumps(trace_payload, indent=2), encoding="utf-8")
+        logger.info("Analyzer trace written to %s", trace_path)
 
     ctx_path: Optional[Path] = None
     should_build_ctx = config.enable_ctx if build_ctx is None else build_ctx
@@ -280,5 +290,6 @@ def run_generation(
         graph_json_path=str(graph_json_path) if graph_json_path else None,
         force_graph_path=str(force_graph_path) if force_graph_path else None,
         graph_nodes_dir=str(graph_nodes_dir) if graph_nodes_dir else None,
+        trace_path=str(trace_path) if trace_path else None,
         used_fallback=used_fallback,
     )

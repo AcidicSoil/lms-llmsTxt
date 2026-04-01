@@ -13,14 +13,14 @@ try:
 except ImportError:
     from .signatures import dspy
 
+from .models import AnalyzerTrace, LLMsDocument, LLMsLinkEntry, LLMsSection
+from .repo_digest import RepoDigest
 from .signatures import (
     AnalyzeCodeStructure,
-    AnalyzeRepositoryFromDigest,
     AnalyzeRepository,
-    GenerateLLMsTxt,
+    AnalyzeRepositoryFromDigest,
     GenerateUsageExamples,
 )
-from .repo_digest import RepoDigest
 
 logger = logging.getLogger(__name__)
 
@@ -223,13 +223,30 @@ def build_dynamic_buckets(
     return ordered
 
 
-def render_llms_markdown(
+def build_document_from_buckets(
     project_name: str,
     project_purpose: str,
     remember_bullets: Iterable[str],
     buckets: List[Tuple[str, List[Tuple[str, str, str]]]],
-) -> str:
-    bullets = [str(b).strip().rstrip(".") for b in remember_bullets if str(b).strip()]
+) -> LLMsDocument:
+    sections = [
+        LLMsSection(
+            name=name,
+            entries=[LLMsLinkEntry(title=title, url=url, note=note) for title, url, note in items],
+        )
+        for name, items in buckets
+        if items
+    ]
+    return LLMsDocument(
+        project_name=project_name,
+        project_purpose=project_purpose,
+        remember_bullets=[str(bullet) for bullet in remember_bullets if str(bullet).strip()],
+        sections=sections,
+    )
+
+
+def render_llms_markdown(document: LLMsDocument) -> str:
+    bullets = [str(b).strip().rstrip(".") for b in document.remember_bullets if str(b).strip()]
     bullets = bullets[:6] or [
         "Install + Quickstart first",
         "Core concepts & API surface",
@@ -237,13 +254,10 @@ def render_llms_markdown(
     ]
     if len(bullets) < 3:
         bullets += ["Review API reference", "See Optional for meta docs"][: 3 - len(bullets)]
-    purpose_line = (project_purpose or "").strip().replace("\n", " ")
-
-    def fmt(items: Iterable[Tuple[str, str, str]]) -> str:
-        return "\n".join(f"- [{title}]({url}): {note}." for title, url, note in items)
+    purpose_line = (document.project_purpose or "").strip().replace("\n", " ")
 
     out = [
-        f"# {project_name}",
+        f"# {document.project_name}",
         "",
         f"> {purpose_line or 'Project overview unavailable.'}",
         "",
@@ -251,11 +265,14 @@ def render_llms_markdown(
         *[f"- {bullet}" for bullet in bullets],
         "",
     ]
-    for name, items in buckets:
-        if not items:
+    for section in document.sections:
+        if not section.entries:
             continue
-        out.append(f"## {name}")
-        out.append(fmt(items) or "- _No curated links yet_.")
+        out.append(f"## {section.name}")
+        out.extend(
+            f"- [{entry.title}]({entry.url}): {entry.note}."
+            for entry in section.entries
+        )
         out.append("")
     return "\n".join(out).strip()
 
@@ -313,21 +330,22 @@ class RepositoryAnalyzer(dspy.Module):
         self.analyze_repo_digest = predictor(AnalyzeRepositoryFromDigest)
         self.analyze_structure = predictor(AnalyzeCodeStructure)
         self.generate_examples = predictor(GenerateUsageExamples)
-        self.generate_llms_txt = predictor(GenerateLLMsTxt)
 
-    def forward(
+    def _resolve_project_name(self, repo_url: str) -> str:
+        try:
+            _, repo = owner_repo_from_url(repo_url)
+            return repo.replace("-", " ").replace("_", " ").title()
+        except Exception:
+            return "Project"
+
+    def _run_repository_analysis(
         self,
-        repo_url: str | None = None,
-        file_tree: str = "",
-        readme_content: str = "",
-        package_files: str = "",
-        default_branch: str | None = None,
-        is_private: bool = False,
-        github_token: str | None = None,
-        link_style: str = "blob",
-        repo_digest: RepoDigest | None = None,
-    ):
-        effective_repo_url = repo_url or "https://github.com/unknown/repo"
+        effective_repo_url: str,
+        file_tree: str,
+        readme_content: str,
+        package_files: str,
+        repo_digest: RepoDigest | None,
+    ) -> tuple[Any, Any, str]:
         if repo_digest is not None:
             digest_summary = (
                 f"Architecture: {repo_digest.architecture_summary}\n"
@@ -344,21 +362,67 @@ class RepositoryAnalyzer(dspy.Module):
                 entry_points=repo_digest.entry_points[:10],
                 development_info=repo_digest.architecture_summary,
             )
-            file_tree = file_tree or "\n".join(
+            effective_file_tree = file_tree or "\n".join(
                 path
                 for sub in repo_digest.subsystems
                 for path in sub.get("paths", [])[:6]
             )
-        else:
-            repo_analysis = self.analyze_repo(
-                repo_url=effective_repo_url,
-                file_tree=file_tree,
-                readme_content=readme_content,
-            )
-            structure_analysis = self.analyze_structure(
-                file_tree=file_tree, package_files=package_files
-            )
+            return repo_analysis, structure_analysis, effective_file_tree
 
+        repo_analysis = self.analyze_repo(
+            repo_url=effective_repo_url,
+            file_tree=file_tree,
+            readme_content=readme_content,
+        )
+        structure_analysis = self.analyze_structure(
+            file_tree=file_tree,
+            package_files=package_files,
+        )
+        return repo_analysis, structure_analysis, file_tree
+
+    def _plan_evidence(
+        self,
+        repo_url: str,
+        file_tree: str,
+        default_branch: str | None,
+        is_private: bool,
+        github_token: str | None,
+        link_style: str,
+    ) -> tuple[list[tuple[str, list[tuple[str, str, str]]]], AnalyzerTrace]:
+        buckets = build_dynamic_buckets(
+            repo_url,
+            file_tree,
+            default_ref=default_branch,
+            validate_urls=True,
+            is_private=is_private,
+            github_token=github_token,
+            link_style=link_style,
+        )
+        trace = AnalyzerTrace(
+            selected_evidence=[
+                {
+                    "section": section_name,
+                    "title": title,
+                    "url": url,
+                    "note": note,
+                }
+                for section_name, items in buckets
+                for title, url, note in items
+            ],
+            dropped_evidence=[],
+            compaction_reasons=[
+                "Context compaction and retry budgeting remain enforced upstream in pipeline.run_generation()."
+            ],
+        )
+        return buckets, trace
+
+    def _inspect_evidence(
+        self,
+        repo_analysis: Any,
+        structure_analysis: Any,
+        readme_content: str,
+        repo_digest: RepoDigest | None,
+    ) -> tuple[str, list[str], list[str], list[str], str]:
         project_purpose = _as_text(_pred_get(repo_analysis, "project_purpose"))
         if not project_purpose:
             project_purpose = _as_text(
@@ -385,41 +449,120 @@ class RepositoryAnalyzer(dspy.Module):
 
         development_info = _as_text(_pred_get(structure_analysis, "development_info"))
         if not development_info and repo_digest is not None:
-            development_info = _as_text(repo_digest.architecture_summary, default="Repository architecture summary unavailable.")
+            development_info = _as_text(
+                repo_digest.architecture_summary,
+                default="Repository architecture summary unavailable.",
+            )
 
-        self.generate_examples(
+        return project_purpose, key_concepts, important_directories, entry_points, development_info
+
+    def _build_usage_section(
+        self,
+        project_purpose: str,
+        key_concepts: list[str],
+        entry_points: list[str],
+    ) -> LLMsSection | None:
+        usage_prediction = self.generate_examples(
             repo_info=(
                 f"Purpose: {project_purpose}\n\n"
                 f"Concepts: {', '.join(key_concepts)}\n\n"
                 f"Entry points: {', '.join(entry_points)}\n"
             )
         )
-
-        try:
-            _, repo = owner_repo_from_url(effective_repo_url)
-            project_name = repo.replace("-", " ").replace("_", " ").title()
-        except Exception:
-            project_name = "Project"
-
-        buckets = build_dynamic_buckets(
-            effective_repo_url,
-            file_tree,
-            default_ref=default_branch,
-            validate_urls=True,
-            is_private=is_private,
-            github_token=github_token,
-            link_style=link_style,
+        usage_examples = _as_text(_pred_get(usage_prediction, "usage_examples"))
+        if not usage_examples:
+            return None
+        return LLMsSection(
+            name="Usage",
+            entries=[
+                LLMsLinkEntry(
+                    title="Common Usage Patterns",
+                    url="about:usage-examples",
+                    note=usage_examples.replace("\n", " ").strip(),
+                )
+            ],
         )
 
-        llms_txt_content = render_llms_markdown(
+    def _plan_sections(
+        self,
+        project_name: str,
+        project_purpose: str,
+        key_concepts: list[str],
+        buckets: list[tuple[str, list[tuple[str, str, str]]]],
+        usage_section: LLMsSection | None,
+        trace: AnalyzerTrace,
+    ) -> LLMsDocument:
+        document = build_document_from_buckets(
             project_name=project_name,
             project_purpose=project_purpose,
             remember_bullets=key_concepts,
             buckets=buckets,
         )
+        if usage_section is not None:
+            document.sections.insert(0, usage_section)
+        trace.section_plan = [
+            {
+                "name": section.name,
+                "entry_count": len(section.entries),
+                "titles": [entry.title for entry in section.entries[:10]],
+            }
+            for section in document.sections
+        ]
+        return document
+
+    def _render_document(self, document: LLMsDocument) -> str:
+        return render_llms_markdown(document)
+
+    def forward(
+        self,
+        repo_url: str | None = None,
+        file_tree: str = "",
+        readme_content: str = "",
+        package_files: str = "",
+        default_branch: str | None = None,
+        is_private: bool = False,
+        github_token: str | None = None,
+        link_style: str = "blob",
+        repo_digest: RepoDigest | None = None,
+    ):
+        effective_repo_url = repo_url or "https://github.com/unknown/repo"
+        repo_analysis, structure_analysis, effective_file_tree = self._run_repository_analysis(
+            effective_repo_url,
+            file_tree,
+            readme_content,
+            package_files,
+            repo_digest,
+        )
+        project_purpose, key_concepts, important_directories, entry_points, development_info = self._inspect_evidence(
+            repo_analysis,
+            structure_analysis,
+            readme_content,
+            repo_digest,
+        )
+        project_name = self._resolve_project_name(effective_repo_url)
+        buckets, trace = self._plan_evidence(
+            effective_repo_url,
+            effective_file_tree,
+            default_branch,
+            is_private,
+            github_token,
+            link_style,
+        )
+        usage_section = self._build_usage_section(project_purpose, key_concepts, entry_points)
+        document = self._plan_sections(
+            project_name,
+            project_purpose,
+            key_concepts,
+            buckets,
+            usage_section,
+            trace,
+        )
+        llms_txt_content = self._render_document(document)
 
         return dspy.Prediction(
             llms_txt_content=llms_txt_content,
+            document=document,
+            trace=trace,
             analysis=dspy.Prediction(
                 project_purpose=project_purpose,
                 key_concepts=key_concepts,

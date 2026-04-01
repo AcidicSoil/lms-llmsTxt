@@ -36,7 +36,11 @@ def test_repository_analyzer_handles_sparse_digest_predictions(monkeypatch):
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
     monkeypatch.setattr(ra, "analyze_repo_digest", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
-    monkeypatch.setattr(analyzer, "build_dynamic_buckets", lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])])
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
 
     digest = RepoDigest(
         topic="Demo",
@@ -59,6 +63,9 @@ def test_repository_analyzer_handles_sparse_digest_predictions(monkeypatch):
     assert hasattr(result, "llms_txt_content")
     assert "Service-oriented Flask app" in result.llms_txt_content
     assert "src/api" in result.llms_txt_content or "flask" in result.llms_txt_content
+    assert result.document.project_name == "Demo"
+    assert result.trace.selected_evidence[0]["section"] == "Docs"
+    assert result.trace.section_plan[0]["name"] == "Docs"
 
 
 def test_repository_analyzer_handles_sparse_non_digest_predictions(monkeypatch):
@@ -69,7 +76,11 @@ def test_repository_analyzer_handles_sparse_non_digest_predictions(monkeypatch):
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: Empty())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
-    monkeypatch.setattr(analyzer, "build_dynamic_buckets", lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])])
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
 
     result = ra.forward(
         repo_url="https://github.com/acme/demo",
@@ -80,3 +91,43 @@ def test_repository_analyzer_handles_sparse_non_digest_predictions(monkeypatch):
     )
     assert hasattr(result, "llms_txt_content")
     assert "Primary service for processing events" in result.llms_txt_content
+    assert result.document.sections[0].name == "Docs"
+    assert result.trace.compaction_reasons
+
+
+def test_repository_analyzer_promotes_usage_examples_into_structured_document(monkeypatch):
+    class RepoAnalysis:
+        project_purpose = "CLI toolkit for repository summaries."
+        key_concepts = ["CLI", "Artifacts"]
+
+    class StructureAnalysis:
+        important_directories = ["src"]
+        entry_points = ["src/lms_llmsTxt/cli.py"]
+        development_info = "pytest and uv"
+
+    ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
+    monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
+    monkeypatch.setattr(
+        ra,
+        "generate_examples",
+        lambda **_: analyzer.dspy.Prediction(usage_examples="Run `lmstxt <repo-url>` to generate artifacts."),
+    )
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
+
+    result = ra.forward(
+        repo_url="https://github.com/acme/demo",
+        file_tree="README.md\nsrc/lms_llmsTxt/cli.py",
+        readme_content="# Demo\n\nCLI toolkit for repository summaries.",
+        package_files="",
+        default_branch="main",
+    )
+
+    assert result.document.sections[0].name == "Usage"
+    assert result.document.sections[0].entries[0].url == "about:usage-examples"
+    assert "Run `lmstxt <repo-url>`" in result.llms_txt_content
+    assert result.trace.section_plan[0]["name"] == "Usage"

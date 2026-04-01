@@ -3,7 +3,7 @@ from __future__ import annotations
 import textwrap
 from typing import Dict, List, Tuple
 
-from .analyzer import build_dynamic_buckets, render_llms_markdown
+from .analyzer import build_document_from_buckets, build_dynamic_buckets, render_llms_markdown
 from .schema import LLMS_JSON_SCHEMA
 
 
@@ -85,10 +85,12 @@ def fallback_markdown_from_payload(repo_name: str, payload: Dict[str, object]) -
         ]
         buckets.append((sec["title"], items))  # type: ignore[arg-type]
     markdown = render_llms_markdown(
-        project_name=repo_name,
-        project_purpose=payload["project"]["summary"],  # type: ignore[index]
-        remember_bullets=payload["remember"],  # type: ignore[index]
-        buckets=buckets,
+        build_document_from_buckets(
+            project_name=repo_name,
+            project_purpose=payload["project"]["summary"],  # type: ignore[index]
+            remember_bullets=payload["remember"],  # type: ignore[index]
+            buckets=buckets,
+        )
     )
     header = textwrap.dedent(
         """\
