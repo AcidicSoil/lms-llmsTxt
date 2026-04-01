@@ -4849,4 +4849,296 @@ def build_active_context(
     return "\n".join(chunk for _, chunk in selected)
 ```
 
+.plans/dspy-lms-llmstxt-tickets/TICKET-100-repository-analyzer-staged-pipeline.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_stage_pipeline"
+title: "Repository analysis runs through explicit planning and synthesis stages"
+agent: "codex"
+done: false
+goal: "Repository analysis is split into explicit, inspectable stages with a structured intermediate representation while the existing product surface remains compatible."
+---
+
+## Tasks
+- Split `RepositoryAnalyzer.forward()` into explicit internal stages for evidence planning, evidence inspection, section planning, synthesis, and rendering.
+- Introduce a structured intermediate representation for final `llms.txt` content so the renderer consumes section and entry data instead of raw local buckets only.
+- Remove unused DSPy calls or wire them into outputs; explicitly resolve the non-authoritative use of `GenerateLLMsTxt` and `GenerateUsageExamples`.
+- Add trace logging or trace artifacts for selected evidence, dropped evidence, the final section plan, and reasons for compaction.
+
+## Acceptance criteria
+- CLI surface and flags, artifact naming and directory structure, graph artifact emission, fallback heuristic generation, FastMCP server contract, session-memory append-only behavior, and the LM Studio integration boundary remain compatible.
+- The final renderer consumes the structured intermediate representation.
+- The fallback path still emits artifacts when LM connectivity or generation fails.
+- Internal stages and trace outputs are inspectable without relying on the previous monolithic `RepositoryAnalyzer.forward()` flow.
+
+## Tests
+- Run the existing CLI generation flow on a representative repository and verify artifact names and layout are unchanged.
+- Exercise the fallback path by simulating LM failure and verify fallback artifacts are still emitted.
+- Inspect the generated trace output and verify it includes selected evidence, dropped evidence, section planning, and compaction rationale.
+
+## Notes
+- Source: "Split `RepositoryAnalyzer.forward()` into smaller internal steps", "Remove unused DSPy calls or wire them into outputs", "Make the final renderer consume a structured intermediate representation", "Add explicit trace logging".
+- Constraints:
+  - Do not change the CLI surface or flags.
+  - Do not change artifact naming or directory structure.
+  - Do not rewrite the FastMCP server.
+  - Do not collapse the fallback generator into the DSPy path.
+- Evidence:
+  - `RepositoryAnalyzer.forward()`
+  - `GenerateLLMsTxt`
+  - `GenerateUsageExamples`
+  - `render_llms_markdown`
+- Dependencies: Not provided
+- Unknowns:
+  - Exact file paths for the analyzer, renderer, and trace artifact locations are not provided.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-110-pin-and-audit-dspy-litellm-upgrade-path.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_pin_audit_deps"
+title: "DSPy and LiteLLM upgrade path is pinned and audited before new planner work"
+agent: "codex"
+done: false
+goal: "The codebase has a reviewed, pinned dependency path for recent DSPy capabilities before newer planner or optimizer work is enabled."
+---
+
+## Tasks
+- Pin DSPy, LiteLLM, and relevant transitive dependencies to reviewed versions before enabling recent DSPy additions.
+- Audit dependency and security considerations called out in the handoff, with emphasis on LiteLLM.
+- Record upgrade constraints or blockers that affect later evidence-planning, optimizer, or RLM work.
+
+## Acceptance criteria
+- A pinned, reviewable dependency set exists for the DSPy and LiteLLM upgrade path.
+- Upgrade constraints or blockers are documented for downstream planner, optimizer, and RLM tickets.
+- No unpinned or casual upgrade path remains for the new DSPy integration.
+
+## Tests
+- Install dependencies from the pinned set or lockfile and verify resolution succeeds.
+- Run a smoke test of the current generator against the pinned dependency set and record any blocker explicitly.
+
+## Notes
+- Source: "Pin and audit DSPy/LiteLLM dependencies before upgrading", "Recent LiteLLM security notices mean any DSPy upgrade path should be dependency-pinned and audited."
+- Constraints:
+  - Do not introduce new DSPy-dependent planner behavior until the upgrade path is reviewed.
+  - Use verified safe LiteLLM versions rather than unpinned upgrades.
+- Evidence:
+  - DSPy upgrade discussion
+  - LiteLLM security warning in the handoff
+- Dependencies: Not provided
+- Unknowns:
+  - Exact approved versions are not provided.
+  - Existing package manager and lockfile format are not provided.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-130-selective-evidence-planning-for-large-repos.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_selective_evidence"
+title: "Large repositories are analyzed through selective evidence planning before compaction"
+agent: "codex"
+done: false
+goal: "Repository analysis selects high-value evidence for deeper inspection before relying on deterministic compaction, especially for large repositories."
+---
+
+## Tasks
+- Add a DSPy evidence-selection module that ranks candidate directories, docs, files, and examples using the repo digest plus lightweight metadata.
+- Fetch deeper content only for selected high-value candidates.
+- Enforce hard limits on candidate count, bytes per fetch, recursion depth, and total exploration budget.
+- Use `RepoDigest` as a routing input for likely documentation roots, real entry points, subsystem boundaries, and deeper evidence fetch decisions.
+- Keep deterministic budget enforcement and compaction as safety rails, but move compaction behind selective inspection.
+
+## Acceptance criteria
+- Default operation plans evidence before compaction on repositories that would otherwise exceed context limits.
+- Budget controls remain enforced and compaction is retained as a last resort rather than the primary analysis strategy.
+- Selected evidence and dropped evidence are traceable from the analyzer output.
+
+## Tests
+- Run generation on a large repository and verify deeper inspection is limited to selected candidates rather than full prompt stuffing.
+- Run generation under a tight budget and verify compaction still occurs only after selective planning is attempted.
+- Inspect trace output and verify selected evidence, dropped evidence, and budget-limit decisions are recorded.
+
+## Notes
+- Source: "Replace truncation-first analysis with staged evidence planning", "Compaction should become last resort, not primary strategy", "Use the digest to rank likely doc roots, find real entry points, detect subsystem boundaries, decide where more evidence should be fetched."
+- Constraints:
+  - Preserve deterministic safety rails around maximum fetch count and token budget.
+  - Do not remove budget enforcement; move it later in the decision chain.
+- Evidence:
+  - `RepoDigest`
+  - Current compaction and retry behavior described in the handoff
+- Dependencies:
+  - TICKET-100-repository-analyzer-staged-pipeline.md
+  - TICKET-110-pin-and-audit-dspy-litellm-upgrade-path.md
+- Unknowns:
+  - Exact candidate-selection features and fetch interfaces are not provided.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_authoritative_synthesis"
+title: "Final llms.txt content is planned by DSPy while markdown formatting stays deterministic"
+agent: "codex"
+done: false
+goal: "The final llms.txt artifact is based on DSPy-owned section planning and content synthesis, while local code remains the deterministic formatter and fallback path stays intact."
+---
+
+## Tasks
+- Add DSPy modules for `llms.txt` section planning and final content synthesis.
+- Make final semantic decisions model-controlled under explicit constraints while keeping local code as the final markdown formatter.
+- Refactor `GenerateLLMsTxt` into the authoritative planning or synthesis path, or remove it if it remains redundant.
+- Promote `GenerateUsageExamples` into final section planning and output generation, or remove the call if it remains unused.
+- Preserve the fallback heuristic bucket renderer as a separate failure path.
+
+## Acceptance criteria
+- Final `llms.txt` inclusion, ordering, and section content come from the DSPy planning and synthesis path rather than only deterministic local bucket logic.
+- Final markdown serialization remains deterministic and is not replaced by free-form model formatting.
+- Fallback generation remains separate and available when LM connectivity or synthesis fails.
+- CLI and FastMCP consumers keep the existing artifact contract.
+
+## Tests
+- Generate `llms.txt` artifacts for representative repositories and verify the section plan drives output content while markdown shape remains stable.
+- Simulate synthesis failure and verify fallback artifact generation still runs.
+- Verify CLI and FastMCP outputs remain compatible with the existing contract.
+
+## Notes
+- Source: "Move final semantic decisions into DSPy, keep markdown formatting deterministic", "GenerateLLMsTxt should either become authoritative or be removed", "GenerateUsageExamples should either feed the artifact or be deleted."
+- Constraints:
+  - Do not replace deterministic artifact formatting with free-form model output.
+  - Do not collapse the fallback generator into the DSPy path.
+  - Do not disturb the artifact contract consumed by external tooling.
+- Evidence:
+  - `GenerateLLMsTxt`
+  - `GenerateUsageExamples`
+  - `render_llms_markdown`
+- Dependencies:
+  - TICKET-100-repository-analyzer-staged-pipeline.md
+  - TICKET-110-pin-and-audit-dspy-litellm-upgrade-path.md
+  - TICKET-130-selective-evidence-planning-for-large-repos.md
+- Unknowns:
+  - Exact section taxonomy beyond example sections is not fully specified.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-170-benchmark-and-evaluation-loop-for-llmstxt-quality.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_benchmark_eval"
+title: "Benchmark and evaluation loop can measure planner quality against repository outcomes"
+agent: "codex"
+done: false
+goal: "A benchmark and evaluation workflow exists to compare llms.txt quality before optimizer work is introduced."
+---
+
+## Tasks
+- Build a benchmark set of repositories with desired `llms.txt` output characteristics.
+- Define evaluation metrics for onboarding usefulness, API coverage quality, doc-link precision, redundancy penalty, and large-repository resilience.
+- Use emitted graph artifacts as evaluation scaffolding for subsystem coverage, hotspot alignment, and omission checks.
+- Gate DSPy optimizer work so it starts only after section planning and synthesis are model-controlled.
+
+## Acceptance criteria
+- Benchmark repositories and evaluation metrics exist for comparing the current heuristic path against the refactored DSPy-native path.
+- Graph artifacts are usable in the evaluation workflow.
+- Optimizer work is explicitly gated on the DSPy-native planner and synthesizer rather than the old deterministic renderer.
+
+## Tests
+- Run the benchmark workflow on baseline and refactored paths and produce comparable evaluation outputs.
+- Exercise graph-based coverage checks and verify they can surface omissions on large or multi-subsystem repositories.
+
+## Notes
+- Source: "Build a benchmark set of repositories", "Define metrics", "Graph generation can become evaluation scaffolding", "Do not optimize until section planning and evidence selection are model-controlled."
+- Constraints:
+  - Optimizer work should not start before final content decisions move into DSPy.
+- Evidence:
+  - Existing graph artifact emission
+  - Proposed metrics listed in the handoff
+- Dependencies:
+  - TICKET-130-selective-evidence-planning-for-large-repos.md
+  - TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
+- Unknowns:
+  - Exact benchmark repository list is not provided.
+  - Exact optimizer choice and tuning procedure are not provided.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-190-evaluate-optional-rlm-exploration-path.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_rlm_eval"
+title: "Optional RLM-style exploration path is evaluated for large-repository quality"
+agent: "codex"
+done: false
+goal: "The team has a bounded evaluation of whether RLM-style recursive exploration improves llms.txt quality on large repositories."
+---
+
+## Tasks
+- Evaluate an RLM-guided selective exploration path against the digest-plus-selective-inspection baseline for large or deeply nested repositories.
+- Constrain exploration with hard limits on depth, file count, and total exploration budget.
+- Compare output quality, latency, and token cost before deciding whether to adopt the path.
+
+## Acceptance criteria
+- The evaluation determines whether RLM improves large-repository output under bounded runtime and cost constraints.
+- Any RLM path remains optional and does not replace deterministic budget enforcement or the fallback generator.
+- Results are comparable against the current selective-planning baseline.
+
+## Tests
+- Run side-by-side large-repository comparisons for the RLM path and the selective-planning baseline.
+- Verify hard exploration limits are enforced during the comparison.
+- Record quality, latency, and token-cost comparison outputs for the evaluated repositories.
+
+## Notes
+- Source: "RLM is the most relevant addition", "Evaluate RLM only after the structured planner exists", "Constrain exploration depth and file count to preserve predictable runtime."
+- Constraints:
+  - Preserve predictable runtime through hard limits.
+  - Keep RLM as an optional advanced path rather than the only generation path.
+- Evidence:
+  - DSPy RLM discussion in the handoff
+- Dependencies:
+  - TICKET-130-selective-evidence-planning-for-large-repos.md
+  - TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
+  - TICKET-170-benchmark-and-evaluation-loop-for-llmstxt-quality.md
+- Unknowns:
+  - Exact repository set for RLM evaluation is not provided.
+  - Exact RLM integration surface is not provided.
+```
+
+.plans/dspy-lms-llmstxt-tickets/TICKET-210-review-refactor-compatibility-and-rollout-decision.md
+```
+---
+ticket_id: "tkt_lmsllmstxt_user_review"
+title: "Refactor compatibility and rollout decision are reviewed against the preserved product surface"
+agent: "user"
+done: false
+goal: "A human review confirms whether the targeted DSPy-native refactor preserves required contracts and whether rollout should proceed."
+---
+
+## Tasks
+- Review the refactor against preserved product-layer contracts: CLI surface and flags, artifact naming and directory structure, graph outputs, fallback path, FastMCP server contract, session-memory append-only model, and LM Studio integration boundary.
+- Confirm the implementation followed the handoff constraints: no MCP server rewrite, no collapse of fallback into DSPy, no free-form model-owned formatting, and budget enforcement retained later in the decision chain.
+- Review benchmark and evaluation outputs, including any optional RLM comparison, and record a proceed or no-proceed decision.
+
+## Acceptance criteria
+- Human review records whether the refactor preserves the required product surface and failure-containment behavior.
+- Any deviations, unresolved unknowns, or conflicting findings are called out explicitly before rollout.
+- A proceed or no-proceed decision is captured with reference to the evaluation outputs.
+
+## Tests
+- Review generated artifacts from prior tickets and verify they match the preserved external contract.
+- Review benchmark and evaluation outputs from prior tickets before recording the rollout decision.
+
+## Notes
+- Source: "Proceed with a targeted DSPy-native generation refactor", "Keep unchanged", "What should not be changed", "Add a final user review/signoff ticket when the original work implies validation, rollout confirmation, or stakeholder review."
+- Constraints:
+  - Product-surface compatibility must be checked before rollout.
+- Evidence:
+  - Outputs from prior tickets
+- Dependencies:
+  - TICKET-100-repository-analyzer-staged-pipeline.md
+  - TICKET-110-pin-and-audit-dspy-litellm-upgrade-path.md
+  - TICKET-130-selective-evidence-planning-for-large-repos.md
+  - TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
+  - TICKET-170-benchmark-and-evaluation-loop-for-llmstxt-quality.md
+  - TICKET-190-evaluate-optional-rlm-exploration-path.md
+- Unknowns:
+  - Final rollout owner and approval venue are not provided.
+```
+
 </source_code>
