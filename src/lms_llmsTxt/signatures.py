@@ -97,6 +97,9 @@ class PlanLLMsSections(dspy.Signature):
         desc="Available deterministic section names in the current candidate document"
     )
 
+    included_sections: List[str] = dspy.OutputField(
+        desc="Subset of available section names to keep in the final document"
+    )
     preferred_section_order: List[str] = dspy.OutputField(
         desc="Preferred final section ordering using only available section names"
     )

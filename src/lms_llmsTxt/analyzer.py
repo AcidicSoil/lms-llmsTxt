@@ -485,13 +485,24 @@ class RepositoryAnalyzer(dspy.Module):
         )
 
 
+    def _filter_sections(
+        self,
+        sections: list[LLMsSection],
+        included_sections: list[str],
+    ) -> tuple[list[LLMsSection], bool]:
+        if not included_sections:
+            return sections, False
+        included = set(included_sections)
+        filtered = [section for section in sections if section.name in included]
+        return (filtered or sections), bool(filtered)
+
     def _apply_section_order(
         self,
         sections: list[LLMsSection],
         preferred_order: list[str],
-    ) -> tuple[list[LLMsSection], str]:
+    ) -> tuple[list[LLMsSection], bool]:
         if not preferred_order:
-            return sections, "deterministic"
+            return sections, False
 
         section_by_name = {section.name: section for section in sections}
         ordered: list[LLMsSection] = []
@@ -504,8 +515,8 @@ class RepositoryAnalyzer(dspy.Module):
             if section.name not in seen:
                 ordered.append(section)
         if not ordered:
-            return sections, "deterministic"
-        return ordered, "model"
+            return sections, False
+        return ordered, True
 
     def _plan_sections(
         self,
@@ -537,13 +548,16 @@ class RepositoryAnalyzer(dspy.Module):
             development_info=development_info,
             available_sections=[section.name for section in document.sections],
         )
+        included_sections = _as_list_of_text(_pred_get(section_plan_prediction, "included_sections"))
         preferred_order = _as_list_of_text(_pred_get(section_plan_prediction, "preferred_section_order"))
         planned_bullets = _as_list_of_text(_pred_get(section_plan_prediction, "remember_bullets"))
 
-        document.sections, plan_source = self._apply_section_order(document.sections, preferred_order)
+        document.sections, used_model_filter = self._filter_sections(document.sections, included_sections)
+        document.sections, used_model_order = self._apply_section_order(document.sections, preferred_order)
         if planned_bullets:
             document.remember_bullets = planned_bullets
 
+        plan_source = "model" if (used_model_filter or used_model_order or planned_bullets) else "deterministic"
         trace.section_plan = [
             {
                 "name": section.name,
