@@ -20,6 +20,7 @@ from .signatures import (
     AnalyzeRepository,
     AnalyzeRepositoryFromDigest,
     GenerateUsageExamples,
+    PlanLLMsSections,
 )
 
 logger = logging.getLogger(__name__)
@@ -324,12 +325,12 @@ class RepositoryAnalyzer(dspy.Module):
 
     def __init__(self, production_mode: bool = True) -> None:
         super().__init__()
-        self.production_mode = production_mode
         predictor = getattr(dspy, "Predict", dspy.ChainOfThought) if production_mode else dspy.ChainOfThought
         self.analyze_repo = predictor(AnalyzeRepository)
         self.analyze_repo_digest = predictor(AnalyzeRepositoryFromDigest)
         self.analyze_structure = predictor(AnalyzeCodeStructure)
         self.generate_examples = predictor(GenerateUsageExamples)
+        self.plan_sections = predictor(PlanLLMsSections)
 
     def _resolve_project_name(self, repo_url: str) -> str:
         try:
@@ -483,11 +484,37 @@ class RepositoryAnalyzer(dspy.Module):
             ],
         )
 
+
+    def _apply_section_order(
+        self,
+        sections: list[LLMsSection],
+        preferred_order: list[str],
+    ) -> tuple[list[LLMsSection], str]:
+        if not preferred_order:
+            return sections, "deterministic"
+
+        section_by_name = {section.name: section for section in sections}
+        ordered: list[LLMsSection] = []
+        seen: set[str] = set()
+        for name in preferred_order:
+            if name in section_by_name and name not in seen:
+                ordered.append(section_by_name[name])
+                seen.add(name)
+        for section in sections:
+            if section.name not in seen:
+                ordered.append(section)
+        if not ordered:
+            return sections, "deterministic"
+        return ordered, "model"
+
     def _plan_sections(
         self,
         project_name: str,
         project_purpose: str,
         key_concepts: list[str],
+        important_directories: list[str],
+        entry_points: list[str],
+        development_info: str,
         buckets: list[tuple[str, list[tuple[str, str, str]]]],
         usage_section: LLMsSection | None,
         trace: AnalyzerTrace,
@@ -500,11 +527,29 @@ class RepositoryAnalyzer(dspy.Module):
         )
         if usage_section is not None:
             document.sections.insert(0, usage_section)
+
+        section_plan_prediction = self.plan_sections(
+            project_name=project_name,
+            project_purpose=project_purpose,
+            key_concepts=key_concepts,
+            important_directories=important_directories,
+            entry_points=entry_points,
+            development_info=development_info,
+            available_sections=[section.name for section in document.sections],
+        )
+        preferred_order = _as_list_of_text(_pred_get(section_plan_prediction, "preferred_section_order"))
+        planned_bullets = _as_list_of_text(_pred_get(section_plan_prediction, "remember_bullets"))
+
+        document.sections, plan_source = self._apply_section_order(document.sections, preferred_order)
+        if planned_bullets:
+            document.remember_bullets = planned_bullets
+
         trace.section_plan = [
             {
                 "name": section.name,
                 "entry_count": len(section.entries),
                 "titles": [entry.title for entry in section.entries[:10]],
+                "source": plan_source,
             }
             for section in document.sections
         ]
@@ -553,6 +598,9 @@ class RepositoryAnalyzer(dspy.Module):
             project_name,
             project_purpose,
             key_concepts,
+            important_directories,
+            entry_points,
+            development_info,
             buckets,
             usage_section,
             trace,

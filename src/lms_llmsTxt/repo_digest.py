@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 import hashlib
+import math
 import re
 from typing import Iterable
 
@@ -36,6 +37,13 @@ class RepoDigest:
     entry_points: list[str]
     test_coverage_hint: str
     digest_id: str
+
+
+@dataclass(slots=True)
+class EvidencePlan:
+    selected_paths: list[str]
+    dropped_paths: list[str]
+    selected_reasons: dict[str, str] = field(default_factory=dict)
 
 
 def _language_from_path(path: str) -> str:
@@ -76,6 +84,102 @@ def _summarize(content: str, max_chars: int = 180) -> str:
     if len(flat) <= max_chars:
         return flat
     return flat[:max_chars] + "..."
+
+
+def _path_priority(path: str, repo_digest: RepoDigest) -> tuple[float, str]:
+    lower = path.lower()
+    depth_penalty = lower.count("/") * 0.1
+    score = max(0.0, 10.0 - depth_penalty)
+    reasons: list[str] = []
+
+    if lower in {"readme.md", "readme.rst", "readme.txt"}:
+        score += 120
+        reasons.append("root-readme")
+    if path in repo_digest.entry_points:
+        score += 110
+        reasons.append("entry-point")
+    if any(token in lower for token in ("docs/", "guide", "tutorial", "example", "quickstart", "getting-started")):
+        score += 60
+        reasons.append("documentation")
+    if lower.endswith(("pyproject.toml", "package.json", "requirements.txt", "package-lock.json", "pnpm-lock.yaml")):
+        score += 55
+        reasons.append("dependency-manifest")
+    if lower.endswith(("/cli.py", "/app.py", "/main.py", "/__main__.py", "/index.ts", "/index.js")) or lower in {
+        "cli.py",
+        "app.py",
+        "main.py",
+        "__main__.py",
+        "index.ts",
+        "index.js",
+    } or any(token in lower for token in ("/cmd/", "/bin/")):
+        score += 50
+        reasons.append("runtime-entry")
+    if repo_digest.test_coverage_hint == "has_tests" and ("/test" in lower or lower.startswith("tests/") or "test_" in lower):
+        score += 10
+        reasons.append("tests")
+
+    for subsystem in repo_digest.subsystems[:8]:
+        subsystem_name = str(subsystem.get("name", "")).strip("/")
+        if not subsystem_name or "/" not in subsystem_name:
+            continue
+        if "." in subsystem_name.rsplit("/", 1)[-1]:
+            continue
+        if path == subsystem_name or path.startswith(f"{subsystem_name}/"):
+            score += 35
+            reasons.append(f"subsystem:{subsystem_name}")
+            break
+
+    if _language_from_path(path) == repo_digest.primary_language:
+        score += 10
+        reasons.append(f"primary-language:{repo_digest.primary_language}")
+
+    return score, ", ".join(reasons) or "fallback-ranking"
+
+
+def plan_evidence_paths(
+    material: RepositoryMaterial,
+    repo_digest: RepoDigest,
+    *,
+    max_paths: int,
+) -> EvidencePlan:
+    paths = sorted({path.strip() for path in material.file_tree.splitlines() if path.strip()})
+    if not paths or len(paths) <= max_paths:
+        return EvidencePlan(selected_paths=paths, dropped_paths=[])
+
+    ranked: list[tuple[float, str, str]] = []
+    for path in paths:
+        score, reason = _path_priority(path, repo_digest)
+        ranked.append((score, path, reason))
+
+    ranked.sort(key=lambda item: (-item[0], item[1]))
+    selected = ranked[:max_paths]
+    dropped = ranked[max_paths:]
+    return EvidencePlan(
+        selected_paths=[path for _, path, _ in selected],
+        dropped_paths=[path for _, path, _ in dropped],
+        selected_reasons={path: reason for _, path, reason in selected},
+    )
+
+
+def apply_evidence_plan(material: RepositoryMaterial, plan: EvidencePlan) -> RepositoryMaterial:
+    return RepositoryMaterial(
+        repo_url=material.repo_url,
+        file_tree="\n".join(plan.selected_paths),
+        readme_content=material.readme_content,
+        package_files=material.package_files,
+        default_branch=material.default_branch,
+        is_private=material.is_private,
+    )
+
+
+def suggested_evidence_limit(estimated_prompt_tokens: int, available_tokens: int) -> int:
+    if available_tokens <= 0:
+        return 20
+    pressure = estimated_prompt_tokens / available_tokens
+    if pressure <= 1:
+        return 80
+    scaled = max(20, int(80 / math.ceil(pressure)))
+    return min(80, scaled)
 
 
 def chunk_repository_material(material: RepositoryMaterial) -> list[RepoChunk]:
@@ -136,7 +240,14 @@ def reduce_capsules(capsules: list[ChunkCapsule], topic: str = "Repository") -> 
         all_deps.update(cap.dependencies)
 
         lower = cap.path.lower()
-        if any(token in lower for token in ("main.py", "__main__.py", "index.ts", "index.js", "cli.py", "/cmd/", "/bin/", "app.py")):
+        if lower.endswith(("/main.py", "/__main__.py", "/index.ts", "/index.js", "/cli.py", "/app.py")) or lower in {
+            "main.py",
+            "__main__.py",
+            "index.ts",
+            "index.js",
+            "cli.py",
+            "app.py",
+        } or any(token in lower for token in ("/cmd/", "/bin/")):
             entry_points.append(cap.path)
 
     primary_language = max(lang_counter.items(), key=lambda kv: kv[1])[0] if lang_counter else "unknown"

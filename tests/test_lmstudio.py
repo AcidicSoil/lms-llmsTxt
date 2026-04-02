@@ -9,6 +9,7 @@ from lms_llmsTxt.config import AppConfig
 from lms_llmsTxt import pipeline
 import lms_llmsTxt.lmstudio as lmstudio
 from lms_llmsTxt.lmstudio import LMStudioConnectivityError
+from lms_llmsTxt.models import AnalyzerTrace
 
 
 class _FakeResponse:
@@ -190,6 +191,79 @@ def test_pipeline_unloads_model(tmp_path, monkeypatch):
     assert unload_called.get("done") is True
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
+
+
+def test_pipeline_runs_evidence_planning_before_compaction(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="\n".join(["README.md", "docs/getting-started.md", "src/cli.py", "src/internal/worker.py"]),
+        readme_content="# Title\n\nSummary",
+        package_files="[project]\nname='demo'",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type(
+                "Result",
+                (),
+                {
+                    "llms_txt_content": "# Generated\n",
+                    "trace": AnalyzerTrace(),
+                },
+            )()
+
+    compact_inputs = []
+
+    class FakeBudget:
+        def __init__(self, estimated, available, decision):
+            self.estimated_prompt_tokens = estimated
+            self.available_tokens = available
+            self.decision = decision
+
+    decisions = iter(
+        [
+            FakeBudget(estimated=4000, available=1000, decision=pipeline.BudgetDecision.NEEDS_COMPACTION),
+            FakeBudget(estimated=1200, available=1000, decision=pipeline.BudgetDecision.NEEDS_COMPACTION),
+            FakeBudget(estimated=700, available=1000, decision=pipeline.BudgetDecision.APPROVED),
+        ]
+    )
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda *args, **kwargs: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(pipeline, "build_context_budget", lambda *a, **k: next(decisions))
+    monkeypatch.setattr(pipeline, "suggested_evidence_limit", lambda *a, **k: 2)
+    monkeypatch.setattr(
+        pipeline,
+        "compact_material",
+        lambda material, *args, **kwargs: compact_inputs.append(material.file_tree.splitlines()) or material,
+    )
+    monkeypatch.setattr(
+        pipeline,
+        "build_llms_full_from_repo",
+        lambda content, **_: content + "\n--- full ---\n",
+    )
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
+
+    assert compact_inputs
+    assert len(compact_inputs[0]) < len(fake_material.file_tree.splitlines())
+    assert Path(artifacts.trace_path).exists()
+    trace_text = Path(artifacts.trace_path).read_text(encoding="utf-8")
+    assert '"stage": "evidence-planning"' in trace_text
+    assert 'Selective evidence planning ran before deterministic compaction.' in trace_text
 
 
 def test_unload_prefers_sdk(monkeypatch):

@@ -36,6 +36,7 @@ def test_repository_analyzer_handles_sparse_digest_predictions(monkeypatch):
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
     monkeypatch.setattr(ra, "analyze_repo_digest", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
+    monkeypatch.setattr(ra, "plan_sections", lambda **_: analyzer.dspy.Prediction())
     monkeypatch.setattr(
         analyzer,
         "build_dynamic_buckets",
@@ -76,6 +77,7 @@ def test_repository_analyzer_handles_sparse_non_digest_predictions(monkeypatch):
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: Empty())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
+    monkeypatch.setattr(ra, "plan_sections", lambda **_: analyzer.dspy.Prediction())
     monkeypatch.setattr(
         analyzer,
         "build_dynamic_buckets",
@@ -113,6 +115,7 @@ def test_repository_analyzer_promotes_usage_examples_into_structured_document(mo
         "generate_examples",
         lambda **_: analyzer.dspy.Prediction(usage_examples="Run `lmstxt <repo-url>` to generate artifacts."),
     )
+    monkeypatch.setattr(ra, "plan_sections", lambda **_: analyzer.dspy.Prediction())
     monkeypatch.setattr(
         analyzer,
         "build_dynamic_buckets",
@@ -131,3 +134,56 @@ def test_repository_analyzer_promotes_usage_examples_into_structured_document(mo
     assert result.document.sections[0].entries[0].url == "about:usage-examples"
     assert "Run `lmstxt <repo-url>`" in result.llms_txt_content
     assert result.trace.section_plan[0]["name"] == "Usage"
+    assert result.trace.section_plan[0]["source"] == "deterministic"
+
+
+def test_repository_analyzer_uses_model_section_plan_when_available(monkeypatch):
+    class RepoAnalysis:
+        project_purpose = "CLI toolkit for repository summaries."
+        key_concepts = ["CLI", "Artifacts"]
+
+    class StructureAnalysis:
+        important_directories = ["src", "docs"]
+        entry_points = ["src/lms_llmsTxt/cli.py"]
+        development_info = "pytest and uv"
+
+    ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
+    monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
+    monkeypatch.setattr(
+        ra,
+        "generate_examples",
+        lambda **_: analyzer.dspy.Prediction(usage_examples="Run `lmstxt <repo-url>` to generate artifacts."),
+    )
+    monkeypatch.setattr(
+        ra,
+        "plan_sections",
+        lambda **_: analyzer.dspy.Prediction(
+            preferred_section_order=["Docs", "Usage"],
+            remember_bullets=["Read Docs first", "Then run the CLI"],
+        ),
+    )
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [
+            ("Docs", [("README", "https://example.com/readme", "docs page")]),
+            ("Tutorials", [("Walkthrough", "https://example.com/tutorial", "worked example")]),
+        ],
+    )
+
+    result = ra.forward(
+        repo_url="https://github.com/acme/demo",
+        file_tree="README.md\ndocs/walkthrough.md\nsrc/lms_llmsTxt/cli.py",
+        readme_content="# Demo\n\nCLI toolkit for repository summaries.",
+        package_files="",
+        default_branch="main",
+    )
+
+    assert [section.name for section in result.document.sections[:3]] == ["Docs", "Usage", "Tutorials"]
+    assert result.document.remember_bullets == ["Read Docs first", "Then run the CLI"]
+    assert result.trace.section_plan[0]["source"] == "model"
+    assert result.trace.section_plan[0]["name"] == "Docs"
+    assert result.document.sections[1].entries[0].url == "about:usage-examples"
+    assert "Read Docs first" in result.llms_txt_content
+    assert "Run `lmstxt <repo-url>`" in result.llms_txt_content

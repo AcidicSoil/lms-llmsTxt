@@ -84,21 +84,24 @@ class GenerateUsageExamples(dspy.Signature):
     )
 
 
-class GenerateLLMsTxt(dspy.Signature):
-    """Generate a complete llms.txt (markdown index) for the project."""
+class PlanLLMsSections(dspy.Signature):
+    """Choose the final semantic section order and remember bullets for llms.txt."""
 
+    project_name: str = dspy.InputField()
     project_purpose: str = dspy.InputField()
     key_concepts: List[str] = dspy.InputField()
-    architecture_overview: str = dspy.InputField()
     important_directories: List[str] = dspy.InputField()
     entry_points: List[str] = dspy.InputField()
     development_info: str = dspy.InputField()
-    usage_examples: str = dspy.InputField(
-        desc="Common usage patterns and examples (markdown)"
+    available_sections: List[str] = dspy.InputField(
+        desc="Available deterministic section names in the current candidate document"
     )
 
-    llms_txt_content: str = dspy.OutputField(
-        desc="Complete llms.txt content following the standard format"
+    preferred_section_order: List[str] = dspy.OutputField(
+        desc="Preferred final section ordering using only available section names"
+    )
+    remember_bullets: List[str] = dspy.OutputField(
+        desc="Short remember bullets for the document header"
     )
 
 

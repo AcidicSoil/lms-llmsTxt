@@ -21,7 +21,7 @@ from .graph_builder import build_repo_graph, emit_graph_files
 from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
 from .reasoning import sanitize_final_output
-from .repo_digest import build_repo_digest
+from .repo_digest import apply_evidence_plan, build_repo_digest, plan_evidence_paths, suggested_evidence_limit
 from .retry_policy import ErrorClass, classify_generation_error, next_retry_budget
 from .schema import LLMS_JSON_SCHEMA
 
@@ -108,6 +108,30 @@ def run_generation(
                 budget.decision,
             )
 
+        planning_digest = build_repo_digest(material, topic=project_name)
+        evidence_plan = None
+        if budget.decision != BudgetDecision.APPROVED:
+            evidence_plan = plan_evidence_paths(
+                material,
+                planning_digest,
+                max_paths=suggested_evidence_limit(
+                    budget.estimated_prompt_tokens,
+                    budget.available_tokens,
+                ),
+            )
+            if evidence_plan.dropped_paths:
+                working_material = apply_evidence_plan(material, evidence_plan)
+                budget = build_context_budget(config, working_material)
+                if verbose_budget:
+                    logger.info(
+                        "After evidence planning: estimated=%s available=%s decision=%s selected=%s dropped=%s",
+                        budget.estimated_prompt_tokens,
+                        budget.available_tokens,
+                        budget.decision,
+                        len(evidence_plan.selected_paths),
+                        len(evidence_plan.dropped_paths),
+                    )
+
         if budget.decision != BudgetDecision.APPROVED:
             working_material = compact_material(working_material, budget, config)
             budget = build_context_budget(config, working_material)
@@ -147,6 +171,30 @@ def run_generation(
                         raise call_exc
                 llms_text = result.llms_txt_content
                 analyzer_trace = getattr(result, "trace", None)
+                if analyzer_trace is not None and evidence_plan is not None and evidence_plan.dropped_paths:
+                    analyzer_trace.selected_evidence = [
+                        *[
+                            {
+                                "path": path,
+                                "reason": evidence_plan.selected_reasons.get(path, "selected"),
+                                "stage": "evidence-planning",
+                            }
+                            for path in evidence_plan.selected_paths
+                        ],
+                        *analyzer_trace.selected_evidence,
+                    ]
+                    analyzer_trace.dropped_evidence = [
+                        {
+                            "path": path,
+                            "reason": "budget-limited",
+                            "stage": "evidence-planning",
+                        }
+                        for path in evidence_plan.dropped_paths
+                    ]
+                    analyzer_trace.compaction_reasons.insert(
+                        0,
+                        "Selective evidence planning ran before deterministic compaction.",
+                    )
                 break
             except Exception as exc:
                 err_class = classify_generation_error(exc)
