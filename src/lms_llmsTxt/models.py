@@ -50,6 +50,8 @@ class AnalyzerTrace:
     selected_evidence: list[dict[str, Any]] = field(default_factory=list)
     dropped_evidence: list[dict[str, Any]] = field(default_factory=list)
     section_plan: list[dict[str, Any]] = field(default_factory=list)
+    model_section_planning: dict[str, Any] = field(default_factory=dict)
+    deterministic_section_planning: dict[str, Any] = field(default_factory=dict)
     compaction_reasons: list[str] = field(default_factory=list)
 
 

@@ -539,6 +539,14 @@ class RepositoryAnalyzer(dspy.Module):
         if usage_section is not None:
             document.sections.insert(0, usage_section)
 
+        deterministic_sections = [section.name for section in document.sections]
+        deterministic_bullets = list(document.remember_bullets)
+        trace.deterministic_section_planning = {
+            "available_sections": deterministic_sections,
+            "remember_bullets": deterministic_bullets,
+            "usage_section_added": usage_section is not None,
+        }
+
         section_plan_prediction = self.plan_sections(
             project_name=project_name,
             project_purpose=project_purpose,
@@ -546,18 +554,31 @@ class RepositoryAnalyzer(dspy.Module):
             important_directories=important_directories,
             entry_points=entry_points,
             development_info=development_info,
-            available_sections=[section.name for section in document.sections],
+            available_sections=deterministic_sections,
         )
         included_sections = _as_list_of_text(_pred_get(section_plan_prediction, "included_sections"))
         preferred_order = _as_list_of_text(_pred_get(section_plan_prediction, "preferred_section_order"))
         planned_bullets = _as_list_of_text(_pred_get(section_plan_prediction, "remember_bullets"))
 
         document.sections, used_model_filter = self._filter_sections(document.sections, included_sections)
+        filtered_sections = [section.name for section in document.sections]
         document.sections, used_model_order = self._apply_section_order(document.sections, preferred_order)
+        final_sections = [section.name for section in document.sections]
+        remember_source = "model" if planned_bullets else "deterministic"
         if planned_bullets:
             document.remember_bullets = planned_bullets
 
         plan_source = "model" if (used_model_filter or used_model_order or planned_bullets) else "deterministic"
+        trace.model_section_planning = {
+            "included_sections": included_sections,
+            "preferred_section_order": preferred_order,
+            "remember_bullets": planned_bullets,
+            "used_model_filter": used_model_filter,
+            "used_model_order": used_model_order,
+            "remember_source": remember_source,
+            "filtered_sections": filtered_sections,
+            "final_sections": final_sections,
+        }
         trace.section_plan = [
             {
                 "name": section.name,

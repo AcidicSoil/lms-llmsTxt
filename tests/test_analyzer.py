@@ -181,6 +181,20 @@ def test_repository_analyzer_uses_model_section_plan_when_available(monkeypatch)
         default_branch="main",
     )
 
+    assert [section.name for section in result.document.sections[:3]] == ["Docs", "Usage"]
+    assert result.document.remember_bullets == ["Read Docs first", "Then run the CLI"]
+    assert result.trace.section_plan[0]["source"] == "model"
+    assert result.trace.section_plan[0]["name"] == "Docs"
+    assert result.trace.deterministic_section_planning["available_sections"] == ["Usage", "Docs", "Tutorials"]
+    assert result.trace.model_section_planning["included_sections"] == ["Docs", "Usage"]
+    assert result.trace.model_section_planning["used_model_filter"] is True
+    assert result.trace.model_section_planning["used_model_order"] is True
+    assert result.trace.model_section_planning["remember_source"] == "model"
+    assert result.trace.model_section_planning["final_sections"] == ["Docs", "Usage"]
+    assert result.document.sections[1].entries[0].url == "about:usage-examples"
+    assert "Read Docs first" in result.llms_txt_content
+    assert "Run `lmstxt <repo-url>`" in result.llms_txt_content
+
 
 def test_repository_analyzer_ignores_invalid_model_section_filter(monkeypatch):
     class RepoAnalysis:
@@ -227,4 +241,10 @@ def test_repository_analyzer_ignores_invalid_model_section_filter(monkeypatch):
 
     assert [section.name for section in result.document.sections[:3]] == ["Tutorials", "Docs", "Usage"]
     assert result.trace.section_plan[0]["source"] == "model"
+    assert result.trace.model_section_planning["included_sections"] == ["Nonexistent"]
+    assert result.trace.model_section_planning["used_model_filter"] is False
+    assert result.trace.model_section_planning["used_model_order"] is True
+    assert result.trace.model_section_planning["filtered_sections"] == ["Usage", "Docs", "Tutorials"]
+    assert result.trace.model_section_planning["final_sections"] == ["Tutorials", "Docs", "Usage"]
+    assert result.trace.deterministic_section_planning["usage_section_added"] is True
 
