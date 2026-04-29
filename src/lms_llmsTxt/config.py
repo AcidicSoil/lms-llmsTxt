@@ -21,18 +21,16 @@ class AppConfig:
     """
     Runtime configuration for the LM Studio llms.txt generator.
 
-    Users can override defaults through environment variables:
-      - ``LMSTUDIO_MODEL``: LM Studio model identifier.
+    Users configure runtime values through environment variables or CLI flags:
+      - ``LMSTUDIO_MODEL``: LM Studio model identifier. Required unless ``--model`` is passed.
       - ``LMSTUDIO_BASE_URL``: API base URL (defaults to http://localhost:1234/v1).
       - ``LMSTUDIO_API_KEY``: Optional API key (LM Studio accepts any string).
       - ``OUTPUT_DIR``: Root folder for generated artifacts.
       - ``ENABLE_CTX``: Set truthy to emit llms-ctx.txt files when llms_txt.create_ctx
         is available.
     """
-    lm_model: str = field(
-        default_factory=lambda: os.getenv(
-            "LMSTUDIO_MODEL", "qwen_qwen3-vl-4b-instruct"
-        )
+    lm_model: str | None = field(
+        default_factory=lambda: (os.getenv("LMSTUDIO_MODEL") or "").strip() or None
     )
     lm_api_base: str = field(
         default_factory=lambda: os.getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1")

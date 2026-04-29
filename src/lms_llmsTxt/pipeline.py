@@ -16,7 +16,7 @@ from .fallback import (
     fallback_llms_payload,
     fallback_markdown_from_payload,
 )
-from .github import gather_repository_material, owner_repo_from_url
+from .github import fetch_file_content, gather_repository_material, owner_repo_from_url
 from .graph_builder import build_repo_graph, emit_graph_files
 from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
@@ -120,7 +120,17 @@ def run_generation(
                 ),
             )
             if evidence_plan.dropped_paths:
-                working_material = apply_evidence_plan(material, evidence_plan)
+                working_material = apply_evidence_plan(
+                    material,
+                    evidence_plan,
+                    fetch_content=lambda path: fetch_file_content(
+                        owner,
+                        repo,
+                        path,
+                        material.default_branch,
+                        config.github_token,
+                    ),
+                )
                 budget = build_context_budget(config, working_material)
                 if verbose_budget:
                     logger.info(
@@ -178,8 +188,18 @@ def run_generation(
                                 "path": path,
                                 "reason": evidence_plan.selected_reasons.get(path, "selected"),
                                 "stage": "evidence-planning",
+                                "content_fetched": path in evidence_plan.fetched_paths,
                             }
                             for path in evidence_plan.selected_paths
+                        ],
+                        *[
+                            {
+                                "path": item.get("path"),
+                                "reason": item.get("reason", "fetch-skipped"),
+                                "stage": "evidence-fetch",
+                                "content_fetched": False,
+                            }
+                            for item in evidence_plan.fetch_skipped
                         ],
                         *analyzer_trace.selected_evidence,
                     ]
@@ -191,6 +211,16 @@ def run_generation(
                         }
                         for path in evidence_plan.dropped_paths
                     ]
+                    analyzer_trace.model_section_planning.setdefault(
+                        "evidence_budget",
+                        {
+                            "candidate_count": evidence_plan.candidate_count,
+                            "max_paths": evidence_plan.max_paths,
+                            "selected_count": evidence_plan.selected_count,
+                            "dropped_count": evidence_plan.dropped_count,
+                            "budget_reason": evidence_plan.budget_reason,
+                        },
+                    )
                     analyzer_trace.compaction_reasons.insert(
                         0,
                         "Selective evidence planning ran before deterministic compaction.",

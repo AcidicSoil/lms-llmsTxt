@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 import hashlib
 import math
 import re
-from typing import Iterable
+from collections.abc import Callable, Iterable
 
 from .models import RepositoryMaterial
 
@@ -44,6 +44,21 @@ class EvidencePlan:
     selected_paths: list[str]
     dropped_paths: list[str]
     selected_reasons: dict[str, str] = field(default_factory=dict)
+    candidate_count: int = 0
+    max_paths: int = 0
+    selected_count: int = 0
+    dropped_count: int = 0
+    budget_reason: str = "within-limit"
+    fetched_paths: list[str] = field(default_factory=list)
+    fetch_skipped: list[dict[str, str]] = field(default_factory=list)
+
+
+@dataclass(frozen=True, slots=True)
+class EvidenceFetchLimits:
+    max_fetches: int = 8
+    max_bytes_per_fetch: int = 8_000
+    max_total_bytes: int = 24_000
+    max_path_depth: int = 8
 
 
 def _language_from_path(path: str) -> str:
@@ -143,8 +158,17 @@ def plan_evidence_paths(
     max_paths: int,
 ) -> EvidencePlan:
     paths = sorted({path.strip() for path in material.file_tree.splitlines() if path.strip()})
+    candidate_count = len(paths)
     if not paths or len(paths) <= max_paths:
-        return EvidencePlan(selected_paths=paths, dropped_paths=[])
+        return EvidencePlan(
+            selected_paths=paths,
+            dropped_paths=[],
+            candidate_count=candidate_count,
+            max_paths=max_paths,
+            selected_count=candidate_count,
+            dropped_count=0,
+            budget_reason="within-limit",
+        )
 
     ranked: list[tuple[float, str, str]] = []
     for path in paths:
@@ -158,15 +182,56 @@ def plan_evidence_paths(
         selected_paths=[path for _, path, _ in selected],
         dropped_paths=[path for _, path, _ in dropped],
         selected_reasons={path: reason for _, path, reason in selected},
+        candidate_count=candidate_count,
+        max_paths=max_paths,
+        selected_count=len(selected),
+        dropped_count=len(dropped),
+        budget_reason="candidate-count-exceeds-limit",
     )
 
 
-def apply_evidence_plan(material: RepositoryMaterial, plan: EvidencePlan) -> RepositoryMaterial:
+def apply_evidence_plan(
+    material: RepositoryMaterial,
+    plan: EvidencePlan,
+    *,
+    fetch_content: Callable[[str], str | None] | None = None,
+    limits: EvidenceFetchLimits = EvidenceFetchLimits(),
+) -> RepositoryMaterial:
+    selected_tree = "\n".join(plan.selected_paths)
+    package_files = material.package_files
+
+    if fetch_content is not None and limits.max_fetches > 0 and limits.max_total_bytes > 0:
+        fetched_blocks: list[str] = []
+        total_bytes = 0
+        for path in plan.selected_paths[: limits.max_fetches]:
+            if path.count("/") > limits.max_path_depth:
+                plan.fetch_skipped.append({"path": path, "reason": "depth-limited"})
+                continue
+
+            content = fetch_content(path)
+            if not content:
+                plan.fetch_skipped.append({"path": path, "reason": "empty-or-unavailable"})
+                continue
+
+            encoded = content.encode("utf-8", "replace")
+            if total_bytes >= limits.max_total_bytes:
+                plan.fetch_skipped.append({"path": path, "reason": "total-byte-limit"})
+                continue
+
+            remaining = limits.max_total_bytes - total_bytes
+            capped = encoded[: min(limits.max_bytes_per_fetch, remaining)].decode("utf-8", "replace")
+            total_bytes += len(capped.encode("utf-8"))
+            plan.fetched_paths.append(path)
+            fetched_blocks.append(f"=== selected evidence: {path} ===\n{capped}")
+
+        if fetched_blocks:
+            package_files = "\n\n".join(part for part in [package_files, *fetched_blocks] if part)
+
     return RepositoryMaterial(
         repo_url=material.repo_url,
-        file_tree="\n".join(plan.selected_paths),
+        file_tree=selected_tree,
         readme_content=material.readme_content,
-        package_files=material.package_files,
+        package_files=package_files,
         default_branch=material.default_branch,
         is_private=material.is_private,
     )

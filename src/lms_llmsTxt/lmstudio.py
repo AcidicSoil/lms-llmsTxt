@@ -416,58 +416,43 @@ def _unload_model_cli(model: str) -> bool:
 
 def _ensure_lmstudio_ready(config: AppConfig) -> None:
     """
-    Confirm that LM Studio exposes the requested model, attempting to load it if needed.
+    Confirm that LM Studio exposes the requested model.
 
     Raises
     ------
     LMStudioConnectivityError
-        If the LM Studio server cannot be contacted or refuses to expose the model.
+        If the LM Studio server cannot be contacted, no model was configured,
+        or the configured model is not advertised by LM Studio.
     """
+
+    target_model = (config.lm_model or "").strip()
+    if not target_model:
+        raise LMStudioConnectivityError(
+            "No LM Studio model configured. Set LMSTUDIO_MODEL in your .env file "
+            "or pass --model with an LM Studio model identifier, then download and "
+            "load that model in LM Studio."
+        )
 
     headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
     base = config.lm_api_base.rstrip("/")
 
     try:
-        models, endpoint_hint = _fetch_models(base, headers)
+        models, _endpoint_hint = _fetch_models(base, headers)
     except requests.RequestException as exc:
         raise LMStudioConnectivityError(
             f"Failed to reach LM Studio at {base}: {exc}"
         ) from exc
 
-    if config.lm_model in models:
-        logger.debug("LM Studio already has model '%s' loaded.", config.lm_model)
+    if target_model in models:
+        logger.debug("LM Studio already has model '%s' loaded.", target_model)
         return
 
-    logger.info(
-        "LM Studio does not advertise model '%s'; attempting to load it automatically.",
-        config.lm_model,
+    available = ", ".join(sorted(models)) if models else "none advertised"
+    raise LMStudioConnectivityError(
+        f"LM Studio model '{target_model}' was not detected. "
+        "Download and load that model in LM Studio, or set LMSTUDIO_MODEL/--model "
+        f"to one of the available models. Available models: {available}."
     )
-
-    loaded = _load_model_http(base, headers, config.lm_model, endpoint_hint)
-    if not loaded:
-        loaded = _load_model_cli(config.lm_model)
-
-    if not loaded:
-        raise LMStudioConnectivityError(
-            f"Unable to load model '{config.lm_model}' automatically. "
-            "Please load it in the LM Studio UI and retry."
-        )
-
-    # Re-query to confirm the model is present.
-    try:
-        models, _ = _fetch_models(base, headers)
-    except requests.RequestException as exc:
-        raise LMStudioConnectivityError(
-            f"Verified load but subsequent model fetch failed: {exc}"
-        ) from exc
-
-    if config.lm_model not in models:
-        raise LMStudioConnectivityError(
-            f"Model '{config.lm_model}' did not appear in LM Studio after load attempts. "
-            "Check the LM Studio logs for more details."
-        )
-
-    logger.info("LM Studio model '%s' is ready.", config.lm_model)
 
 
 def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:

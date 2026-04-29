@@ -240,6 +240,11 @@ def test_pipeline_runs_evidence_planning_before_compaction(tmp_path, monkeypatch
     monkeypatch.setattr(pipeline, "suggested_evidence_limit", lambda *a, **k: 2)
     monkeypatch.setattr(
         pipeline,
+        "fetch_file_content",
+        lambda owner, repo, path, ref, token: f"selected content for {path}",
+    )
+    monkeypatch.setattr(
+        pipeline,
         "compact_material",
         lambda material, *args, **kwargs: compact_inputs.append(material.file_tree.splitlines()) or material,
     )
@@ -263,6 +268,11 @@ def test_pipeline_runs_evidence_planning_before_compaction(tmp_path, monkeypatch
     assert Path(artifacts.trace_path).exists()
     trace_text = Path(artifacts.trace_path).read_text(encoding="utf-8")
     assert '"stage": "evidence-planning"' in trace_text
+    assert '"content_fetched": true' in trace_text
+    assert '"evidence_budget"' in trace_text
+    assert '"candidate_count": 4' in trace_text
+    assert '"max_paths": 2' in trace_text
+    assert '"budget_reason": "candidate-count-exceeds-limit"' in trace_text
     assert 'Selective evidence planning ran before deterministic compaction.' in trace_text
 
 
