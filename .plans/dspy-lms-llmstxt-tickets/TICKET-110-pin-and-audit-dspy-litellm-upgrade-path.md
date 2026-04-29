@@ -2,7 +2,7 @@
 ticket_id: "tkt_lmsllmstxt_pin_audit_deps"
 title: "DSPy and LiteLLM upgrade path is pinned and audited before new planner work"
 agent: "codex"
-done: false
+done: true
 goal: "The codebase has a reviewed, pinned dependency path for recent DSPy capabilities before newer planner or optimizer work is enabled."
 ---
 
@@ -19,6 +19,12 @@ goal: "The codebase has a reviewed, pinned dependency path for recent DSPy capab
 ## Tests
 - Install dependencies from the pinned set or lockfile and verify resolution succeeds.
 - Run a smoke test of the current generator against the pinned dependency set and record any blocker explicitly.
+
+## Completion evidence
+- `pyproject.toml` pins `dspy-ai==3.1.0` and `litellm==1.80.5`.
+- `uv.lock` records the pinned `dspy`, `dspy-ai`, and `litellm` versions and `uv lock --check` resolves successfully.
+- `docs/dependency-audit.md` records the DSPy/LiteLLM upgrade constraints and downstream blockers for planner, optimizer, and RLM work.
+- `uv run --extra test pytest -q` reported `71 passed, 1 skipped, 6 warnings`; the skip is the LM Studio/GitHub credential integration test when the configured GitHub token is invalid or unauthorized.
 
 ## Notes
 - Source: "Pin and audit DSPy/LiteLLM dependencies before upgrading", "Recent LiteLLM security notices mean any DSPy upgrade path should be dependency-pinned and audited."

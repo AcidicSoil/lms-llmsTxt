@@ -1,6 +1,9 @@
 import os
 from pathlib import Path
+
 import pytest
+from requests import HTTPError
+
 from lms_llmsTxt.config import AppConfig
 from lms_llmsTxt.pipeline import run_generation
 
@@ -24,7 +27,13 @@ def test_real_generation(tmp_path):
     if not os.environ.get("GITHUB_ACCESS_TOKEN") and not os.environ.get("GH_TOKEN"):
         pytest.skip("Skipping integration test: GITHUB_ACCESS_TOKEN not set")
 
-    artifacts = run_generation(repo_url, config, build_ctx=False)
+    try:
+        artifacts = run_generation(repo_url, config, build_ctx=False)
+    except HTTPError as exc:
+        status_code = exc.response.status_code if exc.response is not None else None
+        if status_code in {401, 403}:
+            pytest.skip("Skipping integration test: GitHub token is invalid or unauthorized")
+        raise
     
     assert artifacts.used_fallback is False
     assert Path(artifacts.llms_txt_path).exists()
