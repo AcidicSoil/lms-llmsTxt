@@ -46,3 +46,20 @@ def test_app_config_refreshes_dotenv_before_reading_values(tmp_path, monkeypatch
     assert config.lm_api_base == "http://localhost:9999/v1"
     assert config.lm_api_key == "dotenv-key"
     assert str(config.output_dir) == "dotenv-artifacts"
+
+
+def test_process_environment_overrides_dotenv_file(tmp_path, monkeypatch):
+    for key in _ENV_KEYS:
+        monkeypatch.delenv(key, raising=False)
+    monkeypatch.chdir(tmp_path)
+    tmp_path.joinpath(".env").write_text(
+        "LMSTUDIO_MODEL=dotenv-model\n"
+        "LMSTUDIO_BASE_URL=http://localhost:9999/v1\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setenv("LMSTUDIO_MODEL", "shell-model")
+
+    config = AppConfig()
+
+    assert config.lm_model == "shell-model"
+    assert config.lm_api_base == "http://localhost:9999/v1"

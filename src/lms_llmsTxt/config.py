@@ -4,19 +4,24 @@ import os
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-
-
-def _refresh_dotenv() -> None:
-    dotenv_path = Path.cwd() / ".env"
-    if dotenv_path.exists():
-        load_dotenv(dotenv_path=dotenv_path, override=False)
+from dotenv import dotenv_values
 
 
 def _env_value(name: str, default: str | None = None) -> str | None:
-    _refresh_dotenv()
-    value = os.getenv(name)
+    """
+    Return a runtime setting using normal environment precedence.
+
+    Real process environment variables win. If a variable is not present in the
+    process environment, fall back to the current working directory's .env file
+    without mutating os.environ. This keeps AppConfig() fresh for cwd changes and
+    avoids stale .env values leaking between tests or repeated in-process runs.
+    """
+    value = os.environ.get(name)
+    if value is None:
+        dotenv_path = Path.cwd() / ".env"
+        if dotenv_path.exists():
+            raw_value = dotenv_values(dotenv_path).get(name)
+            value = str(raw_value) if raw_value is not None else None
     if value is None:
         return default
     return value.strip()
