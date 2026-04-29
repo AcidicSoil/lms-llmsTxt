@@ -71,7 +71,7 @@ The server must expose an OpenAI-compatible endpoint, commonly `http://localhost
 
 ### Ensure the target model is downloaded
 
-Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
+Open LM Studio, download the model you want to use, and confirm its exact identifier appears in the **Server** tab. Set that identifier with `LMSTUDIO_MODEL` in `.env` or pass it with `--model`.
 
 ## Quick start
 
@@ -79,12 +79,29 @@ Run the CLI against any GitHub repository:
 
 ```bash
 lmstxt https://github.com/owner/repo \
-  --model qwen/qwen3-4b-2507 \
+  --model "$LMSTUDIO_MODEL" \
   --api-base http://localhost:1234/v1 \
   --stamp
 ```
 
 The command writes artifacts to `artifacts/owner/repo/`. Use `--output-dir` to override the destination.
+
+To generate graph artifacts and open them in HyperGraph automatically after generation:
+
+```bash
+lmstxt https://github.com/owner/repo \
+  --generate-graph \
+  --graph-only \
+  --verbose-budget
+  --ui
+```
+
+The CLI will:
+- start/reuse the HyperGraph UI server (default `http://localhost:3000`)
+- auto-open the browser to the generated graph
+- print the same handoff URL for manual reuse
+
+Use `--ui-no-open` to skip auto-opening the browser.
 
 ## Private GitHub repositories
 
@@ -122,7 +139,7 @@ If you run the MCP server, the same env vars must be present in the process envi
 
 | Variable | Description |
 |----------|-------------|
-| `LMSTUDIO_MODEL` | Default LM Studio model identifier |
+| `LMSTUDIO_MODEL` | Required LM Studio model identifier unless `--model` is passed |
 | `LMSTUDIO_BASE_URL` | Base URL such as `http://localhost:1234/v1` |
 | `LMSTUDIO_API_KEY` | API key for secured LM Studio deployments |
 | `OUTPUT_DIR` | Custom root directory for artifacts |
@@ -140,6 +157,29 @@ If you run the MCP server, the same env vars must be present in the process envi
 > [!IMPORTANT]
 > The pipeline always writes `llms.txt` and `llms-full.txt`, even when the language model call fails.
 
+## Graph visualizer (HyperGraph)
+
+Use the built-in HyperGraph UI to inspect and generate `repo.graph.json` artifacts.
+
+```bash
+npm --prefix hypergraph install
+npm run ui:dev
+```
+
+Open <http://localhost:3000>. You now have three flows:
+
+- **Topic graph**: existing HyperGraph topic generation (Hyperbrowser + OpenAI).
+- **Generate repo graph**: run the local `lms_llmsTxt` pipeline from the UI using a GitHub repo URL.
+- **Load repo graph**: inspect an existing artifact path.
+
+For manual loading, use a path like:
+
+```
+../artifacts/<owner>/<repo>/graph/repo.graph.json
+```
+
+The CLI `--ui` flag now auto-starts/reuses the UI (if needed), opens the browser by default, and prints a ready-to-open URL that pre-fills this path and auto-loads the graph.
+
 ## Model Context Protocol (MCP) Server
 
 This package includes a FastMCP server that exposes the generator as an MCP tool and provides access to generated artifacts as resources.
@@ -154,9 +194,14 @@ This package includes a FastMCP server that exposes the generator as an MCP tool
   - `lmstxt_list_runs`: View recent generation history and status.
   - `lmstxt_read_artifact`: Read generated files with pagination support.
   - `lmstxt_list_all_artifacts`: List all persistent `.txt` artifacts on disk.
+  - `lmstxt_list_graph_artifacts`: List discovered graph artifacts (`repo.graph.json`, `repo.force.json`, `nodes/*.md`).
+  - `lmstxt_read_graph_artifact`: Read graph artifact content with pagination.
+  - `lmstxt_read_repo_graph_node`: Read a graph node by repo id and node id.
 - **Resources**:
   - **Run-specific**: `lmstxt://runs/{run_id}/{artifact_name}`
   - **Persistent Directory**: `lmstxt://artifacts/{filename}` (e.g., `lmstxt://artifacts/owner/repo/repo-llms.txt`)
+  - **Graph file**: `lmstxt://graphs/{filename}`
+  - **Repo graph node**: `repo://{repo_id}/graph/nodes/{node_id}` (for example `repo://owner--repo/graph/nodes/moc`)
 
 ### Running the Server
 
@@ -213,6 +258,16 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 - `tests/` – pytest coverage for the generator pipeline and MCP server.
 - `artifacts/` – sample outputs from previous runs.
 
+## Documentation Map
+
+- `docs/getting-started.md` - beginner onboarding and first commands.
+- `docs/architecture.md` - system design, data flow, and extension points.
+- `docs/standards.md` - discovered coding/runtime conventions and recommended consistency rules.
+- `docs/patterns.md` - architectural/code patterns, integration seams, and hotspots.
+- `docs/REVIEW_CHECKLIST.md` - human validation checklist for brownfield documentation claims.
+- `docs/publishing.md` - publishing and release workflow notes.
+- `docs/oracle-pack-2026-01-04.md` - repository knowledge pack reference.
+
 ## Verify your setup
 
 ```bash
@@ -228,6 +283,37 @@ uv run pytest
 ```
 
 All tests should pass, confirming URL validation, fallback handling, and MCP resource exposure.
+
+## Reliability Validation (2026-02-23)
+
+An end-to-end run was executed against `https://github.com/pallets/flask`:
+
+```bash
+PYTHONPATH=src python3 -m lms_llmsTxt.cli https://github.com/pallets/flask \
+  --generate-graph \
+  --graph-only \
+  --verbose-budget \
+  --output-dir artifacts
+```
+
+Observed results:
+
+- Artifacts generated:
+  - `artifacts/pallets/flask/flask-llms.txt`
+  - `artifacts/pallets/flask/graph/repo.graph.json`
+  - `artifacts/pallets/flask/graph/repo.force.json`
+  - `artifacts/pallets/flask/graph/nodes/*.md`
+- Sanitization check: no `<think>`, `<analysis>`, or `Reasoning:` markers found in generated outputs.
+- Graph grounding check: `repo.graph.json` contained `21` nodes and `0` nodes with missing evidence.
+- Runtime mode: generation completed through the primary analyzer path (no fallback artifact emitted).
+
+### Failure-Rate SLO Baseline
+
+- Artifact delivery SLO: `>= 99%` successful artifact generation per invocation (`llms.txt` + graph artifacts when `--generate-graph` is used).
+- Sanitization SLO: `100%` of generated artifacts must be free of reasoning tags (`<think>`, `<analysis>`, `Reasoning:`).
+- Graph evidence SLO: `100%` graph nodes should include at least one evidence entry.
+
+Current baseline run met all three SLO checks above in primary-path mode.
 
 ## Build & verify a local package
 

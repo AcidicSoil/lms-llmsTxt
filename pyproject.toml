@@ -5,23 +5,24 @@ description = "LM Studio-powered llms.txt generator based on DSPy tutorials."
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "dspy-ai",
+    "dspy-ai==3.2.0",
+    "litellm",
     "python-dotenv",
-    "requests",
-    "lmstudio",
-    "llm-ctx",
-    "llms-txt",
-    "mcp",
-    "pydantic",
-    "pydantic-settings"
+    "requests==2.32.5",
+    "lmstudio==1.5.0",
+    "llm-ctx==0.0.1",
+    "llms-txt==0.0.4",
+    "mcp==1.25.0",
+    "pydantic==2.12.4",
+    "pydantic-settings==2.12.0"
 ]
 
 [project.optional-dependencies]
 dev = [
-    "pytest",
+    "pytest==9.0.1",
 ]
 test = [
-    "pytest>=8",
+    "pytest==9.0.1",
 ]
 
 [project.scripts]

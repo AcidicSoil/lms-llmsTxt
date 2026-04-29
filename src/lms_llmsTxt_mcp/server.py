@@ -24,6 +24,13 @@ from .artifacts import (
 )
 from .security import validate_output_dir
 from .hashing import read_text_preview
+from .graph_resources import (
+    graph_resource_uri,
+    read_graph_artifact_chunk,
+    read_repo_node_chunk,
+    repo_graph_node_uri,
+    scan_graph_artifacts,
+)
 from lms_llmsTxt.github import owner_repo_from_url
 
 # Configure logging to stderr to avoid interfering with JSON-RPC on stdout
@@ -68,6 +75,11 @@ def _start_run(run_id: str | None) -> str:
 def _artifact_path_from_url(output_dir: Path, repo_url: str, artifact_name: str) -> Path:
     owner, repo = owner_repo_from_url(repo_url)
     base_name = repo.lower().replace(" ", "-")
+    repo_root = output_dir / owner / repo
+    if artifact_name == "repo.graph.json":
+        return repo_root / "graph" / "repo.graph.json"
+    if artifact_name == "repo.force.json":
+        return repo_root / "graph" / "repo.force.json"
     suffix_map = {
         "llms.txt": "llms.txt",
         "llms-full.txt": "llms-full.txt",
@@ -75,7 +87,7 @@ def _artifact_path_from_url(output_dir: Path, repo_url: str, artifact_name: str)
         "llms.json": "llms.json",
     }
     suffix = suffix_map.get(artifact_name, artifact_name)
-    return output_dir / owner / repo / f"{base_name}-{suffix}"
+    return repo_root / f"{base_name}-{suffix}"
 
 
 def _read_file_chunk(path: Path, offset: int, limit: int) -> str:
@@ -244,6 +256,39 @@ def list_all_artifacts() -> str:
         ))
     return json.dumps([r.model_dump(mode="json") for r in results], indent=2)
 
+
+@mcp.tool(
+    name="lmstxt_list_graph_artifacts",
+    annotations={
+        "title": "List Graph Artifacts",
+        "readOnlyHint": True,
+        "idempotentHint": True,
+    },
+)
+def list_graph_artifacts() -> str:
+    paths = scan_graph_artifacts()
+    root = settings.LLMSTXT_MCP_ALLOWED_ROOT
+    results = []
+    for p in paths:
+        full_path = root / p
+        stats = full_path.stat()
+        results.append(
+            ArtifactMetadata(
+                filename=str(p),
+                size_bytes=stats.st_size,
+                last_modified=datetime.fromtimestamp(stats.st_mtime, tz=timezone.utc),
+                uri=(
+                    repo_graph_node_uri(
+                        str(p.parts[0]) + "--" + str(p.parts[1]),
+                        p.stem,
+                    )
+                    if len(p.parts) >= 5 and p.parts[-2] == "nodes"
+                    else graph_resource_uri(str(p))
+                ),
+            )
+        )
+    return json.dumps([r.model_dump(mode="json") for r in results], indent=2)
+
 @mcp.tool(
     name="lmstxt_read_artifact",
     annotations={
@@ -300,6 +345,54 @@ def read_artifact(
     )
     return res.model_dump_json(indent=2)
 
+
+@mcp.tool(
+    name="lmstxt_read_graph_artifact",
+    annotations={
+        "title": "Read Graph Artifact",
+        "readOnlyHint": True,
+        "idempotentHint": True,
+    },
+)
+def read_graph_artifact(
+    filename: str = Field(..., description="Relative graph artifact path under artifacts root"),
+    offset: int = Field(0, description="Byte offset", ge=0),
+    limit: int = Field(10000, description="Maximum characters", ge=1, le=100000),
+) -> str:
+    effective_limit = min(limit, settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS)
+    content = read_graph_artifact_chunk(filename, offset, effective_limit)
+    result = ReadArtifactResult(
+        content=content,
+        truncated=(len(content) == effective_limit),
+        total_chars=len(content),
+    )
+    return result.model_dump_json(indent=2)
+
+
+@mcp.tool(
+    name="lmstxt_read_repo_graph_node",
+    annotations={
+        "title": "Read Repo Graph Node",
+        "readOnlyHint": True,
+        "idempotentHint": True,
+    },
+)
+def read_repo_graph_node(
+    repo_id: str = Field(..., description="Repository id (for example owner--repo)"),
+    node_id: str = Field(..., description="Graph node id without extension"),
+    offset: int = Field(0, description="Byte offset", ge=0),
+    limit: int = Field(10000, description="Maximum characters", ge=1, le=100000),
+) -> str:
+    effective_limit = min(limit, settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS)
+    content = read_repo_node_chunk(repo_id=repo_id, node_id=node_id, offset=offset, limit=effective_limit)
+    result = ReadArtifactResult(
+        content=content,
+        truncated=(len(content) == effective_limit),
+        total_chars=len(content),
+    )
+    return result.model_dump_json(indent=2)
+
+
 @mcp.resource("lmstxt://runs/{run_id}/{artifact_name}")
 def get_run_artifact(run_id: str, artifact_name: str) -> str:
     """
@@ -339,6 +432,31 @@ def get_persistent_artifact(filename: str) -> str:
     if truncated:
         content += "\n... (content truncated)"
         
+    return content
+
+
+@mcp.resource("lmstxt://graphs/{filename}")
+def get_graph_artifact(filename: str) -> str:
+    content = read_graph_artifact_chunk(
+        filename,
+        0,
+        settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS,
+    )
+    if len(content) >= settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS:
+        content += "\n... (content truncated)"
+    return content
+
+
+@mcp.resource("repo://{repo_id}/graph/nodes/{node_id}")
+def get_repo_graph_node(repo_id: str, node_id: str) -> str:
+    content = read_repo_node_chunk(
+        repo_id=repo_id,
+        node_id=node_id,
+        offset=0,
+        limit=settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS,
+    )
+    if len(content) >= settings.LLMSTXT_MCP_RESOURCE_MAX_CHARS:
+        content += "\n... (content truncated)"
     return content
 
 def main():

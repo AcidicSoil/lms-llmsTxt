@@ -13,6 +13,9 @@ except ImportError:
         class ChainOfThought:
             def __init__(self, signature): pass
             def __call__(self, **kwargs): return MockDSPy.Prediction()
+        class Predict:
+            def __init__(self, signature): pass
+            def __call__(self, **kwargs): return MockDSPy.Prediction()
         class Prediction:
             def __init__(self, **kwargs):
                 for k, v in kwargs.items():
@@ -81,19 +84,53 @@ class GenerateUsageExamples(dspy.Signature):
     )
 
 
-class GenerateLLMsTxt(dspy.Signature):
-    """Generate a complete llms.txt (markdown index) for the project."""
+class SynthesizeLLMsSectionNotes(dspy.Signature):
+    """Synthesize concise section-level guidance while preserving deterministic rendering."""
 
+    project_name: str = dspy.InputField()
+    project_purpose: str = dspy.InputField()
+    section_plan: List[str] = dspy.InputField(
+        desc="Final section names selected for the llms.txt document"
+    )
+    candidate_entries: List[str] = dspy.InputField(
+        desc="Candidate entries as 'Section | Title | URL | Note' strings"
+    )
+
+    section_notes: List[str] = dspy.OutputField(
+        desc="Notes as 'Section: concise guidance' for sections that need synthesized context"
+    )
+
+
+class PlanLLMsSections(dspy.Signature):
+    """Choose the final semantic section order and remember bullets for llms.txt."""
+
+    project_name: str = dspy.InputField()
     project_purpose: str = dspy.InputField()
     key_concepts: List[str] = dspy.InputField()
-    architecture_overview: str = dspy.InputField()
     important_directories: List[str] = dspy.InputField()
     entry_points: List[str] = dspy.InputField()
     development_info: str = dspy.InputField()
-    usage_examples: str = dspy.InputField(
-        desc="Common usage patterns and examples (markdown)"
+    available_sections: List[str] = dspy.InputField(
+        desc="Available deterministic section names in the current candidate document"
     )
 
-    llms_txt_content: str = dspy.OutputField(
-        desc="Complete llms.txt content following the standard format"
+    included_sections: List[str] = dspy.OutputField(
+        desc="Subset of available section names to keep in the final document"
     )
+    preferred_section_order: List[str] = dspy.OutputField(
+        desc="Preferred final section ordering using only available section names"
+    )
+    remember_bullets: List[str] = dspy.OutputField(
+        desc="Short remember bullets for the document header"
+    )
+
+
+class AnalyzeRepositoryFromDigest(dspy.Signature):
+    """Generate project summary from a reduced repository digest."""
+
+    digest_summary: str = dspy.InputField(desc="Compact digest of repository structure")
+    repo_url: str = dspy.InputField(desc="GitHub repository URL")
+
+    project_purpose: str = dspy.OutputField(desc="Purpose summary in 1-3 sentences")
+    key_concepts: List[str] = dspy.OutputField(desc="Key concepts as list")
+    architecture_overview: str = dspy.OutputField(desc="Architecture overview paragraph")
