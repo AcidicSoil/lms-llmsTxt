@@ -2,7 +2,7 @@
 ticket_id: "tkt_lmsllmstxt_benchmark_eval"
 title: "Benchmark and evaluation loop can measure planner quality against repository outcomes"
 agent: "codex"
-done: false
+done: true
 goal: "A benchmark and evaluation workflow exists to compare llms.txt quality before optimizer work is introduced."
 ---
 
@@ -28,9 +28,14 @@ goal: "A benchmark and evaluation workflow exists to compare llms.txt quality be
 - Evidence:
   - Existing graph artifact emission
   - Proposed metrics listed in the handoff
+  - `src/lms_llmsTxt/evaluation.py` defines deterministic benchmark repository expectations, metrics, graph coverage/omission checks, and baseline/candidate comparison outputs.
+  - `tests/test_evaluation.py` verifies metric scoring, graph-based omission surfacing, redundancy penalties, large-repository resilience, and comparable baseline/candidate score deltas.
+  - `uv run --extra test pytest -q tests/test_evaluation.py --tb=short` reported `3 passed, 12 warnings`.
+  - `uv run --extra test pytest -q tests/test_evaluation.py tests/test_graph_builder.py tests/test_analyzer.py tests/test_repo_digest.py --tb=short` reported `17 passed, 12 warnings`.
+  - `uv run --extra test pytest -q --tb=short` reported `84 passed, 1 skipped, 18 warnings`.
 - Dependencies:
   - TICKET-130-selective-evidence-planning-for-large-repos.md
   - TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
 - Unknowns:
-  - Exact benchmark repository list is not provided.
-  - Exact optimizer choice and tuning procedure are not provided.
+  - Exact external benchmark repository list is not provided; current benchmark cases are deterministic in-repo fixtures.
+  - Exact optimizer choice and tuning procedure are not provided and remain gated to TICKET-190+ work.
