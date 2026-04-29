@@ -2,7 +2,7 @@
 ticket_id: "tkt_lmsllmstxt_rlm_eval"
 title: "Optional RLM-style exploration path is evaluated for large-repository quality"
 agent: "codex"
-done: false
+done: true
 goal: "The team has a bounded evaluation of whether RLM-style recursive exploration improves llms.txt quality on large repositories."
 ---
 
@@ -28,10 +28,18 @@ goal: "The team has a bounded evaluation of whether RLM-style recursive explorat
   - Keep RLM as an optional advanced path rather than the only generation path.
 - Evidence:
   - DSPy RLM discussion in the handoff
+  - `src/lms_llmsTxt/rlm_evaluation.py` defines optional deterministic RLM-style exploration scaffolding without adding dependencies or replacing fallback/deterministic paths.
+  - `ExplorationLimits` enforces non-negative depth and positive file/character budgets.
+  - `apply_exploration_limits(...)` enforces hard depth, file-count, and total-character limits and returns selected/skipped paths plus estimated token cost.
+  - `evaluate_optional_rlm_path(...)` reuses the TICKET-170 benchmark comparison model and records quality, latency, and token deltas against the selective-planning baseline.
+  - `tests/test_rlm_evaluation.py` verifies budget enforcement, digest-derived candidate priority/deduplication, side-by-side quality/cost comparison, and invalid limit rejection.
+  - `uv run --extra test pytest -q tests/test_rlm_evaluation.py --tb=short` reported `6 passed, 12 warnings`.
+  - `uv run --extra test pytest -q tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py --tb=short` reported `22 passed, 12 warnings`.
+  - `uv run --extra test pytest -q --tb=short` reported `90 passed, 1 skipped, 18 warnings`.
 - Dependencies:
   - TICKET-130-selective-evidence-planning-for-large-repos.md
   - TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md
   - TICKET-170-benchmark-and-evaluation-loop-for-llmstxt-quality.md
 - Unknowns:
-  - Exact repository set for RLM evaluation is not provided.
-  - Exact RLM integration surface is not provided.
+  - Exact external repository set for future live RLM evaluation is not provided; current evaluation is deterministic and fixture-driven.
+  - Exact model-backed RLM integration surface remains optional and should not be adopted without further evidence.
