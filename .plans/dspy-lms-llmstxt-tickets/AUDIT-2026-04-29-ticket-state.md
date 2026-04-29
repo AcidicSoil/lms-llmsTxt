@@ -11,6 +11,8 @@ Current source-of-truth audit for DSPy `lms-llmsTxt` ticket state, dependency or
 - `uv run --extra test pytest -q tests/test_evaluation.py tests/test_graph_builder.py tests/test_analyzer.py tests/test_repo_digest.py --tb=short` reported `17 passed, 12 warnings` after the TICKET-170 evaluation harness slice.
 - `uv run --extra test pytest -q tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py --tb=short` reported `22 passed, 12 warnings` after the TICKET-190 optional RLM-style evaluation scaffold slice.
 - `uv run --extra test pytest -q --tb=short` reported `90 passed, 1 skipped, 18 warnings` after TICKET-190.
+- `uv run --extra test pytest -q tests/test_rollout_compatibility.py tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py tests/test_graph_builder.py tests/test_cli_ui.py tests/test_session_memory.py --tb=short` reported `36 passed, 12 warnings` after the TICKET-210 compatibility review slice.
+- `uv run --extra test pytest -q --tb=short` reported `94 passed, 1 skipped, 18 warnings` after TICKET-210.
 - User reported the final live LM Studio env-override smoke passed with no issues.
 - The skipped test is the LM Studio/GitHub credential integration path, which depends on local external services and credentials.
 
@@ -24,7 +26,7 @@ Current source-of-truth audit for DSPy `lms-llmsTxt` ticket state, dependency or
 | `TICKET-150-dspy-planned-llmstxt-synthesis-with-deterministic-rendering.md` | `done: true` | Depends on 100, 110, 130 | Finished. DSPy section planning and section-content synthesis feed the structured document while deterministic markdown rendering and fallback separation are preserved. |
 | `TICKET-170-benchmark-and-evaluation-loop-for-llmstxt-quality.md` | `done: true` | Depends on 130 and 150 | Finished. Deterministic benchmark/evaluation helpers, metrics, graph coverage/omission checks, and baseline/candidate comparison outputs are implemented and tested. |
 | `TICKET-190-evaluate-optional-rlm-exploration-path.md` | `done: true` | Depends on 130, 150, 170 | Finished. Optional RLM-style exploration can now be evaluated against the selective-planning baseline with hard depth/file/character limits and comparable quality, latency, and token-cost outputs. |
-| `TICKET-210-review-refactor-compatibility-and-rollout-decision.md` | `done: false` | Depends on all prior tickets | Active next dependency-ready ticket. All implementation/evaluation tickets are complete; final compatibility and rollout review remains. |
+| `TICKET-210-review-refactor-compatibility-and-rollout-decision.md` | `done: true` | Depends on all prior tickets | Finished. Compatibility review and rollout decision record exist; technical proceed is supported, while external rollout remains gated on final human owner/venue approval. |
 
 ## Evidence inspected
 
@@ -53,28 +55,29 @@ Current source-of-truth audit for DSPy `lms-llmsTxt` ticket state, dependency or
 - TICKET-150 was completed with DSPy section-content synthesis feeding deterministic markdown rendering.
 - TICKET-170 was completed with deterministic benchmark/evaluation helpers, graph-based coverage and omission checks, and baseline/candidate comparison outputs without dependency changes or optimizer work.
 - TICKET-190 was completed with optional deterministic RLM-style exploration evaluation scaffolding, hard depth/file/character budget enforcement, and quality/latency/token-cost comparison outputs.
+- TICKET-210 was completed with a compatibility review record, focused compatibility tests, and a rollout decision of technical proceed with external rollout gated pending owner/venue approval.
 
 ## Dependency-ready next slice
 
-The next dependency-ready ticket is `TICKET-210-review-refactor-compatibility-and-rollout-decision.md`.
+All tracked DSPy `llms.txt` refactor tickets are now complete: TICKET-100, TICKET-110, TICKET-130, TICKET-150, TICKET-170, TICKET-190, and TICKET-210.
 
 Recommended next pass:
 
-1. Inspect TICKET-210 acceptance criteria and the cumulative TICKET-100 through TICKET-190 changes.
-2. Review compatibility, artifact contracts, fallback behavior, CLI behavior, dependency posture, and rollout decision evidence.
-3. Avoid dependency changes unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
-4. Run focused compatibility checks first, then the full suite.
-5. Mark TICKET-210 done only if fresh evidence supports every acceptance criterion.
+1. Review the working tree and decide whether to commit the completed ticket series.
+2. Obtain explicit final human owner/venue approval before any external/product rollout.
+3. If rollout proceeds, use `docs/rollout-decision-2026-04-29.md` as the compatibility evidence record.
+4. Continue to avoid dependency changes unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
 
-Suggested initial verification commands:
+Suggested final verification commands before commit or rollout:
 
 ```bash
-uv run --extra test pytest -q tests/test_analyzer.py tests/test_evaluation.py tests/test_rlm_evaluation.py tests/test_repo_digest.py --tb=short
+uv run --extra test pytest -q tests/test_rollout_compatibility.py tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py tests/test_graph_builder.py tests/test_cli_ui.py tests/test_session_memory.py --tb=short
 uv run --extra test pytest -q --tb=short
 ```
 
 ## Do not do yet
 
+- Do not perform external/product rollout until a final human owner and approval venue are identified.
 - Do not change dependency versions unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
 - Do not change dependency versions unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
 - Do not rely on secrets in chat; keep GitHub token setup local.

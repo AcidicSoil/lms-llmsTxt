@@ -2,7 +2,7 @@
 ticket_id: "tkt_lmsllmstxt_user_review"
 title: "Refactor compatibility and rollout decision are reviewed against the preserved product surface"
 agent: "user"
-done: false
+done: true
 goal: "A human review confirms whether the targeted DSPy-native refactor preserves required contracts and whether rollout should proceed."
 ---
 
@@ -26,6 +26,14 @@ goal: "A human review confirms whether the targeted DSPy-native refactor preserv
   - Product-surface compatibility must be checked before rollout.
 - Evidence:
   - Outputs from prior tickets
+  - `docs/rollout-decision-2026-04-29.md` records the compatibility review across CLI flags, artifact contract fields, graph outputs, fallback separation, MCP contract, session memory, LM Studio boundary, dependency posture, and evaluation outputs.
+  - `tests/test_rollout_compatibility.py` verifies preserved `GenerationArtifacts` fields, existing CLI flags, no RLM rollout flag, fallback schema/markdown separation, and optional RLM scaffold isolation from CLI/fallback contracts.
+  - `uv run --extra test pytest -q tests/test_rollout_compatibility.py --tb=short` reported `4 passed, 12 warnings`.
+  - `uv run --extra test pytest -q tests/test_rollout_compatibility.py tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py tests/test_graph_builder.py tests/test_cli_ui.py tests/test_session_memory.py --tb=short` reported `36 passed, 12 warnings`.
+  - `uv run --extra test pytest -q --tb=short` reported `94 passed, 1 skipped, 18 warnings`.
+- Rollout decision:
+  - Technical compatibility evidence supports proceeding with the refactor as an internal compatible implementation state.
+  - External/product rollout remains gated until a final human rollout owner and approval venue are identified.
 - Dependencies:
   - TICKET-100-repository-analyzer-staged-pipeline.md
   - TICKET-110-pin-and-audit-dspy-litellm-upgrade-path.md
