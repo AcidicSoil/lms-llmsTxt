@@ -11,11 +11,9 @@ def test_analyzer_integration():
     """
     Test the DSPy analyzer against a real LM Studio instance.
     """
-    config = AppConfig(
-        lm_model="qwen_qwen3-vl-4b-instruct",
-        lm_api_base="http://localhost:1234/v1",
-        output_dir=Path("artifacts"),
-    )
+    config = AppConfig(output_dir=Path("artifacts"))
+    if not config.lm_model:
+        pytest.skip("Skipping integration test: LMSTUDIO_MODEL not set")
     
     configure_lmstudio_lm(config)
     

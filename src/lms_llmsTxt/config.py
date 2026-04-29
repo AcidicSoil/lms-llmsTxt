@@ -6,11 +6,24 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+
+
+def _refresh_dotenv() -> None:
+    dotenv_path = Path.cwd() / ".env"
+    if dotenv_path.exists():
+        load_dotenv(dotenv_path=dotenv_path, override=False)
+
+
+def _env_value(name: str, default: str | None = None) -> str | None:
+    _refresh_dotenv()
+    value = os.getenv(name)
+    if value is None:
+        return default
+    return value.strip()
 
 
 def _env_flag(name: str, default: bool = False) -> bool:
-    raw = os.getenv(name)
+    raw = _env_value(name)
     if raw is None:
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
@@ -30,49 +43,50 @@ class AppConfig:
         is available.
     """
     lm_model: str | None = field(
-        default_factory=lambda: (os.getenv("LMSTUDIO_MODEL") or "").strip() or None
+        default_factory=lambda: _env_value("LMSTUDIO_MODEL") or None
     )
     lm_api_base: str = field(
-        default_factory=lambda: os.getenv("LMSTUDIO_BASE_URL", "http://localhost:1234/v1")
+        default_factory=lambda: _env_value("LMSTUDIO_BASE_URL", "http://localhost:1234/v1") or "http://localhost:1234/v1"
     )
     lm_api_key: str = field(
-        default_factory=lambda: os.getenv("LMSTUDIO_API_KEY", "lm-studio")
+        default_factory=lambda: _env_value("LMSTUDIO_API_KEY", "lm-studio") or "lm-studio"
     )
     output_dir: Path = field(
-        default_factory=lambda: Path(os.getenv("OUTPUT_DIR", "artifacts"))
+        default_factory=lambda: Path(_env_value("OUTPUT_DIR", "artifacts") or "artifacts")
     )
     github_token: str | None = field(
-        default_factory=lambda: os.getenv("GITHUB_ACCESS_TOKEN")
-        or os.getenv("GH_TOKEN")
+        default_factory=lambda: _env_value("GITHUB_ACCESS_TOKEN")
+        or _env_value("GH_TOKEN")
+        or None
     )
     link_style: str = field(
-        default_factory=lambda: os.getenv("LINK_STYLE", "blob")
+        default_factory=lambda: _env_value("LINK_STYLE", "blob") or "blob"
     )
     enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
     lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
     lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))
     max_context_tokens: int = field(
-        default_factory=lambda: int(os.getenv("MAX_CONTEXT_TOKENS", "32768"))
+        default_factory=lambda: int(_env_value("MAX_CONTEXT_TOKENS", "32768") or "32768")
     )
     max_output_tokens: int = field(
-        default_factory=lambda: int(os.getenv("MAX_OUTPUT_TOKENS", "4096"))
+        default_factory=lambda: int(_env_value("MAX_OUTPUT_TOKENS", "4096") or "4096")
     )
     context_headroom_ratio: float = field(
-        default_factory=lambda: float(os.getenv("CONTEXT_HEADROOM_RATIO", "0.15"))
+        default_factory=lambda: float(_env_value("CONTEXT_HEADROOM_RATIO", "0.15") or "0.15")
     )
     max_file_tree_lines: int = field(
-        default_factory=lambda: int(os.getenv("MAX_FILE_TREE_LINES", "1200"))
+        default_factory=lambda: int(_env_value("MAX_FILE_TREE_LINES", "1200") or "1200")
     )
     max_readme_chars: int = field(
-        default_factory=lambda: int(os.getenv("MAX_README_CHARS", "24000"))
+        default_factory=lambda: int(_env_value("MAX_README_CHARS", "24000") or "24000")
     )
     max_package_chars: int = field(
-        default_factory=lambda: int(os.getenv("MAX_PACKAGE_CHARS", "18000"))
+        default_factory=lambda: int(_env_value("MAX_PACKAGE_CHARS", "18000") or "18000")
     )
     retry_reduction_steps: tuple[float, ...] = field(
         default_factory=lambda: tuple(
             float(part.strip())
-            for part in os.getenv("RETRY_REDUCTION_STEPS", "0.70,0.50").split(",")
+            for part in (_env_value("RETRY_REDUCTION_STEPS", "0.70,0.50") or "0.70,0.50").split(",")
             if part.strip()
         )
     )

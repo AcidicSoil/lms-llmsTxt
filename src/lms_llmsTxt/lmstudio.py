@@ -461,9 +461,10 @@ def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
     """
 
     _ensure_lmstudio_ready(config)
+    target_model = (config.lm_model or "").strip()
 
     lm = dspy.LM(
-        f"openai/{config.lm_model}",
+        f"openai/{target_model}",
         api_base=config.lm_api_base,
         api_key=config.lm_api_key,
         cache=cache,

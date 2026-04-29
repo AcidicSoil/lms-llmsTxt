@@ -52,15 +52,11 @@ def test_fetch_models_prefers_v1(monkeypatch):
     assert calls[0].endswith("/v1/models")
 
 
-def test_ensure_ready_auto_load(monkeypatch):
-    sequence = [
-        _FakeResponse(payload={"data": []}),
-        _FakeResponse(payload={"data": [{"id": "target"}]}),
-    ]
+def test_ensure_ready_does_not_auto_load_missing_model(monkeypatch):
     posts = []
 
     def fake_get(url, headers=None, timeout=None):
-        return sequence.pop(0)
+        return _FakeResponse(payload={"data": [{"id": "available-model"}]})
 
     def fake_post(url, headers=None, json=None, timeout=None):
         posts.append((url, json))
@@ -76,25 +72,51 @@ def test_ensure_ready_auto_load(monkeypatch):
         output_dir=Path("artifacts"),
     )
 
-    lmstudio._ensure_lmstudio_ready(config)
+    with pytest.raises(LMStudioConnectivityError, match="Download and load"):
+        lmstudio._ensure_lmstudio_ready(config)
 
-    assert posts  # auto-load attempted
+    assert posts == []
+
+
+def test_ensure_ready_requires_configured_model(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        raise AssertionError("LM Studio should not be queried before model config is validated")
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+
+    config = AppConfig(
+        lm_model=None,
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    with pytest.raises(LMStudioConnectivityError, match="LMSTUDIO_MODEL"):
+        lmstudio._ensure_lmstudio_ready(config)
+
+
+def test_app_config_reads_lmstudio_model_from_environment(monkeypatch):
+    monkeypatch.setenv("LMSTUDIO_MODEL", "custom-model-from-env")
+
+    config = AppConfig(output_dir=Path("artifacts"))
+
+    assert config.lm_model == "custom-model-from-env"
+
+
+def test_app_config_does_not_fall_back_to_hardcoded_model(tmp_path, monkeypatch):
+    monkeypatch.delenv("LMSTUDIO_MODEL", raising=False)
+    monkeypatch.chdir(tmp_path)
+
+    config = AppConfig(output_dir=Path("artifacts"))
+
+    assert config.lm_model is None
 
 
 def test_ensure_ready_failure(monkeypatch):
     def fake_get(url, headers=None, timeout=None):
         return _FakeResponse(payload={"data": []})
 
-    def fake_post(url, headers=None, json=None, timeout=None):
-        return _FakeResponse(status_code=404, text="missing")
-
     monkeypatch.setattr(lmstudio.requests, "get", fake_get)
-    monkeypatch.setattr(lmstudio.requests, "post", fake_post)
-    monkeypatch.setattr(
-        lmstudio,
-        "_load_model_cli",
-        lambda model: False,
-    )
 
     config = AppConfig(
         lm_model="missing-model",
@@ -103,7 +125,7 @@ def test_ensure_ready_failure(monkeypatch):
         output_dir=Path("artifacts"),
     )
 
-    with pytest.raises(LMStudioConnectivityError):
+    with pytest.raises(LMStudioConnectivityError, match="missing-model"):
         lmstudio._ensure_lmstudio_ready(config)
 
 

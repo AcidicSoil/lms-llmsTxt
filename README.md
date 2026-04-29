@@ -71,7 +71,7 @@ The server must expose an OpenAI-compatible endpoint, commonly `http://localhost
 
 ### Ensure the target model is downloaded
 
-Open LM Studio, download the model (for example `qwen/qwen3-4b-2507`), and confirm it appears in the **Server** tab.
+Open LM Studio, download the model you want to use, and confirm its exact identifier appears in the **Server** tab. Set that identifier with `LMSTUDIO_MODEL` in `.env` or pass it with `--model`.
 
 ## Quick start
 
@@ -79,7 +79,7 @@ Run the CLI against any GitHub repository:
 
 ```bash
 lmstxt https://github.com/owner/repo \
-  --model qwen/qwen3-4b-2507 \
+  --model "$LMSTUDIO_MODEL" \
   --api-base http://localhost:1234/v1 \
   --stamp
 ```
@@ -139,7 +139,7 @@ If you run the MCP server, the same env vars must be present in the process envi
 
 | Variable | Description |
 |----------|-------------|
-| `LMSTUDIO_MODEL` | Default LM Studio model identifier |
+| `LMSTUDIO_MODEL` | Required LM Studio model identifier unless `--model` is passed |
 | `LMSTUDIO_BASE_URL` | Base URL such as `http://localhost:1234/v1` |
 | `LMSTUDIO_API_KEY` | API key for secured LM Studio deployments |
 | `OUTPUT_DIR` | Custom root directory for artifacts |
