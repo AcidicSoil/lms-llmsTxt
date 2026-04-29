@@ -21,6 +21,7 @@ from .signatures import (
     AnalyzeRepositoryFromDigest,
     GenerateUsageExamples,
     PlanLLMsSections,
+    SynthesizeLLMsSectionNotes,
 )
 
 logger = logging.getLogger(__name__)
@@ -331,6 +332,7 @@ class RepositoryAnalyzer(dspy.Module):
         self.analyze_structure = predictor(AnalyzeCodeStructure)
         self.generate_examples = predictor(GenerateUsageExamples)
         self.plan_sections = predictor(PlanLLMsSections)
+        self.synthesize_section_notes = predictor(SynthesizeLLMsSectionNotes)
 
     def _resolve_project_name(self, repo_url: str) -> str:
         try:
@@ -579,6 +581,7 @@ class RepositoryAnalyzer(dspy.Module):
             "filtered_sections": filtered_sections,
             "final_sections": final_sections,
         }
+        self._synthesize_section_content(project_name, project_purpose, document, trace)
         trace.section_plan = [
             {
                 "name": section.name,
@@ -589,6 +592,57 @@ class RepositoryAnalyzer(dspy.Module):
             for section in document.sections
         ]
         return document
+
+    def _synthesize_section_content(
+        self,
+        project_name: str,
+        project_purpose: str,
+        document: LLMsDocument,
+        trace: AnalyzerTrace,
+    ) -> None:
+        """Ask DSPy for concise section notes and render them deterministically."""
+        if not document.sections:
+            trace.model_section_planning.setdefault("section_content_synthesis", {"used": False, "notes": {}})
+            return
+
+        candidate_entries = [
+            f"{section.name} | {entry.title} | {entry.url} | {entry.note}"
+            for section in document.sections
+            for entry in section.entries[:10]
+        ]
+        synthesis_prediction = self.synthesize_section_notes(
+            project_name=project_name,
+            project_purpose=project_purpose,
+            section_plan=[section.name for section in document.sections],
+            candidate_entries=candidate_entries,
+        )
+        raw_notes = _as_list_of_text(_pred_get(synthesis_prediction, "section_notes"))
+        notes_by_section: dict[str, str] = {}
+        valid_sections = {section.name for section in document.sections}
+        for raw_note in raw_notes:
+            section_name, sep, note = raw_note.partition(":")
+            section_name = section_name.strip()
+            note = note.strip()
+            if sep and section_name in valid_sections and note:
+                notes_by_section[section_name] = note
+
+        for section in document.sections:
+            note = notes_by_section.get(section.name)
+            if not note:
+                continue
+            section.entries.insert(
+                0,
+                LLMsLinkEntry(
+                    title=f"{section.name} Overview",
+                    url="about:section-synthesis",
+                    note=note,
+                ),
+            )
+
+        trace.model_section_planning["section_content_synthesis"] = {
+            "used": bool(notes_by_section),
+            "notes": notes_by_section,
+        }
 
     def _render_document(self, document: LLMsDocument) -> str:
         return render_llms_markdown(document)

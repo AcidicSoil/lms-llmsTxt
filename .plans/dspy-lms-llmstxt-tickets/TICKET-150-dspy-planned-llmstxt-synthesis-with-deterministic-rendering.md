@@ -2,7 +2,7 @@
 ticket_id: "tkt_lmsllmstxt_authoritative_synthesis"
 title: "Final llms.txt content is planned by DSPy while markdown formatting stays deterministic"
 agent: "codex"
-done: false
+done: true
 goal: "The final llms.txt artifact is based on DSPy-owned section planning and content synthesis, while local code remains the deterministic formatter and fallback path stays intact."
 ---
 
@@ -23,6 +23,16 @@ goal: "The final llms.txt artifact is based on DSPy-owned section planning and c
 - Generate `llms.txt` artifacts for representative repositories and verify the section plan drives output content while markdown shape remains stable.
 - Simulate synthesis failure and verify fallback artifact generation still runs.
 - Verify CLI and FastMCP outputs remain compatible with the existing contract.
+
+## Completion evidence
+- `src/lms_llmsTxt/signatures.py` defines `SynthesizeLLMsSectionNotes`, a DSPy signature for model-authored section-level guidance while preserving deterministic markdown rendering.
+- `src/lms_llmsTxt/analyzer.py` wires `SynthesizeLLMsSectionNotes` into `RepositoryAnalyzer` and inserts synthesized section overview entries into the structured `LLMsDocument` before `render_llms_markdown()` serializes output.
+- `GenerateUsageExamples` remains promoted into the structured Usage section, and `GenerateLLMsTxt` remains absent rather than retained as an unused signature.
+- `AnalyzerTrace.model_section_planning["section_content_synthesis"]` records whether synthesized section content was used and which section notes were accepted.
+- Fallback generation remains separate in `pipeline.py`; this slice only changes the successful DSPy analyzer path.
+- `tests/test_analyzer.py::test_repository_analyzer_synthesizes_section_content_while_rendering_deterministically` verifies synthesized section content enters the final deterministic markdown output.
+- `uv run --extra test pytest -q tests/test_analyzer.py --tb=short` reported `7 passed, 1 warning`.
+- `uv run --extra test pytest -q --tb=short` reported `81 passed, 1 skipped, 7 warnings`; the skip is the LM Studio/GitHub credential integration path.
 
 ## Notes
 - Source: "Move final semantic decisions into DSPy, keep markdown formatting deterministic", "GenerateLLMsTxt should either become authoritative or be removed", "GenerateUsageExamples should either feed the artifact or be deleted."

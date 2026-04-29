@@ -84,6 +84,23 @@ class GenerateUsageExamples(dspy.Signature):
     )
 
 
+class SynthesizeLLMsSectionNotes(dspy.Signature):
+    """Synthesize concise section-level guidance while preserving deterministic rendering."""
+
+    project_name: str = dspy.InputField()
+    project_purpose: str = dspy.InputField()
+    section_plan: List[str] = dspy.InputField(
+        desc="Final section names selected for the llms.txt document"
+    )
+    candidate_entries: List[str] = dspy.InputField(
+        desc="Candidate entries as 'Section | Title | URL | Note' strings"
+    )
+
+    section_notes: List[str] = dspy.OutputField(
+        desc="Notes as 'Section: concise guidance' for sections that need synthesized context"
+    )
+
+
 class PlanLLMsSections(dspy.Signature):
     """Choose the final semantic section order and remember bullets for llms.txt."""
 

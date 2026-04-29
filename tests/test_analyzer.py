@@ -4,6 +4,14 @@ from lms_llmsTxt import analyzer
 from lms_llmsTxt.repo_digest import RepoDigest
 
 
+
+def _stub_section_synthesis(monkeypatch, ra, notes=None):
+    monkeypatch.setattr(
+        ra,
+        "synthesize_section_notes",
+        lambda **_: analyzer.dspy.Prediction(section_notes=notes or []),
+    )
+
 def test_build_dynamic_buckets_uses_default_branch_and_filters_dead_links(monkeypatch):
     recorded = []
 
@@ -34,6 +42,7 @@ def test_repository_analyzer_handles_sparse_digest_predictions(monkeypatch):
         pass
 
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    _stub_section_synthesis(monkeypatch, ra)
     monkeypatch.setattr(ra, "analyze_repo_digest", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
     monkeypatch.setattr(ra, "plan_sections", lambda **_: analyzer.dspy.Prediction())
@@ -74,6 +83,7 @@ def test_repository_analyzer_handles_sparse_non_digest_predictions(monkeypatch):
         pass
 
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    _stub_section_synthesis(monkeypatch, ra)
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: Empty())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: Empty())
     monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
@@ -108,6 +118,7 @@ def test_repository_analyzer_promotes_usage_examples_into_structured_document(mo
         development_info = "pytest and uv"
 
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    _stub_section_synthesis(monkeypatch, ra)
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
     monkeypatch.setattr(
@@ -148,6 +159,7 @@ def test_repository_analyzer_uses_model_section_plan_when_available(monkeypatch)
         development_info = "pytest and uv"
 
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    _stub_section_synthesis(monkeypatch, ra)
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
     monkeypatch.setattr(
@@ -196,6 +208,59 @@ def test_repository_analyzer_uses_model_section_plan_when_available(monkeypatch)
     assert "Run `lmstxt <repo-url>`" in result.llms_txt_content
 
 
+def test_repository_analyzer_synthesizes_section_content_while_rendering_deterministically(monkeypatch):
+    class RepoAnalysis:
+        project_purpose = "CLI toolkit for repository summaries."
+        key_concepts = ["CLI", "Artifacts"]
+
+    class StructureAnalysis:
+        important_directories = ["src", "docs"]
+        entry_points = ["src/lms_llmsTxt/cli.py"]
+        development_info = "pytest and uv"
+
+    ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
+    monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
+    monkeypatch.setattr(
+        ra,
+        "generate_examples",
+        lambda **_: analyzer.dspy.Prediction(usage_examples="Run `lmstxt <repo-url>` to generate artifacts."),
+    )
+    monkeypatch.setattr(
+        ra,
+        "plan_sections",
+        lambda **_: analyzer.dspy.Prediction(
+            included_sections=["Docs", "Usage"],
+            preferred_section_order=["Docs", "Usage"],
+        ),
+    )
+    _stub_section_synthesis(
+        monkeypatch,
+        ra,
+        notes=["Docs: Start with the README before exploring source files."],
+    )
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
+
+    result = ra.forward(
+        repo_url="https://github.com/acme/demo",
+        file_tree="README.md\nsrc/lms_llmsTxt/cli.py",
+        readme_content="# Demo\n\nCLI toolkit for repository summaries.",
+        package_files="",
+        default_branch="main",
+    )
+
+    assert result.document.sections[0].name == "Docs"
+    assert result.document.sections[0].entries[0].title == "Docs Overview"
+    assert result.document.sections[0].entries[0].url == "about:section-synthesis"
+    assert "Start with the README before exploring source files" in result.llms_txt_content
+    assert result.trace.model_section_planning["section_content_synthesis"]["used"] is True
+    assert result.trace.section_plan[0]["source"] == "model"
+
+
 def test_repository_analyzer_ignores_invalid_model_section_filter(monkeypatch):
     class RepoAnalysis:
         project_purpose = "CLI toolkit for repository summaries."
@@ -207,6 +272,7 @@ def test_repository_analyzer_ignores_invalid_model_section_filter(monkeypatch):
         development_info = "pytest and uv"
 
     ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    _stub_section_synthesis(monkeypatch, ra)
     monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
     monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
     monkeypatch.setattr(
