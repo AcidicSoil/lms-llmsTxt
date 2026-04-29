@@ -372,6 +372,8 @@ def main(argv: list[str] | None = None) -> int:
         summary += f"\n  - {artifacts.graph_nodes_dir}"
     if artifacts.used_fallback:
         summary += "\n(note) LM call failed; fallback JSON/schema output was used."
+        if artifacts.fallback_reason:
+            summary += f"\n(reason) {artifacts.fallback_reason}"
     if args.ui:
         if not artifacts.graph_json_path:
             parser.error("--ui was requested, but no repo graph artifact was generated.")

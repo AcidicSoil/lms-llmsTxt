@@ -129,7 +129,7 @@ def test_ensure_ready_failure(monkeypatch):
         lmstudio._ensure_lmstudio_ready(config)
 
 
-def test_pipeline_fallback(tmp_path, monkeypatch):
+def test_pipeline_fallback(tmp_path, monkeypatch, caplog):
     repo_url = "https://github.com/example/repo"
     repo_root = tmp_path / "artifacts"
 
@@ -161,7 +161,9 @@ def test_pipeline_fallback(tmp_path, monkeypatch):
 
     artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
 
+    assert "LM generation unavailable; using fallback output. Reason: LM unavailable" in caplog.text
     assert artifacts.used_fallback is True
+    assert artifacts.fallback_reason == "LM unavailable"
     assert Path(artifacts.llms_txt_path).exists()
     assert Path(artifacts.llms_full_path).exists()
     assert Path(artifacts.json_path).exists()

@@ -88,6 +88,7 @@ def run_generation(
 
     fallback_payload = None
     used_fallback = False
+    fallback_reason = None
     project_name = repo.replace("-", " ").replace("_", " ").title()
     analyzer_trace = None
 
@@ -257,6 +258,8 @@ def run_generation(
         LMStudioConnectivityError,
     ) as exc:
         used_fallback = True
+        fallback_reason = str(exc)
+        logger.warning("LM generation unavailable; using fallback output. Reason: %s", exc)
         fallback_payload = fallback_llms_payload(
             repo_name=project_name,
             repo_url=repo_url,
@@ -270,6 +273,7 @@ def run_generation(
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
     except Exception as exc:  # pragma: no cover - defensive fallback
         used_fallback = True
+        fallback_reason = str(exc)
         logger.exception("Unexpected error during DSPy generation: %s", exc)
         logger.warning("Falling back to heuristic llms.txt generation using %s.", LLMS_JSON_SCHEMA["title"])
         fallback_payload = fallback_llms_payload(
@@ -370,4 +374,5 @@ def run_generation(
         graph_nodes_dir=str(graph_nodes_dir) if graph_nodes_dir else None,
         trace_path=str(trace_path) if trace_path else None,
         used_fallback=used_fallback,
+        fallback_reason=fallback_reason,
     )
