@@ -314,3 +314,98 @@ def test_repository_analyzer_ignores_invalid_model_section_filter(monkeypatch):
     assert result.trace.model_section_planning["final_sections"] == ["Tutorials", "Docs", "Usage"]
     assert result.trace.deterministic_section_planning["usage_section_added"] is True
 
+
+
+
+def test_repository_analyzer_falls_back_when_digest_analysis_parse_fails(monkeypatch):
+    ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    monkeypatch.setattr(analyzer, "AdapterParseError", RuntimeError)
+    monkeypatch.setattr(
+        ra,
+        "analyze_repo_digest",
+        lambda **_: (_ for _ in ()).throw(RuntimeError("parse failed")),
+    )
+    monkeypatch.setattr(ra, "generate_examples", lambda **_: analyzer.dspy.Prediction())
+    monkeypatch.setattr(ra, "plan_sections", lambda **_: analyzer.dspy.Prediction())
+    _stub_section_synthesis(monkeypatch, ra)
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
+
+    digest = RepoDigest(
+        topic="PinchTab",
+        architecture_summary="React dashboard with filtering and activity tracking.",
+        primary_language="typescript",
+        subsystems=[{"name": "Dashboard", "paths": ["src/Dashboard.tsx"]}],
+        key_dependencies=["react", "axios"],
+        entry_points=["src/main.tsx"],
+        test_coverage_hint="unknown",
+        digest_id="digest-parse-fallback",
+    )
+
+    result = ra.forward(
+        repo_url="https://github.com/pinchtab/pinchtab",
+        file_tree="src/Dashboard.tsx\nREADME.md",
+        readme_content="# PinchTab\n\nDashboard app.",
+        package_files="package.json",
+        default_branch="main",
+        repo_digest=digest,
+    )
+
+    assert "React dashboard with filtering and activity tracking" in result.llms_txt_content
+    assert result.analysis.project_purpose == "React dashboard with filtering and activity tracking."
+    assert result.analysis.key_concepts == ["Dashboard"]
+    assert result.document.sections[0].name == "Docs"
+
+
+def test_repository_analyzer_keeps_deterministic_document_when_optional_model_steps_parse_fail(monkeypatch):
+    class RepoAnalysis:
+        project_purpose = "CLI toolkit for repository summaries."
+        key_concepts = ["CLI", "Artifacts"]
+
+    class StructureAnalysis:
+        important_directories = ["src"]
+        entry_points = ["src/lms_llmsTxt/cli.py"]
+        development_info = "pytest and uv"
+
+    ra = analyzer.RepositoryAnalyzer(production_mode=True)
+    monkeypatch.setattr(analyzer, "AdapterParseError", RuntimeError)
+    monkeypatch.setattr(ra, "analyze_repo", lambda **_: RepoAnalysis())
+    monkeypatch.setattr(ra, "analyze_structure", lambda **_: StructureAnalysis())
+    monkeypatch.setattr(
+        ra,
+        "generate_examples",
+        lambda **_: (_ for _ in ()).throw(RuntimeError("usage parse failed")),
+    )
+    monkeypatch.setattr(
+        ra,
+        "plan_sections",
+        lambda **_: (_ for _ in ()).throw(RuntimeError("plan parse failed")),
+    )
+    monkeypatch.setattr(
+        ra,
+        "synthesize_section_notes",
+        lambda **_: (_ for _ in ()).throw(RuntimeError("notes parse failed")),
+    )
+    monkeypatch.setattr(
+        analyzer,
+        "build_dynamic_buckets",
+        lambda *args, **kwargs: [("Docs", [("README", "https://example.com/readme", "docs page")])],
+    )
+
+    result = ra.forward(
+        repo_url="https://github.com/acme/demo",
+        file_tree="README.md\nsrc/lms_llmsTxt/cli.py",
+        readme_content="# Demo\n\nCLI toolkit for repository summaries.",
+        package_files="",
+        default_branch="main",
+    )
+
+    assert result.document.project_name == "Demo"
+    assert [section.name for section in result.document.sections] == ["Docs"]
+    assert "README" in result.llms_txt_content
+    assert result.trace.section_plan[0]["source"] == "deterministic"
+    assert result.trace.model_section_planning["section_content_synthesis"]["used"] is False
+    assert result.trace.model_section_planning["section_content_synthesis"]["fallback_reason"] == "adapter-parse-error"

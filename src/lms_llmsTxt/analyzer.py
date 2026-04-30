@@ -13,6 +13,11 @@ try:
 except ImportError:
     from .signatures import dspy
 
+try:
+    from dspy.utils.exceptions import AdapterParseError
+except Exception:  # pragma: no cover - only used when real DSPy is installed
+    AdapterParseError = ()  # type: ignore[assignment]
+
 from .models import AnalyzerTrace, LLMsDocument, LLMsLinkEntry, LLMsSection
 from .repo_digest import RepoDigest
 from .signatures import (
@@ -321,6 +326,14 @@ def _readme_lead_sentence(readme_content: str) -> str:
     return (sentence + ".") if sentence and not sentence.endswith(".") else sentence
 
 
+def _empty_prediction(**kwargs: Any) -> Any:
+    return dspy.Prediction(**kwargs)
+
+
+def _is_adapter_parse_error(exc: Exception) -> bool:
+    return bool(AdapterParseError) and isinstance(exc, AdapterParseError)
+
+
 class RepositoryAnalyzer(dspy.Module):
     """DSPy module that synthesizes an llms.txt summary for a GitHub repository."""
 
@@ -356,10 +369,28 @@ class RepositoryAnalyzer(dspy.Module):
                 f"Entry points: {', '.join(repo_digest.entry_points[:10])}\n"
                 f"Dependencies: {', '.join(repo_digest.key_dependencies[:20])}\n"
             )
-            repo_analysis = self.analyze_repo_digest(
-                digest_summary=digest_summary,
-                repo_url=effective_repo_url,
-            )
+            try:
+                repo_analysis = self.analyze_repo_digest(
+                    digest_summary=digest_summary,
+                    repo_url=effective_repo_url,
+                )
+            except Exception as exc:
+                if not _is_adapter_parse_error(exc):
+                    raise
+                logger.warning(
+                    "DSPy repository digest analysis response was not parseable; using deterministic digest summary. Reason: %s",
+                    exc,
+                )
+                repo_analysis = _empty_prediction(
+                    project_purpose=repo_digest.architecture_summary,
+                    key_concepts=[
+                        sub.get("name", "")
+                        for sub in repo_digest.subsystems[:6]
+                        if sub.get("name")
+                    ]
+                    or repo_digest.key_dependencies[:6],
+                    architecture_overview=repo_digest.architecture_summary,
+                )
             structure_analysis = dspy.Prediction(
                 important_directories=[s.get("name", "") for s in repo_digest.subsystems[:8]],
                 entry_points=repo_digest.entry_points[:10],
@@ -372,15 +403,41 @@ class RepositoryAnalyzer(dspy.Module):
             )
             return repo_analysis, structure_analysis, effective_file_tree
 
-        repo_analysis = self.analyze_repo(
-            repo_url=effective_repo_url,
-            file_tree=file_tree,
-            readme_content=readme_content,
-        )
-        structure_analysis = self.analyze_structure(
-            file_tree=file_tree,
-            package_files=package_files,
-        )
+        try:
+            repo_analysis = self.analyze_repo(
+                repo_url=effective_repo_url,
+                file_tree=file_tree,
+                readme_content=readme_content,
+            )
+        except Exception as exc:
+            if not _is_adapter_parse_error(exc):
+                raise
+            logger.warning(
+                "DSPy repository analysis response was not parseable; using deterministic README summary. Reason: %s",
+                exc,
+            )
+            repo_analysis = _empty_prediction(
+                project_purpose=_readme_lead_sentence(readme_content) or "Project overview unavailable.",
+                key_concepts=[],
+                architecture_overview="",
+            )
+        try:
+            structure_analysis = self.analyze_structure(
+                file_tree=file_tree,
+                package_files=package_files,
+            )
+        except Exception as exc:
+            if not _is_adapter_parse_error(exc):
+                raise
+            logger.warning(
+                "DSPy structure analysis response was not parseable; using deterministic structure fallback. Reason: %s",
+                exc,
+            )
+            structure_analysis = _empty_prediction(
+                important_directories=[],
+                entry_points=[],
+                development_info="Repository structure summary unavailable.",
+            )
         return repo_analysis, structure_analysis, file_tree
 
     def _plan_evidence(
@@ -465,13 +522,22 @@ class RepositoryAnalyzer(dspy.Module):
         key_concepts: list[str],
         entry_points: list[str],
     ) -> LLMsSection | None:
-        usage_prediction = self.generate_examples(
-            repo_info=(
-                f"Purpose: {project_purpose}\n\n"
-                f"Concepts: {', '.join(key_concepts)}\n\n"
-                f"Entry points: {', '.join(entry_points)}\n"
+        try:
+            usage_prediction = self.generate_examples(
+                repo_info=(
+                    f"Purpose: {project_purpose}\n\n"
+                    f"Concepts: {', '.join(key_concepts)}\n\n"
+                    f"Entry points: {', '.join(entry_points)}\n"
+                )
             )
-        )
+        except Exception as exc:
+            if not _is_adapter_parse_error(exc):
+                raise
+            logger.warning(
+                "DSPy usage-example response was not parseable; omitting model usage section. Reason: %s",
+                exc,
+            )
+            return None
         usage_examples = _as_text(_pred_get(usage_prediction, "usage_examples"))
         if not usage_examples:
             return None
@@ -549,15 +615,24 @@ class RepositoryAnalyzer(dspy.Module):
             "usage_section_added": usage_section is not None,
         }
 
-        section_plan_prediction = self.plan_sections(
-            project_name=project_name,
-            project_purpose=project_purpose,
-            key_concepts=key_concepts,
-            important_directories=important_directories,
-            entry_points=entry_points,
-            development_info=development_info,
-            available_sections=deterministic_sections,
-        )
+        try:
+            section_plan_prediction = self.plan_sections(
+                project_name=project_name,
+                project_purpose=project_purpose,
+                key_concepts=key_concepts,
+                important_directories=important_directories,
+                entry_points=entry_points,
+                development_info=development_info,
+                available_sections=deterministic_sections,
+            )
+        except Exception as exc:
+            if not _is_adapter_parse_error(exc):
+                raise
+            logger.warning(
+                "DSPy section-plan response was not parseable; using deterministic section plan. Reason: %s",
+                exc,
+            )
+            section_plan_prediction = _empty_prediction()
         included_sections = _as_list_of_text(_pred_get(section_plan_prediction, "included_sections"))
         preferred_order = _as_list_of_text(_pred_get(section_plan_prediction, "preferred_section_order"))
         planned_bullets = _as_list_of_text(_pred_get(section_plan_prediction, "remember_bullets"))
@@ -610,12 +685,26 @@ class RepositoryAnalyzer(dspy.Module):
             for section in document.sections
             for entry in section.entries[:10]
         ]
-        synthesis_prediction = self.synthesize_section_notes(
-            project_name=project_name,
-            project_purpose=project_purpose,
-            section_plan=[section.name for section in document.sections],
-            candidate_entries=candidate_entries,
-        )
+        try:
+            synthesis_prediction = self.synthesize_section_notes(
+                project_name=project_name,
+                project_purpose=project_purpose,
+                section_plan=[section.name for section in document.sections],
+                candidate_entries=candidate_entries,
+            )
+        except Exception as exc:
+            if not _is_adapter_parse_error(exc):
+                raise
+            logger.warning(
+                "DSPy section-note response was not parseable; skipping model section notes. Reason: %s",
+                exc,
+            )
+            trace.model_section_planning["section_content_synthesis"] = {
+                "used": False,
+                "notes": {},
+                "fallback_reason": "adapter-parse-error",
+            }
+            return
         raw_notes = _as_list_of_text(_pred_get(synthesis_prediction, "section_notes"))
         notes_by_section: dict[str, str] = {}
         valid_sections = {section.name for section in document.sections}

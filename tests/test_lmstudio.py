@@ -226,6 +226,36 @@ def test_ensure_ready_failure(monkeypatch):
         lmstudio._ensure_lmstudio_ready(config)
 
 
+def test_configure_lmstudio_uses_chat_adapter_without_json_fallback(monkeypatch):
+    configured: dict[str, object] = {}
+
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(payload={"data": [{"id": "model"}]})
+
+    class FakeLM:
+        def __init__(self, *args, **kwargs):
+            self.args = args
+            self.kwargs = kwargs
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    monkeypatch.setattr(lmstudio.dspy, "LM", FakeLM)
+    monkeypatch.setattr(lmstudio.dspy, "configure", lambda **kwargs: configured.update(kwargs))
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    lm = lmstudio.configure_lmstudio_lm(config)
+
+    assert configured["lm"] is lm
+    adapter = configured["adapter"]
+    assert isinstance(adapter, lmstudio.dspy.ChatAdapter)
+    assert adapter.use_json_adapter_fallback is False
+
+
 def test_pipeline_fallback(tmp_path, monkeypatch, caplog):
     repo_url = "https://github.com/example/repo"
     repo_root = tmp_path / "artifacts"

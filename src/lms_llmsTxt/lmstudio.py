@@ -536,8 +536,9 @@ def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
     # LM Studio currently accepts structured outputs as JSON Schema or text.
     # DSPy's JSONAdapter may ask LiteLLM for the older `json_object` response
     # format on some signatures, which LM Studio rejects. ChatAdapter is the
-    # current DSPy text-chat adapter path and avoids that incompatible request.
-    dspy.configure(lm=lm, adapter=dspy.ChatAdapter())
+    # current DSPy text-chat adapter path, and disabling its JSONAdapter fallback
+    # prevents retrying through the same incompatible response_format path.
+    dspy.configure(lm=lm, adapter=dspy.ChatAdapter(use_json_adapter_fallback=False))
     return lm
 
 
