@@ -226,7 +226,7 @@ def test_ensure_ready_failure(monkeypatch):
         lmstudio._ensure_lmstudio_ready(config)
 
 
-def test_configure_lmstudio_uses_chat_adapter_without_json_fallback(monkeypatch):
+def test_configure_lmstudio_uses_schema_only_json_adapter(monkeypatch):
     configured: dict[str, object] = {}
 
     def fake_get(url, headers=None, timeout=None):
@@ -252,8 +252,7 @@ def test_configure_lmstudio_uses_chat_adapter_without_json_fallback(monkeypatch)
 
     assert configured["lm"] is lm
     adapter = configured["adapter"]
-    assert isinstance(adapter, lmstudio.dspy.ChatAdapter)
-    assert adapter.use_json_adapter_fallback is False
+    assert isinstance(adapter, lmstudio.LMStudioJSONAdapter)
 
 
 def test_pipeline_fallback(tmp_path, monkeypatch, caplog):
@@ -467,3 +466,22 @@ def test_unload_prefers_sdk(monkeypatch):
 
     assert handle_unloaded.get("done") is True
     assert fake_sdk.hosts == ["localhost:1234"]
+
+
+def test_lmstudio_json_adapter_sets_schema_response_format_without_json_object():
+    class DemoSignature(lmstudio.dspy.Signature):
+        question: str = lmstudio.dspy.InputField()
+        answer: str = lmstudio.dspy.OutputField()
+        bullets: list[str] = lmstudio.dspy.OutputField()
+
+    adapter = lmstudio.LMStudioJSONAdapter()
+    lm_kwargs: dict[str, object] = {}
+
+    adapter._apply_response_schema(lm_kwargs, DemoSignature)
+
+    response_format = lm_kwargs["response_format"]
+    assert response_format != {"type": "json_object"}
+    assert hasattr(response_format, "model_json_schema")
+    schema = response_format.model_json_schema()
+    assert set(schema["properties"]) == {"answer", "bullets"}
+    assert schema["required"] == ["answer", "bullets"]

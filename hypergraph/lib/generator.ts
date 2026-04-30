@@ -4,7 +4,113 @@ import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 import path from "node:path";
 
-const openai = new OpenAI();
+type GraphModelConfig = {
+  provider: string;
+  model: string;
+  baseURL?: string;
+  apiKey?: string;
+  responseFormat: "json_object" | "json_schema" | "text";
+};
+
+function graphModelConfig(): GraphModelConfig {
+  const baseURL =
+    process.env.HYPERGRAPH_OPENAI_BASE_URL ||
+    process.env.OPENAI_BASE_URL ||
+    process.env.LMSTUDIO_BASE_URL ||
+    undefined;
+  const model =
+    process.env.HYPERGRAPH_OPENAI_MODEL ||
+    process.env.OPENAI_MODEL ||
+    process.env.LMSTUDIO_MODEL ||
+    "gpt-4o";
+  const apiKey =
+    process.env.HYPERGRAPH_OPENAI_API_KEY ||
+    process.env.OPENAI_API_KEY ||
+    process.env.LMSTUDIO_API_KEY ||
+    (baseURL ? "lm-studio" : undefined);
+  const responseFormat = (
+    process.env.HYPERGRAPH_OPENAI_RESPONSE_FORMAT ||
+    (baseURL ? "json_schema" : "json_object")
+  ).toLowerCase();
+
+  return {
+    provider: baseURL ? "openai-compatible" : "openai",
+    model,
+    baseURL,
+    apiKey,
+    responseFormat:
+      responseFormat === "json_schema" || responseFormat === "text"
+        ? responseFormat
+        : "json_object",
+  };
+}
+
+function openAIClient(config: GraphModelConfig): OpenAI {
+  return new OpenAI({
+    apiKey: config.apiKey,
+    baseURL: config.baseURL,
+  });
+}
+
+function graphResponseFormat(config: GraphModelConfig) {
+  if (config.responseFormat === "text") {
+    return undefined;
+  }
+  if (config.responseFormat === "json_schema") {
+    return {
+      type: "json_schema" as const,
+      json_schema: {
+        name: "hypergraph_skill_graph",
+        strict: true,
+        schema: {
+          type: "object",
+          additionalProperties: false,
+          required: ["topic", "nodes"],
+          properties: {
+            topic: { type: "string" },
+            nodes: {
+              type: "array",
+              minItems: 3,
+              items: {
+                type: "object",
+                additionalProperties: false,
+                required: [
+                  "id",
+                  "label",
+                  "type",
+                  "description",
+                  "content",
+                  "links",
+                ],
+                properties: {
+                  id: { type: "string" },
+                  label: { type: "string" },
+                  type: {
+                    type: "string",
+                    enum: ["moc", "concept", "pattern", "gotcha"],
+                  },
+                  description: { type: "string" },
+                  content: { type: "string" },
+                  links: {
+                    type: "array",
+                    items: { type: "string" },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }
+  return { type: "json_object" as const };
+}
+
+function parseGraphJson(raw: string): SkillGraph {
+  const trimmed = raw.trim();
+  const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/i);
+  return JSON.parse(fenced ? fenced[1] : trimmed) as SkillGraph;
+}
 
 export interface GenerationTraceContext {
   requestId: string;
@@ -85,10 +191,11 @@ export async function generateGraph(
     .join("\n\n---\n\n");
 
   const startedAt = Date.now();
-  const model = "gpt-4o";
-  const response = await openai.chat.completions.create({
-    model,
-    response_format: { type: "json_object" },
+  const modelConfig = graphModelConfig();
+  const responseFormat = graphResponseFormat(modelConfig);
+  const response = await openAIClient(modelConfig).chat.completions.create({
+    model: modelConfig.model,
+    ...(responseFormat ? { response_format: responseFormat } : {}),
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
       {
@@ -101,9 +208,9 @@ export async function generateGraph(
   });
 
   const raw = response.choices[0].message.content;
-  if (!raw) throw new Error("Empty response from OpenAI");
+  if (!raw) throw new Error("Empty response from graph model");
 
-  const parsed = JSON.parse(raw) as SkillGraph;
+  const parsed = parseGraphJson(raw);
 
   if (!parsed.nodes || parsed.nodes.length < 3) {
     throw new Error("Generated graph has too few nodes");
@@ -118,8 +225,8 @@ export async function generateGraph(
     ? {
         requestId: traceContext.requestId,
         mode: traceContext.mode,
-        provider: "openai",
-        model: response.model ?? model,
+        provider: modelConfig.provider,
+        model: response.model ?? modelConfig.model,
         durationMs: Date.now() - startedAt,
         promptSourceCount: docs.length,
         promptInputChars: truncatedDocs.length,
@@ -133,12 +240,26 @@ export async function generateGraph(
   return { graph: parsed, files, trace };
 }
 
+function isWithinDirectory(candidate: string, root: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative === "" || (!!relative && !relative.startsWith("..") && !path.isAbsolute(relative));
+}
+
 function resolveRepoGraphPath(graphPath: string): string {
-  const absolute = path.isAbsolute(graphPath)
-    ? graphPath
-    : path.resolve(/*turbopackIgnore: true*/ process.cwd(), graphPath);
-  const artifactsRoot = path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "artifacts");
-  if (!absolute.startsWith(`${artifactsRoot}${path.sep}`)) {
+  const hypergraphDir = /*turbopackIgnore: true*/ process.cwd();
+  const repoRoot = path.resolve(/*turbopackIgnore: true*/ hypergraphDir, "..");
+  const artifactsRoot = path.resolve(/*turbopackIgnore: true*/ repoRoot, "artifacts");
+  const candidates = path.isAbsolute(graphPath)
+    ? [path.resolve(/*turbopackIgnore: true*/ graphPath)]
+    : [
+        path.resolve(/*turbopackIgnore: true*/ hypergraphDir, graphPath),
+        path.resolve(/*turbopackIgnore: true*/ repoRoot, graphPath),
+      ];
+
+  const absolute = candidates.find((candidate) =>
+    isWithinDirectory(candidate, artifactsRoot),
+  );
+  if (!absolute) {
     throw new Error("Graph path must be within the artifacts directory");
   }
   return absolute;

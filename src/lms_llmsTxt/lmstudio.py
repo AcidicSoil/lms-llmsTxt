@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Iterable, Optional, Tuple
+from typing import Any, Iterable, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -14,6 +14,11 @@ try:
 except ImportError:
     from .signatures import dspy
 
+try:
+    from dspy.adapters.json_adapter import _get_structured_outputs_response_format
+except Exception:  # pragma: no cover - private helper exists in supported DSPy versions
+    _get_structured_outputs_response_format = None  # type: ignore[assignment]
+
 logger = logging.getLogger(__name__)
 
 try:  # Optional dependency recommended for managed unload
@@ -24,6 +29,48 @@ except Exception:  # pragma: no cover - SDK is optional at runtime
 
 class LMStudioConnectivityError(RuntimeError):
     """Raised when LM Studio cannot be reached or does not expose the model."""
+
+
+class LMStudioJSONAdapter(dspy.JSONAdapter):
+    """
+    DSPy JSON adapter for LM Studio's OpenAI-compatible server.
+
+    LM Studio supports structured output via JSON Schema. DSPy's stock
+    JSONAdapter may fall back to the older `json_object` mode when LiteLLM does
+    not recognize a local model as schema-capable. LM Studio rejects that older
+    response_format, so this adapter forces the structured schema path and never
+    downgrades to `json_object`.
+    """
+
+    def _apply_response_schema(self, lm_kwargs: dict[str, Any], signature: type) -> None:
+        if _get_structured_outputs_response_format is None:
+            raise RuntimeError("DSPy JSON structured-output helper is unavailable")
+        lm_kwargs["response_format"] = _get_structured_outputs_response_format(
+            signature,
+            self.use_native_function_calling,
+        )
+
+    def __call__(
+        self,
+        lm: Any,
+        lm_kwargs: dict[str, Any],
+        signature: type,
+        demos: list[dict[str, Any]],
+        inputs: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        self._apply_response_schema(lm_kwargs, signature)
+        return dspy.ChatAdapter.__call__(self, lm, lm_kwargs, signature, demos, inputs)
+
+    async def acall(
+        self,
+        lm: Any,
+        lm_kwargs: dict[str, Any],
+        signature: type,
+        demos: list[dict[str, Any]],
+        inputs: dict[str, Any],
+    ) -> list[dict[str, Any]]:
+        self._apply_response_schema(lm_kwargs, signature)
+        return await dspy.ChatAdapter.acall(self, lm, lm_kwargs, signature, demos, inputs)
 
 
 _MODEL_ENDPOINTS: tuple[str, ...] = ("/v1/models", "/api/v1/models", "/models")
@@ -533,12 +580,11 @@ def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
         cache=cache,
         streaming=config.lm_streaming,
     )
-    # LM Studio currently accepts structured outputs as JSON Schema or text.
-    # DSPy's JSONAdapter may ask LiteLLM for the older `json_object` response
-    # format on some signatures, which LM Studio rejects. ChatAdapter is the
-    # current DSPy text-chat adapter path, and disabling its JSONAdapter fallback
-    # prevents retrying through the same incompatible response_format path.
-    dspy.configure(lm=lm, adapter=dspy.ChatAdapter(use_json_adapter_fallback=False))
+    # LM Studio supports JSON Schema structured output. Use a schema-only DSPy
+    # adapter so local models are not asked to follow fragile text placeholders,
+    # and never downgrade to the older `json_object` response format that LM
+    # Studio rejects.
+    dspy.configure(lm=lm, adapter=LMStudioJSONAdapter())
     return lm
 
 
@@ -574,6 +620,7 @@ def unload_lmstudio_model(config: AppConfig) -> None:
 __all__ = [
     "choose_lmstudio_test_model",
     "configure_lmstudio_lm",
+    "LMStudioJSONAdapter",
     "LMStudioConnectivityError",
     "unload_lmstudio_model",
 ]
