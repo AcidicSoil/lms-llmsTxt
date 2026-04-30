@@ -357,3 +357,107 @@ def test_ensure_hypergraph_ui_running_does_not_reuse_wrong_service(monkeypatch: 
     assert status.reused_existing is False
     assert status.started_process is True
     assert status.ready is True
+
+
+def test_ensure_hypergraph_ui_running_writes_process_metadata(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    class FakeProcess:
+        pid = 5151
+
+        def poll(self):
+            return None
+
+    def fake_spawn(ui_base_url: str):
+        return FakeProcess(), tmp_path / "logs" / "hypergraph-dev.log"
+
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3456")
+
+    assert status.started_process is True
+    metadata = cli._read_ui_process_metadata()
+    assert metadata is not None
+    assert metadata["pid"] == 5151
+    assert metadata["port"] == 3456
+    assert metadata["ui_base_url"] == "http://localhost:3456"
+    assert metadata["started_by"] == "lmstxt --ui"
+
+
+def test_stop_tracked_hypergraph_ui_stops_recorded_process(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=6161,
+        ui_base_url="http://localhost:3000",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+    exists = iter([True, False])
+    killed: list[tuple[int, int]] = []
+
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: next(exists, False))
+    monkeypatch.setattr(cli, "_metadata_matches_lmstxt_ui_process", lambda pid: True)
+    monkeypatch.setattr(cli.os, "killpg", lambda pid, sig: killed.append((pid, sig)))
+
+    status = cli.stop_tracked_hypergraph_ui(timeout_seconds=0.1)
+
+    assert status.stopped is True
+    assert status.pid == 6161
+    assert killed == [(6161, cli.signal.SIGTERM)]
+    assert cli._read_ui_process_metadata() is None
+
+
+def test_stop_tracked_hypergraph_ui_removes_stale_metadata(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=7171,
+        ui_base_url="http://localhost:3000",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: False)
+
+    status = cli.stop_tracked_hypergraph_ui()
+
+    assert status.stopped is False
+    assert status.stale_metadata_removed is True
+    assert "not running" in (status.error or "")
+    assert cli._read_ui_process_metadata() is None
+
+
+def test_stop_tracked_hypergraph_ui_refuses_unmatched_process(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=8181,
+        ui_base_url="http://localhost:3000",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: True)
+    monkeypatch.setattr(cli, "_metadata_matches_lmstxt_ui_process", lambda pid: False)
+
+    status = cli.stop_tracked_hypergraph_ui()
+
+    assert status.stopped is False
+    assert "Refusing to stop" in (status.error or "")
+    assert cli._read_ui_process_metadata() is not None
+
+
+def test_main_ui_stop_uses_tracked_process(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    monkeypatch.setattr(
+        cli,
+        "stop_tracked_hypergraph_ui",
+        lambda: cli.UIStopStatus(stopped=True, pid=9292, metadata_path="/tmp/hypergraph-dev.json"),
+    )
+
+    rc = cli.main(["--ui-stop"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "HyperGraph UI stop:" in out
+    assert "stopped tracked background process (pid=9292)" in out
+    assert "metadata: /tmp/hypergraph-dev.json" in out
+
+
+def test_main_ui_stop_rejects_repo_argument() -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main(["https://github.com/acme/repo", "--ui-stop"])
+    assert excinfo.value.code == 2

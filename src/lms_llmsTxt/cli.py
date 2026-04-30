@@ -1,6 +1,8 @@
 import argparse
+import json
 import logging
 import os
+import signal
 import subprocess
 import sys
 import time
@@ -35,6 +37,15 @@ class UIRuntimeStatus:
     ready: bool = False
     pid: int | None = None
     log_path: str | None = None
+    error: str | None = None
+
+
+@dataclass(slots=True)
+class UIStopStatus:
+    stopped: bool = False
+    stale_metadata_removed: bool = False
+    pid: int | None = None
+    metadata_path: str | None = None
     error: str | None = None
 
 
@@ -113,6 +124,141 @@ def _ui_dev_log_path() -> Path:
     return path
 
 
+def _ui_process_metadata_path() -> Path:
+    log_dir = _default_ui_log_dir()
+    log_dir.mkdir(parents=True, exist_ok=True)
+    return log_dir / "hypergraph-dev.json"
+
+
+def _write_ui_process_metadata(
+    *,
+    pid: int,
+    ui_base_url: str,
+    log_path: Path,
+) -> Path:
+    path = _ui_process_metadata_path()
+    _host, port = _ui_host_port(ui_base_url)
+    data = {
+        "pid": pid,
+        "ui_base_url": ui_base_url.rstrip("/"),
+        "port": port,
+        "log_path": str(log_path),
+        "started_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "started_by": "lmstxt --ui",
+    }
+    path.write_text(json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return path
+
+
+def _read_ui_process_metadata() -> dict[str, object] | None:
+    path = _ui_process_metadata_path()
+    if not path.exists():
+        return None
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def _process_exists(pid: int) -> bool:
+    if pid <= 0:
+        return False
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except PermissionError:
+        return True
+    except OSError:
+        return False
+    return True
+
+
+def _process_cmdline(pid: int) -> str | None:
+    proc_cmdline = Path("/proc") / str(pid) / "cmdline"
+    if not proc_cmdline.exists():
+        return None
+    try:
+        return proc_cmdline.read_bytes().replace(b"\x00", b" ").decode("utf-8", errors="replace")
+    except Exception:
+        return None
+
+
+def _metadata_matches_lmstxt_ui_process(pid: int) -> bool:
+    cmdline = _process_cmdline(pid)
+    if cmdline is None:
+        # Non-/proc platforms cannot cheaply validate command ownership here.
+        # Trust only the metadata file written by this CLI on those platforms.
+        return True
+    lowered = cmdline.lower()
+    return "npm" in lowered and "ui:dev" in lowered
+
+
+def stop_tracked_hypergraph_ui(timeout_seconds: float = 5.0) -> UIStopStatus:
+    metadata_path = _ui_process_metadata_path()
+    data = _read_ui_process_metadata()
+    status = UIStopStatus(metadata_path=str(metadata_path))
+    if not data:
+        status.error = f"No tracked HyperGraph UI process metadata found at {metadata_path}."
+        return status
+
+    try:
+        pid = int(data.get("pid", 0))
+    except Exception:
+        pid = 0
+    status.pid = pid or None
+    if not pid or not _process_exists(pid):
+        try:
+            metadata_path.unlink(missing_ok=True)
+            status.stale_metadata_removed = True
+        except Exception as exc:
+            status.error = f"Tracked UI process is not running, but stale metadata could not be removed: {exc}"
+            return status
+        status.error = "Tracked HyperGraph UI process is not running; removed stale metadata."
+        return status
+
+    if not _metadata_matches_lmstxt_ui_process(pid):
+        status.error = (
+            f"Refusing to stop pid {pid}; it does not look like the `npm run ui:dev` process "
+            "started by lmstxt. Stop it manually if needed."
+        )
+        return status
+
+    try:
+        if os.name == "nt":
+            subprocess.run(
+                ["taskkill", "/PID", str(pid), "/T", "/F"],
+                check=True,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        else:
+            os.killpg(pid, signal.SIGTERM)
+            deadline = time.monotonic() + max(0.1, timeout_seconds)
+            while time.monotonic() < deadline:
+                if not _process_exists(pid):
+                    break
+                time.sleep(0.1)
+            if _process_exists(pid):
+                os.killpg(pid, signal.SIGKILL)
+    except ProcessLookupError:
+        pass
+    except Exception as exc:
+        status.error = f"Failed to stop tracked HyperGraph UI process {pid}: {exc}"
+        return status
+
+    try:
+        metadata_path.unlink(missing_ok=True)
+    except Exception as exc:
+        status.error = f"Stopped HyperGraph UI process {pid}, but could not remove metadata: {exc}"
+        status.stopped = True
+        return status
+
+    status.stopped = True
+    return status
+
+
 def _spawn_hypergraph_dev_server(ui_base_url: str) -> tuple[subprocess.Popen[bytes], Path]:
     repo_root = _project_root()
     _host, port = _ui_host_port(ui_base_url)
@@ -170,6 +316,7 @@ def ensure_hypergraph_ui_running(
         status.started_process = True
         status.pid = proc.pid
         status.log_path = str(log_path)
+        _write_ui_process_metadata(pid=proc.pid, ui_base_url=ui_base_url, log_path=log_path)
     except FileNotFoundError as exc:
         status.error = (
             f"Failed to start HyperGraph UI ({exc}). Ensure Node.js/npm is installed, "
@@ -310,6 +457,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Do not auto-open the browser when using --ui (still starts/reuses the UI server).",
     )
     parser.add_argument(
+        "--ui-stop",
+        action="store_true",
+        help="Stop the HyperGraph UI process previously started by lmstxt --ui.",
+    )
+    parser.add_argument(
         "--ui-start-timeout-seconds",
         type=int,
         default=45,
@@ -351,6 +503,22 @@ def main(argv: list[str] | None = None) -> int:
         config.enable_session_memory = True
     if args.ui_start_timeout_seconds is not None and int(args.ui_start_timeout_seconds) <= 0:
         parser.error("--ui-start-timeout-seconds must be > 0.")
+    if args.ui_stop:
+        if args.repo:
+            parser.error("--ui-stop does not take a repository argument.")
+        stop_status = stop_tracked_hypergraph_ui()
+        summary = "HyperGraph UI stop:"
+        if stop_status.stopped:
+            summary += f"\n  - stopped tracked background process (pid={stop_status.pid})"
+        elif stop_status.stale_metadata_removed:
+            summary += "\n  - no running tracked process"
+            summary += "\n  - removed stale metadata"
+        elif stop_status.error:
+            summary += f"\n  - {stop_status.error}"
+        if stop_status.metadata_path:
+            summary += f"\n  - metadata: {stop_status.metadata_path}"
+        print(summary)
+        return 0 if stop_status.stopped or stop_status.stale_metadata_removed else 1
     if not args.repo:
         if not args.ui:
             parser.error("repo is required unless --ui is used to launch HyperGraph.")

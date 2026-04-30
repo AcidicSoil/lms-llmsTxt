@@ -58,6 +58,18 @@ Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` se
 > [!TIP]
 > Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
 
+## Environment files
+
+This repository has two runtimes, so `.env` ownership matters:
+
+| File/location | Read by | Use for |
+|---|---|---|
+| Root `.env` next to `pyproject.toml` | Python CLI via `AppConfig`; also inherited by HyperGraph when started with `lmstxt --ui` | `LMSTUDIO_*`, GitHub token, artifact output, CLI feature flags, and shared HyperGraph defaults |
+| `hypergraph/.env`, `hypergraph/.env.local`, or shell env while running `cd hypergraph && pnpm dev` | Next.js/HyperGraph server runtime | HyperGraph-only overrides such as `HYPERGRAPH_OPENAI_*` when running the UI directly |
+| `.env.example` | Documentation/template only | Copy values into root `.env` or a HyperGraph env file as appropriate |
+
+Rule of thumb: put shared local settings in the root `.env`. Use a HyperGraph env file only when you run `pnpm dev` from `hypergraph/` and need UI-specific overrides.
+
 ## Configure LM Studio
 
 ### Load the CLI and start the server
@@ -108,6 +120,14 @@ The CLI will:
 - print the same handoff URL for manual reuse when loading a generated graph
 
 Use `--ui-no-open` to skip auto-opening the browser.
+
+To stop a HyperGraph UI background process that was started by `lmstxt --ui`:
+
+```bash
+lmstxt --ui-stop
+```
+
+`--ui-stop` only stops a tracked process recorded under `artifacts/.ui-logs/`; it refuses to kill manually started or untracked UI servers.
 
 ## Private GitHub repositories
 
