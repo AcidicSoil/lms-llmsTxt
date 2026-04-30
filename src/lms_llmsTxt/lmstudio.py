@@ -144,8 +144,8 @@ def _model_rank(model: str) -> tuple[int, int, str]:
     excluded = any(hint in lowered for hint in _TEXT_MODEL_EXCLUSION_HINTS)
     for index, hint in enumerate(_SMALL_TEXT_MODEL_HINTS):
         if hint in lowered:
-            return (1 if excluded else 0, index, lowered)
-    return (2 if excluded else 1, len(_SMALL_TEXT_MODEL_HINTS), lowered)
+            return (2 if excluded else 0, index, lowered)
+    return (3 if excluded else 1, len(_SMALL_TEXT_MODEL_HINTS), lowered)
 
 
 def choose_lmstudio_test_model(
@@ -170,8 +170,12 @@ def choose_lmstudio_test_model(
             "or set LMSTUDIO_TEST_MODEL to a loaded model identifier."
         )
 
+    def is_excluded(candidate: str) -> bool:
+        lowered = candidate.lower()
+        return any(hint in lowered for hint in _TEXT_MODEL_EXCLUSION_HINTS)
+
     for candidate in (preferred_model, config.lm_model):
-        if candidate and candidate.strip() in available:
+        if candidate and candidate.strip() in available and not is_excluded(candidate):
             return candidate.strip()
 
     ranked = sorted(available, key=_model_rank)

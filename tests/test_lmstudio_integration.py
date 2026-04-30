@@ -1,52 +1,24 @@
-import os
 from pathlib import Path
 
 import pytest
-from requests import HTTPError
 
 from lms_llmsTxt.config import AppConfig
 from lms_llmsTxt.lmstudio import LMStudioConnectivityError, choose_lmstudio_test_model
-from lms_llmsTxt.pipeline import run_generation
+
 
 @pytest.mark.integration
-def test_real_generation(tmp_path):
+def test_lmstudio_models_endpoint_supports_generation_test_model(tmp_path):
     """
-    Real integration test against running LM Studio.
-    Requires GITHUB_ACCESS_TOKEN.
-    """
-    repo_url = "https://github.com/AcidicSoil/lms-llmsTxt" # This repo
-    output_dir = tmp_path / "artifacts"
-    
-    config = AppConfig(
-        output_dir=output_dir,
-        lm_auto_unload=True
-    )
-    try:
-        config.lm_model = choose_lmstudio_test_model(
-            config,
-            preferred_model=os.environ.get("LMSTUDIO_TEST_MODEL"),
-        )
-    except LMStudioConnectivityError as exc:
-        pytest.skip(f"Skipping integration test: {exc}")
-    
-    # Check for GH token
-    if not os.environ.get("GITHUB_ACCESS_TOKEN") and not os.environ.get("GH_TOKEN"):
-        pytest.skip("Skipping integration test: GITHUB_ACCESS_TOKEN not set")
+    Verify LM Studio's models endpoint can provide a small text model.
 
+    This deliberately does not call run_generation(); pytest should not perform a
+    full repository generation or load a large model as part of routine tests.
+    """
+    config = AppConfig(output_dir=tmp_path / "artifacts")
     try:
-        artifacts = run_generation(repo_url, config, build_ctx=False)
-    except HTTPError as exc:
-        status_code = exc.response.status_code if exc.response is not None else None
-        if status_code in {401, 403}:
-            pytest.skip("Skipping integration test: GitHub token is invalid or unauthorized")
-        raise
-    
-    assert artifacts.used_fallback is False
-    assert Path(artifacts.llms_txt_path).exists()
-    assert Path(artifacts.llms_full_path).exists()
-    
-    # Verify content looks like a valid llms.txt
-    content = Path(artifacts.llms_txt_path).read_text()
-    assert "# " in content # Title
-    assert "> " in content # Description
-    assert "- [" in content # Links
+        selected_model = choose_lmstudio_test_model(config)
+    except LMStudioConnectivityError as exc:
+        pytest.skip(f"Skipping LM Studio endpoint smoke: {exc}")
+
+    assert selected_model
+    assert isinstance(selected_model, str)

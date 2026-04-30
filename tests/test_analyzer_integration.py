@@ -1,57 +1,28 @@
-import os
 from pathlib import Path
-import pytest
-import dspy
-from lms_llmsTxt.analyzer import RepositoryAnalyzer
-from lms_llmsTxt.lmstudio import (
-    LMStudioConnectivityError,
-    choose_lmstudio_test_model,
-    configure_lmstudio_lm,
-    unload_lmstudio_model,
-)
-from lms_llmsTxt.config import AppConfig
-from lms_llmsTxt.models import RepositoryMaterial
 
-def test_analyzer_integration():
+import pytest
+
+from lms_llmsTxt.config import AppConfig
+from lms_llmsTxt.lmstudio import LMStudioConnectivityError, choose_lmstudio_test_model
+
+
+@pytest.mark.integration
+def test_lmstudio_advertises_small_text_model_for_analyzer_smoke():
     """
-    Test the DSPy analyzer against a real LM Studio instance.
+    Smoke-test LM Studio endpoint/model availability without running DSPy generation.
+
+    Full analyzer runs are intentionally excluded from pytest because they load an
+    LLM and consume generation resources. Use manual smoke scripts for full
+    generation when explicitly needed.
     """
     config = AppConfig(output_dir=Path("artifacts"))
     try:
-        config.lm_model = choose_lmstudio_test_model(
-            config,
-            preferred_model=os.environ.get("LMSTUDIO_TEST_MODEL"),
-        )
+        selected_model = choose_lmstudio_test_model(config)
     except LMStudioConnectivityError as exc:
-        pytest.skip(f"Skipping integration test: {exc}")
+        pytest.skip(f"Skipping LM Studio endpoint smoke: {exc}")
 
-    configure_lmstudio_lm(config)
-
-    try:
-        analyzer = RepositoryAnalyzer()
-
-        material = RepositoryMaterial(
-            repo_url="https://github.com/AcidicSoil/lms-llmsTxt",
-            file_tree="README.md\npyproject.toml\nsrc/lms_llmsTxt/pipeline.py",
-            readme_content="# LMS LLMSTXT\n\nA generator for llms.txt files.",
-            package_files="pyproject.toml content",
-            default_branch="main",
-            is_private=False
-        )
-
-        # Pass arguments individually as expected by forward()
-        result = analyzer(
-            repo_url=material.repo_url,
-            file_tree=material.file_tree,
-            readme_content=material.readme_content,
-            package_files=material.package_files,
-            default_branch=material.default_branch,
-            is_private=material.is_private,
-            github_token=config.github_token,
-        )
-
-        assert hasattr(result, "llms_txt_content")
-        assert len(result.llms_txt_content) > 50
-        print(f"\nGenerated llms.txt content:\n{result.llms_txt_content}")
-    finally:
-        unload_lmstudio_model(config)
+    assert selected_model
+    assert not any(
+        marker in selected_model.lower()
+        for marker in ("embedding", "rerank", "reranker", "vl", "vision", "ocr")
+    )
