@@ -58,17 +58,17 @@ Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` se
 > [!TIP]
 > Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
 
-## Environment files
+## Environment file
 
-This repository has two runtimes, so `.env` ownership matters:
+Use one environment file: the root `.env` next to `pyproject.toml`.
 
-| File/location | Read by | Use for |
-|---|---|---|
-| Root `.env` next to `pyproject.toml` | Python CLI via `AppConfig`; also inherited by HyperGraph when started with `lmstxt --ui` | `LMSTUDIO_*`, GitHub token, artifact output, CLI feature flags, and shared HyperGraph defaults |
-| `hypergraph/.env`, `hypergraph/.env.local`, or shell env while running `cd hypergraph && pnpm dev` | Next.js/HyperGraph server runtime | HyperGraph-only overrides such as `HYPERGRAPH_OPENAI_*` when running the UI directly |
-| `.env.example` | Documentation/template only | Copy values into root `.env` or a HyperGraph env file as appropriate |
+Both runtimes use that same root environment:
 
-Rule of thumb: put shared local settings in the root `.env`. Use a HyperGraph env file only when you run `pnpm dev` from `hypergraph/` and need UI-specific overrides.
+- the Python CLI reads root `.env` through `AppConfig`
+- HyperGraph inherits root `.env` when launched with `lmstxt --ui`
+- HyperGraph also treats the repository root as its Next/Turbopack root, so direct UI runs should use the same root `.env`
+
+Copy `.env.example` to `.env` at the repository root and put all local settings there: `LMSTUDIO_*`, GitHub token, artifact output, CLI flags, and `HYPERGRAPH_OPENAI_*` overrides.
 
 ## Configure LM Studio
 
