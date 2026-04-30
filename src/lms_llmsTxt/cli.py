@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from textwrap import dedent
 from urllib.error import HTTPError, URLError
-from urllib.parse import urlparse, urlencode
+from urllib.parse import urljoin, urlparse, urlencode
 from urllib.request import Request, urlopen
 
 from .config import AppConfig
@@ -70,14 +70,26 @@ def build_graph_viewer_url(
 
 
 def _probe_ui_reachable(ui_base_url: str, timeout_seconds: float = 1.0) -> bool:
-    request = Request(ui_base_url, method="GET")
+    """Return True only when the requested URL appears to serve HyperGraph."""
+    base = ui_base_url.rstrip("/") + "/"
+    health_url = urljoin(base, "api/health")
     try:
-        with urlopen(request, timeout=timeout_seconds):
-            return True
-    except HTTPError:
-        # A real HTTP response proves the server is reachable.
-        return True
-    except URLError:
+        request = Request(health_url, method="GET")
+        with urlopen(request, timeout=timeout_seconds) as response:
+            body = response.read(512).decode("utf-8", errors="replace")
+            if '"app":"hypergraph"' in body.replace(" ", ""):
+                return True
+    except (HTTPError, URLError):
+        pass
+    except Exception:
+        pass
+
+    try:
+        request = Request(ui_base_url, method="GET")
+        with urlopen(request, timeout=timeout_seconds) as response:
+            body = response.read(4096).decode("utf-8", errors="replace")
+            return "HyperGraph" in body or "Hyperbrowser" in body
+    except (HTTPError, URLError):
         return False
     except Exception:
         return False

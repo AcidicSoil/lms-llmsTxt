@@ -193,3 +193,102 @@ def test_ensure_hypergraph_ui_running_spawns_with_requested_base_url(monkeypatch
     assert status.started_process is True
     assert status.ready is True
     assert status.pid == 999
+
+
+def test_probe_ui_reachable_accepts_hypergraph_health(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeResponse:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, *_args):
+            return b'{"app":"hypergraph","status":"ok"}'
+
+    seen_urls: list[str] = []
+
+    def fake_urlopen(request, timeout):
+        seen_urls.append(request.full_url)
+        return FakeResponse()
+
+    monkeypatch.setattr(cli, "urlopen", fake_urlopen)
+
+    assert cli._probe_ui_reachable("http://localhost:3000") is True
+    assert seen_urls == ["http://localhost:3000/api/health"]
+
+
+def test_probe_ui_reachable_rejects_non_hypergraph_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeResponse:
+        def __init__(self, body: bytes):
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, *_args):
+            return self.body
+
+    def fake_urlopen(request, timeout):
+        if request.full_url.endswith("/api/health"):
+            return FakeResponse(b'{"app":"other-service","status":"ok"}')
+        return FakeResponse(b"<html><title>Other app</title></html>")
+
+    monkeypatch.setattr(cli, "urlopen", fake_urlopen)
+
+    assert cli._probe_ui_reachable("http://localhost:3000") is False
+
+
+def test_probe_ui_reachable_falls_back_to_hypergraph_page_marker(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeResponse:
+        def __init__(self, body: bytes):
+            self.body = body
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def read(self, *_args):
+            return self.body
+
+    def fake_urlopen(request, timeout):
+        if request.full_url.endswith("/api/health"):
+            raise cli.HTTPError(request.full_url, 404, "missing", {}, None)
+        return FakeResponse(b"<html><title>HyperGraph</title></html>")
+
+    monkeypatch.setattr(cli, "urlopen", fake_urlopen)
+
+    assert cli._probe_ui_reachable("http://localhost:3000") is True
+
+
+def test_ensure_hypergraph_ui_running_does_not_reuse_wrong_service(monkeypatch: pytest.MonkeyPatch) -> None:
+    spawned: list[str] = []
+
+    class FakeProcess:
+        pid = 31415
+
+        def poll(self):
+            return None
+
+    def fake_probe(*args, **kwargs):
+        return False
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), Path("/tmp/hypergraph-dev.log")
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", fake_probe)
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert spawned == ["http://localhost:3000"]
+    assert status.reused_existing is False
+    assert status.started_process is True
+    assert status.ready is True
