@@ -223,8 +223,8 @@ def _graph_metrics(
         return 1.0, 1.0, []
 
     subsystem_names = tuple(_normalize(name) for name in benchmark.expected_subsystems)
-    graph_labels = tuple(_normalize(node.label) for node in graph.nodes if node.type == "concept")
-    graph_node_ids = tuple(_normalize(node.id).replace("-", " ") for node in graph.nodes if node.type == "concept")
+    graph_labels = tuple(_normalize(node.label) for node in graph.nodes if node.type != "moc")
+    graph_node_ids = tuple(_normalize(node.id).replace("-", " ") for node in graph.nodes if node.type != "moc")
     graph_terms = graph_labels + graph_node_ids
 
     missing_from_graph = [
