@@ -52,6 +52,53 @@ def test_fetch_models_prefers_v1(monkeypatch):
     assert calls[0].endswith("/v1/models")
 
 
+def test_choose_lmstudio_test_model_prefers_small_available_text_model(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(
+            payload={
+                "data": [
+                    {"id": "qwen3-vl-reranker-2b"},
+                    {"id": "qwen_qwen3.5-9b"},
+                    {"id": "qwen_qwen3.5-0.8b"},
+                    {"id": "text-embedding-qwen3-embedding-0.6b"},
+                ]
+            }
+        )
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    config = AppConfig(
+        lm_model="missing-large-model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    assert lmstudio.choose_lmstudio_test_model(config) == "qwen_qwen3.5-0.8b"
+
+
+def test_choose_lmstudio_test_model_honors_loaded_preferred_model(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(
+            payload={"data": [{"id": "small-model-1b"}, {"id": "requested-model"}]}
+        )
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    config = AppConfig(
+        lm_model="missing-large-model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    assert (
+        lmstudio.choose_lmstudio_test_model(
+            config,
+            preferred_model="requested-model",
+        )
+        == "requested-model"
+    )
+
+
 def test_ensure_ready_does_not_auto_load_missing_model(monkeypatch):
     posts = []
 

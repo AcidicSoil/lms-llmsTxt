@@ -5,6 +5,7 @@ import pytest
 from requests import HTTPError
 
 from lms_llmsTxt.config import AppConfig
+from lms_llmsTxt.lmstudio import LMStudioConnectivityError, choose_lmstudio_test_model
 from lms_llmsTxt.pipeline import run_generation
 
 @pytest.mark.integration
@@ -20,8 +21,13 @@ def test_real_generation(tmp_path):
         output_dir=output_dir,
         lm_auto_unload=False # Don't unload user's model
     )
-    if not config.lm_model:
-        pytest.skip("Skipping integration test: LMSTUDIO_MODEL not set")
+    try:
+        config.lm_model = choose_lmstudio_test_model(
+            config,
+            preferred_model=os.environ.get("LMSTUDIO_TEST_MODEL"),
+        )
+    except LMStudioConnectivityError as exc:
+        pytest.skip(f"Skipping integration test: {exc}")
     
     # Check for GH token
     if not os.environ.get("GITHUB_ACCESS_TOKEN") and not os.environ.get("GH_TOKEN"):

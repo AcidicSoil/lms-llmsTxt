@@ -50,6 +50,26 @@ _UNLOAD_ENDPOINT_PATTERNS: tuple[str, ...] = (
     "/models/{model}",
 )
 
+_SMALL_TEXT_MODEL_HINTS: tuple[str, ...] = (
+    "0.5b",
+    "0.6b",
+    "0.8b",
+    "1b",
+    "1.2b",
+    "1.5b",
+    "2b",
+    "3b",
+    "4b",
+)
+_TEXT_MODEL_EXCLUSION_HINTS: tuple[str, ...] = (
+    "embedding",
+    "rerank",
+    "reranker",
+    "vl",
+    "vision",
+    "ocr",
+)
+
 
 def _build_lmstudio_url(base: str, endpoint: str) -> str:
     """
@@ -117,6 +137,45 @@ def _fetch_models(
     if last_error:
         raise last_error
     return set(), None
+
+
+def _model_rank(model: str) -> tuple[int, int, str]:
+    lowered = model.lower()
+    excluded = any(hint in lowered for hint in _TEXT_MODEL_EXCLUSION_HINTS)
+    for index, hint in enumerate(_SMALL_TEXT_MODEL_HINTS):
+        if hint in lowered:
+            return (1 if excluded else 0, index, lowered)
+    return (2 if excluded else 1, len(_SMALL_TEXT_MODEL_HINTS), lowered)
+
+
+def choose_lmstudio_test_model(
+    config: AppConfig,
+    *,
+    preferred_model: str | None = None,
+) -> str:
+    """
+    Choose a small available LM Studio text model for live integration tests.
+
+    This avoids coupling live tests to a large or locally-missing model from
+    ``LMSTUDIO_MODEL``. Runtime application configuration remains unchanged;
+    callers opt into this helper for test/smoke workflows.
+    """
+    headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
+    base = config.lm_api_base.rstrip("/")
+    models, _endpoint_hint = _fetch_models(base, headers)
+    available = {model.strip() for model in models if model and model.strip()}
+    if not available:
+        raise LMStudioConnectivityError(
+            f"LM Studio at {base} did not advertise any models. Load a small text model, "
+            "or set LMSTUDIO_TEST_MODEL to a loaded model identifier."
+        )
+
+    for candidate in (preferred_model, config.lm_model):
+        if candidate and candidate.strip() in available:
+            return candidate.strip()
+
+    ranked = sorted(available, key=_model_rank)
+    return ranked[0]
 
 
 def _load_model_http(
@@ -470,7 +529,11 @@ def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
         cache=cache,
         streaming=config.lm_streaming,
     )
-    dspy.configure(lm=lm)
+    # LM Studio currently accepts structured outputs as JSON Schema or text.
+    # DSPy's JSONAdapter may ask LiteLLM for the older `json_object` response
+    # format on some signatures, which LM Studio rejects. ChatAdapter is the
+    # current DSPy text-chat adapter path and avoids that incompatible request.
+    dspy.configure(lm=lm, adapter=dspy.ChatAdapter())
     return lm
 
 
@@ -503,4 +566,9 @@ def unload_lmstudio_model(config: AppConfig) -> None:
     )
 
 
-__all__ = ["configure_lmstudio_lm", "LMStudioConnectivityError", "unload_lmstudio_model"]
+__all__ = [
+    "choose_lmstudio_test_model",
+    "configure_lmstudio_lm",
+    "LMStudioConnectivityError",
+    "unload_lmstudio_model",
+]

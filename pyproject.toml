@@ -47,6 +47,13 @@ pythonpath = [
 markers = [
     "integration: marks tests as integration tests (slow)",
 ]
+filterwarnings = [
+    # DSPy 3.2.0 emits this from its own avatar helper signatures at import time.
+    # The project signatures use desc=... and do not pass deprecated prefix=....
+    "ignore:The 'prefix' argument in InputField/OutputField is deprecated and has no effect in DSPy:DeprecationWarning:dspy\\.",
+    # LiteLLM 1.82.6 still emits this from its service logger on Python 3.13.
+    "ignore:There is no current event loop:DeprecationWarning:litellm\\._service_logger",
+]
 
 # uv index example for TestPyPI; keep if you publish snapshots there.
 [[tool.uv.index]]

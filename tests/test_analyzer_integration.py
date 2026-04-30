@@ -3,7 +3,11 @@ from pathlib import Path
 import pytest
 import dspy
 from lms_llmsTxt.analyzer import RepositoryAnalyzer
-from lms_llmsTxt.lmstudio import configure_lmstudio_lm
+from lms_llmsTxt.lmstudio import (
+    LMStudioConnectivityError,
+    choose_lmstudio_test_model,
+    configure_lmstudio_lm,
+)
 from lms_llmsTxt.config import AppConfig
 from lms_llmsTxt.models import RepositoryMaterial
 
@@ -12,9 +16,14 @@ def test_analyzer_integration():
     Test the DSPy analyzer against a real LM Studio instance.
     """
     config = AppConfig(output_dir=Path("artifacts"))
-    if not config.lm_model:
-        pytest.skip("Skipping integration test: LMSTUDIO_MODEL not set")
-    
+    try:
+        config.lm_model = choose_lmstudio_test_model(
+            config,
+            preferred_model=os.environ.get("LMSTUDIO_TEST_MODEL"),
+        )
+    except LMStudioConnectivityError as exc:
+        pytest.skip(f"Skipping integration test: {exc}")
+
     configure_lmstudio_lm(config)
     
     analyzer = RepositoryAnalyzer()
