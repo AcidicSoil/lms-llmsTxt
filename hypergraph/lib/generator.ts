@@ -6,6 +6,26 @@ import path from "node:path";
 
 const openai = new OpenAI();
 
+export interface GenerationTraceContext {
+  requestId: string;
+  mode: "topic" | "generate-repo-graph" | "load-repo-graph";
+}
+
+export interface GenerationTrace {
+  requestId: string;
+  mode: GenerationTraceContext["mode"];
+  provider?: string;
+  model?: string;
+  durationMs?: number;
+  promptSourceCount?: number;
+  promptInputChars?: number;
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+  finishReason?: string | null;
+  pythonBin?: string;
+}
+
 const SYSTEM_PROMPT = `You are a domain knowledge graph architect. Given a topic and source material, produce a deeply interconnected JSON skill graph that enables an agent to UNDERSTAND the domain — not merely summarize it. This is the difference between an agent that follows instructions and an agent that understands a domain.
 
 Output format (JSON only):
@@ -58,13 +78,16 @@ Depth requirements:
 export async function generateGraph(
   topic: string,
   docs: { url: string; markdown: string }[],
-): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
+  traceContext?: GenerationTraceContext,
+): Promise<{ graph: SkillGraph; files: GeneratedFile[]; trace?: GenerationTrace }> {
   const truncatedDocs = docs
     .map((d) => `## Source: ${d.url}\n\n${d.markdown.slice(0, 4000)}`)
     .join("\n\n---\n\n");
 
+  const startedAt = Date.now();
+  const model = "gpt-4o";
   const response = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: SYSTEM_PROMPT },
@@ -91,7 +114,23 @@ export async function generateGraph(
     content: node.content,
   }));
 
-  return { graph: parsed, files };
+  const trace = traceContext
+    ? {
+        requestId: traceContext.requestId,
+        mode: traceContext.mode,
+        provider: "openai",
+        model: response.model ?? model,
+        durationMs: Date.now() - startedAt,
+        promptSourceCount: docs.length,
+        promptInputChars: truncatedDocs.length,
+        completionTokens: response.usage?.completion_tokens,
+        promptTokens: response.usage?.prompt_tokens,
+        totalTokens: response.usage?.total_tokens,
+        finishReason: response.choices[0]?.finish_reason,
+      }
+    : undefined;
+
+  return { graph: parsed, files, trace };
 }
 
 function resolveRepoGraphPath(graphPath: string): string {
@@ -107,7 +146,9 @@ function resolveRepoGraphPath(graphPath: string): string {
 
 export async function loadRepoGraph(
   graphPath: string,
-): Promise<{ graph: SkillGraph; files: GeneratedFile[] }> {
+  traceContext?: GenerationTraceContext,
+): Promise<{ graph: SkillGraph; files: GeneratedFile[]; trace?: GenerationTrace }> {
+  const startedAt = Date.now();
   const absolute = resolveRepoGraphPath(graphPath);
   const raw = await fs.readFile(absolute, "utf-8");
   const parsed = JSON.parse(raw) as SkillGraph;
@@ -118,7 +159,15 @@ export async function loadRepoGraph(
     path: `${slugify(parsed.topic || "repo")}/${node.id}.md`,
     content: node.content,
   }));
-  return { graph: parsed, files };
+  const trace = traceContext
+    ? {
+        requestId: traceContext.requestId,
+        mode: traceContext.mode,
+        provider: "filesystem",
+        durationMs: Date.now() - startedAt,
+      }
+    : undefined;
+  return { graph: parsed, files, trace };
 }
 
 function parseGithubRepoUrl(repoUrl: string): { owner: string; repo: string } {
@@ -188,7 +237,7 @@ function buildPythonEnv(repoRoot: string): NodeJS.ProcessEnv {
 async function runLocalLmstxt(
   repoRoot: string,
   repoUrl: string,
-): Promise<void> {
+): Promise<{ pythonBin: string }> {
   const artifactsDir = path.join(repoRoot, "artifacts");
   const env = buildPythonEnv(repoRoot);
   const pythonCandidates = [
@@ -213,7 +262,7 @@ async function runLocalLmstxt(
         ],
         { cwd: repoRoot, env },
       );
-      return;
+      return { pythonBin };
     } catch (error) {
       lastError = error instanceof Error ? error : new Error(String(error));
     }
@@ -224,15 +273,18 @@ async function runLocalLmstxt(
 
 export async function generateRepoGraph(
   repoUrl: string,
+  traceContext?: GenerationTraceContext,
 ): Promise<{
   graph: SkillGraph;
   files: GeneratedFile[];
   artifactPath: string;
+  trace?: GenerationTrace;
 }> {
+  const startedAt = Date.now();
   const { owner, repo } = parseGithubRepoUrl(repoUrl);
   const hypergraphDir = process.cwd();
   const repoRoot = path.resolve(hypergraphDir, "..");
-  await runLocalLmstxt(repoRoot, repoUrl);
+  const localRun = await runLocalLmstxt(repoRoot, repoUrl);
 
   const graphPath = path.join(
     "..",
@@ -243,7 +295,17 @@ export async function generateRepoGraph(
     "repo.graph.json",
   );
   const loaded = await loadRepoGraph(graphPath);
-  return { ...loaded, artifactPath: graphPath };
+  const trace = traceContext
+    ? {
+        requestId: traceContext.requestId,
+        mode: traceContext.mode,
+        provider: "lmstxt-cli",
+        model: process.env.LMSTUDIO_MODEL,
+        durationMs: Date.now() - startedAt,
+        pythonBin: localRun.pythonBin,
+      }
+    : undefined;
+  return { ...loaded, artifactPath: graphPath, trace };
 }
 
 function slugify(text: string): string {

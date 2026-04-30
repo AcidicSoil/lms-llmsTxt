@@ -26,10 +26,20 @@ export interface GeneratedFile {
   content: string;
 }
 
+export interface GenerateTrace {
+  requestId: string;
+  mode: "topic" | "generate-repo-graph" | "load-repo-graph";
+  provider?: string;
+  model?: string;
+  durationMs?: number;
+}
+
 export interface GenerateResponse {
   graph: SkillGraph;
   files: GeneratedFile[];
   artifactPath?: string;
+  requestId?: string;
+  trace?: GenerateTrace;
 }
 
 export interface ForceGraphNode {
