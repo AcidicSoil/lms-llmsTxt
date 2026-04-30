@@ -26,6 +26,175 @@ const EXAMPLE_TOPICS = [
   "Docker Networking",
 ];
 
+function inferRepoNodeType(node: GraphNode): GraphNode["type"] {
+  const searchable = `${node.id} ${node.label} ${node.description} ${node.content}`.toLowerCase();
+  if (/\b(test|tests|spec|e2e|fixture|mock|config|security|secret|credential)\b/.test(searchable)) {
+    return "gotcha";
+  }
+  if (/\b(doc|docs|guide|guides|example|examples|workflow|template|pattern)\b/.test(searchable)) {
+    return "pattern";
+  }
+  return node.type;
+}
+
+function repoAffinityScore(a: GraphNode, b: GraphNode): number {
+  const aText = `${a.id} ${a.label} ${a.description}`.toLowerCase();
+  const bText = `${b.id} ${b.label} ${b.description}`.toLowerCase();
+  const aRoot = a.id.split("-")[0] ?? "";
+  const bRoot = b.id.split("-")[0] ?? "";
+  const aTokens = new Set(aText.split(/[^a-z0-9]+/).filter((token) => token.length > 2));
+  const bTokens = new Set(bText.split(/[^a-z0-9]+/).filter((token) => token.length > 2));
+
+  let score = 0;
+  if (aRoot && aRoot === bRoot) score += 8;
+  for (const token of aTokens) {
+    if (bTokens.has(token)) score += 2;
+  }
+  if (aText.includes("test") && bTokens.has(aRoot)) score += 8;
+  if (bText.includes("test") && aTokens.has(bRoot)) score += 8;
+  if (aText.includes("doc") && bTokens.has(aRoot)) score += 5;
+  if (bText.includes("doc") && aTokens.has(bRoot)) score += 5;
+  return score;
+}
+
+function addLink(
+  links: ForceGraphData["links"],
+  linkSet: Set<string>,
+  source: string,
+  target: string,
+): void {
+  if (source === target) return;
+  const key = [source, target].sort().join("::");
+  if (linkSet.has(key)) return;
+  linkSet.add(key);
+  links.push({ source, target });
+}
+
+function hydrateFilesFromGraph(files: GeneratedFile[], graph: SkillGraph): GeneratedFile[] {
+  return files.map((file) => {
+    const nodeId = file.path.split("/").pop()?.replace(/\.md$/, "");
+    const node = graph.nodes.find((candidate) => candidate.id === nodeId);
+    return node ? { ...file, content: node.content } : file;
+  });
+}
+
+function evidenceLines(node: GraphNode): string {
+  if (!node.evidence?.length) {
+    return "- No evidence paths were included in the uploaded graph artifact.";
+  }
+  return node.evidence
+    .slice(0, 6)
+    .map((ev) => `- \`${ev.path}\`${ev.start_line ? `:${ev.start_line}` : ""}`)
+    .join("\n");
+}
+
+function hydrateSparseRepoGraph(graph: SkillGraph): SkillGraph {
+  const nodeIds = new Set(graph.nodes.map((node) => node.id));
+  const existingNonMocLinks = graph.nodes
+    .filter((node) => node.type !== "moc")
+    .reduce((count, node) => count + node.links.filter((target) => nodeIds.has(target)).length, 0);
+
+  if (existingNonMocLinks > 0) {
+    return graph;
+  }
+
+  const nonMocNodes = graph.nodes.filter((node) => node.type !== "moc");
+  if (nonMocNodes.length < 3) {
+    return graph;
+  }
+
+  const related = new Map<string, string[]>();
+  const degree = new Map<string, number>();
+  const candidates: Array<{ score: number; source: string; target: string }> = [];
+
+  for (let i = 0; i < nonMocNodes.length; i += 1) {
+    for (let j = i + 1; j < nonMocNodes.length; j += 1) {
+      const score = repoAffinityScore(nonMocNodes[i], nonMocNodes[j]);
+      if (score > 0) {
+        candidates.push({ score, source: nonMocNodes[i].id, target: nonMocNodes[j].id });
+      }
+    }
+  }
+
+  candidates.sort((a, b) => b.score - a.score || a.source.localeCompare(b.source));
+  for (const candidate of candidates) {
+    if ((degree.get(candidate.source) ?? 0) >= 4 || (degree.get(candidate.target) ?? 0) >= 4) {
+      continue;
+    }
+    related.set(candidate.source, [...(related.get(candidate.source) ?? []), candidate.target]);
+    related.set(candidate.target, [...(related.get(candidate.target) ?? []), candidate.source]);
+    degree.set(candidate.source, (degree.get(candidate.source) ?? 0) + 1);
+    degree.set(candidate.target, (degree.get(candidate.target) ?? 0) + 1);
+    if ([...degree.values()].reduce((sum, value) => sum + value, 0) / 2 >= graph.nodes.length * 1.5) {
+      break;
+    }
+  }
+
+  return {
+    ...graph,
+    nodes: graph.nodes.map((node) => {
+      if (node.type === "moc") {
+        const links = node.links.filter((target) => nodeIds.has(target));
+        const mocLinks = links.length > 0 ? links : nonMocNodes.slice(0, 16).map((candidate) => candidate.id);
+        return {
+          ...node,
+          links: mocLinks,
+          content: [
+            `# ${graph.topic}`,
+            "",
+            "This uploaded repo graph was sparse, so HyperGraph enriched its traversal links at load time. Use the links below to move through related source, docs, tests, and operational hotspots instead of reading a flat file list.",
+            "",
+            "## Domain Clusters",
+            ...mocLinks.map((target) => {
+              const targetNode = graph.nodes.find((candidate) => candidate.id === target);
+              return `- Follow [[${target}]] to inspect ${targetNode?.label ?? target} and its evidence-backed neighbors.`;
+            }),
+            "",
+            "## Explorations Needed",
+            "- Which inferred relationships should be promoted into the source artifact?",
+            "- Which tests, configs, and docs explain the riskiest runtime behavior?",
+            "- Which clusters need deeper generation evidence?",
+          ].join("\n"),
+        };
+      }
+
+      const visualType = inferRepoNodeType(node);
+      const links = related.get(node.id) ?? [];
+      const relatedText = links.length
+        ? links.map((target) => `Follow [[${target}]] to compare adjacent evidence and implementation responsibilities.`).join(" ")
+        : "No high-confidence related node was inferred from the uploaded artifact.";
+      return {
+        ...node,
+        type: visualType,
+        links,
+        content: [
+          `---`,
+          `title: ${node.label}`,
+          `type: ${visualType}`,
+          `description: ${node.description}`,
+          `---`,
+          "",
+          `# ${node.label}`,
+          "",
+          node.description,
+          "",
+          "## Evidence",
+          "",
+          evidenceLines(node),
+          "",
+          "## Related traversal",
+          "",
+          relatedText,
+          "",
+          "## Uploaded artifact note",
+          "",
+          "This content was normalized from a sparse uploaded repo graph so its preview links match the canvas topology.",
+        ].join("\n"),
+      };
+    }),
+  };
+}
+
 function buildForceGraphData(graph: SkillGraph): ForceGraphData {
   const nodeIds = new Set(graph.nodes.map((n) => n.id));
   const linkSet = new Set<string>();
@@ -34,21 +203,60 @@ function buildForceGraphData(graph: SkillGraph): ForceGraphData {
   for (const node of graph.nodes) {
     for (const target of node.links) {
       if (!nodeIds.has(target)) continue;
-      const key = [node.id, target].sort().join("::");
-      if (!linkSet.has(key)) {
-        linkSet.add(key);
-        links.push({ source: node.id, target });
-      }
+      addLink(links, linkSet, node.id, target);
     }
   }
 
+  const nonMocNodes = graph.nodes.filter((node) => node.type !== "moc");
+  const nonMocLinkCount = links.filter((link) => {
+    const source = typeof link.source === "string" ? link.source : String(link.source.id ?? "");
+    const target = typeof link.target === "string" ? link.target : String(link.target.id ?? "");
+    const sourceNode = graph.nodes.find((node) => node.id === source);
+    const targetNode = graph.nodes.find((node) => node.id === target);
+    return sourceNode?.type !== "moc" && targetNode?.type !== "moc";
+  }).length;
+
+  if (nonMocNodes.length > 2 && nonMocLinkCount === 0) {
+    const candidates: Array<{ score: number; source: string; target: string }> = [];
+    for (let i = 0; i < nonMocNodes.length; i += 1) {
+      for (let j = i + 1; j < nonMocNodes.length; j += 1) {
+        const score = repoAffinityScore(nonMocNodes[i], nonMocNodes[j]);
+        if (score > 0) {
+          candidates.push({ score, source: nonMocNodes[i].id, target: nonMocNodes[j].id });
+        }
+      }
+    }
+    candidates.sort((a, b) => b.score - a.score || a.source.localeCompare(b.source));
+    const degree = new Map<string, number>();
+    for (const candidate of candidates) {
+      if ((degree.get(candidate.source) ?? 0) >= 3 || (degree.get(candidate.target) ?? 0) >= 3) {
+        continue;
+      }
+      addLink(links, linkSet, candidate.source, candidate.target);
+      degree.set(candidate.source, (degree.get(candidate.source) ?? 0) + 1);
+      degree.set(candidate.target, (degree.get(candidate.target) ?? 0) + 1);
+      if (links.length >= graph.nodes.length * 2) break;
+    }
+  }
+
+  const degree = new Map<string, number>();
+  for (const link of links) {
+    const source = typeof link.source === "string" ? link.source : String(link.source.id ?? "");
+    const target = typeof link.target === "string" ? link.target : String(link.target.id ?? "");
+    degree.set(source, (degree.get(source) ?? 0) + 1);
+    degree.set(target, (degree.get(target) ?? 0) + 1);
+  }
+
   return {
-    nodes: graph.nodes.map((n) => ({
-      id: n.id,
-      label: n.label,
-      type: n.type,
-      val: NODE_SIZES[n.type] + Math.min(n.links.length * 0.5, 4),
-    })),
+    nodes: graph.nodes.map((n) => {
+      const visualType = n.type === "moc" ? "moc" : inferRepoNodeType(n);
+      return {
+        id: n.id,
+        label: n.label,
+        type: visualType,
+        val: NODE_SIZES[visualType] + Math.min((degree.get(n.id) ?? 0) * 0.25, 2),
+      };
+    }),
     links,
   };
 }
@@ -172,10 +380,11 @@ function HomeContent() {
           return;
         }
 
-        setGraph(data.graph);
-        setFiles(data.files);
+        const hydratedGraph = hydrateSparseRepoGraph(data.graph);
+        setGraph(hydratedGraph);
+        setFiles(hydrateFilesFromGraph(data.files, hydratedGraph));
         setArtifactPathHint(trimmedPath);
-        focusMocNode(data.graph);
+        focusMocNode(hydratedGraph);
       } catch (err) {
         setError({
           message: err instanceof Error ? err.message : "Something went wrong",
@@ -216,13 +425,14 @@ function HomeContent() {
           return;
         }
 
-        setGraph(data.graph);
-        setFiles(data.files);
+        const hydratedGraph = hydrateSparseRepoGraph(data.graph);
+        setGraph(hydratedGraph);
+        setFiles(hydrateFilesFromGraph(data.files, hydratedGraph));
         setArtifactPathHint(data.artifactPath ?? null);
         if (data.artifactPath) {
           setGraphPath(data.artifactPath);
         }
-        focusMocNode(data.graph);
+        focusMocNode(hydratedGraph);
       } catch (err) {
         setError({
           message: err instanceof Error ? err.message : "Something went wrong",
