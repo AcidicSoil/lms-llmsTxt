@@ -79,6 +79,5 @@ uv run --extra test pytest -q --tb=short
 
 - Do not perform external/product rollout until a final human owner and approval venue are identified.
 - Do not change dependency versions unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
-- Do not change dependency versions unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
 - Do not rely on secrets in chat; keep GitHub token setup local.
 - Do not delete stale records; preserve recoverability by updating, redirecting, or archiving instead.

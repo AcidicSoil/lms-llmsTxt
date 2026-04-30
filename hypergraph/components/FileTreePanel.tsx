@@ -11,10 +11,10 @@ interface FileTreePanelProps {
 }
 
 const TYPE_DOT: Record<NodeType, string> = {
-  moc: "bg-zinc-900",
-  concept: "bg-zinc-600",
-  pattern: "bg-zinc-400",
-  gotcha: "border border-zinc-300 bg-white",
+  moc: "bg-zinc-900 dark:bg-zinc-100",
+  concept: "bg-zinc-600 dark:bg-zinc-400",
+  pattern: "bg-zinc-400 dark:bg-zinc-500",
+  gotcha: "border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950",
 };
 
 function toNodeId(filePath: string): string {
@@ -48,11 +48,11 @@ export default function FileTreePanel({
   });
 
   return (
-    <div className="flex h-full w-[200px] flex-shrink-0 flex-col overflow-hidden border-r border-zinc-200 bg-white">
+    <div className="flex h-full w-[200px] flex-shrink-0 flex-col overflow-hidden border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
       {/* Panel header */}
-      <div className="flex flex-shrink-0 items-center border-b border-zinc-200 px-3 py-2">
+      <div className="flex flex-shrink-0 items-center border-b border-zinc-200 dark:border-zinc-800 px-3 py-2">
         <span
-          className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400"
+          className="text-[10px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500"
           style={{ letterSpacing: "0.08em" }}
         >
           Explorer
@@ -64,11 +64,11 @@ export default function FileTreePanel({
         {/* Folder row */}
         <button
           onClick={() => setFolderOpen((o) => !o)}
-          className="flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-zinc-50"
+          className="flex w-full items-center gap-1.5 px-2 py-1 text-left transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-900"
         >
           {/* Chevron */}
           <svg
-            className={`h-3 w-3 flex-shrink-0 text-zinc-400 transition-transform duration-150 ${folderOpen ? "rotate-90" : ""}`}
+            className={`h-3 w-3 flex-shrink-0 text-zinc-400 dark:text-zinc-500 transition-transform duration-150 ${folderOpen ? "rotate-90" : ""}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -82,7 +82,7 @@ export default function FileTreePanel({
           </svg>
           {/* Folder icon */}
           <svg
-            className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400"
+            className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400 dark:text-zinc-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -95,13 +95,13 @@ export default function FileTreePanel({
             />
           </svg>
           <span
-            className="flex-1 truncate font-mono text-[11px] text-zinc-600"
+            className="flex-1 truncate font-mono text-[11px] text-zinc-600 dark:text-zinc-400"
             title={topicSlug}
           >
             {topicSlug}
           </span>
           {/* Count badge */}
-          <span className="ml-auto flex-shrink-0 rounded-full bg-zinc-100 px-1.5 py-px font-mono text-[9px] text-zinc-400">
+          <span className="ml-auto flex-shrink-0 rounded-full bg-zinc-100 dark:bg-zinc-800 px-1.5 py-px font-mono text-[9px] text-zinc-400 dark:text-zinc-500">
             {files.length}
           </span>
         </button>
@@ -122,13 +122,13 @@ export default function FileTreePanel({
                   title={node?.description ?? fileName}
                   className={`flex w-full items-center gap-2 py-[5px] pl-7 pr-2 text-left transition-colors duration-100 ${
                     isActive
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+                      ? "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                      : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-900 dark:hover:text-zinc-200"
                   }`}
                 >
                   {/* Type dot */}
                   <span
-                    className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${node ? TYPE_DOT[node.type] : "bg-zinc-300"}`}
+                    className={`h-1.5 w-1.5 flex-shrink-0 rounded-full ${node ? TYPE_DOT[node.type] : "bg-zinc-300 dark:bg-zinc-600"}`}
                   />
                   {/* File name */}
                   <span

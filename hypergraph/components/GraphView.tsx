@@ -30,15 +30,76 @@ type LinkForce = {
 
 const R = 3.5; // base radius multiplier, reduced to avoid clutter
 
-// Visual config per type
-const NODE_STYLE: Record<
-  NodeType,
-  { fill: string; stroke: string; strokeW: number; innerDot: boolean }
-> = {
-  moc: { fill: "#18181b", stroke: "#000000", strokeW: 0, innerDot: true },
-  concept: { fill: "#27272a", stroke: "#000000", strokeW: 0, innerDot: false },
-  pattern: { fill: "#52525b", stroke: "#000000", strokeW: 0, innerDot: false },
-  gotcha: { fill: "#ffffff", stroke: "#d4d4d8", strokeW: 1.5, innerDot: false },
+type NodeVisualStyle = {
+  fill: string;
+  stroke: string;
+  strokeW: number;
+  innerDot: boolean;
+};
+
+type GraphPalette = {
+  nodes: Record<NodeType, NodeVisualStyle>;
+  gridDot: string;
+  background: string;
+  link: string;
+  particle: string;
+  selectedHalo: string;
+  selectedRing: string;
+  hoverRing: string;
+  shadow: string;
+  selectedFill: string;
+  selectedStroke: string;
+  innerDot: string;
+  labelHalo: string;
+  label: string;
+  selectedLabel: string;
+};
+
+const GRAPH_PALETTES: Record<"light" | "dark", GraphPalette> = {
+  light: {
+    nodes: {
+      moc: { fill: "#18181b", stroke: "#000000", strokeW: 0, innerDot: true },
+      concept: { fill: "#27272a", stroke: "#000000", strokeW: 0, innerDot: false },
+      pattern: { fill: "#52525b", stroke: "#000000", strokeW: 0, innerDot: false },
+      gotcha: { fill: "#ffffff", stroke: "#d4d4d8", strokeW: 1.5, innerDot: false },
+    },
+    gridDot: "#d4d4d8",
+    background: "#fafafa",
+    link: "rgba(161,161,170,0.4)",
+    particle: "rgba(0,0,0,0.6)",
+    selectedHalo: "rgba(0,0,0,0.04)",
+    selectedRing: "rgba(0,0,0,0.8)",
+    hoverRing: "rgba(0,0,0,0.15)",
+    shadow: "rgba(0,0,0,0.12)",
+    selectedFill: "#ffffff",
+    selectedStroke: "#000000",
+    innerDot: "rgba(255,255,255,0.85)",
+    labelHalo: "rgba(255,255,255,0.95)",
+    label: "#404040",
+    selectedLabel: "#000000",
+  },
+  dark: {
+    nodes: {
+      moc: { fill: "#f4f4f5", stroke: "#ffffff", strokeW: 0, innerDot: true },
+      concept: { fill: "#d4d4d8", stroke: "#ffffff", strokeW: 0, innerDot: false },
+      pattern: { fill: "#a1a1aa", stroke: "#ffffff", strokeW: 0, innerDot: false },
+      gotcha: { fill: "#18181b", stroke: "#71717a", strokeW: 1.5, innerDot: false },
+    },
+    gridDot: "#27272a",
+    background: "#09090b",
+    link: "rgba(113,113,122,0.5)",
+    particle: "rgba(244,244,245,0.75)",
+    selectedHalo: "rgba(244,244,245,0.10)",
+    selectedRing: "rgba(244,244,245,0.9)",
+    hoverRing: "rgba(244,244,245,0.24)",
+    shadow: "rgba(0,0,0,0.45)",
+    selectedFill: "#09090b",
+    selectedStroke: "#f4f4f5",
+    innerDot: "rgba(9,9,11,0.85)",
+    labelHalo: "rgba(9,9,11,0.96)",
+    label: "#d4d4d8",
+    selectedLabel: "#ffffff",
+  },
 };
 
 const LEGEND: { type: NodeType; label: string }[] = [
@@ -57,6 +118,27 @@ export default function GraphView({
   const graphRef = useRef<GraphMethods | undefined>(undefined);
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const palette = GRAPH_PALETTES[theme];
+
+  useEffect(() => {
+    const updateTheme = () => {
+      setTheme(
+        document.documentElement.getAttribute("data-theme") === "dark"
+          ? "dark"
+          : "light",
+      );
+    };
+
+    updateTheme();
+    const observer = new MutationObserver(updateTheme);
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -101,7 +183,7 @@ export default function GraphView({
   const nodeCanvasObject = useCallback(
     (node: GraphNodeObject, ctx: CanvasRenderingContext2D, globalScale: number) => {
       const type = typeof node.type === "string" ? (node.type as NodeType) : "concept";
-      const style = NODE_STYLE[type] ?? NODE_STYLE.concept;
+      const style = palette.nodes[type] ?? palette.nodes.concept;
       const size = (typeof node.val === "number" ? node.val : 1) * R;
       const x = node.x ?? 0;
       const y = node.y ?? 0;
@@ -113,19 +195,19 @@ export default function GraphView({
         // Outer diffuse halo
         ctx.beginPath();
         ctx.arc(x, y, size + 8, 0, 2 * Math.PI);
-        ctx.strokeStyle = "rgba(0,0,0,0.04)";
+        ctx.strokeStyle = palette.selectedHalo;
         ctx.lineWidth = 6;
         ctx.stroke();
         // Crisp selection ring
         ctx.beginPath();
         ctx.arc(x, y, size + 4, 0, 2 * Math.PI);
-        ctx.strokeStyle = "rgba(0,0,0,0.8)";
+        ctx.strokeStyle = palette.selectedRing;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       } else if (isHovered) {
         ctx.beginPath();
         ctx.arc(x, y, size + 4, 0, 2 * Math.PI);
-        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+        ctx.strokeStyle = palette.hoverRing;
         ctx.lineWidth = 1.5;
         ctx.stroke();
       }
@@ -135,16 +217,16 @@ export default function GraphView({
       ctx.arc(x, y, size, 0, 2 * Math.PI);
 
       // Shadow for depth
-      ctx.shadowColor = "rgba(0,0,0,0.12)";
+      ctx.shadowColor = palette.shadow;
       ctx.shadowBlur = 6;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 2;
 
       if (isSelected) {
-        ctx.fillStyle = "#ffffff";
+        ctx.fillStyle = palette.selectedFill;
         ctx.fill();
         ctx.shadowColor = "transparent"; // clear shadow for stroke
-        ctx.strokeStyle = "#000000";
+        ctx.strokeStyle = palette.selectedStroke;
         ctx.lineWidth = 2;
         ctx.stroke();
       } else {
@@ -162,7 +244,7 @@ export default function GraphView({
       if (style.innerDot && !isSelected) {
         ctx.beginPath();
         ctx.arc(x, y, size * 0.35, 0, 2 * Math.PI);
-        ctx.fillStyle = "rgba(255,255,255,0.85)";
+        ctx.fillStyle = palette.innerDot;
         ctx.fill();
       }
 
@@ -183,11 +265,11 @@ export default function GraphView({
       // 1. Thick white halo (stroke) to create separation from background/other nodes
       ctx.lineJoin = "round";
       ctx.lineWidth = 3.5;
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+      ctx.strokeStyle = palette.labelHalo;
       ctx.strokeText(label, x, ly);
 
       // 2. The text itself
-      ctx.fillStyle = isSelected ? "#000000" : "#404040";
+      ctx.fillStyle = isSelected ? palette.selectedLabel : palette.label;
       ctx.fillText(label, x, ly);
 
       // Reset
@@ -195,7 +277,7 @@ export default function GraphView({
         ctx as CanvasRenderingContext2D & { letterSpacing?: string }
       ).letterSpacing = "0px";
     },
-    [selectedNodeId, hoveredNode],
+    [selectedNodeId, hoveredNode, palette],
   );
 
   const nodePointerAreaPaint = useCallback(
@@ -215,9 +297,9 @@ export default function GraphView({
       className="relative h-full w-full"
       style={{
         backgroundImage:
-          "radial-gradient(circle, #d4d4d8 1px, transparent 1px)",
+          `radial-gradient(circle, ${palette.gridDot} 1px, transparent 1px)`,
         backgroundSize: "28px 28px",
-        backgroundColor: "#fafafa",
+        backgroundColor: palette.background,
       }}
     >
       <ForceGraph2D
@@ -233,11 +315,11 @@ export default function GraphView({
           }
         }}
         onNodeHover={(node) => setHoveredNode(node?.id != null ? String(node.id) : null)}
-        linkColor={() => "rgba(161,161,170,0.4)"}
+        linkColor={() => palette.link}
         linkWidth={1.2}
         linkDirectionalParticles={2}
         linkDirectionalParticleWidth={2}
-        linkDirectionalParticleColor={() => "rgba(0,0,0,0.6)"}
+        linkDirectionalParticleColor={() => palette.particle}
         backgroundColor="transparent"
         d3AlphaDecay={0.04}
         d3VelocityDecay={0.2}
@@ -256,13 +338,15 @@ export default function GraphView({
               <div
                 className="h-2.5 w-2.5 flex-shrink-0 rounded-full"
                 style={{
-                  backgroundColor: NODE_STYLE[type].fill,
+                  backgroundColor: palette.nodes[type].fill,
                   border:
-                    NODE_STYLE[type].stroke !== "none"
-                      ? `1.5px solid ${NODE_STYLE[type].stroke}`
+                    palette.nodes[type].stroke !== "none"
+                      ? `1.5px solid ${palette.nodes[type].stroke}`
                       : "none",
                   outline:
-                    type === "moc" ? "2px solid rgba(0,0,0,0.12)" : "none",
+                    type === "moc"
+                      ? `2px solid ${theme === "dark" ? "rgba(244,244,245,0.18)" : "rgba(0,0,0,0.12)"}`
+                      : "none",
                   outlineOffset: "1px",
                 }}
               />

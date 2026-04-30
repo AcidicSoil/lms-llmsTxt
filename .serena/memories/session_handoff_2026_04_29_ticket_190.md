@@ -1,5 +1,9 @@
 # Session Handoff — 2026-04-29 — TICKET-190
 
+> [!IMPORTANT]
+> Superseded for current-state decisions by `docs/current-state.md` and `.serena/memories/current_state_2026_04_30.md`. Preserve this file as historical evidence; do not use it as the latest task state when it conflicts with the current-state record.
+
+
 ## Objective
 Start TICKET-190 and complete the largest coherent safe verified slice for optional RLM-style exploration evaluation.
 

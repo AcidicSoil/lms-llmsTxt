@@ -34,9 +34,9 @@ export default function TopicInput({
   if (variant === "hero") {
     return (
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="relative flex items-center rounded-xl border border-zinc-200 bg-white shadow-sm transition-all duration-200 focus-within:border-zinc-400 focus-within:shadow-md">
+        <div className="relative flex items-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm transition-all duration-200 focus-within:border-zinc-400 focus-within:shadow-md">
           <svg
-            className="ml-4 h-4 w-4 flex-shrink-0 text-zinc-400"
+            className="ml-4 h-4 w-4 flex-shrink-0 text-zinc-400 dark:text-zinc-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -55,13 +55,13 @@ export default function TopicInput({
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Supabase Auth, React Server Components, Postgres…"
             disabled={isLoading}
-            className="flex-1 bg-transparent px-3 py-3.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 bg-transparent px-3 py-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
           <div className="flex-shrink-0 p-1.5">
             <button
               type="submit"
               disabled={isLoading || !topic.trim()}
-              className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900"
+              className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 dark:disabled:hover:bg-zinc-100"
             >
               {isLoading ? (
                 <>
@@ -119,12 +119,12 @@ export default function TopicInput({
         onChange={(e) => setTopic(e.target.value)}
         placeholder="Enter a topic…"
         disabled={isLoading}
-        className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none ring-0 transition-all duration-150 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 outline-none ring-0 transition-all duration-150 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
       />
       <button
         type="submit"
         disabled={isLoading || !topic.trim()}
-        className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900"
+        className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 dark:disabled:hover:bg-zinc-100"
       >
         {isLoading ? (
           <>

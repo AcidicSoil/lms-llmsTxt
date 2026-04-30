@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import JSZip from "jszip";
 import TopicInput from "@/components/TopicInput";
 import GraphView from "@/components/GraphView";
 import NodePreview from "@/components/NodePreview";
 import FileTreePanel from "@/components/FileTreePanel";
+import ThemeToggle from "@/components/ThemeToggle";
 import type {
   SkillGraph,
   GeneratedFile,
@@ -58,7 +59,7 @@ interface AppError {
   upgradeUrl?: string;
 }
 
-export default function Home() {
+function HomeContent() {
   const searchParams = useSearchParams();
   const autoLoadHandledRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -308,9 +309,9 @@ export default function Home() {
   /* ── Landing screen ── */
   if (!hasResults) {
     return (
-      <div className="flex h-screen flex-col bg-white font-sans">
+      <div className="flex h-screen flex-col bg-white dark:bg-zinc-950 font-sans">
         {/* Top nav */}
-        <nav className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 px-5 py-3">
+        <nav className="flex flex-shrink-0 items-center justify-between border-b border-zinc-100 dark:border-zinc-800 px-5 py-3">
           <a
             href="https://hyperbrowser.ai"
             target="_blank"
@@ -334,17 +335,19 @@ export default function Home() {
               />
             </svg>
             <span
-              className="text-[11px] font-semibold text-zinc-400"
+              className="text-[11px] font-semibold text-zinc-400 dark:text-zinc-500"
               style={{ letterSpacing: "0.01em" }}
             >
               Hyperbrowser
             </span>
           </a>
-          <a
-            href="https://hyperbrowser.ai"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 rounded-md border border-zinc-200 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <a
+              href="https://hyperbrowser.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
           >
             <svg
               className="h-3 w-3"
@@ -359,7 +362,8 @@ export default function Home() {
               <path d="M21 2l-9.6 9.6M15.5 7.5l2 2" />
             </svg>
             Get API Key
-          </a>
+            </a>
+          </div>
         </nav>
 
         {/* Centered content */}
@@ -368,12 +372,12 @@ export default function Home() {
             {/* Brand */}
             <div className="mb-8 text-center">
               <h1
-                className="text-4xl font-bold text-zinc-900"
+                className="text-4xl font-bold text-zinc-900 dark:text-zinc-100"
                 style={{ letterSpacing: "-0.04em" }}
               >
                 Hyper<span className="font-extralight">Graph</span>
               </h1>
-              <p className="accent mt-2.5 text-xs font-semibold text-zinc-400">
+              <p className="accent mt-2.5 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
                 Give your agent a domain to understand, not just instructions to
                 follow
               </p>
@@ -386,20 +390,20 @@ export default function Home() {
               variant="hero"
             />
 
-            <div className="mt-6 rounded-xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
+            <div className="mt-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold text-zinc-500">
+                  <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
                     Generate repo graph
                   </p>
-                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400">
+                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">
                     Run the local lms_llmsTxt pipeline and load the generated
                     repo graph
                   </p>
                 </div>
                 <button
                   onClick={() => setShowRepoPanel((prev) => !prev)}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-[10px] font-semibold text-zinc-500 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white"
+                  className="rounded-full border border-zinc-200 dark:border-zinc-800 px-3 py-1 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950"
                 >
                   {showRepoPanel ? "Hide" : "Show"}
                 </button>
@@ -411,13 +415,13 @@ export default function Home() {
                     value={repoUrlInput}
                     onChange={(e) => setRepoUrlInput(e.target.value)}
                     placeholder="https://github.com/<owner>/<repo>"
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+                    className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                     disabled={isLoading}
                   />
                   <button
                     onClick={() => void handleGenerateRepoGraph()}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Generate repo graph
                   </button>
@@ -425,19 +429,19 @@ export default function Home() {
               )}
             </div>
 
-            <div className="mt-6 rounded-xl border border-zinc-200 bg-white px-4 py-4 shadow-sm">
+            <div className="mt-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-4 shadow-sm">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-semibold text-zinc-500">
+                  <p className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
                     Load repo graph
                   </p>
-                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400">
+                  <p className="accent mt-1 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">
                     Use an existing repo.graph.json from artifacts
                   </p>
                 </div>
                 <button
                   onClick={() => setShowLoadPanel((prev) => !prev)}
-                  className="rounded-full border border-zinc-200 px-3 py-1 text-[10px] font-semibold text-zinc-500 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white"
+                  className="rounded-full border border-zinc-200 dark:border-zinc-800 px-3 py-1 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950"
                 >
                   {showLoadPanel ? "Hide" : "Show"}
                 </button>
@@ -449,13 +453,13 @@ export default function Home() {
                     value={graphPath}
                     onChange={(e) => setGraphPath(e.target.value)}
                     placeholder="../artifacts/<owner>/<repo>/graph/repo.graph.json"
-                    className="w-full rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+                    className="w-full rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                     disabled={isLoading}
                   />
                   <button
                     onClick={() => void handleLoadGraph()}
                     disabled={isLoading}
-                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex items-center justify-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     Load graph
                   </button>
@@ -469,7 +473,7 @@ export default function Home() {
                 <button
                   key={t}
                   onClick={() => handleSubmit(t)}
-                  className="accent rounded-full border border-zinc-200 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+                  className="accent rounded-full border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
                 >
                   {t}
                 </button>
@@ -479,7 +483,7 @@ export default function Home() {
         </div>
 
         {/* Footer */}
-        <p className="accent pb-6 text-center text-[10px] font-semibold text-zinc-300">
+        <p className="accent pb-6 text-center text-[10px] font-semibold text-zinc-300 dark:text-zinc-600">
           Powered by Hyperbrowser
         </p>
       </div>
@@ -488,9 +492,9 @@ export default function Home() {
 
   /* ── Results / loading screen ── */
   return (
-    <div className="flex h-screen flex-col bg-white font-sans text-zinc-900">
+    <div className="flex h-screen flex-col bg-white dark:bg-zinc-950 font-sans text-zinc-900 dark:text-zinc-100">
       {/* Compact header */}
-      <header className="flex flex-shrink-0 items-center gap-3 border-b border-zinc-200 px-5 py-2.5">
+      <header className="flex flex-shrink-0 items-center gap-3 border-b border-zinc-200 dark:border-zinc-800 px-5 py-2.5">
         {/* Logo + brand */}
         <button
           onClick={() => {
@@ -520,7 +524,7 @@ export default function Home() {
             />
           </svg>
           <span
-            className="font-bold text-zinc-900"
+            className="font-bold text-zinc-900 dark:text-zinc-100"
             style={{ letterSpacing: "-0.03em", fontSize: "15px" }}
           >
             Hyper<span className="font-extralight">Graph</span>
@@ -537,7 +541,7 @@ export default function Home() {
         </div>
         <button
           onClick={() => setShowRepoPanel((prev) => !prev)}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
         >
           <svg
             className="h-3.5 w-3.5"
@@ -556,7 +560,7 @@ export default function Home() {
         </button>
         <button
           onClick={() => setShowLoadPanel((prev) => !prev)}
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
         >
           <svg
             className="h-3.5 w-3.5"
@@ -576,7 +580,7 @@ export default function Home() {
         {files.length > 0 && (
           <button
             onClick={handleDownload}
-            className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+            className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-300 dark:border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-700 dark:text-zinc-300 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
           >
             <svg
               className="h-3.5 w-3.5"
@@ -594,12 +598,13 @@ export default function Home() {
             Download .zip
           </button>
         )}
-        <div className="h-4 w-px bg-zinc-200 flex-shrink-0" />
+        <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 flex-shrink-0" />
+        <ThemeToggle />
         <a
           href="https://hyperbrowser.ai"
           target="_blank"
           rel="noopener noreferrer"
-          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 transition-all duration-150 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+          className="flex flex-shrink-0 items-center gap-1.5 rounded-md border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-[11px] font-semibold text-zinc-600 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
         >
           <svg
             className="h-3 w-3"
@@ -618,19 +623,19 @@ export default function Home() {
       </header>
 
       {showRepoPanel && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-5 py-3">
           <input
             type="text"
             value={repoUrlInput}
             onChange={(e) => setRepoUrlInput(e.target.value)}
             placeholder="https://github.com/<owner>/<repo>"
-            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
             disabled={isLoading}
           />
           <button
             onClick={() => void handleGenerateRepoGraph()}
             disabled={isLoading}
-            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Generate repo graph
           </button>
@@ -638,19 +643,19 @@ export default function Home() {
       )}
 
       {showLoadPanel && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 bg-zinc-50 px-5 py-3">
+        <div className="flex flex-wrap items-center gap-2 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-5 py-3">
           <input
             type="text"
             value={graphPath}
             onChange={(e) => setGraphPath(e.target.value)}
             placeholder="../artifacts/<owner>/<repo>/graph/repo.graph.json"
-            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 bg-white px-3 py-2 text-xs text-zinc-700 outline-none focus:border-zinc-400"
+            className="flex-1 min-w-[240px] rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-2 text-xs text-zinc-700 dark:text-zinc-300 outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
             disabled={isLoading}
           />
           <button
             onClick={() => void handleLoadGraph()}
             disabled={isLoading}
-            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-2 text-xs font-semibold text-white transition-all duration-150 hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 disabled:cursor-not-allowed disabled:opacity-50"
           >
             Load repo graph
           </button>
@@ -658,9 +663,9 @@ export default function Home() {
       )}
 
       {artifactPathHint && (
-        <div className="border-b border-zinc-200 bg-zinc-50 px-5 py-2 text-xs text-zinc-600">
+        <div className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-5 py-2 text-xs text-zinc-600 dark:text-zinc-400">
           Artifact path:{" "}
-          <code className="rounded bg-white px-1.5 py-0.5 text-[11px] text-zinc-700">
+          <code className="rounded bg-white dark:bg-zinc-950 px-1.5 py-0.5 text-[11px] text-zinc-700 dark:text-zinc-300">
             {artifactPathHint}
           </code>
         </div>
@@ -668,7 +673,7 @@ export default function Home() {
 
       {/* Error bar */}
       {error && !error.isPlanLimit && (
-        <div className="flex items-center gap-2 border-b border-red-100 bg-red-50 px-5 py-2.5 text-sm text-red-700">
+        <div className="flex items-center gap-2 border-b border-red-100 dark:border-red-900/50 bg-red-50 dark:bg-red-950/40 px-5 py-2.5 text-sm text-red-700 dark:text-red-300">
           <svg
             className="h-4 w-4 flex-shrink-0"
             fill="none"
@@ -688,10 +693,10 @@ export default function Home() {
 
       {/* Plan limit banner */}
       {error?.isPlanLimit && (
-        <div className="flex items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-5 py-3">
+        <div className="flex items-center justify-between gap-3 border-b border-amber-200 dark:border-amber-800/60 bg-amber-50 dark:bg-amber-950/40 px-5 py-3">
           <div className="flex items-start gap-2.5">
             <svg
-              className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600"
+              className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600 dark:text-amber-400"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -704,10 +709,10 @@ export default function Home() {
               />
             </svg>
             <div>
-              <p className="text-xs font-semibold text-amber-800">
+              <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
                 Free plan — concurrent browser limit reached
               </p>
-              <p className="mt-0.5 text-[11px] text-amber-700">
+              <p className="mt-0.5 text-[11px] text-amber-700 dark:text-amber-300">
                 Your Hyperbrowser plan supports only 1 concurrent browser
                 session. Upgrade to run parallel scrapes.
               </p>
@@ -717,7 +722,7 @@ export default function Home() {
             href={error.upgradeUrl ?? "https://hyperbrowser.ai"}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 rounded-md bg-amber-800 px-3 py-1.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
+            className="flex-shrink-0 rounded-md bg-amber-800 dark:bg-amber-500 px-3 py-1.5 text-[11px] font-semibold text-white transition-opacity hover:opacity-80"
           >
             Upgrade plan
           </a>
@@ -742,7 +747,7 @@ export default function Home() {
               />
             </svg>
             <svg
-              className="absolute inset-0 h-10 w-10 animate-spin text-zinc-900"
+              className="absolute inset-0 h-10 w-10 animate-spin text-zinc-900 dark:text-zinc-100"
               style={{ animationDuration: "0.75s" }}
               viewBox="0 0 24 24"
               fill="none"
@@ -757,12 +762,12 @@ export default function Home() {
           </div>
           <div className="text-center">
             <p
-              className="text-sm font-bold text-zinc-900"
+              className="text-sm font-bold text-zinc-900 dark:text-zinc-100"
               style={{ letterSpacing: "-0.02em" }}
             >
               Building{submittedTopic ? ` "${submittedTopic}"` : ""} graph
             </p>
-            <p className="accent mt-1.5 text-[10px] font-semibold text-zinc-400">
+            <p className="accent mt-1.5 text-[10px] font-semibold text-zinc-400 dark:text-zinc-500">
               Mapping the knowledge structure for this domain
             </p>
           </div>
@@ -778,7 +783,7 @@ export default function Home() {
             selectedNodeId={selectedNodeId}
             onSelect={setSelectedNodeId}
           />
-          <div className="flex-1 border-r border-zinc-200 overflow-hidden">
+          <div className="flex-1 border-r border-zinc-200 dark:border-zinc-800 overflow-hidden">
             <GraphView
               data={graphData}
               onNodeClick={setSelectedNodeId}
@@ -794,5 +799,13 @@ export default function Home() {
         </main>
       )}
     </div>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={null}>
+      <HomeContent />
+    </Suspense>
   );
 }

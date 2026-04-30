@@ -262,6 +262,7 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 
 - `docs/getting-started.md` - beginner onboarding and first commands.
 - `docs/architecture.md` - system design, data flow, and extension points.
+- `docs/current-state.md` - current source of truth for active/superseded state records, rollout gates, and next safe slices.
 - `docs/standards.md` - discovered coding/runtime conventions and recommended consistency rules.
 - `docs/patterns.md` - architectural/code patterns, integration seams, and hotspots.
 - `docs/REVIEW_CHECKLIST.md` - human validation checklist for brownfield documentation claims.

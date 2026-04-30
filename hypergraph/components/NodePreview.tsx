@@ -12,10 +12,10 @@ interface NodePreviewProps {
 }
 
 const TYPE_STYLES: Record<NodeType, string> = {
-  moc: "bg-zinc-900 text-white border-zinc-900",
-  concept: "bg-zinc-700 text-white border-zinc-700",
-  pattern: "bg-zinc-400 text-white border-zinc-400",
-  gotcha: "border-zinc-300 text-zinc-500 bg-zinc-50",
+  moc: "bg-zinc-900 dark:bg-zinc-100 text-white border-zinc-900",
+  concept: "bg-zinc-700 dark:bg-zinc-300 text-white border-zinc-700",
+  pattern: "bg-zinc-400 dark:bg-zinc-500 text-white border-zinc-400",
+  gotcha: "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900",
 };
 
 function toSlug(label: string): string {
@@ -43,7 +43,7 @@ function CopyButton({
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 transition-all duration-150 hover:bg-zinc-200 hover:text-zinc-700 active:scale-95"
+      className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-medium text-zinc-400 dark:text-zinc-500 transition-all duration-150 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-zinc-700 dark:hover:text-zinc-200 dark:text-zinc-300 active:scale-95"
     >
       {copied ? (
         <>
@@ -90,10 +90,10 @@ export default function NodePreview({
 }: NodePreviewProps) {
   if (!node) {
     return (
-      <div className="flex h-full items-center justify-center bg-zinc-50">
+      <div className="flex h-full items-center justify-center bg-zinc-50 dark:bg-zinc-900">
         <div className="text-center">
           <svg
-            className="mx-auto mb-3 h-9 w-9 text-zinc-200"
+            className="mx-auto mb-3 h-9 w-9 text-zinc-200 dark:text-zinc-700"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -105,7 +105,7 @@ export default function NodePreview({
               d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
             />
           </svg>
-          <p className="text-xs text-zinc-400">Select a node to view content</p>
+          <p className="text-xs text-zinc-400 dark:text-zinc-500">Select a node to view content</p>
         </div>
       </div>
     );
@@ -123,7 +123,7 @@ export default function NodePreview({
           <button
             key={i}
             onClick={() => onWikilinkClick(linkId)}
-            className="mx-0.5 inline-block rounded border border-zinc-300 px-1.5 py-0.5 text-xs font-semibold text-zinc-700 transition-all duration-100 hover:border-zinc-900 hover:bg-zinc-900 hover:text-white active:scale-95"
+            className="mx-0.5 inline-block rounded border border-zinc-300 dark:border-zinc-700 px-1.5 py-0.5 text-xs font-semibold text-zinc-700 dark:text-zinc-300 transition-all duration-100 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
             style={{ letterSpacing: "-0.01em" }}
           >
             {linkId}
@@ -135,17 +135,17 @@ export default function NodePreview({
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
+    <div className="flex h-full flex-col overflow-hidden bg-white dark:bg-zinc-950">
       {/* ── Editor tab strip ─────────────────────────────────────────────── */}
-      <div className="flex flex-shrink-0 items-stretch border-b border-zinc-200 bg-[#f3f3f3]">
+      <div className="flex flex-shrink-0 items-stretch border-b border-zinc-200 dark:border-zinc-800 bg-[#f3f3f3] dark:bg-zinc-900">
         {/* Active tab */}
         <div
-          className="flex min-w-0 items-center gap-1.5 border-r border-zinc-200 bg-white px-3 py-0 relative"
+          className="flex min-w-0 items-center gap-1.5 border-r border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-3 py-0 relative"
           style={{ borderTop: "1px solid #18181b" }}
         >
           {/* top accent bar */}
           <svg
-            className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400"
+            className="h-3.5 w-3.5 flex-shrink-0 text-zinc-400 dark:text-zinc-500"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -158,7 +158,7 @@ export default function NodePreview({
             />
           </svg>
           <span
-            className="truncate font-mono text-[11px] text-zinc-600 py-2"
+            className="truncate font-mono text-[11px] text-zinc-600 dark:text-zinc-400 py-2"
             style={{ maxWidth: "160px" }}
           >
             {slug}.md
@@ -168,7 +168,7 @@ export default function NodePreview({
         {/* Spacer — rest of the tab strip */}
         <div className="flex flex-1 items-center justify-end gap-2 px-3 py-1.5">
           <CopyButton text={node.content} label="Copy file" />
-          <div className="h-3.5 w-px bg-zinc-300" />
+          <div className="h-3.5 w-px bg-zinc-300 dark:bg-zinc-600" />
           <span
             className={`flex-shrink-0 rounded border px-1.5 py-0.5 font-mono text-[9px] font-semibold tracking-widest ${TYPE_STYLES[node.type]}`}
           >
@@ -178,10 +178,10 @@ export default function NodePreview({
       </div>
 
       {/* ── Breadcrumb ───────────────────────────────────────────────────── */}
-      <div className="flex flex-shrink-0 items-center gap-1 border-b border-zinc-100 bg-white px-4 py-1.5">
-        <span className="font-mono text-[10px] text-zinc-300">skills</span>
+      <div className="flex flex-shrink-0 items-center gap-1 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-1.5">
+        <span className="font-mono text-[10px] text-zinc-300 dark:text-zinc-600">skills</span>
         <svg
-          className="h-2.5 w-2.5 flex-shrink-0 text-zinc-200"
+          className="h-2.5 w-2.5 flex-shrink-0 text-zinc-200 dark:text-zinc-700"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -189,26 +189,26 @@ export default function NodePreview({
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
-        <span className="font-mono text-[10px] text-zinc-400">{slug}.md</span>
+        <span className="font-mono text-[10px] text-zinc-400 dark:text-zinc-500">{slug}.md</span>
       </div>
 
       {/* ── Description ──────────────────────────────────────────────────── */}
-      <div className="flex-shrink-0 border-b border-zinc-100 bg-white px-4 py-2.5">
-        <p className="text-[11px] leading-relaxed text-zinc-400">
+      <div className="flex-shrink-0 border-b border-zinc-100 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-2.5">
+        <p className="text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-500">
           {node.description}
         </p>
         {node.evidence && node.evidence.length > 0 && (
-          <div className="mt-2 border-t border-zinc-100 pt-2">
-            <p className="mb-1 text-[10px] uppercase tracking-widest text-zinc-400">
+          <div className="mt-2 border-t border-zinc-100 dark:border-zinc-800 pt-2">
+            <p className="mb-1 text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
               Evidence
             </p>
             <ul className="space-y-1">
               {node.evidence.slice(0, 5).map((ev, idx) => (
                 <li
                   key={`${ev.path}-${idx}`}
-                  className="text-[10px] text-zinc-500"
+                  className="text-[10px] text-zinc-500 dark:text-zinc-400"
                 >
-                  <code className="rounded bg-zinc-100 px-1 py-0.5">
+                  <code className="rounded bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5">
                     {ev.path}
                   </code>
                   {ev.start_line ? `:${ev.start_line}` : ""}
@@ -227,20 +227,20 @@ export default function NodePreview({
           components={{
             h1: ({ children }) => (
               <h1
-                className="mb-5 mt-0 text-lg font-bold text-zinc-900"
+                className="mb-5 mt-0 text-lg font-bold text-zinc-900 dark:text-zinc-100"
                 style={{ letterSpacing: "-0.03em" }}
               >
                 {children}
               </h1>
             ),
             h2: ({ children }) => (
-              <h2 className="mb-2 mt-7 text-[11px] font-bold uppercase tracking-widest text-zinc-400 border-b border-zinc-100 pb-1.5">
+              <h2 className="mb-2 mt-7 text-[11px] font-bold uppercase tracking-widest text-zinc-400 dark:text-zinc-500 border-b border-zinc-100 dark:border-zinc-800 pb-1.5">
                 {children}
               </h2>
             ),
             h3: ({ children }) => (
               <h3
-                className="mb-2 mt-5 text-xs font-semibold text-zinc-600"
+                className="mb-2 mt-5 text-xs font-semibold text-zinc-600 dark:text-zinc-400"
                 style={{ letterSpacing: "-0.01em" }}
               >
                 {children}
@@ -254,7 +254,7 @@ export default function NodePreview({
                 return child;
               });
               return (
-                <p className="mb-4 text-[13px] leading-[1.8] text-zinc-600">
+                <p className="mb-4 text-[13px] leading-[1.8] text-zinc-600 dark:text-zinc-400">
                   {processed}
                 </p>
               );
@@ -265,16 +265,16 @@ export default function NodePreview({
 
               if (isBlock) {
                 return (
-                  <div className="mb-5 overflow-hidden rounded-md border border-zinc-200 bg-white">
-                    <div className="flex items-center justify-between border-b border-zinc-100 bg-zinc-50 px-3.5 py-1.5">
-                      <span className="font-mono text-[9px] font-semibold uppercase tracking-widest text-zinc-400">
+                  <div className="mb-5 overflow-hidden rounded-md border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+                    <div className="flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-3.5 py-1.5">
+                      <span className="font-mono text-[9px] font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
                         {lang || "code"}
                       </span>
                       <CopyButton text={String(children)} />
                     </div>
                     <div className="overflow-x-auto px-4 py-3.5">
                       <code
-                        className={`block font-mono text-[11px] leading-relaxed text-zinc-700 ${className ?? ""}`}
+                        className={`block font-mono text-[11px] leading-relaxed text-zinc-700 dark:text-zinc-300 ${className ?? ""}`}
                         {...props}
                       >
                         {children}
@@ -286,7 +286,7 @@ export default function NodePreview({
 
               return (
                 <code
-                  className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-[11px] text-zinc-700"
+                  className="rounded bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 font-mono text-[11px] text-zinc-700 dark:text-zinc-300"
                   {...props}
                 >
                   {children}
@@ -296,7 +296,7 @@ export default function NodePreview({
             pre: ({ children }) => <>{children}</>,
             ul: ({ children }) => (
               <ul
-                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600"
+                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600 dark:text-zinc-400"
                 style={{ listStyleType: "disc" }}
               >
                 {children}
@@ -304,7 +304,7 @@ export default function NodePreview({
             ),
             ol: ({ children }) => (
               <ol
-                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600"
+                className="mb-4 space-y-1.5 pl-4 text-[13px] text-zinc-600 dark:text-zinc-400"
                 style={{ listStyleType: "decimal" }}
               >
                 {children}
@@ -312,7 +312,7 @@ export default function NodePreview({
             ),
             li: ({ children }) => <li className="leading-[1.8]">{children}</li>,
             blockquote: ({ children }) => (
-              <blockquote className="mb-4 border-l-2 border-zinc-200 pl-4 text-[13px] italic text-zinc-400">
+              <blockquote className="mb-4 border-l-2 border-zinc-200 dark:border-zinc-800 pl-4 text-[13px] italic text-zinc-400 dark:text-zinc-500">
                 {children}
               </blockquote>
             ),
@@ -321,29 +321,29 @@ export default function NodePreview({
                 href={href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-zinc-900 underline decoration-zinc-300 underline-offset-2 transition-colors hover:decoration-zinc-900"
+                className="text-zinc-900 dark:text-zinc-100 underline decoration-zinc-300 underline-offset-2 transition-colors hover:decoration-zinc-900"
               >
                 {children}
               </a>
             ),
             table: ({ children }) => (
-              <div className="mb-5 overflow-x-auto rounded-md border border-zinc-200">
+              <div className="mb-5 overflow-x-auto rounded-md border border-zinc-200 dark:border-zinc-800">
                 <table className="w-full border-collapse text-[11px]">
                   {children}
                 </table>
               </div>
             ),
             th: ({ children }) => (
-              <th className="border-b border-zinc-200 bg-zinc-50 px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-zinc-500">
+              <th className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900 px-4 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
                 {children}
               </th>
             ),
             td: ({ children }) => (
-              <td className="border-b border-zinc-100 px-4 py-2 text-[11px] text-zinc-600">
+              <td className="border-b border-zinc-100 dark:border-zinc-800 px-4 py-2 text-[11px] text-zinc-600 dark:text-zinc-400">
                 {children}
               </td>
             ),
-            hr: () => <hr className="my-6 border-zinc-100" />,
+            hr: () => <hr className="my-6 border-zinc-100 dark:border-zinc-800" />,
           }}
         >
           {node.content}
