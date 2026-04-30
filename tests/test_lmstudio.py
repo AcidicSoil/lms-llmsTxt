@@ -76,6 +76,56 @@ def test_choose_lmstudio_test_model_prefers_small_available_text_model(monkeypat
     assert lmstudio.choose_lmstudio_test_model(config) == "qwen_qwen3.5-0.8b"
 
 
+def test_choose_lmstudio_test_model_skips_excluded_configured_model(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(
+            payload={
+                "data": [
+                    {"id": "qwen_qwen3-vl-4b-instruct"},
+                    {"id": "qwen_qwen3.5-0.8b"},
+                ]
+            }
+        )
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    config = AppConfig(
+        lm_model="qwen_qwen3-vl-4b-instruct",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    assert lmstudio.choose_lmstudio_test_model(config) == "qwen_qwen3.5-0.8b"
+
+
+def test_choose_lmstudio_test_model_skips_excluded_preferred_model(monkeypatch):
+    def fake_get(url, headers=None, timeout=None):
+        return _FakeResponse(
+            payload={
+                "data": [
+                    {"id": "qwen3-reranker-0.6b"},
+                    {"id": "qwen_qwen3.5-0.8b"},
+                ]
+            }
+        )
+
+    monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    config = AppConfig(
+        lm_model=None,
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=Path("artifacts"),
+    )
+
+    assert (
+        lmstudio.choose_lmstudio_test_model(
+            config,
+            preferred_model="qwen3-reranker-0.6b",
+        )
+        == "qwen_qwen3.5-0.8b"
+    )
+
+
 def test_choose_lmstudio_test_model_honors_loaded_preferred_model(monkeypatch):
     def fake_get(url, headers=None, timeout=None):
         return _FakeResponse(

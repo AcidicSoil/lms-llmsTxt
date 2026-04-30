@@ -217,7 +217,11 @@ def build_parser() -> argparse.ArgumentParser:
         prog="lmstxt",
         description="Generate llms.txt artifacts for a GitHub repository using LM Studio.",
     )
-    parser.add_argument("repo", help="GitHub repository URL (https://github.com/<owner>/<repo>)")
+    parser.add_argument(
+        "repo",
+        nargs="?",
+        help="GitHub repository URL (https://github.com/<owner>/<repo>). Optional when using --ui alone.",
+    )
     parser.add_argument(
         "--model",
         help="LM Studio model identifier (overrides LMSTUDIO_MODEL).",
@@ -345,10 +349,45 @@ def main(argv: list[str] | None = None) -> int:
         config.enable_repo_graph = True
     if args.enable_session_memory:
         config.enable_session_memory = True
-    if args.ui and not args.generate_graph:
-        parser.error("--ui requires --generate-graph so repo.graph.json is produced.")
     if args.ui_start_timeout_seconds is not None and int(args.ui_start_timeout_seconds) <= 0:
         parser.error("--ui-start-timeout-seconds must be > 0.")
+    if not args.repo:
+        if not args.ui:
+            parser.error("repo is required unless --ui is used to launch HyperGraph.")
+        ui_status = ensure_hypergraph_ui_running(
+            args.ui_base_url,
+            startup_timeout_seconds=int(args.ui_start_timeout_seconds),
+        )
+        summary = "HyperGraph UI:"
+        summary += f"\n  - {args.ui_base_url.rstrip('/')}"
+        if ui_status.reused_existing:
+            summary += "\nUI status:"
+            summary += "\n  - already running"
+        elif ui_status.started_process:
+            summary += "\nUI status:"
+            summary += f"\n  - started background dev server (pid={ui_status.pid})"
+            if ui_status.log_path:
+                summary += f"\n  - log: {ui_status.log_path}"
+            if ui_status.ready:
+                summary += "\n  - ready"
+            elif ui_status.error:
+                summary += f"\n  - error: {ui_status.error}"
+        elif ui_status.error:
+            summary += "\nUI status:"
+            summary += f"\n  - error: {ui_status.error}"
+
+        if not args.ui_no_open:
+            if ui_status.ready:
+                opened = open_graph_viewer_in_browser(args.ui_base_url.rstrip('/'))
+                summary += "\nBrowser:"
+                summary += "\n  - opened" if opened else "\n  - failed to open automatically (open the URL manually)"
+            else:
+                summary += "\nBrowser:"
+                summary += "\n  - not opened (UI was not ready)"
+        print(summary)
+        return 0
+    if args.ui and not args.generate_graph:
+        parser.error("--ui with a repo requires --generate-graph so repo.graph.json is produced. Use `lmstxt --ui` to launch HyperGraph without generating artifacts.")
 
     try:
         artifacts = run_generation(

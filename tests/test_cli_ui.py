@@ -22,10 +22,75 @@ def test_build_graph_viewer_url_prefers_hypergraph_relative_path(tmp_path: Path)
     assert "..%2Fartifacts%2Fowner%2Frepo%2Fgraph%2Frepo.graph.json" in url
 
 
-def test_main_rejects_ui_without_generate_graph() -> None:
+def test_main_rejects_repo_ui_without_generate_graph() -> None:
     with pytest.raises(SystemExit) as excinfo:
         cli.main(["https://github.com/pallets/flask", "--ui"])
     assert excinfo.value.code == 2
+
+
+def test_main_requires_repo_unless_launching_ui() -> None:
+    with pytest.raises(SystemExit) as excinfo:
+        cli.main([])
+    assert excinfo.value.code == 2
+
+
+def test_main_launches_ui_without_repo(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    called = {"generation": 0, "browser": 0}
+
+    def fake_run_generation(*args, **kwargs):
+        called["generation"] += 1
+        raise AssertionError("lmstxt --ui must not run generation when no repo is supplied")
+
+    def fake_open(url: str) -> bool:
+        called["browser"] += 1
+        assert url == "http://localhost:3000"
+        return True
+
+    monkeypatch.setattr(cli, "run_generation", fake_run_generation)
+    monkeypatch.setattr(
+        cli,
+        "ensure_hypergraph_ui_running",
+        lambda *args, **kwargs: cli.UIRuntimeStatus(reused_existing=True, ready=True),
+    )
+    monkeypatch.setattr(cli, "open_graph_viewer_in_browser", fake_open)
+
+    rc = cli.main(["--ui"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert called == {"generation": 0, "browser": 1}
+    assert "HyperGraph UI:" in out
+    assert "http://localhost:3000" in out
+    assert "already running" in out
+    assert "Browser:" in out
+    assert "opened" in out
+
+
+def test_main_launches_ui_without_repo_and_no_open(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
+    called = {"browser": 0}
+
+    monkeypatch.setattr(
+        cli,
+        "ensure_hypergraph_ui_running",
+        lambda *args, **kwargs: cli.UIRuntimeStatus(
+            started_process=True,
+            ready=True,
+            pid=23456,
+            log_path="/tmp/hypergraph-dev.log",
+        ),
+    )
+    monkeypatch.setattr(cli, "open_graph_viewer_in_browser", lambda url: called.__setitem__("browser", called["browser"] + 1))
+
+    rc = cli.main(["--ui", "--ui-no-open", "--ui-base-url", "http://localhost:3002"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert called["browser"] == 0
+    assert "HyperGraph UI:" in out
+    assert "http://localhost:3002" in out
+    assert "started background dev server (pid=23456)" in out
+    assert "log: /tmp/hypergraph-dev.log" in out
+    assert "Browser:" not in out
 
 
 def test_main_prints_viewer_url_when_ui_requested(monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]) -> None:
