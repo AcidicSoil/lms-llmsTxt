@@ -136,8 +136,8 @@ export async function generateGraph(
 function resolveRepoGraphPath(graphPath: string): string {
   const absolute = path.isAbsolute(graphPath)
     ? graphPath
-    : path.resolve(process.cwd(), graphPath);
-  const artifactsRoot = path.resolve(process.cwd(), "..", "artifacts");
+    : path.resolve(/*turbopackIgnore: true*/ process.cwd(), graphPath);
+  const artifactsRoot = path.resolve(/*turbopackIgnore: true*/ process.cwd(), "..", "artifacts");
   if (!absolute.startsWith(`${artifactsRoot}${path.sep}`)) {
     throw new Error("Graph path must be within the artifacts directory");
   }
@@ -282,7 +282,7 @@ export async function generateRepoGraph(
 }> {
   const startedAt = Date.now();
   const { owner, repo } = parseGithubRepoUrl(repoUrl);
-  const hypergraphDir = process.cwd();
+  const hypergraphDir = /*turbopackIgnore: true*/ process.cwd();
   const repoRoot = path.resolve(hypergraphDir, "..");
   const localRun = await runLocalLmstxt(repoRoot, repoUrl);
 
