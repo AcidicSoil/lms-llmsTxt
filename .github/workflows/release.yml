@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  pypi:
+    name: Publish to PyPI
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/lms-llmsTxt
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Smoke test (wheel)
+        run: |
+          uv run --isolated --no-project --with dist/*.whl --with pytest pytest -q tests/smoke_test.py
+      - name: Smoke test (source distribution)
+        run: |
+          uv run --isolated --no-project --with dist/*.tar.gz --with pytest pytest -q tests/smoke_test.py
+      - name: Publish
+        run: uv publish

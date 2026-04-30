@@ -1,0 +1,48 @@
+name: Publish to TestPyPI
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Optional Git ref or tag to publish"
+        required: false
+        default: ""
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.release_tag || github.ref }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Build distributions
+        run: uv build
+
+      - name: Smoke Test Artifacts
+        run: |
+          # Run smoke tests using pytest via uv
+          uv run --with pytest pytest tests/smoke_test.py
+
+      - name: Verify TestPyPI token is present
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
+        run: |
+          if [ -z "${UV_PUBLISH_TOKEN}" ]; then
+            echo "Missing secrets.TEST_PYPI_TOKEN (or it is empty / not available in this workflow scope)."
+            exit 1
+          fi
+
+      - name: Publish to TestPyPI
+        env:
+          UV_PUBLISH_TOKEN: ${{ secrets.TEST_PYPI_TOKEN }}
+        run: uv publish --index testpypi --token "$UV_PUBLISH_TOKEN"
