@@ -41,7 +41,7 @@ class UIRuntimeStatus:
 def build_graph_viewer_url(
     graph_json_path: str | Path,
     *,
-    ui_base_url: str = "http://localhost:3010",
+    ui_base_url: str = "http://localhost:3000",
     hypergraph_dir: Path | None = None,
 ) -> str:
     graph_path = Path(graph_json_path).resolve()
@@ -101,8 +101,9 @@ def _ui_dev_log_path() -> Path:
     return path
 
 
-def _spawn_hypergraph_dev_server() -> tuple[subprocess.Popen[bytes], Path]:
+def _spawn_hypergraph_dev_server(ui_base_url: str) -> tuple[subprocess.Popen[bytes], Path]:
     repo_root = _project_root()
+    _host, port = _ui_host_port(ui_base_url)
     log_path = _ui_dev_log_path()
     log_handle = log_path.open("ab")
     kwargs: dict[str, object] = {
@@ -111,7 +112,7 @@ def _spawn_hypergraph_dev_server() -> tuple[subprocess.Popen[bytes], Path]:
         "stderr": subprocess.STDOUT,
         "stdin": subprocess.DEVNULL,
         "close_fds": True,
-        "env": dict(os.environ),
+        "env": {**os.environ, "PORT": str(port)},
     }
     if os.name == "nt":
         flags = 0
@@ -153,7 +154,7 @@ def ensure_hypergraph_ui_running(
 
     status = UIRuntimeStatus()
     try:
-        proc, log_path = _spawn_hypergraph_dev_server()
+        proc, log_path = _spawn_hypergraph_dev_server(ui_base_url)
         status.started_process = True
         status.pid = proc.pid
         status.log_path = str(log_path)
@@ -284,8 +285,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--ui-base-url",
-        default="http://localhost:3010",
-        help="Base URL for the HyperGraph UI used by --ui (default: http://localhost:3010).",
+        default="http://localhost:3000",
+        help="Base URL for the HyperGraph UI used by --ui (default: http://localhost:3000).",
     )
     parser.add_argument(
         "--ui-no-open",

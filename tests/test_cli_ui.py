@@ -142,3 +142,54 @@ def test_ensure_hypergraph_ui_running_reuses_existing(monkeypatch: pytest.Monkey
     assert status.reused_existing is True
     assert status.ready is True
     assert status.started_process is False
+
+
+def test_spawn_hypergraph_dev_server_sets_port_from_ui_base_url(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    calls: list[dict[str, object]] = []
+
+    class FakeProcess:
+        pid = 4242
+
+    class FakePopen:
+        def __new__(cls, args, **kwargs):
+            calls.append({"args": args, "kwargs": kwargs})
+            return FakeProcess()
+
+    monkeypatch.setattr(cli, "_project_root", lambda: tmp_path)
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    monkeypatch.setattr(cli.subprocess, "Popen", FakePopen)
+
+    proc, log_path = cli._spawn_hypergraph_dev_server("http://127.0.0.1:3123")
+
+    assert proc.pid == 4242
+    assert log_path.parent == tmp_path / "logs"
+    assert calls[0]["args"] == ["npm", "run", "ui:dev"]
+    env = calls[0]["kwargs"]["env"]
+    assert isinstance(env, dict)
+    assert env["PORT"] == "3123"
+
+
+def test_ensure_hypergraph_ui_running_spawns_with_requested_base_url(monkeypatch: pytest.MonkeyPatch) -> None:
+    spawned: list[str] = []
+
+    class FakeProcess:
+        pid = 999
+
+        def poll(self):
+            return None
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), Path("/tmp/hypergraph-dev.log")
+
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3124")
+
+    assert spawned == ["http://localhost:3124"]
+    assert status.started_process is True
+    assert status.ready is True
+    assert status.pid == 999
