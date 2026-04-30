@@ -19,7 +19,7 @@ def test_real_generation(tmp_path):
     
     config = AppConfig(
         output_dir=output_dir,
-        lm_auto_unload=False # Don't unload user's model
+        lm_auto_unload=True
     )
     try:
         config.lm_model = choose_lmstudio_test_model(
