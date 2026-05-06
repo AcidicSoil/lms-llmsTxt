@@ -91,9 +91,15 @@ def test_graph_safeguard_flags_parse():
         "1024",
         "--lm-unload-timeout-seconds",
         "5",
+        "--lm-ttl-seconds",
+        "600",
+        "--lm-context-length",
+        "8192",
     ])
 
     assert args.generate_graph is True
     assert args.semantic_graph_timeout_seconds == 30
     assert args.semantic_graph_max_output_tokens == 1024
     assert args.lm_unload_timeout_seconds == 5
+    assert args.lm_ttl_seconds == 600
+    assert args.lm_context_length == 8192

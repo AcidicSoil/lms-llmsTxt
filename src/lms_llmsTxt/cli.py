@@ -448,6 +448,18 @@ def build_parser() -> argparse.ArgumentParser:
         help="Maximum seconds to wait for LM Studio model unload before letting the CLI exit.",
     )
     parser.add_argument(
+        "--lm-ttl-seconds",
+        "--lm-idle-ttl-seconds",
+        dest="lm_ttl_seconds",
+        type=int,
+        help="Idle TTL in seconds to request when loading/calling LM Studio models (default: 3600).",
+    )
+    parser.add_argument(
+        "--lm-context-length",
+        type=int,
+        help="Context length to request when loading the LM Studio model (defaults to --max-context-tokens).",
+    )
+    parser.add_argument(
         "--enable-session-memory",
         action="store_true",
         help="Record append-only generation events for LCM-style session memory.",
@@ -527,6 +539,14 @@ def main(argv: list[str] | None = None) -> int:
         if args.lm_unload_timeout_seconds < 0:
             parser.error("--lm-unload-timeout-seconds must be >= 0.")
         config.lm_unload_timeout_seconds = args.lm_unload_timeout_seconds
+    if args.lm_ttl_seconds is not None:
+        if args.lm_ttl_seconds < 0:
+            parser.error("--lm-ttl-seconds must be >= 0.")
+        config.lm_ttl_seconds = args.lm_ttl_seconds
+    if args.lm_context_length is not None:
+        if args.lm_context_length <= 0:
+            parser.error("--lm-context-length must be > 0.")
+        config.lm_context_length = args.lm_context_length
     if args.enable_session_memory:
         config.enable_session_memory = True
     if args.ui_start_timeout_seconds is not None and int(args.ui_start_timeout_seconds) <= 0:

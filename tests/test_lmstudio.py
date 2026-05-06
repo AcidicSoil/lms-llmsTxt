@@ -149,11 +149,16 @@ def test_choose_lmstudio_test_model_honors_loaded_preferred_model(monkeypatch):
     )
 
 
-def test_ensure_ready_does_not_auto_load_missing_model(monkeypatch):
+def test_ensure_ready_attempts_documented_load_for_missing_model(monkeypatch):
     posts = []
+    get_calls = 0
 
     def fake_get(url, headers=None, timeout=None):
-        return _FakeResponse(payload={"data": [{"id": "available-model"}]})
+        nonlocal get_calls
+        get_calls += 1
+        if get_calls == 1:
+            return _FakeResponse(payload={"data": [{"id": "available-model"}]})
+        return _FakeResponse(payload={"data": [{"id": "target"}]})
 
     def fake_post(url, headers=None, json=None, timeout=None):
         posts.append((url, json))
@@ -161,18 +166,26 @@ def test_ensure_ready_does_not_auto_load_missing_model(monkeypatch):
 
     monkeypatch.setattr(lmstudio.requests, "get", fake_get)
     monkeypatch.setattr(lmstudio.requests, "post", fake_post)
+    monkeypatch.setattr(lmstudio, "_LMSTUDIO_SDK", None, raising=False)
+    monkeypatch.setattr(lmstudio, "_load_model_cli", lambda config: False)
 
     config = AppConfig(
         lm_model="target",
         lm_api_base="http://localhost:1234/v1",
         lm_api_key="key",
         output_dir=Path("artifacts"),
+        lm_ttl_seconds=123,
+        max_context_tokens=4096,
     )
 
-    with pytest.raises(LMStudioConnectivityError, match="Download and load"):
-        lmstudio._ensure_lmstudio_ready(config)
+    lmstudio._ensure_lmstudio_ready(config)
 
-    assert posts == []
+    assert posts
+    url, body = posts[0]
+    assert url.endswith("/api/v1/models/load")
+    assert body["model"] == "target"
+    assert body["ttl"] == 123
+    assert body["context_length"] == 4096
 
 
 def test_ensure_ready_requires_configured_model(monkeypatch):
@@ -214,6 +227,9 @@ def test_ensure_ready_failure(monkeypatch):
         return _FakeResponse(payload={"data": []})
 
     monkeypatch.setattr(lmstudio.requests, "get", fake_get)
+    monkeypatch.setattr(lmstudio, "_load_model_sdk", lambda config: False)
+    monkeypatch.setattr(lmstudio, "_load_model_rest", lambda config: False)
+    monkeypatch.setattr(lmstudio, "_load_model_cli", lambda config: False)
 
     config = AppConfig(
         lm_model="missing-model",
@@ -222,7 +238,7 @@ def test_ensure_ready_failure(monkeypatch):
         output_dir=Path("artifacts"),
     )
 
-    with pytest.raises(LMStudioConnectivityError, match="missing-model"):
+    with pytest.raises(LMStudioConnectivityError, match="automatic load failed"):
         lmstudio._ensure_lmstudio_ready(config)
 
 

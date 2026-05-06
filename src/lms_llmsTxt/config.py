@@ -70,6 +70,17 @@ class AppConfig:
     enable_ctx: bool = field(default_factory=lambda: _env_flag("ENABLE_CTX", False))
     lm_streaming: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_STREAMING", True))
     lm_auto_unload: bool = field(default_factory=lambda: _env_flag("LMSTUDIO_AUTO_UNLOAD", True))
+    lm_ttl_seconds: int = field(
+        default_factory=lambda: int(_env_value("LMSTUDIO_TTL_SECONDS", "3600") or "3600")
+    )
+    lm_context_length: int | None = field(
+        default_factory=lambda: (
+            int(value)
+            if (value := _env_value("LMSTUDIO_CONTEXT_LENGTH"))
+            else None
+        )
+    )
+    lm_instance_id: str | None = None
     max_context_tokens: int = field(
         default_factory=lambda: int(_env_value("MAX_CONTEXT_TOKENS", "32768") or "32768")
     )

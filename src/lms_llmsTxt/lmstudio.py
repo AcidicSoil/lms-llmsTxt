@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Any, Iterable, Optional, Tuple
+from typing import Any, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
@@ -74,29 +74,6 @@ class LMStudioJSONAdapter(dspy.JSONAdapter):
 
 
 _MODEL_ENDPOINTS: tuple[str, ...] = ("/v1/models", "/api/v1/models", "/models")
-_LOAD_ENDPOINT_PATTERNS: tuple[str, ...] = (
-    "/v1/models/{model}/load",
-    "/v1/models/load",
-    "/v1/models/{model}",
-    "/api/v1/models/{model}/load",
-    "/api/v1/models/load",
-    "/api/v1/models/{model}",
-    "/models/{model}/load",
-    "/models/load",
-    "/models/{model}",
-)
-_UNLOAD_ENDPOINT_PATTERNS: tuple[str, ...] = (
-    "/v1/models/{model}/unload",
-    "/v1/models/unload",
-    "/v1/models/{model}",
-    "/api/v1/models/{model}/unload",
-    "/api/v1/models/unload",
-    "/api/v1/models/{model}",
-    "/models/{model}/unload",
-    "/models/unload",
-    "/models/{model}",
-)
-
 _SMALL_TEXT_MODEL_HINTS: tuple[str, ...] = (
     "0.5b",
     "0.6b",
@@ -186,6 +163,85 @@ def _fetch_models(
     return set(), None
 
 
+
+def _rest_api_base(api_base: str) -> str:
+    """Return the LM Studio host root for native /api/v1 management endpoints."""
+    base = api_base.rstrip("/")
+    for suffix in ("/v1", "/api/v1", "/api/v0"):
+        if base.endswith(suffix):
+            return base[: -len(suffix)]
+    return base
+
+
+def _lmstudio_headers(config: AppConfig, *, json_content: bool = False) -> dict[str, str]:
+    headers = {"Authorization": f"Bearer {config.lm_api_key or 'lm-studio'}"}
+    if json_content:
+        headers["Content-Type"] = "application/json"
+    return headers
+
+
+def _load_payload(config: AppConfig) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "model": str(config.lm_model),
+        "echo_load_config": True,
+    }
+    if config.lm_context_length:
+        payload["context_length"] = int(config.lm_context_length)
+    elif config.max_context_tokens:
+        payload["context_length"] = int(config.max_context_tokens)
+    if config.lm_ttl_seconds > 0:
+        payload["ttl"] = int(config.lm_ttl_seconds)
+    return payload
+
+
+def _load_model_rest(config: AppConfig) -> bool:
+    """Load the configured model with LM Studio's documented REST endpoint."""
+    if not config.lm_model:
+        return False
+    url = f"{_rest_api_base(config.lm_api_base)}/api/v1/models/load"
+    payload = _load_payload(config)
+    try:
+        logger.info(
+            "Requesting LM Studio model load for '%s' via %s (ttl=%s, context_length=%s)",
+            config.lm_model,
+            url,
+            payload.get("ttl", "default"),
+            payload.get("context_length", "default"),
+        )
+        response = requests.post(
+            url,
+            headers=_lmstudio_headers(config, json_content=True),
+            json=payload,
+            timeout=(10, 120),
+        )
+    except requests.RequestException as exc:
+        logger.debug("LM Studio REST load request failed: %s", exc)
+        return False
+
+    if response.status_code >= 400:
+        logger.debug(
+            "LM Studio REST load rejected model '%s' (status %s: %s)",
+            config.lm_model,
+            response.status_code,
+            response.text,
+        )
+        return False
+
+    try:
+        data = response.json()
+    except ValueError:
+        data = {}
+    instance_id = data.get("instance_id") if isinstance(data, dict) else None
+    if instance_id:
+        config.lm_instance_id = str(instance_id)
+    logger.info(
+        "LM Studio REST loaded model '%s'%s.",
+        config.lm_model,
+        f" as instance '{config.lm_instance_id}'" if config.lm_instance_id else "",
+    )
+    return True
+
+
 def _model_rank(model: str) -> tuple[int, int, str]:
     lowered = model.lower()
     excluded = any(hint in lowered for hint in _TEXT_MODEL_EXCLUSION_HINTS)
@@ -229,86 +285,52 @@ def choose_lmstudio_test_model(
     return ranked[0]
 
 
-def _load_model_http(
-    base_url: str,
-    headers: dict[str, str],
-    model: str,
-    endpoint_hint: Optional[str],
-) -> bool:
-    """
-    Attempt to load the requested model via LM Studio's HTTP API.
+def _load_model_sdk(config: AppConfig) -> bool:
+    """Load or get the model using LM Studio's Python SDK, with TTL when possible."""
+    if _LMSTUDIO_SDK is None or not config.lm_model:
+        return False
 
-    Returns True if any request returns a 2xx status code.
-    """
-    def candidate_paths() -> Iterable[str]:
-        if endpoint_hint and endpoint_hint.startswith("/v1"):
-            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/v1")]
-            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/v1")]
-            yield from primary + secondary
-        elif endpoint_hint and endpoint_hint.startswith("/api/v1"):
-            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
-            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
-            yield from primary + secondary
-        elif endpoint_hint:
-            primary = [p for p in _LOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
-            secondary = [p for p in _LOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
-            yield from primary + secondary
-        else:
-            yield from _LOAD_ENDPOINT_PATTERNS
-
-    for template in candidate_paths():
-        url = _build_lmstudio_url(base_url, template.format(model=model))
-        body_candidates = (
-            None,
-            {"model": model},
-            {"id": model},
-            {"name": model},
-        )
-        for body in body_candidates:
-            try:
-                logger.debug("Attempting LM Studio load via %s body=%s", url, body)
-                if body is None:
-                    response = requests.post(url, headers=headers, timeout=10)
-                else:
-                    enriched_headers = dict(headers)
-                    enriched_headers["Content-Type"] = "application/json"
-                    response = requests.post(
-                        url,
-                        headers=enriched_headers,
-                        json=body,
-                        timeout=10,
-                    )
-                if response.status_code < 400:
-                    logger.info(
-                        "LM Studio accepted load request via %s (status %s)",
-                        url,
-                        response.status_code,
-                    )
-                    return True
-                logger.debug(
-                    "LM Studio rejected load request via %s (status %s: %s)",
-                    url,
-                    response.status_code,
-                    response.text,
-                )
-            except requests.RequestException as exc:
-                logger.debug("LM Studio load request failed via %s: %s", url, exc)
-                continue
-    return False
-
-
-def _load_model_cli(model: str) -> bool:
-    """
-    Attempt to load the model using the `lms` CLI if available.
-    """
+    _configure_sdk_client(config)
     try:
-        logger.debug("Attempting CLI load for model '%s'", model)
+        set_timeout = getattr(_LMSTUDIO_SDK, "set_sync_api_timeout", None)
+        if callable(set_timeout):
+            set_timeout(max(60, config.semantic_graph_timeout_seconds, config.lm_unload_timeout_seconds))
+    except Exception as exc:  # pragma: no cover - diagnostic only
+        logger.debug("LM Studio SDK set_sync_api_timeout failed: %s", exc)
+
+    kwargs: dict[str, object] = {}
+    if config.lm_ttl_seconds > 0:
+        kwargs["ttl"] = int(config.lm_ttl_seconds)
+    try:
+        _LMSTUDIO_SDK.llm(config.lm_model, **kwargs)  # type: ignore[attr-defined]
+        logger.info(
+            "LM Studio SDK ensured model '%s' is loaded%s.",
+            config.lm_model,
+            f" with ttl={config.lm_ttl_seconds}s" if config.lm_ttl_seconds > 0 else "",
+        )
+        return True
+    except Exception as exc:  # pragma: no cover - diagnostic path
+        logger.debug("LM Studio SDK load failed for '%s': %s", config.lm_model, exc)
+        return False
+
+
+def _load_model_cli(config: AppConfig) -> bool:
+    """Load the model with `lms load`, using documented TTL/context flags."""
+    model = config.lm_model or ""
+    args = ["lms", "load", model]
+    if config.lm_ttl_seconds > 0:
+        args.extend(["--ttl", str(config.lm_ttl_seconds)])
+    context_length = config.lm_context_length or config.max_context_tokens
+    if context_length:
+        args.extend(["--context-length", str(context_length)])
+    try:
+        logger.debug("Attempting CLI load for model '%s' with args=%s", model, args)
         result = subprocess.run(
-            ["lms", "load", model],
+            args,
             check=False,
             capture_output=True,
             text=True,
-            timeout=30,
+            timeout=120,
         )
     except FileNotFoundError:
         logger.debug("LM Studio CLI (lms) not found on PATH; skipping CLI load.")
@@ -322,13 +344,73 @@ def _load_model_cli(model: str) -> bool:
         return True
 
     logger.debug(
-        "LM Studio CLI returned %s: %s %s",
+        "LM Studio CLI load returned %s: %s %s",
         result.returncode,
         result.stdout,
         result.stderr,
     )
     return False
 
+
+def _unload_model_rest(config: AppConfig) -> bool:
+    """Unload using LM Studio's documented REST endpoint."""
+    instance_id = config.lm_instance_id or config.lm_model
+    if not instance_id:
+        return False
+    url = f"{_rest_api_base(config.lm_api_base)}/api/v1/models/unload"
+    try:
+        response = requests.post(
+            url,
+            headers=_lmstudio_headers(config, json_content=True),
+            json={"instance_id": instance_id},
+            timeout=(5, max(1, config.lm_unload_timeout_seconds)),
+        )
+    except requests.RequestException as exc:
+        logger.debug("LM Studio REST unload request failed: %s", exc)
+        return False
+
+    if response.status_code < 400:
+        logger.info("LM Studio REST unloaded model instance '%s'.", instance_id)
+        return True
+
+    logger.debug(
+        "LM Studio REST unload rejected instance '%s' (status %s: %s)",
+        instance_id,
+        response.status_code,
+        response.text,
+    )
+    return False
+
+
+def _unload_model_cli(model: str) -> bool:
+    """Attempt to unload the model using the documented `lms unload` command."""
+    try:
+        logger.debug("Attempting CLI unload for model '%s'", model)
+        result = subprocess.run(
+            ["lms", "unload", model],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except FileNotFoundError:
+        logger.debug("LM Studio CLI (lms) not found on PATH; skipping CLI unload.")
+        return False
+    except subprocess.SubprocessError as exc:  # pragma: no cover - defensive
+        logger.debug("LM Studio CLI unload failed: %s", exc)
+        return False
+
+    if result.returncode == 0:
+        logger.info("LM Studio CLI reported successful unload for '%s'.", model)
+        return True
+
+    logger.debug(
+        "LM Studio CLI unload returned %s: %s %s",
+        result.returncode,
+        result.stdout,
+        result.stderr,
+    )
+    return False
 
 def _host_from_api_base(api_base: str | None) -> Optional[str]:
     if not api_base:
@@ -422,128 +504,16 @@ def _unload_model_sdk(config: AppConfig) -> bool:
         return False
 
 
-def _unload_model_http(
-    base_url: str,
-    headers: dict[str, str],
-    model: str,
-    endpoint_hint: Optional[str],
-) -> bool:
-    """
-    Attempt to unload the requested model via LM Studio's HTTP API.
-
-    Returns True if any request returns a 2xx status code.
-    """
-
-    def candidate_paths() -> Iterable[str]:
-        if endpoint_hint and endpoint_hint.startswith("/v1"):
-            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/v1")]
-            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/v1")]
-            yield from primary + secondary
-        elif endpoint_hint and endpoint_hint.startswith("/api/v1"):
-            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
-            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
-            yield from primary + secondary
-        elif endpoint_hint:
-            primary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if not p.startswith("/api/v1")]
-            secondary = [p for p in _UNLOAD_ENDPOINT_PATTERNS if p.startswith("/api/v1")]
-            yield from primary + secondary
-        else:
-            yield from _UNLOAD_ENDPOINT_PATTERNS
-
-    for template in candidate_paths():
-        url = _build_lmstudio_url(base_url, template.format(model=model))
-        body_candidates = (
-            None,
-            {"model": model},
-            {"id": model},
-            {"name": model},
-        )
-        for body in body_candidates:
-            try:
-                logger.debug("Attempting LM Studio unload via POST %s body=%s", url, body)
-                if body is None:
-                    response = requests.post(url, headers=headers, timeout=10)
-                else:
-                    enriched_headers = dict(headers)
-                    enriched_headers["Content-Type"] = "application/json"
-                    response = requests.post(
-                        url,
-                        headers=enriched_headers,
-                        json=body,
-                        timeout=10,
-                    )
-                if response.status_code < 400:
-                    logger.info(
-                        "LM Studio accepted unload request via POST %s (status %s)",
-                        url,
-                        response.status_code,
-                    )
-                    return True
-                logger.debug(
-                    "LM Studio rejected unload via POST %s (status %s: %s)",
-                    url,
-                    response.status_code,
-                    response.text,
-                )
-            except requests.RequestException as exc:
-                logger.debug("LM Studio unload request failed via %s: %s", url, exc)
-                continue
-    return False
-
-
-def _unload_model_cli(model: str) -> bool:
-    """
-    Attempt to unload the model using the `lms` CLI if available.
-    """
-    try:
-        logger.debug("Attempting CLI unload for model '%s'", model)
-        result = subprocess.run(
-            ["lms", "unload", model],
-            check=False,
-            capture_output=True,
-            text=True,
-            timeout=30,
-        )
-    except FileNotFoundError:
-        logger.debug("LM Studio CLI (lms) not found on PATH; skipping CLI unload.")
-        return False
-    except subprocess.SubprocessError as exc:  # pragma: no cover - defensive
-        logger.debug("LM Studio CLI unload failed: %s", exc)
-        return False
-
-    if result.returncode == 0:
-        logger.info("LM Studio CLI reported successful unload for '%s'.", model)
-        return True
-
-    logger.debug(
-        "LM Studio CLI unload returned %s: %s %s",
-        result.returncode,
-        result.stdout,
-        result.stderr,
-    )
-    return False
-
-
 def _ensure_lmstudio_ready(config: AppConfig) -> None:
-    """
-    Confirm that LM Studio exposes the requested model.
-
-    Raises
-    ------
-    LMStudioConnectivityError
-        If the LM Studio server cannot be contacted, no model was configured,
-        or the configured model is not advertised by LM Studio.
-    """
-
+    """Ensure the configured model is available to LM Studio for this run."""
     target_model = (config.lm_model or "").strip()
     if not target_model:
         raise LMStudioConnectivityError(
             "No LM Studio model configured. Set LMSTUDIO_MODEL in your .env file "
-            "or pass --model with an LM Studio model identifier, then download and "
-            "load that model in LM Studio."
+            "or pass --model with an LM Studio model identifier."
         )
 
-    headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
+    headers = _lmstudio_headers(config)
     base = config.lm_api_base.rstrip("/")
 
     try:
@@ -554,13 +524,32 @@ def _ensure_lmstudio_ready(config: AppConfig) -> None:
         ) from exc
 
     if target_model in models:
-        logger.debug("LM Studio already has model '%s' loaded.", target_model)
+        logger.info(
+            "LM Studio already advertises model '%s'; using existing instance.",
+            target_model,
+        )
         return
+
+    logger.info(
+        "LM Studio model '%s' is not loaded/advertised; loading with ttl=%ss and context_length=%s.",
+        target_model,
+        config.lm_ttl_seconds,
+        config.lm_context_length or config.max_context_tokens,
+    )
+
+    loaded = _load_model_rest(config) or _load_model_sdk(config) or _load_model_cli(config)
+    if loaded:
+        try:
+            refreshed_models, _ = _fetch_models(base, headers)
+        except requests.RequestException:
+            refreshed_models = set()
+        if not refreshed_models or target_model in refreshed_models or config.lm_instance_id:
+            return
 
     available = ", ".join(sorted(models)) if models else "none advertised"
     raise LMStudioConnectivityError(
-        f"LM Studio model '{target_model}' was not detected. "
-        "Download and load that model in LM Studio, or set LMSTUDIO_MODEL/--model "
+        f"LM Studio model '{target_model}' was not detected and automatic load failed. "
+        "Download the model with `lms get`, load it with `lms load`, or set LMSTUDIO_MODEL/--model "
         f"to one of the available models. Available models: {available}."
     )
 
@@ -589,30 +578,18 @@ def configure_lmstudio_lm(config: AppConfig, *, cache: bool = False) -> dspy.LM:
 
 
 def unload_lmstudio_model(config: AppConfig) -> None:
-    """
-    Attempt to unload the configured LM Studio model to free resources.
-    """
-
+    """Attempt to unload the configured LM Studio model to free resources."""
     if _unload_model_sdk(config):
         return
 
-    headers = {"Authorization": f"Bearer {config.lm_api_key or ''}"}
-    base = config.lm_api_base.rstrip("/")
-
-    try:
-        _, endpoint_hint = _fetch_models(base, headers)
-    except requests.RequestException as exc:  # pragma: no cover - informational
-        endpoint_hint = None
-        logger.debug("Unable to refresh LM Studio endpoint hint before unload: %s", exc)
-
-    if _unload_model_http(base, headers, config.lm_model, endpoint_hint):
+    if _unload_model_rest(config):
         return
 
-    if _unload_model_cli(config.lm_model):
+    if _unload_model_cli(config.lm_model or ""):
         return
 
     logger.warning(
-        "Failed to unload LM Studio model '%s' via SDK, HTTP, or CLI. The model may remain loaded.",
+        "Failed to unload LM Studio model '%s' via SDK, REST, or CLI. The model may remain loaded.",
         config.lm_model,
     )
 

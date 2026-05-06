@@ -253,6 +253,10 @@ def _chat_completion_payload(
         "temperature": 0.35,
         "max_tokens": min(config.max_output_tokens, config.semantic_graph_max_output_tokens, 8192),
     }
+    if config.lm_ttl_seconds > 0:
+        # LM Studio supports per-request TTL on OpenAI-compatible API requests;
+        # this prevents long multi-stage runs from losing a JIT-loaded model mid-run.
+        payload["ttl"] = int(config.lm_ttl_seconds)
     if response_format == "json_schema":
         payload["response_format"] = _semantic_graph_response_format()
     elif response_format == "json_object":

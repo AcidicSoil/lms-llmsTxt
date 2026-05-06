@@ -60,6 +60,15 @@ def test_semantic_graph_payload_uses_lmstudio_json_schema_response_format():
     assert payload["response_format"]["json_schema"]["schema"]["required"] == ["topic", "nodes"]
 
 
+def test_semantic_graph_payload_includes_lmstudio_ttl():
+    config = _config()
+    config.lm_ttl_seconds = 123
+
+    payload = _chat_completion_payload(_digest(), _material(), config)
+
+    assert payload["ttl"] == 123
+
+
 def test_response_error_detail_includes_lmstudio_error_body():
     class Response:
         reason = "Bad Request"
