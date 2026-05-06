@@ -409,3 +409,25 @@ def test_repository_analyzer_keeps_deterministic_document_when_optional_model_st
     assert result.trace.section_plan[0]["source"] == "deterministic"
     assert result.trace.model_section_planning["section_content_synthesis"]["used"] is False
     assert result.trace.model_section_planning["section_content_synthesis"]["fallback_reason"] == "adapter-parse-error"
+
+
+def test_dynamic_buckets_make_duplicate_api_links_human_specific(monkeypatch):
+    monkeypatch.setattr(analyzer, "_url_alive", lambda url: True)
+    monkeypatch.setattr(
+        analyzer,
+        "construct_github_file_url",
+        lambda repo_url, path, ref=None, style="blob": f"https://example.com/{path}",
+    )
+
+    buckets = analyzer.build_dynamic_buckets(
+        "https://github.com/lmstudio-ai/docs",
+        "1_python/_7_api-reference/chat.md\n2_typescript/7_api-reference/_chat.md\nREADME.md",
+        default_ref="main",
+        validate_urls=True,
+    )
+    entries = [(title, note) for section, items in buckets for title, _, note in items if section == "API"]
+
+    assert ("Python Chat", "lookup the python chat API contract, parameters, and return behavior") in entries
+    assert ("TypeScript Chat", "lookup the typescript chat API contract, parameters, and return behavior") in entries
+    assert len({title for title, _ in entries}) == len(entries)
+    assert all(note != "API reference" for _, note in entries)

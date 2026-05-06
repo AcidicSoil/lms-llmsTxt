@@ -100,11 +100,12 @@ def _short_note(path: str) -> str:
     platform = _platform_from_path(path)
     topic = _topic_from_path(path)
     subject = topic or "this page"
+    platform_prefix = f"{platform} " if platform and not subject.lower().startswith(platform.lower()) else ""
 
     if any(hint in lower for hint in ["getting-started", "quickstart", "install", "overview", "/readme"]):
-        return f"start here for {platform + ' ' if platform else ''}{subject.lower()} setup and first-run workflow"
+        return f"start here for {platform_prefix}{subject.lower()} setup and first-run workflow"
     if any(hint in lower for hint in ["reference", "/api"]):
-        return f"lookup the {platform + ' ' if platform else ''}{subject.lower()} API contract, parameters, and return behavior"
+        return f"lookup the {platform_prefix}{subject.lower()} API contract, parameters, and return behavior"
     if any(hint in lower for hint in ["tutorial", "example", "how-to", "demo"]):
         return f"follow a worked example for {subject.lower()}"
     if any(hint in lower for hint in ["concept", "architecture", "design", "faq"]):
@@ -822,6 +823,8 @@ class RepositoryAnalyzer(dspy.Module):
 
         inserted_notes: dict[str, str] = {}
         for section in document.sections:
+            if section.name == "Usage" or all(entry.url.startswith("about:") for entry in section.entries):
+                continue
             note = notes_by_section.get(section.name)
             source = "model"
             if not note:
@@ -830,7 +833,7 @@ class RepositoryAnalyzer(dspy.Module):
             section.entries.insert(
                 0,
                 LLMsLinkEntry(
-                    title=f"{section.name} Guide",
+                    title=f"{section.name} Overview",
                     url="about:section-synthesis",
                     note=note,
                 ),
