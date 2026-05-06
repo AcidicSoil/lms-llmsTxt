@@ -422,6 +422,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Headroom ratio reserved from context window (e.g. 0.15).",
     )
     parser.add_argument(
+        "-g",
         "--generate-graph",
         action="store_true",
         help="Generate repository graph artifacts (repo.graph.json, repo.force.json, nodes/*.md).",

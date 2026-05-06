@@ -66,3 +66,14 @@ def test_optional_rlm_scaffold_is_not_wired_into_cli_or_fallback_contracts() -> 
     assert limits.max_depth == 2
     assert cli.build_parser().prog == "lmstxt"
     assert GenerationArtifacts(llms_txt_path="out/llms.txt").used_fallback is False
+
+
+def test_generate_graph_short_flag_sets_generate_graph():
+    from lms_llmsTxt.cli import build_parser
+
+    args = build_parser().parse_args([
+        "https://github.com/example/repo",
+        "-g",
+    ])
+
+    assert args.generate_graph is True
