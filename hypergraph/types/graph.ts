@@ -32,6 +32,13 @@ export interface GenerateTrace {
   provider?: string;
   model?: string;
   durationMs?: number;
+  promptSourceCount?: number;
+  promptInputChars?: number;
+  completionTokens?: number;
+  promptTokens?: number;
+  totalTokens?: number;
+  finishReason?: string | null;
+  pythonBin?: string;
 }
 
 export interface GenerateResponse {
@@ -40,6 +47,66 @@ export interface GenerateResponse {
   artifactPath?: string;
   requestId?: string;
   trace?: GenerateTrace;
+  meta?: {
+    generationId?: string;
+    requestId?: string;
+    persistenceWarning?: "store_failed";
+    model?: string;
+    searchProvider?: "serper" | "brave" | "tavily";
+    searchAttempts?: Array<{
+      provider: "serper" | "brave" | "tavily";
+      ok: boolean;
+      reason?: string;
+      resultCount?: number;
+    }>;
+  };
+}
+
+export interface GenerationRecordSummary {
+  id: string;
+  topic: string;
+  model: string | null;
+  status: "success" | "error";
+  requestId: string;
+  searchProvider: "serper" | "brave" | "tavily" | null;
+  nodeCount: number;
+  fileCount: number;
+  createdAt: number;
+}
+
+export interface GenerationRecordDetail {
+  id: string;
+  topic: string;
+  model: string | null;
+  status: "success" | "error";
+  requestId: string;
+  searchProvider: "serper" | "brave" | "tavily" | null;
+  searchAttempts: Array<{
+    provider: "serper" | "brave" | "tavily";
+    ok: boolean;
+    reason?: string;
+    resultCount?: number;
+  }>;
+  graph: SkillGraph;
+  files: GeneratedFile[];
+  metrics?: Record<string, unknown>;
+  error?: Record<string, unknown>;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface GenerationsListResponse {
+  generations: GenerationRecordSummary[];
+}
+
+export interface ModelOption {
+  id: string;
+  label: string;
+}
+
+export interface ModelsResponse {
+  models: ModelOption[];
+  error?: string;
 }
 
 export interface ForceGraphNode {

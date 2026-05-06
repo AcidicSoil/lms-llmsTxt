@@ -14,6 +14,8 @@ import type {
   GenerateResponse,
   ForceGraphData,
   GraphNode,
+  ModelsResponse,
+  ModelOption,
 } from "@/types/graph";
 import { NODE_SIZES } from "@/types/graph";
 
@@ -223,7 +225,11 @@ function HomeContent() {
   const searchParams = useSearchParams();
   const autoLoadHandledRef = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModelsLoading, setIsModelsLoading] = useState(true);
   const [error, setError] = useState<AppError | null>(null);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [models, setModels] = useState<ModelOption[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
   const [graph, setGraph] = useState<SkillGraph | null>(null);
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -251,7 +257,46 @@ function HomeContent() {
     }
   }, []);
 
-  async function handleSubmit(topic: string) {
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadModels() {
+      setIsModelsLoading(true);
+      setModelsError(null);
+      try {
+        const res = await fetch("/api/models", { cache: "no-store" });
+        const data: ModelsResponse = await res.json();
+        if (!mounted) return;
+
+        if (!res.ok || !data.models || data.models.length === 0) {
+          setModels([]);
+          setSelectedModel("");
+          setModelsError(data.error ?? "Unable to load models from CLIProxyAPI.");
+          return;
+        }
+
+        setModels(data.models);
+        setSelectedModel((prev) => {
+          if (prev && data.models.some((modelOption) => modelOption.id === prev)) return prev;
+          return data.models[0].id;
+        });
+      } catch (err) {
+        if (!mounted) return;
+        setModels([]);
+        setSelectedModel("");
+        setModelsError(err instanceof Error ? err.message : "Unable to load models");
+      } finally {
+        if (mounted) setIsModelsLoading(false);
+      }
+    }
+
+    void loadModels();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  async function handleSubmit(topic: string, model: string) {
     setSubmittedTopic(topic);
     setIsLoading(true);
     setError(null);
@@ -259,13 +304,18 @@ function HomeContent() {
     setFiles([]);
     setSelectedNodeId(null);
     setArtifactPathHint(null);
-    setArtifactPathHint(null);
+
+    if (!model) {
+      setError({ message: "No model selected. Select a model before generating." });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ topic }),
+        body: JSON.stringify({ topic, model }),
       });
 
       const data: GenerateResponse & {
@@ -550,6 +600,11 @@ function HomeContent() {
               onSubmit={handleSubmit}
               isLoading={isLoading}
               variant="hero"
+              models={models}
+              selectedModel={selectedModel}
+              onModelChange={setSelectedModel}
+              modelsError={modelsError}
+              isModelsLoading={isModelsLoading}
             />
 
             <div className="mt-6 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 px-4 py-4 shadow-sm">
@@ -634,8 +689,9 @@ function HomeContent() {
               {EXAMPLE_TOPICS.map((t) => (
                 <button
                   key={t}
-                  onClick={() => handleSubmit(t)}
-                  className="accent rounded-full border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95"
+                  onClick={() => handleSubmit(t, selectedModel)}
+                  disabled={isLoading || isModelsLoading || !selectedModel}
+                  className="accent rounded-full border border-zinc-200 dark:border-zinc-800 px-3 py-1.5 text-[10px] font-semibold text-zinc-500 dark:text-zinc-400 transition-all duration-150 hover:border-zinc-900 dark:hover:border-zinc-100 hover:bg-zinc-900 dark:hover:bg-zinc-100 hover:text-white dark:hover:text-zinc-950 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {t}
                 </button>
@@ -699,6 +755,11 @@ function HomeContent() {
             isLoading={isLoading}
             variant="compact"
             initialValue={submittedTopic}
+            models={models}
+            selectedModel={selectedModel}
+            onModelChange={setSelectedModel}
+            modelsError={modelsError}
+            isModelsLoading={isModelsLoading}
           />
         </div>
         <button

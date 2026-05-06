@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, FormEvent, useEffect, useRef } from "react";
+import type { ModelOption } from "@/types/graph";
 
 interface TopicInputProps {
-  onSubmit: (topic: string) => void;
+  onSubmit: (topic: string, model: string) => void;
   isLoading: boolean;
   variant?: "hero" | "compact";
   initialValue?: string;
+  models: ModelOption[];
+  selectedModel: string;
+  onModelChange: (model: string) => void;
+  modelsError?: string | null;
+  isModelsLoading?: boolean;
 }
 
 export default function TopicInput({
@@ -14,6 +20,11 @@ export default function TopicInput({
   isLoading,
   variant = "compact",
   initialValue = "",
+  models,
+  selectedModel,
+  onModelChange,
+  modelsError,
+  isModelsLoading = false,
 }: TopicInputProps) {
   const [topic, setTopic] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -24,19 +35,22 @@ export default function TopicInput({
     }
   }, [variant]);
 
+  const canSubmit =
+    !isLoading && !isModelsLoading && topic.trim().length > 0 && selectedModel.length > 0;
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (topic.trim() && !isLoading) {
-      onSubmit(topic.trim());
+    if (canSubmit) {
+      onSubmit(topic.trim(), selectedModel);
     }
   };
 
   if (variant === "hero") {
     return (
       <form onSubmit={handleSubmit} className="w-full">
-        <div className="relative flex items-center rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950 shadow-sm transition-all duration-200 focus-within:border-zinc-400 focus-within:shadow-md">
+        <div className="relative flex items-center rounded-xl border border-zinc-200 bg-white shadow-sm transition-all duration-200 focus-within:border-zinc-400 focus-within:shadow-md">
           <svg
-            className="ml-4 h-4 w-4 flex-shrink-0 text-zinc-400 dark:text-zinc-500"
+            className="ml-4 h-4 w-4 flex-shrink-0 text-zinc-400"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -55,13 +69,30 @@ export default function TopicInput({
             onChange={(e) => setTopic(e.target.value)}
             placeholder="Supabase Auth, React Server Components, Postgres…"
             disabled={isLoading}
-            className="flex-1 bg-transparent px-3 py-3.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex-1 bg-transparent px-3 py-3.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none disabled:cursor-not-allowed disabled:opacity-50"
           />
+          <select
+            value={selectedModel}
+            onChange={(e) => onModelChange(e.target.value)}
+            disabled={isLoading || isModelsLoading || models.length === 0}
+            className="mr-2 max-w-[220px] rounded-md border border-zinc-200 bg-white px-2 py-1.5 text-xs text-zinc-700 outline-none focus:border-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isModelsLoading && <option value="">Loading models...</option>}
+            {!isModelsLoading && models.length === 0 && (
+              <option value="">No models</option>
+            )}
+            {!isModelsLoading &&
+              models.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.label}
+                </option>
+              ))}
+          </select>
           <div className="flex-shrink-0 p-1.5">
             <button
               type="submit"
-              disabled={isLoading || !topic.trim()}
-              className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 dark:disabled:hover:bg-zinc-100"
+              disabled={!canSubmit}
+              className="flex items-center gap-1.5 rounded-lg bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900"
             >
               {isLoading ? (
                 <>
@@ -107,6 +138,9 @@ export default function TopicInput({
             </button>
           </div>
         </div>
+        {modelsError && (
+          <p className="mt-2 text-xs text-red-600">{modelsError}</p>
+        )}
       </form>
     );
   }
@@ -119,12 +153,29 @@ export default function TopicInput({
         onChange={(e) => setTopic(e.target.value)}
         placeholder="Enter a topic…"
         disabled={isLoading}
-        className="flex-1 rounded-md border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-950 px-3 py-1.5 text-sm text-zinc-900 dark:text-zinc-100 placeholder-zinc-400 dark:placeholder-zinc-600 outline-none ring-0 transition-all duration-150 focus:border-zinc-900 dark:focus:border-zinc-100 focus:ring-1 focus:ring-zinc-900 dark:focus:ring-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+        className="flex-1 rounded-md border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 placeholder-zinc-400 outline-none ring-0 transition-all duration-150 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-50"
       />
+      <select
+        value={selectedModel}
+        onChange={(e) => onModelChange(e.target.value)}
+        disabled={isLoading || isModelsLoading || models.length === 0}
+        className="w-48 rounded-md border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-700 outline-none transition-all duration-150 focus:border-zinc-900 focus:ring-1 focus:ring-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isModelsLoading && <option value="">Loading models...</option>}
+        {!isModelsLoading && models.length === 0 && (
+          <option value="">No models</option>
+        )}
+        {!isModelsLoading &&
+          models.map((model) => (
+            <option key={model.id} value={model.id}>
+              {model.label}
+            </option>
+          ))}
+      </select>
       <button
         type="submit"
-        disabled={isLoading || !topic.trim()}
-        className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-300 dark:disabled:hover:bg-zinc-100"
+        disabled={!canSubmit}
+        className="flex items-center gap-1.5 rounded-md bg-zinc-900 px-4 py-1.5 text-sm font-medium text-white transition-all duration-150 hover:bg-zinc-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-zinc-900"
       >
         {isLoading ? (
           <>
@@ -168,6 +219,9 @@ export default function TopicInput({
           </>
         )}
       </button>
+      {modelsError && (
+        <p className="self-center text-xs text-red-600">{modelsError}</p>
+      )}
     </form>
   );
 }

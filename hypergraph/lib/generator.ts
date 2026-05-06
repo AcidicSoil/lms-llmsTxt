@@ -3,6 +3,7 @@ import type { GraphNode, SkillGraph, GeneratedFile } from "@/types/graph";
 import { promises as fs } from "node:fs";
 import { spawn } from "node:child_process";
 import path from "node:path";
+import { getLLMProxyConfig } from "@/lib/llm/config";
 
 type GraphModelConfig = {
   provider: string;
@@ -12,19 +13,29 @@ type GraphModelConfig = {
   responseFormat: "json_object" | "json_schema" | "text";
 };
 
-function graphModelConfig(): GraphModelConfig {
+function graphModelConfig(modelOverride?: string): GraphModelConfig {
+  let proxyConfig: ReturnType<typeof getLLMProxyConfig> | undefined;
+  try {
+    proxyConfig = getLLMProxyConfig();
+  } catch {
+    proxyConfig = undefined;
+  }
   const baseURL =
     process.env.HYPERGRAPH_OPENAI_BASE_URL ||
+    proxyConfig?.baseUrl ||
     process.env.OPENAI_BASE_URL ||
     process.env.LMSTUDIO_BASE_URL ||
     undefined;
   const model =
+    modelOverride ||
     process.env.HYPERGRAPH_OPENAI_MODEL ||
+    proxyConfig?.defaultModel ||
     process.env.OPENAI_MODEL ||
     process.env.LMSTUDIO_MODEL ||
     "gpt-4o";
   const apiKey =
     process.env.HYPERGRAPH_OPENAI_API_KEY ||
+    proxyConfig?.apiKey ||
     process.env.OPENAI_API_KEY ||
     process.env.LMSTUDIO_API_KEY ||
     (baseURL ? "lm-studio" : undefined);
@@ -185,13 +196,14 @@ export async function generateGraph(
   topic: string,
   docs: { url: string; markdown: string }[],
   traceContext?: GenerationTraceContext,
+  modelOverride?: string,
 ): Promise<{ graph: SkillGraph; files: GeneratedFile[]; trace?: GenerationTrace }> {
   const truncatedDocs = docs
     .map((d) => `## Source: ${d.url}\n\n${d.markdown.slice(0, 4000)}`)
     .join("\n\n---\n\n");
 
   const startedAt = Date.now();
-  const modelConfig = graphModelConfig();
+  const modelConfig = graphModelConfig(modelOverride);
   const responseFormat = graphResponseFormat(modelConfig);
   const response = await openAIClient(modelConfig).chat.completions.create({
     model: modelConfig.model,

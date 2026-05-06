@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { searchDocs } from "@/lib/serper";
+import { SearchConfigError, SearchNoResultsError, searchDocs } from "@/lib/search";
 import { scrapeUrls, ConcurrencyPlanError } from "@/lib/hyperbrowser";
 import {
   generateGraph,
@@ -8,267 +8,225 @@ import {
   type GenerationTrace,
   type GenerationTraceContext,
 } from "@/lib/generator";
-import { errorToLog, logger, preview } from "@/lib/logger";
-import type { GeneratedFile, SkillGraph } from "@/types/graph";
+import { getLLMProxyConfig, LLMConfigError } from "@/lib/llm/config";
+import { fetchProxyModels, LLMProxyError, resolveModelSelection } from "@/lib/llm/proxy";
+import { createGeneration } from "@/lib/db/repository/generations";
+import {
+  createRequestContext,
+  logErrorEvent,
+  logProgressEvent,
+  logWideEvent,
+  type GenerationStage,
+} from "@/lib/logging/logger";
 
 export const maxDuration = 60;
 export const runtime = "nodejs";
 
 type GenerateMode = "topic" | "generate-repo-graph" | "load-repo-graph";
 
-type RequestLogEvent = {
-  event: "hypergraph.generate";
-  requestId: string;
-  mode: GenerateMode;
-  startedAt: string;
-  durationMs?: number;
-  statusCode?: number;
-  outcome?: "success" | "error";
-  input?: Record<string, unknown>;
-  graph?: {
-    topic?: string;
-    nodeCount?: number;
-    fileCount?: number;
-    artifactPath?: string;
-  };
-  trace?: GenerationTrace;
-  error?: ReturnType<typeof errorToLog>;
-};
+type AppErrorMeta = { name?: string; message?: string; code?: string | number; stage?: string };
 
-function jsonWithRequestId(
-  body: Record<string, unknown>,
-  requestId: string,
-  init?: ResponseInit,
-) {
-  return NextResponse.json({ ...body, requestId }, init);
+function withRequestId(response: NextResponse, requestId: string): NextResponse {
+  response.headers.set("x-request-id", requestId);
+  return response;
 }
 
-function finalizeLog(
-  event: RequestLogEvent,
-  startedMs: number,
-  statusCode: number,
-  outcome: "success" | "error",
-  extra: Partial<RequestLogEvent> = {},
-) {
-  const finalEvent: RequestLogEvent = {
-    ...event,
-    ...extra,
-    statusCode,
-    outcome,
-    durationMs: Date.now() - startedMs,
-  };
-
-  if (outcome === "error") {
-    logger.error(finalEvent);
-    return;
-  }
-
-  logger.info(finalEvent);
-}
-
-function inputSummary({
-  mode,
-  topic,
-  graphPath,
-  repoUrl,
-}: {
-  mode: GenerateMode;
-  topic: unknown;
-  graphPath: unknown;
-  repoUrl: unknown;
-}): Record<string, unknown> {
-  if (mode === "load-repo-graph") {
-    const value = typeof graphPath === "string" ? graphPath : "";
-    return {
-      graphPath: value ? preview(value, 180) : undefined,
-      graphPathLength: value.length,
-    };
-  }
-
-  if (mode === "generate-repo-graph") {
-    if (typeof repoUrl !== "string") return {};
-    try {
-      const parsed = new URL(repoUrl);
-      const parts = parsed.pathname.replace(/^\/+|\/+$/g, "").split("/");
-      return {
-        repoHost: parsed.hostname,
-        repoOwner: parts[0],
-        repoName: parts[1]?.replace(/\.git$/i, ""),
-      };
-    } catch {
-      return { repoUrlPreview: preview(repoUrl, 120) };
-    }
-  }
-
-  const value = typeof topic === "string" ? topic.trim() : "";
-  return {
-    topicPreview: value ? preview(value, 120) : undefined,
-    topicLength: value.length,
-  };
-}
-
-function graphSummary(
-  graph: SkillGraph,
-  files: GeneratedFile[],
-  artifactPath?: string,
-): RequestLogEvent["graph"] {
-  return {
-    topic: graph.topic,
-    nodeCount: graph.nodes.length,
-    fileCount: files.length,
-    artifactPath,
-  };
-}
 
 export async function POST(req: NextRequest) {
-  const requestId = crypto.randomUUID();
-  const startedMs = Date.now();
-  let parsedBody: {
-    topic?: unknown;
-    mode?: unknown;
-    graphPath?: unknown;
-    repoUrl?: unknown;
-  } = {};
-  let mode: GenerateMode = "topic";
+  const request = createRequestContext(req, "api.generate");
+  const startedAt = Date.now();
+  const metrics: Record<string, unknown> = {};
+  let statusCode = 500;
+  let outcome: "success" | "error" = "error";
+  let errorMeta: AppErrorMeta | undefined;
+  let stage: GenerationStage = "request.parse";
+  let stageStartedAt = Date.now();
 
-  const baseEvent: RequestLogEvent = {
-    event: "hypergraph.generate",
-    requestId,
-    mode,
-    startedAt: new Date(startedMs).toISOString(),
+  const markStageStart = (nextStage: GenerationStage, stageMetrics?: Record<string, unknown>) => {
+    stage = nextStage;
+    stageStartedAt = Date.now();
+    logProgressEvent({ event: "api.generate.stage.started", request, stage, metrics: stageMetrics });
+  };
+
+  const markStageSuccess = (stageMetrics?: Record<string, unknown>) => {
+    logProgressEvent({
+      event: "api.generate.stage.succeeded",
+      request,
+      stage,
+      durationMs: Date.now() - stageStartedAt,
+      metrics: stageMetrics,
+    });
   };
 
   try {
-    parsedBody = await req.json();
-    const { topic, graphPath, repoUrl } = parsedBody;
-    mode =
-      parsedBody.mode === "load-repo-graph" ||
-      parsedBody.mode === "generate-repo-graph"
-        ? parsedBody.mode
-        : "topic";
-    baseEvent.mode = mode;
-    baseEvent.input = inputSummary({ mode, topic, graphPath, repoUrl });
-
-    const traceContext: GenerationTraceContext = { requestId, mode };
+    markStageStart("request.parse");
+    const { topic, model, mode: rawMode, graphPath, repoUrl } = await req.json();
+    const mode: GenerateMode =
+      rawMode === "load-repo-graph" || rawMode === "generate-repo-graph" ? rawMode : "topic";
+    const traceContext: GenerationTraceContext = { requestId: request.requestId, mode };
+    metrics.mode = mode;
+    metrics.hasModelInput = typeof model === "string" && model.trim().length > 0;
+    markStageSuccess({ mode, hasModelInput: metrics.hasModelInput });
 
     if (mode === "load-repo-graph") {
+      markStageStart("llm.generate", { mode });
       if (!graphPath || typeof graphPath !== "string") {
-        const error = new Error("graphPath is required in load-repo-graph mode");
-        finalizeLog(baseEvent, startedMs, 400, "error", { error: errorToLog(error) });
-        return jsonWithRequestId({ error: error.message }, requestId, { status: 400 });
+        statusCode = 400;
+        return withRequestId(NextResponse.json({ error: "graphPath is required in load-repo-graph mode" }, { status: 400 }), request.requestId);
       }
-      try {
-        const { graph, files, trace } = await loadRepoGraph(graphPath, traceContext);
-        finalizeLog(baseEvent, startedMs, 200, "success", {
-          graph: graphSummary(graph, files),
-          trace,
-        });
-        return jsonWithRequestId({ graph, files, trace }, requestId);
-      } catch (error) {
-        finalizeLog(baseEvent, startedMs, 400, "error", { error: errorToLog(error) });
-        return jsonWithRequestId(
-          {
-            error:
-              error instanceof Error ? error.message : "Invalid graph path",
-          },
-          requestId,
-          { status: 400 },
-        );
-      }
+      const { graph, files, trace } = await loadRepoGraph(graphPath, traceContext);
+      metrics.graphNodeCount = graph.nodes.length;
+      metrics.generatedFileCount = files.length;
+      markStageSuccess({ graphNodeCount: graph.nodes.length, generatedFileCount: files.length });
+      statusCode = 200;
+      outcome = "success";
+      return withRequestId(NextResponse.json({ graph, files, trace, requestId: request.requestId }), request.requestId);
     }
 
     if (mode === "generate-repo-graph") {
+      markStageStart("llm.generate", { mode });
       if (!repoUrl || typeof repoUrl !== "string") {
-        const error = new Error("repoUrl is required in generate-repo-graph mode");
-        finalizeLog(baseEvent, startedMs, 400, "error", { error: errorToLog(error) });
-        return jsonWithRequestId({ error: error.message }, requestId, { status: 400 });
+        statusCode = 400;
+        return withRequestId(NextResponse.json({ error: "repoUrl is required in generate-repo-graph mode" }, { status: 400 }), request.requestId);
       }
-      try {
-        const { graph, files, artifactPath, trace } = await generateRepoGraph(
-          repoUrl,
-          traceContext,
-        );
-        finalizeLog(baseEvent, startedMs, 200, "success", {
-          graph: graphSummary(graph, files, artifactPath),
-          trace,
-        });
-        return jsonWithRequestId({ graph, files, artifactPath, trace }, requestId);
-      } catch (error) {
-        finalizeLog(baseEvent, startedMs, 400, "error", { error: errorToLog(error) });
-        return jsonWithRequestId(
-          {
-            error:
-              error instanceof Error
-                ? error.message
-                : "Repo graph generation failed",
-          },
-          requestId,
-          { status: 400 },
-        );
-      }
+      const { graph, files, artifactPath, trace } = await generateRepoGraph(repoUrl, traceContext);
+      metrics.graphNodeCount = graph.nodes.length;
+      metrics.generatedFileCount = files.length;
+      metrics.artifactPath = artifactPath;
+      markStageSuccess({ graphNodeCount: graph.nodes.length, generatedFileCount: files.length, artifactPath });
+      statusCode = 200;
+      outcome = "success";
+      return withRequestId(NextResponse.json({ graph, files, artifactPath, trace, requestId: request.requestId }), request.requestId);
     }
 
     if (!topic || typeof topic !== "string" || topic.trim().length === 0) {
-      const error = new Error("Topic is required");
-      finalizeLog(baseEvent, startedMs, 400, "error", { error: errorToLog(error) });
-      return jsonWithRequestId({ error: error.message }, requestId, { status: 400 });
+      statusCode = 400;
+      return withRequestId(NextResponse.json({ error: "Topic is required" }, { status: 400 }), request.requestId);
     }
 
-    const urls = await searchDocs(topic.trim());
-    if (urls.length === 0) {
-      const error = new Error("No documentation found for this topic");
-      finalizeLog(baseEvent, startedMs, 404, "error", {
-        error: errorToLog(error),
-        trace: { requestId, mode, provider: "serper", durationMs: Date.now() - startedMs },
-      });
-      return jsonWithRequestId({ error: error.message }, requestId, { status: 404 });
-    }
+    markStageStart("search.docs");
+    const searchStartedAt = Date.now();
+    const { urls, diagnostics } = await searchDocs(topic.trim());
+    metrics.searchDurationMs = Date.now() - searchStartedAt;
+    metrics.searchAttempts = diagnostics.attempted.length;
+    metrics.selectedSearchProvider = diagnostics.selected;
+    metrics.urlsFound = urls.length;
+    markStageSuccess({ urlsFound: urls.length, selectedSearchProvider: diagnostics.selected });
 
-    const docs = await scrapeUrls(urls);
+    markStageStart("scrape.urls", { urlsToScrape: urls.length });
+    const scrapeStartedAt = Date.now();
+    const docs = await scrapeUrls(urls, { requestId: request.requestId });
+    metrics.scrapeDurationMs = Date.now() - scrapeStartedAt;
+    metrics.docsScraped = docs.length;
     if (docs.length === 0) {
-      const error = new Error("Failed to scrape any documentation");
-      finalizeLog(baseEvent, startedMs, 502, "error", {
-        error: errorToLog(error),
-        trace: {
-          requestId,
-          mode,
-          provider: "hyperbrowser",
-          durationMs: Date.now() - startedMs,
-          promptSourceCount: urls.length,
-        },
+      statusCode = 502;
+      return withRequestId(NextResponse.json({ error: "Failed to scrape any documentation" }, { status: 502 }), request.requestId);
+    }
+    markStageSuccess({ docsScraped: docs.length });
+
+    markStageStart("llm.models.fetch");
+    const llmConfig = getLLMProxyConfig();
+    const selectedModel = resolveModelSelection(typeof model === "string" ? model : undefined, llmConfig.defaultModel);
+    if (!selectedModel) {
+      statusCode = 400;
+      return withRequestId(NextResponse.json({ error: "No model selected. Pick a model in the UI or set DEFAULT_MODEL." }, { status: 400 }), request.requestId);
+    }
+    const models = await fetchProxyModels(llmConfig);
+    if (!models.some((available) => available.id === selectedModel)) {
+      statusCode = 400;
+      return withRequestId(NextResponse.json({ error: `Model '${selectedModel}' is not available from CLIProxyAPI /v1/models.` }, { status: 400 }), request.requestId);
+    }
+    metrics.selectedModel = selectedModel;
+    metrics.availableModelCount = models.length;
+    markStageSuccess({ selectedModel, availableModelCount: models.length });
+
+    markStageStart("llm.generate", { selectedModel, docsScraped: docs.length });
+    const generateStartedAt = Date.now();
+    const { graph, files, trace } = await generateGraph(topic.trim(), docs, traceContext, selectedModel);
+    metrics.generateDurationMs = Date.now() - generateStartedAt;
+    metrics.graphNodeCount = graph.nodes.length;
+    metrics.generatedFileCount = files.length;
+    markStageSuccess({ graphNodeCount: graph.nodes.length, generatedFileCount: files.length });
+
+    let generationId: string | undefined;
+    let persistenceWarning: "store_failed" | undefined;
+    try {
+      generationId = crypto.randomUUID();
+      await createGeneration({
+        id: generationId,
+        requestId: request.requestId,
+        topic: topic.trim(),
+        model: selectedModel,
+        status: "success",
+        searchProvider: diagnostics.selected ?? null,
+        searchAttempts: diagnostics.attempted,
+        graph,
+        files,
+        metrics,
       });
-      return jsonWithRequestId({ error: error.message }, requestId, { status: 502 });
+    } catch {
+      persistenceWarning = "store_failed";
     }
 
-    const { graph, files, trace } = await generateGraph(
-      topic.trim(),
-      docs,
-      traceContext,
-    );
-
-    finalizeLog(baseEvent, startedMs, 200, "success", {
-      graph: graphSummary(graph, files),
-      trace,
-    });
-    return jsonWithRequestId({ graph, files, trace }, requestId);
+    statusCode = 200;
+    outcome = "success";
+    return withRequestId(NextResponse.json({
+      graph,
+      files,
+      trace: trace satisfies GenerationTrace | undefined,
+      meta: {
+        generationId,
+        model: selectedModel,
+        searchProvider: diagnostics.selected,
+        searchAttempts: diagnostics.attempted,
+        requestId: request.requestId,
+        persistenceWarning,
+      },
+    }), request.requestId);
   } catch (err) {
-    if (err instanceof ConcurrencyPlanError) {
-      finalizeLog(baseEvent, startedMs, 402, "error", { error: errorToLog(err) });
-      return jsonWithRequestId(
-        {
-          error: err.message,
-          upgradeUrl: "https://hyperbrowser.ai",
-          hint: "Set HYPERBROWSER_MAX_CONCURRENCY=1 in your .env (it is already the default) and ensure no other requests are running simultaneously.",
-        },
-        requestId,
-        { status: 402 },
-      );
+    logProgressEvent({ event: "api.generate.stage.failed", request, stage, durationMs: Date.now() - stageStartedAt, error: err });
+    errorMeta = {
+      stage,
+      ...(err instanceof Error ? { name: err.name, message: err.message } : { message: "Unknown error" }),
+    };
+
+    if (err instanceof LLMConfigError || err instanceof SearchConfigError) {
+      statusCode = 500;
+      logErrorEvent("api.generate.exception", request, err, stage);
+      return withRequestId(NextResponse.json({ error: err.message }, { status: 500 }), request.requestId);
     }
-    finalizeLog(baseEvent, startedMs, 500, "error", { error: errorToLog(err) });
-    return jsonWithRequestId(
-      { error: err instanceof Error ? err.message : "Internal server error" },
-      requestId,
-      { status: 500 },
-    );
+    if (err instanceof LLMProxyError) {
+      statusCode = 502;
+      errorMeta.code = err.status;
+      logErrorEvent("api.generate.exception", request, err, stage);
+      return withRequestId(NextResponse.json({ error: err.message }, { status: 502 }), request.requestId);
+    }
+    if (err instanceof SearchNoResultsError) {
+      statusCode = 404;
+      logErrorEvent("api.generate.exception", request, err, stage);
+      return withRequestId(NextResponse.json({ error: err.message, meta: { searchAttempts: err.diagnostics.attempted } }, { status: 404 }), request.requestId);
+    }
+    if (err instanceof ConcurrencyPlanError) {
+      statusCode = 402;
+      logErrorEvent("api.generate.exception", request, err, stage);
+      return withRequestId(NextResponse.json({
+        error: err.message,
+        upgradeUrl: "https://hyperbrowser.ai",
+        hint: "Set HYPERBROWSER_MAX_CONCURRENCY=1 in your .env and ensure no other requests are running simultaneously.",
+      }, { status: 402 }), request.requestId);
+    }
+    statusCode = 500;
+    logErrorEvent("api.generate.exception", request, err, stage);
+    return withRequestId(NextResponse.json({ error: err instanceof Error ? err.message : "Internal server error" }, { status: 500 }), request.requestId);
+  } finally {
+    logWideEvent({
+      event: "api.generate.completed",
+      request,
+      statusCode,
+      outcome,
+      durationMs: Date.now() - startedAt,
+      metrics,
+      error: errorMeta,
+    });
   }
 }
