@@ -1,6 +1,14 @@
 from pathlib import Path
 
-from lms_llmsTxt.graph_builder import build_repo_graph, emit_graph_files, to_force_graph
+import pytest
+
+from lms_llmsTxt.graph_builder import (
+    build_repo_graph,
+    emit_graph_files,
+    to_force_graph,
+    validate_semantic_graph,
+)
+from lms_llmsTxt.graph_models import RepoGraphNode, RepoSkillGraph
 from lms_llmsTxt.repo_digest import RepoDigest
 
 
@@ -78,7 +86,9 @@ def test_repo_graph_adds_evidence_backed_topology_and_node_variety():
     assert {node.type for node in non_moc_nodes} >= {"concept", "pattern", "gotcha"}
     assert any(node.links for node in non_moc_nodes)
     assert all(target in node_ids for node in graph.nodes for target in node.links)
-    assert any("Related traversal" in node.content for node in non_moc_nodes)
+    assert all("Related traversal" not in node.content for node in non_moc_nodes)
+    assert all("This node is grounded in repository paths" not in node.content for node in non_moc_nodes)
+    assert any("Related concepts" in node.content for node in non_moc_nodes)
     assert any("[[" in node.content for node in non_moc_nodes if node.links)
 
 
@@ -116,3 +126,39 @@ def test_force_graph_uses_deduped_valid_edges_and_degree_sizing():
     assert any(key == ("src-auth", "tests-auth") for key in edge_keys)
     assert node_values["src-auth"] > 1.5
     assert node_values["tests-auth"] > 1.5
+
+
+def test_semantic_graph_validation_rejects_provenance_boilerplate():
+    graph = RepoSkillGraph(
+        topic="Example Repo",
+        nodes=[
+            RepoGraphNode(
+                id="moc",
+                label="Example Repo Map",
+                type="moc",
+                description="Repository overview",
+                content="# Example Repo\n\nA semantic overview of the repository.",
+                links=["bad-node"],
+            ),
+            RepoGraphNode(
+                id="bad-node",
+                label="Bad Node",
+                type="concept",
+                description="This node is grounded in repository paths.",
+                content=(
+                    "---\n"
+                    "title: Bad Node\n"
+                    "type: concept\n"
+                    "description: Bad node\n"
+                    "---\n\n"
+                    "# Bad Node\n\n"
+                    "This node is grounded in repository paths that indicate a concept role.\n\n"
+                    "Another paragraph that would otherwise be long enough to pass structure validation."
+                ),
+                links=[],
+            ),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="provenance boilerplate"):
+        validate_semantic_graph(graph)

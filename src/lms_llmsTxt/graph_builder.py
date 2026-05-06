@@ -22,6 +22,55 @@ MAX_REPO_NODES = 20
 MAX_MOC_LINKS = 16
 MAX_NODE_LINKS = 5
 
+PROVENANCE_ONLY_PHRASES = (
+    "this node is grounded in repository paths",
+    "this node is based on evidence anchors",
+    "use it to understand ownership boundaries",
+    "operational risk or validation surface",
+    "no key symbols were extracted",
+    "related traversal",
+    "uploaded artifact note",
+    "evidence-backed neighbors",
+)
+
+
+def _contains_provenance_boilerplate(text: str) -> bool:
+    lowered = text.lower()
+    return any(phrase in lowered for phrase in PROVENANCE_ONLY_PHRASES)
+
+
+def validate_semantic_node(node: RepoGraphNode) -> None:
+    if _contains_provenance_boilerplate(f"{node.description}\n{node.content}"):
+        raise ValueError(f"Node {node.id} used provenance boilerplate instead of semantic synthesis")
+
+    if node.type != "moc":
+        body_before_evidence = node.content.lower().split("## evidence", 1)[0]
+        paragraphs = [
+            part.strip()
+            for part in body_before_evidence.split("\n\n")
+            if len(part.strip()) > 80
+        ]
+        if len(paragraphs) < 2:
+            raise ValueError(f"Node {node.id} does not contain enough semantic explanation before evidence")
+        if node.label.strip().startswith(("/", "./")) or "/" in node.label:
+            raise ValueError(f"Node {node.id} has a raw path label instead of a concept label")
+
+
+def validate_semantic_graph(graph: RepoSkillGraph) -> None:
+    moc_count = sum(1 for node in graph.nodes if node.type == "moc")
+    if moc_count != 1:
+        raise ValueError(f"Repo graph must contain exactly one MOC node; found {moc_count}")
+
+    node_ids = {node.id for node in graph.nodes}
+    if len(node_ids) != len(graph.nodes):
+        raise ValueError("Repo graph contains duplicate node ids")
+
+    for node in graph.nodes:
+        validate_semantic_node(node)
+        for target in node.links:
+            if target not in node_ids:
+                raise ValueError(f"Node {node.id} links to unknown node {target}")
+
 
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "node"
@@ -107,6 +156,39 @@ def _format_evidence_lines(paths: list[str]) -> str:
     return "\n".join(f"- `{path}`" for path in paths[:8])
 
 
+def _humanize_subsystem_label(name: str) -> str:
+    parts = [part for part in re.split(r"[/_.-]+", name) if part]
+    if not parts:
+        return "Repository Capability"
+    return " ".join(part.upper() if part.isupper() else part.capitalize() for part in parts)
+
+
+def _humanize_subsystem_name(name: str) -> str:
+    leaf = name.strip("/").split("/")[-1] or name
+    leaf = leaf.rsplit(".", 1)[0]
+    return " ".join(part.capitalize() for part in re.split(r"[-_\s]+", leaf) if part) or name
+
+
+def _semantic_description(subsystem: dict, *, node_type: GraphNodeType) -> str:
+    name = str(subsystem["name"])
+    summary = str(subsystem.get("summary") or "").strip()
+    label = _humanize_subsystem_label(name)
+    if summary and not _contains_provenance_boilerplate(summary):
+        return summary
+    if node_type == "pattern":
+        return f"Explains how {label} expresses a reusable workflow or implementation pattern in this repository."
+    if node_type == "gotcha":
+        return f"Explains the validation or operational concern around {label} and when a developer should inspect it."
+    return f"Explains the role {label} plays in the repository architecture and how nearby code depends on it."
+
+
+def _related_concept_sentence(related_links: list[str]) -> str:
+    if not related_links:
+        return "This node currently has no high-confidence semantic neighbors in the deterministic graph; inspect its evidence before broad changes."
+    linked = ", ".join(f"[[{node_id}]]" for node_id in related_links[:3])
+    return f"Read {linked} next to understand the adjacent concepts that share source paths, symbols, or integration boundaries with this area."
+
+
 def _content_for_subsystem(
     subsystem: dict,
     *,
@@ -117,42 +199,48 @@ def _content_for_subsystem(
     summary = str(subsystem["summary"])
     key_symbols = [str(symbol) for symbol in subsystem.get("key_symbols", [])[:12]]
     paths = [str(path) for path in subsystem.get("paths", [])[:8]]
+    concept_name = _humanize_subsystem_name(name)
 
     related_sentence = (
         " ".join(
-            f"Follow [[{node_id}]] to compare adjacent responsibilities and integration evidence."
+            f"Read [[{node_id}]] next when you need to understand how this responsibility interacts with a neighboring part of the system."
             for node_id in related_links
         )
         if related_links
-        else "No high-confidence adjacent subsystem was detected in the digest."
+        else "This node has no high-confidence semantic neighbor in the current digest, so treat it as a local entry point."
     )
 
-    operational_heading = {
-        "concept": "Why this subsystem matters",
-        "pattern": "Reusable implementation pattern",
-        "gotcha": "Operational risk or validation surface",
+    focus_heading = {
+        "concept": "What this part of the system represents",
+        "pattern": "Reusable approach",
+        "gotcha": "Failure mode to watch",
         "moc": "Overview",
     }[node_type]
 
+    symbols_text = (
+        ", ".join(f"`{symbol}`" for symbol in key_symbols)
+        if key_symbols
+        else "The digest did not expose named public symbols for this subsystem."
+    )
+
     return (
         f"---\n"
-        f"title: {name}\n"
+        f"title: {concept_name}\n"
         f"type: {node_type}\n"
         f"description: {summary}\n"
         f"---\n\n"
-        f"# {name}\n\n"
+        f"# {concept_name}\n\n"
         f"{summary}\n\n"
-        f"## {operational_heading}\n\n"
-        f"This node is grounded in repository paths that indicate a `{node_type}` role in the codebase. "
-        f"Use it to understand ownership boundaries before changing related files.\n\n"
+        f"## {focus_heading}\n\n"
+        f"This area groups the behavior represented by `{name}`. Read it as a conceptual boundary: the files listed below are supporting evidence, but the reason the node exists is that these paths appear to share a coherent responsibility in the repository.\n\n"
+        f"When changing this area, first identify whether the work is about runtime behavior, documentation, tests, or configuration. That distinction determines whether the safe change is an API change, a usage-pattern update, or a validation fix.\n\n"
+        f"## Concrete implementation signals\n\n"
+        f"Important symbols or exported names: {symbols_text}\n\n"
+        f"## Related concepts\n\n"
+        f"{related_sentence}\n\n"
         f"## Evidence\n\n"
-        f"{_format_evidence_lines(paths)}\n\n"
-        f"## Key symbols\n\n"
-        f"{', '.join(key_symbols) if key_symbols else 'No key symbols were extracted from the digest.'}\n\n"
-        f"## Related traversal\n\n"
-        f"{related_sentence}\n"
+        f"{_format_evidence_lines(paths)}\n"
     )
-
 
 def _related_edges(subsystems: list[dict], node_ids: list[str]) -> dict[str, list[str]]:
     scored: dict[str, list[tuple[int, str]]] = defaultdict(list)
@@ -179,20 +267,20 @@ def _build_moc_content(digest: RepoDigest, nodes: list[RepoGraphNode]) -> str:
     cluster_lines = []
     for node in nodes[:MAX_MOC_LINKS]:
         cluster_lines.append(
-            f"- Start with [[{node.id}]] when investigating {node.label}; its evidence anchors explain why it belongs in the repository map."
+            f"- Start with [[{node.id}]] when investigating {node.label}; it summarizes the responsibility and neighboring concepts for that part of the project."
         )
 
     type_summary = ", ".join(f"{count} {node_type}" for node_type, count in sorted(type_counts.items()))
     return (
         f"# {digest.topic}\n\n"
-        f"This map summarizes repository structure, evidence-backed subsystem relationships, and practical traversal paths. "
-        f"It contains {type_summary or 'no classified subsystem nodes'} so agents can distinguish architecture, reusable patterns, and validation risks instead of reading a flat file list.\n\n"
+        f"This map summarizes the repository as a set of developer-facing concepts rather than a flat file list. "
+        f"It contains {type_summary or 'no classified subsystem nodes'} so agents can distinguish architecture, reusable approaches, and failure modes before making changes.\n\n"
         f"## Domain Clusters\n"
         + "\n".join(cluster_lines)
         + "\n\n## Explorations Needed\n"
         "- Which subsystem boundaries should become explicit ownership documentation?\n"
         "- Which pattern and gotcha nodes should become targeted regression tests?\n"
-        "- Where should dependency and entry-point evidence be expanded in the next graph pass?\n"
+        "- Which concepts need richer source excerpts in the next graph pass?\n"
     )
 
 
@@ -214,7 +302,7 @@ def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
         nodes.append(
             RepoGraphNode(
                 id=node_id,
-                label=subsystem["name"],
+                label=_humanize_subsystem_label(str(subsystem["name"])),
                 type=node_type,
                 description=subsystem["summary"],
                 content=content,
@@ -238,7 +326,9 @@ def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
         tags=["moc", digest.primary_language],
     )
 
-    return RepoSkillGraph(topic=digest.topic, nodes=[moc, *nodes])
+    graph = RepoSkillGraph(topic=digest.topic, nodes=[moc, *nodes])
+    validate_semantic_graph(graph)
+    return graph
 
 
 def to_force_graph(graph: RepoSkillGraph) -> ForceGraphData:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import requests
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -18,6 +19,7 @@ from .fallback import (
 )
 from .github import fetch_file_content, gather_repository_material, owner_repo_from_url
 from .graph_builder import build_repo_graph, emit_graph_files
+from .graph_semantic_synthesizer import SemanticGraphSynthesisError, build_semantic_repo_graph
 from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
 from .reasoning import sanitize_final_output
@@ -341,7 +343,12 @@ def run_generation(
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
         digest = build_repo_digest(material, topic=project_name)
-        graph = build_repo_graph(digest)
+        try:
+            graph = build_semantic_repo_graph(digest, material, config)
+            logger.info("Semantic repo graph generated with LM Studio")
+        except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
+            logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
+            graph = build_repo_graph(digest)
         graph_paths = emit_graph_files(graph, repo_root / "graph")
         graph_json_path = Path(graph_paths["graph_json"])
         force_graph_path = Path(graph_paths["force_json"])
