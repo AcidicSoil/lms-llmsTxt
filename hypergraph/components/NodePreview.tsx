@@ -30,6 +30,28 @@ function toSlug(label: string): string {
     .replace(/[^a-z0-9-]/g, "");
 }
 
+function firstMarkdownListItems(markdown: string, heading: string, maxItems = 4): string[] {
+  const pattern = new RegExp(`## ${heading}\\n\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
+  const match = markdown.match(pattern);
+  if (!match) return [];
+  return match[1]
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith("- "))
+    .map((line) => line.replace(/^-\s+/, ""))
+    .slice(0, maxItems);
+}
+
+function sectionText(markdown: string, heading: string): string | null {
+  const pattern = new RegExp(`## ${heading}\\n\\n([\\s\\S]*?)(?=\\n## |$)`, "i");
+  const match = markdown.match(pattern);
+  return match ? match[1].trim() : null;
+}
+
+function stripInlineMarkdown(value: string): string {
+  return value.replace(/`([^`]+)`/g, "$1").replace(/\[\[([^\]]+)\]\]/g, "$1").trim();
+}
+
 function CopyButton({
   text,
   label = "Copy",
@@ -118,6 +140,9 @@ export default function NodePreview({
 
   const slug = toSlug(node.label);
   const markdownContent = displayMarkdown(node.content);
+  const inspectItems = firstMarkdownListItems(markdownContent, "Inspect first");
+  const signalItems = firstMarkdownListItems(markdownContent, "Implementation signals", 3);
+  const changeRisk = sectionText(markdownContent, "Change risk");
 
   function processWikilinks(text: string): ReactNode[] {
     const parts = text.split(/(\[\[[^\]]+\]\])/g);
@@ -203,6 +228,48 @@ export default function NodePreview({
         <p className="text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-500">
           {node.description}
         </p>
+      </div>
+
+      {/* ── Action summary ───────────────────────────────────────────────── */}
+      <div className="flex-shrink-0 border-b border-zinc-100 bg-zinc-50 px-4 py-3 dark:border-zinc-800 dark:bg-zinc-900/45">
+        <div className="grid gap-3 text-[11px] leading-relaxed text-zinc-600 dark:text-zinc-400">
+          {inspectItems.length > 0 ? (
+            <div>
+              <p className="mb-1 font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                Inspect first
+              </p>
+              <ul className="space-y-1">
+                {inspectItems.map((item) => (
+                  <li key={item} className="truncate font-mono text-[10px]">
+                    {stripInlineMarkdown(item)}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {signalItems.length > 0 ? (
+            <div>
+              <p className="mb-1 font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                Signals
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {signalItems.map((item) => (
+                  <span key={item} className="rounded bg-white px-1.5 py-0.5 font-mono text-[10px] text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                    {stripInlineMarkdown(item)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {changeRisk ? (
+            <div>
+              <p className="mb-1 font-semibold uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
+                Change risk
+              </p>
+              <p>{stripInlineMarkdown(changeRisk).slice(0, 220)}</p>
+            </div>
+          ) : null}
+        </div>
       </div>
 
       {/* ── Markdown document body ───────────────────────────────────────── */}

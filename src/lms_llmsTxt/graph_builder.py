@@ -23,6 +23,7 @@ MAX_MOC_LINKS = 16
 MAX_NODE_LINKS = 5
 
 PROVENANCE_ONLY_PHRASES = (
+    "best-effort name",
     "this node is grounded in repository paths",
     "this node is based on evidence anchors",
     "use it to understand ownership boundaries",
@@ -166,11 +167,16 @@ _PATHISH_RE = re.compile(r"(?:^|\s)(?:[A-Za-z0-9_.-]+/){1,}[A-Za-z0-9_.-]+")
 
 
 def _looks_like_path_inventory(text: str) -> bool:
-    if not text.strip():
+    stripped = text.strip()
+    if not stripped:
         return True
-    path_hits = len(_PATHISH_RE.findall(text))
-    word_hits = len(re.findall(r"[A-Za-z]{3,}", text))
-    return path_hits >= 2 and path_hits >= max(1, word_hits // 6)
+    path_hits = len(_PATHISH_RE.findall(stripped))
+    slash_hits = stripped.count("/")
+    word_hits = len(re.findall(r"[A-Za-z]{3,}", stripped))
+    sentence_markers = len(re.findall(r"[.!?]\s+", stripped))
+    if slash_hits >= 4 and sentence_markers == 0:
+        return True
+    return path_hits >= 2 and path_hits >= max(1, word_hits // 8)
 
 
 def _clean_label_part(part: str) -> str:
@@ -211,21 +217,37 @@ def _humanize_subsystem_name(name: str) -> str:
     return _humanize_subsystem_label(name)
 
 
+def _path_words(paths: list[str]) -> set[str]:
+    words: set[str] = set()
+    for path in paths:
+        words.update(part for part in re.split(r"[^a-z0-9]+", path.lower()) if part)
+    return words
+
+
 def _theme_from_paths(paths: list[str]) -> str:
     joined = " ".join(paths).lower()
+    words = _path_words(paths)
+    if "electron" in words and ({"ipc", "native", "extension", "extensions", "bin"} & words):
+        return "desktop_runtime"
+    if {"cursor", "cursors", "icon", "icons", "wallpaper", "wallpapers", "asset", "assets", "png", "svg", "jpg", "jpeg"} & words:
+        return "assets"
+    if {"i18n", "locale", "locales", "translation", "translations"} & words:
+        return "localization"
+    if {"component", "components", "ui", "tsx", "jsx"} & words:
+        return "ui"
     if "api-reference" in joined or "api_reference" in joined:
         return "api_reference"
-    if any(token in joined for token in ("quickstart", "getting-started", "tutorial")):
+    if {"quickstart", "getting", "started", "tutorial"} & words:
         return "quickstart"
-    if any(token in joined for token in ("plugin", "provider", "adapter")):
+    if {"plugin", "plugins", "provider", "providers", "adapter", "adapters"} & words:
         return "extension"
-    if any(token in joined for token in ("preset", "config", "configuration")):
+    if {"preset", "presets", "config", "configuration", "settings"} & words:
         return "configuration"
-    if any(token in joined for token in ("cli", "command", "daemon")):
+    if {"cli", "command", "commands", "daemon", "bin", "cmd"} & words:
         return "cli"
-    if any(token in joined for token in ("model", "llm", "prediction")):
+    if {"model", "models", "llm", "prediction", "predict"} & words:
         return "model_runtime"
-    if any(token in joined for token in ("doc", ".md", ".mdx")):
+    if {"doc", "docs", "md", "mdx", "readme"} & words:
         return "documentation"
     return "implementation"
 
@@ -240,6 +262,14 @@ def _semantic_description(subsystem: dict, *, node_type: GraphNodeType) -> str:
     if raw_summary and not _contains_provenance_boilerplate(raw_summary) and not _looks_like_path_inventory(raw_summary):
         return raw_summary
 
+    if theme == "assets":
+        return f"Collects visual or static assets for {label}; changes affect what users see, download, or interact with in the app."
+    if theme == "localization":
+        return f"Owns localized copy and language resources for {label}; changes affect user-facing text and translation coverage."
+    if theme == "ui":
+        return f"Owns user-interface behavior for {label}; changes affect visible screens, interactions, and component state."
+    if theme == "desktop_runtime":
+        return f"Connects {label} to desktop runtime behavior such as Electron IPC, native helpers, extensions, or capture integrations."
     if theme == "api_reference":
         return f"Explains how the {label} surface exposes concrete calls, parameters, and return shapes that developers rely on."
     if theme == "quickstart":
@@ -269,6 +299,14 @@ def _related_concept_sentence(related_links: list[str]) -> str:
 
 
 def _developer_action(theme: str, label: str) -> str:
+    if theme == "assets":
+        return f"Care about {label} when changing image, icon, cursor, or bundled static files, because missing or renamed assets usually break visible UI rather than type checks."
+    if theme == "localization":
+        return f"Care about {label} when adding screens, renaming translation keys, or changing default copy, because stale locale files create broken or inconsistent UI text."
+    if theme == "ui":
+        return f"Care about {label} when changing component props, layout state, keyboard behavior, or visual regressions, because this cluster is user-facing."
+    if theme == "desktop_runtime":
+        return f"Care about {label} when changing IPC contracts, native binaries, permissions, or platform-specific capture behavior, because failures surface as desktop runtime bugs."
     if theme == "api_reference":
         return f"Care about {label} when changing call signatures, request/response schemas, examples, or generated client surfaces, because small inconsistencies here become user-facing integration bugs."
     if theme == "quickstart":
@@ -285,6 +323,14 @@ def _developer_action(theme: str, label: str) -> str:
 
 
 def _failure_mode(theme: str, label: str) -> str:
+    if theme == "assets":
+        return f"If {label} is changed without checking references, the app can ship missing icons, wrong cursors, broken previews, or stale visual branding."
+    if theme == "localization":
+        return f"If {label} drifts from UI usage, users can see missing keys, mixed languages, or untranslated flows."
+    if theme == "ui":
+        return f"If {label} is changed in isolation, visible flows can regress even when lower-level logic still passes tests."
+    if theme == "desktop_runtime":
+        return f"If {label} changes without platform smoke tests, capture, permissions, IPC, or packaged native helpers can fail outside the browser dev loop."
     if theme == "api_reference":
         return f"If {label} is treated as a passive file list, documentation can drift away from the actual API contract and users will copy examples that no longer match runtime behavior."
     if theme == "quickstart":
@@ -313,26 +359,28 @@ def _content_for_subsystem(
     description = _semantic_description(subsystem, node_type=node_type)
     theme = _theme_from_paths(paths)
 
-    focus_label = {
-        "concept": "Concept description",
-        "pattern": "Pattern description",
-        "gotcha": "Failure mode to watch",
-        "moc": "Overview",
-    }[node_type]
+    if paths:
+        file_list = "\n".join(f"- `{path}`" for path in paths[:6])
+        lead_file = paths[0]
+    else:
+        file_list = "- Unknown; no representative file paths were available in the digest."
+        lead_file = "Unknown"
 
-    symbols_sentence = (
-        f"Concrete implementation signals include {', '.join(f'`{symbol}`' for symbol in key_symbols[:6])}."
-        if key_symbols
-        else "No named public symbols were extracted for this cluster, so generated guidance should be checked against the listed files before editing."
-    )
-    evidence_sentence = (
-        f"Representative files: {', '.join(f'`{path}`' for path in paths[:4])}."
-        if paths
-        else "No representative file paths were available in the current digest."
-    )
+    if key_symbols:
+        symbol_list = "\n".join(f"- `{symbol}`" for symbol in key_symbols[:8])
+    else:
+        symbol_list = "- No named symbols were extracted; inspect the files directly before editing."
+
     related_sentence = _related_concept_sentence(related_links)
     developer_action = _developer_action(theme, concept_name)
     failure_mode = _failure_mode(theme, concept_name)
+
+    if node_type == "gotcha":
+        role_heading = "Why this is risky"
+    elif node_type == "pattern":
+        role_heading = "Reusable pattern"
+    else:
+        role_heading = "What this owns"
 
     return (
         f"---\n"
@@ -340,13 +388,18 @@ def _content_for_subsystem(
         f"type: {node_type}\n"
         f"description: {description}\n"
         f"---\n\n"
+        f"# {concept_name}\n\n"
+        f"## {role_heading}\n\n"
         f"{description}\n\n"
-        f"**{focus_label.upper()}: {description.upper()}**\n\n"
-        f"{concept_name} is the graph's best-effort name for `{name}`. {evidence_sentence} "
-        f"Use this node to decide which concrete files to inspect first and which user-facing behavior may be affected.\n\n"
-        f"{developer_action} {symbols_sentence}\n\n"
+        f"{developer_action}\n\n"
+        f"## Inspect first\n\n"
+        f"Start with `{lead_file}`. Then check these nearby files before changing behavior:\n\n"
+        f"{file_list}\n\n"
+        f"## Implementation signals\n\n"
+        f"{symbol_list}\n\n"
         f"## Related concepts\n\n"
         f"{related_sentence}\n\n"
+        f"## Change risk\n\n"
         f"{failure_mode}\n\n"
         f"## Evidence\n\n"
         f"{_format_evidence_lines(paths)}\n"
@@ -424,11 +477,16 @@ def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
         )
 
     moc_links = [node.id for node in nodes[:MAX_MOC_LINKS]]
+    moc_description = (
+        digest.architecture_summary
+        if digest.architecture_summary and not _looks_like_path_inventory(digest.architecture_summary)
+        else f"Repository map for {digest.topic}: start here to choose the subsystem, risk area, or evidence path to inspect next."
+    )
     moc = RepoGraphNode(
         id="moc",
         label=f"{digest.topic} Map",
         type="moc",
-        description=digest.architecture_summary or "Repository map of content",
+        description=moc_description,
         content=_build_moc_content(digest, nodes),
         links=moc_links,
         evidence=[GraphNodeEvidence(path="repo_digest", artifact_ref=digest.digest_id)],
@@ -479,6 +537,10 @@ def emit_graph_files(graph: RepoSkillGraph, output_dir: Path) -> dict[str, str]:
     force_json = output_dir / "repo.force.json"
     nodes_dir = output_dir / "nodes"
     nodes_dir.mkdir(parents=True, exist_ok=True)
+    expected_node_files = {f"{node.id}.md" for node in graph.nodes}
+    for stale_node_file in nodes_dir.glob("*.md"):
+        if stale_node_file.name not in expected_node_files:
+            stale_node_file.unlink()
 
     graph_json.write_text(graph.model_dump_json(indent=2), encoding="utf-8")
     force_json.write_text(force.model_dump_json(indent=2), encoding="utf-8")

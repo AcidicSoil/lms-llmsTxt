@@ -325,9 +325,26 @@ def reduce_capsules(capsules: list[ChunkCapsule], topic: str = "Repository") -> 
     all_deps: set[str] = set()
     entry_points: list[str] = []
 
+    def subsystem_key(path: str) -> str:
+        parts = [part for part in path.split("/") if part]
+        if not parts:
+            return "root"
+        filename = parts[-1]
+        # Group source trees by the first meaningful feature/package directory, not just
+        # `src/components` or `src/lib`. Coarse buckets produce unreadable graph nodes.
+        if len(parts) >= 3 and parts[0] in {"src", "app", "lib", "packages", "electron"}:
+            if filename.lower() in {"index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py"}:
+                return "/".join(parts[:2])
+            return "/".join(parts[:3])
+        if len(parts) >= 3 and parts[0] in {"tests", "test", "e2e"}:
+            return "/".join(parts[:3])
+        if len(parts) >= 3 and parts[0] in {"docs", "public", "assets", "icons"}:
+            return "/".join(parts[:3])
+        return "/".join(parts[:2]) if len(parts) >= 2 else parts[0]
+
     for cap in capsules:
         parts = cap.path.split("/")
-        subsystem = "/".join(parts[:2]) if len(parts) >= 2 else (parts[0] if parts else "root")
+        subsystem = subsystem_key(cap.path)
         by_subsystem.setdefault(subsystem, []).append(cap)
 
         lang = _language_from_path(cap.path)

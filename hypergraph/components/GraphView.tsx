@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import dynamic from "next/dynamic";
 import type { ForceGraphData, NodeType } from "@/types/graph";
 import type { ForceGraphMethods, LinkObject, NodeObject } from "react-force-graph-2d";
@@ -28,7 +28,7 @@ type LinkForce = {
   distance: (fn: (link: GraphLinkObject) => number) => LinkForce;
 };
 
-const R = 3.5; // base radius multiplier, reduced to avoid clutter
+const R = 3.7; // base radius multiplier
 
 type NodeVisualStyle = {
   fill: string;
@@ -109,6 +109,41 @@ const LEGEND: { type: NodeType; label: string }[] = [
   { type: "gotcha", label: "Gotcha" },
 ];
 
+function clampLabel(label: unknown, max = 22): string {
+  const value = typeof label === "string" ? label : "";
+  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+}
+
+function buildDegreeMap(data: ForceGraphData): Map<string, number> {
+  const degree = new Map<string, number>();
+  for (const node of data.nodes) {
+    degree.set(node.id, 0);
+  }
+  for (const link of data.links) {
+    const source = String(link.source);
+    const target = String(link.target);
+    degree.set(source, (degree.get(source) ?? 0) + 1);
+    degree.set(target, (degree.get(target) ?? 0) + 1);
+  }
+  return degree;
+}
+
+function shouldRenderLabel(
+  node: GraphNodeObject,
+  globalScale: number,
+  selectedNodeId: string | null,
+  hoveredNode: string | null,
+  degreeMap: Map<string, number>,
+): boolean {
+  const id = node.id != null ? String(node.id) : "";
+  if (!id) return false;
+  if (id === selectedNodeId || id === hoveredNode) return true;
+  if (node.type === "moc") return true;
+  const degree = degreeMap.get(id) ?? 0;
+  // At overview zoom, label only hubs. As the user zooms in, reveal more labels.
+  return (degree >= 4 && globalScale >= 1.25) || globalScale >= 2.1;
+}
+
 export default function GraphView({
   data,
   onNodeClick,
@@ -120,6 +155,14 @@ export default function GraphView({
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
   const [theme, setTheme] = useState<"light" | "dark">("light");
   const palette = GRAPH_PALETTES[theme];
+  const degreeMap = useMemo(() => buildDegreeMap(data), [data]);
+  const graphStats = useMemo(() => {
+    const hubs = data.nodes
+      .map((node) => ({ id: node.id, label: node.label, degree: degreeMap.get(node.id) ?? 0 }))
+      .sort((a, b) => b.degree - a.degree)
+      .slice(0, 4);
+    return { nodeCount: data.nodes.length, linkCount: data.links.length, hubs };
+  }, [data, degreeMap]);
 
   useEffect(() => {
     const updateTheme = () => {
@@ -157,8 +200,8 @@ export default function GraphView({
     }
 
     const chargeForce = graphRef.current.d3Force("charge") as ChargeForce | undefined;
-    chargeForce?.strength(-350);
-    chargeForce?.distanceMax(500);
+    chargeForce?.strength(-650);
+    chargeForce?.distanceMax(900);
 
     const linkForce = graphRef.current.d3Force("link") as LinkForce | undefined;
     linkForce?.distance((link: GraphLinkObject) => {
@@ -170,7 +213,7 @@ export default function GraphView({
         typeof link.target === "object" && link.target !== null && "type" in link.target
           ? link.target.type
           : undefined;
-      return sourceType === "moc" || targetType === "moc" ? 180 : 90;
+      return sourceType === "moc" || targetType === "moc" ? 260 : 150;
     });
 
     graphRef.current.d3ReheatSimulation();
@@ -248,36 +291,33 @@ export default function GraphView({
         ctx.fill();
       }
 
-      // ── Label — with high-contrast halo ──────────────────────────────────
-      const fontSize = Math.max(10 / globalScale, 2.2);
-      const weight = isSelected ? "700" : "500";
-      (
-        ctx as CanvasRenderingContext2D & { letterSpacing?: string }
-      ).letterSpacing = "-0.02em";
-      ctx.font = `${weight} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
+      // ── Label — reveal only useful labels to avoid hairball output ────────
+      if (shouldRenderLabel(node, globalScale, selectedNodeId, hoveredNode, degreeMap)) {
+        const fontSize = Math.max((isSelected ? 12 : 10) / globalScale, 2.4);
+        const weight = isSelected ? "750" : "600";
+        (
+          ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+        ).letterSpacing = "-0.02em";
+        ctx.font = `${weight} ${fontSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`;
 
-      const label = node.label ?? "";
-      const ly = y + size + 7;
+        const label = clampLabel(node.label, isSelected ? 34 : 24);
+        const ly = y + size + 8;
 
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "top";
+        ctx.lineJoin = "round";
+        ctx.lineWidth = isSelected ? 5 : 4;
+        ctx.strokeStyle = palette.labelHalo;
+        ctx.strokeText(label, x, ly);
+        ctx.fillStyle = isSelected ? palette.selectedLabel : palette.label;
+        ctx.fillText(label, x, ly);
 
-      // 1. Thick white halo (stroke) to create separation from background/other nodes
-      ctx.lineJoin = "round";
-      ctx.lineWidth = 3.5;
-      ctx.strokeStyle = palette.labelHalo;
-      ctx.strokeText(label, x, ly);
-
-      // 2. The text itself
-      ctx.fillStyle = isSelected ? palette.selectedLabel : palette.label;
-      ctx.fillText(label, x, ly);
-
-      // Reset
-      (
-        ctx as CanvasRenderingContext2D & { letterSpacing?: string }
-      ).letterSpacing = "0px";
+        (
+          ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+        ).letterSpacing = "0px";
+      }
     },
-    [selectedNodeId, hoveredNode, palette],
+    [selectedNodeId, hoveredNode, palette, degreeMap],
   );
 
   const nodePointerAreaPaint = useCallback(
@@ -316,8 +356,16 @@ export default function GraphView({
         }}
         onNodeHover={(node) => setHoveredNode(node?.id != null ? String(node.id) : null)}
         linkColor={() => palette.link}
-        linkWidth={1.2}
-        linkDirectionalParticles={2}
+        linkWidth={(link) => {
+          const source = typeof link.source === "object" && link.source !== null ? String(link.source.id) : String(link.source);
+          const target = typeof link.target === "object" && link.target !== null ? String(link.target.id) : String(link.target);
+          return source === selectedNodeId || target === selectedNodeId ? 2.4 : 0.8;
+        }}
+        linkDirectionalParticles={(link) => {
+          const source = typeof link.source === "object" && link.source !== null ? String(link.source.id) : String(link.source);
+          const target = typeof link.target === "object" && link.target !== null ? String(link.target.id) : String(link.target);
+          return source === selectedNodeId || target === selectedNodeId ? 2 : 0;
+        }}
         linkDirectionalParticleWidth={2}
         linkDirectionalParticleColor={() => palette.particle}
         backgroundColor="transparent"
@@ -326,6 +374,25 @@ export default function GraphView({
         cooldownTicks={100}
         onEngineStop={() => graphRef.current?.zoomToFit(400, 60)}
       />
+
+      {/* Graph summary */}
+      <div className="pointer-events-none absolute right-4 top-4 max-w-[280px] rounded-lg border border-zinc-200 bg-white/90 px-3 py-2.5 text-zinc-700 shadow-sm backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-950/90 dark:text-zinc-300">
+        <p className="accent text-[9px] font-semibold uppercase tracking-widest text-zinc-400">
+          Graph view
+        </p>
+        <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
+          {graphStats.nodeCount} nodes · {graphStats.linkCount} links. Labels are intentionally hidden at overview zoom; hover, select, or zoom to reveal them.
+        </p>
+        {graphStats.hubs.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-1">
+            {graphStats.hubs.map((hub) => (
+              <span key={hub.id} className="rounded bg-zinc-100 px-1.5 py-0.5 text-[9px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                {clampLabel(hub.label, 18)} · {hub.degree}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
 
       {/* Legend */}
       <div className="pointer-events-none absolute bottom-4 left-4 rounded-lg border border-zinc-200 bg-white/90 px-3 py-2.5 shadow-sm backdrop-blur-sm">
