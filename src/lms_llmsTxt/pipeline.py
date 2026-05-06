@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 import requests
 import threading
 from dataclasses import asdict, is_dataclass
@@ -96,6 +97,51 @@ def _unload_lmstudio_model_safely(config: AppConfig) -> None:
         logger.warning("LM Studio model unload failed: %s", error[0])
 
 
+
+def _semantic_graph_auto_decision(material: RepositoryMaterial, config: AppConfig) -> tuple[bool, str]:
+    """Return whether semantic graph synthesis is safe enough to attempt automatically.
+
+    This keeps `lmstxt <repo> -g` user-facing behavior simple while avoiding an
+    expensive second LM Studio call on small/unknown local models. Semantic graph
+    synthesis is attempted only when both the repo evidence and model name look
+    safe for the fast bounded budget; otherwise deterministic graph generation is
+    used immediately.
+    """
+    if not config.lm_model:
+        return False, "no LM Studio model is configured"
+
+    model = config.lm_model.lower()
+    small_markers = (
+        "e2b",
+        "0.5b",
+        "1b",
+        "1.5b",
+        "2b",
+        "3b",
+        "4b",
+        "mini",
+        "small",
+    )
+    if any(marker in model for marker in small_markers):
+        return False, f"model '{config.lm_model}' is classified as small/local"
+
+    capable_model = re.search(
+        r"(?:^|[-_/])(7|8|9|12|13|14|20|27|30|32|34|70|72|90|120|405)b(?:$|[-_/])",
+        model,
+    )
+    if not capable_model:
+        return False, f"model '{config.lm_model}' capacity is unknown"
+
+    source_chars = len(material.readme_content or "") + len(material.package_files or "")
+    source_limit = max(1_000, config.semantic_graph_max_source_chars * 2)
+    if source_chars > source_limit:
+        return False, f"source evidence is too large for bounded semantic synthesis ({source_chars} > {source_limit} chars)"
+
+    file_tree_lines = len([line for line in (material.file_tree or "").splitlines() if line.strip()])
+    if file_tree_lines > 250:
+        return False, f"repository tree is too large for bounded semantic synthesis ({file_tree_lines} files/entries)"
+
+    return True, "model and repo evidence are within bounded semantic synthesis limits"
 
 def prepare_repository_material(config: AppConfig, repo_url: str) -> RepositoryMaterial:
     return gather_repository_material(repo_url, config.github_token)
@@ -378,14 +424,15 @@ def run_generation(
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
         digest = build_repo_digest(material, topic=project_name)
-        semantic_mode = (config.semantic_graph_mode or "off").strip().lower()
-        if semantic_mode in {"off", "deterministic", "none", "false", "0"}:
-            logger.info("Semantic repo graph synthesis disabled; generating deterministic repo graph.")
+        should_attempt_semantic, semantic_reason = _semantic_graph_auto_decision(material, config)
+        if not should_attempt_semantic:
+            logger.info("Skipping semantic repo graph synthesis automatically: %s", semantic_reason)
             graph = build_repo_graph(digest)
         else:
             try:
+                logger.info("Attempting bounded semantic repo graph synthesis automatically: %s", semantic_reason)
                 graph = build_semantic_repo_graph(digest, material, config)
-                logger.info("Semantic repo graph generated with LM Studio using mode '%s'", semantic_mode)
+                logger.info("Semantic repo graph generated with LM Studio")
             except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
                 logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
                 graph = build_repo_graph(digest)

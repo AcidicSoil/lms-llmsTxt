@@ -433,27 +433,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip llms-full generation and only produce llms.txt (+ optional graph artifacts).",
     )
     parser.add_argument(
-        "--semantic-graph-mode",
-        "--graph-synthesis",
-        choices=("off", "fast", "balanced", "deep"),
-        help="Semantic graph LLM mode. Default off uses deterministic graph only; fast/balanced/deep opt into LLM synthesis.",
-    )
-    parser.add_argument(
-        "--semantic-graph",
-        action="store_true",
-        help="Enable semantic graph synthesis using the fast preset. Equivalent to --semantic-graph-mode fast.",
-    )
-    parser.add_argument(
-        "--semantic-graph-timeout-seconds",
-        type=int,
-        help="Wall-clock timeout for semantic repo graph LLM synthesis before falling back to deterministic graph.",
-    )
-    parser.add_argument(
-        "--semantic-graph-max-output-tokens",
-        type=int,
-        help="Maximum output tokens reserved for semantic repo graph synthesis.",
-    )
-    parser.add_argument(
         "--lm-unload-timeout-seconds",
         type=int,
         help="Maximum seconds to wait for LM Studio model unload before letting the CLI exit.",
@@ -538,35 +517,6 @@ def main(argv: list[str] | None = None) -> int:
         config.context_headroom_ratio = args.context_headroom
     if args.generate_graph:
         config.enable_repo_graph = True
-    requested_semantic_graph_mode = args.semantic_graph_mode or ("fast" if args.semantic_graph else None)
-    if requested_semantic_graph_mode:
-        config.semantic_graph_mode = requested_semantic_graph_mode
-        if requested_semantic_graph_mode == "fast":
-            config.semantic_graph_timeout_seconds = 30
-            config.semantic_graph_max_output_tokens = 768
-            config.semantic_graph_max_source_chars = 6000
-            config.semantic_graph_max_excerpt_chars = 1200
-            config.semantic_graph_max_subsystems = 6
-        elif requested_semantic_graph_mode == "balanced":
-            config.semantic_graph_timeout_seconds = 60
-            config.semantic_graph_max_output_tokens = 1536
-            config.semantic_graph_max_source_chars = 12000
-            config.semantic_graph_max_excerpt_chars = 2000
-            config.semantic_graph_max_subsystems = 10
-        elif requested_semantic_graph_mode == "deep":
-            config.semantic_graph_timeout_seconds = 180
-            config.semantic_graph_max_output_tokens = 4096
-            config.semantic_graph_max_source_chars = 42000
-            config.semantic_graph_max_excerpt_chars = 6000
-            config.semantic_graph_max_subsystems = 18
-    if args.semantic_graph_timeout_seconds is not None:
-        if args.semantic_graph_timeout_seconds <= 0:
-            parser.error("--semantic-graph-timeout-seconds must be > 0.")
-        config.semantic_graph_timeout_seconds = args.semantic_graph_timeout_seconds
-    if args.semantic_graph_max_output_tokens is not None:
-        if args.semantic_graph_max_output_tokens <= 0:
-            parser.error("--semantic-graph-max-output-tokens must be > 0.")
-        config.semantic_graph_max_output_tokens = args.semantic_graph_max_output_tokens
     if args.lm_unload_timeout_seconds is not None:
         if args.lm_unload_timeout_seconds < 0:
             parser.error("--lm-unload-timeout-seconds must be >= 0.")

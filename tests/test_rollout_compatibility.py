@@ -79,49 +79,17 @@ def test_generate_graph_short_flag_sets_generate_graph():
     assert args.generate_graph is True
 
 
-def test_graph_safeguard_flags_parse():
+def test_graph_generation_has_no_user_facing_semantic_synthesis_flags():
     from lms_llmsTxt.cli import build_parser
 
-    args = build_parser().parse_args([
-        "https://github.com/example/repo",
-        "-g",
-        "--semantic-graph-mode",
-        "fast",
-        "--semantic-graph-timeout-seconds",
-        "30",
-        "--semantic-graph-max-output-tokens",
-        "1024",
-        "--lm-unload-timeout-seconds",
-        "5",
-        "--lm-ttl-seconds",
-        "600",
-        "--lm-context-length",
-        "8192",
-    ])
+    help_text = build_parser().format_help()
 
-    assert args.generate_graph is True
-    assert args.semantic_graph_mode == "fast"
-    assert args.semantic_graph_timeout_seconds == 30
-    assert args.semantic_graph_max_output_tokens == 1024
-    assert args.lm_unload_timeout_seconds == 5
-    assert args.lm_ttl_seconds == 600
-    assert args.lm_context_length == 8192
+    assert "--semantic-graph" not in help_text
+    assert "--semantic-graph-mode" not in help_text
+    assert "--graph-synthesis" not in help_text
 
 
-def test_semantic_graph_short_flag_parse():
-    from lms_llmsTxt.cli import build_parser
-
-    args = build_parser().parse_args([
-        "https://github.com/example/repo",
-        "-g",
-        "--semantic-graph",
-    ])
-
-    assert args.generate_graph is True
-    assert args.semantic_graph is True
-
-
-def test_semantic_graph_defaults_are_safe_without_env(tmp_path, monkeypatch):
+def test_semantic_graph_internal_defaults_are_bounded_without_env(tmp_path, monkeypatch):
     from lms_llmsTxt.config import AppConfig
 
     monkeypatch.delenv("SEMANTIC_GRAPH_MODE", raising=False)
@@ -131,20 +99,7 @@ def test_semantic_graph_defaults_are_safe_without_env(tmp_path, monkeypatch):
 
     config = AppConfig()
 
-    assert config.semantic_graph_mode == "off"
-    assert config.semantic_graph_timeout_seconds == 30
-    assert config.semantic_graph_max_output_tokens == 768
-
-
-def test_graph_synthesis_alias_parses_semantic_mode():
-    from lms_llmsTxt.cli import build_parser
-
-    args = build_parser().parse_args([
-        "https://github.com/example/repo",
-        "-g",
-        "--graph-synthesis",
-        "fast",
-    ])
-
-    assert args.generate_graph is True
-    assert args.semantic_graph_mode == "fast"
+    assert config.semantic_graph_timeout_seconds == 20
+    assert config.semantic_graph_max_output_tokens == 512
+    assert config.semantic_graph_max_source_chars == 4000
+    assert config.semantic_graph_max_subsystems == 4
