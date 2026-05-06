@@ -9,7 +9,7 @@ for u in urls:
     owner_repo = "-".join(u.rstrip(")").split("/")[-2:])
     log = pathlib.Path("logs") / f"{owner_repo}.log"
     # swap "lmstxt" with "lmstudio-lmstxt" if that's your installed CLI
-    cmd = ["lmstxt", u]
+    cmd = ["lmstxt", u, "--generate-graph"]
     print(">>", " ".join(cmd))
     with log.open("w", encoding="utf-8") as fh:
         p = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
