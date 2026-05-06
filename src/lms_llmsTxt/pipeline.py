@@ -706,9 +706,10 @@ def run_generation(
     graph_nodes_dir: Optional[Path] = None
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
-        digest = build_repo_digest(material, topic=project_name)
+        graph_material = working_material if 'working_material' in locals() else material
+        digest = build_repo_digest(graph_material, topic=project_name)
         decision_stage = run_log.stage_start("graph.semantic_decision")
-        should_attempt_semantic, semantic_reason = _semantic_graph_auto_decision(material, config)
+        should_attempt_semantic, semantic_reason = _semantic_graph_auto_decision(graph_material, config)
         run_log.stage_end(
             "graph.semantic_decision",
             decision_stage,
@@ -742,7 +743,7 @@ def run_generation(
                     max_source_chars=config.semantic_graph_max_source_chars,
                     max_subsystems=config.semantic_graph_max_subsystems,
                 )
-                graph = build_semantic_repo_graph(digest, material, config)
+                graph = build_semantic_repo_graph(digest, graph_material, config)
                 logger.info("Semantic repo graph generated with LM Studio")
                 _record_run_event(
                     events_path=run_events_path,

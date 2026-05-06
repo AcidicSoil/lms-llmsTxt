@@ -247,18 +247,49 @@ def suggested_evidence_limit(estimated_prompt_tokens: int, available_tokens: int
     return min(80, scaled)
 
 
+_SELECTED_EVIDENCE_RE = re.compile(
+    r"^=== selected evidence: (?P<path>.+?) ===\n(?P<content>.*?)(?=^=== selected evidence: |\Z)",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def _selected_evidence_chunks(package_files: str) -> list[RepoChunk]:
+    chunks: list[RepoChunk] = []
+    for match in _SELECTED_EVIDENCE_RE.finditer(package_files or ""):
+        path = match.group("path").strip()
+        content = match.group("content").strip()
+        if not path or not content:
+            continue
+        chunks.append(
+            RepoChunk(
+                path=path,
+                content=content,
+                start_line=1,
+                end_line=max(1, content.count("\n") + 1),
+            )
+        )
+    return chunks
+
+
 def chunk_repository_material(material: RepositoryMaterial) -> list[RepoChunk]:
     chunks: list[RepoChunk] = []
+    evidence_chunks = _selected_evidence_chunks(material.package_files)
+    evidence_paths = {chunk.path for chunk in evidence_chunks}
+
     for path in sorted(p for p in material.file_tree.splitlines() if p.strip()):
+        if path in evidence_paths:
+            continue
         chunks.append(RepoChunk(path=path, content=path, start_line=1, end_line=1))
     if material.readme_content:
         end_line = max(1, material.readme_content.count("\n") + 1)
         chunks.append(RepoChunk(path="README.md", content=material.readme_content, end_line=end_line))
-    if material.package_files:
-        end_line = max(1, material.package_files.count("\n") + 1)
-        chunks.append(RepoChunk(path="package_files.txt", content=material.package_files, end_line=end_line))
-    return chunks
+    chunks.extend(evidence_chunks)
 
+    remaining_package_content = _SELECTED_EVIDENCE_RE.sub("", material.package_files or "").strip()
+    if remaining_package_content:
+        end_line = max(1, remaining_package_content.count("\n") + 1)
+        chunks.append(RepoChunk(path="package_files.txt", content=remaining_package_content, end_line=end_line))
+    return chunks
 
 def extract_chunk_capsules(chunks: Iterable[RepoChunk]) -> list[ChunkCapsule]:
     capsules: list[ChunkCapsule] = []

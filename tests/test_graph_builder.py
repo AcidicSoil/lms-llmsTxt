@@ -162,3 +162,36 @@ def test_semantic_graph_validation_rejects_provenance_boilerplate():
 
     with pytest.raises(ValueError, match="provenance boilerplate"):
         validate_semantic_graph(graph)
+
+
+def test_repo_digest_uses_selected_evidence_content_for_graph_summaries():
+    from lms_llmsTxt.models import RepositoryMaterial
+    from lms_llmsTxt.repo_digest import build_repo_digest
+
+    material = RepositoryMaterial(
+        repo_url="https://github.com/example/repo",
+        file_tree="docs/knowledge-base.md\ndocs/api-reference.md",
+        readme_content="# Example\n\nA docs repo.",
+        package_files=(
+            "=== selected evidence: docs/knowledge-base.md ===\n"
+            "Knowledge base integration connects local models to user-owned corpora. "
+            "It explains retrieval, grounding, and answer workflows.\n\n"
+            "=== selected evidence: docs/api-reference.md ===\n"
+            "The API reference documents concrete methods, arguments, return shapes, "
+            "and integration boundaries for SDK users."
+        ),
+        default_branch="main",
+        is_private=False,
+    )
+
+    digest = build_repo_digest(material, topic="Docs")
+    summaries = {subsystem["name"]: subsystem["summary"] for subsystem in digest.subsystems}
+
+    assert "Knowledge base integration connects local models" in summaries["docs/knowledge-base.md"]
+    assert "concrete methods" in summaries["docs/api-reference.md"]
+
+    graph = build_repo_graph(digest)
+    non_moc_content = "\n".join(node.content for node in graph.nodes if node.type != "moc")
+    assert "Knowledge base integration connects local models" in non_moc_content
+    assert "concrete methods" in non_moc_content
+    assert "This area groups the behavior" not in non_moc_content
