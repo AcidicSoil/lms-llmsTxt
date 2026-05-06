@@ -67,5 +67,7 @@ class GenerationArtifacts:
     force_graph_path: str | None = None
     graph_nodes_dir: str | None = None
     trace_path: str | None = None
+    run_log_path: str | None = None
+    run_events_path: str | None = None
     used_fallback: bool = False
     fallback_reason: str | None = None

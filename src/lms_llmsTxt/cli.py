@@ -620,6 +620,12 @@ def main(argv: list[str] | None = None) -> int:
         summary += f"\n  - {artifacts.force_graph_path}"
     if artifacts.graph_nodes_dir:
         summary += f"\n  - {artifacts.graph_nodes_dir}"
+    if artifacts.trace_path:
+        summary += f"\n  - {artifacts.trace_path}"
+    if artifacts.run_log_path:
+        summary += f"\n  - {artifacts.run_log_path}"
+    if artifacts.run_events_path:
+        summary += f"\n  - {artifacts.run_events_path}"
     if artifacts.used_fallback:
         summary += "\n(note) LM call failed; fallback JSON/schema output was used."
         if artifacts.fallback_reason:

@@ -20,6 +20,8 @@ def test_generation_artifacts_contract_retains_expected_fields() -> None:
         "force_graph_path",
         "graph_nodes_dir",
         "trace_path",
+        "run_log_path",
+        "run_events_path",
         "used_fallback",
         "fallback_reason",
     ]

@@ -5,6 +5,9 @@ import logging
 import re
 import requests
 import threading
+import time
+import uuid
+import uuid
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -49,6 +52,105 @@ except Exception:  # pragma: no cover
 logger = logging.getLogger(__name__)
 
 
+def _append_jsonl(path: Path, payload: dict[str, object]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as handle:
+        handle.write(json.dumps(payload, sort_keys=True, default=str) + "\n")
+
+
+def _record_run_event(
+    *,
+    events_path: Path,
+    log_path: Path,
+    run_id: str,
+    stage: str,
+    status: str,
+    started_at: float | None = None,
+    **fields: object,
+) -> None:
+    now = time.perf_counter()
+    payload: dict[str, object] = {
+        "ts": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+        "run_id": run_id,
+        "stage": stage,
+        "status": status,
+    }
+    if started_at is not None:
+        payload["duration_ms"] = round((now - started_at) * 1000, 2)
+    payload.update({key: value for key, value in fields.items() if value is not None})
+    _append_jsonl(events_path, payload)
+
+    duration = f" duration_ms={payload['duration_ms']}" if "duration_ms" in payload else ""
+    extras = " ".join(
+        f"{key}={value}"
+        for key, value in payload.items()
+        if key not in {"ts", "run_id", "stage", "status", "duration_ms"}
+    )
+    line = f"{payload['ts']} {status.upper()} {stage}{duration} {extras}".rstrip()
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8") as handle:
+        handle.write(line + "\n")
+
+
+
+class RunLog:
+    """Append-only per-run JSONL telemetry for debugging slow or stuck runs."""
+
+    def __init__(self, path: Path, *, repo_url: str, owner: str, repo: str, model: str | None, run_id: str | None = None) -> None:
+        self.path = path
+        self.run_id = run_id or uuid.uuid4().hex
+        self.started_at = time.perf_counter()
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.event(
+            "run.started",
+            repo_url=repo_url,
+            owner=owner,
+            repo=repo,
+            model=model,
+        )
+
+    def event(self, event: str, **fields: object) -> None:
+        elapsed_ms = int((time.perf_counter() - self.started_at) * 1000)
+        payload = {
+            "run_id": self.run_id,
+            "event": event,
+            "elapsed_ms": elapsed_ms,
+            "ts": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            **fields,
+        }
+        with self.path.open("a", encoding="utf-8") as handle:
+            handle.write(json.dumps(payload, default=str, sort_keys=True) + "\n")
+
+    def stage_start(self, stage: str, **fields: object) -> float:
+        self.event(f"{stage}.started", **fields)
+        return time.perf_counter()
+
+    def stage_end(self, stage: str, started_at: float, **fields: object) -> None:
+        self.event(
+            f"{stage}.completed",
+            duration_ms=int((time.perf_counter() - started_at) * 1000),
+            **fields,
+        )
+
+    def stage_failed(self, stage: str, started_at: float, error: BaseException, **fields: object) -> None:
+        self.event(
+            f"{stage}.failed",
+            duration_ms=int((time.perf_counter() - started_at) * 1000),
+            error_type=type(error).__name__,
+            error=str(error),
+            **fields,
+        )
+
+
+def _material_metrics(material: RepositoryMaterial) -> dict[str, int | bool]:
+    return {
+        "file_tree_lines": len([line for line in material.file_tree.splitlines() if line.strip()]),
+        "readme_chars": len(material.readme_content),
+        "package_chars": len(material.package_files),
+        "is_private": material.is_private,
+    }
+
+
 def _timestamp_comment(prefix: str = "# Generated") -> str:
     now = datetime.now(timezone.utc).replace(microsecond=0).isoformat()
     return f"{prefix}: {now} UTC"
@@ -61,10 +163,15 @@ def _write_text(path: Path, content: str, stamp: bool) -> None:
     path.write_text(text + "\n", encoding="utf-8")
 
 
-def _unload_lmstudio_model_safely(config: AppConfig) -> None:
+def _unload_lmstudio_model_safely(config: AppConfig, run_log: RunLog | None = None) -> None:
     timeout_seconds = max(0, int(config.lm_unload_timeout_seconds))
     if timeout_seconds == 0:
-        unload_lmstudio_model(config)
+        started = run_log.stage_start("lm.unload", timeout_seconds=timeout_seconds) if run_log else None
+        try:
+            unload_lmstudio_model(config)
+        finally:
+            if run_log and started is not None:
+                run_log.stage_end("lm.unload", started)
         return
 
     error: list[BaseException] = []
@@ -80,6 +187,7 @@ def _unload_lmstudio_model_safely(config: AppConfig) -> None:
         name="lmstudio-unload",
         daemon=True,
     )
+    started = run_log.stage_start("lm.unload", timeout_seconds=timeout_seconds) if run_log else None
     thread.start()
     thread.join(timeout_seconds)
 
@@ -91,10 +199,16 @@ def _unload_lmstudio_model_safely(config: AppConfig) -> None:
             timeout_seconds,
             config.lm_model,
         )
+        if run_log and started is not None:
+            run_log.event("lm.unload.timeout", timeout_seconds=timeout_seconds, model=config.lm_model)
         return
 
     if error:
         logger.warning("LM Studio model unload failed: %s", error[0])
+        if run_log and started is not None:
+            run_log.stage_failed("lm.unload", started, error[0])
+    elif run_log and started is not None:
+        run_log.stage_end("lm.unload", started, model=config.lm_model)
 
 
 
@@ -163,14 +277,52 @@ def run_generation(
     owner, repo = owner_repo_from_url(repo_url)
     repo_root = config.ensure_output_root(owner, repo)
     base_name = repo.lower().replace(" ", "-")
+    run_id = datetime.now(timezone.utc).strftime("%Y%m%d-%H%M%S")
+    run_log_path = repo_root / f"{base_name}-run-{run_id}.log"
+    run_events_path = repo_root / f"{base_name}-run-{run_id}.jsonl"
+    run_log = RunLog(run_events_path, repo_url=repo_url, owner=owner, repo=repo, model=config.lm_model)
+    total_started_at = time.perf_counter()
+    run_log = RunLog(run_events_path, repo_url=repo_url, owner=owner, repo=repo, model=config.lm_model, run_id=run_id)
+    _record_run_event(
+        events_path=run_events_path,
+        log_path=run_log_path,
+        run_id=run_id,
+        stage="run",
+        status="started",
+        repo_url=repo_url,
+        model=config.lm_model,
+        generate_graph=generate_graph if generate_graph is not None else config.enable_repo_graph,
+    )
 
     logger.debug("Preparing repository material for %s", repo_url)
+    material_started_at = time.perf_counter()
     material = prepare_repository_material(config, repo_url)
+    _record_run_event(
+        events_path=run_events_path,
+        log_path=run_log_path,
+        run_id=run_id,
+        stage="prepare_repository_material",
+        status="completed",
+        started_at=material_started_at,
+        file_tree_lines=len([line for line in material.file_tree.splitlines() if line.strip()]),
+        readme_chars=len(material.readme_content or ""),
+        package_chars=len(material.package_files or ""),
+    )
+    analyzer_construct_started_at = time.perf_counter()
     try:
         analyzer = RepositoryAnalyzer(production_mode=True)
     except TypeError:
         # Compatibility with tests that monkeypatch RepositoryAnalyzer as a zero-arg callable.
         analyzer = RepositoryAnalyzer()
+    _record_run_event(
+        events_path=run_events_path,
+        log_path=run_log_path,
+        run_id=run_id,
+        stage="analyzer_construct",
+        status="completed",
+        started_at=analyzer_construct_started_at,
+        analyzer_type=type(analyzer).__name__,
+    )
 
     fallback_payload = None
     used_fallback = False
@@ -182,11 +334,40 @@ def run_generation(
 
     try:
         logger.info("Configuring LM Studio model '%s'", config.lm_model)
+        lm_config_started_at = time.perf_counter()
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="lmstudio_configure",
+            status="started",
+            model=config.lm_model,
+            api_base=config.lm_api_base,
+        )
         configure_lmstudio_lm(config, cache=cache_lm)
         model_loaded = True
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="lmstudio_configure",
+            status="completed",
+            started_at=lm_config_started_at,
+            model=config.lm_model,
+        )
 
         working_material = material
         budget = build_context_budget(config, working_material)
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="context_budget",
+            status="computed",
+            estimated_prompt_tokens=budget.estimated_prompt_tokens,
+            available_tokens=budget.available_tokens,
+            decision=budget.decision.value if hasattr(budget.decision, "value") else str(budget.decision),
+        )
         if verbose_budget:
             logger.info(
                 "Initial budget: estimated=%s available=%s decision=%s",
@@ -195,9 +376,12 @@ def run_generation(
                 budget.decision,
             )
 
+        digest_stage = run_log.stage_start("repo_digest.initial")
         planning_digest = build_repo_digest(material, topic=project_name)
+        run_log.stage_end("repo_digest.initial", digest_stage, subsystem_count=len(planning_digest.subsystems))
         evidence_plan = None
         if budget.decision != BudgetDecision.APPROVED:
+            evidence_stage = run_log.stage_start("evidence_planning")
             evidence_plan = plan_evidence_paths(
                 material,
                 planning_digest,
@@ -206,7 +390,16 @@ def run_generation(
                     budget.available_tokens,
                 ),
             )
+            run_log.stage_end(
+                "evidence_planning",
+                evidence_stage,
+                candidate_count=evidence_plan.candidate_count,
+                selected_count=evidence_plan.selected_count,
+                dropped_count=evidence_plan.dropped_count,
+                budget_reason=evidence_plan.budget_reason,
+            )
             if evidence_plan.dropped_paths:
+                apply_stage = run_log.stage_start("evidence_apply", selected_count=evidence_plan.selected_count)
                 working_material = apply_evidence_plan(
                     material,
                     evidence_plan,
@@ -218,7 +411,16 @@ def run_generation(
                         config.github_token,
                     ),
                 )
+                run_log.stage_end("evidence_apply", apply_stage, **_material_metrics(working_material))
+                budget_stage = run_log.stage_start("context_budget.after_evidence")
                 budget = build_context_budget(config, working_material)
+                run_log.stage_end(
+                    "context_budget.after_evidence",
+                    budget_stage,
+                    estimated_prompt_tokens=budget.estimated_prompt_tokens,
+                    available_tokens=budget.available_tokens,
+                    decision=str(budget.decision),
+                )
                 if verbose_budget:
                     logger.info(
                         "After evidence planning: estimated=%s available=%s decision=%s selected=%s dropped=%s",
@@ -230,8 +432,18 @@ def run_generation(
                     )
 
         if budget.decision != BudgetDecision.APPROVED:
+            compact_stage = run_log.stage_start("context_compaction", decision=str(budget.decision))
             working_material = compact_material(working_material, budget, config)
+            run_log.stage_end("context_compaction", compact_stage, **_material_metrics(working_material))
+            budget_stage = run_log.stage_start("context_budget.after_compaction")
             budget = build_context_budget(config, working_material)
+            run_log.stage_end(
+                "context_budget.after_compaction",
+                budget_stage,
+                estimated_prompt_tokens=budget.estimated_prompt_tokens,
+                available_tokens=budget.available_tokens,
+                decision=str(budget.decision),
+            )
             if verbose_budget:
                 logger.info(
                     "After compaction: estimated=%s available=%s decision=%s",
@@ -240,12 +452,23 @@ def run_generation(
                     budget.decision,
                 )
 
+        digest_stage = run_log.stage_start("repo_digest.final")
         repo_digest = build_repo_digest(working_material, topic=project_name)
+        run_log.stage_end("repo_digest.final", digest_stage, subsystem_count=len(repo_digest.subsystems))
         llms_text = ""
         retry_step = 0
         current_budget = budget
         while True:
             try:
+                analyzer_started_at = time.perf_counter()
+                _record_run_event(
+                    events_path=run_events_path,
+                    log_path=run_log_path,
+                    run_id=run_id,
+                    stage="dspy_analyzer",
+                    status="started",
+                    retry_step=retry_step,
+                )
                 analyzer_kwargs = {
                     "repo_url": working_material.repo_url,
                     "file_tree": working_material.file_tree,
@@ -257,6 +480,13 @@ def run_generation(
                     "link_style": config.link_style,
                     "repo_digest": repo_digest,
                 }
+                analyzer_stage = run_log.stage_start(
+                    "analyzer.generate",
+                    retry_step=retry_step,
+                    file_tree_chars=len(working_material.file_tree),
+                    readme_chars=len(working_material.readme_content),
+                    package_chars=len(working_material.package_files),
+                )
                 try:
                     result = analyzer(**analyzer_kwargs)
                 except TypeError as call_exc:
@@ -266,7 +496,18 @@ def run_generation(
                         result = analyzer.forward(**analyzer_kwargs)
                     else:
                         raise call_exc
+                run_log.stage_end("analyzer.generate", analyzer_stage, retry_step=retry_step)
                 llms_text = result.llms_txt_content
+                _record_run_event(
+                    events_path=run_events_path,
+                    log_path=run_log_path,
+                    run_id=run_id,
+                    stage="dspy_analyzer",
+                    status="completed",
+                    started_at=analyzer_started_at,
+                    retry_step=retry_step,
+                    output_chars=len(llms_text or ""),
+                )
                 analyzer_trace = getattr(result, "trace", None)
                 if analyzer_trace is not None and evidence_plan is not None and evidence_plan.dropped_paths:
                     analyzer_trace.selected_evidence = [
@@ -314,6 +555,8 @@ def run_generation(
                     )
                 break
             except Exception as exc:
+                if 'analyzer_stage' in locals():
+                    run_log.stage_failed("analyzer.generate", analyzer_stage, exc, retry_step=retry_step)
                 err_class = classify_generation_error(exc)
                 if err_class in (ErrorClass.CONTEXT_LENGTH, ErrorClass.PAYLOAD_LIMIT):
                     reduced = next_retry_budget(
@@ -327,6 +570,13 @@ def run_generation(
                     current_budget = reduced
                     working_material = compact_material(working_material, current_budget, config)
                     repo_digest = build_repo_digest(working_material, topic=project_name)
+                    run_log.event(
+                        "analyzer.retry_budget_reduced",
+                        retry_step=retry_step,
+                        estimated_prompt_tokens=current_budget.estimated_prompt_tokens,
+                        available_tokens=current_budget.available_tokens,
+                        error_class=str(err_class),
+                    )
                     if verbose_budget:
                         logger.warning(
                             "Retrying generation with reduced budget step=%s estimated=%s available=%s",
@@ -345,7 +595,16 @@ def run_generation(
     ) as exc:
         used_fallback = True
         fallback_reason = str(exc)
+        run_log.event("generation.fallback", reason=fallback_reason, error_type=type(exc).__name__)
         logger.warning("LM generation unavailable; using fallback output. Reason: %s", exc)
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="dspy_analyzer",
+            status="fallback",
+            error=str(exc),
+        )
         fallback_payload = fallback_llms_payload(
             repo_name=project_name,
             repo_url=repo_url,
@@ -360,8 +619,17 @@ def run_generation(
     except Exception as exc:  # pragma: no cover - defensive fallback
         used_fallback = True
         fallback_reason = str(exc)
+        run_log.event("generation.fallback", reason=fallback_reason, error_type=type(exc).__name__, unexpected=True)
         logger.exception("Unexpected error during DSPy generation: %s", exc)
         logger.warning("Falling back to heuristic llms.txt generation using %s.", LLMS_JSON_SCHEMA["title"])
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="dspy_analyzer",
+            status="fallback",
+            error=str(exc),
+        )
         fallback_payload = fallback_llms_payload(
             repo_name=project_name,
             repo_url=repo_url,
@@ -377,13 +645,26 @@ def run_generation(
     sanitized = sanitize_final_output(llms_text, strict=True)
     llms_txt_path = repo_root / f"{base_name}-llms.txt"
     logger.info("Writing llms.txt to %s", llms_txt_path)
+    write_stage = run_log.stage_start("artifact.write_llms_txt", path=str(llms_txt_path))
     _write_text(llms_txt_path, sanitized.text or llms_text, stamp)
+    run_log.stage_end("artifact.write_llms_txt", write_stage, path=str(llms_txt_path), chars=len(sanitized.text or llms_text))
+    _record_run_event(
+        events_path=run_events_path,
+        log_path=run_log_path,
+        run_id=run_id,
+        stage="write_llms_txt",
+        status="completed",
+        path=str(llms_txt_path),
+        output_chars=len(sanitized.text or llms_text),
+    )
 
     trace_path: Optional[Path] = None
     if analyzer_trace is not None:
         trace_path = repo_root / f"{base_name}-trace.json"
         trace_payload = asdict(analyzer_trace) if is_dataclass(analyzer_trace) else analyzer_trace
+        trace_write_stage = run_log.stage_start("artifact.write_analyzer_trace", path=str(trace_path))
         trace_path.write_text(json.dumps(trace_payload, indent=2), encoding="utf-8")
+        run_log.stage_end("artifact.write_analyzer_trace", trace_write_stage, path=str(trace_path))
         logger.info("Analyzer trace written to %s", trace_path)
 
     ctx_path: Optional[Path] = None
@@ -410,7 +691,9 @@ def run_generation(
         )
         llms_full_path = repo_root / f"{base_name}-llms-full.txt"
         logger.debug("Writing llms-full to %s", llms_full_path)
+        full_write_stage = run_log.stage_start("artifact.write_llms_full", path=str(llms_full_path))
         _write_text(llms_full_path, llms_full_text, stamp)
+        run_log.stage_end("artifact.write_llms_full", full_write_stage, path=str(llms_full_path), chars=len(llms_full_text))
 
     json_path: Optional[Path] = None
     if fallback_payload:
@@ -424,27 +707,84 @@ def run_generation(
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
         digest = build_repo_digest(material, topic=project_name)
+        decision_stage = run_log.stage_start("graph.semantic_decision")
         should_attempt_semantic, semantic_reason = _semantic_graph_auto_decision(material, config)
+        run_log.stage_end(
+            "graph.semantic_decision",
+            decision_stage,
+            should_attempt_semantic=should_attempt_semantic,
+            reason=semantic_reason,
+        )
         if not should_attempt_semantic:
             logger.info("Skipping semantic repo graph synthesis automatically: %s", semantic_reason)
+            _record_run_event(
+                events_path=run_events_path,
+                log_path=run_log_path,
+                run_id=run_id,
+                stage="repo_graph_semantic_decision",
+                status="skipped",
+                reason=semantic_reason,
+            )
             graph = build_repo_graph(digest)
         else:
             try:
+                semantic_started_at = time.perf_counter()
                 logger.info("Attempting bounded semantic repo graph synthesis automatically: %s", semantic_reason)
+                _record_run_event(
+                    events_path=run_events_path,
+                    log_path=run_log_path,
+                    run_id=run_id,
+                    stage="repo_graph_semantic",
+                    status="started",
+                    reason=semantic_reason,
+                    timeout_seconds=config.semantic_graph_timeout_seconds,
+                    max_output_tokens=config.semantic_graph_max_output_tokens,
+                    max_source_chars=config.semantic_graph_max_source_chars,
+                    max_subsystems=config.semantic_graph_max_subsystems,
+                )
                 graph = build_semantic_repo_graph(digest, material, config)
                 logger.info("Semantic repo graph generated with LM Studio")
+                _record_run_event(
+                    events_path=run_events_path,
+                    log_path=run_log_path,
+                    run_id=run_id,
+                    stage="repo_graph_semantic",
+                    status="completed",
+                    started_at=semantic_started_at,
+                    node_count=len(graph.nodes),
+                )
             except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
                 logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
+                _record_run_event(
+                    events_path=run_events_path,
+                    log_path=run_log_path,
+                    run_id=run_id,
+                    stage="repo_graph_semantic",
+                    status="fallback",
+                    error=str(exc),
+                )
                 graph = build_repo_graph(digest)
             except BaseException:
                 if model_loaded and config.lm_auto_unload:
-                    _unload_lmstudio_model_safely(config)
+                    _unload_lmstudio_model_safely(config, run_log)
                     model_loaded = False
                 raise
+        emit_stage = run_log.stage_start("artifact.write_graph", node_count=len(graph.nodes))
         graph_paths = emit_graph_files(graph, repo_root / "graph")
+        run_log.stage_end("artifact.write_graph", emit_stage, **{key: str(value) for key, value in graph_paths.items()})
         graph_json_path = Path(graph_paths["graph_json"])
         force_graph_path = Path(graph_paths["force_json"])
         graph_nodes_dir = Path(graph_paths["nodes_dir"])
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="repo_graph_emit",
+            status="completed",
+            graph_json_path=str(graph_json_path),
+            force_graph_path=str(force_graph_path),
+            graph_nodes_dir=str(graph_nodes_dir),
+        )
 
     if enable_session_memory if enable_session_memory is not None else config.enable_session_memory:
         try:
@@ -464,7 +804,26 @@ def run_generation(
             logger.exception("Failed to append session memory event")
 
     if model_loaded and config.lm_auto_unload:
+        unload_started_at = time.perf_counter()
         _unload_lmstudio_model_safely(config)
+        _record_run_event(
+            events_path=run_events_path,
+            log_path=run_log_path,
+            run_id=run_id,
+            stage="lmstudio_unload",
+            status="completed",
+            started_at=unload_started_at,
+        )
+
+    _record_run_event(
+        events_path=run_events_path,
+        log_path=run_log_path,
+        run_id=run_id,
+        stage="run",
+        status="completed",
+        started_at=total_started_at,
+        used_fallback=used_fallback,
+    )
 
     return GenerationArtifacts(
         llms_txt_path=str(llms_txt_path),
@@ -475,6 +834,8 @@ def run_generation(
         force_graph_path=str(force_graph_path) if force_graph_path else None,
         graph_nodes_dir=str(graph_nodes_dir) if graph_nodes_dir else None,
         trace_path=str(trace_path) if trace_path else None,
+        run_log_path=str(run_log_path),
+        run_events_path=str(run_events_path),
         used_fallback=used_fallback,
         fallback_reason=fallback_reason,
     )
