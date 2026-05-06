@@ -18,6 +18,11 @@ const TYPE_STYLES: Record<NodeType, string> = {
   gotcha: "border-zinc-300 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-900",
 };
 
+
+function displayMarkdown(content: string): string {
+  return content.replace(/^---\n[\s\S]*?\n---\n+/, "").trim();
+}
+
 function toSlug(label: string): string {
   return label
     .toLowerCase()
@@ -112,6 +117,7 @@ export default function NodePreview({
   }
 
   const slug = toSlug(node.label);
+  const markdownContent = displayMarkdown(node.content);
 
   function processWikilinks(text: string): ReactNode[] {
     const parts = text.split(/(\[\[[^\]]+\]\])/g);
@@ -197,27 +203,6 @@ export default function NodePreview({
         <p className="text-[11px] leading-relaxed text-zinc-400 dark:text-zinc-500">
           {node.description}
         </p>
-        {node.evidence && node.evidence.length > 0 && (
-          <div className="mt-2 border-t border-zinc-100 dark:border-zinc-800 pt-2">
-            <p className="mb-1 text-[10px] uppercase tracking-widest text-zinc-400 dark:text-zinc-500">
-              Evidence
-            </p>
-            <ul className="space-y-1">
-              {node.evidence.slice(0, 5).map((ev, idx) => (
-                <li
-                  key={`${ev.path}-${idx}`}
-                  className="text-[10px] text-zinc-500 dark:text-zinc-400"
-                >
-                  <code className="rounded bg-zinc-100 dark:bg-zinc-800 px-1 py-0.5">
-                    {ev.path}
-                  </code>
-                  {ev.start_line ? `:${ev.start_line}` : ""}
-                  {ev.end_line ? `-${ev.end_line}` : ""}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
       </div>
 
       {/* ── Markdown document body ───────────────────────────────────────── */}
@@ -346,7 +331,7 @@ export default function NodePreview({
             hr: () => <hr className="my-6 border-zinc-100 dark:border-zinc-800" />,
           }}
         >
-          {node.content}
+          {markdownContent}
         </ReactMarkdown>
       </div>
     </div>

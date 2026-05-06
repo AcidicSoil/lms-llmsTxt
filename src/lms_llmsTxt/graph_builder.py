@@ -156,37 +156,142 @@ def _format_evidence_lines(paths: list[str]) -> str:
     return "\n".join(f"- `{path}`" for path in paths[:8])
 
 
+_PATHISH_RE = re.compile(r"(?:^|\s)(?:[A-Za-z0-9_.-]+/){1,}[A-Za-z0-9_.-]+")
+
+
+def _looks_like_path_inventory(text: str) -> bool:
+    if not text.strip():
+        return True
+    path_hits = len(_PATHISH_RE.findall(text))
+    word_hits = len(re.findall(r"[A-Za-z]{3,}", text))
+    return path_hits >= 2 and path_hits >= max(1, word_hits // 6)
+
+
+def _clean_label_part(part: str) -> str:
+    part = part.strip("_-. ")
+    part = re.sub(r"^\d+[_-]*", "", part)
+    if not part:
+        return ""
+    lower = part.lower()
+    acronyms = {
+        "api": "API",
+        "sdk": "SDK",
+        "cli": "CLI",
+        "ui": "UI",
+        "llm": "LLM",
+        "mcp": "MCP",
+        "rest": "REST",
+        "json": "JSON",
+        "ts": "TypeScript",
+        "js": "JavaScript",
+    }
+    if lower in acronyms:
+        return acronyms[lower]
+    return " ".join(piece.capitalize() for piece in re.split(r"[-_\s]+", part) if piece)
+
+
 def _humanize_subsystem_label(name: str) -> str:
-    parts = [part for part in re.split(r"[/_.-]+", name) if part]
+    parts = [_clean_label_part(part) for part in re.split(r"[/]+", name) if part]
+    parts = [part for part in parts if part]
     if not parts:
         return "Repository Capability"
-    return " ".join(part.upper() if part.isupper() else part.capitalize() for part in parts)
+    # Keep the most meaningful two levels while dropping numeric documentation scaffolding.
+    if len(parts) > 2:
+        parts = parts[-2:]
+    return " ".join(parts)
 
 
 def _humanize_subsystem_name(name: str) -> str:
-    leaf = name.strip("/").split("/")[-1] or name
-    leaf = leaf.rsplit(".", 1)[0]
-    return " ".join(part.capitalize() for part in re.split(r"[-_\s]+", leaf) if part) or name
+    return _humanize_subsystem_label(name)
+
+
+def _theme_from_paths(paths: list[str]) -> str:
+    joined = " ".join(paths).lower()
+    if "api-reference" in joined or "api_reference" in joined:
+        return "api_reference"
+    if any(token in joined for token in ("quickstart", "getting-started", "tutorial")):
+        return "quickstart"
+    if any(token in joined for token in ("plugin", "provider", "adapter")):
+        return "extension"
+    if any(token in joined for token in ("preset", "config", "configuration")):
+        return "configuration"
+    if any(token in joined for token in ("cli", "command", "daemon")):
+        return "cli"
+    if any(token in joined for token in ("model", "llm", "prediction")):
+        return "model_runtime"
+    if any(token in joined for token in ("doc", ".md", ".mdx")):
+        return "documentation"
+    return "implementation"
 
 
 def _semantic_description(subsystem: dict, *, node_type: GraphNodeType) -> str:
     name = str(subsystem["name"])
-    summary = str(subsystem.get("summary") or "").strip()
+    raw_summary = str(subsystem.get("summary") or "").strip()
+    paths = [str(path) for path in subsystem.get("paths", [])]
     label = _humanize_subsystem_label(name)
-    if summary and not _contains_provenance_boilerplate(summary):
-        return summary
-    if node_type == "pattern":
-        return f"Explains how {label} expresses a reusable workflow or implementation pattern in this repository."
+    theme = _theme_from_paths(paths)
+
+    if raw_summary and not _contains_provenance_boilerplate(raw_summary) and not _looks_like_path_inventory(raw_summary):
+        return raw_summary
+
+    if theme == "api_reference":
+        return f"Explains how the {label} surface exposes concrete calls, parameters, and return shapes that developers rely on."
+    if theme == "quickstart":
+        return f"Explains how {label} introduces the first successful workflow and sets expectations for later integration work."
+    if theme == "extension":
+        return f"Explains how {label} extends the product through provider, plugin, or adapter boundaries."
+    if theme == "configuration":
+        return f"Explains how {label} shapes runtime behavior through presets, configuration, or setup decisions."
+    if theme == "cli":
+        return f"Explains how {label} turns repository capabilities into command-line workflows and operational entry points."
+    if theme == "model_runtime":
+        return f"Explains how {label} manages model-facing runtime behavior such as loading, prediction, or API calls."
     if node_type == "gotcha":
-        return f"Explains the validation or operational concern around {label} and when a developer should inspect it."
-    return f"Explains the role {label} plays in the repository architecture and how nearby code depends on it."
+        return f"Explains the failure mode around {label} and what a developer should verify before changing it."
+    if node_type == "pattern":
+        return f"Explains the reusable workflow represented by {label} and where it fits in the repository."
+    return f"Explains the role {label} plays in the repository and how nearby files depend on that concept."
 
 
 def _related_concept_sentence(related_links: list[str]) -> str:
     if not related_links:
-        return "This node currently has no high-confidence semantic neighbors in the deterministic graph; inspect its evidence before broad changes."
+        return "This node has no high-confidence neighbor in the current graph, so treat it as a focused local concept rather than a broad architecture claim."
+    if len(related_links) == 1:
+        return f"It connects most directly to [[{related_links[0]}]], because the two areas share source paths, naming, symbols, or integration boundaries."
     linked = ", ".join(f"[[{node_id}]]" for node_id in related_links[:3])
-    return f"Read {linked} next to understand the adjacent concepts that share source paths, symbols, or integration boundaries with this area."
+    return f"It connects most directly to {linked}, because those neighboring areas share source paths, naming, symbols, or integration boundaries."
+
+
+def _developer_action(theme: str, label: str) -> str:
+    if theme == "api_reference":
+        return f"Care about {label} when changing call signatures, request/response schemas, examples, or generated client surfaces, because small inconsistencies here become user-facing integration bugs."
+    if theme == "quickstart":
+        return f"Care about {label} when changing setup, authentication, installation, or first-run flows, because this material defines the reader's first successful path through the product."
+    if theme == "extension":
+        return f"Care about {label} when adding providers, plugins, adapters, or customization hooks, because extension points need stable boundaries between user code and internal behavior."
+    if theme == "configuration":
+        return f"Care about {label} when defaults, presets, environment variables, or runtime options change, because configuration drift creates hard-to-debug behavior differences."
+    if theme == "cli":
+        return f"Care about {label} when commands, daemon behavior, local services, or developer automation changes, because it is often the operational face of the system."
+    if theme == "model_runtime":
+        return f"Care about {label} when model loading, prediction, token limits, or local runtime behavior changes, because those details determine whether the system responds reliably under resource constraints."
+    return f"Care about {label} when changing the nearby files, because this area marks a responsibility boundary in the repository rather than a random collection of paths."
+
+
+def _failure_mode(theme: str, label: str) -> str:
+    if theme == "api_reference":
+        return f"If {label} is treated as a passive file list, documentation can drift away from the actual API contract and users will copy examples that no longer match runtime behavior."
+    if theme == "quickstart":
+        return f"If {label} is not kept coherent, readers may fail before they reach the deeper docs even when the underlying product still works."
+    if theme == "extension":
+        return f"If {label} is misunderstood, plugin or provider code can leak implementation assumptions across the public extension boundary."
+    if theme == "configuration":
+        return f"If {label} is changed without tracking defaults and override precedence, users can observe behavior that appears nondeterministic across environments."
+    if theme == "cli":
+        return f"If {label} is changed without respecting process and command boundaries, local workflows can hang, race, or report success before the system is actually ready."
+    if theme == "model_runtime":
+        return f"If {label} is misunderstood, the system can make the wrong tradeoff between latency, memory, model lifecycle, and correctness."
+    return f"If {label} is treated only as provenance, the graph remains accurate but not useful: it tells users where files are without explaining the decision they need to make."
 
 
 def _content_for_subsystem(
@@ -196,48 +301,48 @@ def _content_for_subsystem(
     related_links: list[str],
 ) -> str:
     name = str(subsystem["name"])
-    summary = str(subsystem["summary"])
-    key_symbols = [str(symbol) for symbol in subsystem.get("key_symbols", [])[:12]]
     paths = [str(path) for path in subsystem.get("paths", [])[:8]]
+    key_symbols = [str(symbol) for symbol in subsystem.get("key_symbols", [])[:12]]
     concept_name = _humanize_subsystem_name(name)
+    description = _semantic_description(subsystem, node_type=node_type)
+    theme = _theme_from_paths(paths)
 
-    related_sentence = (
-        " ".join(
-            f"Read [[{node_id}]] next when you need to understand how this responsibility interacts with a neighboring part of the system."
-            for node_id in related_links
-        )
-        if related_links
-        else "This node has no high-confidence semantic neighbor in the current digest, so treat it as a local entry point."
-    )
-
-    focus_heading = {
-        "concept": "What this part of the system represents",
-        "pattern": "Reusable approach",
+    focus_label = {
+        "concept": "Concept description",
+        "pattern": "Pattern description",
         "gotcha": "Failure mode to watch",
         "moc": "Overview",
     }[node_type]
 
-    symbols_text = (
-        ", ".join(f"`{symbol}`" for symbol in key_symbols)
+    symbols_sentence = (
+        f"Concrete implementation signals include {', '.join(f'`{symbol}`' for symbol in key_symbols[:6])}."
         if key_symbols
-        else "The digest did not expose named public symbols for this subsystem."
+        else "The current digest does not expose named public symbols for this area, so the strongest signals are the path names and neighboring docs."
     )
+    evidence_sentence = (
+        f"The strongest evidence paths include {', '.join(f'`{path}`' for path in paths[:4])}."
+        if paths
+        else "The current digest did not expose concrete paths for this area."
+    )
+    related_sentence = _related_concept_sentence(related_links)
+    developer_action = _developer_action(theme, concept_name)
+    failure_mode = _failure_mode(theme, concept_name)
 
     return (
         f"---\n"
         f"title: {concept_name}\n"
         f"type: {node_type}\n"
-        f"description: {summary}\n"
+        f"description: {description}\n"
         f"---\n\n"
-        f"# {concept_name}\n\n"
-        f"{summary}\n\n"
-        f"## {focus_heading}\n\n"
-        f"This area groups the behavior represented by `{name}`. Read it as a conceptual boundary: the files listed below are supporting evidence, but the reason the node exists is that these paths appear to share a coherent responsibility in the repository.\n\n"
-        f"When changing this area, first identify whether the work is about runtime behavior, documentation, tests, or configuration. That distinction determines whether the safe change is an API change, a usage-pattern update, or a validation fix.\n\n"
-        f"## Concrete implementation signals\n\n"
-        f"Important symbols or exported names: {symbols_text}\n\n"
+        f"{description}\n\n"
+        f"**{focus_label.upper()}: {description.upper()}**\n\n"
+        f"This concept describes the repository responsibility behind `{name}`. "
+        f"Rather than reading it as a bundle of filenames, treat it as the place where the project explains, exposes, or protects the {concept_name.lower()} workflow. "
+        f"{evidence_sentence}\n\n"
+        f"{developer_action} {symbols_sentence}\n\n"
         f"## Related concepts\n\n"
         f"{related_sentence}\n\n"
+        f"{failure_mode}\n\n"
         f"## Evidence\n\n"
         f"{_format_evidence_lines(paths)}\n"
     )
@@ -304,7 +409,7 @@ def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
                 id=node_id,
                 label=_humanize_subsystem_label(str(subsystem["name"])),
                 type=node_type,
-                description=subsystem["summary"],
+                description=_semantic_description(subsystem, node_type=node_type),
                 content=content,
                 links=links,
                 evidence=evidence,
