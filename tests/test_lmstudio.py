@@ -501,3 +501,136 @@ def test_lmstudio_json_adapter_sets_schema_response_format_without_json_object()
     schema = response_format.model_json_schema()
     assert set(schema["properties"]) == {"answer", "bullets"}
     assert schema["required"] == ["answer", "bullets"]
+
+
+def test_generate_graph_defaults_to_deterministic_without_semantic_llm(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type("Result", (), {"llms_txt_content": "# Generated\n"})()
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
+    monkeypatch.setattr(
+        pipeline,
+        "build_semantic_repo_graph",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("semantic graph must be opt-in")),
+    )
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+        enable_repo_graph=True,
+        lm_auto_unload=True,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False, build_full=False)
+
+    assert Path(artifacts.graph_json_path).exists()
+    assert Path(artifacts.force_graph_path).exists()
+    assert Path(artifacts.graph_nodes_dir).exists()
+
+
+def test_generate_graph_uses_semantic_llm_when_enabled(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type("Result", (), {"llms_txt_content": "# Generated\n"})()
+
+    semantic_called = {"value": False}
+
+    def fake_semantic_graph(digest, material, config):
+        semantic_called["value"] = True
+        return pipeline.build_repo_graph(digest)
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
+    monkeypatch.setattr(pipeline, "build_semantic_repo_graph", fake_semantic_graph)
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+        enable_repo_graph=True,
+        semantic_graph_mode="fast",
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False, build_full=False)
+
+    assert semantic_called["value"] is True
+    assert Path(artifacts.graph_json_path).exists()
+
+
+def test_pipeline_generate_graph_defaults_to_deterministic_without_semantic_lm(tmp_path, monkeypatch):
+    repo_url = "https://github.com/example/repo"
+    repo_root = tmp_path / "artifacts"
+
+    fake_material = pipeline.RepositoryMaterial(
+        repo_url=repo_url,
+        file_tree="README.md\nsrc/main.py",
+        readme_content="# Title\n\nSummary",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    class FakeAnalyzer:
+        def __call__(self, *args, **kwargs):
+            return type("Result", (), {"llms_txt_content": "# Generated\n"})()
+
+    def fail_semantic(*args, **kwargs):
+        raise AssertionError("semantic graph synthesis should be opt-in")
+
+    monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
+    monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda *args, **kwargs: FakeAnalyzer())
+    monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
+    monkeypatch.setattr(pipeline, "build_semantic_repo_graph", fail_semantic)
+    monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
+    monkeypatch.setattr(
+        pipeline,
+        "build_llms_full_from_repo",
+        lambda content, **_: content + "\n--- full ---\n",
+    )
+
+    config = AppConfig(
+        lm_model="model",
+        lm_api_base="http://localhost:1234/v1",
+        lm_api_key="key",
+        output_dir=repo_root,
+        enable_repo_graph=True,
+    )
+
+    artifacts = pipeline.run_generation(repo_url, config, build_ctx=False)
+
+    assert config.semantic_graph_mode == "off"
+    assert artifacts.graph_json_path is not None
+    assert Path(artifacts.graph_json_path).exists()

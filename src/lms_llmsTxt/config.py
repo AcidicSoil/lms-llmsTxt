@@ -107,11 +107,26 @@ class AppConfig:
         )
     )
     enable_repo_graph: bool = field(default_factory=lambda: _env_flag("ENABLE_REPO_GRAPH", False))
+    semantic_graph_mode: str = field(
+        default_factory=lambda: (_env_value("SEMANTIC_GRAPH_MODE", "off") or "off").lower()
+    )
     semantic_graph_timeout_seconds: int = field(
-        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_TIMEOUT_SECONDS", "180") or "180")
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_TIMEOUT_SECONDS", "30") or "30")
     )
     semantic_graph_max_output_tokens: int = field(
-        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_OUTPUT_TOKENS", "4096") or "4096")
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_OUTPUT_TOKENS", "768") or "768")
+    )
+    semantic_graph_streaming: bool = field(
+        default_factory=lambda: _env_flag("SEMANTIC_GRAPH_STREAMING", True)
+    )
+    semantic_graph_max_source_chars: int = field(
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_SOURCE_CHARS", "6000") or "6000")
+    )
+    semantic_graph_max_excerpt_chars: int = field(
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_EXCERPT_CHARS", "1200") or "1200")
+    )
+    semantic_graph_max_subsystems: int = field(
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_SUBSYSTEMS", "6") or "6")
     )
     lm_unload_timeout_seconds: int = field(
         default_factory=lambda: int(_env_value("LMSTUDIO_UNLOAD_TIMEOUT_SECONDS", "20") or "20")

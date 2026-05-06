@@ -378,12 +378,22 @@ def run_generation(
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
         digest = build_repo_digest(material, topic=project_name)
-        try:
-            graph = build_semantic_repo_graph(digest, material, config)
-            logger.info("Semantic repo graph generated with LM Studio")
-        except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
-            logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
+        semantic_mode = (config.semantic_graph_mode or "off").strip().lower()
+        if semantic_mode in {"off", "deterministic", "none", "false", "0"}:
+            logger.info("Semantic repo graph synthesis disabled; generating deterministic repo graph.")
             graph = build_repo_graph(digest)
+        else:
+            try:
+                graph = build_semantic_repo_graph(digest, material, config)
+                logger.info("Semantic repo graph generated with LM Studio using mode '%s'", semantic_mode)
+            except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
+                logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
+                graph = build_repo_graph(digest)
+            except BaseException:
+                if model_loaded and config.lm_auto_unload:
+                    _unload_lmstudio_model_safely(config)
+                    model_loaded = False
+                raise
         graph_paths = emit_graph_files(graph, repo_root / "graph")
         graph_json_path = Path(graph_paths["graph_json"])
         force_graph_path = Path(graph_paths["force_json"])

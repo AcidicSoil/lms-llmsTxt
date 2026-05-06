@@ -17,9 +17,9 @@ from .repo_digest import RepoDigest
 
 logger = logging.getLogger(__name__)
 
-MAX_SOURCE_CHARS = 42_000
-MAX_EXCERPT_CHARS = 6_000
-MAX_SUBSYSTEMS = 18
+DEFAULT_MAX_SOURCE_CHARS = 12_000
+DEFAULT_MAX_EXCERPT_CHARS = 2_000
+DEFAULT_MAX_SUBSYSTEMS = 10
 
 PROVENANCE_ONLY_PHRASES = (
     "this node is grounded in repository paths",
@@ -146,6 +146,7 @@ def build_semantic_repo_graph(
                     payload,
                     response_format=response_format,
                     timeout_seconds=timeout_seconds,
+                    stream=config.semantic_graph_streaming,
                 )
                 graph = _parse_graph(raw_content, digest)
                 validate_semantic_graph(graph)
@@ -233,14 +234,14 @@ def _chat_completion_payload(
     *,
     response_format: str = "json_schema",
 ) -> dict[str, Any]:
-    source_bundle = _build_source_bundle(digest, material)
+    source_bundle = _build_source_bundle(digest, material, config)
     user_prompt = (
         f"Repo topic: {digest.topic}\n\n"
         f"Architecture summary:\n{digest.architecture_summary}\n\n"
         f"Primary language: {digest.primary_language}\n"
         f"Entry points: {', '.join(digest.entry_points) or 'unknown'}\n"
         f"Key dependencies: {', '.join(digest.key_dependencies[:24]) or 'unknown'}\n\n"
-        f"Subsystem candidates as JSON:\n{json.dumps(digest.subsystems[:MAX_SUBSYSTEMS], indent=2)}\n\n"
+        f"Subsystem candidates as JSON:\n{json.dumps(digest.subsystems[: max(1, config.semantic_graph_max_subsystems)], indent=2)}\n\n"
         f"Source excerpts:\n{source_bundle}\n\n"
         "Create concept-level graph nodes from the evidence. Keep provenance secondary and compact."
     )
@@ -285,7 +286,17 @@ def _post_chat_completion(
     *,
     response_format: str,
     timeout_seconds: int,
+    stream: bool,
 ) -> str:
+    if stream:
+        return _post_streaming_chat_completion(
+            url,
+            headers,
+            payload,
+            response_format=response_format,
+            timeout_seconds=timeout_seconds,
+        )
+
     try:
         response = requests.post(
             url,
@@ -315,6 +326,75 @@ def _post_chat_completion(
     if not raw_content:
         raise SemanticGraphSynthesisError("LM Studio returned an empty semantic graph response")
     return str(raw_content)
+
+
+def _post_streaming_chat_completion(
+    url: str,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    *,
+    response_format: str,
+    timeout_seconds: int,
+) -> str:
+    import time
+
+    streamed_payload = dict(payload)
+    streamed_payload["stream"] = True
+    started_at = time.monotonic()
+    chunks: list[str] = []
+    response: requests.Response | None = None
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=streamed_payload,
+            stream=True,
+            timeout=(10, min(10, max(1, timeout_seconds))),
+        )
+        if response.status_code >= 400:
+            detail = _response_error_detail(response)
+            raise SemanticGraphSynthesisError(
+                f"LM Studio chat completion failed with status {response.status_code} "
+                f"using response_format={response_format}: {detail}"
+            )
+
+        for line in response.iter_lines(decode_unicode=True):
+            if time.monotonic() - started_at > timeout_seconds:
+                raise SemanticGraphSynthesisError("semantic repo graph synthesis timed out")
+            if not line:
+                continue
+            line = str(line).strip()
+            if line.startswith("data:"):
+                line = line[5:].strip()
+            if line == "[DONE]":
+                break
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            try:
+                choice = event["choices"][0]
+            except (KeyError, IndexError, TypeError):
+                continue
+            delta = choice.get("delta") if isinstance(choice, dict) else None
+            if isinstance(delta, dict):
+                content = delta.get("content")
+                if content:
+                    chunks.append(str(content))
+            message = choice.get("message") if isinstance(choice, dict) else None
+            if isinstance(message, dict) and message.get("content"):
+                chunks.append(str(message["content"]))
+
+    except requests.RequestException as exc:
+        raise SemanticGraphSynthesisError(f"LM Studio streaming request failed: {exc}") from exc
+    finally:
+        if response is not None and hasattr(response, "close"):
+            response.close()
+
+    raw_content = "".join(chunks).strip()
+    if not raw_content:
+        raise SemanticGraphSynthesisError("LM Studio returned an empty semantic graph stream")
+    return raw_content
 
 
 def _response_error_detail(response: requests.Response) -> str:
@@ -349,22 +429,22 @@ def _semantic_graph_response_format() -> dict[str, Any]:
         },
     }
 
-def _build_source_bundle(digest: RepoDigest, material: RepositoryMaterial) -> str:
+def _build_source_bundle(digest: RepoDigest, material: RepositoryMaterial, config: AppConfig) -> str:
     blocks: list[str] = []
     if material.readme_content:
-        blocks.append(_excerpt_block("README.md", material.readme_content))
+        blocks.append(_excerpt_block("README.md", material.readme_content, config))
     if material.package_files:
         for path, content in _split_package_blocks(material.package_files):
-            blocks.append(_excerpt_block(path, content))
+            blocks.append(_excerpt_block(path, content, config))
 
     if not blocks:
         blocks.extend(
             _excerpt_block(str(subsystem.get("name", "subsystem")), str(subsystem.get("summary", "")))
-            for subsystem in digest.subsystems[:MAX_SUBSYSTEMS]
+            for subsystem in digest.subsystems[: max(1, config.semantic_graph_max_subsystems)]
         )
 
     bundle = "\n\n---\n\n".join(blocks)
-    return bundle[:MAX_SOURCE_CHARS]
+    return bundle[: max(1000, config.semantic_graph_max_source_chars)]
 
 
 def _split_package_blocks(package_files: str) -> list[tuple[str, str]]:
@@ -383,8 +463,8 @@ def _split_package_blocks(package_files: str) -> list[tuple[str, str]]:
     return blocks
 
 
-def _excerpt_block(path: str, content: str) -> str:
-    excerpt = content.strip()[:MAX_EXCERPT_CHARS]
+def _excerpt_block(path: str, content: str, config: AppConfig) -> str:
+    excerpt = content.strip()[: max(500, config.semantic_graph_max_excerpt_chars)]
     return f"### {path}\n\n{excerpt}"
 
 
