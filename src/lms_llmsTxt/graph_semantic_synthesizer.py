@@ -65,6 +65,42 @@ Rules:
 """
 
 
+SEMANTIC_GRAPH_JSON_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "additionalProperties": False,
+    "required": ["topic", "nodes"],
+    "properties": {
+        "topic": {"type": "string"},
+        "nodes": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+                "type": "object",
+                "additionalProperties": False,
+                "required": [
+                    "id",
+                    "label",
+                    "type",
+                    "description",
+                    "content",
+                    "links",
+                    "source_subsystems",
+                ],
+                "properties": {
+                    "id": {"type": "string"},
+                    "label": {"type": "string"},
+                    "type": {"type": "string", "enum": ["moc", "concept", "pattern", "gotcha"]},
+                    "description": {"type": "string"},
+                    "content": {"type": "string"},
+                    "links": {"type": "array", "items": {"type": "string"}},
+                    "source_subsystems": {"type": "array", "items": {"type": "string"}},
+                },
+            },
+        },
+    },
+}
+
+
 class SemanticGraphSynthesisError(RuntimeError):
     """Raised when model-authored repo graph synthesis fails validation."""
 
@@ -78,25 +114,41 @@ def build_semantic_repo_graph(
     if not config.lm_model:
         raise SemanticGraphSynthesisError("LMSTUDIO_MODEL is not configured")
 
-    payload = _chat_completion_payload(digest, material, config)
-    url = config.lm_api_base.rstrip("/")
-    if not url.endswith("/chat/completions"):
-        url = f"{url}/chat/completions"
+    url = _chat_completion_url(config)
+    headers = {
+        "Authorization": f"Bearer {config.lm_api_key or 'lm-studio'}",
+        "Content-Type": "application/json",
+    }
 
-    response = requests.post(
-        url,
-        headers={
-            "Authorization": f"Bearer {config.lm_api_key or 'lm-studio'}",
-            "Content-Type": "application/json",
-        },
-        json=payload,
-        timeout=120,
-    )
-    response.raise_for_status()
-    raw_content = response.json()["choices"][0]["message"]["content"]
-    graph = _parse_graph(raw_content, digest)
-    validate_semantic_graph(graph)
-    return graph
+    last_error: SemanticGraphSynthesisError | None = None
+    for response_format in _response_format_attempts():
+        payload = _chat_completion_payload(
+            digest,
+            material,
+            config,
+            response_format=response_format,
+        )
+        try:
+            raw_content = _post_chat_completion(
+                url,
+                headers,
+                payload,
+                response_format=response_format,
+            )
+            graph = _parse_graph(raw_content, digest)
+            validate_semantic_graph(graph)
+            return graph
+        except SemanticGraphSynthesisError as exc:
+            last_error = exc
+            if response_format == "none" or not _is_response_format_rejection(exc):
+                raise
+            logger.warning(
+                "Semantic repo graph request using response_format=%s failed; retrying without response_format: %s",
+                response_format,
+                exc,
+            )
+
+    raise last_error or SemanticGraphSynthesisError("semantic graph synthesis failed")
 
 
 def validate_semantic_graph(graph: RepoSkillGraph) -> None:
@@ -140,7 +192,13 @@ def validate_semantic_graph(graph: RepoSkillGraph) -> None:
                 raise SemanticGraphSynthesisError(f"Node {node.id} puts evidence before explanatory content")
 
 
-def _chat_completion_payload(digest: RepoDigest, material: RepositoryMaterial, config: AppConfig) -> dict[str, Any]:
+def _chat_completion_payload(
+    digest: RepoDigest,
+    material: RepositoryMaterial,
+    config: AppConfig,
+    *,
+    response_format: str = "json_schema",
+) -> dict[str, Any]:
     source_bundle = _build_source_bundle(digest, material)
     user_prompt = (
         f"Repo topic: {digest.topic}\n\n"
@@ -152,7 +210,7 @@ def _chat_completion_payload(digest: RepoDigest, material: RepositoryMaterial, c
         f"Source excerpts:\n{source_bundle}\n\n"
         "Create concept-level graph nodes from the evidence. Keep provenance secondary and compact."
     )
-    return {
+    payload: dict[str, Any] = {
         "model": config.lm_model,
         "messages": [
             {"role": "system", "content": SEMANTIC_SYSTEM_PROMPT},
@@ -160,9 +218,97 @@ def _chat_completion_payload(digest: RepoDigest, material: RepositoryMaterial, c
         ],
         "temperature": 0.35,
         "max_tokens": min(config.max_output_tokens, 8192),
-        "response_format": {"type": "json_object"},
     }
+    if response_format == "json_schema":
+        payload["response_format"] = _semantic_graph_response_format()
+    elif response_format == "json_object":
+        payload["response_format"] = {"type": "json_object"}
+    return payload
 
+
+def _chat_completion_url(config: AppConfig) -> str:
+    url = config.lm_api_base.rstrip("/")
+    if not url.endswith("/chat/completions"):
+        url = f"{url}/chat/completions"
+    return url
+
+
+def _response_format_attempts() -> tuple[str, ...]:
+    # LM Studio's OpenAI-compatible server rejects legacy json_object mode for
+    # several local models. Prefer JSON Schema, then retry without a structured
+    # response_format if the server rejects structured output for the loaded model.
+    return ("json_schema", "none")
+
+
+def _post_chat_completion(
+    url: str,
+    headers: dict[str, str],
+    payload: dict[str, Any],
+    *,
+    response_format: str,
+) -> str:
+    try:
+        response = requests.post(
+            url,
+            headers=headers,
+            json=payload,
+            timeout=120,
+        )
+    except requests.RequestException as exc:
+        raise SemanticGraphSynthesisError(f"LM Studio request failed: {exc}") from exc
+
+    if response.status_code >= 400:
+        detail = _response_error_detail(response)
+        raise SemanticGraphSynthesisError(
+            f"LM Studio chat completion failed with status {response.status_code} "
+            f"using response_format={response_format}: {detail}"
+        )
+
+    try:
+        data = response.json()
+        raw_content = data["choices"][0]["message"]["content"]
+    except (KeyError, IndexError, TypeError, ValueError) as exc:
+        raise SemanticGraphSynthesisError(
+            f"LM Studio returned an unexpected chat completion payload: "
+            f"{_truncate(response.text, 1000)}"
+        ) from exc
+
+    if not raw_content:
+        raise SemanticGraphSynthesisError("LM Studio returned an empty semantic graph response")
+    return str(raw_content)
+
+
+def _response_error_detail(response: requests.Response) -> str:
+    try:
+        payload = response.json()
+    except ValueError:
+        return _truncate(response.text, 1200) or response.reason
+    return _truncate(json.dumps(payload, ensure_ascii=False), 1200)
+
+
+def _is_response_format_rejection(error: SemanticGraphSynthesisError) -> bool:
+    message = str(error).lower()
+    return (
+        "response_format" in message
+        or "json_schema" in message
+        or "schema" in message
+        or "status 400" in message
+    )
+
+
+def _truncate(value: str, max_chars: int) -> str:
+    return value if len(value) <= max_chars else value[:max_chars] + "...[truncated]"
+
+
+def _semantic_graph_response_format() -> dict[str, Any]:
+    return {
+        "type": "json_schema",
+        "json_schema": {
+            "name": "repo_skill_graph",
+            "strict": True,
+            "schema": SEMANTIC_GRAPH_JSON_SCHEMA,
+        },
+    }
 
 def _build_source_bundle(digest: RepoDigest, material: RepositoryMaterial) -> str:
     blocks: list[str] = []

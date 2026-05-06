@@ -289,9 +289,6 @@ def run_generation(
             link_style=config.link_style,
         )
         llms_text = fallback_markdown_from_payload(project_name, fallback_payload)
-    finally:
-        if model_loaded and config.lm_auto_unload:
-            unload_lmstudio_model(config)
 
     sanitized = sanitize_final_output(llms_text, strict=True)
     llms_txt_path = repo_root / f"{base_name}-llms.txt"
@@ -370,6 +367,9 @@ def run_generation(
             )
         except Exception:  # pragma: no cover - memory is optional
             logger.exception("Failed to append session memory event")
+
+    if model_loaded and config.lm_auto_unload:
+        unload_lmstudio_model(config)
 
     return GenerationArtifacts(
         llms_txt_path=str(llms_txt_path),
