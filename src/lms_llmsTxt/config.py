@@ -96,6 +96,15 @@ class AppConfig:
         )
     )
     enable_repo_graph: bool = field(default_factory=lambda: _env_flag("ENABLE_REPO_GRAPH", False))
+    semantic_graph_timeout_seconds: int = field(
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_TIMEOUT_SECONDS", "180") or "180")
+    )
+    semantic_graph_max_output_tokens: int = field(
+        default_factory=lambda: int(_env_value("SEMANTIC_GRAPH_MAX_OUTPUT_TOKENS", "4096") or "4096")
+    )
+    lm_unload_timeout_seconds: int = field(
+        default_factory=lambda: int(_env_value("LMSTUDIO_UNLOAD_TIMEOUT_SECONDS", "20") or "20")
+    )
     enable_session_memory: bool = field(
         default_factory=lambda: _env_flag("ENABLE_SESSION_MEMORY", False)
     )

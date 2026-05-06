@@ -3,7 +3,10 @@ from __future__ import annotations
 import json
 import logging
 import re
-from typing import Any
+import signal
+import threading
+from contextlib import contextmanager
+from typing import Any, Iterator
 
 import requests
 
@@ -120,33 +123,43 @@ def build_semantic_repo_graph(
         "Content-Type": "application/json",
     }
 
+    timeout_seconds = max(1, int(config.semantic_graph_timeout_seconds))
+    logger.info(
+        "Starting semantic repo graph synthesis using model '%s' with timeout=%ss",
+        config.lm_model,
+        timeout_seconds,
+    )
+
     last_error: SemanticGraphSynthesisError | None = None
-    for response_format in _response_format_attempts():
-        payload = _chat_completion_payload(
-            digest,
-            material,
-            config,
-            response_format=response_format,
-        )
-        try:
-            raw_content = _post_chat_completion(
-                url,
-                headers,
-                payload,
+    with _wall_clock_timeout(timeout_seconds, "semantic repo graph synthesis timed out"):
+        for response_format in _response_format_attempts():
+            payload = _chat_completion_payload(
+                digest,
+                material,
+                config,
                 response_format=response_format,
             )
-            graph = _parse_graph(raw_content, digest)
-            validate_semantic_graph(graph)
-            return graph
-        except SemanticGraphSynthesisError as exc:
-            last_error = exc
-            if response_format == "none" or not _is_response_format_rejection(exc):
-                raise
-            logger.warning(
-                "Semantic repo graph request using response_format=%s failed; retrying without response_format: %s",
-                response_format,
-                exc,
-            )
+            try:
+                raw_content = _post_chat_completion(
+                    url,
+                    headers,
+                    payload,
+                    response_format=response_format,
+                    timeout_seconds=timeout_seconds,
+                )
+                graph = _parse_graph(raw_content, digest)
+                validate_semantic_graph(graph)
+                logger.info("Semantic repo graph synthesis completed with %s nodes", len(graph.nodes))
+                return graph
+            except SemanticGraphSynthesisError as exc:
+                last_error = exc
+                if response_format == "none" or not _is_response_format_rejection(exc):
+                    raise
+                logger.warning(
+                    "Semantic repo graph request using response_format=%s failed; retrying without response_format: %s",
+                    response_format,
+                    exc,
+                )
 
     raise last_error or SemanticGraphSynthesisError("semantic graph synthesis failed")
 
@@ -192,6 +205,27 @@ def validate_semantic_graph(graph: RepoSkillGraph) -> None:
                 raise SemanticGraphSynthesisError(f"Node {node.id} puts evidence before explanatory content")
 
 
+@contextmanager
+def _wall_clock_timeout(seconds: int, message: str) -> Iterator[None]:
+    if seconds <= 0 or not hasattr(signal, "SIGALRM") or threading.current_thread() is not threading.main_thread():
+        yield
+        return
+
+    def _raise_timeout(_signum: int, _frame: object) -> None:
+        raise SemanticGraphSynthesisError(message)
+
+    previous_handler = signal.getsignal(signal.SIGALRM)
+    previous_timer = signal.setitimer(signal.ITIMER_REAL, seconds)
+    signal.signal(signal.SIGALRM, _raise_timeout)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, previous_handler)
+        if previous_timer[0] > 0:
+            signal.setitimer(signal.ITIMER_REAL, previous_timer[0], previous_timer[1])
+
+
 def _chat_completion_payload(
     digest: RepoDigest,
     material: RepositoryMaterial,
@@ -217,7 +251,7 @@ def _chat_completion_payload(
             {"role": "user", "content": user_prompt},
         ],
         "temperature": 0.35,
-        "max_tokens": min(config.max_output_tokens, 8192),
+        "max_tokens": min(config.max_output_tokens, config.semantic_graph_max_output_tokens, 8192),
     }
     if response_format == "json_schema":
         payload["response_format"] = _semantic_graph_response_format()
@@ -246,13 +280,14 @@ def _post_chat_completion(
     payload: dict[str, Any],
     *,
     response_format: str,
+    timeout_seconds: int,
 ) -> str:
     try:
         response = requests.post(
             url,
             headers=headers,
             json=payload,
-            timeout=120,
+            timeout=(10, timeout_seconds),
         )
     except requests.RequestException as exc:
         raise SemanticGraphSynthesisError(f"LM Studio request failed: {exc}") from exc

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import requests
+import threading
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -57,6 +58,43 @@ def _write_text(path: Path, content: str, stamp: bool) -> None:
     if stamp:
         text += "\n\n" + _timestamp_comment()
     path.write_text(text + "\n", encoding="utf-8")
+
+
+def _unload_lmstudio_model_safely(config: AppConfig) -> None:
+    timeout_seconds = max(0, int(config.lm_unload_timeout_seconds))
+    if timeout_seconds == 0:
+        unload_lmstudio_model(config)
+        return
+
+    error: list[BaseException] = []
+
+    def unload() -> None:
+        try:
+            unload_lmstudio_model(config)
+        except BaseException as exc:  # pragma: no cover - defensive cleanup path
+            error.append(exc)
+
+    thread = threading.Thread(
+        target=unload,
+        name="lmstudio-unload",
+        daemon=True,
+    )
+    thread.start()
+    thread.join(timeout_seconds)
+
+    if thread.is_alive():
+        logger.warning(
+            "Timed out after %ss while unloading LM Studio model '%s'; continuing so the CLI can exit. "
+            "Set LMSTUDIO_AUTO_UNLOAD=false to keep models loaded intentionally, or increase "
+            "LMSTUDIO_UNLOAD_TIMEOUT_SECONDS if unloads are slow.",
+            timeout_seconds,
+            config.lm_model,
+        )
+        return
+
+    if error:
+        logger.warning("LM Studio model unload failed: %s", error[0])
+
 
 
 def prepare_repository_material(config: AppConfig, repo_url: str) -> RepositoryMaterial:
@@ -369,7 +407,7 @@ def run_generation(
             logger.exception("Failed to append session memory event")
 
     if model_loaded and config.lm_auto_unload:
-        unload_lmstudio_model(config)
+        _unload_lmstudio_model_safely(config)
 
     return GenerationArtifacts(
         llms_txt_path=str(llms_txt_path),

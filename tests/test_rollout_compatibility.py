@@ -77,3 +77,23 @@ def test_generate_graph_short_flag_sets_generate_graph():
     ])
 
     assert args.generate_graph is True
+
+
+def test_graph_safeguard_flags_parse():
+    from lms_llmsTxt.cli import build_parser
+
+    args = build_parser().parse_args([
+        "https://github.com/example/repo",
+        "-g",
+        "--semantic-graph-timeout-seconds",
+        "30",
+        "--semantic-graph-max-output-tokens",
+        "1024",
+        "--lm-unload-timeout-seconds",
+        "5",
+    ])
+
+    assert args.generate_graph is True
+    assert args.semantic_graph_timeout_seconds == 30
+    assert args.semantic_graph_max_output_tokens == 1024
+    assert args.lm_unload_timeout_seconds == 5

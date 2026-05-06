@@ -433,6 +433,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="Skip llms-full generation and only produce llms.txt (+ optional graph artifacts).",
     )
     parser.add_argument(
+        "--semantic-graph-timeout-seconds",
+        type=int,
+        help="Wall-clock timeout for semantic repo graph LLM synthesis before falling back to deterministic graph.",
+    )
+    parser.add_argument(
+        "--semantic-graph-max-output-tokens",
+        type=int,
+        help="Maximum output tokens reserved for semantic repo graph synthesis.",
+    )
+    parser.add_argument(
+        "--lm-unload-timeout-seconds",
+        type=int,
+        help="Maximum seconds to wait for LM Studio model unload before letting the CLI exit.",
+    )
+    parser.add_argument(
         "--enable-session-memory",
         action="store_true",
         help="Record append-only generation events for LCM-style session memory.",
@@ -500,6 +515,18 @@ def main(argv: list[str] | None = None) -> int:
         config.context_headroom_ratio = args.context_headroom
     if args.generate_graph:
         config.enable_repo_graph = True
+    if args.semantic_graph_timeout_seconds is not None:
+        if args.semantic_graph_timeout_seconds <= 0:
+            parser.error("--semantic-graph-timeout-seconds must be > 0.")
+        config.semantic_graph_timeout_seconds = args.semantic_graph_timeout_seconds
+    if args.semantic_graph_max_output_tokens is not None:
+        if args.semantic_graph_max_output_tokens <= 0:
+            parser.error("--semantic-graph-max-output-tokens must be > 0.")
+        config.semantic_graph_max_output_tokens = args.semantic_graph_max_output_tokens
+    if args.lm_unload_timeout_seconds is not None:
+        if args.lm_unload_timeout_seconds < 0:
+            parser.error("--lm-unload-timeout-seconds must be >= 0.")
+        config.lm_unload_timeout_seconds = args.lm_unload_timeout_seconds
     if args.enable_session_memory:
         config.enable_session_memory = True
     if args.ui_start_timeout_seconds is not None and int(args.ui_start_timeout_seconds) <= 0:
