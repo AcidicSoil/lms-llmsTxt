@@ -134,3 +134,25 @@ class AnalyzeRepositoryFromDigest(dspy.Signature):
     project_purpose: str = dspy.OutputField(desc="Purpose summary in 1-3 sentences")
     key_concepts: List[str] = dspy.OutputField(desc="Key concepts as list")
     architecture_overview: str = dspy.OutputField(desc="Architecture overview paragraph")
+
+
+class SynthesizeRepoGraphNodes(dspy.Signature):
+    """Rewrite repository graph node content into specific, evidence-grounded developer guidance.
+
+    Return JSON only: an array of objects with id, label, description, and content.
+    Each content value must be markdown with 2-4 concise paragraphs. Use concrete
+    mechanisms, APIs, files, components, or workflows from the node source excerpts.
+    Do not use generic phrases such as "explains the role", "nearby files depend",
+    "repository responsibility", or path-inventory prose. Evidence may appear at
+    the bottom, but the main body must be human-readable and unique to the node.
+    """
+
+    repo_topic: str = dspy.InputField(desc="Repository or project name")
+    repo_summary: str = dspy.InputField(desc="High-level repository summary")
+    node_specs_json: str = dspy.InputField(
+        desc="JSON array of graph nodes with labels, paths, symbols, neighbors, and source excerpts"
+    )
+
+    node_updates_json: str = dspy.OutputField(
+        desc="JSON array: [{id,label,description,content}] with specific non-generic markdown per node"
+    )

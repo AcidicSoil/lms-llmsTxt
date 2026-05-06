@@ -31,6 +31,12 @@ PROVENANCE_ONLY_PHRASES = (
     "related traversal",
     "uploaded artifact note",
     "evidence-backed neighbors",
+    "explains the role",
+    "nearby files depend on that concept",
+    "this concept describes the repository responsibility",
+    "rather than reading it as a bundle of filenames",
+    "random collection of paths",
+    "the strongest evidence paths include",
 )
 
 
@@ -250,7 +256,7 @@ def _semantic_description(subsystem: dict, *, node_type: GraphNodeType) -> str:
         return f"Explains the failure mode around {label} and what a developer should verify before changing it."
     if node_type == "pattern":
         return f"Explains the reusable workflow represented by {label} and where it fits in the repository."
-    return f"Explains the role {label} plays in the repository and how nearby files depend on that concept."
+    return f"Frames {label} as a repository capability that needs source-backed explanation before a developer changes it."
 
 
 def _related_concept_sentence(related_links: list[str]) -> str:
@@ -275,7 +281,7 @@ def _developer_action(theme: str, label: str) -> str:
         return f"Care about {label} when commands, daemon behavior, local services, or developer automation changes, because it is often the operational face of the system."
     if theme == "model_runtime":
         return f"Care about {label} when model loading, prediction, token limits, or local runtime behavior changes, because those details determine whether the system responds reliably under resource constraints."
-    return f"Care about {label} when changing the nearby files, because this area marks a responsibility boundary in the repository rather than a random collection of paths."
+    return f"Care about {label} when changing files in this cluster, because the grouped paths likely share behavior, state, or developer-facing documentation."
 
 
 def _failure_mode(theme: str, label: str) -> str:
@@ -291,7 +297,7 @@ def _failure_mode(theme: str, label: str) -> str:
         return f"If {label} is changed without respecting process and command boundaries, local workflows can hang, race, or report success before the system is actually ready."
     if theme == "model_runtime":
         return f"If {label} is misunderstood, the system can make the wrong tradeoff between latency, memory, model lifecycle, and correctness."
-    return f"If {label} is treated only as provenance, the graph remains accurate but not useful: it tells users where files are without explaining the decision they need to make."
+    return f"If {label} is reduced to path trivia, maintainers lose the reason these files should be reviewed together before changing behavior."
 
 
 def _content_for_subsystem(
@@ -317,12 +323,12 @@ def _content_for_subsystem(
     symbols_sentence = (
         f"Concrete implementation signals include {', '.join(f'`{symbol}`' for symbol in key_symbols[:6])}."
         if key_symbols
-        else "The current digest does not expose named public symbols for this area, so the strongest signals are the path names and neighboring docs."
+        else "No named public symbols were extracted for this cluster, so generated guidance should be checked against the listed files before editing."
     )
     evidence_sentence = (
-        f"The strongest evidence paths include {', '.join(f'`{path}`' for path in paths[:4])}."
+        f"Representative files: {', '.join(f'`{path}`' for path in paths[:4])}."
         if paths
-        else "The current digest did not expose concrete paths for this area."
+        else "No representative file paths were available in the current digest."
     )
     related_sentence = _related_concept_sentence(related_links)
     developer_action = _developer_action(theme, concept_name)
@@ -336,9 +342,8 @@ def _content_for_subsystem(
         f"---\n\n"
         f"{description}\n\n"
         f"**{focus_label.upper()}: {description.upper()}**\n\n"
-        f"This concept describes the repository responsibility behind `{name}`. "
-        f"Rather than reading it as a bundle of filenames, treat it as the place where the project explains, exposes, or protects the {concept_name.lower()} workflow. "
-        f"{evidence_sentence}\n\n"
+        f"{concept_name} is the graph's best-effort name for `{name}`. {evidence_sentence} "
+        f"Use this node to decide which concrete files to inspect first and which user-facing behavior may be affected.\n\n"
         f"{developer_action} {symbols_sentence}\n\n"
         f"## Related concepts\n\n"
         f"{related_sentence}\n\n"

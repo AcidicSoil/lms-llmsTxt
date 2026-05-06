@@ -7,7 +7,6 @@ import requests
 import threading
 import time
 import uuid
-import uuid
 from dataclasses import asdict, is_dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -24,7 +23,7 @@ from .fallback import (
 )
 from .github import fetch_file_content, gather_repository_material, owner_repo_from_url
 from .graph_builder import build_repo_graph, emit_graph_files
-from .graph_semantic_synthesizer import SemanticGraphSynthesisError, build_semantic_repo_graph
+from .graph_dspy_synthesizer import enrich_repo_graph_with_dspy
 from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
 from .reasoning import sanitize_final_output
@@ -212,50 +211,24 @@ def _unload_lmstudio_model_safely(config: AppConfig, run_log: RunLog | None = No
 
 
 
-def _semantic_graph_auto_decision(material: RepositoryMaterial, config: AppConfig) -> tuple[bool, str]:
-    """Return whether semantic graph synthesis is safe enough to attempt automatically.
-
-    This keeps `lmstxt <repo> -g` user-facing behavior simple while avoiding an
-    expensive second LM Studio call on small/unknown local models. Semantic graph
-    synthesis is attempted only when both the repo evidence and model name look
-    safe for the fast bounded budget; otherwise deterministic graph generation is
-    used immediately.
-    """
+def _graph_enrichment_auto_decision(material: RepositoryMaterial, config: AppConfig) -> tuple[bool, str]:
+    """Return whether bounded DSPy node enrichment is safe to attempt automatically."""
     if not config.lm_model:
         return False, "no LM Studio model is configured"
 
-    model = config.lm_model.lower()
-    small_markers = (
-        "e2b",
-        "0.5b",
-        "1b",
-        "1.5b",
-        "2b",
-        "3b",
-        "4b",
-        "mini",
-        "small",
-    )
-    if any(marker in model for marker in small_markers):
-        return False, f"model '{config.lm_model}' is classified as small/local"
-
-    capable_model = re.search(
-        r"(?:^|[-_/])(7|8|9|12|13|14|20|27|30|32|34|70|72|90|120|405)b(?:$|[-_/])",
-        model,
-    )
-    if not capable_model:
-        return False, f"model '{config.lm_model}' capacity is unknown"
-
     source_chars = len(material.readme_content or "") + len(material.package_files or "")
+    if source_chars < 120:
+        return False, "not enough source evidence for node-specific synthesis"
+
     source_limit = max(1_000, config.semantic_graph_max_source_chars * 2)
     if source_chars > source_limit:
-        return False, f"source evidence is too large for bounded semantic synthesis ({source_chars} > {source_limit} chars)"
+        return False, f"source evidence is too large for bounded DSPy graph synthesis ({source_chars} > {source_limit} chars)"
 
     file_tree_lines = len([line for line in (material.file_tree or "").splitlines() if line.strip()])
-    if file_tree_lines > 250:
-        return False, f"repository tree is too large for bounded semantic synthesis ({file_tree_lines} files/entries)"
+    if file_tree_lines > 600:
+        return False, f"repository tree is too large for bounded DSPy graph synthesis ({file_tree_lines} files/entries)"
 
-    return True, "model and repo evidence are within bounded semantic synthesis limits"
+    return True, "repo evidence is within bounded DSPy graph synthesis limits"
 
 def prepare_repository_material(config: AppConfig, repo_url: str) -> RepositoryMaterial:
     return gather_repository_material(repo_url, config.github_token)
@@ -708,74 +681,76 @@ def run_generation(
     if should_generate_graph:
         graph_material = working_material if 'working_material' in locals() else material
         digest = build_repo_digest(graph_material, topic=project_name)
-        decision_stage = run_log.stage_start("graph.semantic_decision")
-        should_attempt_semantic, semantic_reason = _semantic_graph_auto_decision(graph_material, config)
+        graph = build_repo_graph(digest)
+        decision_stage = run_log.stage_start("graph.dspy_enrichment_decision")
+        should_enrich_graph, enrichment_reason = _graph_enrichment_auto_decision(graph_material, config)
         run_log.stage_end(
-            "graph.semantic_decision",
+            "graph.dspy_enrichment_decision",
             decision_stage,
-            should_attempt_semantic=should_attempt_semantic,
-            reason=semantic_reason,
+            should_enrich_graph=should_enrich_graph,
+            reason=enrichment_reason,
         )
-        if not should_attempt_semantic:
-            logger.info("Skipping semantic repo graph synthesis automatically: %s", semantic_reason)
+        if not should_enrich_graph:
+            logger.info("Skipping DSPy repo graph node synthesis automatically: %s", enrichment_reason)
             _record_run_event(
                 events_path=run_events_path,
                 log_path=run_log_path,
                 run_id=run_id,
-                stage="repo_graph_semantic_decision",
+                stage="repo_graph_dspy_enrichment_decision",
                 status="skipped",
-                reason=semantic_reason,
+                reason=enrichment_reason,
             )
-            graph = build_repo_graph(digest)
         else:
             try:
-                semantic_started_at = time.perf_counter()
-                logger.info("Attempting bounded semantic repo graph synthesis automatically: %s", semantic_reason)
+                dspy_graph_started_at = time.perf_counter()
+                logger.info("Attempting bounded DSPy repo graph node synthesis automatically: %s", enrichment_reason)
                 _record_run_event(
                     events_path=run_events_path,
                     log_path=run_log_path,
                     run_id=run_id,
-                    stage="repo_graph_semantic",
+                    stage="repo_graph_dspy_enrichment",
                     status="started",
-                    reason=semantic_reason,
+                    reason=enrichment_reason,
                     timeout_seconds=config.semantic_graph_timeout_seconds,
                     max_output_tokens=config.semantic_graph_max_output_tokens,
                     max_source_chars=config.semantic_graph_max_source_chars,
                     max_subsystems=config.semantic_graph_max_subsystems,
                 )
-                graph = build_semantic_repo_graph(digest, graph_material, config)
-                logger.info("Semantic repo graph generated with LM Studio")
+                graph = enrich_repo_graph_with_dspy(graph, digest, graph_material, config)
                 _record_run_event(
                     events_path=run_events_path,
                     log_path=run_log_path,
                     run_id=run_id,
-                    stage="repo_graph_semantic",
+                    stage="repo_graph_dspy_enrichment",
                     status="completed",
-                    started_at=semantic_started_at,
+                    started_at=dspy_graph_started_at,
                     node_count=len(graph.nodes),
                 )
-            except (SemanticGraphSynthesisError, requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
-                logger.warning("Semantic repo graph synthesis failed; falling back to deterministic graph: %s", exc)
+            except (requests.RequestException, KeyError, ValueError, json.JSONDecodeError) as exc:
+                logger.warning("DSPy repo graph node synthesis failed; using deterministic graph: %s", exc)
                 _record_run_event(
                     events_path=run_events_path,
                     log_path=run_log_path,
                     run_id=run_id,
-                    stage="repo_graph_semantic",
+                    stage="repo_graph_dspy_enrichment",
                     status="fallback",
                     error=str(exc),
                 )
-                graph = build_repo_graph(digest)
             except BaseException:
                 if model_loaded and config.lm_auto_unload:
-                    _unload_lmstudio_model_safely(config, run_log)
+                    _unload_lmstudio_model_safely(config, run_log=run_log)
                     model_loaded = False
                 raise
-        emit_stage = run_log.stage_start("artifact.write_graph", node_count=len(graph.nodes))
         graph_paths = emit_graph_files(graph, repo_root / "graph")
-        run_log.stage_end("artifact.write_graph", emit_stage, **{key: str(value) for key, value in graph_paths.items()})
         graph_json_path = Path(graph_paths["graph_json"])
         force_graph_path = Path(graph_paths["force_json"])
         graph_nodes_dir = Path(graph_paths["nodes_dir"])
+        run_log.event(
+            "graph.emit",
+            graph_json=str(graph_json_path),
+            force_graph=str(force_graph_path),
+            nodes_dir=str(graph_nodes_dir),
+        )
         _record_run_event(
             events_path=run_events_path,
             log_path=run_log_path,

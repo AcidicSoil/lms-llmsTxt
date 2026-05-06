@@ -282,7 +282,11 @@ def test_pipeline_fallback(tmp_path, monkeypatch, caplog):
         repo_url=repo_url,
         file_tree="README.md\nsrc/main.py",
         readme_content="# Title\n\nSummary",
-        package_files="",
+        package_files=(
+            "=== selected evidence: src/main.py ===\n"
+            "This source file starts the application and wires the main workflow. "
+            "It exposes a concrete entry point that graph synthesis can describe."
+        ),
         default_branch="main",
         is_private=False,
     )
@@ -503,7 +507,7 @@ def test_lmstudio_json_adapter_sets_schema_response_format_without_json_object()
     assert schema["required"] == ["answer", "bullets"]
 
 
-def test_generate_graph_auto_skips_semantic_lm_for_large_evidence(tmp_path, monkeypatch):
+def test_generate_graph_auto_skips_dspy_enrichment_for_large_evidence(tmp_path, monkeypatch):
     repo_url = "https://github.com/example/repo"
     repo_root = tmp_path / "artifacts"
 
@@ -526,8 +530,8 @@ def test_generate_graph_auto_skips_semantic_lm_for_large_evidence(tmp_path, monk
     monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
     monkeypatch.setattr(
         pipeline,
-        "build_semantic_repo_graph",
-        lambda *a, **k: (_ for _ in ()).throw(AssertionError("large graph should skip semantic synthesis automatically")),
+        "enrich_repo_graph_with_dspy",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("large graph should skip DSPy enrichment automatically")),
     )
 
     config = AppConfig(
@@ -546,7 +550,7 @@ def test_generate_graph_auto_skips_semantic_lm_for_large_evidence(tmp_path, monk
     assert Path(artifacts.graph_nodes_dir).exists()
 
 
-def test_generate_graph_auto_attempts_semantic_lm_for_small_evidence(tmp_path, monkeypatch):
+def test_generate_graph_auto_attempts_dspy_enrichment_for_small_evidence(tmp_path, monkeypatch):
     repo_url = "https://github.com/example/repo"
     repo_root = tmp_path / "artifacts"
 
@@ -554,7 +558,11 @@ def test_generate_graph_auto_attempts_semantic_lm_for_small_evidence(tmp_path, m
         repo_url=repo_url,
         file_tree="README.md\nsrc/main.py",
         readme_content="# Title\n\nSummary",
-        package_files="",
+        package_files=(
+            "=== selected evidence: src/main.py ===\n"
+            "This source file starts the application and wires the main workflow. "
+            "It exposes a concrete entry point that graph synthesis can describe."
+        ),
         default_branch="main",
         is_private=False,
     )
@@ -563,17 +571,17 @@ def test_generate_graph_auto_attempts_semantic_lm_for_small_evidence(tmp_path, m
         def __call__(self, *args, **kwargs):
             return type("Result", (), {"llms_txt_content": "# Generated\n"})()
 
-    semantic_called = {"value": False}
+    enrichment_called = {"value": False}
 
-    def fake_semantic_graph(digest, material, config):
-        semantic_called["value"] = True
-        return pipeline.build_repo_graph(digest)
+    def fake_enrich_graph(graph, digest, material, config):
+        enrichment_called["value"] = True
+        return graph
 
     monkeypatch.setattr(pipeline, "prepare_repository_material", lambda *a, **k: fake_material)
     monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
     monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
     monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
-    monkeypatch.setattr(pipeline, "build_semantic_repo_graph", fake_semantic_graph)
+    monkeypatch.setattr(pipeline, "enrich_repo_graph_with_dspy", fake_enrich_graph)
 
     config = AppConfig(
         lm_model="qwen-7b",
@@ -585,5 +593,5 @@ def test_generate_graph_auto_attempts_semantic_lm_for_small_evidence(tmp_path, m
 
     artifacts = pipeline.run_generation(repo_url, config, build_ctx=False, build_full=False)
 
-    assert semantic_called["value"] is True
+    assert enrichment_called["value"] is True
     assert Path(artifacts.graph_json_path).exists()

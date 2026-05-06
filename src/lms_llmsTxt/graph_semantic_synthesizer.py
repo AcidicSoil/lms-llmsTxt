@@ -439,7 +439,7 @@ def _build_source_bundle(digest: RepoDigest, material: RepositoryMaterial, confi
 
     if not blocks:
         blocks.extend(
-            _excerpt_block(str(subsystem.get("name", "subsystem")), str(subsystem.get("summary", "")))
+            _excerpt_block(str(subsystem.get("name", "subsystem")), str(subsystem.get("summary", "")), config)
             for subsystem in digest.subsystems[: max(1, config.semantic_graph_max_subsystems)]
         )
 
