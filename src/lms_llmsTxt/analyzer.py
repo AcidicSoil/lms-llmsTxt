@@ -36,38 +36,95 @@ _URL_SESSION = requests.Session()
 _URL_HEADERS = {"User-Agent": "lms-lmstxt"}
 
 
+def _clean_path_part(part: str) -> str:
+    part = re.sub(r"\.(mdx?|rst|txt|py|ipynb|js|ts|html)$", "", part, flags=re.I)
+    part = part.strip("_-. ")
+    part = re.sub(r"^\d+[_-]*", "", part)
+    lower = part.lower()
+    acronyms = {
+        "api": "API",
+        "sdk": "SDK",
+        "cli": "CLI",
+        "ui": "UI",
+        "llm": "LLM",
+        "mcp": "MCP",
+        "rest": "REST",
+        "json": "JSON",
+        "faq": "FAQ",
+        "repl": "REPL",
+    }
+    if lower in acronyms:
+        return acronyms[lower]
+    return " ".join(piece.capitalize() for piece in re.split(r"[-_\s]+", part) if piece)
+
+
+def _platform_from_path(path: str) -> str:
+    first = path.strip("/").split("/", 1)[0].lower()
+    if "python" in first:
+        return "Python"
+    if "typescript" in first:
+        return "TypeScript"
+    if "developer" in first:
+        return "Developer"
+    if first.startswith("3_cli") or first == "cli":
+        return "CLI"
+    if "lmlink" in first:
+        return "LM Link"
+    return ""
+
+
+def _topic_from_path(path: str) -> str:
+    parts = [p for p in path.strip("/").split("/") if p]
+    if not parts:
+        return ""
+    leaf = _clean_path_part(parts[-1])
+    parents = [_clean_path_part(p) for p in parts[:-1]]
+    parents = [p for p in parents if p and p not in {"Python", "TypeScript", "Developer"}]
+    if leaf.lower() in {"index", "readme"} and parents:
+        return parents[-1]
+    if len(parts) >= 2 and any(token in path.lower() for token in ("api-reference", "getting-started", "plugins", "presets")):
+        platform = _platform_from_path(path)
+        if platform and not leaf.startswith(platform):
+            return f"{platform} {leaf}"
+    return leaf or path
+
+
 def _nicify_title(path: str) -> str:
-    base = path.rsplit("/", 1)[-1]
-    base = re.sub(r"\.(md|rst|txt|py|ipynb|js|ts|html|mdx)$", "", base, flags=re.I)
-    base = base.replace("-", " ").replace("_", " ")
-    title = base.strip().title() or path
-    if re.search(r"(^|/)index(\.mdx?|\.html?)?$", path, flags=re.I):
-        parts = path.strip("/").split("/")
-        if len(parts) > 1:
-            title = parts[-2].replace("-", " ").replace("_", " ").title()
-    return title
+    if re.search(r"(^|/)README\.md$", path, flags=re.I):
+        return "README"
+    return _topic_from_path(path) or path
 
 
 def _short_note(path: str) -> str:
     lower = path.lower()
-    if any(
-        hint in lower
-        for hint in ["getting-started", "quickstart", "install", "overview", "/readme"]
-    ):
-        return "install & quickstart"
+    platform = _platform_from_path(path)
+    topic = _topic_from_path(path)
+    subject = topic or "this page"
+
+    if any(hint in lower for hint in ["getting-started", "quickstart", "install", "overview", "/readme"]):
+        return f"start here for {platform + ' ' if platform else ''}{subject.lower()} setup and first-run workflow"
     if any(hint in lower for hint in ["reference", "/api"]):
-        return "API reference"
+        return f"lookup the {platform + ' ' if platform else ''}{subject.lower()} API contract, parameters, and return behavior"
     if any(hint in lower for hint in ["tutorial", "example", "how-to", "demo"]):
-        return "worked example"
-    if any(hint in lower for hint in ["concept", "architecture", "faq"]):
-        return "core concept"
+        return f"follow a worked example for {subject.lower()}"
+    if any(hint in lower for hint in ["concept", "architecture", "design", "faq"]):
+        return f"understand the concept or decision model behind {subject.lower()}"
     if "changelog" in lower or "release" in lower:
-        return "version history"
+        return f"track version changes and migration notes for {subject.lower()}"
     if "license" in lower:
-        return "usage terms"
+        return "review usage terms and redistribution constraints"
     if "security" in lower:
-        return "security policy"
-    return "docs page"
+        return "review the security policy and reporting workflow"
+    if "contributing" in lower:
+        return "learn how contributors should edit, test, and submit changes"
+    return f"read supporting documentation for {subject.lower()}"
+
+
+def _finish_sentence(text: str) -> str:
+    text = " ".join(str(text).strip().split())
+    if not text:
+        return ""
+    return text if text.endswith((".", "!", "?")) else text + "."
 
 
 def _score(path: str) -> float:
@@ -277,7 +334,7 @@ def render_llms_markdown(document: LLMsDocument) -> str:
             continue
         out.append(f"## {section.name}")
         out.extend(
-            f"- [{entry.title}]({entry.url}): {entry.note}."
+            f"- [{entry.title}]({entry.url}): {_finish_sentence(entry.note)}"
             for entry in section.entries
         )
         out.append("")
@@ -668,6 +725,48 @@ class RepositoryAnalyzer(dspy.Module):
         ]
         return document
 
+    def _is_useful_section_note(self, section_name: str, note: str, entries: list[LLMsLinkEntry]) -> bool:
+        cleaned = " ".join(note.strip().split())
+        if len(cleaned) < 48:
+            return False
+        lowered = cleaned.lower()
+        generic_phrases = (
+            "general documentation",
+            "various functionalities",
+            "core concepts and frequently asked questions",
+            "related to the project",
+            "this section contains",
+            "documentation and guides",
+        )
+        if any(phrase in lowered for phrase in generic_phrases):
+            return False
+        entry_terms = {
+            token.lower()
+            for entry in entries
+            for token in re.findall(r"[A-Za-z][A-Za-z0-9]+", f"{entry.title} {entry.note}")
+            if len(token) > 3
+        }
+        note_terms = {token.lower() for token in re.findall(r"[A-Za-z][A-Za-z0-9]+", cleaned) if len(token) > 3}
+        # Keep a model note only if it appears grounded in the concrete links for the section.
+        return bool(entry_terms & note_terms) or section_name.lower() in lowered
+
+    def _deterministic_section_note(self, section: LLMsSection) -> str:
+        titles = [entry.title for entry in section.entries if not entry.url.startswith("about:")]
+        notes = [entry.note for entry in section.entries if not entry.url.startswith("about:")]
+        title_list = ", ".join(titles[:4])
+        if section.name == "Docs":
+            return f"Use this section for the first successful path through the project; it prioritizes {title_list or 'setup and overview pages'} so readers can orient before deeper API work"
+        if section.name == "API":
+            return f"Use this section as the contract surface; it links concrete references such as {title_list or 'the exported API pages'} and should answer what call, parameter, or return shape to inspect"
+        if section.name == "Tutorials":
+            return f"Use this section when examples matter more than exhaustive reference; it collects worked flows such as {title_list or 'hands-on examples'}"
+        if section.name == "Concepts":
+            return f"Use this section to understand the product mental model behind the implementation; it points to {title_list or 'conceptual docs'} before code-level changes"
+        if section.name == "Optional":
+            return f"Use this section for project maintenance and meta information; it includes {title_list or 'supporting repository pages'} rather than the primary integration path"
+        sample = title_list or ", ".join(notes[:3]) or section.name
+        return f"Use this section for {section.name.lower()} material, especially {sample}, when deciding where a reader should go next"
+
     def _synthesize_section_content(
         self,
         project_name: str,
@@ -708,29 +807,40 @@ class RepositoryAnalyzer(dspy.Module):
         raw_notes = _as_list_of_text(_pred_get(synthesis_prediction, "section_notes"))
         notes_by_section: dict[str, str] = {}
         valid_sections = {section.name for section in document.sections}
+        rejected_notes: dict[str, str] = {}
         for raw_note in raw_notes:
             section_name, sep, note = raw_note.partition(":")
             section_name = section_name.strip()
-            note = note.strip()
-            if sep and section_name in valid_sections and note:
+            note = _finish_sentence(note.strip()).rstrip(".")
+            section = next((candidate for candidate in document.sections if candidate.name == section_name), None)
+            if not sep or section is None or not note:
+                continue
+            if self._is_useful_section_note(section_name, note, section.entries):
                 notes_by_section[section_name] = note
+            else:
+                rejected_notes[section_name] = note
 
+        inserted_notes: dict[str, str] = {}
         for section in document.sections:
             note = notes_by_section.get(section.name)
+            source = "model"
             if not note:
-                continue
+                note = self._deterministic_section_note(section)
+                source = "deterministic"
             section.entries.insert(
                 0,
                 LLMsLinkEntry(
-                    title=f"{section.name} Overview",
+                    title=f"{section.name} Guide",
                     url="about:section-synthesis",
                     note=note,
                 ),
             )
+            inserted_notes[section.name] = f"{source}: {note}"
 
         trace.model_section_planning["section_content_synthesis"] = {
-            "used": bool(notes_by_section),
-            "notes": notes_by_section,
+            "used": bool(inserted_notes),
+            "notes": inserted_notes,
+            "rejected_notes": rejected_notes,
         }
 
     def _render_document(self, document: LLMsDocument) -> str:
