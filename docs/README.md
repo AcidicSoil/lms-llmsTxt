@@ -42,6 +42,19 @@ These files are preserved outside `docs/` because they are state snapshots, AI w
 | `.archived/docs/hyperbrowser-oss-replacement-plan.md` | Historical replacement plan |
 | `.archived/docs/oss-alternatives-hypergraph.md` | Historical alternatives note |
 
+
+## Local docs site
+
+This repository uses Rspress for the local documentation site.
+
+```bash
+pnpm run docs:dev
+pnpm run docs:build
+pnpm run docs:preview
+```
+
+The site root is `docs/`, the generated output is `doc_build/`, and `doc_build/` is ignored because it can be regenerated.
+
 ## Organization conventions
 
 - Keep root `README.md` focused on overview, install, quick start, and entry-point links.

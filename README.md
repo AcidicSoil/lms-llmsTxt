@@ -306,6 +306,12 @@ source .venv/bin/activate
 python -m pytest
 ```
 
+Build the documentation site with Rspress:
+
+```bash
+pnpm run docs:build
+```
+
 Using uv:
 
 ```bash

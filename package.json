@@ -4,10 +4,14 @@
   "scripts": {
     "ui:dev": "npm --prefix hypergraph run dev",
     "ui:build": "npm --prefix hypergraph run build",
-    "ui:start": "npm --prefix hypergraph run start"
+    "ui:start": "npm --prefix hypergraph run start",
+    "docs:dev": "rspress dev",
+    "docs:build": "rspress build",
+    "docs:preview": "rspress preview"
   },
   "devDependencies": {
-    "codefetch": "^2.2.0"
+    "codefetch": "^2.2.0",
+    "@rspress/core": "^2.0.10"
   },
   "packageManager": "pnpm@10.29.2+sha512.bef43fa759d91fd2da4b319a5a0d13ef7a45bb985a3d7342058470f9d2051a3ba8674e629672654686ef9443ad13a82da2beb9eeb3e0221c87b8154fff9d74b8"
 }
