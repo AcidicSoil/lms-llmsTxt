@@ -4,26 +4,26 @@
 
 - This file is the current durable repository-state summary.
 - The detailed DSPy refactor ticket ledger remains `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md`.
-- External/product rollout decision evidence remains `docs/rollout-decision-2026-04-29.md`.
-- Dependency-safety posture remains `AGENTS.md` and `docs/dependency-security-posture.md`.
-- Latest repository-state consolidation report: `docs/state-consolidation-2026-05-08.md`.
+- External/product rollout decision evidence remains `docs/decisions/2026-04-29-rollout-compatibility.md`.
+- Dependency-safety posture remains `AGENTS.md` and `docs/security/dependency-security-posture.md`.
+- Documentation index: `docs/README.md`.
+- Latest repository-state consolidation report: `.archived/docs/state-consolidation-2026-05-08.md`.
 - Serena memory index: `.serena/memories/README.md`.
-- Serena indexed-search workflow script: `.serena/indexed-search.sh` is currently staged as added; it appears to be a standalone safe search entrypoint, but approval/adoption status is Unknown.
-- Prior consolidation report: `docs/state-consolidation-2026-04-30.md` is historical evidence and is superseded for current working-tree status by this file and the 2026-05-08 report.
+- Serena indexed-search workflow script: `.serena/indexed-search.sh` is present as a standalone safe search entrypoint; approval/adoption status remains Unknown.
+- Prior consolidation report: `.archived/docs/state-consolidation-2026-04-30.md` is historical evidence and is superseded for current working-tree status by this file and the 2026-05-08 report.
 
 ## Current repository status
 
-- `git status --short` during final 2026-05-08 validation reports workflow/memory/documentation consolidation changes under `.serena/indexed-search.sh`, `.serena/memories`, `README.md`, `docs/current-state.md`, and `docs/state-consolidation-2026-05-08.md`.
-- `.serena/indexed-search.sh` is a tool-facing workflow helper staged in the working tree; it was not rewritten during the memory consolidation edits.
-- `README.md` is staged with a Documentation Map entry for `.serena/memories/README.md`.
-- Staging is mixed because some consolidation writes were already staged before the final sync. This pass did not normalize staging; preserve the staged/unstaged split for reviewer visibility.
-- Initial evidence in this pass showed ` D .ecc-hooks-disable` and `?? .ecc-hooks-disable.bak`, but final targeted validation no longer reproduced those as working-tree changes.
-- `git ls-files --stage -- .ecc-hooks-disable .ecc-hooks-disable.bak` shows `.ecc-hooks-disable.bak` is tracked.
-- `git status --short -- .ecc-hooks-disable .ecc-hooks-disable.bak` and `git diff --name-status -- .ecc-hooks-disable .ecc-hooks-disable.bak` produced no output during final validation.
-- `.ecc-hooks-disable` is absent from the working tree and not tracked in final validation; `.ecc-hooks-disable.bak` exists as an empty tracked file.
+- `git status --short` during this documentation organization pass reports:
+  - `M README.md`
+  - `M .archived/docs/current-state-2026-05-08.md`
+  - `?? docs/README.md`
+- Current documentation maintenance adds a docs index and fixes the README Documentation Map entry for the archived oracle pack reference.
+- `.serena/indexed-search.sh` is present in the working tree and not part of the current documentation diff.
+- `git status --short -- .ecc-hooks-disable .ecc-hooks-disable.bak` and `git diff --name-status -- .ecc-hooks-disable .ecc-hooks-disable.bak` produce no output during current validation.
+- `.ecc-hooks-disable` is absent from the working tree and not tracked; `.ecc-hooks-disable.bak` exists as an empty tracked file.
 - Intent behind the historical `.ecc-hooks-disable` / `.ecc-hooks-disable.bak` transition remains Unknown from discovered repository evidence, but there is no current dirty `.ecc` working-tree change to resolve.
-- No irreversible cleanup was performed during the 2026-05-08 consolidation pass.
-- Earlier statements that the tree was clean as of 2026-04-30 are historical only and must not be treated as current status.
+- No irreversible cleanup was performed during this documentation organization pass.
 
 ## Completed implementation state now reflected in the repository
 
@@ -54,19 +54,19 @@ These records are preserved for recoverability. They are no longer the current s
 - `.serena/memories/session_handoff_2026_04_29_ticket_170.md` — finished intermediate handoff; superseded by later ticket handoffs and the final audit.
 - `.serena/memories/session_handoff_2026_04_29_ticket_190.md` — finished intermediate handoff; superseded by TICKET-210 and the final audit.
 - `.serena/memories/session_handoff_2026_04_29_ticket_210.md` — finished final handoff; useful evidence, but this file and the audit are the current summary.
-- `docs/state-consolidation-2026-04-30.md` — prior consolidation report; superseded for latest status by `docs/state-consolidation-2026-05-08.md`, but preserved as historical evidence.
+- `.archived/docs/state-consolidation-2026-04-30.md` — prior consolidation report; superseded for latest status by `.archived/docs/state-consolidation-2026-05-08.md`, but preserved as historical evidence.
 - `.archived/**` — already archived historical records; preserved and not modified by this consolidation.
 
 ## Duplicate structures
 
 | Duplicate or overlapping record | Canonical source | Compatibility / recoverability | Status |
 |---|---|---|---|
-| `.serena/memories/README.md` and dated current-state memories | `docs/current-state.md` plus `.serena/memories/current_state_2026_05_08.md` | Keep README index and dated memories; older dated memory is a redirect for path stability. | Active index / superseded redirect |
-| `.serena/memories/session_handoff_2026_04_29*.md` | `docs/current-state.md` plus `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md` | Keep handoffs in place with supersession notes; do not delete. | Superseded |
+| `.serena/memories/README.md` and dated current-state memories | `.archived/docs/current-state-2026-05-08.md` plus `.serena/memories/current_state_2026_05_08.md` | Keep README index and dated memories; older dated memory is a redirect for path stability. | Active index / superseded redirect |
+| `.serena/memories/session_handoff_2026_04_29*.md` | `.archived/docs/current-state-2026-05-08.md` plus `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md` | Keep handoffs in place with supersession notes; do not delete. | Superseded |
 | Individual `.plans/dspy-lms-llmstxt-tickets/TICKET-*.md` files | Audit file for summary; ticket files for detailed evidence | Keep detailed ticket files. | Finished evidence |
-| `docs/rollout-decision-2026-04-29.md` and audit rollout notes | `docs/rollout-decision-2026-04-29.md` for rollout decision | Audit links to rollout decision; keep both. | Active reference |
+| `docs/decisions/2026-04-29-rollout-compatibility.md` and audit rollout notes | `docs/decisions/2026-04-29-rollout-compatibility.md` for rollout decision | Audit links to rollout decision; keep both. | Active reference |
 | README documentation map and docs directory | README plus this file | Preserve existing docs and point future agents here first. | Active |
-| `docs/state-consolidation-2026-04-30.md` and `docs/state-consolidation-2026-05-08.md` | `docs/state-consolidation-2026-05-08.md` for latest consolidation run; older report for history | Keep both reports; do not overwrite historical evidence. | Prior report superseded |
+| `.archived/docs/state-consolidation-2026-04-30.md` and `.archived/docs/state-consolidation-2026-05-08.md` | `.archived/docs/state-consolidation-2026-05-08.md` for latest consolidation run; older report for history | Keep both reports; do not overwrite historical evidence. | Prior report superseded |
 
 ## Verification evidence
 
@@ -97,7 +97,7 @@ Earlier implementation-evidence check from the 2026-04-30 consolidation remains 
 
 ```bash
 for pat in 'lmstxt --ui' 'HYPERGRAPH_OPENAI' 'LMStudioJSONAdapter' 'test_pytest_suite_does_not_run_full_live_generation_paths' 'requestId' '/api/health'; do
-  grep -R "$pat" -n README.md .env.example docs/current-state.md src/lms_llmsTxt hypergraph/app hypergraph/lib hypergraph/types tests --exclude-dir='node_modules' | head -20
+  grep -R "$pat" -n README.md .env.example .archived/docs/current-state-2026-05-08.md src/lms_llmsTxt hypergraph/app hypergraph/lib hypergraph/types tests --exclude-dir='node_modules' | head -20
 done
 ```
 

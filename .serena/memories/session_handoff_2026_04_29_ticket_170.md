@@ -1,7 +1,7 @@
 # Session Handoff — 2026-04-29 — TICKET-170
 
 > [!IMPORTANT]
-> Superseded for current-state decisions by `docs/current-state.md` and `.serena/memories/current_state_2026_05_08.md`. Preserve this file as historical evidence; do not use it as the latest task state when it conflicts with the current-state record.
+> Superseded for current-state decisions by `.archived/docs/current-state-2026-05-08.md` and `.serena/memories/current_state_2026_05_08.md`. Preserve this file as historical evidence; do not use it as the latest task state when it conflicts with the current-state record.
 
 
 ## Objective

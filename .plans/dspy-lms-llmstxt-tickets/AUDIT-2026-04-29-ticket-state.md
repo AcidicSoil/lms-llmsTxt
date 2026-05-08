@@ -34,7 +34,7 @@ Current source-of-truth audit for DSPy `lms-llmsTxt` ticket state, dependency or
 - `AGENTS.md`
 - `README.md`
 - `docs/architecture.md`
-- `docs/dependency-audit.md`
+- `docs/audits/dependency-audit.md`
 - `docs/getting-started.md`
 - `src/lms_llmsTxt/analyzer.py`
 - `src/lms_llmsTxt/signatures.py`
@@ -65,7 +65,7 @@ Recommended next pass:
 
 1. Review the working tree and decide whether to commit the completed ticket series.
 2. Obtain explicit final human owner/venue approval before any external/product rollout.
-3. If rollout proceeds, use `docs/rollout-decision-2026-04-29.md` as the compatibility evidence record.
+3. If rollout proceeds, use `docs/decisions/2026-04-29-rollout-compatibility.md` as the compatibility evidence record.
 4. Continue to avoid dependency changes unless explicitly executing a dependency-upgrade slice under `AGENTS.md` dependency security posture.
 
 Suggested final verification commands before commit or rollout:

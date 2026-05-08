@@ -4,18 +4,18 @@ This directory stores project-local Serena memories for repository agents. Use t
 
 ## Current source of truth
 
-1. `docs/current-state.md` — durable repository-state summary.
-2. `docs/state-consolidation-2026-05-08.md` — latest memory/workflow consolidation report.
+1. `.archived/docs/current-state-2026-05-08.md` — durable repository-state summary.
+2. `.archived/docs/state-consolidation-2026-05-08.md` — latest memory/workflow consolidation report.
 3. `.serena/memories/current_state_2026_05_08.md` — concise current memory redirect for future agents.
 4. `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md` — canonical DSPy ticket-state ledger.
-5. `docs/rollout-decision-2026-04-29.md` — rollout gate and compatibility decision.
+5. `docs/decisions/2026-04-29-rollout-compatibility.md` — rollout gate and compatibility decision.
 
 ## Memory classification
 
 | Memory file | Classification | Use |
 |---|---|---|
 | `current_state_2026_05_08.md` | Active | Start here for concise current state and handoff pointers. |
-| `current_state_2026_04_30.md` | Superseded redirect | Preserved for path stability; defer to `current_state_2026_05_08.md` and `docs/current-state.md` when status differs. |
+| `current_state_2026_04_30.md` | Superseded redirect | Preserved for path stability; defer to `current_state_2026_05_08.md` and `.archived/docs/current-state-2026-05-08.md` when status differs. |
 | `project_overview.md` | Active | Durable project purpose, runtime layout, and high-level architecture. |
 | `style_and_conventions.md` | Active | Durable coding, testing, and compatibility conventions. |
 | `suggested_commands.md` | Active | Common setup, test, build, CLI, MCP, and UI commands. |

@@ -26,7 +26,7 @@ goal: "A human review confirms whether the targeted DSPy-native refactor preserv
   - Product-surface compatibility must be checked before rollout.
 - Evidence:
   - Outputs from prior tickets
-  - `docs/rollout-decision-2026-04-29.md` records the compatibility review across CLI flags, artifact contract fields, graph outputs, fallback separation, MCP contract, session memory, LM Studio boundary, dependency posture, and evaluation outputs.
+  - `docs/decisions/2026-04-29-rollout-compatibility.md` records the compatibility review across CLI flags, artifact contract fields, graph outputs, fallback separation, MCP contract, session memory, LM Studio boundary, dependency posture, and evaluation outputs.
   - `tests/test_rollout_compatibility.py` verifies preserved `GenerationArtifacts` fields, existing CLI flags, no RLM rollout flag, fallback schema/markdown separation, and optional RLM scaffold isolation from CLI/fallback contracts.
   - `uv run --extra test pytest -q tests/test_rollout_compatibility.py --tb=short` reported `4 passed, 12 warnings`.
   - `uv run --extra test pytest -q tests/test_rollout_compatibility.py tests/test_rlm_evaluation.py tests/test_evaluation.py tests/test_analyzer.py tests/test_repo_digest.py tests/test_graph_builder.py tests/test_cli_ui.py tests/test_session_memory.py --tb=short` reported `36 passed, 12 warnings`.

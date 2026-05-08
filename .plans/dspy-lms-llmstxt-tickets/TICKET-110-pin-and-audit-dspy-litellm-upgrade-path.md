@@ -23,7 +23,7 @@ goal: "The codebase has a reviewed, pinned dependency path for recent DSPy capab
 ## Completion evidence
 - `pyproject.toml` pins `dspy-ai==3.1.0` and `litellm==1.80.5`.
 - `uv.lock` records the pinned `dspy`, `dspy-ai`, and `litellm` versions and `uv lock --check` resolves successfully.
-- `docs/dependency-audit.md` records the DSPy/LiteLLM upgrade constraints and downstream blockers for planner, optimizer, and RLM work.
+- `docs/audits/dependency-audit.md` records the DSPy/LiteLLM upgrade constraints and downstream blockers for planner, optimizer, and RLM work.
 - `uv run --extra test pytest -q` reported `71 passed, 1 skipped, 6 warnings`; the skip is the LM Studio/GitHub credential integration test when the configured GitHub token is invalid or unauthorized.
 
 ## Notes

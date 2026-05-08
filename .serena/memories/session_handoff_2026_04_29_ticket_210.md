@@ -1,7 +1,7 @@
 # Session Handoff — 2026-04-29 — TICKET-210
 
 > [!IMPORTANT]
-> Superseded for current-state decisions by `docs/current-state.md` and `.serena/memories/current_state_2026_05_08.md`. Preserve this file as historical evidence; do not use it as the latest task state when it conflicts with the current-state record.
+> Superseded for current-state decisions by `.archived/docs/current-state-2026-05-08.md` and `.serena/memories/current_state_2026_05_08.md`. Preserve this file as historical evidence; do not use it as the latest task state when it conflicts with the current-state record.
 
 
 ## Objective
@@ -13,7 +13,7 @@ Start TICKET-210 and complete compatibility/rollout review for TICKET-100 throug
   - existing CLI flags and no RLM rollout flag
   - fallback schema/markdown separation from RLM scaffold
   - optional RLM scaffold isolation from CLI/fallback contracts
-- Added `docs/rollout-decision-2026-04-29.md` with compatibility findings and rollout decision.
+- Added `docs/decisions/2026-04-29-rollout-compatibility.md` with compatibility findings and rollout decision.
 - Updated `.plans/dspy-lms-llmstxt-tickets/TICKET-210-review-refactor-compatibility-and-rollout-decision.md` to `done: true` with fresh evidence.
 - Updated `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md` to say all tracked DSPy llms.txt refactor tickets are complete.
 
@@ -30,7 +30,7 @@ External/product rollout remains gated until a final human rollout owner and app
 ## Files changed
 - `.plans/dspy-lms-llmstxt-tickets/AUDIT-2026-04-29-ticket-state.md`
 - `.plans/dspy-lms-llmstxt-tickets/TICKET-210-review-refactor-compatibility-and-rollout-decision.md`
-- `docs/rollout-decision-2026-04-29.md`
+- `docs/decisions/2026-04-29-rollout-compatibility.md`
 - `tests/test_rollout_compatibility.py`
 
 ## Current status

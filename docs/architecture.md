@@ -309,7 +309,7 @@ This section supplements the original architecture doc with the newer two-way vi
 - This affects verification confidence for HyperGraph standards, not the architecture shape itself.
 
 3. Cross-runtime operational assumptions (Python executable, `PYTHONPATH`, LM Studio availability) should be validated in target developer environments.
-- See `docs/REVIEW_CHECKLIST.md` for manual verification items.
+- See `docs/audits/brownfield-documentation-review-checklist.md` for manual verification items.
 
 ## Testing Strategy (High-Level, Tests Excluded from Deep Analysis)
 

@@ -286,15 +286,18 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 
 ## Documentation Map
 
+- `docs/README.md` - documentation index and organization map.
 - `docs/getting-started.md` - beginner onboarding and first commands.
 - `docs/architecture.md` - system design, data flow, and extension points.
-- `docs/current-state.md` - current source of truth for active/superseded state records, rollout gates, and next safe slices.
-- `.serena/memories/README.md` - agent memory index for active, superseded, finished, and durable memory records.
 - `docs/standards.md` - discovered coding/runtime conventions and recommended consistency rules.
 - `docs/patterns.md` - architectural/code patterns, integration seams, and hotspots.
-- `docs/REVIEW_CHECKLIST.md` - human validation checklist for brownfield documentation claims.
+- `docs/security/dependency-security-posture.md` - dependency security posture and controls.
+- `docs/audits/dependency-audit.md` - dependency audit and pinning notes.
+- `docs/decisions/2026-04-29-rollout-compatibility.md` - rollout compatibility decision and gates.
+- `docs/audits/brownfield-documentation-review-checklist.md` - human validation checklist for brownfield documentation claims.
 - `docs/publishing.md` - publishing and release workflow notes.
-- `docs/oracle-pack-2026-01-04.md` - repository knowledge pack reference.
+- `.serena/memories/README.md` - agent memory index for active, superseded, finished, and durable memory records.
+- `.archived/oracle-pack-2026-01-04.md` - archived repository knowledge pack reference.
 
 ## Verify your setup
 
