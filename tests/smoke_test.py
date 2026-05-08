@@ -52,6 +52,7 @@ def temp_venv():
         venv.create(venv_path, with_pip=True)
         yield venv_path
 
+@pytest.mark.packaging
 def test_wheel_install(temp_venv):
     wheels = glob.glob(os.path.join(DIST_DIR, '*.whl'))
     if not wheels:
@@ -63,6 +64,7 @@ def test_wheel_install(temp_venv):
     run_in_venv(temp_venv, ['lmstxt', '--help'])
     run_in_venv(temp_venv, ['lmstxt-mcp', '--help'])
 
+@pytest.mark.packaging
 def test_sdist_install(temp_venv):
     sdists = glob.glob(os.path.join(DIST_DIR, '*.tar.gz'))
     if not sdists:

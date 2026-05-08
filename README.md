@@ -306,6 +306,12 @@ source .venv/bin/activate
 python -m pytest
 ```
 
+Default pytest runs skip slow package-install smoke tests. Run the release-gate packaging smoke tests explicitly when validating built distributions:
+
+```bash
+python -m pytest --run-packaging -m packaging
+```
+
 Build the documentation site with Rspress:
 
 ```bash
@@ -316,10 +322,16 @@ Using uv:
 
 ```bash
 source .venv/bin/activate
-uv run pytest
+uv run --extra test pytest
 ```
 
-All tests should pass, confirming URL validation, fallback handling, and MCP resource exposure.
+For distribution validation, build artifacts first and then run:
+
+```bash
+uv run --extra test pytest --run-packaging -m packaging
+```
+
+All default tests should pass quickly, confirming URL validation, fallback handling, and MCP resource exposure. Packaging smoke tests remain available as a slower release gate.
 
 ## Reliability Validation (2026-02-23)
 
