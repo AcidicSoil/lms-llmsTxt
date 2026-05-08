@@ -9,6 +9,9 @@ ArtifactName = Literal[
     "llms.json",
     "repo.graph.json",
     "repo.force.json",
+    "trace.json",
+    "run.log",
+    "run.events.jsonl",
 ]
 RunStatus = Literal["pending", "processing", "completed", "failed"]
 

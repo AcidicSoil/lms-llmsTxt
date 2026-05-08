@@ -122,6 +122,9 @@ def safe_generate_llms_txt(
     url: str,
     output_dir: str = "./artifacts",
     cache_lm: bool = True,
+    generate_graph: bool | None = None,
+    verbose_budget: bool = False,
+    enable_session_memory: bool | None = None,
 ) -> RunRecord:
     """
     Thread-safe wrapper around run_generation that only writes llms.txt (+ optional llms.json).
@@ -153,6 +156,9 @@ def safe_generate_llms_txt(
                 cache_lm=cache_lm,
                 build_full=False,
                 build_ctx=False,
+                generate_graph=generate_graph,
+                verbose_budget=verbose_budget,
+                enable_session_memory=enable_session_memory,
             )
 
             # Process artifacts into our domain model
@@ -173,6 +179,11 @@ def safe_generate_llms_txt(
 
             add_artifact(artifacts.llms_txt_path, "llms.txt")
             add_artifact(artifacts.json_path, "llms.json")
+            add_artifact(artifacts.graph_json_path, "repo.graph.json")
+            add_artifact(artifacts.force_graph_path, "repo.force.json")
+            add_artifact(artifacts.trace_path, "trace.json")
+            add_artifact(artifacts.run_log_path, "run.log")
+            add_artifact(artifacts.run_events_path, "run.events.jsonl")
 
             result = run_store.update_run(
                 run_id,

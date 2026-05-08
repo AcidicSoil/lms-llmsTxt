@@ -116,7 +116,10 @@ def _read_file_chunk(path: Path, offset: int, limit: int) -> str:
 def generate_llms_txt(
     url: str = Field(..., description="The URL of the repository to process (e.g., https://github.com/owner/repo)"),
     output_dir: str = Field("./artifacts", description="Local directory to store artifacts"),
-    cache_lm: bool = Field(True, description="Enable LM caching")
+    cache_lm: bool = Field(True, description="Enable LM caching"),
+    generate_graph: bool | None = Field(None, description="Override repo graph generation; defaults to ENABLE_REPO_GRAPH"),
+    verbose_budget: bool = Field(False, description="Log context-budget planning details"),
+    enable_session_memory: bool | None = Field(None, description="Override session-memory capture; defaults to ENABLE_SESSION_MEMORY")
 ) -> str:
     """
     Generates llms.txt (and llms.json on fallback) for a repository.
@@ -134,6 +137,9 @@ def generate_llms_txt(
         url,
         output_dir,
         cache_lm,
+        generate_graph,
+        verbose_budget,
+        enable_session_memory,
     )
     return run_store.get_run(run_id).model_dump_json(indent=2)
 
