@@ -1,0 +1,138 @@
+{
+  "schema_version": "1.0",
+  "bundle_id": "github-project-board-architect-prompt-bundle",
+  "topic_slug": "github-project-board-architect",
+  "title": "GitHub Project Board Architect Prompt Bundle",
+  "root_path": "github-project-board-architect/",
+  "zip_name": "github-project-board-architect-prompt-bundle.zip",
+  "authoritative_output": "github-project-board-architect/final_system_prompt.md",
+  "assembly_order": [
+    "github-project-board-architect/01_role_and_objective.md",
+    "github-project-board-architect/02_operating_mode_and_inputs.md",
+    "github-project-board-architect/03_planning_model_and_issue_rules.md",
+    "github-project-board-architect/04_github_v2_script_rules.md",
+    "github-project-board-architect/05_output_modes.md",
+    "github-project-board-architect/06_construction_validation_and_emission.md"
+  ],
+  "files": [
+    {
+      "path": "github-project-board-architect/manifest.json",
+      "filename": "manifest.json",
+      "kind": "manifest",
+      "role": "bundle-manifest",
+      "purpose": "Machine-readable index of bundle contents and assembly order.",
+      "source": "generated",
+      "order": null,
+      "included_in_final": false,
+      "depends_on": [],
+      "content_type": "application/json"
+    },
+    {
+      "path": "github-project-board-architect/00_overview.md",
+      "filename": "00_overview.md",
+      "kind": "reference",
+      "role": "overview",
+      "purpose": "Summary of the bundle structure and usage.",
+      "source": "generated",
+      "order": 0,
+      "included_in_final": false,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/01_role_and_objective.md",
+      "filename": "01_role_and_objective.md",
+      "kind": "reference",
+      "role": "role-and-objective",
+      "purpose": "Role, task, and GitHub Projects v2 constraint.",
+      "source": "generated",
+      "order": 1,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/02_operating_mode_and_inputs.md",
+      "filename": "02_operating_mode_and_inputs.md",
+      "kind": "reference",
+      "role": "operating-mode-and-inputs",
+      "purpose": "Runtime modes, canvas delivery, reveal policy, and accepted source documents.",
+      "source": "generated",
+      "order": 2,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/03_planning_model_and_issue_rules.md",
+      "filename": "03_planning_model_and_issue_rules.md",
+      "kind": "reference",
+      "role": "planning-model-and-issue-rules",
+      "purpose": "Issue inventory requirements, internal model, labels, milestones, and issue body contract.",
+      "source": "generated",
+      "order": 3,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/04_github_v2_script_rules.md",
+      "filename": "04_github_v2_script_rules.md",
+      "kind": "reference",
+      "role": "github-v2-script-rules",
+      "purpose": "GitHub CLI, Projects v2, field, item, label, milestone, issue, and idempotency rules for script mode.",
+      "source": "generated",
+      "order": 4,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/05_output_modes.md",
+      "filename": "05_output_modes.md",
+      "kind": "reference",
+      "role": "output-modes",
+      "purpose": "Script, CSV, and JSON output specifications.",
+      "source": "generated",
+      "order": 5,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/06_construction_validation_and_emission.md",
+      "filename": "06_construction_validation_and_emission.md",
+      "kind": "reference",
+      "role": "construction-validation-and-emission",
+      "purpose": "Construction rules, validation checklist, and final emission policy.",
+      "source": "generated",
+      "order": 6,
+      "included_in_final": true,
+      "depends_on": [],
+      "content_type": "text/markdown"
+    },
+    {
+      "path": "github-project-board-architect/final_system_prompt.md",
+      "filename": "final_system_prompt.md",
+      "kind": "assembled-output",
+      "role": "final-system-prompt",
+      "purpose": "Authoritative merged system prompt preserved from the provided source.",
+      "source": "derived",
+      "order": null,
+      "included_in_final": false,
+      "depends_on": [
+        "github-project-board-architect/01_role_and_objective.md",
+        "github-project-board-architect/02_operating_mode_and_inputs.md",
+        "github-project-board-architect/03_planning_model_and_issue_rules.md",
+        "github-project-board-architect/04_github_v2_script_rules.md",
+        "github-project-board-architect/05_output_modes.md",
+        "github-project-board-architect/06_construction_validation_and_emission.md"
+      ],
+      "content_type": "text/markdown"
+    }
+  ],
+  "notes": [
+    "final_system_prompt.md preserves the provided source prompt as the authoritative assembled output.",
+    "Reference files split the prompt by stable semantic sections for reuse and maintenance."
+  ]
+}

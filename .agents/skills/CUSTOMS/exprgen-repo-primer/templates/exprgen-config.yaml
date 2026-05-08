@@ -1,0 +1,39 @@
+# Proposed .exprgen.yaml
+# Generated after scanning the repository. Review paths before committing.
+
+allowedRoots:
+  - .
+
+recipes:
+  docs:
+    description: Search project documentation
+    triggers:
+      - documentation
+      - guides
+    paths:
+      - docs
+    extensions:
+      - md
+
+  source:
+    description: Search application source code
+    triggers:
+      - src
+      - code
+    paths:
+      - src
+    extensions:
+      - ts
+      - js
+
+  tests:
+    description: Search test files
+    triggers:
+      - test
+      - specs
+    paths:
+      - test
+      - tests
+    extensions:
+      - ts
+      - js
