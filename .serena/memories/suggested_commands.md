@@ -2,9 +2,10 @@
 - Create venv: `python3 -m venv .venv && source .venv/bin/activate`
 - Or with uv: `uv venv && source .venv/bin/activate`
 - Install editable package with dev deps: `uv pip install -e '.[dev]'`
-- Run tests: `pytest -q`
-- Run a focused test file: `pytest -q tests/test_analyzer.py`
-- Run smoke test similar to CI: `uv run --isolated --no-project --with dist/*.whl --with pytest pytest -q tests/smoke_test.py`
+- Run default tests: `uv run --extra test pytest -q` (skips slow package-install smoke tests by default).
+- Run fast unit/regression tests only: `uv run --extra test pytest -q -m 'not integration and not packaging'`.
+- Run a focused test file: `uv run --extra test pytest -q tests/test_analyzer.py`.
+- Run release-gate package smoke tests after building distributions: `uv run --extra test pytest --run-packaging -q -m packaging`.
 - Build package: `uv build`
 - Run CLI locally: `lmstxt <github_repo_url>`
 - Run MCP server: `lmstxt-mcp`
