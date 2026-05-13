@@ -10,11 +10,7 @@
     "logs:tail": "tail -f .logs/hypergraph/app-current.ndjson",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
-    "db:studio": "drizzle-kit studio",
-    "code": "pnpm code:src",
-    "code:src": "codefetch -t 5 --include-dir app,components,lib,types -o hypergraph.md",
-    "scri": "bash scripts/codefetch/codefetch_skill.sh ",
-    "scrip": "bash scripts/codefetch/codefetch_skills_pattern.sh"
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@hyperbrowser/sdk": "^0.83.3",
@@ -37,7 +33,6 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "codefetch": "^2.2.0",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "react-grab": "^0.1.17",
