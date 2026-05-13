@@ -17,21 +17,51 @@ Use this CLI-first toolkit to produce LLM-friendly documentation bundles (`llms.
 
 ## Prerequisites
 
-- Python 3.10 or later
-- LM Studio server available locally (Developer tab → **Start Server**) or the CLI (`lms server start --port 1234`)
-- GitHub API token in `GITHUB_ACCESS_TOKEN` or `GH_TOKEN`
-- Optional: [`llms_txt`](https://pypi.org/project/llms-txt/) when you want to produce `llms-ctx.txt`
+Install the tools for the part of the project you want to use:
+
+| Area | Required tools |
+|------|----------------|
+| CLI and MCP server | Python 3.10 or later, `pip` or `uv` |
+| LM Studio generation | LM Studio desktop app or `lms` CLI, with the local server running |
+| GitHub repository access | `GITHUB_ACCESS_TOKEN` or `GH_TOKEN` for private repos or higher API limits |
+| HyperGraph UI | Node.js, npm, and the UI dependencies under `hypergraph/` |
+| Documentation site | pnpm, using the version pinned by `packageManager` in `package.json` |
 
 > [!WARNING]
-> Install dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
+> Install Python dependencies inside a virtual environment to avoid PEP 668 “externally managed environment” errors.
 
 ## Install
 
-### Create a virtual environment
+Use the install helper for repeatable setup:
+
+```bash
+scripts/install.sh --help
+```
+
+Common setup flows:
+
+```bash
+# Released CLI and MCP server from PyPI
+scripts/install.sh --pypi --uv
+
+# Source checkout for development
+scripts/install.sh --dev --uv
+
+# Everything needed for local development, UI, docs, and ctx verification
+scripts/install.sh --all --uv
+```
+
+Choose the manual install path below when you need to run each step yourself.
+
+### Install the CLI from PyPI
+
+Use this when you only need the released `lmstxt` CLI and `lmstxt-mcp` server:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install lms-llmsTxt
 ```
 
 Using uv:
@@ -39,24 +69,80 @@ Using uv:
 ```bash
 uv venv
 source .venv/bin/activate
+uv pip install lms-llmsTxt
 ```
 
-### Install the package with developer extras
+Verify the console scripts are available:
 
 ```bash
-pip install -e '.[dev]'
+lmstxt --help
+lmstxt-mcp --help
+```
+
+### Install from source for development
+
+Use this when working on the repository, running tests, or using unreleased code:
+
+```bash
+git clone https://github.com/AcidicSoil/lms-llmsTxt.git
+cd lms-llmsTxt
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
 ```
 
 Using uv:
 
 ```bash
-uv pip install -e '.[dev]'
+git clone https://github.com/AcidicSoil/lms-llmsTxt.git
+cd lms-llmsTxt
+uv venv
+source .venv/bin/activate
+uv sync --extra dev
 ```
 
-Installing the editable package exposes the `lmstxt` CLI and the `lmstxt-mcp` server.
+The Python project dependencies are declared in `pyproject.toml`. The runtime install includes DSPy, LiteLLM, LM Studio SDK, `requests`, `llms-txt`, `llm-ctx`, FastMCP, Pydantic, and Pydantic Settings. The `dev` extra adds pytest.
 
-> [!TIP]
-> Keep the virtual environment active while running the CLI or tests so the SDK-based unload logic can import `lmstudio`.
+### Install HyperGraph UI dependencies
+
+Use this when running `lmstxt --ui`, `lmstxt --generate-graph --ui`, or the standalone HyperGraph development server:
+
+```bash
+npm --prefix hypergraph install
+```
+
+Then start the UI directly when needed:
+
+```bash
+npm run ui:dev
+```
+
+The root `ui:*` scripts delegate into `hypergraph/`, whose dependencies are listed in `hypergraph/package.json`.
+
+### Install documentation-site dependencies
+
+Use this when editing or building the Rspress documentation site:
+
+```bash
+corepack enable
+pnpm install
+pnpm run docs:dev
+```
+
+Build the static docs site with:
+
+```bash
+pnpm run docs:build
+```
+
+### Optional context artifact support
+
+`llms-ctx.txt` generation is enabled by setting `ENABLE_CTX=1`. The source install already includes the `llms-txt` and `llm-ctx` packages declared in `pyproject.toml`; if you are debugging a minimal or custom environment, confirm they are installed before enabling context output:
+
+```bash
+python -m pip show llms-txt llm-ctx
+```
 
 ## Environment file
 
@@ -185,10 +271,15 @@ If you run the MCP server, the same env vars must be present in the process envi
 
 ## Graph visualizer (HyperGraph)
 
-Use the built-in HyperGraph UI to inspect and generate `repo.graph.json` artifacts.
+Use the built-in HyperGraph UI to inspect and generate `repo.graph.json` artifacts. Install the UI dependencies first:
 
 ```bash
 npm --prefix hypergraph install
+```
+
+Start the UI directly with:
+
+```bash
 npm run ui:dev
 ```
 

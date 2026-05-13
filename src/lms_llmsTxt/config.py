@@ -112,7 +112,7 @@ class AppConfig:
     semantic_graph_timeout_seconds: int = 20
     semantic_graph_max_output_tokens: int = 512
     semantic_graph_streaming: bool = True
-    semantic_graph_max_source_chars: int = 4_000
+    semantic_graph_max_source_chars: int = 16_000
     semantic_graph_max_excerpt_chars: int = 800
     semantic_graph_max_subsystems: int = 4
     lm_unload_timeout_seconds: int = field(

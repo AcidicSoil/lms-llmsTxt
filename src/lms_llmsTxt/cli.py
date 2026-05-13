@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import signal
+import socket
 import subprocess
 import sys
 import time
@@ -37,6 +38,8 @@ class UIRuntimeStatus:
     ready: bool = False
     pid: int | None = None
     log_path: str | None = None
+    ui_base_url: str | None = None
+    note: str | None = None
     error: str | None = None
 
 
@@ -114,6 +117,56 @@ def _ui_host_port(ui_base_url: str) -> tuple[str, int]:
     return host, 443 if parsed.scheme == "https" else 80
 
 
+def _ui_base_url_with_port(ui_base_url: str, port: int) -> str:
+    parsed = urlparse(ui_base_url)
+    netloc = parsed.hostname or "localhost"
+    if ":" in netloc and not netloc.startswith("["):
+        netloc = f"[{netloc}]"
+    if parsed.username or parsed.password:
+        auth = ""
+        if parsed.username:
+            auth += parsed.username
+        if parsed.password:
+            auth += f":{parsed.password}"
+        netloc = f"{auth}@{netloc}"
+    netloc = f"{netloc}:{port}"
+    return parsed._replace(netloc=netloc).geturl().rstrip("/")
+
+
+def _port_available_for_dev_server(port: int) -> bool:
+    families = [socket.AF_INET]
+    if socket.has_ipv6:
+        families.append(socket.AF_INET6)
+
+    for family in families:
+        sock = socket.socket(family, socket.SOCK_STREAM)
+        try:
+            sock.bind(("::" if family == socket.AF_INET6 else "0.0.0.0", port))
+        except OSError:
+            return False
+        finally:
+            sock.close()
+    return True
+
+
+def _select_ui_base_url_for_start(ui_base_url: str, *, max_extra_ports: int = 20) -> tuple[str, str | None]:
+    _host, requested_port = _ui_host_port(ui_base_url)
+    if _port_available_for_dev_server(requested_port):
+        return ui_base_url.rstrip("/"), None
+
+    for port in range(requested_port + 1, requested_port + max(1, max_extra_ports) + 1):
+        if _port_available_for_dev_server(port):
+            selected_url = _ui_base_url_with_port(ui_base_url, port)
+            return selected_url, (
+                f"Requested UI port {requested_port} was already in use; started HyperGraph on port {port} instead."
+            )
+
+    return ui_base_url.rstrip("/"), (
+        f"Requested UI port {requested_port} is already in use and no free port was found in "
+        f"{requested_port + 1}-{requested_port + max(1, max_extra_ports)}."
+    )
+
+
 def _ui_dev_log_path() -> Path:
     log_dir = _default_ui_log_dir()
     log_dir.mkdir(parents=True, exist_ok=True)
@@ -159,6 +212,70 @@ def _read_ui_process_metadata() -> dict[str, object] | None:
     except Exception:
         return None
     return data if isinstance(data, dict) else None
+
+
+def _remove_ui_process_metadata() -> None:
+    _ui_process_metadata_path().unlink(missing_ok=True)
+
+
+def _tracked_ui_base_url_from_metadata(data: dict[str, object] | None) -> str | None:
+    if not data:
+        return None
+    raw = data.get("ui_base_url")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip().rstrip("/")
+    port = data.get("port")
+    try:
+        return f"http://localhost:{int(port)}" if port else None
+    except Exception:
+        return None
+
+
+def _tracked_ui_pid_from_metadata(data: dict[str, object] | None) -> int | None:
+    if not data:
+        return None
+    try:
+        pid = int(data.get("pid", 0))
+    except Exception:
+        return None
+    return pid if pid > 0 else None
+
+
+def _reuse_tracked_hypergraph_ui() -> UIRuntimeStatus | None:
+    data = _read_ui_process_metadata()
+    tracked_url = _tracked_ui_base_url_from_metadata(data)
+    tracked_pid = _tracked_ui_pid_from_metadata(data)
+    if not tracked_url or not tracked_pid:
+        return None
+
+    if not _process_exists(tracked_pid):
+        _remove_ui_process_metadata()
+        return None
+
+    if not _metadata_matches_lmstxt_ui_process(tracked_pid):
+        return None
+
+    if _probe_ui_reachable(tracked_url, timeout_seconds=1.0):
+        return UIRuntimeStatus(
+            reused_existing=True,
+            ready=True,
+            pid=tracked_pid,
+            ui_base_url=tracked_url,
+            note=f"Reused tracked HyperGraph UI process (pid={tracked_pid}).",
+        )
+
+    stop_status = stop_tracked_hypergraph_ui(timeout_seconds=5.0)
+    if stop_status.stopped or stop_status.stale_metadata_removed:
+        return None
+
+    return UIRuntimeStatus(
+        pid=tracked_pid,
+        ui_base_url=tracked_url,
+        error=(
+            "Tracked HyperGraph UI process was not reachable and could not be cleaned up: "
+            f"{stop_status.error or 'unknown cleanup failure'}"
+        ),
+    )
 
 
 def _process_exists(pid: int) -> bool:
@@ -307,16 +424,26 @@ def ensure_hypergraph_ui_running(
     *,
     startup_timeout_seconds: int = 45,
 ) -> UIRuntimeStatus:
-    if _probe_ui_reachable(ui_base_url, timeout_seconds=1.0):
-        return UIRuntimeStatus(reused_existing=True, ready=True)
+    requested_base_url = ui_base_url.rstrip("/")
+    if _probe_ui_reachable(requested_base_url, timeout_seconds=1.0):
+        return UIRuntimeStatus(reused_existing=True, ready=True, ui_base_url=requested_base_url)
 
-    status = UIRuntimeStatus()
+    tracked_status = _reuse_tracked_hypergraph_ui()
+    if tracked_status is not None:
+        return tracked_status
+
+    start_base_url, port_note = _select_ui_base_url_for_start(requested_base_url)
+    status = UIRuntimeStatus(ui_base_url=start_base_url, note=port_note)
+    if port_note and start_base_url == requested_base_url:
+        status.error = port_note
+        return status
+
     try:
-        proc, log_path = _spawn_hypergraph_dev_server(ui_base_url)
+        proc, log_path = _spawn_hypergraph_dev_server(start_base_url)
         status.started_process = True
         status.pid = proc.pid
         status.log_path = str(log_path)
-        _write_ui_process_metadata(pid=proc.pid, ui_base_url=ui_base_url, log_path=log_path)
+        _write_ui_process_metadata(pid=proc.pid, ui_base_url=start_base_url, log_path=log_path)
     except FileNotFoundError as exc:
         status.error = (
             f"Failed to start HyperGraph UI ({exc}). Ensure Node.js/npm is installed, "
@@ -327,7 +454,7 @@ def ensure_hypergraph_ui_running(
         status.error = f"Failed to start HyperGraph UI: {exc}"
         return status
 
-    ready = _wait_for_ui_ready(ui_base_url, timeout_seconds=startup_timeout_seconds)
+    ready = _wait_for_ui_ready(start_base_url, timeout_seconds=startup_timeout_seconds)
     status.ready = ready
     if ready:
         return status
@@ -343,7 +470,7 @@ def ensure_hypergraph_ui_running(
             f"See log: {status.log_path}"
         )
     else:
-        host, port = _ui_host_port(ui_base_url)
+        host, port = _ui_host_port(start_base_url)
         status.error = (
             "Timed out waiting for HyperGraph UI to start "
             f"at {host}:{port} after {startup_timeout_seconds}s. "
@@ -556,13 +683,18 @@ def main(argv: list[str] | None = None) -> int:
             args.ui_base_url,
             startup_timeout_seconds=int(args.ui_start_timeout_seconds),
         )
+        effective_ui_base_url = (ui_status.ui_base_url or args.ui_base_url).rstrip("/")
         summary = "HyperGraph UI:"
-        summary += f"\n  - {args.ui_base_url.rstrip('/')}"
+        summary += f"\n  - {effective_ui_base_url}"
         if ui_status.reused_existing:
             summary += "\nUI status:"
+            if ui_status.note:
+                summary += f"\n  - {ui_status.note}"
             summary += "\n  - already running"
         elif ui_status.started_process:
             summary += "\nUI status:"
+            if ui_status.note:
+                summary += f"\n  - {ui_status.note}"
             summary += f"\n  - started background dev server (pid={ui_status.pid})"
             if ui_status.log_path:
                 summary += f"\n  - log: {ui_status.log_path}"
@@ -576,7 +708,7 @@ def main(argv: list[str] | None = None) -> int:
 
         if not args.ui_no_open:
             if ui_status.ready:
-                opened = open_graph_viewer_in_browser(args.ui_base_url.rstrip('/'))
+                opened = open_graph_viewer_in_browser(effective_ui_base_url)
                 summary += "\nBrowser:"
                 summary += "\n  - opened" if opened else "\n  - failed to open automatically (open the URL manually)"
             else:
@@ -633,19 +765,24 @@ def main(argv: list[str] | None = None) -> int:
     if args.ui:
         if not artifacts.graph_json_path:
             parser.error("--ui was requested, but no repo graph artifact was generated.")
-        viewer_url = build_graph_viewer_url(artifacts.graph_json_path, ui_base_url=args.ui_base_url)
         ui_status = ensure_hypergraph_ui_running(
             args.ui_base_url,
             startup_timeout_seconds=int(args.ui_start_timeout_seconds),
         )
+        effective_ui_base_url = (ui_status.ui_base_url or args.ui_base_url).rstrip("/")
+        viewer_url = build_graph_viewer_url(artifacts.graph_json_path, ui_base_url=effective_ui_base_url)
 
         summary += "\nGraph viewer:"
         summary += f"\n  - {viewer_url}"
         if ui_status.reused_existing:
             summary += "\nUI status:"
+            if ui_status.note:
+                summary += f"\n  - {ui_status.note}"
             summary += "\n  - already running"
         elif ui_status.started_process:
             summary += "\nUI status:"
+            if ui_status.note:
+                summary += f"\n  - {ui_status.note}"
             summary += f"\n  - started background dev server (pid={ui_status.pid})"
             if ui_status.log_path:
                 summary += f"\n  - log: {ui_status.log_path}"

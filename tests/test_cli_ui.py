@@ -244,6 +244,7 @@ def test_ensure_hypergraph_ui_running_spawns_with_requested_base_url(monkeypatch
             return None
 
     monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(cli, "_select_ui_base_url_for_start", lambda url: (url, None))
 
     def fake_spawn(ui_base_url: str):
         spawned.append(ui_base_url)
@@ -258,6 +259,137 @@ def test_ensure_hypergraph_ui_running_spawns_with_requested_base_url(monkeypatch
     assert status.started_process is True
     assert status.ready is True
     assert status.pid == 999
+
+
+def test_ensure_hypergraph_ui_running_uses_alternate_port_when_requested_port_is_busy(monkeypatch: pytest.MonkeyPatch) -> None:
+    spawned: list[str] = []
+
+    class FakeProcess:
+        pid = 1001
+
+        def poll(self):
+            return None
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(
+        cli,
+        "_select_ui_base_url_for_start",
+        lambda url: (
+            "http://localhost:3001",
+            "Requested UI port 3000 was already in use; started HyperGraph on port 3001 instead.",
+        ),
+    )
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), Path("/tmp/hypergraph-dev.log")
+
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert spawned == ["http://localhost:3001"]
+    assert status.ui_base_url == "http://localhost:3001"
+    assert status.note == "Requested UI port 3000 was already in use; started HyperGraph on port 3001 instead."
+    assert status.started_process is True
+    assert status.ready is True
+
+
+def test_ensure_hypergraph_ui_running_uses_next_free_port_when_requested_port_is_busy(monkeypatch: pytest.MonkeyPatch) -> None:
+    spawned: list[str] = []
+
+    class FakeProcess:
+        pid = 1001
+
+        def poll(self):
+            return None
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(
+        cli,
+        "_port_available_for_dev_server",
+        lambda port: port == 3001,
+    )
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), Path("/tmp/hypergraph-dev.log")
+
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert spawned == ["http://localhost:3001"]
+    assert status.started_process is True
+    assert status.ready is True
+    assert status.ui_base_url == "http://localhost:3001"
+    assert status.note == "Requested UI port 3000 was already in use; started HyperGraph on port 3001 instead."
+
+
+def test_ensure_hypergraph_ui_running_reuses_healthy_tracked_process(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=2020,
+        ui_base_url="http://localhost:3002",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+
+    def fake_probe(ui_base_url: str, *args, **kwargs):
+        return ui_base_url.rstrip("/") == "http://localhost:3002"
+
+    spawned: list[str] = []
+    monkeypatch.setattr(cli, "_probe_ui_reachable", fake_probe)
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", lambda ui_base_url: spawned.append(ui_base_url))
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert spawned == []
+    assert status.reused_existing is True
+    assert status.ready is True
+    assert status.pid == 2020
+    assert status.ui_base_url == "http://localhost:3002"
+    assert "Reused tracked HyperGraph UI" in (status.note or "")
+
+
+def test_ensure_hypergraph_ui_running_stops_unhealthy_tracked_process_before_spawning(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=3030,
+        ui_base_url="http://localhost:3002",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+
+    class FakeProcess:
+        pid = 4040
+
+        def poll(self):
+            return None
+
+    stopped: list[float] = []
+    spawned: list[str] = []
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: pid == 3030)
+    monkeypatch.setattr(cli, "_metadata_matches_lmstxt_ui_process", lambda pid: True)
+    monkeypatch.setattr(cli, "stop_tracked_hypergraph_ui", lambda timeout_seconds=5.0: stopped.append(timeout_seconds) or cli.UIStopStatus(stopped=True, pid=3030))
+    monkeypatch.setattr(cli, "_port_available_for_dev_server", lambda port: port == 3000)
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), Path("/tmp/hypergraph-dev.log")
+
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert stopped == [5.0]
+    assert spawned == ["http://localhost:3000"]
+    assert status.started_process is True
+    assert status.ready is True
+    assert status.pid == 4040
 
 
 def test_probe_ui_reachable_accepts_hypergraph_health(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -348,6 +480,7 @@ def test_ensure_hypergraph_ui_running_does_not_reuse_wrong_service(monkeypatch: 
         return FakeProcess(), Path("/tmp/hypergraph-dev.log")
 
     monkeypatch.setattr(cli, "_probe_ui_reachable", fake_probe)
+    monkeypatch.setattr(cli, "_port_available_for_dev_server", lambda port: True)
     monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
     monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
 
@@ -383,6 +516,77 @@ def test_ensure_hypergraph_ui_running_writes_process_metadata(monkeypatch: pytes
     assert metadata["port"] == 3456
     assert metadata["ui_base_url"] == "http://localhost:3456"
     assert metadata["started_by"] == "lmstxt --ui"
+
+
+def test_ensure_hypergraph_ui_running_reuses_healthy_tracked_process(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=5252,
+        ui_base_url="http://localhost:3007",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+    probed: list[str] = []
+
+    def fake_probe(ui_base_url: str, *args, **kwargs):
+        probed.append(ui_base_url)
+        return ui_base_url == "http://localhost:3007"
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", fake_probe)
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: True)
+    monkeypatch.setattr(cli, "_metadata_matches_lmstxt_ui_process", lambda pid: True)
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", lambda *args, **kwargs: (_ for _ in ()).throw(AssertionError("should reuse tracked UI")))
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert status.reused_existing is True
+    assert status.ready is True
+    assert status.pid == 5252
+    assert status.ui_base_url == "http://localhost:3007"
+    assert status.note == "Reused tracked HyperGraph UI process (pid=5252)."
+    assert probed == ["http://localhost:3000", "http://localhost:3007"]
+
+
+def test_ensure_hypergraph_ui_running_stops_unreachable_tracked_process_before_starting(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(cli, "_default_ui_log_dir", lambda: tmp_path / "logs")
+    cli._write_ui_process_metadata(
+        pid=5353,
+        ui_base_url="http://localhost:3007",
+        log_path=tmp_path / "logs" / "hypergraph-dev.log",
+    )
+    spawned: list[str] = []
+    stopped: list[bool] = []
+
+    class FakeProcess:
+        pid = 5454
+
+        def poll(self):
+            return None
+
+    monkeypatch.setattr(cli, "_probe_ui_reachable", lambda *args, **kwargs: False)
+    monkeypatch.setattr(cli, "_process_exists", lambda pid: True)
+    monkeypatch.setattr(cli, "_metadata_matches_lmstxt_ui_process", lambda pid: True)
+    monkeypatch.setattr(cli, "_port_available_for_dev_server", lambda port: True)
+
+    def fake_stop(timeout_seconds: float = 5.0):
+        stopped.append(True)
+        cli._remove_ui_process_metadata()
+        return cli.UIStopStatus(stopped=True, pid=5353)
+
+    def fake_spawn(ui_base_url: str):
+        spawned.append(ui_base_url)
+        return FakeProcess(), tmp_path / "logs" / "hypergraph-dev-new.log"
+
+    monkeypatch.setattr(cli, "stop_tracked_hypergraph_ui", fake_stop)
+    monkeypatch.setattr(cli, "_spawn_hypergraph_dev_server", fake_spawn)
+    monkeypatch.setattr(cli, "_wait_for_ui_ready", lambda *args, **kwargs: True)
+
+    status = cli.ensure_hypergraph_ui_running("http://localhost:3000")
+
+    assert stopped == [True]
+    assert spawned == ["http://localhost:3000"]
+    assert status.started_process is True
+    assert status.ready is True
+    assert status.pid == 5454
 
 
 def test_stop_tracked_hypergraph_ui_stops_recorded_process(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:

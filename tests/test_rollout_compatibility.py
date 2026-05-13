@@ -103,5 +103,5 @@ def test_semantic_graph_internal_defaults_are_bounded_without_env(tmp_path, monk
 
     assert config.semantic_graph_timeout_seconds == 20
     assert config.semantic_graph_max_output_tokens == 512
-    assert config.semantic_graph_max_source_chars == 4000
+    assert config.semantic_graph_max_source_chars == 16000
     assert config.semantic_graph_max_subsystems == 4

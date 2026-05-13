@@ -38,16 +38,30 @@ export function normalizeCliproxyBaseUrl(raw: string): string {
 }
 
 export function getLLMProxyConfig(): LLMProxyConfig {
-  const baseUrl = process.env.CLIPROXY_BASE_URL?.trim();
+  const baseUrl =
+    process.env.CLIPROXY_BASE_URL?.trim() ||
+    process.env.HYPERGRAPH_OPENAI_BASE_URL?.trim() ||
+    process.env.OPENAI_BASE_URL?.trim() ||
+    process.env.LMSTUDIO_BASE_URL?.trim();
   if (!baseUrl) {
     throw new LLMConfigError(
-      "CLIPROXY_BASE_URL is not set. Point it to your CLIProxyAPI OpenAI-compatible /v1 endpoint."
+      "No OpenAI-compatible model endpoint is configured. Set CLIPROXY_BASE_URL, HYPERGRAPH_OPENAI_BASE_URL, OPENAI_BASE_URL, or LMSTUDIO_BASE_URL."
     );
   }
 
   return {
     baseUrl: normalizeCliproxyBaseUrl(baseUrl),
-    apiKey: process.env.CLIPROXY_API_KEY?.trim() || undefined,
-    defaultModel: process.env.DEFAULT_MODEL?.trim() || undefined,
+    apiKey:
+      process.env.CLIPROXY_API_KEY?.trim() ||
+      process.env.HYPERGRAPH_OPENAI_API_KEY?.trim() ||
+      process.env.OPENAI_API_KEY?.trim() ||
+      process.env.LMSTUDIO_API_KEY?.trim() ||
+      undefined,
+    defaultModel:
+      process.env.DEFAULT_MODEL?.trim() ||
+      process.env.HYPERGRAPH_OPENAI_MODEL?.trim() ||
+      process.env.OPENAI_MODEL?.trim() ||
+      process.env.LMSTUDIO_MODEL?.trim() ||
+      undefined,
   };
 }
