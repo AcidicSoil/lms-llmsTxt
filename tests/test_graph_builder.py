@@ -161,6 +161,135 @@ def test_graph_validation_rejects_repeated_generic_section_template():
 
 
 
+def test_repo_digest_groups_varied_nested_workspace_shapes_deeply():
+    from lms_llmsTxt.models import RepositoryMaterial
+    from lms_llmsTxt.repo_digest import build_repo_digest
+
+    material = RepositoryMaterial(
+        repo_url="https://github.com/example/workspace",
+        file_tree="\n".join(
+            [
+                "services/api/src/http/routes.py",
+                "services/api/src/domain/orders.py",
+                "packages/ui/src/components/Button.tsx",
+                "packages/ui/src/theme/tokens.ts",
+                "crates/engine/src/runtime/mod.rs",
+                "tools/converter/source/adapters/claude.ts",
+                "plugins/editor/app/commands/register.ts",
+                "extensions/vscode/src/activation.ts",
+                "examples/quickstart/src/main.py",
+            ]
+        ),
+        readme_content="# Workspace\n\nNested services, packages, crates, tools, plugins, extensions, and examples.",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    digest = build_repo_digest(material, topic="Workspace")
+    subsystem_names = {subsystem["name"] for subsystem in digest.subsystems}
+
+    assert "services/api/src/http" in subsystem_names
+    assert "services/api/src/domain" in subsystem_names
+    assert "packages/ui/src/components" in subsystem_names
+    assert "packages/ui/src/theme" in subsystem_names
+    assert "crates/engine/src/runtime" in subsystem_names
+    assert "tools/converter/source/adapters" in subsystem_names
+    assert "plugins/editor/app/commands" in subsystem_names
+    assert "extensions/vscode/src/activation.ts" not in subsystem_names
+    assert "extensions/vscode/src" in subsystem_names or "extensions/vscode" in subsystem_names
+    assert "examples/quickstart/src" in subsystem_names or "examples/quickstart" in subsystem_names
+
+
+
+def test_repo_digest_groups_apps_nested_runtime_domains_deeply():
+    from lms_llmsTxt.models import RepositoryMaterial
+    from lms_llmsTxt.repo_digest import build_repo_digest
+
+    material = RepositoryMaterial(
+        repo_url="https://github.com/example/polyglot",
+        file_tree="\n".join(
+            [
+                "apps/planning-runtime/app/api/main.py",
+                "apps/planning-runtime/app/api/routes.py",
+                "apps/planning-runtime/app/domain/models.py",
+                "apps/planning-runtime/app/orchestration/graph.py",
+                "apps/planning-runtime/app/services/planner.py",
+                "apps/planning-runtime/app/storage/db.py",
+                "apps/toolkit-converter/src/cli/index.ts",
+                "apps/toolkit-converter/src/discovery/inventory.ts",
+                "apps/toolkit-converter/src/emitters/codex/agent-emitter.ts",
+                "apps/toolkit-converter/src/source-adapters/claude-code/skills-parser.ts",
+                "apps/toolkit-converter/src/validation/runner.ts",
+            ]
+        ),
+        readme_content="# Polyglot\n\nA planning runtime and toolkit converter workspace.",
+        package_files=(
+            "=== selected evidence: apps/planning-runtime/app/orchestration/graph.py ===\n"
+            "The planning runtime orchestration graph wires nodes and states for policy-driven planning flows.\n\n"
+            "=== selected evidence: apps/toolkit-converter/src/source-adapters/claude-code/skills-parser.ts ===\n"
+            "The toolkit converter parses Claude Code skills and lowers them into Codex-compatible assets."
+        ),
+        default_branch="main",
+        is_private=False,
+    )
+
+    digest = build_repo_digest(material, topic="Polyglot Workspace")
+    subsystem_names = {subsystem["name"] for subsystem in digest.subsystems}
+
+    assert "apps/planning-runtime/app/api" in subsystem_names
+    assert "apps/planning-runtime/app/domain" in subsystem_names
+    assert "apps/planning-runtime/app/orchestration" in subsystem_names
+    assert "apps/toolkit-converter/src/cli" in subsystem_names
+    assert "apps/toolkit-converter/src/source-adapters" in subsystem_names
+
+    graph = build_repo_graph(digest)
+    evidence_paths = {evidence.path for node in graph.nodes for evidence in node.evidence}
+
+    assert "apps/planning-runtime/app/orchestration/graph.py" in evidence_paths
+    assert "apps/toolkit-converter/src/source-adapters/claude-code/skills-parser.ts" in evidence_paths
+
+
+
+def test_repo_digest_groups_arbitrary_nested_project_roots():
+    from lms_llmsTxt.models import RepositoryMaterial
+    from lms_llmsTxt.repo_digest import build_repo_digest
+
+    material = RepositoryMaterial(
+        repo_url="https://github.com/example/nested",
+        file_tree="\n".join(
+            [
+                "tools/converter/package.json",
+                "tools/converter/src/cli/index.ts",
+                "tools/converter/src/mapping/mapper.ts",
+                "tools/converter/src/validation/runner.ts",
+                "workspaces/runtime/pyproject.toml",
+                "workspaces/runtime/app/api/main.py",
+                "workspaces/runtime/app/domain/models.py",
+                "vendor/embedded-engine/Cargo.toml",
+                "vendor/embedded-engine/src/scheduler/mod.rs",
+                "vendor/embedded-engine/src/storage/lib.rs",
+            ]
+        ),
+        readme_content="# Nested\n\nMultiple nested projects in mixed containers.",
+        package_files="",
+        default_branch="main",
+        is_private=False,
+    )
+
+    digest = build_repo_digest(material, topic="Nested Workspace")
+    subsystem_names = {subsystem["name"] for subsystem in digest.subsystems}
+
+    assert "tools/converter/src/cli" in subsystem_names
+    assert "tools/converter/src/mapping" in subsystem_names
+    assert "tools/converter/src/validation" in subsystem_names
+    assert "workspaces/runtime/app/api" in subsystem_names
+    assert "workspaces/runtime/app/domain" in subsystem_names
+    assert "vendor/embedded-engine/src/scheduler" in subsystem_names
+    assert "vendor/embedded-engine/src/storage" in subsystem_names
+
+
+
 def test_polyglot_graph_selection_keeps_nested_project_roots():
     subsystems = [
         {

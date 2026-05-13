@@ -61,6 +61,109 @@ class EvidenceFetchLimits:
     max_path_depth: int = 8
 
 
+PROJECT_MANIFEST_FILENAMES = {
+    "package.json",
+    "pyproject.toml",
+    "setup.py",
+    "setup.cfg",
+    "requirements.txt",
+    "go.mod",
+    "cargo.toml",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "composer.json",
+    "gemfile",
+    "mix.exs",
+}
+
+WORKSPACE_CONTAINER_DIRS = {
+    "apps",
+    "packages",
+    "services",
+    "crates",
+    "workspaces",
+    "projects",
+    "modules",
+    "tools",
+    "plugins",
+    "extensions",
+    "examples",
+    "libs",
+    "libraries",
+    "components",
+}
+
+SOURCE_LAYER_DIRS = {"src", "app", "lib", "source", "server", "client", "cmd", "pkg"}
+SUPPORT_LAYER_DIRS = {"tests", "test", "e2e", "docs", "doc", "examples", "public", "assets", "icons"}
+INDEX_FILENAMES = {"index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py", "mod.rs", "lib.rs"}
+
+
+def _path_parts(path: str) -> list[str]:
+    return [part for part in path.split("/") if part]
+
+
+def _path_dir(parts: list[str]) -> tuple[str, ...]:
+    return tuple(parts[:-1])
+
+
+def _project_root_candidates(paths: Iterable[str]) -> set[tuple[str, ...]]:
+    roots: set[tuple[str, ...]] = set()
+    for path in paths:
+        parts = _path_parts(path)
+        if len(parts) < 2:
+            continue
+        filename = parts[-1].lower()
+        if filename in PROJECT_MANIFEST_FILENAMES:
+            root = _path_dir(parts)
+            if root:
+                roots.add(root)
+        if len(parts) >= 3 and parts[0] in WORKSPACE_CONTAINER_DIRS:
+            roots.add(tuple(parts[:2]))
+    return roots
+
+
+def _longest_project_root(parts: list[str], roots: set[tuple[str, ...]]) -> tuple[str, ...]:
+    best: tuple[str, ...] = ()
+    for root in roots:
+        if len(root) <= len(best):
+            continue
+        if len(parts) > len(root) and tuple(parts[: len(root)]) == root:
+            best = root
+    return best
+
+
+def _subsystem_key_for_path(path: str, project_roots: set[tuple[str, ...]]) -> str:
+    parts = _path_parts(path)
+    if not parts:
+        return "root"
+
+    filename = parts[-1].lower()
+    root = _longest_project_root(parts, project_roots)
+    if root:
+        remaining = parts[len(root) :]
+        if not remaining:
+            return "/".join(root)
+        if len(remaining) == 1:
+            return "/".join(root)
+        layer = remaining[0]
+        if layer in SOURCE_LAYER_DIRS:
+            if len(remaining) >= 3:
+                return "/".join([*root, layer, remaining[1]])
+            return "/".join([*root, layer])
+        if layer in SUPPORT_LAYER_DIRS:
+            if len(remaining) >= 3:
+                return "/".join([*root, layer, remaining[1]])
+            return "/".join([*root, layer])
+        return "/".join([*root, layer])
+
+    if len(parts) >= 3 and parts[0] in {"src", "app", "lib", "packages", "electron"}:
+        return "/".join(parts[:3])
+    if len(parts) >= 3 and parts[0] in SUPPORT_LAYER_DIRS:
+        return "/".join(parts[:3])
+    return "/".join(parts[:2]) if len(parts) >= 2 else parts[0]
+
+
 def _language_from_path(path: str) -> str:
     if path.endswith(".py"):
         return "python"
@@ -339,26 +442,11 @@ def reduce_capsules(capsules: list[ChunkCapsule], topic: str = "Repository") -> 
     all_deps: set[str] = set()
     entry_points: list[str] = []
 
-    def subsystem_key(path: str) -> str:
-        parts = [part for part in path.split("/") if part]
-        if not parts:
-            return "root"
-        filename = parts[-1]
-        # Group source trees by the first meaningful feature/package directory, not just
-        # `src/components` or `src/lib`. Coarse buckets produce unreadable graph nodes.
-        if len(parts) >= 3 and parts[0] in {"src", "app", "lib", "packages", "electron"}:
-            if filename.lower() in {"index.ts", "index.tsx", "index.js", "index.jsx", "__init__.py"}:
-                return "/".join(parts[:2])
-            return "/".join(parts[:3])
-        if len(parts) >= 3 and parts[0] in {"tests", "test", "e2e"}:
-            return "/".join(parts[:3])
-        if len(parts) >= 3 and parts[0] in {"docs", "public", "assets", "icons"}:
-            return "/".join(parts[:3])
-        return "/".join(parts[:2]) if len(parts) >= 2 else parts[0]
+    project_roots = _project_root_candidates(cap.path for cap in capsules)
 
     for cap in capsules:
         parts = cap.path.split("/")
-        subsystem = subsystem_key(cap.path)
+        subsystem = _subsystem_key_for_path(cap.path, project_roots)
         by_subsystem.setdefault(subsystem, []).append(cap)
 
         lang = _language_from_path(cap.path)
