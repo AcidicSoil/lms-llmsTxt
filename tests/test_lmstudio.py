@@ -515,7 +515,7 @@ def test_generate_graph_auto_skips_dspy_enrichment_for_large_evidence(tmp_path, 
         repo_url=repo_url,
         file_tree="\n".join(f"src/file_{index}.py" for index in range(300)),
         readme_content="# Title\n\nSummary",
-        package_files="x" * 20_000,
+        package_files="x" * 40_000,
         default_branch="main",
         is_private=False,
     )
