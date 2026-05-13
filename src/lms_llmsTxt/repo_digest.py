@@ -116,7 +116,21 @@ def _path_priority(path: str, repo_digest: RepoDigest) -> tuple[float, str]:
     if any(token in lower for token in ("docs/", "guide", "tutorial", "example", "quickstart", "getting-started")):
         score += 60
         reasons.append("documentation")
-    if lower.endswith(("pyproject.toml", "package.json", "requirements.txt", "package-lock.json", "pnpm-lock.yaml")):
+    if lower.endswith((
+        "pyproject.toml",
+        "package.json",
+        "requirements.txt",
+        "package-lock.json",
+        "pnpm-lock.yaml",
+        "go.mod",
+        "cargo.toml",
+        "pom.xml",
+        "build.gradle",
+        "build.gradle.kts",
+        "composer.json",
+        "gemfile",
+        "mix.exs",
+    )):
         score += 55
         reasons.append("dependency-manifest")
     if lower.endswith(("/cli.py", "/app.py", "/main.py", "/__main__.py", "/index.ts", "/index.js")) or lower in {

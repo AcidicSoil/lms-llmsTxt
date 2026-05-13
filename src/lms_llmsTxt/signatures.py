@@ -137,22 +137,29 @@ class AnalyzeRepositoryFromDigest(dspy.Signature):
 
 
 class SynthesizeRepoGraphNodes(dspy.Signature):
-    """Rewrite repository graph node content into specific, evidence-grounded developer guidance.
+    """Synthesize one repository graph node into specific, evidence-grounded developer guidance.
 
-    Return JSON only: an array of objects with id, label, description, and content.
-    Each content value must be markdown with 2-4 concise paragraphs. Use concrete
-    mechanisms, APIs, files, components, or workflows from the node source excerpts.
-    Do not use generic phrases such as "explains the role", "nearby files depend",
-    "repository responsibility", or path-inventory prose. Evidence may appear at
-    the bottom, but the main body must be human-readable and unique to the node.
+    Return JSON only: an array with exactly one object containing id, label,
+    description, and content. The input contains a single node spec. Infer that
+    node independently from its own paths, excerpts, symbols, and relationship
+    context. Explain why linked nodes matter to this node; do not merely list
+    neighbor IDs.
+
+    The content value must be markdown with 2-4 concise, node-specific sections.
+    Section headings must be unique to this node's domain and must not repeat the
+    generic template headings "Related concepts", "Change risk", "Evidence",
+    "Inspect first", or "Implementation signals". Use concrete mechanisms, APIs,
+    files, components, commands, package boundaries, or workflows from the source
+    excerpts. Do not use generic phrases such as "explains the role", "nearby
+    files depend", "repository responsibility", or path-inventory prose.
     """
 
     repo_topic: str = dspy.InputField(desc="Repository or project name")
     repo_summary: str = dspy.InputField(desc="High-level repository summary")
     node_specs_json: str = dspy.InputField(
-        desc="JSON array of graph nodes with labels, paths, symbols, neighbors, and source excerpts"
+        desc="JSON array containing exactly one graph node with label, paths, symbols, relationship context, and source excerpts"
     )
 
     node_updates_json: str = dspy.OutputField(
-        desc="JSON array: [{id,label,description,content}] with specific non-generic markdown per node"
+        desc="JSON array with exactly one object: [{id,label,description,content}] using unique node-specific markdown headings"
     )

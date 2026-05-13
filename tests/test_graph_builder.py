@@ -114,8 +114,99 @@ def test_repo_graph_adds_evidence_backed_topology_and_node_variety():
     assert all(target in node_ids for node in graph.nodes for target in node.links)
     assert all("Related traversal" not in node.content for node in non_moc_nodes)
     assert all("This node is grounded in repository paths" not in node.content for node in non_moc_nodes)
-    assert any("Related concepts" in node.content for node in non_moc_nodes)
+    assert all("## Related concepts" not in node.content for node in non_moc_nodes)
+    assert all("## Inspect first" not in node.content for node in non_moc_nodes)
+    assert all("## Change risk" not in node.content for node in non_moc_nodes)
     assert any("[[" in node.content for node in non_moc_nodes if node.links)
+
+
+def test_graph_validation_rejects_repeated_generic_section_template():
+    graph = RepoSkillGraph(
+        topic="Example Repo",
+        nodes=[
+            RepoGraphNode(
+                id="moc",
+                label="Example Repo Map",
+                type="moc",
+                description="Repository overview",
+                content="# Example Repo\n\nA semantic overview of the repository.",
+                links=["templated-node"],
+            ),
+            RepoGraphNode(
+                id="templated-node",
+                label="Templated Node",
+                type="concept",
+                description="A node with repeated template sections.",
+                content=(
+                    "---\n"
+                    "title: Templated Node\n"
+                    "type: concept\n"
+                    "description: A node with repeated template sections.\n"
+                    "---\n\n"
+                    "# Templated Node\n\n"
+                    "## Inspect first\n\n"
+                    "This paragraph is long enough to look useful, but the repeated generic heading makes the graph feel templated rather than node-specific.\n\n"
+                    "## Related concepts\n\n"
+                    "This paragraph is also long enough to pass structure checks, but it keeps the same fixed section title used by every deterministic node.\n\n"
+                    "## Change risk\n\n"
+                    "This paragraph confirms the validator rejects the repeated header pattern that made generated graph nodes look identical."
+                ),
+                links=[],
+            ),
+        ],
+    )
+
+    with pytest.raises(ValueError, match="generic graph node section template"):
+        validate_semantic_graph(graph)
+
+
+
+def test_polyglot_graph_selection_keeps_nested_project_roots():
+    subsystems = [
+        {
+            "name": f"src/feature_{index}",
+            "paths": [f"src/feature_{index}/module_{part}.py" for part in range(8)],
+            "summary": "Large Python feature area",
+            "key_symbols": ["run_feature"],
+        }
+        for index in range(24)
+    ]
+    subsystems.extend(
+        [
+            {
+                "name": "packages/web",
+                "paths": ["packages/web/package.json", "packages/web/src/App.tsx"],
+                "summary": "Nested TypeScript web workspace",
+                "key_symbols": ["App"],
+            },
+            {
+                "name": "crates/engine",
+                "paths": ["crates/engine/Cargo.toml", "crates/engine/src/lib.rs"],
+                "summary": "Nested Rust engine crate",
+                "key_symbols": ["Engine"],
+            },
+        ]
+    )
+    digest = RepoDigest(
+        topic="Polyglot Repo",
+        architecture_summary="Python core with nested TypeScript and Rust workspaces",
+        primary_language="python",
+        subsystems=subsystems,
+        key_dependencies=[],
+        entry_points=[],
+        test_coverage_hint="no_tests_detected",
+        digest_id="polyglot",
+    )
+
+    graph = build_repo_graph(digest)
+    labels = {node.label for node in graph.nodes}
+    evidence_paths = {evidence.path for node in graph.nodes for evidence in node.evidence}
+
+    assert "Packages Web" in labels
+    assert "Crates Engine" in labels
+    assert "packages/web/package.json" in evidence_paths
+    assert "crates/engine/Cargo.toml" in evidence_paths
+
 
 
 def test_force_graph_uses_deduped_valid_edges_and_degree_sizing():

@@ -23,6 +23,14 @@ MAX_REPO_NODES = 20
 MAX_MOC_LINKS = 16
 MAX_NODE_LINKS = 5
 
+TEMPLATE_SECTION_HEADINGS = {
+    "inspect first",
+    "implementation signals",
+    "related concepts",
+    "change risk",
+    "evidence",
+}
+
 PROVENANCE_ONLY_PHRASES = (
     "best-effort name",
     "this node is grounded in repository paths",
@@ -47,11 +55,21 @@ def _contains_provenance_boilerplate(text: str) -> bool:
     return any(phrase in lowered for phrase in PROVENANCE_ONLY_PHRASES)
 
 
+def _template_heading_count(markdown: str) -> int:
+    headings = {
+        match.group(1).strip().lower()
+        for match in re.finditer(r"^##\s+(.+?)\s*$", markdown, flags=re.MULTILINE)
+    }
+    return len(headings & TEMPLATE_SECTION_HEADINGS)
+
+
 def validate_semantic_node(node: RepoGraphNode) -> None:
     if _contains_provenance_boilerplate(f"{node.description}\n{node.content}"):
         raise ValueError(f"Node {node.id} used provenance boilerplate instead of semantic synthesis")
 
     if node.type != "moc":
+        if _template_heading_count(node.content) >= 3:
+            raise ValueError(f"Node {node.id} reused the generic graph node section template")
         body_before_evidence = node.content.lower().split("## evidence", 1)[0]
         paragraphs = [
             part.strip()
@@ -361,27 +379,30 @@ def _content_for_subsystem(
     theme = _theme_from_paths(paths)
 
     if paths:
-        file_list = "\n".join(f"- `{path}`" for path in paths[:6])
         lead_file = paths[0]
+        file_sentence = ", ".join(f"`{path}`" for path in paths[:4])
     else:
-        file_list = "- Unknown; no representative file paths were available in the digest."
-        lead_file = "Unknown"
+        lead_file = "the highest-signal file in this area"
+        file_sentence = "the representative files for this area"
 
-    if key_symbols:
-        symbol_list = "\n".join(f"- `{symbol}`" for symbol in key_symbols[:8])
-    else:
-        symbol_list = "- No named symbols were extracted; inspect the files directly before editing."
-
+    symbol_sentence = (
+        ", ".join(f"`{symbol}`" for symbol in key_symbols[:6])
+        if key_symbols
+        else "the exported names, commands, or configuration keys visible in the cited files"
+    )
     related_sentence = _related_concept_sentence(related_links)
     developer_action = _developer_action(theme, concept_name)
     failure_mode = _failure_mode(theme, concept_name)
 
     if node_type == "gotcha":
-        role_heading = "Why this is risky"
+        first_heading = f"{concept_name} failure surface"
     elif node_type == "pattern":
-        role_heading = "Reusable pattern"
+        first_heading = f"{concept_name} reuse path"
     else:
-        role_heading = "What this owns"
+        first_heading = f"{concept_name} responsibility"
+
+    relationship_heading = f"How {concept_name} connects outward"
+    evidence_heading = f"Source anchors for {concept_name}"
 
     return (
         f"---\n"
@@ -390,19 +411,13 @@ def _content_for_subsystem(
         f"description: {description}\n"
         f"---\n\n"
         f"# {concept_name}\n\n"
-        f"## {role_heading}\n\n"
-        f"{description}\n\n"
-        f"{developer_action}\n\n"
-        f"## Inspect first\n\n"
-        f"Start with `{lead_file}`. Then check these nearby files before changing behavior:\n\n"
-        f"{file_list}\n\n"
-        f"## Implementation signals\n\n"
-        f"{symbol_list}\n\n"
-        f"## Related concepts\n\n"
-        f"{related_sentence}\n\n"
-        f"## Change risk\n\n"
+        f"## {first_heading}\n\n"
+        f"{description} {developer_action} Start with `{lead_file}` because it is the clearest anchor for this part of the repository, then compare it with {file_sentence} before changing behavior.\n\n"
+        f"## {relationship_heading}\n\n"
+        f"The useful connection to follow is {related_sentence} The local implementation signals are {symbol_sentence}, which indicate where behavior, configuration, or tests are likely to cross subsystem boundaries.\n\n"
+        f"## {evidence_heading}\n\n"
         f"{failure_mode}\n\n"
-        f"## Evidence\n\n"
+        f"Representative evidence paths:\n\n"
         f"{_format_evidence_lines(paths)}\n"
     )
 
@@ -448,8 +463,95 @@ def _build_moc_content(digest: RepoDigest, nodes: list[RepoGraphNode]) -> str:
     )
 
 
+_MANIFEST_FILENAMES = {
+    "package.json",
+    "pyproject.toml",
+    "requirements.txt",
+    "go.mod",
+    "cargo.toml",
+    "pom.xml",
+    "build.gradle",
+    "build.gradle.kts",
+    "composer.json",
+    "gemfile",
+    "mix.exs",
+}
+
+_LANGUAGE_SUFFIXES = {
+    ".py": "python",
+    ".ts": "typescript",
+    ".tsx": "typescript",
+    ".js": "javascript",
+    ".jsx": "javascript",
+    ".go": "go",
+    ".rs": "rust",
+    ".java": "java",
+    ".kt": "kotlin",
+    ".cs": "csharp",
+    ".rb": "ruby",
+    ".ex": "elixir",
+    ".exs": "elixir",
+    ".php": "php",
+}
+
+
+def _path_language(path: str) -> str:
+    lower = path.lower()
+    for suffix, language in _LANGUAGE_SUFFIXES.items():
+        if lower.endswith(suffix):
+            return language
+    return "unknown"
+
+
+def _subsystem_graph_score(subsystem: dict, *, seen_languages: set[str]) -> float:
+    name = str(subsystem.get("name", "")).lower()
+    paths = [str(path) for path in subsystem.get("paths", [])]
+    lower_paths = [path.lower() for path in paths]
+    score = float(min(len(paths), 20))
+
+    if any(Path(path).name.lower() in _MANIFEST_FILENAMES for path in lower_paths):
+        score += 80
+    if any(path.endswith(("/main.py", "/cli.py", "/app.py", "/index.ts", "/index.js", "/main.go")) for path in lower_paths):
+        score += 70
+    if name.startswith(("packages/", "apps/", "services/", "crates/", "cmd/", "pkg/", "src/")):
+        score += 35
+    if any(part in name for part in ("api", "server", "client", "worker", "frontend", "backend", "extension", "plugin")):
+        score += 25
+    if any(token in " ".join(lower_paths) for token in ("docs/", "examples/", "tests/", "test/")):
+        score += 8
+
+    languages = {_path_language(path) for path in paths} - {"unknown"}
+    if languages and not languages <= seen_languages:
+        score += 30
+    return score
+
+
+def _select_graph_subsystems(subsystems: list[dict]) -> list[dict]:
+    selected: list[dict] = []
+    selected_ids: set[int] = set()
+    seen_languages: set[str] = set()
+
+    for _ in range(min(MAX_REPO_NODES, len(subsystems))):
+        best_index = None
+        best_score = float("-inf")
+        for index, subsystem in enumerate(subsystems):
+            if index in selected_ids:
+                continue
+            score = _subsystem_graph_score(subsystem, seen_languages=seen_languages)
+            if score > best_score:
+                best_score = score
+                best_index = index
+        if best_index is None:
+            break
+        selected_ids.add(best_index)
+        chosen = subsystems[best_index]
+        selected.append(chosen)
+        seen_languages.update({_path_language(path) for path in chosen.get("paths", [])} - {"unknown"})
+    return selected
+
+
 def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
-    selected_subsystems = digest.subsystems[:MAX_REPO_NODES]
+    selected_subsystems = _select_graph_subsystems(digest.subsystems)
     used_ids: set[str] = {"moc"}
     subsystem_node_ids = [_unique_slug(str(subsystem["name"]), used_ids) for subsystem in selected_subsystems]
     related = _related_edges(selected_subsystems, subsystem_node_ids)

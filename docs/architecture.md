@@ -63,6 +63,7 @@ User (CLI / MCP / HyperGraph UI)
   - `repo.graph.json`
   - `repo.force.json`
   - `graph/nodes/*.md`
+- Selects graph nodes by subsystem importance, nested project manifests, entry points, and language diversity instead of raw directory size alone.
 - Can also infer graph inputs from existing `llms.txt` or `llms-full.txt` markdown artifacts.
 
 6. `src/lms_llmsTxt_mcp/server.py`
@@ -233,7 +234,8 @@ Observed implementation:
 ## 5) Post-processing and artifact persistence
 - `src/lms_llmsTxt/reasoning.py` sanitizes outputs.
 - `src/lms_llmsTxt/full_builder.py` optionally expands to `llms-full.txt`.
-- `src/lms_llmsTxt/graph_builder.py` emits graph artifacts.
+- `src/lms_llmsTxt/graph_builder.py` emits graph artifacts and rejects repeated generic node section templates.
+- `src/lms_llmsTxt/graph_dspy_synthesizer.py` performs bounded per-node graph synthesis with relationship context so each enriched node can use node-specific headings and explanations.
 - `src/lms_llmsTxt/pipeline.py` writes files into the artifact directory.
 
 ## 6) Consumption via MCP

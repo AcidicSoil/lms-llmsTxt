@@ -27,7 +27,7 @@ from .graph_dspy_synthesizer import enrich_repo_graph_with_dspy
 from .lmstudio import configure_lmstudio_lm, LMStudioConnectivityError, unload_lmstudio_model
 from .models import GenerationArtifacts, RepositoryMaterial
 from .reasoning import sanitize_final_output
-from .repo_digest import apply_evidence_plan, build_repo_digest, plan_evidence_paths, suggested_evidence_limit
+from .repo_digest import EvidenceFetchLimits, apply_evidence_plan, build_repo_digest, plan_evidence_paths, suggested_evidence_limit
 from .retry_policy import ErrorClass, classify_generation_error, next_retry_budget
 from .schema import LLMS_JSON_SCHEMA
 
@@ -212,7 +212,7 @@ def _unload_lmstudio_model_safely(config: AppConfig, run_log: RunLog | None = No
 
 
 def _graph_enrichment_auto_decision(material: RepositoryMaterial, config: AppConfig) -> tuple[bool, str]:
-    """Return whether bounded DSPy node enrichment is safe to attempt automatically."""
+    """Return whether bounded per-node DSPy graph enrichment can be attempted."""
     if not config.lm_model:
         return False, "no LM Studio model is configured"
 
@@ -220,15 +220,22 @@ def _graph_enrichment_auto_decision(material: RepositoryMaterial, config: AppCon
     if source_chars < 120:
         return False, "not enough source evidence for node-specific synthesis"
 
-    source_limit = max(1_000, config.semantic_graph_max_source_chars * 2)
-    if source_chars > source_limit:
-        return False, f"source evidence is too large for bounded DSPy graph synthesis ({source_chars} > {source_limit} chars)"
+    return True, "per-node graph synthesis uses bounded node specs and can run on large repository trees"
 
-    file_tree_lines = len([line for line in (material.file_tree or "").splitlines() if line.strip()])
-    if file_tree_lines > 600:
-        return False, f"repository tree is too large for bounded DSPy graph synthesis ({file_tree_lines} files/entries)"
 
-    return True, "repo evidence is within bounded DSPy graph synthesis limits"
+def _fetch_graph_evidence_content(
+    owner: str,
+    repo: str,
+    path: str,
+    ref: str,
+    token: str | None,
+) -> str | None:
+    """Best-effort graph evidence fetch; graph depth must not break generation."""
+    try:
+        return fetch_file_content(owner, repo, path, ref, token)
+    except Exception as exc:  # pragma: no cover - exact HTTP failures vary by GitHub state
+        logger.debug("Skipping graph evidence fetch for %s: %s", path, exc)
+        return None
 
 def prepare_repository_material(config: AppConfig, repo_url: str) -> RepositoryMaterial:
     return gather_repository_material(repo_url, config.github_token)
@@ -680,6 +687,40 @@ def run_generation(
     should_generate_graph = config.enable_repo_graph if generate_graph is None else bool(generate_graph)
     if should_generate_graph:
         graph_material = working_material if 'working_material' in locals() else material
+        graph_planning_digest = build_repo_digest(graph_material, topic=project_name)
+        graph_evidence_stage = run_log.stage_start("graph.evidence_planning")
+        graph_evidence_max_paths = max(24, int(config.semantic_graph_max_subsystems) * 8)
+        graph_evidence_plan = plan_evidence_paths(
+            graph_material,
+            graph_planning_digest,
+            max_paths=graph_evidence_max_paths,
+        )
+        if graph_evidence_plan.selected_paths:
+            graph_material = apply_evidence_plan(
+                graph_material,
+                graph_evidence_plan,
+                fetch_content=lambda path: _fetch_graph_evidence_content(
+                    owner,
+                    repo,
+                    path,
+                    graph_material.default_branch,
+                    config.github_token,
+                ),
+                limits=EvidenceFetchLimits(
+                    max_fetches=min(graph_evidence_max_paths, max(12, int(config.semantic_graph_max_subsystems) * 4)),
+                    max_bytes_per_fetch=max(1_200, int(config.semantic_graph_max_excerpt_chars) * 3),
+                    max_total_bytes=max(8_000, int(config.semantic_graph_max_source_chars)),
+                    max_path_depth=8,
+                ),
+            )
+        run_log.stage_end(
+            "graph.evidence_planning",
+            graph_evidence_stage,
+            candidate_count=graph_evidence_plan.candidate_count,
+            selected_count=graph_evidence_plan.selected_count,
+            fetched_count=len(graph_evidence_plan.fetched_paths),
+            skipped_count=len(graph_evidence_plan.fetch_skipped),
+        )
         digest = build_repo_digest(graph_material, topic=project_name)
         graph = build_repo_graph(digest)
         decision_stage = run_log.stage_start("graph.dspy_enrichment_decision")

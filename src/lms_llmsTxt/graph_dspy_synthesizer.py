@@ -12,7 +12,7 @@ except ImportError:  # pragma: no cover - test fallback
     from .signatures import dspy
 
 from .config import AppConfig
-from .graph_builder import validate_semantic_graph
+from .graph_builder import _template_heading_count, validate_semantic_graph
 from .graph_models import GraphNodeEvidence, RepoGraphNode, RepoSkillGraph
 from .models import RepositoryMaterial
 from .repo_digest import RepoDigest
@@ -64,7 +64,7 @@ def enrich_repo_graph_with_dspy(
             updated_nodes.append(node)
             continue
 
-        specs = _node_specs([node], digest, material, config)
+        specs = _node_specs([node], digest, material, config, graph_nodes=graph.nodes)
         if not specs:
             updated_nodes.append(node)
             continue
@@ -118,7 +118,7 @@ def enrich_repo_graph_with_dspy(
 class RepoGraphDSPySynthesizer(dspy.Module):
     def __init__(self) -> None:
         super().__init__()
-        self.synthesize = dspy.Predict(SynthesizeRepoGraphNodes)
+        self.synthesize = dspy.ChainOfThought(SynthesizeRepoGraphNodes)
 
     def forward(self, repo_topic: str, repo_summary: str, node_specs_json: str) -> Any:
         return self.synthesize(
@@ -133,9 +133,12 @@ def _node_specs(
     digest: RepoDigest,
     material: RepositoryMaterial,
     config: AppConfig,
+    *,
+    graph_nodes: list[RepoGraphNode] | None = None,
 ) -> list[dict[str, Any]]:
     excerpts = _evidence_excerpt_map(material)
     subsystem_by_name = {str(item.get("name", "")): item for item in digest.subsystems}
+    node_by_id = {item.id: item for item in (graph_nodes or nodes)}
     specs: list[dict[str, Any]] = []
     for node in nodes:
         evidence_paths = [ev.path for ev in node.evidence]
@@ -146,6 +149,19 @@ def _node_specs(
             for path in candidate_paths
             if path in excerpts and excerpts[path].strip()
         ][:3]
+        neighbor_context = []
+        for neighbor_id in node.links[:4]:
+            neighbor = node_by_id.get(neighbor_id)
+            if neighbor is None:
+                continue
+            neighbor_context.append(
+                {
+                    "id": neighbor.id,
+                    "label": neighbor.label,
+                    "type": neighbor.type,
+                    "description": neighbor.description,
+                }
+            )
         specs.append(
             {
                 "id": node.id,
@@ -153,10 +169,11 @@ def _node_specs(
                 "type": node.type,
                 "current_description": node.description,
                 "summary": str(subsystem.get("summary", node.description)),
-                "paths": candidate_paths[:6],
-                "key_symbols": [str(symbol) for symbol in subsystem.get("key_symbols", [])[:8]],
-                "neighbor_ids": node.links[:4],
+                "paths": candidate_paths[:8],
+                "key_symbols": [str(symbol) for symbol in subsystem.get("key_symbols", [])[:10]],
+                "relationships_to_explain": neighbor_context,
                 "source_excerpts": node_excerpts,
+                "format_rule": "Use node-specific headings derived from this node's domain. Do not use the generic headings Related concepts, Change risk, Evidence, Inspect first, or Implementation signals.",
             }
         )
     return specs
@@ -251,6 +268,8 @@ def _clean_text(value: Any) -> str:
 def _is_high_value_node(node: RepoGraphNode) -> bool:
     text = f"{node.description}\n{node.content}".lower()
     if any(phrase in text for phrase in LOW_VALUE_PHRASES):
+        return False
+    if _template_heading_count(node.content) >= 2:
         return False
     body = re.sub(r"^---\n.*?\n---\n", "", node.content, flags=re.DOTALL).strip()
     body = re.split(r"\n## Evidence\b", body, maxsplit=1, flags=re.IGNORECASE)[0]

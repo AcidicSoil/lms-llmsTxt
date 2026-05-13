@@ -507,7 +507,7 @@ def test_lmstudio_json_adapter_sets_schema_response_format_without_json_object()
     assert schema["required"] == ["answer", "bullets"]
 
 
-def test_generate_graph_auto_skips_dspy_enrichment_for_large_evidence(tmp_path, monkeypatch):
+def test_generate_graph_auto_attempts_dspy_enrichment_for_large_repo_tree(tmp_path, monkeypatch):
     repo_url = "https://github.com/example/repo"
     repo_root = tmp_path / "artifacts"
 
@@ -528,11 +528,14 @@ def test_generate_graph_auto_skips_dspy_enrichment_for_large_evidence(tmp_path, 
     monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
     monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
     monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
-    monkeypatch.setattr(
-        pipeline,
-        "enrich_repo_graph_with_dspy",
-        lambda *a, **k: (_ for _ in ()).throw(AssertionError("large graph should skip DSPy enrichment automatically")),
-    )
+    enrichment_called = {"value": False}
+
+    def fake_enrich_graph(graph, digest, material, config):
+        enrichment_called["value"] = True
+        return graph
+
+    monkeypatch.setattr(pipeline, "fetch_file_content", lambda *a, **k: "def selected():\n    return 'graph evidence'\n")
+    monkeypatch.setattr(pipeline, "enrich_repo_graph_with_dspy", fake_enrich_graph)
 
     config = AppConfig(
         lm_model="model",
@@ -545,6 +548,7 @@ def test_generate_graph_auto_skips_dspy_enrichment_for_large_evidence(tmp_path, 
 
     artifacts = pipeline.run_generation(repo_url, config, build_ctx=False, build_full=False)
 
+    assert enrichment_called["value"] is True
     assert Path(artifacts.graph_json_path).exists()
     assert Path(artifacts.force_graph_path).exists()
     assert Path(artifacts.graph_nodes_dir).exists()
@@ -581,6 +585,7 @@ def test_generate_graph_auto_attempts_dspy_enrichment_for_small_evidence(tmp_pat
     monkeypatch.setattr(pipeline, "RepositoryAnalyzer", lambda: FakeAnalyzer())
     monkeypatch.setattr(pipeline, "configure_lmstudio_lm", lambda *a, **k: None)
     monkeypatch.setattr(pipeline, "unload_lmstudio_model", lambda cfg: None)
+    monkeypatch.setattr(pipeline, "fetch_file_content", lambda *a, **k: "def main():\n    return 'graph evidence'\n")
     monkeypatch.setattr(pipeline, "enrich_repo_graph_with_dspy", fake_enrich_graph)
 
     config = AppConfig(
