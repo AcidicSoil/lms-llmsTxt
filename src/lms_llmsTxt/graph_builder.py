@@ -5,6 +5,7 @@ from pathlib import Path
 import re
 from collections import Counter, defaultdict
 from itertools import combinations
+from urllib.parse import urlparse
 
 from .graph_models import (
     ForceGraphData,
@@ -497,6 +498,109 @@ def build_repo_graph(digest: RepoDigest) -> RepoSkillGraph:
     graph = RepoSkillGraph(topic=digest.topic, nodes=[moc, *nodes])
     validate_semantic_graph(graph)
     return graph
+
+
+_MARKDOWN_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+_PATH_CANDIDATE_RE = re.compile(r"(?P<path>(?:[A-Za-z0-9_.-]+/)+[A-Za-z0-9_.-]+\.[A-Za-z0-9_.-]+)")
+
+
+def _path_from_url_or_text(value: str) -> str | None:
+    text = value.strip().strip("`<>")
+    if not text or text.startswith("#"):
+        return None
+    parsed = urlparse(text)
+    if parsed.scheme and parsed.netloc:
+        path = parsed.path.lstrip("/")
+        parts = path.split("/")
+        if "blob" in parts:
+            index = parts.index("blob")
+            if len(parts) > index + 2:
+                return "/".join(parts[index + 2 :])
+        if "raw.githubusercontent.com" in parsed.netloc and len(parts) > 3:
+            return "/".join(parts[3:])
+        return None
+    match = _PATH_CANDIDATE_RE.search(text)
+    return match.group("path") if match else None
+
+
+def _subsystems_from_llms_markdown(markdown: str) -> tuple[str, str, list[dict]]:
+    lines = markdown.splitlines()
+    topic = "llms.txt Graph"
+    current_heading = "Overview"
+    section_paths: dict[str, list[str]] = defaultdict(list)
+    section_notes: dict[str, list[str]] = defaultdict(list)
+
+    for line in lines:
+        stripped = line.strip()
+        if stripped.startswith("# ") and topic == "llms.txt Graph":
+            topic = stripped.lstrip("#").strip() or topic
+            continue
+        if stripped.startswith("##"):
+            current_heading = stripped.lstrip("#").strip() or current_heading
+            continue
+        for label, target in _MARKDOWN_LINK_RE.findall(stripped):
+            path = _path_from_url_or_text(target) or _path_from_url_or_text(label)
+            if path and path not in section_paths[current_heading]:
+                section_paths[current_heading].append(path)
+        path = _path_from_url_or_text(stripped)
+        if path and path not in section_paths[current_heading]:
+            section_paths[current_heading].append(path)
+        if stripped and len(section_notes[current_heading]) < 4 and not stripped.startswith(("- [", "* [")):
+            section_notes[current_heading].append(stripped.lstrip("-* "))
+
+    subsystems: list[dict] = []
+    for heading, paths in section_paths.items():
+        if not paths:
+            continue
+        summary_bits = [bit for bit in section_notes.get(heading, []) if bit and not _looks_like_path_inventory(bit)]
+        summary = " ".join(summary_bits[:2]).strip()
+        if not summary:
+            summary = f"{heading} groups entries referenced by the llms document for this repository."
+        subsystems.append(
+            {
+                "name": heading,
+                "paths": paths[:8],
+                "summary": summary[:600],
+                "key_symbols": [Path(path).stem for path in paths[:8]],
+            }
+        )
+
+    if not subsystems:
+        fallback_paths = []
+        for match in _PATH_CANDIDATE_RE.finditer(markdown):
+            path = match.group("path")
+            if path not in fallback_paths:
+                fallback_paths.append(path)
+        for path in fallback_paths[:MAX_REPO_NODES]:
+            subsystems.append(
+                {
+                    "name": path,
+                    "paths": [path],
+                    "summary": f"{path} appears in the llms document and should be inspected as part of the generated graph.",
+                    "key_symbols": [Path(path).stem],
+                }
+            )
+
+    architecture_summary = (
+        "Graph generated from an existing llms.txt-style artifact. Nodes are inferred from markdown sections, links, and file references."
+    )
+    return topic, architecture_summary, subsystems[:MAX_REPO_NODES]
+
+
+def build_repo_graph_from_llms_markdown(markdown: str, *, topic: str | None = None) -> RepoSkillGraph:
+    """Build a repository graph from an existing llms.txt or llms-full.txt markdown artifact."""
+    inferred_topic, architecture_summary, subsystems = _subsystems_from_llms_markdown(markdown)
+    digest = RepoDigest(
+        topic=topic or inferred_topic,
+        architecture_summary=architecture_summary,
+        primary_language="unknown",
+        subsystems=subsystems,
+        key_dependencies=[],
+        entry_points=[path for subsystem in subsystems for path in subsystem.get("paths", [])[:1]][:6],
+        test_coverage_hint="unknown",
+        digest_id="llms-markdown",
+    )
+    return build_repo_graph(digest)
 
 
 def to_force_graph(graph: RepoSkillGraph) -> ForceGraphData:

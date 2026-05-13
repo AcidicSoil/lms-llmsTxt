@@ -16,6 +16,7 @@ from urllib.parse import urljoin, urlparse, urlencode
 from urllib.request import Request, urlopen
 
 from .config import AppConfig
+from .graph_builder import build_repo_graph_from_llms_markdown, emit_graph_files
 from .pipeline import run_generation
 
 
@@ -486,6 +487,26 @@ def open_graph_viewer_in_browser(url: str) -> bool:
         return False
 
 
+def _emit_graph_from_llms_file(source_path: Path, output_root: Path | None = None) -> dict[str, str]:
+    if not source_path.exists():
+        raise FileNotFoundError(f"llms artifact not found: {source_path}")
+    markdown = source_path.read_text(encoding="utf-8")
+    graph = build_repo_graph_from_llms_markdown(markdown, topic=source_path.stem)
+    target_dir = (output_root or source_path.parent) / f"{source_path.stem}.graph"
+    return emit_graph_files(graph, target_dir)
+
+
+def _print_graph_from_llms_summary(paths: list[Path], output_dir: Path | None = None) -> str:
+    lines = ["Graph artifacts generated from llms markdown:"]
+    for source_path in paths:
+        graph_paths = _emit_graph_from_llms_file(source_path, output_dir)
+        lines.append(f"  - source: {source_path}")
+        lines.append(f"    graph: {graph_paths['graph_json']}")
+        lines.append(f"    force: {graph_paths['force_json']}")
+        lines.append(f"    nodes: {graph_paths['nodes_dir']}")
+    return "\n".join(lines)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="lmstxt",
@@ -587,9 +608,20 @@ def build_parser() -> argparse.ArgumentParser:
         help="Log context budget and retry reductions.",
     )
     parser.add_argument(
+        "--graph-from",
+        action="append",
+        type=Path,
+        default=[],
+        metavar="LLMS_MARKDOWN",
+        help="Generate graph artifacts from an existing llms.txt or llms-full.txt file. Repeat for multiple files.",
+    )
+    parser.add_argument(
         "--ui",
-        action="store_true",
-        help="Print a HyperGraph visualizer URL for the generated repo graph artifact.",
+        nargs="?",
+        const=True,
+        default=False,
+        metavar="GRAPH_JSON",
+        help="Launch/open HyperGraph. Optionally pass a repo.graph.json path to open it directly.",
     )
     parser.add_argument(
         "--ui-base-url",
@@ -660,6 +692,11 @@ def main(argv: list[str] | None = None) -> int:
         config.enable_session_memory = True
     if args.ui_start_timeout_seconds is not None and int(args.ui_start_timeout_seconds) <= 0:
         parser.error("--ui-start-timeout-seconds must be > 0.")
+    ui_graph_path = Path(args.ui) if isinstance(args.ui, str) else None
+    if args.graph_from and args.repo:
+        parser.error("--graph-from generates graphs from files and does not take a repository argument.")
+    if args.graph_from and ui_graph_path:
+        parser.error("Use --graph-from to generate graph artifacts or --ui GRAPH_JSON to open an existing graph, not both at once.")
     if args.ui_stop:
         if args.repo:
             parser.error("--ui-stop does not take a repository argument.")
@@ -676,6 +713,47 @@ def main(argv: list[str] | None = None) -> int:
             summary += f"\n  - metadata: {stop_status.metadata_path}"
         print(summary)
         return 0 if stop_status.stopped or stop_status.stale_metadata_removed else 1
+    if args.graph_from:
+        try:
+            print(_print_graph_from_llms_summary(args.graph_from, config.output_dir if args.output_dir else None))
+        except Exception as exc:
+            parser.error(str(exc))
+            return 2
+        return 0
+    if ui_graph_path is not None:
+        if args.repo:
+            parser.error("--ui GRAPH_JSON does not take a repository argument.")
+        if not ui_graph_path.exists():
+            parser.error(f"Graph JSON file not found: {ui_graph_path}")
+        ui_status = ensure_hypergraph_ui_running(
+            args.ui_base_url,
+            startup_timeout_seconds=int(args.ui_start_timeout_seconds),
+        )
+        effective_ui_base_url = (ui_status.ui_base_url or args.ui_base_url).rstrip("/")
+        viewer_url = build_graph_viewer_url(ui_graph_path, ui_base_url=effective_ui_base_url)
+        summary = "Graph viewer:"
+        summary += f"\n  - {viewer_url}"
+        if ui_status.reused_existing:
+            summary += "\nUI status:\n  - already running"
+        elif ui_status.started_process:
+            summary += "\nUI status:"
+            if ui_status.note:
+                summary += f"\n  - {ui_status.note}"
+            summary += f"\n  - started background dev server (pid={ui_status.pid})"
+            if ui_status.log_path:
+                summary += f"\n  - log: {ui_status.log_path}"
+            summary += "\n  - ready" if ui_status.ready else "\n  - not ready"
+        elif ui_status.error:
+            summary += f"\nUI status:\n  - error: {ui_status.error}"
+        if not args.ui_no_open:
+            if ui_status.ready:
+                opened = open_graph_viewer_in_browser(viewer_url)
+                summary += "\nBrowser:"
+                summary += "\n  - opened" if opened else "\n  - failed to open automatically (open the URL manually)"
+            else:
+                summary += "\nBrowser:\n  - not opened (UI was not ready)"
+        print(summary)
+        return 0
     if not args.repo:
         if not args.ui:
             parser.error("repo is required unless --ui is used to launch HyperGraph.")

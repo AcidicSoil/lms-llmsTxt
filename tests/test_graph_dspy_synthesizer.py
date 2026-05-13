@@ -62,6 +62,44 @@ def test_dspy_graph_enrichment_applies_specific_node_content(monkeypatch):
     assert "nearby files depend" not in updated.content
 
 
+def test_dspy_graph_enrichment_calls_model_once_per_node(monkeypatch):
+    material = _material()
+    digest = build_repo_digest(material, topic="Example App")
+    graph = build_repo_graph(digest)
+    non_moc_nodes = [node for node in graph.nodes if node.type != "moc"]
+    seen_specs: list[list[dict]] = []
+
+    class FakeModule:
+        def __call__(self, **kwargs):
+            specs = json.loads(kwargs["node_specs_json"])
+            seen_specs.append(specs)
+            node_id = specs[0]["id"]
+            payload = [
+                {
+                    "id": node_id,
+                    "label": f"Specific {node_id}",
+                    "description": f"Specific node {node_id} explains a distinct React context responsibility using concrete provider evidence.",
+                    "content": (
+                        f"Specific {node_id} owns a distinct slice of shared interface state, and this paragraph names that node so the graph cannot reuse a single generic header for every card. "
+                        "Its provider evidence points to concrete behavior such as locale helpers, keyboard registration, or document theme synchronization, which makes the relationship useful before editing. "
+                        "Developers should compare the cited source excerpt with connected nodes to see whether a UI state change crosses route, shell, or rendering boundaries.\n\n"
+                        f"The second {node_id} paragraph explains change risk in unique terms rather than repeating a batched summary. "
+                        "Incorrect edits can leak stale handlers, paint the wrong theme, or display labels in the wrong language, so this node needs individual reasoning from the model. "
+                        "That per-node synthesis keeps graph descriptions aligned with their own evidence and relationships."
+                    ),
+                }
+            ]
+            return type("Prediction", (), {"node_updates_json": json.dumps(payload)})()
+
+    monkeypatch.setattr("lms_llmsTxt.graph_dspy_synthesizer.RepoGraphDSPySynthesizer", lambda: FakeModule())
+
+    enrich_repo_graph_with_dspy(graph, digest, material, AppConfig(lm_model="test-model"))
+
+    assert len(seen_specs) == len(non_moc_nodes)
+    assert all(len(specs) == 1 for specs in seen_specs)
+    assert {specs[0]["id"] for specs in seen_specs} == {node.id for node in non_moc_nodes}
+
+
 def test_dspy_graph_enrichment_rejects_generic_node_content(monkeypatch):
     material = _material()
     digest = build_repo_digest(material, topic="Example App")

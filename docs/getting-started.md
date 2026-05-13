@@ -91,6 +91,19 @@ It also auto-starts/reuses the HyperGraph UI and opens your browser by default.
 
 Use `--ui-no-open` if you only want the URL and background UI startup behavior.
 
+Open an existing graph artifact directly:
+
+```bash
+PYTHONPATH=src lmstxt --ui ../artifacts/<owner>/<repo>/graph/repo.graph.json
+```
+
+Generate graph artifacts from existing markdown outputs:
+
+```bash
+PYTHONPATH=src lmstxt --graph-from artifacts/<owner>/<repo>/<repo>-llms.txt
+PYTHONPATH=src lmstxt --graph-from artifacts/<owner>/<repo>/<repo>-llms-full.txt
+```
+
 ### UI-first repo generation
 
 In HyperGraph (`http://localhost:3000`):

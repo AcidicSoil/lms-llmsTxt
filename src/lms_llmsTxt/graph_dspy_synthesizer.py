@@ -41,51 +41,58 @@ def enrich_repo_graph_with_dspy(
     material: RepositoryMaterial,
     config: AppConfig,
 ) -> RepoSkillGraph:
-    """Use a bounded DSPy pass to replace generic deterministic node prose.
+    """Use bounded per-node DSPy calls to replace generic deterministic node prose.
 
-    This is intentionally a single batched call. The graph topology remains
-    deterministic; DSPy only rewrites labels, descriptions, and user-facing
-    markdown for nodes where the model can produce evidence-grounded content.
+    The graph topology remains deterministic. Each non-MOC node is synthesized in
+    its own call so labels, descriptions, and markdown are grounded in that node's
+    excerpts instead of inheriting a repeated batched response shape.
     """
     non_moc_nodes = [node for node in graph.nodes if node.type != "moc"][:MAX_BATCH_NODES]
     if not non_moc_nodes:
         return graph
 
-    specs = _node_specs(non_moc_nodes, digest, material, config)
-    if not specs:
-        return graph
-
     module = RepoGraphDSPySynthesizer()
-    try:
-        prediction = module(
-            repo_topic=digest.topic,
-            repo_summary=digest.architecture_summary,
-            node_specs_json=json.dumps(specs, ensure_ascii=False, indent=2),
-        )
-    except TypeError:
-        prediction = module.forward(
-            repo_topic=digest.topic,
-            repo_summary=digest.architecture_summary,
-            node_specs_json=json.dumps(specs, ensure_ascii=False, indent=2),
-        )
-    except Exception as exc:
-        logger.warning("DSPy repo graph node synthesis failed; keeping deterministic graph: %s", exc)
-        return graph
-
-    updates = _parse_updates(getattr(prediction, "node_updates_json", ""))
-    if not updates:
-        logger.info("DSPy repo graph node synthesis returned no usable updates")
-        return graph
-
     updated_nodes: list[RepoGraphNode] = []
-    update_by_id = {str(update.get("id", "")): update for update in updates if update.get("id")}
     applied = 0
+
     for node in graph.nodes:
-        update = update_by_id.get(node.id)
-        if node.type == "moc" or not update:
+        if node.type == "moc":
             updated_nodes.append(node)
             continue
 
+        if node not in non_moc_nodes:
+            updated_nodes.append(node)
+            continue
+
+        specs = _node_specs([node], digest, material, config)
+        if not specs:
+            updated_nodes.append(node)
+            continue
+
+        try:
+            prediction = module(
+                repo_topic=digest.topic,
+                repo_summary=digest.architecture_summary,
+                node_specs_json=json.dumps(specs, ensure_ascii=False, indent=2),
+            )
+        except TypeError:
+            prediction = module.forward(
+                repo_topic=digest.topic,
+                repo_summary=digest.architecture_summary,
+                node_specs_json=json.dumps(specs, ensure_ascii=False, indent=2),
+            )
+        except Exception as exc:
+            logger.warning("DSPy repo graph node synthesis failed for %s; keeping deterministic node: %s", node.id, exc)
+            updated_nodes.append(node)
+            continue
+
+        updates = _parse_updates(getattr(prediction, "node_updates_json", ""))
+        update = next((item for item in updates if str(item.get("id", "")) == node.id), updates[0] if updates else None)
+        if not update:
+            updated_nodes.append(node)
+            continue
+
+        update["id"] = node.id
         candidate = _apply_update(node, update)
         if _is_high_value_node(candidate):
             updated_nodes.append(candidate)

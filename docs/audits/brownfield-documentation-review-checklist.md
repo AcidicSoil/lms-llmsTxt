@@ -23,7 +23,7 @@ Pass scope:
 
 1. Verify CLI flag documentation matches implementation.
 - Confirm `--ui` and `--ui-base-url` behavior in `src/lms_llmsTxt/cli.py`.
-- Confirm `--ui` correctly requires graph generation in docs and code.
+- Confirm repository `--ui` requires graph generation, while `--ui <repo.graph.json>` opens existing graph artifacts directly.
 
 2. Verify HyperGraph API route mode documentation.
 - Confirm all supported modes in `hypergraph/app/api/generate/route.ts` are accurately listed.

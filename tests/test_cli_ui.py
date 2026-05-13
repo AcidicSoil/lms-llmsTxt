@@ -22,6 +22,44 @@ def test_build_graph_viewer_url_prefers_hypergraph_relative_path(tmp_path: Path)
     assert "..%2Fartifacts%2Fowner%2Frepo%2Fgraph%2Frepo.graph.json" in url
 
 
+def test_main_generates_graph_from_llms_file(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    source = tmp_path / "demo-llms.txt"
+    source.write_text(
+        "# Demo\n\n## Runtime\n- [Pipeline](src/pipeline.py): coordinates generation.\n",
+        encoding="utf-8",
+    )
+
+    rc = cli.main(["--graph-from", str(source)])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "Graph artifacts generated from llms markdown:" in out
+    assert (tmp_path / "demo-llms.graph" / "repo.graph.json").exists()
+    assert (tmp_path / "demo-llms.graph" / "repo.force.json").exists()
+
+
+def test_main_opens_ui_directly_to_graph_json(monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    graph_path = tmp_path / "repo.graph.json"
+    graph_path.write_text('{"topic":"Demo","nodes":[]}', encoding="utf-8")
+    opened: list[str] = []
+
+    monkeypatch.setattr(
+        cli,
+        "ensure_hypergraph_ui_running",
+        lambda *args, **kwargs: cli.UIRuntimeStatus(reused_existing=True, ready=True),
+    )
+    monkeypatch.setattr(cli, "open_graph_viewer_in_browser", lambda url: opened.append(url) or True)
+    monkeypatch.setattr(cli, "_default_hypergraph_dir", lambda: tmp_path / "hypergraph")
+
+    rc = cli.main(["--ui", str(graph_path), "--ui-base-url", "http://localhost:3009"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert "Graph viewer:" in out
+    assert "http://localhost:3009/?" in out
+    assert opened and "repo.graph.json" in opened[0]
+
+
 def test_main_rejects_repo_ui_without_generate_graph() -> None:
     with pytest.raises(SystemExit) as excinfo:
         cli.main(["https://github.com/pallets/flask", "--ui"])

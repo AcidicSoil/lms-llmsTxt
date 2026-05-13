@@ -106,7 +106,7 @@ Out of scope for this pass:
 
 1. Treat artifact file formats and MCP URIs as compatibility-sensitive interfaces.
 2. Add tests when changing CLI summary output or URL formatting (to avoid downstream workflow regressions).
-3. Keep explicit error messages for misused flags (for example `--ui` without `--generate-graph`).
+3. Keep explicit error messages for misused flag combinations (for example repository `--ui` without `--generate-graph`, or `--graph-from` with a repository argument).
 
 ## 4. HyperGraph UI / Next.js Standards (Observed)
 

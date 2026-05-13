@@ -63,6 +63,7 @@ User (CLI / MCP / HyperGraph UI)
   - `repo.graph.json`
   - `repo.force.json`
   - `graph/nodes/*.md`
+- Can also infer graph inputs from existing `llms.txt` or `llms-full.txt` markdown artifacts.
 
 6. `src/lms_llmsTxt_mcp/server.py`
 - FastMCP server entrypoint.
@@ -145,13 +146,15 @@ Key flags and behavior are implemented in `src/lms_llmsTxt/cli.py`.
 
 Notable interface groups:
 - Generation/runtime: `--model`, `--api-base`, `--api-key`, `--output-dir`
-- Artifact controls: `--stamp`, `--no-ctx`, `--generate-graph`, `--graph-only`
+- Artifact controls: `--stamp`, `--no-ctx`, `--generate-graph`, `--graph-only`, `--graph-from`
 - Budget controls: `--max-context-tokens`, `--max-output-tokens`, `--context-headroom`, `--verbose-budget`
 - Session memory: `--enable-session-memory`
-- UI handoff: `--ui`, `--ui-base-url`
+- UI handoff: `--ui`, `--ui <repo.graph.json>`, `--ui-base-url`
 
 Compatibility note:
-- `--ui` requires graph generation so `repo.graph.json` exists (enforced by CLI validation).
+- `--ui` with a repository still requires `--generate-graph` so `repo.graph.json` exists.
+- `--ui <repo.graph.json>` opens an existing graph artifact directly without running repository generation.
+- `--graph-from <llms.txt>` and repeated `--graph-from <llms-full.txt>` generate graph artifacts from existing markdown files.
 
 ## Artifact File Contract
 
@@ -249,8 +252,8 @@ Observed implementation:
 This section supplements the original architecture doc with the newer two-way visualizer wiring.
 
 ## A. CLI -> HyperGraph
-1. User runs `lmstxt ... --generate-graph --ui`.
-2. CLI generates repo graph artifacts.
+1. You run `lmstxt ... --generate-graph --ui` or `lmstxt --ui <repo.graph.json>`.
+2. For repository generation, the CLI generates repo graph artifacts. For direct graph loading, it validates the existing graph path.
 3. CLI ensures HyperGraph is reachable (reuses a running UI or starts a background dev server), then builds a URL containing `graphPath` and `autoLoad=1`.
 4. CLI opens the URL in the default browser (unless disabled via CLI flag); the printed URL remains available for manual use.
 5. HyperGraph UI auto-loads `repo.graph.json` and renders the graph.

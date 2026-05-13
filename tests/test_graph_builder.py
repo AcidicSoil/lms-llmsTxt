@@ -12,6 +12,32 @@ from lms_llmsTxt.graph_models import RepoGraphNode, RepoSkillGraph
 from lms_llmsTxt.repo_digest import RepoDigest
 
 
+def test_build_repo_graph_from_llms_markdown_uses_sections_and_links():
+    from lms_llmsTxt.graph_builder import build_repo_graph_from_llms_markdown
+
+    graph = build_repo_graph_from_llms_markdown(
+        """
+# Example Project
+
+## Core Runtime
+- [Pipeline](https://github.com/acme/repo/blob/main/src/runtime/pipeline.py): coordinates staged generation.
+- [Config](src/runtime/config.py): keeps runtime settings together.
+
+## Tests
+- [Runtime tests](tests/runtime/test_pipeline.py): validates pipeline behavior.
+        """.strip()
+    )
+
+    labels = {node.label for node in graph.nodes}
+    evidence_paths = {evidence.path for node in graph.nodes for evidence in node.evidence}
+
+    assert graph.topic == "Example Project"
+    assert "Core Runtime" in labels
+    assert "Tests" in labels
+    assert "src/runtime/pipeline.py" in evidence_paths
+    assert "tests/runtime/test_pipeline.py" in evidence_paths
+
+
 def test_graph_builder_emits_expected_files(tmp_path: Path):
     digest = RepoDigest(
         topic="Example Repo",

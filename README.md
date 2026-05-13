@@ -205,6 +205,19 @@ The CLI will:
 - auto-open the browser to HyperGraph, or to the generated graph when a repo graph is produced
 - print the same handoff URL for manual reuse when loading a generated graph
 
+To open HyperGraph directly to an existing graph artifact:
+
+```bash
+lmstxt --ui artifacts/<owner>/<repo>/graph/repo.graph.json
+```
+
+To generate graph artifacts from existing `llms.txt` or `llms-full.txt` markdown files:
+
+```bash
+lmstxt --graph-from artifacts/<owner>/<repo>/<repo>-llms.txt
+lmstxt --graph-from artifacts/<owner>/<repo>/<repo>-llms-full.txt
+```
+
 Use `--ui-no-open` to skip auto-opening the browser.
 
 To stop a HyperGraph UI background process that was started by `lmstxt --ui`:
@@ -295,7 +308,7 @@ For manual loading, use a path like:
 ../artifacts/<owner>/<repo>/graph/repo.graph.json
 ```
 
-The CLI `--ui` flag can be used by itself to auto-start/reuse the UI and open HyperGraph. When used with a repository plus `--generate-graph`, it opens the generated graph and prints a ready-to-open URL that pre-fills this path and auto-loads the graph.
+The CLI `--ui` flag can be used by itself to auto-start/reuse the UI and open HyperGraph. When used with a repository plus `--generate-graph`, it opens the generated graph and prints a ready-to-open URL that pre-fills this path and auto-loads the graph. When used as `lmstxt --ui <repo.graph.json>`, it opens directly to that existing graph artifact.
 
 ## Model Context Protocol (MCP) Server
 

@@ -37,6 +37,23 @@ _GITHUB_URL = re.compile(
 
 _SESSION = requests.Session()
 
+_DEFAULT_IGNORED_PATH_PREFIXES = (
+    ".agents/",
+    ".serena/",
+    ".taskmaster/",
+    "Taskmaster/",
+    "Taskmaster-AI/",
+)
+_DEFAULT_IGNORED_PATHS = {".agents", ".serena", ".taskmaster", "Taskmaster", "Taskmaster-AI"}
+
+
+def is_default_ignored_repo_path(path: str) -> bool:
+    """Return True for local AI/dev-tooling paths that should not enter llms.txt context."""
+    normalized = _normalize_repo_path(path).strip("/")
+    if normalized in _DEFAULT_IGNORED_PATHS:
+        return True
+    return any(normalized.startswith(prefix) for prefix in _DEFAULT_IGNORED_PATH_PREFIXES)
+
 
 def owner_repo_from_url(repo_url: str) -> tuple[str, str]:
     """Return ``(owner, repo)`` for https or SSH GitHub URLs."""
@@ -94,7 +111,9 @@ def fetch_file_tree(
     return [
         item["path"]
         for item in payload.get("tree", [])
-        if item.get("type") == "blob" and "path" in item
+        if item.get("type") == "blob"
+        and "path" in item
+        and not is_default_ignored_repo_path(str(item["path"]))
     ]
 
 
