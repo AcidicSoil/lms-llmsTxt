@@ -1,5 +1,8 @@
 # lmstxt MCP quick use (agent handoff)
 
+> Internal working note, moved from the repository root during documentation hygiene cleanup. This is not stakeholder-facing product documentation. Verify tool schemas against `src/lms_llmsTxt_mcp/server.py` before promoting any content back into `README.md` or `docs/`.
+
+
 ## Goal
 
 Read a repo’s `llms.txt` (or `llms-full.txt`, `llms-ctx.txt`) via the lmstxt MCP.

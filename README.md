@@ -400,8 +400,7 @@ LMSTUDIO_BASE_URL = "http://localhost:1234/v1"
 - `docs/decisions/2026-04-29-rollout-compatibility.md` - rollout compatibility decision and gates.
 - `docs/audits/brownfield-documentation-review-checklist.md` - human validation checklist for brownfield documentation claims.
 - `docs/publishing.md` - publishing and release workflow notes.
-- `.serena/memories/README.md` - agent memory index for active, superseded, finished, and durable memory records.
-- `.archived/oracle-pack-2026-01-04.md` - archived repository knowledge pack reference.
+- `docs/mcp-inspector-payloads.md` - MCP Inspector payloads for tool verification.
 
 ## Verify your setup
 
