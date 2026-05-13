@@ -1,24 +1,24 @@
 ---
 name: technical-prd-roadmap
-description: "Generate implementation-ready PRDs and staged roadmap chains using base PRD and RPG dependency templates. WHEN: \"write PRD\", \"create roadmap\", \"approved proceed\", \"implementation PRD\", \"RPG PRD\", \"Task Master PRD\", \"dependency-aware roadmap\"."
+description: "Generate dependency-aware PRDs and staged implementation roadmaps. WHEN: "write PRD", "create roadmap", "implementation PRD", "RPG PRD", "Task Master PRD", "dependency-aware PRD", "approved proceed"."
 license: MIT
 metadata:
   author: OpenAI
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # Technical PRD Roadmap
 
-Use this skill to convert scope decisions, planning notes, transcripts, or approved implementation paths into dependency-aware technical PRDs.
+Use this skill to convert scope decisions, planning notes, transcripts, or approved implementation paths into implementation-ready PRDs.
 
 ## Workflow
 
-1. **Extract scope** — Identify approved direction, target users, success metrics, non-goals, constraints, and evidence gaps.
-2. **Choose depth** — Use the [base PRD template](templates/base-prd-template.txt) for concise product plans or the [RPG PRD template](templates/rpg-prd-template.txt) for dependency-aware implementation plans.
-3. **Separate WHAT from HOW** — Draft capabilities and features first, then map them to repository modules.
-4. **Build dependency order** — Define foundation modules, layered dependencies, and phase entry/exit criteria.
-5. **Make it executable** — Add acceptance criteria, test strategy, artifacts, risks, mitigations, and handoff commands.
-6. **Split roadmaps** — When scope is broad, produce sequenced PRDs instead of one oversized PRD.
+1. **Extract scope** — Identify problem, users, success metrics, constraints, integrations, assumptions, non-goals, and evidence gaps.
+2. **Choose template** — Use the [base PRD template](templates/base-prd-template.txt), [RPG PRD template](templates/rpg-prd-template.txt), or [strict dependency-aware PRD prompt](templates/strict-dependency-aware-prd-prompt.md).
+3. **Separate WHAT from HOW** — Draft capability domains and atomic features first, then map them to modules, files, functions, or classes.
+4. **Order by dependency** — Build an acyclic dependency chain from foundation modules to higher layers, then derive phases from that topology.
+5. **Make tasks executable** — Each phase task needs dependencies, acceptance criteria, and test strategy. Avoid timelines unless explicitly requested.
+6. **Close with handoff structure** — End dependency-aware PRDs with recommended counts for epics, implementation tasks, and subtasks.
 
 ## Reference Guides
 
@@ -27,11 +27,13 @@ Use this skill to convert scope decisions, planning notes, transcripts, or appro
 - [Task Master handoff](references/task-master-handoff.md)
 - [Quality checklist](references/checklists/prd-quality-checklist.md)
 - [Error handling](references/error-handling.md)
+- [Prompt examples](references/prompt-examples.md)
 
 ## Output Rules
 
-- Do not include timelines unless the user explicitly asks.
-- Prefer dependency order over calendar order.
-- Keep MVP scope usable and visible as early as possible.
-- Do not invent codebase facts; mark assumptions and required inspection.
-- For broad initiatives, end each PRD with the next logical PRD.
+- Use exact 11-section order for strict dependency-aware PRDs; see [combined output outline](templates/combined-prd-output-outline.md).
+- Every feature must list Description, Inputs, Outputs, Behavior, and MVP status.
+- Every module must have one responsibility and explicit public exports.
+- Dependency graphs must be acyclic and include a nonempty foundation layer.
+- Phases must derive from dependencies, not calendar timelines.
+- State assumptions when repository facts or prior research are missing.

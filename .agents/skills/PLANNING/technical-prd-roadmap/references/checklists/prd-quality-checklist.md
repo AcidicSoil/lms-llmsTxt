@@ -24,3 +24,10 @@
 - [ ] MVP produces a usable result.
 - [ ] Risks include mitigation and fallback.
 - [ ] Output artifacts and commands are named.
+
+## Strict PRD Final Checks
+
+- [ ] Output uses the exact 11-section order.
+- [ ] Dependency chain includes explicit `Depends on: [...]` entries.
+- [ ] Phase 0 contains only foundation modules with no dependencies.
+- [ ] Final section recommends epic, task, and subtask counts with rationale.

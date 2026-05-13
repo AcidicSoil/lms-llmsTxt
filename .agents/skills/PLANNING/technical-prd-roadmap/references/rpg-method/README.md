@@ -15,11 +15,12 @@ Repository Planning Graph (RPG) PRDs separate functional planning from structura
 ## Rules
 
 - Capabilities are not files. Name behaviors like `Data Validation`, not `validation.js`.
-- Every feature needs description, inputs, outputs, and behavior.
+- Every feature needs description, inputs, outputs, behavior, and MVP status.
 - Every module has one responsibility and explicit exports.
 - Foundation modules have no dependencies.
 - Non-foundation modules depend on named earlier modules.
 - If two modules depend on each other, split one or introduce a lower-level shared module.
+- End production-ready PRDs with recommended epic/task/subtask counts.
 
 ## Related Sections
 

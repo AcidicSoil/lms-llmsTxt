@@ -1,10 +1,10 @@
 ---
 name: create-cli
-description: >
+description: >-
   Design command-line interface parameters and UX: arguments, flags, subcommands,
   help text, output formats, error messages, exit codes, prompts, config/env
-  precedence, and safe/dry-run behavior. Use when you’re designing a CLI spec
-  (before implementation) or refactoring an existing CLI’s surface area for
+  precedence, and safe/dry-run behavior. Use when you're designing a CLI spec
+  (before implementation) or refactoring an existing CLI's surface area for
   consistency, composability, and discoverability.
 ---
 
@@ -14,7 +14,7 @@ Design CLI surface area (syntax + behavior), human-first, script-friendly.
 
 ## Do This First
 
-- Read `agent-scripts/skills/create-cli/references/cli-guidelines.md` and apply it as the default rubric.
+- Read `references/cli-guidelines.md` and apply it as the default rubric.
 - Upstream/full guidelines: https://clig.dev/ (propose changes: https://github.com/cli-guidelines/cli-guidelines)
 - Ask only the minimum clarifying questions needed to lock the interface.
 
@@ -64,30 +64,30 @@ Fill these sections, drop anything irrelevant:
 1. **Name**: `mycmd`
 2. **One-liner**: `...`
 3. **USAGE**:
-   - `mycmd [global flags] <subcommand> [args]`
+    - `mycmd [global flags] <subcommand> [args]`
 4. **Subcommands**:
-   - `mycmd init ...`
-   - `mycmd run ...`
+    - `mycmd init ...`
+    - `mycmd run ...`
 5. **Global flags**:
-   - `-h, --help`
-   - `--version`
-   - `-q, --quiet` / `-v, --verbose` (define exactly)
-   - `--json` / `--plain` (if applicable)
+    - `-h, --help`
+    - `--version`
+    - `-q, --quiet` / `-v, --verbose` (define exactly)
+    - `--json` / `--plain` (if applicable)
 6. **I/O contract**:
-   - stdout:
-   - stderr:
+    - stdout:
+    - stderr:
 7. **Exit codes**:
-   - `0` success
-   - `1` generic failure
-   - `2` invalid usage (parse/validation)
-   - (add command-specific codes only when actually useful)
+    - `0` success
+    - `1` generic failure
+    - `2` invalid usage (parse/validation)
+    - (add command-specific codes only when actually useful)
 8. **Env/config**:
-   - env vars:
-   - config file path + precedence:
+    - env vars:
+    - config file path + precedence:
 9. **Examples**:
-   - …
+    - …
 
 ## Notes
 
 - Prefer recommending a parsing library (language-specific) only when asked; otherwise keep this skill language-agnostic.
-- If the request is “design parameters”, do not drift into implementation.
+- If the request is "design parameters", do not drift into implementation.

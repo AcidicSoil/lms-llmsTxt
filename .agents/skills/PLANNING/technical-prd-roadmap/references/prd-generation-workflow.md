@@ -20,3 +20,11 @@ Split into multiple PRDs when workstreams have different users, artifacts, comma
 ## Sequencing Pattern
 
 Discovery or inventory → classification or context mapping → evaluation → decisioning → optimization → promotion or rollout.
+
+## Strict Dependency-Aware Mode
+
+When the user asks for a production-ready, dependency-aware, RPG, or Task Master PRD, use `templates/strict-dependency-aware-prd-prompt.md` and preserve the exact 11-section output order. Ask once for missing problem/users/metrics, constraints/integrations/assumptions, and prior research/specs. If still missing, cite assumptions instead of inventing facts.
+
+## Final Task Structure Rule
+
+End with recommended default counts for epics, implementation tasks, and subtasks. Include density ranges and a short rationale based on dependency layers, MVP size, module count, and test surface.

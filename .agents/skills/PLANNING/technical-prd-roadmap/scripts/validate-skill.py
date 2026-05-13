@@ -41,10 +41,13 @@ def main() -> None:
     required = [
         "templates/base-prd-template.txt",
         "templates/rpg-prd-template.txt",
+        "templates/strict-dependency-aware-prd-prompt.md",
+        "templates/combined-prd-output-outline.md",
         "references/prd-generation-workflow.md",
         "references/rpg-method/README.md",
         "references/task-master-handoff.md",
         "references/checklists/prd-quality-checklist.md",
+        "assets/section-map.json",
     ]
     for rel in required:
         if not (ROOT / rel).exists():
