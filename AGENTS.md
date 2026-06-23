@@ -115,3 +115,14 @@ Dependency security posture conflicts detected
   - <brief statement of what can still happen>
 - Required remediation:
   - <ordered changes>
+
+<!-- BEGIN serena-gsd-bridge -->
+## serena-gsd-bridge
+
+This project may use `serena-gsd-bridge`, a Serena runtime/configuration bridge for operating under `gsd-core`-style constraints.
+
+- Start bridge diagnostics with `gsd-serena-bridge bootstrap --format markdown`.
+- Treat native `/gsd:*` workflows as native-owned when native GSD evidence such as `.gsd/`, `.claude/commands/gsd/`, or `.githooks/` is present.
+- Do not mix native workflow mutation with bridge prepare/execute/transition mutation unless an explicit coexistence mode allows it.
+- Preserve bridge-owned files under `.agents/gsd-serena/**`, Serena bridge setup under `.serena/**`, and bridge evidence under `.planning/.bridge/**`.
+<!-- END serena-gsd-bridge -->
